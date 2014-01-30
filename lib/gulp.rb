@@ -4,6 +4,10 @@
 module Gulp
   BASE_DIR   = ENV["GULP_BASE"] || File.join(ENV["HOME"], ".gulp")
 
+  # make sure base dir exists
+  Dir.mkdir BASE_DIR unless Dir.exist? BASE_DIR
+
+
   ## record exceptions thrown in threads nicely
   @exceptions = []
   @exception_mutex = Mutex.new
@@ -43,11 +47,19 @@ module Gulp
   module_function :start, :finish
 end
 
+require 'gulp/version'
 require 'gulp/util'
 require 'gulp/logger/singleton'
 
-info "oy gulp!"
+info "oy gulp! - version: #{Gulp::VERSION}"
+
 
 $encoding = 'UTF-8' # there is only one - we don't support anything else
 info "using encoding: #{$encoding} - there is no choice."
+
+require 'gdk3'
+require 'gtk3'
+
+require 'gulp/main'
+
 

@@ -8,9 +8,13 @@ require 'gulp'
 module Gulp
 
   begin
+    Gulp::start
+
+    Gulp::Main.init
+    Gulp::Main.Go
 
   rescue Exception => e
-    Gulp::record_expcetion e, "main"
+    Gulp::record_exception e, "main"
   ensure
     Gulp::finish
     Gulp::Logger.remove_all_sinks!
