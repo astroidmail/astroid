@@ -2,9 +2,12 @@
 #
 # keeps track of main window and others
 
+require 'notmuch'
+
 require 'gulp/util'
 
 require 'gulp/main_window'
+require 'gulp/modes/thread_index'
 
 module Gulp
   class Main
@@ -27,6 +30,11 @@ module Gulp
 
       # open one @main_window by default
       @main_windows.push MainWindow.new
+
+      # add an inbox to the this main window
+      inbox = ThreadIndex.new 'label:inbox'
+      @main_windows[0].add_mode inbox
+
 
       ## start main loop
       Gtk.main

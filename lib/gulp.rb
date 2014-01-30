@@ -1,5 +1,9 @@
 # encoding: utf-8
 
+def die msg=nil
+  $stderr.puts "error: #{msg}" if msg
+  exit (-1)
+end
 
 module Gulp
   BASE_DIR   = ENV["GULP_BASE"] || File.join(ENV["HOME"], ".gulp")
@@ -41,7 +45,7 @@ module Gulp
   end
 
   def finish
-
+    Db.close if Db.instantiated?
   end
 
   module_function :start, :finish
@@ -61,5 +65,6 @@ require 'gdk3'
 require 'gtk3'
 
 require 'gulp/main'
+require 'gulp/db'
 
 

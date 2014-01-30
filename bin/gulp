@@ -10,6 +10,7 @@ module Gulp
   begin
     Gulp::start
 
+    Gulp::Db.init
     Gulp::Main.init
     Gulp::Main.Go
 
