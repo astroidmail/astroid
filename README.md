@@ -1,9 +1,9 @@
-= cup =
+# gulp mua
 
-A graphical mail user agent based on sup and notmuch. Written in ruby
-utilizing the Mail library, GTK+ and clutter.
+  A graphical threads-with-tags mail user agent based on [sup] and [notmuch].
+  Written in ruby utilizing the Mail library, GTK+ and clutter.
 
-== user interface goals ==
+## user interface goals
 * operated by keyboard only - but accept mouse clicks
 * base interface on sup, but allow buffers to be dragged out
   or separated as windows so that multiple views/buffers can be
@@ -12,7 +12,7 @@ utilizing the Mail library, GTK+ and clutter.
 * display html mail and some attachments inline - steal from
   thunderbird or something.
 
-== design goals ==
+## design goals
 * Always use the latest Ruby
 * Never use deprecated libraries - use as few libraries as possible
 * Never rewrite something there exists an active library for
@@ -22,4 +22,11 @@ utilizing the Mail library, GTK+ and clutter.
   specifically thinking about: maildir <-> tag sync.
 * Support: Platforms supported by notmuch and other libraries, specifically:
   Linux, *BSD, Mac, Windows, Android..
+
+## licence
+
+MIT
+
+[sup]: http://supmua.org
+[notmuch]: http://notmuchmail.org/
 

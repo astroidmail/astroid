@@ -1,0 +1,54 @@
+#! /usr/bin/env ruby
+# encoding: utf-8
+
+$:.unshift File.join(File.dirname(__FILE__), *%w[.. lib])
+
+require 'gulp'
+
+module Gulp
+
+  begin
+
+  rescue Exception => e
+    Gulp::record_expcetion e, "main"
+  ensure
+    Gulp::finish
+    Gulp::Logger.remove_all_sinks!
+    Gulp::Logger.add_sink $stderr, false
+
+    if Gulp::exceptions.empty?
+      debug "no fatal errors. good job!"
+    else
+      error "oh crap, an exception"
+    end
+
+  end
+
+  unless Gulp::exceptions.empty?
+    File.open(File.join(Gulp::BASE_DIR, "exception-log.txt"), "w") do |f|
+      Gulp::exceptions.each do |e, name|
+        f.puts "--- #{e.class.name} from thread: #{name}"
+        f.puts e.message, e.backtrace
+      end
+    end
+    $stderr.puts <<EOS
+  ----------------------------------------------------------------
+  Oy! err.. It seems that an error has occured. Please accept our
+  sincere aplogoies. Please submit the content of
+  #{Gulp::BASE_DIR}/exception-log.txt and a brief report of the
+  circumstances to https://github.com/gauteh/gulp/issues so that
+  we might address this problem. Thank you!
+
+  Sincerely,
+  gaute
+  ----------------------------------------------------------------
+EOS
+    Gulp::exceptions.each do |e, name|
+      puts "--- #{e.class.name} from thread: #{name}"
+      puts e.message, e.backtrace
+    end
+
+  end
+
+end
+
