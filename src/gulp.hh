@@ -2,6 +2,7 @@
 
 # include <vector>
 
+# include "proto.hh"
 
 using namespace std;
 
@@ -10,6 +11,8 @@ namespace Gulp {
     public:
       Gulp ();
       int main (int, char**);
+
+      Db *db;
 
 
 

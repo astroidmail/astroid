@@ -67,14 +67,11 @@ if not GetOption("verbose_flag"):
 env.ParseConfig ('pkg-config --libs --cflags glibmm-2.4')
 env.ParseConfig ('pkg-config --libs --cflags gtkmm-3.0')
 
-env.Append (CPPDEFINES = { 'GIT_DESC' : ('\\"%s\\"' % GIT_DESC) }, CPPFLAGS = ['-g', '-std=c++0x', '-pthread'] )
+env.Append (CPPDEFINES = { 'GIT_DESC' : ('\\"%s\\"' % GIT_DESC) }, CPPFLAGS = ['-g', '-std=c++0x', ] )
 
 source = Glob('src/*.cc')
 
-libs   = ['pthread',
-          'boost_system',
-          'boost_filesystem',
-         ]
+libs   = ['notmuch',]
 
 env.Append (LIBS = libs)
 

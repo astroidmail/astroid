@@ -3,6 +3,7 @@
 # include <gtkmm.h>
 
 # include "gulp.hh"
+# include "db.hh"
 
 
 using namespace std;
@@ -22,6 +23,9 @@ namespace Gulp {
 
   int Gulp::main (int argc, char **argv) {
     cout << "gulp - v" << GIT_DESC << endl;
+
+    db = new Db ();
+
     return 0;
   }
 
