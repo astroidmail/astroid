@@ -1,6 +1,6 @@
 # encoding: utf-8
 #
-# keeps track of main window and others
+# main_window with notebook
 
 require 'gulp/modes/log'
 require 'gulp/modes/help'
