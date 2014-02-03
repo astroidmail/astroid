@@ -1,6 +1,7 @@
 # pragma once
 
 # include <vector>
+# include <memory>
 
 # include "proto.hh"
 
@@ -14,7 +15,8 @@ namespace Gulp {
 
       Db *db;
 
-
+      /* list of main windows */
+      vector<MainWindow*>  main_windows;
 
 
   };

@@ -1,10 +1,16 @@
 # include <iostream>
+# include <vector>
+# include <memory>
 
 # include <gtkmm.h>
+# include <gtkmm/window.h>
 
 # include "gulp.hh"
 # include "db.hh"
 
+/* UI */
+# include "main_window.hh"
+# include "thread_index.hh"
 
 using namespace std;
 
@@ -24,9 +30,25 @@ namespace Gulp {
   int Gulp::main (int argc, char **argv) {
     cout << "welcome to gulp! - v" << GIT_DESC << endl;
 
+    /* set up gtk */
+    Glib::RefPtr<Gtk::Application> app =
+      Gtk::Application::create (argc, argv, "org.gulp");
+
     db = new Db ();
 
+    /* start up default window with default buffers */
+    MainWindow mw;
+    mw.add_mode (new ThreadIndex ("label:inbox"));
+
+    main_windows.push_back (&mw);
+    main_windows.shrink_to_fit ();
+
+    app->run (mw);
+
+    /* clean up and exit */
+    main_windows.clear ();
     delete db;
+
 
     return 0;
   }
