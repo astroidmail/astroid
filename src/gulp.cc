@@ -22,9 +22,11 @@ namespace Gulp {
   }
 
   int Gulp::main (int argc, char **argv) {
-    cout << "gulp - v" << GIT_DESC << endl;
+    cout << "welcome to gulp! - v" << GIT_DESC << endl;
 
     db = new Db ();
+
+    delete db;
 
     return 0;
   }

@@ -71,7 +71,9 @@ env.Append (CPPDEFINES = { 'GIT_DESC' : ('\\"%s\\"' % GIT_DESC) }, CPPFLAGS = ['
 
 source = Glob('src/*.cc')
 
-libs   = ['notmuch',]
+libs   = ['notmuch',
+          'boost_system',
+          'boost_filesystem',]
 
 env.Append (LIBS = libs)
 
