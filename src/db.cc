@@ -34,7 +34,7 @@ namespace Gulp {
 
     cout << "ok." << endl;
 
-    //test_query ();
+    test_query ();
   }
 
   void Db::test_query () {
@@ -52,7 +52,7 @@ namespace Gulp {
          notmuch_messages_move_to_next (messages)) {
       message = notmuch_messages_get (messages);
 
-      cout << "message: " << notmuch_message_get_header (message, "Subject") << endl;
+      cout << "thread:" << notmuch_message_get_thread_id (message) << ", message: " << notmuch_message_get_header (message, "Subject") << endl;
 
       notmuch_message_destroy (message);
     }

@@ -15,6 +15,7 @@ using namespace std;
 namespace Gulp {
   ThreadIndex::ThreadIndex (string _query) : query_string(_query){
 
+    set_orientation (Gtk::Orientation::ORIENTATION_VERTICAL);
     tab_widget = new Gtk::Label (query_string);
 
     /* set up notmuch query */
@@ -23,6 +24,8 @@ namespace Gulp {
     cout << "index, query: " << notmuch_query_get_query_string (query) << ", approx: "
          << notmuch_query_count_messages (query) << " messages." << endl;
 
+
+    /* set up treeview */
   }
 
   ThreadIndex::~ThreadIndex () {
