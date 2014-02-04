@@ -10,7 +10,7 @@
 
 /* UI */
 # include "main_window.hh"
-# include "thread_index.hh"
+# include "modes/thread_index.hh"
 
 using namespace std;
 

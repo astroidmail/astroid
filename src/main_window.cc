@@ -4,8 +4,8 @@
 # include <gtkmm/widget.h>
 
 # include "main_window.hh"
-# include "mode.hh"
-# include "thread_index.hh"
+# include "modes/mode.hh"
+# include "modes/thread_index.hh"
 
 using namespace std;
 

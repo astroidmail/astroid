@@ -7,6 +7,13 @@
 using namespace std;
 
 namespace Gulp {
+  class NotmuchThread {
+    public:
+      NotmuchThread ();
+      NotmuchThread (notmuch_thread_t *);
+      notmuch_thread_t * nm_thread;
+  };
+
   class Db {
     public:
       Db ();

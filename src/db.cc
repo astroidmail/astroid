@@ -63,5 +63,10 @@ namespace Gulp {
     if (nm_db != NULL) notmuch_database_close (nm_db);
   }
 
+  /* notmuch thread */
+  NotmuchThread::NotmuchThread () { };
+  NotmuchThread::NotmuchThread (notmuch_thread_t * t) {
+    nm_thread = t;
+  }
 }
 

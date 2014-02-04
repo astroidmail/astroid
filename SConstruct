@@ -69,7 +69,7 @@ env.ParseConfig ('pkg-config --libs --cflags gtkmm-3.0')
 
 env.Append (CPPDEFINES = { 'GIT_DESC' : ('\\"%s\\"' % GIT_DESC) }, CPPFLAGS = ['-g', '-std=c++0x', ] )
 
-source = Glob('src/*.cc')
+source = Glob('src/*.cc') + Glob('src/modes/*.cc')
 
 libs   = ['notmuch',
           'boost_system',
