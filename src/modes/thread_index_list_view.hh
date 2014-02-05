@@ -30,6 +30,8 @@ namespace Gulp {
       ThreadIndexListView (Glib::RefPtr<ThreadIndexListStore>);
 
       Glib::RefPtr<ThreadIndexListStore> list_store;
+
+      void set_thread_data (Gtk::CellRenderer *, const Gtk::TreeIter & );
   };
 }
 

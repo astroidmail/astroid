@@ -1,3 +1,5 @@
+# include <iostream>
+
 # include "../db.hh"
 # include "thread_index_list_view.hh"
 # include "thread_index_list_cell_renderer.hh"
@@ -31,7 +33,23 @@ namespace Gulp {
     int cols_count = append_column ("Thread", *renderer);
     Gtk::TreeViewColumn * column = get_column (cols_count - 1);
 
+    column->set_cell_data_func (*renderer,
+        sigc::mem_fun(*this, &ThreadIndexListView::set_thread_data) );
+  }
 
+  void ThreadIndexListView::set_thread_data (
+      Gtk::CellRenderer * renderer,
+      const Gtk::TreeIter &iter) {
+
+    ThreadIndexListCellRenderer * r =
+      (ThreadIndexListCellRenderer*) renderer;
+
+    if (iter) {
+
+      Gtk::ListStore::Row row = *iter;
+      r->thread = row[list_store->columns.thread];
+
+    }
   }
 }
 
