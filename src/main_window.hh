@@ -17,6 +17,8 @@ namespace Gulp {
       MainWindow ();
       ~MainWindow ();
 
+      bool on_key_press (GdkEventKey *);
+
       Notebook notebook;
 
       vector<Mode*> modes; 

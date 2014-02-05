@@ -12,7 +12,9 @@ namespace Gulp {
     public:
       Gulp ();
       int main (int, char**);
+      void quit ();
 
+      Glib::RefPtr<Gtk::Application> app;
       Db *db;
 
       /* list of main windows */

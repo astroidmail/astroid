@@ -31,8 +31,7 @@ namespace Gulp {
     cout << "welcome to gulp! - v" << GIT_DESC << endl;
 
     /* set up gtk */
-    Glib::RefPtr<Gtk::Application> app =
-      Gtk::Application::create (argc, argv, "org.gulp");
+    app = Gtk::Application::create (argc, argv, "org.gulp");
 
     db = new Db ();
 
@@ -51,6 +50,12 @@ namespace Gulp {
 
 
     return 0;
+  }
+
+  void Gulp::quit () {
+    cout << "goodbye!" << endl;
+    app->quit ();
+
   }
 
 }

@@ -20,6 +20,8 @@ namespace Gulp {
       ThreadIndex (string);
       ~ThreadIndex ();
 
+      void add_threads ();
+
       Glib::RefPtr<ThreadIndexListStore> list_store;
       ThreadIndexListView  * list_view;
 

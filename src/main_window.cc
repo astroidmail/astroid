@@ -3,6 +3,7 @@
 # include <gtkmm.h>
 # include <gtkmm/widget.h>
 
+# include "gulp.hh"
 # include "main_window.hh"
 # include "modes/mode.hh"
 # include "modes/thread_index.hh"
@@ -20,6 +21,20 @@ namespace Gulp {
 
     show_all ();
 
+    /* connect keys */
+    add_events (Gdk::KEY_PRESS_MASK);
+    signal_key_press_event ().connect (
+        sigc::mem_fun(*this, &MainWindow::on_key_press));
+
+  }
+
+  bool MainWindow::on_key_press (GdkEventKey * event) {
+    switch (event->keyval) {
+      case GDK_KEY_q:
+      case GDK_KEY_Q:
+        gulp->quit ();
+    }
+    return true;
   }
 
   MainWindow::~MainWindow () {

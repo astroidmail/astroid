@@ -34,12 +34,19 @@ namespace Gulp {
     show_all ();
 
     /* add threads to model */
+    add_threads ();
+  }
+
+  void ThreadIndex::add_threads () {
     notmuch_threads_t * threads;
     notmuch_thread_t  * thread;
+
+    cout << "index: add threads.." << endl;
 
     for (threads = notmuch_query_search_threads (query);
          notmuch_threads_valid (threads);
          notmuch_threads_move_to_next (threads)) {
+
       thread = notmuch_threads_get (threads);
 
       NotmuchThread *t = new NotmuchThread (thread);
