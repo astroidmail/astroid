@@ -12,12 +12,14 @@ namespace Gulp {
   class NotmuchThread {
     public:
       NotmuchThread ();
-      NotmuchThread (notmuch_thread_t *);
+      NotmuchThread (notmuch_threads_t *, notmuch_thread_t *);
 
-      notmuch_thread_t * nm_thread;
-      string thread_id;
+      notmuch_threads_t * nm_threads;
+      notmuch_thread_t  * nm_thread;
+      string              thread_id;
 
-      ustring * get_subject ();
+      void      ensure_valid ();
+      ustring   get_subject ();
   };
 
   class Db {

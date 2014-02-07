@@ -31,6 +31,19 @@ namespace Gulp {
           const Gdk::Rectangle &,
           Gtk::CellRendererState) override;
 
+      virtual void get_preferred_height_vfunc (
+          Gtk::Widget& widget,
+          int& minimum_height,
+          int& natural_height) const override;
+
+    private:
+      int height = 20;
+      int subject_font_size = 11;
+
+      void render_subject (
+          const ::Cairo::RefPtr< ::Cairo::Context>&cr,
+          Gtk::Widget &widget,
+          const Gdk::Rectangle &cell_area );
   };
 }
 

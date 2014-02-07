@@ -25,7 +25,10 @@ namespace Gulp {
     set_model (list_store);
     set_enable_search (false);
 
-    append_column ("Thread IDs", list_store->columns.thread_id);
+    set_show_expanders (false);
+    set_headers_visible (false);
+
+    //append_column ("Thread IDs", list_store->columns.thread_id);
 
     /* add thread column */
     ThreadIndexListCellRenderer * renderer =

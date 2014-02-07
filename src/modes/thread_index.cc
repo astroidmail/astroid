@@ -49,7 +49,7 @@ namespace Gulp {
 
       thread = notmuch_threads_get (threads);
 
-      NotmuchThread *t = new NotmuchThread (thread);
+      NotmuchThread *t = new NotmuchThread (threads, thread);
 
       auto iter = list_store->append ();
       Gtk::ListStore::Row row = *iter;

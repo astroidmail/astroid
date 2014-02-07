@@ -20,6 +20,7 @@ namespace Gulp {
       exit (1);
     }
 
+    /* TODO: get this from config or .notmuch-config */
     path path_db (home);
     path_db /= ".mail";
 
@@ -64,23 +65,51 @@ namespace Gulp {
     if (nm_db != NULL) notmuch_database_close (nm_db);
   }
 
-  /* notmuch thread */
+  /* --------------
+   * notmuch thread
+   * --------------
+   */
   NotmuchThread::NotmuchThread () { };
-  NotmuchThread::NotmuchThread (notmuch_thread_t * t) {
+  NotmuchThread::NotmuchThread (notmuch_threads_t *ts, notmuch_thread_t * t) {
     nm_thread = t;
+    nm_threads = ts;
     thread_id = notmuch_thread_get_thread_id (t);
   }
 
-  /* get subject of thread */
-  ustring * NotmuchThread::get_subject () {
-    return new ustring ("hey" + thread_id);
-    /*
-    if (notmuch_thread_valid (nm_thread)) {
-      return new ustring (notmuch_thread_get_subject (nm_thread));
-    } else {
-      throw invalid_argument ("Notmuch Thread is no longer valid."); 
+  void NotmuchThread::ensure_valid () {
+    // thread id is constant
+    if (!notmuch_threads_valid (nm_threads)) {
+      // create new threads object
+      cout << "re-querying for thread id: " << thread_id << endl;
+
+      string query_s = "threadid:" + thread_id;
+      notmuch_query_t * query = notmuch_query_create (gulp->db->nm_db, query_s.c_str());
+
+      int c = 0;
+
+      for (nm_threads = notmuch_query_search_threads (query);
+           notmuch_threads_valid (nm_threads);
+           notmuch_threads_move_to_next (nm_threads)) {
+
+        if (c > 0) {
+          cerr << "notmuch_thread: got more than one thread for thread id!" << endl;
+          break;
+        }
+
+        nm_thread = notmuch_threads_get (nm_threads);
+
+        c++;
+      }
     }
-    */
+  }
+
+  /* get subject of thread */
+  ustring NotmuchThread::get_subject () {
+
+    ensure_valid ();
+    const char * subject = notmuch_thread_get_subject (nm_thread);
+
+    return ustring (subject);
   }
 }
 
