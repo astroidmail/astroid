@@ -1,6 +1,7 @@
 # include <iostream>
-
 # include <boost/filesystem.hpp>
+
+# include <glibmm.h>
 
 # include <notmuch.h>
 
@@ -67,6 +68,19 @@ namespace Gulp {
   NotmuchThread::NotmuchThread () { };
   NotmuchThread::NotmuchThread (notmuch_thread_t * t) {
     nm_thread = t;
+    thread_id = notmuch_thread_get_thread_id (t);
+  }
+
+  /* get subject of thread */
+  ustring * NotmuchThread::get_subject () {
+    return new ustring ("hey" + thread_id);
+    /*
+    if (notmuch_thread_valid (nm_thread)) {
+      return new ustring (notmuch_thread_get_subject (nm_thread));
+    } else {
+      throw invalid_argument ("Notmuch Thread is no longer valid."); 
+    }
+    */
   }
 }
 

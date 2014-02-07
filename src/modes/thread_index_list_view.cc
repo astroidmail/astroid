@@ -44,6 +44,7 @@ namespace Gulp {
     ThreadIndexListCellRenderer * r =
       (ThreadIndexListCellRenderer*) renderer;
 
+    //cout << "setting thread.." << r <<  endl;
     if (iter) {
 
       Gtk::ListStore::Row row = *iter;

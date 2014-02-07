@@ -3,11 +3,19 @@
 # include <vector>
 # include <memory>
 
+# include <gtkmm.h>
+# include <glibmm.h>
+
 # include "proto.hh"
 
 using namespace std;
 
 namespace Gulp {
+
+  /* alias ustring */
+  typedef Glib::ustring ustring;
+
+
   class Gulp {
     public:
       Gulp ();
