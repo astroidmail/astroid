@@ -111,5 +111,28 @@ namespace Gulp {
 
     return ustring (subject);
   }
+
+  /* is there unread messages in thread */
+  bool NotmuchThread::unread () {
+
+    ensure_valid ();
+
+    notmuch_tags_t *  tags;
+    const char *      tag;
+
+    for (tags = notmuch_thread_get_tags (nm_thread);
+         notmuch_tags_valid (tags);
+         notmuch_tags_move_to_next (tags))
+    {
+      tag = notmuch_tags_get (tags);
+
+      if (string(tag) == "unread") {
+        return true;
+      }
+    }
+
+    return false;
+
+  }
 }
 

@@ -12,6 +12,7 @@ namespace Gulp {
   class ThreadIndexListCellRenderer : public Gtk::CellRenderer {
     public:
       NotmuchThread thread; /* thread that should be rendered now */
+      bool last;
 
     protected:
       /* best documentation so far from here:
@@ -37,10 +38,31 @@ namespace Gulp {
           int& natural_height) const override;
 
     private:
-      int height = 20;
-      int subject_font_size = 11;
+      int content_height = 20;
+      int spacing = 2;
+      int height = content_height + spacing;
+      int left_icons_width = 20;
+      int left_icons = 2;
+      int padding = 5;
+      int subject_start = left_icons*left_icons_width + padding;
+      int subject_font_size = 9;
 
       void render_subject (
+          const ::Cairo::RefPtr< ::Cairo::Context>&cr,
+          Gtk::Widget &widget,
+          const Gdk::Rectangle &cell_area );
+
+      void render_delimiter (
+          const ::Cairo::RefPtr< ::Cairo::Context>&cr,
+          Gtk::Widget &widget,
+          const Gdk::Rectangle &cell_area );
+
+      void render_starred (
+          const ::Cairo::RefPtr< ::Cairo::Context>&cr,
+          Gtk::Widget &widget,
+          const Gdk::Rectangle &cell_area );
+
+      void render_attachment (
           const ::Cairo::RefPtr< ::Cairo::Context>&cr,
           Gtk::Widget &widget,
           const Gdk::Rectangle &cell_area );

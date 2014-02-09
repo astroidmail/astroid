@@ -20,6 +20,7 @@ namespace Gulp {
 
       void      ensure_valid ();
       ustring   get_subject ();
+      bool      unread ();
   };
 
   class Db {
