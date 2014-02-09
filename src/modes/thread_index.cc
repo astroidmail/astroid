@@ -19,6 +19,7 @@ namespace Gulp {
 
     set_orientation (Gtk::Orientation::ORIENTATION_VERTICAL);
     tab_widget = new Gtk::Label (query_string);
+    tab_widget->set_can_focus (false);
 
     /* set up notmuch query */
     query =  notmuch_query_create (gulp->db->nm_db, query_string.c_str ());
@@ -35,6 +36,12 @@ namespace Gulp {
 
     /* add threads to model */
     add_threads ();
+
+    /* select first */
+    list_view->set_cursor (Gtk::TreePath("0"));
+
+    list_view->set_can_default (true);
+    list_view->grab_focus ();
   }
 
   void ThreadIndex::add_threads () {

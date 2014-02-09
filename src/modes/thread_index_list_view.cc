@@ -55,5 +55,34 @@ namespace Gulp {
 
     }
   }
+
+  bool ThreadIndexListView::on_key_press_event (GdkEventKey *event) {
+    switch (event->keyval) {
+      case GDK_KEY_j:
+      case GDK_KEY_J:
+        {
+          Gtk::TreePath path;
+          Gtk::TreeViewColumn *c;
+          get_cursor (path, c);
+          path.next ();
+          set_cursor (path);
+          return true;
+        }
+        break;
+      case GDK_KEY_k:
+      case GDK_KEY_K:
+        {
+          Gtk::TreePath path;
+          Gtk::TreeViewColumn *c;
+          get_cursor (path, c);
+          path.prev ();
+          set_cursor (path);
+          return true;
+        }
+        break;
+    }
+
+    return false;
+  }
 }
 

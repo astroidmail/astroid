@@ -148,7 +148,7 @@ namespace Gulp {
     int y = max(0,(content_height / 2) - ((h / Pango::SCALE) / 2));
 
     /* update subject start */
-    subject_start = date_start + (w / Pango::SCALE) + padding;
+    //subject_start = date_start + (w / Pango::SCALE) + padding;
 
     cr->move_to (cell_area.get_x() + date_start, cell_area.get_y() + y);
     pango_layout->show_in_cairo_context (cr);

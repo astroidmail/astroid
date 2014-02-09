@@ -48,7 +48,7 @@ namespace Gulp {
 
       int date_start = left_icons*left_icons_width + padding;
 
-      int subject_start; // calculate from previous widget
+      int subject_start = date_start + 100;
       int subject_font_size = font_size;
 
       void render_subject (

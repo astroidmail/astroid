@@ -22,7 +22,6 @@ namespace Gulp {
 
       ThreadIndexListStore ();
       const ThreadIndexListStoreColumnRecord columns;
-
   };
 
   class ThreadIndexListView : public Gtk::TreeView {
@@ -32,6 +31,9 @@ namespace Gulp {
       Glib::RefPtr<ThreadIndexListStore> list_store;
 
       void set_thread_data (Gtk::CellRenderer *, const Gtk::TreeIter & );
+
+    protected:
+      virtual bool on_key_press_event (GdkEventKey *) override;
   };
 }
 
