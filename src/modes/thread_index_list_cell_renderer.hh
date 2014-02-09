@@ -44,10 +44,19 @@ namespace Gulp {
       int left_icons_width = 20;
       int left_icons = 2;
       int padding = 5;
-      int subject_start = left_icons*left_icons_width + padding;
-      int subject_font_size = 9;
+      int font_size = 9;
+
+      int date_start = left_icons*left_icons_width + padding;
+
+      int subject_start; // calculate from previous widget
+      int subject_font_size = font_size;
 
       void render_subject (
+          const ::Cairo::RefPtr< ::Cairo::Context>&cr,
+          Gtk::Widget &widget,
+          const Gdk::Rectangle &cell_area );
+
+      void render_date (
           const ::Cairo::RefPtr< ::Cairo::Context>&cr,
           Gtk::Widget &widget,
           const Gdk::Rectangle &cell_area );

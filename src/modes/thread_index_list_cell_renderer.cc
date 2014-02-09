@@ -7,6 +7,7 @@
  */
 
 # include <iostream>
+# include <time.h>
 
 # include <gtkmm/image.h>
 
@@ -29,6 +30,7 @@ namespace Gulp {
 
     cout << "render..:" << thread.thread_id << endl;
 
+    render_date (cr, widget, cell_area);
     render_subject (cr, widget, cell_area);
     if (!last)
       render_delimiter (cr, widget, cell_area);
@@ -38,6 +40,7 @@ namespace Gulp {
     cr->stroke ();
   }
 
+  /* render icons {{{ */
   void ThreadIndexListCellRenderer::render_starred (
       const ::Cairo::RefPtr< ::Cairo::Context>&cr,
       Gtk::Widget &widget,
@@ -73,9 +76,9 @@ namespace Gulp {
 
     cr->rectangle (cell_area.get_x () + left_icons_width + 2, cell_area.get_y (), 20, 20);
     cr->fill ();
-  }
+  } // }}}
 
-  void ThreadIndexListCellRenderer::render_delimiter (
+  void ThreadIndexListCellRenderer::render_delimiter ( // {{{
       const ::Cairo::RefPtr< ::Cairo::Context>&cr,
       Gtk::Widget &widget,
       const Gdk::Rectangle &cell_area ) {
@@ -89,9 +92,9 @@ namespace Gulp {
     cr->line_to(cell_area.get_x() + cell_area.get_width(), cell_area.get_y() + cell_area.get_height());
     cr->stroke ();
 
-  }
+  } // }}}
 
-  void ThreadIndexListCellRenderer::render_subject (
+  void ThreadIndexListCellRenderer::render_subject ( // {{{
       const ::Cairo::RefPtr< ::Cairo::Context>&cr,
       Gtk::Widget &widget,
       const Gdk::Rectangle &cell_area ) {
@@ -115,9 +118,44 @@ namespace Gulp {
     cr->move_to (cell_area.get_x() + subject_start, cell_area.get_y() + y);
     pango_layout->show_in_cairo_context (cr);
 
-  }
+  } // }}}
 
+  void ThreadIndexListCellRenderer::render_date ( // {{{
+      const ::Cairo::RefPtr< ::Cairo::Context>&cr,
+      Gtk::Widget &widget,
+      const Gdk::Rectangle &cell_area ) {
 
+    time_t newest = thread.get_newest_date ();
+    struct tm * timeinfo;
+    char buf[80];
+    timeinfo = localtime (&newest);
+    strftime (buf, 80, "%D %R", timeinfo);
+
+    Glib::RefPtr<Pango::Layout> pango_layout = widget.create_pango_layout (buf);
+
+    Pango::FontDescription font_description;
+    font_description.set_size(Pango::SCALE * font_size);
+
+    if (thread.unread ()) {
+      font_description.set_weight (Pango::WEIGHT_BOLD);
+    }
+
+    pango_layout->set_font_description (font_description);
+
+    /* align in the middle */
+    int w, h;
+    pango_layout->get_size (w, h);
+    int y = max(0,(content_height / 2) - ((h / Pango::SCALE) / 2));
+
+    /* update subject start */
+    subject_start = date_start + (w / Pango::SCALE) + padding;
+
+    cr->move_to (cell_area.get_x() + date_start, cell_area.get_y() + y);
+    pango_layout->show_in_cairo_context (cr);
+
+  } // }}}
+
+  /* cellrenderer overloads {{{ */
   void ThreadIndexListCellRenderer::get_preferred_height_vfunc (
       Gtk::Widget& widget,
       int& minimum_height,
@@ -141,6 +179,7 @@ namespace Gulp {
 
     return false;
   }
+  // }}}
 
 }
 

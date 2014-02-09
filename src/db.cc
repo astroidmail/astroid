@@ -112,6 +112,14 @@ namespace Gulp {
     return ustring (subject);
   }
 
+  /* get newest date of thread */
+  time_t NotmuchThread::get_newest_date () {
+
+    ensure_valid ();
+
+    return notmuch_thread_get_newest_date (nm_thread);
+  }
+
   /* is there unread messages in thread */
   bool NotmuchThread::unread () {
 

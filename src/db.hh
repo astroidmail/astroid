@@ -21,6 +21,7 @@ namespace Gulp {
       void      ensure_valid ();
       ustring   get_subject ();
       bool      unread ();
+      time_t    get_newest_date ();
   };
 
   class Db {
