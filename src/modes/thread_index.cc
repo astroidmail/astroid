@@ -39,9 +39,6 @@ namespace Gulp {
 
     /* select first */
     list_view->set_cursor (Gtk::TreePath("0"));
-
-    list_view->set_can_default (true);
-    list_view->grab_focus ();
   }
 
   void ThreadIndex::add_threads () {
@@ -65,6 +62,10 @@ namespace Gulp {
       row[list_store->columns.thread]    = *t;
 
     }
+  }
+
+  void ThreadIndex::grab_modal () {
+    list_view->add_modal_grab ();
   }
 
   ThreadIndex::~ThreadIndex () {

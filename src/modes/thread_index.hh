@@ -22,6 +22,8 @@ namespace Gulp {
 
       void add_threads ();
 
+      virtual void grab_modal () override;
+
       Glib::RefPtr<ThreadIndexListStore> list_store;
       ThreadIndexListView  * list_view;
 

@@ -64,8 +64,14 @@ namespace Gulp {
           Gtk::TreePath path;
           Gtk::TreeViewColumn *c;
           get_cursor (path, c);
-          path.next ();
-          set_cursor (path);
+
+          if (path) {
+            path.next ();
+            set_cursor (path);
+          } else {
+            path.prev ();
+          }
+
           return true;
         }
         break;
@@ -76,7 +82,7 @@ namespace Gulp {
           Gtk::TreeViewColumn *c;
           get_cursor (path, c);
           path.prev ();
-          set_cursor (path);
+          if (path) set_cursor (path);
           return true;
         }
         break;

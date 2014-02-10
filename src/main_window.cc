@@ -33,8 +33,9 @@ namespace Gulp {
       case GDK_KEY_q:
       case GDK_KEY_Q:
         gulp->quit ();
+        return true;
     }
-    return true;
+    return false;
   }
 
   MainWindow::~MainWindow () {
@@ -44,8 +45,18 @@ namespace Gulp {
   void MainWindow::add_mode (Mode * m) {
     modes.push_back (m);
     Gtk::Widget * w = m;
-    notebook.append_page ((*w), *(m->tab_widget));
+    int n = notebook.append_page ((*w), *(m->tab_widget));
     notebook.show_all ();
+
+    set_active (n);
+  }
+
+  void MainWindow::set_active (int n) {
+    if (notebook.get_current_page() != n) {
+      notebook.set_current_page (n);
+    }
+
+    modes[n]->grab_modal ();
   }
 }
 

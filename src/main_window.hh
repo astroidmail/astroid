@@ -26,6 +26,8 @@ namespace Gulp {
       void add_mode (Mode *);
       void del_mode (Mode *);
 
+      void set_active (int);
+
   };
 
 }
