@@ -31,7 +31,11 @@ namespace Gulp {
     /* set up treeview */
     list_store = Glib::RefPtr<ThreadIndexListStore>(new ThreadIndexListStore ());
     list_view  = new ThreadIndexListView (list_store);
-    pack_start (*list_view, true, true, 5);
+
+    scroll.add (*list_view);
+    pack_start (scroll, true, true, 0);
+
+    scroll.show_all ();
     show_all ();
 
     /* add threads to model */
@@ -47,21 +51,31 @@ namespace Gulp {
 
     cout << "index: add threads.." << endl;
 
+    int i = 0;
+
     for (threads = notmuch_query_search_threads (query);
          notmuch_threads_valid (threads);
          notmuch_threads_move_to_next (threads)) {
 
       thread = notmuch_threads_get (threads);
 
-      NotmuchThread *t = new NotmuchThread (threads, thread);
+      NotmuchThread *t = new NotmuchThread (thread);
 
       auto iter = list_store->append ();
       Gtk::ListStore::Row row = *iter;
 
       row[list_store->columns.thread_id] = notmuch_thread_get_thread_id (thread);
-      row[list_store->columns.thread]    = *t;
+      row[list_store->columns.thread]    = Glib::RefPtr<NotmuchThread>(t);
 
+      i++;
+
+      if (i >= initial_max_threads) {
+        break;
+      }
     }
+
+    notmuch_threads_destroy (threads);
+    notmuch_query_destroy (query);
   }
 
   void ThreadIndex::grab_modal () {

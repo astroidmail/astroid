@@ -7,7 +7,10 @@
 using namespace std;
 
 namespace Gulp {
-  /* list store */
+  /* ----------
+   * list store
+   * ----------
+   */
   ThreadIndexListStore::ThreadIndexListStoreColumnRecord::ThreadIndexListStoreColumnRecord () {
     add (thread_id);
     add (thread);
@@ -18,7 +21,10 @@ namespace Gulp {
   }
 
 
-  /* list view */
+  /* ---------
+   * list view
+   * ---------
+   */
   ThreadIndexListView::ThreadIndexListView (Glib::RefPtr<ThreadIndexListStore> store) {
     list_store = store;
 
@@ -27,6 +33,7 @@ namespace Gulp {
 
     set_show_expanders (false);
     set_headers_visible (false);
+    set_grid_lines (Gtk::TreeViewGridLines::TREE_VIEW_GRID_LINES_NONE);
 
     //append_column ("Thread IDs", list_store->columns.thread_id);
 
@@ -60,6 +67,7 @@ namespace Gulp {
     switch (event->keyval) {
       case GDK_KEY_j:
       case GDK_KEY_J:
+      case GDK_KEY_Down:
         {
           Gtk::TreePath path;
           Gtk::TreeViewColumn *c;
@@ -77,12 +85,15 @@ namespace Gulp {
         break;
       case GDK_KEY_k:
       case GDK_KEY_K:
+      case GDK_KEY_Up:
         {
           Gtk::TreePath path;
           Gtk::TreeViewColumn *c;
           get_cursor (path, c);
           path.prev ();
-          if (path) set_cursor (path);
+          if (path) {
+            set_cursor (path);
+          }
           return true;
         }
         break;

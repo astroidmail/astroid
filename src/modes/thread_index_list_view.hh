@@ -15,7 +15,7 @@ namespace Gulp {
       {
         public:
           Gtk::TreeModelColumn<Glib::ustring> thread_id;
-          Gtk::TreeModelColumn<NotmuchThread> thread;
+          Gtk::TreeModelColumn<Glib::RefPtr<NotmuchThread>> thread;
 
           ThreadIndexListStoreColumnRecord ();
       };

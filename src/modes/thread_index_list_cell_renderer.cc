@@ -28,16 +28,26 @@ namespace Gulp {
       Gtk::CellRendererState flags)
   {
 
-    cout << "render..:" << thread.thread_id << endl;
+    cout << "render..:" << thread->thread_id << endl;
+
+    /*
+    auto p = property_cell_background ();
+    p.set_value ("#ffffff");
+    */
+
+    thread->ensure_valid ();
 
     render_date (cr, widget, cell_area);
     render_subject (cr, widget, cell_area);
+
     if (!last)
       render_delimiter (cr, widget, cell_area);
-    render_starred (cr, widget, cell_area);
-    render_attachment (cr, widget, cell_area);
 
-    cr->stroke ();
+    render_starred (cr, widget, cell_area);
+
+    if (thread->attachment)
+      render_attachment (cr, widget, cell_area);
+
   }
 
   /* render icons {{{ */
@@ -50,12 +60,12 @@ namespace Gulp {
     Glib::RefPtr<Gtk::IconTheme> theme = Gtk::IconTheme::get_default();
     Glib::RefPtr<Gdk::Pixbuf> pixbuf = theme->load_icon (
         "starred-symbolic",
-        20,
+        left_icons_size,
         Gtk::ICON_LOOKUP_USE_BUILTIN );
 
     Gdk::Cairo::set_source_pixbuf (cr, pixbuf, cell_area.get_x(), cell_area.get_y());
 
-    cr->rectangle (cell_area.get_x (), cell_area.get_y (), 20, 20);
+    cr->rectangle (cell_area.get_x (), cell_area.get_y (), left_icons_size,left_icons_size);
     cr->fill ();
   }
 
@@ -67,14 +77,15 @@ namespace Gulp {
 
     Glib::RefPtr<Gtk::IconTheme> theme = Gtk::IconTheme::get_default();
     Glib::RefPtr<Gdk::Pixbuf> pixbuf = theme->load_icon (
-        "starred-symbolic",
-        20,
+        "mail-attachment-symbolic",
+        left_icons_size,
         Gtk::ICON_LOOKUP_USE_BUILTIN );
 
+    int y =  cell_area.get_y() + left_icons_size + 2;
 
-    Gdk::Cairo::set_source_pixbuf (cr, pixbuf, cell_area.get_x() + left_icons_width + 2, cell_area.get_y());
+    Gdk::Cairo::set_source_pixbuf (cr, pixbuf, cell_area.get_x(), y);
 
-    cr->rectangle (cell_area.get_x () + left_icons_width + 2, cell_area.get_y (), 20, 20);
+    cr->rectangle (cell_area.get_x (), y, left_icons_size, left_icons_size);
     cr->fill ();
   } // }}}
 
@@ -83,9 +94,9 @@ namespace Gulp {
       Gtk::Widget &widget,
       const Gdk::Rectangle &cell_area ) {
 
-    cr->set_line_width(0.7);
+    cr->set_line_width(0.5);
     Gdk::Color gray;
-    gray.set_grey_p (0.5);
+    gray.set_grey_p (0.1);
     cr->set_source_rgb (gray.get_red_p(), gray.get_green_p(), gray.get_blue_p());
 
     cr->move_to(cell_area.get_x(), cell_area.get_y() + cell_area.get_height());
@@ -99,16 +110,21 @@ namespace Gulp {
       Gtk::Widget &widget,
       const Gdk::Rectangle &cell_area ) {
 
-    Glib::RefPtr<Pango::Layout> pango_layout = widget.create_pango_layout ((thread.get_subject()));
+    Glib::RefPtr<Pango::Layout> pango_layout = widget.create_pango_layout ((thread->subject));
 
     Pango::FontDescription font_description;
     font_description.set_size(Pango::SCALE * subject_font_size);
 
-    if (thread.unread ()) {
+    if (thread->unread) {
       font_description.set_weight (Pango::WEIGHT_BOLD);
     }
 
     pango_layout->set_font_description (font_description);
+
+    /* set color */
+    Glib::RefPtr<Gtk::StyleContext> stylecontext = widget.get_style_context();
+    Gdk::RGBA color = stylecontext->get_color(Gtk::STATE_FLAG_NORMAL);
+    cr->set_source_rgb (color.get_red(), color.get_green(), color.get_blue());
 
     /* align in the middle */
     int w, h;
@@ -125,22 +141,28 @@ namespace Gulp {
       Gtk::Widget &widget,
       const Gdk::Rectangle &cell_area ) {
 
-    time_t newest = thread.get_newest_date ();
+    time_t newest = thread->newest_date;
     struct tm * timeinfo;
     char buf[80];
     timeinfo = localtime (&newest);
     strftime (buf, 80, "%D %R", timeinfo);
+
 
     Glib::RefPtr<Pango::Layout> pango_layout = widget.create_pango_layout (buf);
 
     Pango::FontDescription font_description;
     font_description.set_size(Pango::SCALE * font_size);
 
-    if (thread.unread ()) {
+    if (thread->unread) {
       font_description.set_weight (Pango::WEIGHT_BOLD);
     }
 
     pango_layout->set_font_description (font_description);
+
+    /* set color */
+    Glib::RefPtr<Gtk::StyleContext> stylecontext = widget.get_style_context();
+    Gdk::RGBA color = stylecontext->get_color(Gtk::STATE_FLAG_NORMAL);
+    cr->set_source_rgb (color.get_red(), color.get_green(), color.get_blue());
 
     /* align in the middle */
     int w, h;

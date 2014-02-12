@@ -38,6 +38,7 @@ namespace Gulp {
     /* start up default window with default buffers */
     MainWindow mw;
     mw.add_mode (new ThreadIndex ("label:inbox"));
+    mw.add_mode (new ThreadIndex ("astrid"));
 
     main_windows.push_back (&mw);
     main_windows.shrink_to_fit ();

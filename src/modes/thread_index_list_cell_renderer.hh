@@ -11,7 +11,7 @@ using namespace std;
 namespace Gulp {
   class ThreadIndexListCellRenderer : public Gtk::CellRenderer {
     public:
-      NotmuchThread thread; /* thread that should be rendered now */
+      Glib::RefPtr<NotmuchThread> thread; /* thread that should be rendered now */
       bool last;
 
     protected:
@@ -38,17 +38,19 @@ namespace Gulp {
           int& natural_height) const override;
 
     private:
-      int content_height = 20;
+      int content_height = 32;
       int spacing = 2;
       int height = content_height + spacing;
-      int left_icons_width = 20;
-      int left_icons = 2;
+      int left_icons_size = 15;
+      int left_icons_width  = 15;
+      int left_icons_width_n = 1;
       int padding = 5;
       int font_size = 9;
 
-      int date_start = left_icons*left_icons_width + padding;
+      int date_start = left_icons_width_n * left_icons_width + padding;
+      int date_width = 100;
 
-      int subject_start = date_start + 100;
+      int subject_start = date_start + date_width;
       int subject_font_size = font_size;
 
       void render_subject (
