@@ -1,3 +1,0 @@
-
-require 'gulp/util/singleton'
-
