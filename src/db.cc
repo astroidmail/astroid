@@ -69,61 +69,49 @@ namespace Gulp {
    * notmuch thread
    * --------------
    */
-  NotmuchThread::NotmuchThread () { };
-  NotmuchThread::NotmuchThread (notmuch_threads_t *ts, notmuch_thread_t * t) {
-    nm_thread = t;
-    nm_threads = ts;
+  NotmuchThread::NotmuchThread (notmuch_thread_t * t) {
     thread_id = notmuch_thread_get_thread_id (t);
+    ensure_valid ();
   }
 
   void NotmuchThread::ensure_valid () {
-    // thread id is constant
-    if (!notmuch_threads_valid (nm_threads)) {
-      // create new threads object
-      cout << "re-querying for thread id: " << thread_id << endl;
+    // create new threads object
+    //cout << "re-querying for thread id: " << thread_id << endl;
 
-      string query_s = "threadid:" + thread_id;
-      notmuch_query_t * query = notmuch_query_create (gulp->db->nm_db, query_s.c_str());
+    string query_s = "thread:" + thread_id;
+    notmuch_query_t * query = notmuch_query_create (gulp->db->nm_db, query_s.c_str());
+    notmuch_threads_t * nm_threads;
+    notmuch_thread_t  * nm_thread;
 
-      int c = 0;
+    int c = 0;
 
-      for (nm_threads = notmuch_query_search_threads (query);
-           notmuch_threads_valid (nm_threads);
-           notmuch_threads_move_to_next (nm_threads)) {
+    for (nm_threads = notmuch_query_search_threads (query);
+         notmuch_threads_valid (nm_threads);
+         notmuch_threads_move_to_next (nm_threads)) {
 
-        if (c > 0) {
-          cerr << "notmuch_thread: got more than one thread for thread id!" << endl;
-          break;
-        }
-
-        nm_thread = notmuch_threads_get (nm_threads);
-
-        c++;
+      if (c > 0) {
+        cerr << "notmuch_thread: got more than one thread for thread id!" << endl;
+        break;
       }
+
+      nm_thread = notmuch_threads_get (nm_threads);
+
+      /* update values */
+      const char * s = notmuch_thread_get_subject (nm_thread);
+      subject     = ustring (s);
+      newest_date = notmuch_thread_get_newest_date (nm_thread);
+      unread      = check_unread (nm_thread);
+      attachment  = check_attachment (nm_thread);
+
+      c++;
     }
-  }
 
-  /* get subject of thread */
-  ustring NotmuchThread::get_subject () {
-
-    ensure_valid ();
-    const char * subject = notmuch_thread_get_subject (nm_thread);
-
-    return ustring (subject);
-  }
-
-  /* get newest date of thread */
-  time_t NotmuchThread::get_newest_date () {
-
-    ensure_valid ();
-
-    return notmuch_thread_get_newest_date (nm_thread);
+    notmuch_threads_destroy (nm_threads);
+    notmuch_query_destroy (query);
   }
 
   /* is there unread messages in thread */
-  bool NotmuchThread::unread () {
-
-    ensure_valid ();
+  bool NotmuchThread::check_unread (notmuch_thread_t * nm_thread) {
 
     notmuch_tags_t *  tags;
     const char *      tag;
@@ -135,6 +123,27 @@ namespace Gulp {
       tag = notmuch_tags_get (tags);
 
       if (string(tag) == "unread") {
+        return true;
+      }
+    }
+
+    return false;
+
+  }
+
+  /* is there a message with an attachment in thread */
+  bool NotmuchThread::check_attachment (notmuch_thread_t * nm_thread) {
+
+    notmuch_tags_t *  tags;
+    const char *      tag;
+
+    for (tags = notmuch_thread_get_tags (nm_thread);
+         notmuch_tags_valid (tags);
+         notmuch_tags_move_to_next (tags))
+    {
+      tag = notmuch_tags_get (tags);
+
+      if (string(tag) == "attachment") {
         return true;
       }
     }

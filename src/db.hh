@@ -1,5 +1,7 @@
 # pragma once
 
+# include <time.h>
+
 # include <glibmm.h>
 # include <notmuch.h>
 
@@ -9,19 +11,23 @@
 using namespace std;
 
 namespace Gulp {
-  class NotmuchThread {
+  class NotmuchThread : public Glib::Object {
     public:
-      NotmuchThread ();
-      NotmuchThread (notmuch_threads_t *, notmuch_thread_t *);
+      NotmuchThread (notmuch_thread_t *);
 
-      notmuch_threads_t * nm_threads;
-      notmuch_thread_t  * nm_thread;
       string              thread_id;
 
+      char * subject_chr;
+      ustring subject;
+      time_t  newest_date;
+      bool    unread;
+      bool    attachment;
+
       void      ensure_valid ();
-      ustring   get_subject ();
-      bool      unread ();
-      time_t    get_newest_date ();
+
+    private:
+      bool      check_unread (notmuch_thread_t *);
+      bool      check_attachment (notmuch_thread_t *);
   };
 
   class Db {
