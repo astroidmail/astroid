@@ -82,6 +82,10 @@ namespace Gulp {
     list_view->add_modal_grab ();
   }
 
+  void ThreadIndex::release_modal () {
+    list_view->remove_modal_grab ();
+  }
+
   ThreadIndex::~ThreadIndex () {
 
   }

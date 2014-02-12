@@ -38,16 +38,17 @@ namespace Gulp {
       /* page through notebook */
       case GDK_KEY_b:
         if (notebook.get_current_page () == (notebook.get_n_pages () - 1))
-          notebook.set_current_page (0);
+          set_active (0);
         else
-          notebook.next_page ();
+          set_active (notebook.get_current_page() + 1);
         return true;
 
       case GDK_KEY_B:
         if (notebook.get_current_page() == 0)
-          notebook.set_current_page(notebook.get_n_pages()-1);
+          set_active (notebook.get_n_pages()-1);
         else
-          notebook.prev_page ();
+          set_active (notebook.get_current_page() - 1);
+
         return true;
     }
     return false;
@@ -71,7 +72,15 @@ namespace Gulp {
       notebook.set_current_page (n);
     }
 
+    if (current >= 0) {
+      if (modes.size() > current) {
+        modes[current]->release_modal ();
+        current = -1;
+      }
+    }
+
     modes[n]->grab_modal ();
+    current = n;
   }
 }
 

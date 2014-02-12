@@ -22,6 +22,7 @@ namespace Gulp {
       Notebook notebook;
 
       vector<Mode*> modes; 
+      int current = -1;
 
       void add_mode (Mode *);
       void del_mode (Mode *);

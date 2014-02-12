@@ -16,5 +16,6 @@ namespace Gulp {
       Gtk::Widget * tab_widget;
 
       virtual void grab_modal () = 0;
+      virtual void release_modal () = 0;
   };
 }
