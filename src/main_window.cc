@@ -34,6 +34,21 @@ namespace Gulp {
       case GDK_KEY_Q:
         gulp->quit ();
         return true;
+
+      /* page through notebook */
+      case GDK_KEY_b:
+        if (notebook.get_current_page () == (notebook.get_n_pages () - 1))
+          notebook.set_current_page (0);
+        else
+          notebook.next_page ();
+        return true;
+
+      case GDK_KEY_B:
+        if (notebook.get_current_page() == 0)
+          notebook.set_current_page(notebook.get_n_pages()-1);
+        else
+          notebook.prev_page ();
+        return true;
     }
     return false;
   }
