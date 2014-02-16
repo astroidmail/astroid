@@ -1,5 +1,6 @@
 # include <iostream>
 # include <string>
+# include <exception>
 
 # include <gtkmm.h>
 # include <gtkmm/label.h>
@@ -8,6 +9,7 @@
 
 # include "../gulp.hh"
 # include "../db.hh"
+# include "paned_mode.hh"
 # include "thread_index.hh"
 # include "thread_index_list_view.hh"
 # include "thread_index_list_cell_renderer.hh"
@@ -31,11 +33,10 @@ namespace Gulp {
     /* set up treeview */
     list_store = Glib::RefPtr<ThreadIndexListStore>(new ThreadIndexListStore ());
     list_view  = new ThreadIndexListView (list_store);
+    scroll     = new ThreadIndexScrolled (list_store, list_view);
 
-    scroll.add (*list_view);
-    pack_start (scroll, true, true, 0);
+    add_pane (*scroll);
 
-    scroll.show_all ();
     show_all ();
 
     /* add threads to model */
@@ -76,14 +77,6 @@ namespace Gulp {
 
     notmuch_threads_destroy (threads);
     notmuch_query_destroy (query);
-  }
-
-  void ThreadIndex::grab_modal () {
-    list_view->add_modal_grab ();
-  }
-
-  void ThreadIndex::release_modal () {
-    list_view->remove_modal_grab ();
   }
 
   ThreadIndex::~ThreadIndex () {

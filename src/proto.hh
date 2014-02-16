@@ -10,7 +10,10 @@ namespace Gulp {
   /* UI */
   class MainWindow;
   class Mode;
+  class PanedMode;
+  class PanedChild;
   class ThreadIndex;
+  class ThreadIndexScrolled;
   class ThreadIndexListStore;
   class ThreadIndexListCellRenderer;
   class ThreadIndexListView;

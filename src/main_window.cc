@@ -68,17 +68,20 @@ namespace Gulp {
   }
 
   void MainWindow::set_active (int n) {
+    cout << "mw: set active: " << n << ", current: " << current << endl;
     if (notebook.get_current_page() != n) {
       notebook.set_current_page (n);
     }
 
     if (current >= 0) {
       if (modes.size() > current) {
+        cout << "mw: release modal, from: " << current << endl;
         modes[current]->release_modal ();
         current = -1;
       }
     }
 
+    cout << "mw: grab modal to: " << n << endl;
     modes[n]->grab_modal ();
     current = n;
   }

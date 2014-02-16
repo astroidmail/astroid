@@ -63,9 +63,12 @@ namespace Gulp {
         left_icons_size,
         Gtk::ICON_LOOKUP_USE_BUILTIN );
 
-    Gdk::Cairo::set_source_pixbuf (cr, pixbuf, cell_area.get_x(), cell_area.get_y());
+    int y = cell_area.get_y() + left_icons_padding;
+    int x = cell_area.get_x();
 
-    cr->rectangle (cell_area.get_x (), cell_area.get_y (), left_icons_size,left_icons_size);
+    Gdk::Cairo::set_source_pixbuf (cr, pixbuf, x, y);
+
+    cr->rectangle (x, y, left_icons_size,left_icons_size);
     cr->fill ();
   }
 
@@ -81,11 +84,12 @@ namespace Gulp {
         left_icons_size,
         Gtk::ICON_LOOKUP_USE_BUILTIN );
 
-    int y =  cell_area.get_y() + left_icons_size + 2;
+    int y = cell_area.get_y() + left_icons_padding;
+    int x = cell_area.get_x() + left_icons_width + left_icons_padding;
 
-    Gdk::Cairo::set_source_pixbuf (cr, pixbuf, cell_area.get_x(), y);
+    Gdk::Cairo::set_source_pixbuf (cr, pixbuf, x, y);
 
-    cr->rectangle (cell_area.get_x (), y, left_icons_size, left_icons_size);
+    cr->rectangle (x, y, left_icons_size, left_icons_size);
     cr->fill ();
   } // }}}
 

@@ -1,12 +1,40 @@
 # include <iostream>
 
 # include "../db.hh"
+# include "paned_mode.hh"
 # include "thread_index_list_view.hh"
 # include "thread_index_list_cell_renderer.hh"
 
 using namespace std;
 
 namespace Gulp {
+  /* ----------
+   * scrolled window
+   * ----------
+   */
+
+  ThreadIndexScrolled::ThreadIndexScrolled (
+      Glib::RefPtr<ThreadIndexListStore> _list_store,
+      ThreadIndexListView * _list_view) {
+
+    list_store = _list_store;
+    list_view  = _list_view;
+
+    add (*list_view);
+  }
+
+  void ThreadIndexScrolled::grab_modal () {
+    list_view->add_modal_grab ();
+  }
+
+  void ThreadIndexScrolled::release_modal () {
+    list_view->remove_modal_grab ();
+  }
+
+  Gtk::Widget * ThreadIndexScrolled::get_widget () {
+    return (Gtk::Widget *) this;
+  }
+
   /* ----------
    * list store
    * ----------
@@ -83,6 +111,7 @@ namespace Gulp {
           return true;
         }
         break;
+
       case GDK_KEY_k:
       case GDK_KEY_K:
       case GDK_KEY_Up:
@@ -97,6 +126,23 @@ namespace Gulp {
           return true;
         }
         break;
+
+      case GDK_KEY_Return:
+        {
+          if (event->state & GDK_SHIFT_MASK) {
+            /* open message in new tab */
+            cout << "shift + enter" << endl;
+
+
+          } else {
+            /* open message in split pane*/
+            cout << "enter " << endl;
+
+          }
+        }
+        break;
+
+
     }
 
     return false;

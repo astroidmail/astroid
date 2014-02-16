@@ -38,16 +38,18 @@ namespace Gulp {
           int& natural_height) const override;
 
     private:
-      int content_height = 32;
-      int spacing = 2;
-      int height = content_height + spacing;
+      int content_height = 20;
+      int line_spacing = 2;
+      int height = content_height + line_spacing;
       int left_icons_size = 15;
       int left_icons_width  = 15;
-      int left_icons_width_n = 1;
+      int left_icons_width_n = 2;
+      int left_icons_padding = 2;
       int padding = 5;
       int font_size = 9;
 
-      int date_start = left_icons_width_n * left_icons_width + padding;
+      int date_start = left_icons_width_n * left_icons_width +
+        (left_icons_width_n-1) * left_icons_padding + padding;
       int date_width = 100;
 
       int subject_start = date_start + date_width;

@@ -9,14 +9,14 @@
 
 # include <notmuch.h>
 
-# include "mode.hh"
+# include "paned_mode.hh"
 
 
 using namespace std;
 
 namespace Gulp {
 
-  class ThreadIndex : public Mode  {
+  class ThreadIndex : public PanedMode  {
     public:
       ThreadIndex (string);
       ~ThreadIndex ();
@@ -25,12 +25,9 @@ namespace Gulp {
 
       void add_threads ();
 
-      virtual void grab_modal () override;
-      virtual void release_modal () override;
-
       Glib::RefPtr<ThreadIndexListStore> list_store;
       ThreadIndexListView  * list_view;
-      Gtk::ScrolledWindow scroll;
+      ThreadIndexScrolled  * scroll;
 
       string query_string;
       notmuch_query_t * query;
