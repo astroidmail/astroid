@@ -10,11 +10,15 @@ using namespace std;
 
 namespace Gulp {
   /* the list view consists of:
-   * - a scolled window
+   * - a scolled window (which may be paned)
    * - a Treeview
    * - a ListStore
    */
 
+  /* ----------
+   * list store
+   * ----------
+   */
   class ThreadIndexListStore : public Gtk::ListStore {
     public:
       class ThreadIndexListStoreColumnRecord : public Gtk::TreeModel::ColumnRecord
@@ -30,6 +34,11 @@ namespace Gulp {
       const ThreadIndexListStoreColumnRecord columns;
   };
 
+
+  /* ---------
+   * list view
+   * ---------
+   */
   class ThreadIndexListView : public Gtk::TreeView {
     public:
       ThreadIndexListView (Glib::RefPtr<ThreadIndexListStore>);
@@ -42,6 +51,11 @@ namespace Gulp {
       virtual bool on_key_press_event (GdkEventKey *) override;
   };
 
+
+  /* ----------
+   * scrolled window
+   * ----------
+   */
   class ThreadIndexScrolled : public Gtk::ScrolledWindow, public PanedChild {
     public:
       ThreadIndexScrolled (Glib::RefPtr<ThreadIndexListStore> list_store,

@@ -20,6 +20,7 @@ namespace Gulp {
       virtual Gtk::Widget * get_widget () = 0;
   };
 
+  /* a virtual mode class which can embed panes */
   class PanedMode : public Mode {
     public:
       PanedMode ();
