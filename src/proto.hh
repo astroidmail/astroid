@@ -7,6 +7,10 @@ namespace Gulp {
   class Db;
   class NotmuchThread;
 
+  /* message and thread */
+  class Message;
+  class MessageThread;
+
   /* UI */
   class MainWindow;
   class Mode;

@@ -12,8 +12,9 @@ using namespace std;
 
 namespace Gulp {
 
-  /* alias ustring */
+  /* aliases for often used types  */
   typedef Glib::ustring ustring;
+  # define refptr Glib::RefPtr
 
 
   class Gulp {
