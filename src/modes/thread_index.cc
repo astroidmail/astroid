@@ -80,6 +80,25 @@ namespace Gulp {
     notmuch_query_destroy (query);
   }
 
+  void ThreadIndex::open_thread (ustring thread_id) {
+    if (thread_view == NULL) {
+      thread_view = new ThreadView ();
+    }
+
+    thread_view->load_thread (thread_id);
+    thread_view->render ();
+
+    if (!thread_view_visible) {
+      add_pane (*thread_view);
+      thread_view_visible = true;
+    }
+
+    // grab modal
+    current = 1;
+    grab_modal ();
+
+  }
+
   ThreadIndex::~ThreadIndex () {
 
   }

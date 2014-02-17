@@ -147,5 +147,10 @@ namespace Gulp {
 
     return false;
   }
+
+  ThreadIndex * ThreadIndexListView::get_parent_thread_index () {
+    Gtk::Widget * parent = get_parent (); // scrolled window
+    return (ThreadIndex *) parent->get_parent ();
+  }
 }
 

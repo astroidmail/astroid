@@ -25,9 +25,15 @@ namespace Gulp {
 
       void add_threads ();
 
+      void open_thread (ustring);
+      ThreadView * thread_view;
+      bool thread_view_visible = false;
+
       Glib::RefPtr<ThreadIndexListStore> list_store;
       ThreadIndexListView  * list_view;
       ThreadIndexScrolled  * scroll;
+
+
 
       string query_string;
       notmuch_query_t * query;

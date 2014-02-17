@@ -47,6 +47,8 @@ namespace Gulp {
 
       void set_thread_data (Gtk::CellRenderer *, const Gtk::TreeIter & );
 
+      ThreadIndex * get_parent_thread_index ();
+
     protected:
       virtual bool on_key_press_event (GdkEventKey *) override;
   };
