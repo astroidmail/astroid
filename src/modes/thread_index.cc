@@ -13,6 +13,7 @@
 # include "thread_index.hh"
 # include "thread_index_list_view.hh"
 # include "thread_index_list_cell_renderer.hh"
+# include "thread_view.hh"
 
 using namespace std;
 

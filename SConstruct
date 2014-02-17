@@ -63,11 +63,12 @@ if not GetOption("verbose_flag"):
 
 # Verbose }}}
 
-# gtk, glib, etc
+# gtk, glib, gmime
 env.ParseConfig ('pkg-config --libs --cflags glibmm-2.4')
 env.ParseConfig ('pkg-config --libs --cflags gtkmm-3.0')
+env.ParseConfig ('pkg-config --libs --cflags gmime-2.6')
 
-env.Append (CPPDEFINES = { 'GIT_DESC' : ('\\"%s\\"' % GIT_DESC) }, CPPFLAGS = ['-g', '-std=c++0x', ] )
+env.Append (CPPDEFINES = { 'GIT_DESC' : ('\\"%s\\"' % GIT_DESC) }, CPPFLAGS = ['-g', '-std=c++11', ] )
 
 env.Append (CPPPATH = 'src')
 source = Glob('src/*.cc') + Glob('src/modes/*.cc')

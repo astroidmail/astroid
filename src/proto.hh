@@ -17,6 +17,7 @@ namespace Gulp {
   class ThreadIndexListStore;
   class ThreadIndexListCellRenderer;
   class ThreadIndexListView;
+  class ThreadView;
 
 }
 
