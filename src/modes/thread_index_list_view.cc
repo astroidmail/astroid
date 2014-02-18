@@ -30,6 +30,7 @@ namespace Gulp {
 
   void ThreadIndexScrolled::grab_modal () {
     list_view->add_modal_grab ();
+    list_view->grab_focus ();
   }
 
   void ThreadIndexScrolled::release_modal () {

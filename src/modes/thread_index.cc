@@ -83,6 +83,27 @@ namespace Gulp {
     notmuch_query_destroy (query);
   }
 
+  bool ThreadIndex::on_key_press_event (GdkEventKey *event) {
+    cout << "ti: key press" << endl;
+    switch (event->keyval) {
+      case GDK_KEY_x:
+        {
+          if (current == 1) {
+            if (thread_view_loaded && thread_view_visible) {
+              /* hide thread view */
+              del_pane (1);
+              thread_view_visible = false;
+
+              return true;
+            }
+          }
+        }
+        break;
+    }
+
+    return false;
+  }
+
   void ThreadIndex::open_thread (ustring thread_id, bool new_tab) {
     cout << "ti: open thread: " << thread_id << " (" << new_tab << ")" << endl;
     ThreadView * tv;

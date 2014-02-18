@@ -13,6 +13,7 @@ using namespace std;
 namespace Gulp {
   class ThreadView : public Mode {
     public:
+      ThreadView ();
       void load_thread (ustring);
       void render ();
 

@@ -13,6 +13,9 @@ using namespace std;
 namespace Gulp {
 
   PanedMode::PanedMode () {
+    set_can_focus (true);
+    add_events (Gdk::KEY_PRESS_MASK);
+
     pack_start (paned, true, true, 5);
     paned.show_all ();
   }

@@ -36,9 +36,10 @@ namespace Gulp {
       ThreadIndexListView  * list_view;
       ThreadIndexScrolled  * scroll;
 
-
-
       string query_string;
       notmuch_query_t * query;
+
+    protected:
+      virtual bool on_key_press_event (GdkEventKey *) override;
   };
 }

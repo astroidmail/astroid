@@ -50,6 +50,12 @@ namespace Gulp {
           set_active (notebook.get_current_page() - 1);
 
         return true;
+
+      /* close page */
+      case GDK_KEY_x:
+        cout << "mw: close page, not implemented" << endl;
+        return true;
+
     }
     return false;
   }
