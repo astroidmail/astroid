@@ -53,7 +53,8 @@ namespace Gulp {
 
       /* close page */
       case GDK_KEY_x:
-        cout << "mw: close page, not implemented" << endl;
+        int c = notebook.get_current_page ();
+        del_mode (c);
         return true;
 
     }
@@ -71,6 +72,14 @@ namespace Gulp {
     notebook.show_all ();
 
     set_active (n);
+  }
+
+  void MainWindow::del_mode (int c) {
+    notebook.remove_page (c);
+    auto it = modes.begin () + c;
+    modes.erase(it);
+    c = min (c, notebook.get_n_pages()-1);
+    set_active(c);
   }
 
   void MainWindow::set_active (int n) {
