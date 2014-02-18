@@ -14,11 +14,14 @@
 # include "thread_index_list_view.hh"
 # include "thread_index_list_cell_renderer.hh"
 # include "thread_view.hh"
+# include "main_window.hh"
 
 using namespace std;
 
 namespace Gulp {
-  ThreadIndex::ThreadIndex (string _query) : query_string(_query){
+  ThreadIndex::ThreadIndex (MainWindow *mw, string _query) : query_string(_query){
+
+    main_window = mw;
 
     set_orientation (Gtk::Orientation::ORIENTATION_VERTICAL);
     tab_widget = new Gtk::Label (query_string);
@@ -33,7 +36,7 @@ namespace Gulp {
 
     /* set up treeview */
     list_store = Glib::RefPtr<ThreadIndexListStore>(new ThreadIndexListStore ());
-    list_view  = new ThreadIndexListView (list_store);
+    list_view  = new ThreadIndexListView (this, list_store);
     scroll     = new ThreadIndexScrolled (list_store, list_view);
 
     add_pane (*scroll);
@@ -80,22 +83,36 @@ namespace Gulp {
     notmuch_query_destroy (query);
   }
 
-  void ThreadIndex::open_thread (ustring thread_id) {
-    if (thread_view == NULL) {
-      thread_view = new ThreadView ();
+  void ThreadIndex::open_thread (ustring thread_id, bool new_tab) {
+    cout << "ti: open thread: " << thread_id << " (" << new_tab << ")" << endl;
+    ThreadView * tv;
+
+    if (new_tab) {
+      tv = new ThreadView ();
+    } else {
+      if (thread_view == NULL) {
+        thread_view = new ThreadView ();
+      }
+
+      tv = thread_view;
     }
 
-    thread_view->load_thread (thread_id);
-    thread_view->render ();
+    tv->load_thread (thread_id);
+    tv->show ();
+    tv->render ();
 
-    if (!thread_view_visible) {
-      add_pane (*thread_view);
+    if (!new_tab && !thread_view_visible) {
+      add_pane (*tv);
       thread_view_visible = true;
+    } else if (new_tab) {
+      main_window->add_mode (tv);
     }
 
     // grab modal
-    current = 1;
-    grab_modal ();
+    if (!new_tab) {
+      current = 1;
+      grab_modal ();
+    }
 
   }
 

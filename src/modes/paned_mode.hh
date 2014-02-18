@@ -11,15 +11,6 @@
 using namespace std;
 
 namespace Gulp {
-  /* modes that can be embedded as child panes should also inherit this
-   * interface */
-  class PanedChild {
-    public:
-      virtual void grab_modal () = 0;
-      virtual void release_modal () = 0;
-      virtual Gtk::Widget * get_widget () = 0;
-  };
-
   /* a virtual mode class which can embed panes */
   class PanedMode : public Mode {
     public:
@@ -27,11 +18,11 @@ namespace Gulp {
 
       /* hpane: can be split into horizontal panes */
       Gtk::Paned paned;
-      vector<PanedChild*> paned_widgets;
+      vector<Mode*> paned_widgets;
 
       int  current = -1;
-      void add_pane (PanedChild &w);
-      void del_pane (PanedChild &w);
+      void add_pane (Mode &w);
+      void del_pane (Mode &w);
 
       bool has_modal = false;
       virtual void grab_modal () override;

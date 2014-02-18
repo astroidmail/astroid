@@ -15,7 +15,6 @@ namespace Gulp {
   class MainWindow;
   class Mode;
   class PanedMode;
-  class PanedChild;
   class ThreadIndex;
   class ThreadIndexScrolled;
   class ThreadIndexListStore;

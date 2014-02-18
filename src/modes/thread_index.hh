@@ -18,14 +18,16 @@ namespace Gulp {
 
   class ThreadIndex : public PanedMode  {
     public:
-      ThreadIndex (string);
+      ThreadIndex (MainWindow *, string);
       ~ThreadIndex ();
+
+      MainWindow * main_window;
 
       int initial_max_threads = 20;
 
       void add_threads ();
 
-      void open_thread (ustring);
+      void open_thread (ustring, bool);
       ThreadView * thread_view;
       bool thread_view_visible = false;
 

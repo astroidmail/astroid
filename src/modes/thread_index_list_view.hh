@@ -41,13 +41,13 @@ namespace Gulp {
    */
   class ThreadIndexListView : public Gtk::TreeView {
     public:
-      ThreadIndexListView (Glib::RefPtr<ThreadIndexListStore>);
+      ThreadIndexListView (ThreadIndex *, Glib::RefPtr<ThreadIndexListStore>);
 
+      ThreadIndex * thread_index;
       Glib::RefPtr<ThreadIndexListStore> list_store;
 
       void set_thread_data (Gtk::CellRenderer *, const Gtk::TreeIter & );
 
-      ThreadIndex * get_parent_thread_index ();
 
     protected:
       virtual bool on_key_press_event (GdkEventKey *) override;
@@ -58,7 +58,7 @@ namespace Gulp {
    * scrolled window
    * ----------
    */
-  class ThreadIndexScrolled : public Gtk::ScrolledWindow, public PanedChild {
+  class ThreadIndexScrolled : public Mode {
     public:
       ThreadIndexScrolled (Glib::RefPtr<ThreadIndexListStore> list_store,
                            ThreadIndexListView * list_view);
@@ -66,10 +66,11 @@ namespace Gulp {
       Glib::RefPtr<ThreadIndexListStore>  list_store;
       ThreadIndexListView * list_view;
 
-      /* paned child */
+      Gtk::ScrolledWindow scroll;
+
+      /* mode */
       virtual void grab_modal () override;
       virtual void release_modal () override;
-      virtual Gtk::Widget * get_widget () override;
   };
 }
 

@@ -3,7 +3,9 @@
 # include <exception>
 
 # include <gtkmm.h>
+# include <gtkmm/widget.h>
 
+# include "mode.hh"
 # include "paned_mode.hh"
 
 using namespace std;
@@ -14,22 +16,25 @@ namespace Gulp {
     pack_start (paned, true, true, 5);
   }
 
-  void PanedMode::add_pane (PanedChild &w) {
+  void PanedMode::add_pane (Mode &w) {
     paned_widgets.push_back (&w);
-    paned.add2 (*w.get_widget ());
+
+    Gtk::Widget * ww = &w;
+
+    paned.add2 (*ww);
 
     if (current <= 0)
       current = paned_widgets.size() -1;
   }
 
-  void PanedMode::del_pane (PanedChild &w) {
+  void PanedMode::del_pane (Mode &w) {
     cout << "pm: del pane" << endl;
     auto it = find (paned_widgets.begin (), paned_widgets.end (), &w);
     if ((it == paned_widgets.end ()) && *it != &w) {
       throw invalid_argument ("The widget is not among the paned");
     }
 
-    paned.remove (*((*it)->get_widget()));
+    paned.remove (*( (Gtk::Widget*) (*it)));
     auto newe = paned_widgets.erase (it);
 
     int i = newe - paned_widgets.begin ();

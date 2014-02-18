@@ -6,22 +6,23 @@
 
 # include "gulp.hh"
 # include "proto.hh"
-# include "paned_mode.hh"
+# include "mode.hh"
 
 using namespace std;
 
 namespace Gulp {
-  class ThreadView : public Gtk::ScrolledWindow, public PanedChild {
+  class ThreadView : public Mode {
     public:
       void load_thread (ustring);
       void render ();
 
       ustring thread_id;
 
-      /* paned child */
+      Gtk::ScrolledWindow scroll;
+
+      /* mode */
       virtual void grab_modal () override;
       virtual void release_modal () override;
-      virtual Gtk::Widget * get_widget () override;
   };
 }
 

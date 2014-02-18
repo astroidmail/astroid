@@ -2,6 +2,7 @@
 
 # include "../db.hh"
 # include "paned_mode.hh"
+# include "thread_index.hh"
 # include "thread_index_list_view.hh"
 # include "thread_index_list_cell_renderer.hh"
 
@@ -20,7 +21,11 @@ namespace Gulp {
     list_store = _list_store;
     list_view  = _list_view;
 
-    add (*list_view);
+    tab_widget = new Gtk::Label ("None");
+
+    scroll.add (*list_view);
+    pack_start (scroll, true, true, 0);
+    scroll.show_all ();
   }
 
   void ThreadIndexScrolled::grab_modal () {
@@ -29,10 +34,6 @@ namespace Gulp {
 
   void ThreadIndexScrolled::release_modal () {
     list_view->remove_modal_grab ();
-  }
-
-  Gtk::Widget * ThreadIndexScrolled::get_widget () {
-    return (Gtk::Widget *) this;
   }
 
   /* ----------
@@ -53,7 +54,8 @@ namespace Gulp {
    * list view
    * ---------
    */
-  ThreadIndexListView::ThreadIndexListView (Glib::RefPtr<ThreadIndexListStore> store) {
+  ThreadIndexListView::ThreadIndexListView (ThreadIndex * _thread_index, Glib::RefPtr<ThreadIndexListStore> store) {
+    thread_index = _thread_index;
     list_store = store;
 
     set_model (list_store);
@@ -129,28 +131,34 @@ namespace Gulp {
 
       case GDK_KEY_Return:
         {
+          Gtk::TreePath path;
+          Gtk::TreeViewColumn *c;
+          get_cursor (path, c);
+          Gtk::TreeIter iter;
+
+          iter = list_store->get_iter (path);
+
+          Gtk::ListStore::Row row = *iter;
+          ustring thread_id = row[list_store->columns.thread_id];
+          cout << "ti_list: loading: " << thread_id << endl;
+
           if (event->state & GDK_SHIFT_MASK) {
             /* open message in new tab */
-            cout << "shift + enter" << endl;
+            thread_index->open_thread (thread_id, true);
 
 
           } else {
             /* open message in split pane*/
-            cout << "enter " << endl;
+            thread_index->open_thread (thread_id, false);
 
           }
         }
-        break;
+        return true;
 
 
     }
 
     return false;
-  }
-
-  ThreadIndex * ThreadIndexListView::get_parent_thread_index () {
-    Gtk::Widget * parent = get_parent (); // scrolled window
-    return (ThreadIndex *) parent->get_parent ();
   }
 }
 
