@@ -99,6 +99,16 @@ namespace Gulp {
           }
         }
         break;
+
+      /* toggle between panes */
+      case GDK_KEY_Tab:
+        if (packed == 2) {
+          release_modal ();
+          current = (current == 0 ? 1 : 0);
+          grab_modal ();
+        }
+        return true;
+
     }
 
     return false;
