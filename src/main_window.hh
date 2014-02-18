@@ -7,7 +7,7 @@
 
 using namespace std;
 
-namespace Gulp {
+namespace Astroid {
   class Notebook : public Gtk::Notebook {
 
   };

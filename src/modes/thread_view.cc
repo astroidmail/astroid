@@ -8,7 +8,7 @@
 
 using namespace std;
 
-namespace Gulp {
+namespace Astroid {
 
   ThreadView::ThreadView () {
     tab_widget = new Gtk::Label (thread_id);

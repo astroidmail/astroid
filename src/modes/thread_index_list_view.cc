@@ -8,7 +8,7 @@
 
 using namespace std;
 
-namespace Gulp {
+namespace Astroid {
   /* ----------
    * scrolled window
    * ----------

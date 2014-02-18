@@ -3,11 +3,11 @@
 # include <vector>
 
 # include "proto.hh"
-# include "gulp.hh"
+# include "astroid.hh"
 
 using namespace std;
 
-namespace Gulp {
+namespace Astroid {
   class Message : public Glib::Object {
     public:
       Message ();

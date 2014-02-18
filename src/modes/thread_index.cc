@@ -7,7 +7,7 @@
 
 # include <notmuch.h>
 
-# include "../gulp.hh"
+# include "../astroid.hh"
 # include "../db.hh"
 # include "paned_mode.hh"
 # include "thread_index.hh"
@@ -18,7 +18,7 @@
 
 using namespace std;
 
-namespace Gulp {
+namespace Astroid {
   ThreadIndex::ThreadIndex (MainWindow *mw, string _query) : query_string(_query){
 
     main_window = mw;
@@ -28,7 +28,7 @@ namespace Gulp {
     tab_widget->set_can_focus (false);
 
     /* set up notmuch query */
-    query =  notmuch_query_create (gulp->db->nm_db, query_string.c_str ());
+    query =  notmuch_query_create (astroid->db->nm_db, query_string.c_str ());
 
     cout << "index, query: " << notmuch_query_get_query_string (query) << ", approx: "
          << notmuch_query_count_messages (query) << " messages." << endl;

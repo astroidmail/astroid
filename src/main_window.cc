@@ -3,18 +3,18 @@
 # include <gtkmm.h>
 # include <gtkmm/widget.h>
 
-# include "gulp.hh"
+# include "astroid.hh"
 # include "main_window.hh"
 # include "modes/mode.hh"
 # include "modes/thread_index.hh"
 
 using namespace std;
 
-namespace Gulp {
+namespace Astroid {
   MainWindow::MainWindow () {
     cout << "mw: init.." << endl;
 
-    set_title ("Gulp");
+    set_title ("Astroid");
     set_default_size (800, 400);
 
     add (notebook);
@@ -32,7 +32,7 @@ namespace Gulp {
     switch (event->keyval) {
       case GDK_KEY_q:
       case GDK_KEY_Q:
-        gulp->quit ();
+        astroid->quit ();
         return true;
 
       /* page through notebook */

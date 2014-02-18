@@ -15,7 +15,7 @@ Gemfile.lock
 # generated file for gnupg test
 test/gnupg_test_home/random_seed
 
-gulp
+astroid
 *.o
 
 .sconsign.dblite

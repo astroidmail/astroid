@@ -10,16 +10,16 @@
 
 using namespace std;
 
-namespace Gulp {
+namespace Astroid {
 
   /* aliases for often used types  */
   typedef Glib::ustring ustring;
   # define refptr Glib::RefPtr
 
 
-  class Gulp {
+  class Astroid {
     public:
-      Gulp ();
+      Astroid ();
       int main (int, char**);
       void quit ();
 
@@ -32,7 +32,7 @@ namespace Gulp {
 
   };
 
-  /* globally available instance of our main Gulp-class */
-  extern Gulp * gulp;
+  /* globally available instance of our main Astroid-class */
+  extern Astroid * astroid;
 }
 

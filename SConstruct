@@ -80,5 +80,5 @@ libs   = ['notmuch',
 env.Append (LIBS = libs)
 
 
-env.Program (source = source, target = 'gulp')
+env.Program (source = source, target = 'astroid')
 

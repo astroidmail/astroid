@@ -1,9 +1,9 @@
 # pragma once
 
 /* forward declarations of classes and structs 'n stuff */
-namespace Gulp {
+namespace Astroid {
 
-  class Gulp;
+  class Astroid;
   class Db;
   class NotmuchThread;
 

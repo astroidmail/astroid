@@ -10,7 +10,7 @@
 
 using namespace std;
 
-namespace Gulp {
+namespace Astroid {
   /* a virtual mode class with two panes */
   class PanedMode : public Mode {
     public:

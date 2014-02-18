@@ -1,6 +1,6 @@
 # include "mode.hh"
 
-namespace Gulp {
+namespace Astroid {
   Mode::Mode () {
 
   }

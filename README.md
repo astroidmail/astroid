@@ -1,4 +1,4 @@
-# gulp mua
+# astroid mua
 
   A graphical threads-with-tags mail user agent based on [sup] and [notmuch].
   Written in C++ using GTK+ and WebKit.
@@ -25,9 +25,9 @@
 
 ## acknowledgements
 
-  The main inspiration for gulp is the [sup] mail user agent. [sup] provided
+  The main inspiration for astroid is the [sup] mail user agent. [sup] provided
   inspiration for [notmuch] which clearly separates the mail index from the
-  user interface. gulp is a therefore a graphical front-end for [notmuch].
+  user interface. astroid is a therefore a graphical front-end for [notmuch].
   Additional inspiration for the user interface has been gathered from the
   [Geary] mail suite.
 

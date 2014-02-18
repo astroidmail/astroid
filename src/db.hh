@@ -5,12 +5,12 @@
 # include <glibmm.h>
 # include <notmuch.h>
 
-# include <gulp.hh>
+# include <astroid.hh>
 # include "proto.hh"
 
 using namespace std;
 
-namespace Gulp {
+namespace Astroid {
   class NotmuchThread : public Glib::Object {
     public:
       NotmuchThread (notmuch_thread_t *);

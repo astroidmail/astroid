@@ -8,7 +8,7 @@
 
 using namespace std;
 
-namespace Gulp {
+namespace Astroid {
   class ThreadIndexListCellRenderer : public Gtk::CellRenderer {
     public:
       Glib::RefPtr<NotmuchThread> thread; /* thread that should be rendered now */

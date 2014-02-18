@@ -10,7 +10,7 @@
 using namespace std;
 using namespace boost::filesystem;
 
-namespace Gulp {
+namespace Astroid {
   Db::Db () {
     cout << "db: opening db..";
 
@@ -79,7 +79,7 @@ namespace Gulp {
     //cout << "re-querying for thread id: " << thread_id << endl;
 
     string query_s = "thread:" + thread_id;
-    notmuch_query_t * query = notmuch_query_create (gulp->db->nm_db, query_s.c_str());
+    notmuch_query_t * query = notmuch_query_create (astroid->db->nm_db, query_s.c_str());
     notmuch_threads_t * nm_threads;
     notmuch_thread_t  * nm_thread;
 

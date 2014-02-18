@@ -10,7 +10,7 @@
 
 using namespace std;
 
-namespace Gulp {
+namespace Astroid {
 
   PanedMode::PanedMode () {
     set_can_focus (true);

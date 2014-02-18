@@ -8,7 +8,7 @@
 
 using namespace std;
 
-namespace Gulp {
+namespace Astroid {
   /* the list view consists of:
    * - a scolled window (which may be paned)
    * - a Treeview

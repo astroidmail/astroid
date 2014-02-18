@@ -4,13 +4,13 @@
 
 # include <gtkmm.h>
 
-# include "gulp.hh"
+# include "astroid.hh"
 # include "proto.hh"
 # include "mode.hh"
 
 using namespace std;
 
-namespace Gulp {
+namespace Astroid {
   class ThreadView : public Mode {
     public:
       ThreadView ();

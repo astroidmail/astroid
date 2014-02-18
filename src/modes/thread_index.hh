@@ -14,7 +14,7 @@
 
 using namespace std;
 
-namespace Gulp {
+namespace Astroid {
 
   class ThreadIndex : public PanedMode  {
     public:

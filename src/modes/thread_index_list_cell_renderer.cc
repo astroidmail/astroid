@@ -19,7 +19,7 @@
 
 using namespace std;
 
-namespace Gulp {
+namespace Astroid {
   void ThreadIndexListCellRenderer::render_vfunc (
       const ::Cairo::RefPtr< ::Cairo::Context>&cr,
       Gtk::Widget    &widget,

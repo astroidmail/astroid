@@ -5,7 +5,7 @@
 # include <gtkmm.h>
 # include <gtkmm/window.h>
 
-# include "gulp.hh"
+# include "astroid.hh"
 # include "db.hh"
 
 /* UI */
@@ -14,24 +14,24 @@
 
 using namespace std;
 
-/* globally available static instance of the Gulp */
-Gulp::Gulp * (Gulp::gulp);
+/* globally available static instance of the Astroid */
+Astroid::Astroid * (Astroid::astroid);
 
 int main (int argc, char **argv) {
-  Gulp::gulp = new Gulp::Gulp ();
-  return Gulp::gulp->main (argc, argv);
+  Astroid::astroid = new Astroid::Astroid ();
+  return Astroid::astroid->main (argc, argv);
 }
 
-namespace Gulp {
+namespace Astroid {
 
-  Gulp::Gulp () {
+  Astroid::Astroid () {
   }
 
-  int Gulp::main (int argc, char **argv) {
-    cout << "welcome to gulp! - v" << GIT_DESC << endl;
+  int Astroid::main (int argc, char **argv) {
+    cout << "welcome to astroid! - v" << GIT_DESC << endl;
 
     /* set up gtk */
-    app = Gtk::Application::create (argc, argv, "org.gulp");
+    app = Gtk::Application::create (argc, argv, "org.astroid");
 
     db = new Db ();
 
@@ -53,7 +53,7 @@ namespace Gulp {
     return 0;
   }
 
-  void Gulp::quit () {
+  void Astroid::quit () {
     cout << "goodbye!" << endl;
     app->quit ();
 
