@@ -3,7 +3,7 @@
 # include <gtkmm.h>
 
 # include "thread_view.hh"
-# include "message.hh"
+# include "message_thread.hh"
 
 
 using namespace std;
@@ -21,6 +21,10 @@ namespace Astroid {
     thread_id = _thread_id;
 
     ((Gtk::Label*) tab_widget)->set_text (thread_id);
+
+    mthread = new MessageThread (thread_id);
+    mthread->load_messages ();
+
   }
 
   void ThreadView::render () {

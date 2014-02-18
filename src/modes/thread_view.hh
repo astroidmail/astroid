@@ -18,6 +18,7 @@ namespace Astroid {
       void render ();
 
       ustring thread_id;
+      MessageThread * mthread;
 
       Gtk::ScrolledWindow scroll;
 

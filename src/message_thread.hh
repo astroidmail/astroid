@@ -2,6 +2,8 @@
 
 # include <vector>
 
+# include <notmuch.h>
+
 # include "proto.hh"
 # include "astroid.hh"
 
@@ -12,8 +14,11 @@ namespace Astroid {
     public:
       Message ();
       Message (ustring _fname);
+      Message (notmuch_message_t *);
 
       ustring fname;
+
+      ustring mid;
 
       void load_message ();
 
@@ -24,7 +29,7 @@ namespace Astroid {
       MessageThread ();
       MessageThread (ustring _tid);
 
-      ustring threadid;
+      ustring thread_id;
       vector<refptr<Message>> messages;
 
       void load_messages ();
