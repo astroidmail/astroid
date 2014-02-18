@@ -39,7 +39,7 @@ namespace Gulp {
     list_view  = new ThreadIndexListView (this, list_store);
     scroll     = new ThreadIndexScrolled (list_store, list_view);
 
-    add_pane (*scroll);
+    add_pane (0, *scroll);
 
     show_all ();
 
@@ -90,8 +90,10 @@ namespace Gulp {
     if (new_tab) {
       tv = new ThreadView ();
     } else {
-      if (thread_view == NULL) {
+      if (!thread_view_loaded) {
+        cout << "ti: init paned tv" << endl;
         thread_view = new ThreadView ();
+        thread_view_loaded = true;
       }
 
       tv = thread_view;
@@ -102,7 +104,7 @@ namespace Gulp {
     tv->render ();
 
     if (!new_tab && !thread_view_visible) {
-      add_pane (*tv);
+      add_pane (1, *tv);
       thread_view_visible = true;
     } else if (new_tab) {
       main_window->add_mode (tv);

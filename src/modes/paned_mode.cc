@@ -14,54 +14,78 @@ namespace Gulp {
 
   PanedMode::PanedMode () {
     pack_start (paned, true, true, 5);
+    paned.show_all ();
   }
 
-  void PanedMode::add_pane (Mode &w) {
-    paned_widgets.push_back (&w);
+  void PanedMode::add_pane (int p, Mode &w) {
+    cout << "pm: add pane" << endl;
+
+    if (packed >= 2) {
+      throw out_of_range ("Can only embed two panes.");
+    }
+
+
+    if (p == 0) pw1 = &w;
+    else        pw2 = &w;
 
     Gtk::Widget * ww = &w;
 
-    paned.add2 (*ww);
+    if (p == 0)
+      paned.pack1 (*ww, true, false);
+    else
+      paned.pack2 (*ww, true, false);
 
-    if (current <= 0)
-      current = paned_widgets.size() -1;
+    packed++;
+
+    current = p;
   }
 
-  void PanedMode::del_pane (Mode &w) {
+  void PanedMode::del_pane (int p) {
     cout << "pm: del pane" << endl;
-    auto it = find (paned_widgets.begin (), paned_widgets.end (), &w);
-    if ((it == paned_widgets.end ()) && *it != &w) {
-      throw invalid_argument ("The widget is not among the paned");
+
+    if (p == current && has_modal) {
+      release_modal ();
+      current = -1;
     }
 
-    paned.remove (*( (Gtk::Widget*) (*it)));
-    auto newe = paned_widgets.erase (it);
-
-    int i = newe - paned_widgets.begin ();
-
-    if ((i+1) == current) {
-      current = i;
-      if (has_modal) grab_modal ();
+    if (p == 0) {
+      paned.remove (*pw1);
+      pw1 = NULL;
+      current = 1;
+      packed--;
+    } else {
+      paned.remove (*pw2);
+      pw2 = NULL;
+      current = 0;
+      packed--;
     }
+
+    if (packed < 1) {
+      current = -1;
+    } else {
+      if (has_modal)
+        grab_modal ();
+    }
+
   }
 
   void PanedMode::grab_modal () {
-    if (current >= 0) {
-      if (paned_widgets.size() > current) {
-        cout << "pm: grab modal to: " << current << endl;
-        paned_widgets[current]->grab_modal ();
-        has_modal = true;
-      }
+    cout << "pm: grab modal to: " << current << endl;
+    if (current == 0) {
+      pw1->grab_modal ();
+      has_modal = true;
+    } else if (current == 1) {
+      pw2->grab_modal ();
+      has_modal = true;
     }
   }
 
   void PanedMode::release_modal () {
-    if (current >= 0) {
-      if (paned_widgets.size() > current) {
-        cout << "pm: release modal: " << current << " (" << has_modal << ")" << endl;
-
-        paned_widgets[current]->release_modal ();
-      }
+    cout << "pm: release modal: " << current << " (" << has_modal << ")" << endl;
+    if (current == 0) {
+      pw1->release_modal ();
+    } else if (current == 1) {
+      pw2->release_modal ();
     }
     has_modal = false;
   }

@@ -29,6 +29,7 @@ namespace Gulp {
 
       void open_thread (ustring, bool);
       ThreadView * thread_view;
+      bool thread_view_loaded  = false;
       bool thread_view_visible = false;
 
       Glib::RefPtr<ThreadIndexListStore> list_store;
