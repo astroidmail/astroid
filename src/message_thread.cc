@@ -18,7 +18,7 @@ namespace Astroid {
   Message::Message () { }
   Message::Message (ustring _fname) : fname (_fname) {
   }
-  
+
   Message::Message (notmuch_message_t *message) {
     /* The initializer must make sure the message pointer
      * is valid and not destroyed while initializing */
@@ -29,9 +29,17 @@ namespace Astroid {
 
     fname = notmuch_message_get_filename (message);
     cout << "msg: filename: " << fname << endl;
+
+    load_message ();
   }
 
   void Message::load_message () {
+    g_mime_init (0); // utf-8 is default
+    GMimeStream * stream = g_mime_stream_file_new_for_path (fname.c_str(), "r");
+
+    /* lots of work ... */
+
+    g_object_unref (stream);
   }
 
 
