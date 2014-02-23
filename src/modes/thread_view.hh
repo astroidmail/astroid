@@ -3,6 +3,7 @@
 # include <iostream>
 
 # include <gtkmm.h>
+# include <webkit/webkit.h>
 
 # include "astroid.hh"
 # include "proto.hh"
@@ -21,6 +22,10 @@ namespace Astroid {
       MessageThread * mthread;
 
       Gtk::ScrolledWindow scroll;
+
+      /* webkit (using C api) */
+      WebKitWebView * webview;
+
 
       /* mode */
       virtual void grab_modal () override;

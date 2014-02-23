@@ -40,8 +40,10 @@ namespace Astroid {
     render_date (cr, widget, cell_area);
     render_subject (cr, widget, cell_area);
 
+    /*
     if (!last)
       render_delimiter (cr, widget, cell_area);
+    */
 
     render_starred (cr, widget, cell_area);
 
