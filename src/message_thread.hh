@@ -3,6 +3,7 @@
 # include <vector>
 
 # include <notmuch.h>
+# include <gmime/gmime.h>
 
 # include "proto.hh"
 # include "astroid.hh"
@@ -15,12 +16,15 @@ namespace Astroid {
       Message ();
       Message (ustring _fname);
       Message (notmuch_message_t *);
+      ~Message ();
 
       ustring fname;
-
       ustring mid;
 
       void load_message ();
+
+      GMimeMessage * message;
+
 
   };
 

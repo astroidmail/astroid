@@ -12,6 +12,9 @@
 # include "main_window.hh"
 # include "modes/thread_index.hh"
 
+/* gmime */
+# include <gmime/gmime.h>
+
 using namespace std;
 
 /* globally available static instance of the Astroid */
@@ -33,7 +36,11 @@ namespace Astroid {
     /* set up gtk */
     app = Gtk::Application::create (argc, argv, "org.astroid");
 
+    /* notmuch db */
     db = new Db ();
+
+    /* gmime settings */
+    g_mime_init (0); // utf-8 is default
 
     /* start up default window with default buffers */
     MainWindow mw;

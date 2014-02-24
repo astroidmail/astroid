@@ -33,13 +33,29 @@ namespace Astroid {
     load_message ();
   }
 
+  Message::~Message () {
+    g_object_unref (message);
+  }
+
   void Message::load_message () {
-    g_mime_init (0); // utf-8 is default
-    GMimeStream * stream = g_mime_stream_file_new_for_path (fname.c_str(), "r");
 
-    /* lots of work ... */
+    /* Load message with parts.
+     *
+     * example:
+     * http://code.metager.de/source/xref/gnome/Desktop/gmime/examples/basic-example.c
+     *
+     *
+     *
+     */
 
-    g_object_unref (stream);
+    GMimeStream   * stream  = g_mime_stream_file_new_for_path (fname.c_str(), "r");
+    GMimeParser   * parser  = g_mime_parser_new_with_stream (stream);
+    message = g_mime_parser_construct_message (parser);
+
+    g_object_unref (stream); // reffed from parser
+    g_object_unref (parser); // reffed from message
+
+
   }
 
 
