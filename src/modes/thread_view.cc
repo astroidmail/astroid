@@ -38,7 +38,7 @@ namespace Astroid {
   }
 
   void ThreadView::render () {
-    webkit_web_view_load_plain_text (webview, mthread->messages[0]->body().c_str());
+    webkit_web_view_load_html (webview, mthread->messages[0]->body().c_str(), "/tmp/");
 
   }
 
