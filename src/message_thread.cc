@@ -7,6 +7,7 @@
 # include "astroid.hh"
 # include "db.hh"
 # include "message_thread.hh"
+# include "chunk.hh"
 
 using namespace std;
 
@@ -42,9 +43,13 @@ namespace Astroid {
     /* Load message with parts.
      *
      * example:
-     * http://code.metager.de/source/xref/gnome/Desktop/gmime/examples/basic-example.c
+     * https://git.gnome.org/browse/gmime/tree/examples/basic-example.c
      *
      *
+     * Do this a bit like sup:
+     * - build up a tree/list of chunks that are viewable, except siblings.
+     * - show text and html parts
+     * - show a gallery of attachments at the bottom
      *
      */
 
@@ -52,10 +57,21 @@ namespace Astroid {
     GMimeParser   * parser  = g_mime_parser_new_with_stream (stream);
     message = g_mime_parser_construct_message (parser);
 
+    /* read header fields */
+    sender  = g_mime_message_get_sender (message);
+    subject = g_mime_message_get_subject (message);
+
+
+    root = refptr<Chunk>(new Chunk (g_mime_message_get_body (message)));
+
+
     g_object_unref (stream); // reffed from parser
     g_object_unref (parser); // reffed from message
 
+  }
 
+  ustring Message::body () {
+    return root->body();
   }
 
 

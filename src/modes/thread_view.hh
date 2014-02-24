@@ -3,7 +3,7 @@
 # include <iostream>
 
 # include <gtkmm.h>
-# include <webkit/webkit.h>
+# include <webkit2/webkit2.h>
 
 # include "astroid.hh"
 # include "proto.hh"
@@ -15,6 +15,7 @@ namespace Astroid {
   class ThreadView : public Mode {
     public:
       ThreadView ();
+      ~ThreadView ();
       void load_thread (ustring);
       void render ();
 

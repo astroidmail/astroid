@@ -24,6 +24,12 @@ namespace Astroid {
       void load_message ();
 
       GMimeMessage * message;
+      refptr<Chunk>     root;
+
+      ustring sender;
+      ustring subject;
+      
+      ustring body ();
 
 
   };

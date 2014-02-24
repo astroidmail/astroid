@@ -10,6 +10,8 @@ namespace Astroid {
   /* message and thread */
   class Message;
   class MessageThread;
+  class Chunk;
+  class TextChunk;
 
   /* UI */
   class MainWindow;
