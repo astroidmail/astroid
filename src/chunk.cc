@@ -32,7 +32,7 @@ namespace Astroid {
 
 
       /* convert to html */
-      guint32 cite_color = 0xffffff;
+      guint32 cite_color = 0x1e1e1e;
       /*
        * GMIME_FILTER_HTML_PRE ||
        */
