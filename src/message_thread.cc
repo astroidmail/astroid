@@ -62,7 +62,7 @@ namespace Astroid {
     subject = g_mime_message_get_subject (message);
 
 
-    root = refptr<Chunk>(new Chunk (g_mime_message_get_body (message)));
+    root = refptr<Chunk>(new Chunk (g_mime_message_get_mime_part (message)));
 
 
     g_object_unref (stream); // reffed from parser
