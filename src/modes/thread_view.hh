@@ -25,7 +25,8 @@ namespace Astroid {
       Gtk::ScrolledWindow scroll;
 
       /* webkit (using C api) */
-      WebKitWebView * webview;
+      WebKitWebView   * webview;
+      WebKitSettings  * websettings;
 
 
       /* mode */

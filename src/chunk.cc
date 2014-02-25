@@ -1,7 +1,5 @@
 # include <vector>
-# include <string>
 # include <iostream>
-# include <sstream>
 
 # include <glib.h>
 # include <gmime/gmime.h>
