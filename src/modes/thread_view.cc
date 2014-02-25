@@ -1,4 +1,5 @@
 # include <iostream>
+# include <fstream>
 
 # include <gtkmm.h>
 # include <webkit2/webkit2.h>
@@ -10,6 +11,12 @@
 using namespace std;
 
 namespace Astroid {
+  bool ThreadView::theme_loaded = false;
+  const char * ThreadView::thread_view_html_f = "ui/thread-view.html";
+  const char * ThreadView::thread_view_css_f  = "ui/thread-view.css";
+  ustring ThreadView::thread_view_html;
+  ustring ThreadView::thread_view_css;
+
 
   ThreadView::ThreadView () {
     tab_widget = new Gtk::Label (thread_id);
@@ -44,11 +51,60 @@ namespace Astroid {
 
 
     scroll.show_all ();
+
+    /* load css, html and DOM objects */
+    if (!theme_loaded) {
+      ifstream tv_html_f (thread_view_html_f);
+      istreambuf_iterator<char> eos; // default is eos
+      istreambuf_iterator<char> tv_iit (tv_html_f);
+
+      thread_view_html.append (tv_iit, eos);
+      tv_html_f.close ();
+
+      ifstream tv_css_f (thread_view_css_f);
+      istreambuf_iterator<char> tv_css_iit (tv_css_f);
+      thread_view_css.append (tv_css_iit, eos);
+      tv_css_f.close ();
+
+      theme_loaded = true;
+    }
+
+    g_signal_connect (webview, "load-changed",
+        G_CALLBACK(ThreadView::on_load_changed), (gpointer) this);
+    webkit_web_view_load_html (webview, thread_view_html.c_str (), "/tmp/");
+
   }
 
   ThreadView::~ThreadView () {
     g_object_unref (webview);
     g_object_unref (websettings);
+  }
+
+  bool ThreadView::on_load_changed (
+      GObject * o,
+      WebKitLoadEvent ev,
+      gchar * failing_url,
+      gpointer error,
+      gpointer data )
+  {
+    return ((ThreadView *) data)->on_load_changed_int (o, ev, failing_url,
+        error);
+  }
+
+  bool ThreadView::on_load_changed_int (
+      GObject *o,
+      WebKitLoadEvent ev,
+      gchar * failing_url,
+      gpointer error )
+  {
+    cout << "tv: on_load_changed: " << ev << endl;
+    switch (ev) {
+      case WEBKIT_LOAD_FINISHED:
+        cout << "tv: load finished." << endl;
+        break;
+    }
+
+    return true;
   }
 
   void ThreadView::load_thread (ustring _thread_id) {
@@ -61,7 +117,10 @@ namespace Astroid {
   }
 
   void ThreadView::render () {
-    webkit_web_view_load_html (webview, mthread->messages[0]->body().c_str(), "/tmp/");
+    //webkit_web_view_load_html (webview, mthread->messages[0]->body().c_str(), "/tmp/");
+
+
+
 
   }
 
