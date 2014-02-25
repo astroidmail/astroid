@@ -27,13 +27,16 @@ namespace Astroid {
 
       refptr<Glib::ByteArray> bytearray = Glib::ByteArray::create ();
 
-      GMimeStream * stream = g_mime_stream_mem_new_with_byte_array (bytearray->gobj());
+      GMimeStream * stream =
+        g_mime_stream_mem_new_with_byte_array (bytearray->gobj());
       g_mime_stream_mem_set_owner ((GMimeStreamMem *) stream, false);
 
 
       /* convert to html */
       guint32 cite_color = 0x1e1e1e;
-      /*
+
+      /* other filters:
+       *
        * GMIME_FILTER_HTML_PRE ||
        */
       guint32 html_filter_flags = GMIME_FILTER_HTML_CONVERT_NL |
@@ -48,19 +51,20 @@ namespace Astroid {
           html_filter_flags, cite_color);
 
       GMimeStream * filter_stream = g_mime_stream_filter_new (stream);
-      g_mime_stream_filter_add ((GMimeStreamFilter *)filter_stream, html_filter);
+      g_mime_stream_filter_add ((GMimeStreamFilter *) filter_stream,
+                                html_filter);
       g_mime_data_wrapper_write_to_stream (content, filter_stream);
-
-
 
       g_mime_stream_flush (filter_stream);
 
-      char *ss = (char*) bytearray->get_data ();
-      ss[bytearray->size()] = 0;
+      g_object_unref (html_filter); // owned by filter_stream
+      g_object_unref (filter_stream);
+      g_object_unref (stream);
+      g_object_unref (content);
 
-      cout << "html: " << ss << endl;
+      char * ss = (char *) bytearray->get_data ();
 
-      return ustring(ss);
+      return ustring(ss, bytearray->size());
 
     } else {
 
