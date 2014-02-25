@@ -28,7 +28,7 @@ namespace Astroid {
       Gtk::CellRendererState flags)
   {
 
-    cout << "render..:" << thread->thread_id << endl;
+    //cout << "render..:" << thread->thread_id << endl;
 
     /*
     auto p = property_cell_background ();

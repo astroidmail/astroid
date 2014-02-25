@@ -36,7 +36,7 @@ namespace Astroid {
 
     cout << "ok." << endl;
 
-    test_query ();
+    //test_query ();
   }
 
   void Db::test_query () {

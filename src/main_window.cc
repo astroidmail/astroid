@@ -17,6 +17,11 @@ namespace Astroid {
     set_title ("Astroid");
     set_default_size (800, 400);
 
+    Glib::RefPtr<Gtk::IconTheme> theme = Gtk::IconTheme::get_default();
+    Glib::RefPtr<Gdk::Pixbuf> pixbuf = theme->load_icon (
+        "mail-send-symbolic", 42, Gtk::ICON_LOOKUP_USE_BUILTIN );
+    set_icon (pixbuf);
+
     add (notebook);
 
     show_all ();
