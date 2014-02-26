@@ -80,22 +80,26 @@ namespace Astroid {
     g_object_unref (websettings);
   }
 
+  /* is this callback setup safe:
+   *
+   * http://stackoverflow.com/questions/2068022/in-c-is-it-safe-portable-to-use-static-member-function-pointer-for-c-api-call
+   */
   bool ThreadView::on_load_changed (
-      GObject * o,
+      GObject *       o,
       WebKitLoadEvent ev,
-      gchar * failing_url,
-      gpointer error,
-      gpointer data )
+      gchar *         failing_url,
+      gpointer        error,
+      gpointer        data )
   {
     return ((ThreadView *) data)->on_load_changed_int (o, ev, failing_url,
         error);
   }
 
   bool ThreadView::on_load_changed_int (
-      GObject *o,
+      GObject *       o,
       WebKitLoadEvent ev,
-      gchar * failing_url,
-      gpointer error )
+      gchar *         failing_url,
+      gpointer        error )
   {
     cout << "tv: on_load_changed: " << ev << endl;
     switch (ev) {
