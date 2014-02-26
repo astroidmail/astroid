@@ -70,7 +70,9 @@ namespace Astroid {
     }
 
     g_signal_connect (webview, "load-changed",
-        G_CALLBACK(ThreadView::on_load_changed), (gpointer) this);
+        G_CALLBACK(ThreadView_on_load_changed),
+        (gpointer) this );
+
     webkit_web_view_load_html (webview, thread_view_html.c_str (), "/tmp/");
 
   }
@@ -80,22 +82,29 @@ namespace Astroid {
     g_object_unref (websettings);
   }
 
-  /* is this callback setup safe:
+  /* is this callback setup safe?
    *
    * http://stackoverflow.com/questions/2068022/in-c-is-it-safe-portable-to-use-static-member-function-pointer-for-c-api-call
+   *
+   * http://gtk.10911.n7.nabble.com/Using-g-signal-connect-in-class-td57137.html
+   *
+   * to be portable we have to use a free function declared extern "C". a
+   * static member function * is likely to work at least on gcc/g++, but not
+   * necessarily elsewhere.
+   *
    */
-  bool ThreadView::on_load_changed (
+
+  extern "C" bool ThreadView_on_load_changed (
       GObject *       o,
       WebKitLoadEvent ev,
       gchar *         failing_url,
       gpointer        error,
       gpointer        data )
   {
-    return ((ThreadView *) data)->on_load_changed_int (o, ev, failing_url,
-        error);
+    return ((ThreadView *) data)->on_load_changed (o, ev, failing_url, error);
   }
 
-  bool ThreadView::on_load_changed_int (
+  bool ThreadView::on_load_changed (
       GObject *       o,
       WebKitLoadEvent ev,
       gchar *         failing_url,

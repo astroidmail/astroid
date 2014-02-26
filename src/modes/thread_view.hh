@@ -12,7 +12,22 @@
 using namespace std;
 
 namespace Astroid {
+  extern "C" bool ThreadView_on_load_changed (
+          GObject *,
+          WebKitLoadEvent,
+          gchar *,
+          gpointer,
+          gpointer );
+
   class ThreadView : public Mode {
+    /*
+    friend bool ThreadView_on_load_changed (
+          GObject *,
+          WebKitLoadEvent,
+          gchar *,
+          gpointer,
+          gpointer );
+    */
     public:
       ThreadView ();
       ~ThreadView ();
@@ -34,15 +49,8 @@ namespace Astroid {
       static ustring       thread_view_html;
       static ustring       thread_view_css;
 
-      /* event wrappers (ugly) */
-      static bool on_load_changed (
-          GObject *,
-          WebKitLoadEvent,
-          gchar *,
-          gpointer,
-          gpointer );
-
-      bool on_load_changed_int (
+      /* event wrappers */
+      bool on_load_changed (
           GObject *,
           WebKitLoadEvent,
           gchar *,
