@@ -2,7 +2,7 @@
 # include <fstream>
 
 # include <gtkmm.h>
-# include <webkit2/webkit2.h>
+# include <webkit/webkit.h>
 
 # include "thread_view.hh"
 # include "message_thread.hh"
@@ -26,7 +26,8 @@ namespace Astroid {
     /* set up webkit web view (using C api) */
     webview = WEBKIT_WEB_VIEW (webkit_web_view_new ());
 
-    websettings = WEBKIT_SETTINGS (webkit_settings_new ());
+    websettings = WEBKIT_WEB_SETTINGS (webkit_web_settings_new ());
+    /* use g_object_set / g_object_get
     webkit_settings_set_auto_load_images (websettings, false);
     webkit_settings_set_enable_html5_database (websettings, false);
     webkit_settings_set_enable_html5_local_storage (websettings, false);
@@ -43,6 +44,7 @@ namespace Astroid {
     webkit_settings_set_enable_webgl (websettings, true);
     webkit_settings_set_enable_private_browsing (websettings, true);
     webkit_settings_set_enable_fullscreen (websettings, true);
+    */
 
     webkit_web_view_set_settings (webview, websettings);
 
@@ -69,11 +71,11 @@ namespace Astroid {
       theme_loaded = true;
     }
 
-    g_signal_connect (webview, "load-changed",
+    g_signal_connect (webview, "notify::load-status",
         G_CALLBACK(ThreadView_on_load_changed),
         (gpointer) this );
 
-    webkit_web_view_load_html (webview, thread_view_html.c_str (), "/tmp/");
+    webkit_web_view_load_html_string (webview, thread_view_html.c_str (), "/tmp/");
 
   }
 
@@ -95,25 +97,27 @@ namespace Astroid {
    */
 
   extern "C" bool ThreadView_on_load_changed (
-      GObject *       o,
-      WebKitLoadEvent ev,
-      gchar *         failing_url,
-      gpointer        error,
-      gpointer        data )
+      GtkWidget *       w,
+      GParamSpec *      p,
+      gpointer          data )
   {
-    return ((ThreadView *) data)->on_load_changed (o, ev, failing_url, error);
+    return ((ThreadView *) data)->on_load_changed (w, p);
   }
 
   bool ThreadView::on_load_changed (
-      GObject *       o,
-      WebKitLoadEvent ev,
-      gchar *         failing_url,
-      gpointer        error )
+      GtkWidget *       w,
+      GParamSpec *      p)
   {
+    WebKitLoadStatus ev = *(WebKitLoadStatus *) p;
     cout << "tv: on_load_changed: " << ev << endl;
     switch (ev) {
       case WEBKIT_LOAD_FINISHED:
         cout << "tv: load finished." << endl;
+        {
+          /* load css style */
+
+
+        }
         break;
     }
 

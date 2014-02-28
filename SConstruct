@@ -67,7 +67,7 @@ if not GetOption("verbose_flag"):
 env.ParseConfig ('pkg-config --libs --cflags glibmm-2.4')
 env.ParseConfig ('pkg-config --libs --cflags gtkmm-3.0')
 env.ParseConfig ('pkg-config --libs --cflags gmime-2.6')
-env.ParseConfig ('pkg-config --libs --cflags webkit2gtk-3.0')
+env.ParseConfig ('pkg-config --libs --cflags webkitgtk-3.0')
 
 libs   = ['notmuch',
           'boost_system',

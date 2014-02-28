@@ -3,7 +3,7 @@
 # include <iostream>
 
 # include <gtkmm.h>
-# include <webkit2/webkit2.h>
+# include <webkit/webkit.h>
 
 # include "astroid.hh"
 # include "proto.hh"
@@ -13,10 +13,8 @@ using namespace std;
 
 namespace Astroid {
   extern "C" bool ThreadView_on_load_changed (
-          GObject *,
-          WebKitLoadEvent,
-          gchar *,
-          gpointer,
+          GtkWidget *,
+          GParamSpec *,
           gpointer );
 
   class ThreadView : public Mode {
@@ -41,7 +39,7 @@ namespace Astroid {
 
       /* webkit (using C api) */
       WebKitWebView   * webview;
-      WebKitSettings  * websettings;
+      WebKitWebSettings  * websettings;
 
       static bool theme_loaded;
       static const char *  thread_view_html_f;
@@ -51,10 +49,8 @@ namespace Astroid {
 
       /* event wrappers */
       bool on_load_changed (
-          GObject *,
-          WebKitLoadEvent,
-          gchar *,
-          gpointer );
+          GtkWidget *,
+          GParamSpec *);
 
       /* mode */
       virtual void grab_modal () override;
