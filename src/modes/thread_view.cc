@@ -108,14 +108,32 @@ namespace Astroid {
       GtkWidget *       w,
       GParamSpec *      p)
   {
-    WebKitLoadStatus ev = *(WebKitLoadStatus *) p;
+    WebKitLoadStatus ev = webkit_web_view_get_load_status (webview);
     cout << "tv: on_load_changed: " << ev << endl;
     switch (ev) {
       case WEBKIT_LOAD_FINISHED:
         cout << "tv: load finished." << endl;
         {
           /* load css style */
+          GError *err = NULL;
+          WebKitDOMDocument *d = webkit_web_view_get_dom_document (webview);
+          WebKitDOMElement  *e = webkit_dom_document_create_element (d, STYLE_NAME, &err);
 
+          WebKitDOMText *t = webkit_dom_document_create_text_node
+            (d, thread_view_css.c_str());
+
+          webkit_dom_node_append_child (WEBKIT_DOM_NODE(e), WEBKIT_DOM_NODE(t), (err = NULL, &err));
+
+          WebKitDOMHTMLHeadElement * head = webkit_dom_document_get_head (d);
+          webkit_dom_node_append_child (WEBKIT_DOM_NODE(head), WEBKIT_DOM_NODE(e), (err = NULL, &err));
+
+
+          g_object_unref (d);
+          g_object_unref (e);
+          g_object_unref (t);
+          g_object_unref (head);
+
+          /* unlock message loading */
 
         }
         break;
