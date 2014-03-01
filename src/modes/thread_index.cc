@@ -132,7 +132,6 @@ namespace Astroid {
 
     tv->load_thread (thread_id);
     tv->show ();
-    tv->render ();
 
     if (!new_tab && !thread_view_visible) {
       add_pane (1, *tv);

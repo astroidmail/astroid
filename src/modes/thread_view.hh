@@ -1,6 +1,7 @@
 # pragma once
 
 # include <iostream>
+# include <atomic>
 
 # include <gtkmm.h>
 # include <webkit/webkit.h>
@@ -40,6 +41,7 @@ namespace Astroid {
       /* webkit (using C api) */
       WebKitWebView     * webview;
       WebKitWebSettings * websettings;
+      WebKitDOMHTMLDivElement * container = NULL;
 
       static bool theme_loaded;
       static const char *  thread_view_html_f;
@@ -47,6 +49,11 @@ namespace Astroid {
       static ustring       thread_view_html;
       static ustring       thread_view_css;
       const char * STYLE_NAME = "STYLE";
+
+      atomic<bool> wk_loaded;
+
+
+
 
       /* event wrappers */
       bool on_load_changed (

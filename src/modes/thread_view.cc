@@ -1,5 +1,6 @@
 # include <iostream>
 # include <fstream>
+# include <atomic>
 
 # include <gtkmm.h>
 # include <webkit/webkit.h>
@@ -71,9 +72,12 @@ namespace Astroid {
       theme_loaded = true;
     }
 
+    wk_loaded = false;
+
     g_signal_connect (webview, "notify::load-status",
         G_CALLBACK(ThreadView_on_load_changed),
         (gpointer) this );
+
 
     webkit_web_view_load_html_string (webview, thread_view_html.c_str (), "/tmp/");
 
@@ -82,6 +86,7 @@ namespace Astroid {
   ThreadView::~ThreadView () {
     g_object_unref (webview);
     g_object_unref (websettings);
+    if (container) g_object_unref (container);
   }
 
   /* is this callback setup safe?
@@ -127,13 +132,18 @@ namespace Astroid {
           WebKitDOMHTMLHeadElement * head = webkit_dom_document_get_head (d);
           webkit_dom_node_append_child (WEBKIT_DOM_NODE(head), WEBKIT_DOM_NODE(e), (err = NULL, &err));
 
+          /* get container for message divs */
+          container = WEBKIT_DOM_HTML_DIV_ELEMENT(webkit_dom_document_get_element_by_id (d, "message_container"));
+
 
           g_object_unref (d);
           g_object_unref (e);
           g_object_unref (t);
           g_object_unref (head);
 
-          /* unlock message loading */
+          /* render */
+          wk_loaded = true;
+          render ();
 
         }
         break;
@@ -149,12 +159,23 @@ namespace Astroid {
 
     mthread = new MessageThread (thread_id);
     mthread->load_messages ();
+
+    render ();
   }
 
   void ThreadView::render () {
-    //webkit_web_view_load_html (webview, mthread->messages[0]->body().c_str(), "/tmp/");
+    cout << "render: wait.." << endl;
+    if (!container || !wk_loaded) {
+      cerr << "tv: div container and web kit not loaded." << endl;
+      return;
+    }
+
+    /* wait for webkit webview to load */
+    //unique_lock<mutex> lk (wk_m);
+    //wk_cv.wait (lk, [this]{ return wk_loaded; });
 
 
+    cout << "render: go." << endl;
 
 
   }
