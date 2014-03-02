@@ -37,6 +37,7 @@ namespace Astroid {
 
       Gtk::ScrolledWindow scroll;
 
+    private:
       /* webkit (using C api) */
       WebKitWebView     * webview;
       WebKitWebSettings * websettings;
@@ -53,8 +54,15 @@ namespace Astroid {
 
       /* rendering */
       void render ();
+      void render_post ();
       void add_message (refptr<Message>);
       WebKitDOMHTMLElement * make_message_div ();
+
+      /* message loading setup */
+      void set_message_html (refptr<Message>, WebKitDOMHTMLElement*);
+      void insert_header_address (ustring &, ustring, ustring, bool);
+      ustring create_header_row (ustring, ustring, bool);
+
 
       /* webkit dom utils */
       WebKitDOMHTMLElement * clone_select (
@@ -66,10 +74,11 @@ namespace Astroid {
           WebKitDOMNode * node,
           bool            deep = true);
 
-      WebKitDOMHTMLElement * clone_select_select (
+      WebKitDOMHTMLElement * select (
           WebKitDOMNode * node,
           ustring         selector);
 
+    public:
       /* event wrappers */
       bool on_load_changed (
           GtkWidget *,

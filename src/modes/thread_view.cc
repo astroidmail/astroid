@@ -79,7 +79,6 @@ namespace Astroid {
         (gpointer) this );
 
 
-    webkit_web_view_load_html_string (webview, thread_view_html.c_str (), "/tmp/");
 
   }
 
@@ -143,7 +142,7 @@ namespace Astroid {
 
           /* render */
           wk_loaded = true;
-          render ();
+          render_post ();
 
         }
         break;
@@ -164,13 +163,16 @@ namespace Astroid {
   }
 
   void ThreadView::render () {
-    cout << "render: wait.." << endl;
+    cout << "render: loading html.." << endl;
+    webkit_web_view_load_html_string (webview, thread_view_html.c_str (), "/tmp/");
+  }
+
+  void ThreadView::render_post () {
+    cout << "render: html loaded, building messages.." << endl;
     if (!container || !wk_loaded) {
       cerr << "tv: div container and web kit not loaded." << endl;
       return;
     }
-
-    cout << "render: go." << endl;
 
     for_each (mthread->messages.begin(),
               mthread->messages.end(),
@@ -187,12 +189,61 @@ namespace Astroid {
     WebKitDOMNode * insert_before = webkit_dom_node_get_last_child (
         WEBKIT_DOM_NODE (container));
 
-    WebKitDOMHTMLElement * div_message;
+    WebKitDOMHTMLElement * div_message = make_message_div ();
 
+    GError * err = NULL;
+    webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT(div_message),
+        "id", div_id.c_str(), &err);
+
+    /* insert message div */
+    webkit_dom_node_insert_before (WEBKIT_DOM_NODE(container),
+        WEBKIT_DOM_NODE(div_message),
+        insert_before,
+        (err = NULL, &err));
+
+    set_message_html (m, div_message);
 
     g_object_unref (insert_before);
-    //g_object_unref (div_message); // TODO: why doesn't this work?
+    g_object_unref (div_message);
   }
+
+  void ThreadView::set_message_html (
+      refptr<Message> m,
+      WebKitDOMHTMLElement * div_message)
+  {
+    GError *err;
+
+    /* load message into div */
+    ustring header;
+    WebKitDOMHTMLElement * div_email_container =
+      select (WEBKIT_DOM_NODE(div_message), "div.email_container");
+
+    insert_header_address (header, "From:", m->sender, true);
+
+
+    /* build header */
+    WebKitDOMHTMLElement * table_header =
+      select (WEBKIT_DOM_NODE(div_email_container), ".header_container .header");
+    webkit_dom_html_element_set_inner_html (table_header, header.c_str(), (err = NULL, &err));
+
+  }
+
+  void ThreadView::insert_header_address (ustring &header, ustring title, ustring address, bool important) {
+    header += create_header_row (title, address, important);
+  }
+
+  ustring ThreadView::create_header_row (ustring title, ustring value, bool important) {
+    return ustring::compose (
+        "<div class=\"field %1\">"
+        "  <div class=\"title\">%2</div>"
+        "  <div class=\"value\">%3</div>"
+        "</div>",
+        (important ? "important" : ""),
+        title,
+        value
+        );
+  }
+
 
   WebKitDOMHTMLElement * ThreadView::make_message_div () {
     /* clone div from template in html file */
@@ -209,7 +260,7 @@ namespace Astroid {
       ustring         selector,
       bool            deep) {
 
-    return clone_node (WEBKIT_DOM_NODE(clone_select_select (node, selector)),
+    return clone_node (WEBKIT_DOM_NODE(select (node, selector)),
         deep);
   }
 
@@ -221,14 +272,15 @@ namespace Astroid {
 
   }
 
-  WebKitDOMHTMLElement * ThreadView::clone_select_select (
+  WebKitDOMHTMLElement * ThreadView::select (
       WebKitDOMNode * node,
       ustring         selector) {
 
     GError * gerr = NULL;
+    WebKitDOMHTMLElement *e;
 
     if (WEBKIT_DOM_IS_DOCUMENT(node)) {
-      return WEBKIT_DOM_HTML_ELEMENT(
+      e = WEBKIT_DOM_HTML_ELEMENT(
         webkit_dom_document_query_selector (WEBKIT_DOM_DOCUMENT(node),
                                             selector.c_str(),
                                             &gerr));
@@ -236,12 +288,18 @@ namespace Astroid {
 
     } else {
       /* ..DOMElement */
-      return WEBKIT_DOM_HTML_ELEMENT(
+      e = WEBKIT_DOM_HTML_ELEMENT(
         webkit_dom_element_query_selector (WEBKIT_DOM_ELEMENT(node),
                                             selector.c_str(),
                                             &gerr));
 
     }
+
+    cout << "tv: clone_s_s" << endl;
+    if (gerr != NULL)
+      cout << "tv: clone_s_s_err: " << gerr->message << endl;
+
+    return e;
   }
 
   void ThreadView::grab_modal () {
