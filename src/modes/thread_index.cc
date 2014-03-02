@@ -19,7 +19,7 @@
 using namespace std;
 
 namespace Astroid {
-  ThreadIndex::ThreadIndex (MainWindow *mw, string _query) : query_string(_query){
+  ThreadIndex::ThreadIndex (MainWindow *mw, ustring _query) : query_string(_query){
 
     main_window = mw;
 

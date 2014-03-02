@@ -22,9 +22,28 @@ namespace Astroid {
         "mail-send-symbolic", 42, Gtk::ICON_LOOKUP_USE_BUILTIN );
     set_icon (pixbuf);
 
-    add (notebook);
+    vbox.set_orientation (Gtk::ORIENTATION_VERTICAL);
+    s_hbox.set_orientation (Gtk::ORIENTATION_HORIZONTAL);
 
-    show_all ();
+    sbar.set_show_close_button ();
+    sbar.connect_entry (sentry);
+    s_hbox.pack_start (sentry, Gtk::PACK_EXPAND_WIDGET, 5);
+    sbar.add (s_hbox);
+
+    sbar.property_search_mode_enabled().signal_changed().connect(
+        sigc::mem_fun (*this, &MainWindow::on_search_mode_changed)
+        );
+
+    sentry.signal_activate ().connect (
+        sigc::mem_fun (*this, &MainWindow::on_search_entry_activated)
+        );
+
+    vbox.pack_start (sbar, Gtk::PACK_SHRINK, 0);
+    vbox.pack_start (notebook, Gtk::PACK_EXPAND_WIDGET, 0);
+
+    add (vbox);
+
+    show_all_children ();
 
     /* connect keys */
     add_events (Gdk::KEY_PRESS_MASK);
@@ -33,7 +52,46 @@ namespace Astroid {
 
   }
 
+  void MainWindow::enable_search () {
+    cout << "mw: enable search" << endl;
+    sbar.set_search_mode (true);
+    is_searching = true;
+    unset_active ();
+    sbar.add_modal_grab ();
+  }
+
+  void MainWindow::disable_search () {
+    cout << "mw: disable search" << endl;
+    // hides itself
+    sbar.remove_modal_grab();
+    set_active (lastcurrent);
+    is_searching = false;
+  }
+
+  void MainWindow::on_search_entry_activated () {
+    ustring stext = sentry.get_text ();
+    cout << "mw: search for: " << stext << endl;
+    sbar.set_search_mode (false); // emits changed -> disables search
+
+    if (stext.size() > 0) {
+      Mode * m = new ThreadIndex (this, stext);
+
+      add_mode (m);
+    }
+  }
+
+  void MainWindow::on_search_mode_changed () {
+    cout << "mw: smode changed" << endl;
+    if (!sbar.get_search_mode()) {
+      disable_search ();
+    }
+  }
+
   bool MainWindow::on_key_press (GdkEventKey * event) {
+    if (is_searching) {
+      return sbar.handle_event (event);
+    }
+
     switch (event->keyval) {
       case GDK_KEY_q:
       case GDK_KEY_Q:
@@ -58,8 +116,15 @@ namespace Astroid {
 
       /* close page */
       case GDK_KEY_x:
-        int c = notebook.get_current_page ();
-        del_mode (c);
+        {
+          int c = notebook.get_current_page ();
+          del_mode (c);
+        }
+        return true;
+
+      /* search */
+      case GDK_KEY_F:
+        enable_search ();
         return true;
 
     }
@@ -87,23 +152,34 @@ namespace Astroid {
     set_active(c);
   }
 
-  void MainWindow::set_active (int n) {
-    cout << "mw: set active: " << n << ", current: " << current << endl;
-    if (notebook.get_current_page() != n) {
-      notebook.set_current_page (n);
-    }
-
+  void MainWindow::unset_active () {
     if (current >= 0) {
       if (modes.size() > current) {
         cout << "mw: release modal, from: " << current << endl;
         modes[current]->release_modal ();
+        lastcurrent = current;
         current = -1;
       }
     }
+  }
 
-    cout << "mw: grab modal to: " << n << endl;
-    modes[n]->grab_modal ();
-    current = n;
+  void MainWindow::set_active (int n) {
+    cout << "mw: set active: " << n << ", current: " << current << endl;
+
+    if (n >= 0 && n <= notebook.get_n_pages()-1) {
+
+      if (notebook.get_current_page() != n) {
+        notebook.set_current_page (n);
+      }
+
+      unset_active ();
+
+      cout << "mw: grab modal to: " << n << endl;
+      modes[n]->grab_modal ();
+      current = n;
+    } else {
+      cout << "mw: set active: page is out of range: " << n << endl;
+    }
   }
 }
 

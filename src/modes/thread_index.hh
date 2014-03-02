@@ -18,7 +18,7 @@ namespace Astroid {
 
   class ThreadIndex : public PanedMode  {
     public:
-      ThreadIndex (MainWindow *, string);
+      ThreadIndex (MainWindow *, ustring);
       ~ThreadIndex ();
 
       MainWindow * main_window;
@@ -36,7 +36,7 @@ namespace Astroid {
       ThreadIndexListView  * list_view;
       ThreadIndexScrolled  * scroll;
 
-      string query_string;
+      ustring query_string;
       notmuch_query_t * query;
 
     protected:
