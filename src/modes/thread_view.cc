@@ -170,14 +170,78 @@ namespace Astroid {
       return;
     }
 
-    /* wait for webkit webview to load */
-    //unique_lock<mutex> lk (wk_m);
-    //wk_cv.wait (lk, [this]{ return wk_loaded; });
-
-
     cout << "render: go." << endl;
 
+    for_each (mthread->messages.begin(),
+              mthread->messages.end(),
+              [&](refptr<Message> m) {
+                add_message (m);
+              });
+  }
 
+  void ThreadView::add_message (refptr<Message> m) {
+    cout << "tv: adding message: " << m->mid << endl;
+
+    ustring div_id = "message_" + m->mid;
+
+    WebKitDOMNode * insert_before = webkit_dom_node_get_last_child (
+        WEBKIT_DOM_NODE (container));
+
+    WebKitDOMHTMLElement * div_message;
+
+
+    g_object_unref (insert_before);
+    //g_object_unref (div_message); // TODO: why doesn't this work?
+  }
+
+  WebKitDOMHTMLElement * ThreadView::make_message_div () {
+    /* clone div from template in html file */
+    WebKitDOMDocument *d = webkit_web_view_get_dom_document (webview);
+    WebKitDOMHTMLElement *e = clone_select (WEBKIT_DOM_NODE(d),
+        "#email_template");
+    g_object_unref (d);
+    return e;
+  }
+
+  /* clone html elements */
+  WebKitDOMHTMLElement * ThreadView::clone_select (
+      WebKitDOMNode * node,
+      ustring         selector,
+      bool            deep) {
+
+    return clone_node (WEBKIT_DOM_NODE(clone_select_select (node, selector)),
+        deep);
+  }
+
+  WebKitDOMHTMLElement * ThreadView::clone_node (
+      WebKitDOMNode * node,
+      bool            deep) {
+
+    return WEBKIT_DOM_HTML_ELEMENT(webkit_dom_node_clone_node (node, deep));
+
+  }
+
+  WebKitDOMHTMLElement * ThreadView::clone_select_select (
+      WebKitDOMNode * node,
+      ustring         selector) {
+
+    GError * gerr = NULL;
+
+    if (WEBKIT_DOM_IS_DOCUMENT(node)) {
+      return WEBKIT_DOM_HTML_ELEMENT(
+        webkit_dom_document_query_selector (WEBKIT_DOM_DOCUMENT(node),
+                                            selector.c_str(),
+                                            &gerr));
+
+
+    } else {
+      /* ..DOMElement */
+      return WEBKIT_DOM_HTML_ELEMENT(
+        webkit_dom_element_query_selector (WEBKIT_DOM_ELEMENT(node),
+                                            selector.c_str(),
+                                            &gerr));
+
+    }
   }
 
   void ThreadView::grab_modal () {

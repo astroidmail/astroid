@@ -31,7 +31,6 @@ namespace Astroid {
       ThreadView ();
       ~ThreadView ();
       void load_thread (ustring);
-      void render ();
 
       ustring thread_id;
       MessageThread * mthread;
@@ -52,8 +51,24 @@ namespace Astroid {
 
       atomic<bool> wk_loaded;
 
+      /* rendering */
+      void render ();
+      void add_message (refptr<Message>);
+      WebKitDOMHTMLElement * make_message_div ();
 
+      /* webkit dom utils */
+      WebKitDOMHTMLElement * clone_select (
+          WebKitDOMNode * node,
+          ustring         selector,
+          bool            deep = true);
 
+      WebKitDOMHTMLElement * clone_node (
+          WebKitDOMNode * node,
+          bool            deep = true);
+
+      WebKitDOMHTMLElement * clone_select_select (
+          WebKitDOMNode * node,
+          ustring         selector);
 
       /* event wrappers */
       bool on_load_changed (
