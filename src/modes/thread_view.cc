@@ -218,14 +218,26 @@ namespace Astroid {
     WebKitDOMHTMLElement * div_email_container =
       select (WEBKIT_DOM_NODE(div_message), "div.email_container");
 
+    /* build header */
     insert_header_address (header, "From:", m->sender, true);
 
-
-    /* build header */
+    /* insert header html*/
     WebKitDOMHTMLElement * table_header =
       select (WEBKIT_DOM_NODE(div_email_container), ".header_container .header");
-    webkit_dom_html_element_set_inner_html (table_header, header.c_str(), (err = NULL, &err));
+    webkit_dom_html_element_set_inner_html (
+        table_header,
+        header.c_str(),
+        (err = NULL, &err));
 
+    /* build message body */
+    WebKitDOMHTMLElement * span_body =
+      select (WEBKIT_DOM_NODE(div_email_container), ".body");
+    webkit_dom_html_element_set_inner_html (
+        span_body,
+        m->body().c_str(),
+        (err = NULL, &err));
+
+    g_object_unref (table_header);
   }
 
   void ThreadView::insert_header_address (ustring &header, ustring title, ustring address, bool important) {
