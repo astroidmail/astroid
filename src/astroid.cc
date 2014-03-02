@@ -44,7 +44,8 @@ namespace Astroid {
 
     /* start up default window with default buffers */
     MainWindow mw;
-    mw.add_mode (new ThreadIndex (&mw, "label:inbox"));
+    mw.add_mode (new ThreadIndex (&mw, "tag:new"));
+    mw.add_mode (new ThreadIndex (&mw, "tag:new and tag:unread"));
     mw.add_mode (new ThreadIndex (&mw, "astrid"));
 
     main_windows.push_back (&mw);
