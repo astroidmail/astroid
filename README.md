@@ -1,7 +1,7 @@
 # astroid mua
 
   A graphical threads-with-tags mail user agent based on [sup] and [notmuch].
-  Written in C++ using GTK+ and WebKit.
+  Written in C++ using GTK+ and [WebKit].
 
 ## user interface goals
 * operated by keyboard only - but accept mouse clicks
@@ -41,4 +41,6 @@ MIT
 [sup]: http://supmua.org
 [notmuch]: http://notmuchmail.org/
 [Geary]: http://www.yorba.org/projects/geary/
+[gmime]: http://spruce.sourceforge.net/gmime/
+[webkit]: http://webkitgtk.org/
 
