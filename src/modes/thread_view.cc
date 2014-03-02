@@ -159,6 +159,13 @@ namespace Astroid {
     mthread = new MessageThread (thread_id);
     mthread->load_messages ();
 
+    ustring s = mthread->subject;
+    if (s.size() > MAX_TAB_SUBJECT_LEN)
+      s = s.substr(0, MAX_TAB_SUBJECT_LEN - 3) + "...";
+
+    ((Gtk::Label*)tab_widget)->set_text (s);
+
+
     render ();
   }
 

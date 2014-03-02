@@ -37,6 +37,8 @@ namespace Astroid {
 
       Gtk::ScrolledWindow scroll;
 
+      const int MAX_TAB_SUBJECT_LEN = 15;
+
     private:
       /* webkit (using C api) */
       WebKitWebView     * webview;

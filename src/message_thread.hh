@@ -40,6 +40,7 @@ namespace Astroid {
       MessageThread (ustring _tid);
 
       ustring thread_id;
+      ustring subject;
       vector<refptr<Message>> messages;
 
       void load_messages ();

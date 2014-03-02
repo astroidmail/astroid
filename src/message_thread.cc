@@ -116,9 +116,9 @@ namespace Astroid {
     }
 
     /* update values */
-    /*
     const char * s = notmuch_thread_get_subject (nm_thread);
     subject     = ustring (s);
+    /*
     newest_date = notmuch_thread_get_newest_date (nm_thread);
     unread      = check_unread (nm_thread);
     attachment  = check_attachment (nm_thread);
