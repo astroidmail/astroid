@@ -31,12 +31,13 @@
   The main inspiration for astroid is the [sup] mail user agent. [sup]
   provided inspiration for [notmuch] which separates the mail index from the
   user interface. astroid is a therefore a graphical front-end for [notmuch]
-  with a [gmime] based message parser. Some inspiration for the user
-  interface has been gathered from the [Geary] mail client.
+  with a [gmime] based message parser. Some parts of the user interface and layout
+  has been copied or inspired by the [Geary] mail client.
 
 ## licence
 
-MIT
+  GNU GPL V3 or later.
+
 
 [sup]: http://supmua.org
 [notmuch]: http://notmuchmail.org/
