@@ -11,8 +11,12 @@ namespace Astroid {
   Chunk::Chunk (GMimeObject * mp) : mime_object (mp) {
     content_type = g_mime_object_get_content_type (mime_object);
 
+    if (GMIME_IS_PART (mime_object)) {
+      viewable = true;
+    } else if GMIME_IS_MESSAGE_PARTIAL (mime_object) {
 
 
+    }
   }
 
   ustring Chunk::body () {

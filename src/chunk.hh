@@ -23,6 +23,8 @@ namespace Astroid {
 
       vector<refptr<Chunk>> kids;
 
+      bool viewable = false;
+
   };
 
   class TextChunk : public Chunk {

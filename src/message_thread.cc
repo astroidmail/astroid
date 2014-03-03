@@ -74,7 +74,6 @@ namespace Astroid {
     return root->body();
   }
 
-
   /* --------
    * MessageThread
    * --------

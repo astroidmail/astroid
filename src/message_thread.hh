@@ -28,7 +28,7 @@ namespace Astroid {
 
       ustring sender;
       ustring subject;
-      
+
       ustring body ();
 
 

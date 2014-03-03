@@ -7,6 +7,7 @@
 
 # include "thread_view.hh"
 # include "message_thread.hh"
+# include "chunk.hh"
 
 
 using namespace std;
@@ -242,9 +243,24 @@ namespace Astroid {
     WebKitDOMHTMLElement * span_body =
       select (WEBKIT_DOM_NODE(div_email_container), ".body");
 
+    refptr<Chunk> c = m->root;
+    ustring body;
+
+    function< void (refptr<Chunk>) > app_body =
+      [&] (refptr<Chunk> c)
+    {
+      if (c->viewable) body += c->body();
+      for_each (c->kids.begin(),
+                c->kids.end (),
+                app_body);
+    };
+
+    app_body (c);
+
+
     webkit_dom_html_element_set_inner_html (
         span_body,
-        m->body().c_str(),
+        body.c_str(),
         (err = NULL, &err));
 
     g_object_unref (table_header);
