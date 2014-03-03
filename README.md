@@ -1,11 +1,11 @@
 # astroid mua
 
   A graphical threads-with-tags mail user agent based on [sup] and [notmuch].
-  Written in C++ using GTK+ and [WebKit].
+  Written in C++ using GTK+, [WebKit] and [gmime].
 
 ## user interface goals
 * operated by keyboard only - but accept mouse clicks
-* very very lightweight - but scratch the itch!
+* very lightweight.
 * base interface on sup, but allow buffers to be dragged out
   or separated as windows so that multiple views/buffers can be
   seen at one time.
@@ -16,7 +16,7 @@
 
 ## design goals
 * Never use deprecated libraries - use as few libraries as possible
-* Never rewrite something there exists an active library for
+* Never rewrite something it exists an active library for
 * All database operations / mail handling should be done by notmuch
 * If features are missing in notmuch; create a temporary standalone
   program that can easily later be removed.
@@ -30,9 +30,10 @@
 
   The main inspiration for astroid is the [sup] mail user agent. [sup]
   provided inspiration for [notmuch] which separates the mail index from the
-  user interface. astroid is a therefore a graphical front-end for [notmuch]
-  with a [gmime] based message parser. Some parts of the user interface and layout
-  has been copied or inspired by the [Geary] mail client.
+  user interface. astroid is using [notmuch] as a backend.
+
+  Some parts of the user interface and layout have been copied or inspired
+  by the [Geary] mail client.
 
 ## licence
 
