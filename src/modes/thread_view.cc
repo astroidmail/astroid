@@ -230,7 +230,9 @@ namespace Astroid {
 
     /* insert header html*/
     WebKitDOMHTMLElement * table_header =
-      select (WEBKIT_DOM_NODE(div_email_container), ".header_container .header");
+      select (WEBKIT_DOM_NODE(div_email_container),
+          ".header_container .header");
+
     webkit_dom_html_element_set_inner_html (
         table_header,
         header.c_str(),
@@ -239,6 +241,7 @@ namespace Astroid {
     /* build message body */
     WebKitDOMHTMLElement * span_body =
       select (WEBKIT_DOM_NODE(div_email_container), ".body");
+
     webkit_dom_html_element_set_inner_html (
         span_body,
         m->body().c_str(),
@@ -247,11 +250,18 @@ namespace Astroid {
     g_object_unref (table_header);
   }
 
-  void ThreadView::insert_header_address (ustring &header, ustring title, ustring address, bool important) {
+  void ThreadView::insert_header_address (
+      ustring &header,
+      ustring title,
+      ustring address,
+      bool important) {
     header += create_header_row (title, address, important);
   }
 
-  ustring ThreadView::create_header_row (ustring title, ustring value, bool important) {
+  ustring ThreadView::create_header_row (
+      ustring title,
+      ustring value,
+      bool important) {
     return ustring::compose (
         "<div class=\"field %1\">"
         "  <div class=\"title\">%2</div>"
@@ -279,8 +289,7 @@ namespace Astroid {
       ustring         selector,
       bool            deep) {
 
-    return clone_node (WEBKIT_DOM_NODE(select (node, selector)),
-        deep);
+    return clone_node (WEBKIT_DOM_NODE(select (node, selector)), deep);
   }
 
   WebKitDOMHTMLElement * ThreadView::clone_node (
@@ -288,7 +297,6 @@ namespace Astroid {
       bool            deep) {
 
     return WEBKIT_DOM_HTML_ELEMENT(webkit_dom_node_clone_node (node, deep));
-
   }
 
   WebKitDOMHTMLElement * ThreadView::select (
@@ -303,18 +311,14 @@ namespace Astroid {
         webkit_dom_document_query_selector (WEBKIT_DOM_DOCUMENT(node),
                                             selector.c_str(),
                                             &gerr));
-
-
     } else {
       /* ..DOMElement */
       e = WEBKIT_DOM_HTML_ELEMENT(
         webkit_dom_element_query_selector (WEBKIT_DOM_ELEMENT(node),
                                             selector.c_str(),
                                             &gerr));
-
     }
 
-    cout << "tv: clone_s_s" << endl;
     if (gerr != NULL)
       cout << "tv: clone_s_s_err: " << gerr->message << endl;
 
