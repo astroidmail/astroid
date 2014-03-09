@@ -59,28 +59,30 @@ namespace Astroid {
       }
 
       if (alternative) {
-        for_each (kids.begin(),
+        for_each (
+            kids.begin(),
+            kids.end(),
+            [&] (refptr<Chunk> c) {
+              for_each (
+                  kids.begin(),
                   kids.end(),
-                  [&] (refptr<Chunk> c) {
-                    for_each (kids.begin(),
-                              kids.end(),
-                              [&] (refptr<Chunk> cc) {
-                                if (c != cc) {
-                                  cout << "chunk: multipart: added sibling" << endl;
-                                  c->siblings.push_back (cc);
-                                }
-                              }
-                      );
-
-                    if (g_mime_content_type_is_type (c->content_type,
-                        g_mime_content_type_get_media_type (preferred_type),
-                        g_mime_content_type_get_media_subtype (preferred_type)))
-                    {
-                      cout << "chunk: multipart: preferred." << endl;
-                      c->preferred = true;
+                  [&] (refptr<Chunk> cc) {
+                    if (c != cc) {
+                      cout << "chunk: multipart: added sibling" << endl;
+                      c->siblings.push_back (cc);
                     }
                   }
-            );
+                );
+
+              if (g_mime_content_type_is_type (c->content_type,
+                  g_mime_content_type_get_media_type (preferred_type),
+                  g_mime_content_type_get_media_subtype (preferred_type)))
+              {
+                cout << "chunk: multipart: preferred." << endl;
+                c->preferred = true;
+              }
+            }
+          );
       }
 
       cout << "chunk: multi part end" << endl;
@@ -163,7 +165,8 @@ namespace Astroid {
         g_object_unref (content);
 
         const char * ss = (const char *) bytearray->get_data ();
-        return ustring (ss);
+        return ustring (ss); // TODO: apparently some issues with using the
+                             //       bytearray size here..
 
       } else {
         return ustring ("non-viewable part");
