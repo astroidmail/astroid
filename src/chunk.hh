@@ -26,9 +26,5 @@ namespace Astroid {
       bool viewable = false;
 
   };
-
-  class TextChunk : public Chunk {
-
-  };
 }
 

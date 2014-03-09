@@ -12,9 +12,42 @@ namespace Astroid {
     content_type = g_mime_object_get_content_type (mime_object);
 
     if (GMIME_IS_PART (mime_object)) {
+      // has no sub-parts
+      cout << "chunk: part" << endl;
       viewable = true;
-    } else if GMIME_IS_MESSAGE_PARTIAL (mime_object) {
 
+    } else if GMIME_IS_MESSAGE_PART (mime_object) {
+      cout << "chunk: message part" << endl;
+
+      /* contains a GMimeMessage with a potential substructure */
+      GMimeMessage * msg = g_mime_message_part_get_message ((GMimeMessagePart *) mime_object);
+      kids.push_back (refptr<Chunk>(new Chunk((GMimeObject *) msg)));
+
+    } else if GMIME_IS_MESSAGE_PARTIAL (mime_object) {
+      cout << "chunk: partial" << endl;
+
+      GMimeMessage * msg = g_mime_message_partial_reconstruct_message (
+          (GMimeMessagePartial **) &mime_object,
+          g_mime_message_partial_get_total ((GMimeMessagePartial *) mime_object)
+          );
+
+      kids.push_back (refptr<Chunk>(new Chunk((GMimeObject *) msg)));
+
+    } else if GMIME_IS_MULTIPART (mime_object) {
+      cout << "chunk: multi part" << endl;
+      //  TODO: MultiPartEncrypted, MultiPartSigned
+
+      int total = g_mime_multipart_get_count ((GMimeMultipart *) mime_object);
+      for (int i = 0; i < total; i++) {
+        GMimeObject * mo = g_mime_multipart_get_part (
+            (GMimeMultipart *) mime_object,
+            i);
+
+        kids.push_back (refptr<Chunk>(new Chunk(mo)));
+      }
+
+    } else if GMIME_IS_MESSAGE (mime_object) {
+      cout << "chunk: mime message" << endl;
 
     }
   }

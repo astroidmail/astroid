@@ -11,7 +11,6 @@ namespace Astroid {
   class Message;
   class MessageThread;
   class Chunk;
-  class TextChunk;
 
   /* UI */
   class MainWindow;
