@@ -31,7 +31,7 @@ namespace Astroid {
   }
 
   int Astroid::main (int argc, char **argv) {
-    cout << "welcome to astroid! - v" << GIT_DESC << endl;
+    cout << "welcome to astroid! - " << GIT_DESC << endl;
 
     /* set up gtk */
     app = Gtk::Application::create (argc, argv, "org.astroid");

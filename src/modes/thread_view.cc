@@ -1,6 +1,8 @@
 # include <iostream>
 # include <fstream>
 # include <atomic>
+# include <vector>
+# include <algorithm>
 
 # include <gtkmm.h>
 # include <webkit/webkit.h>
@@ -249,10 +251,33 @@ namespace Astroid {
     function< void (refptr<Chunk>) > app_body =
       [&] (refptr<Chunk> c)
     {
-      if (c->viewable) body += c->body();
-      for_each (c->kids.begin(),
-                c->kids.end (),
-                app_body);
+      /* check if we're the preferred sibling */
+      bool use = false;
+
+      if (c->siblings.size() >= 1) {
+        if (c->preferred) {
+          use = true;
+        } else {
+          /* check if there are any other preferred */
+          if (all_of (c->siblings.begin (),
+                      c->siblings.end (),
+                      [](refptr<Chunk> c) { return (!c->preferred); })) {
+            use = true;
+          } else {
+            use = false;
+          }
+        }
+      } else {
+        use = true;
+      }
+
+      if (use) {
+        if (c->viewable) body += c->body();
+
+        for_each (c->kids.begin(),
+                  c->kids.end (),
+                  app_body);
+      }
     };
 
     app_body (c);

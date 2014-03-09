@@ -1,6 +1,7 @@
 # pragma once
 
 # include <vector>
+# include <map>
 
 # include <gmime/gmime.h>
 
@@ -18,12 +19,22 @@ namespace Astroid {
       /* Chunk assumes ownership of these */
       GMimeObject *       mime_object;
       GMimeContentType *  content_type;
+      ustring content_id;
 
       ustring body ();
 
       vector<refptr<Chunk>> kids;
+      vector<refptr<Chunk>> siblings;
 
-      bool viewable = false;
+      bool viewable  = false;
+      bool preferred = false;
+
+      map<ustring, GMimeContentType *> viewable_text = {
+        { "plain", g_mime_content_type_new ("text", "plain") },
+        { "html" , g_mime_content_type_new ("text", "html") }
+      };
+
+      GMimeContentType * preferred_type = viewable_text["plain"];
 
   };
 }
