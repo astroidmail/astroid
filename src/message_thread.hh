@@ -28,10 +28,14 @@ namespace Astroid {
 
       ustring sender;
       ustring subject;
+      InternetAddressList * to ();
+      InternetAddressList * cc ();
+      InternetAddressList * bcc ();
+
+      ustring date ();
+
 
       ustring body ();
-
-
   };
 
   class MessageThread : public Glib::Object {

@@ -231,6 +231,25 @@ namespace Astroid {
     /* build header */
     insert_header_address (header, "From:", m->sender, true);
 
+    if (internet_address_list_length (m->to()) > 0) {
+      insert_header_address (header, "To:",
+          internet_address_list_to_string (m->to(), false), true);
+    }
+
+    if (internet_address_list_length (m->cc()) > 0) {
+      insert_header_address (header, "Cc:",
+          internet_address_list_to_string (m->cc(), false), true);
+    }
+
+    if (internet_address_list_length (m->bcc()) > 0) {
+      insert_header_address (header, "Bcc:",
+          internet_address_list_to_string (m->bcc(), false), true);
+    }
+
+    insert_header_address (header, "Subject:", m->subject, true);
+
+    insert_header_address (header, "Date:", m->date (), true);
+
     /* insert header html*/
     WebKitDOMHTMLElement * table_header =
       select (WEBKIT_DOM_NODE(div_email_container),

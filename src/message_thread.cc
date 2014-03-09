@@ -74,6 +74,22 @@ namespace Astroid {
     return root->body();
   }
 
+  ustring Message::date () {
+    return ustring (g_mime_message_get_date_as_string (message));
+  }
+
+  InternetAddressList * Message::to () {
+    return g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_TO);
+  }
+
+  InternetAddressList * Message::cc () {
+    return g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_CC);
+  }
+
+  InternetAddressList * Message::bcc () {
+    return g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_BCC);
+  }
+
   /* --------
    * MessageThread
    * --------
