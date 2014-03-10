@@ -39,7 +39,7 @@ namespace Astroid {
     /* set up notmuch query */
     query =  notmuch_query_create (astroid->db->nm_db, query_string.c_str ());
 
-    cout << "index, query: " << notmuch_query_get_query_string (query) << ", approx: "
+    cout << "ti, query: " << notmuch_query_get_query_string (query) << ", approx: "
          << notmuch_query_count_messages (query) << " messages." << endl;
 
     threads = notmuch_query_search_threads (query);
@@ -51,10 +51,10 @@ namespace Astroid {
     list_view->set_cursor (Gtk::TreePath("0"));
   }
 
-  void ThreadIndex::load_more_threads () {
+  void ThreadIndex::load_more_threads (bool all) {
     notmuch_thread_t  * thread;
 
-    cout << "index: load more threads.." << endl;
+    cout << "ti: load more (all: " << all << ") threads.." << endl;
 
     int i = 0;
 
@@ -74,10 +74,14 @@ namespace Astroid {
 
       i++;
 
-      if (i >= initial_max_threads) {
-        break;
+      if (!all) {
+        if (i >= initial_max_threads) {
+          break;
+        }
       }
     }
+
+    cout << "ti: loaded " << i << " threads." << endl;
   }
 
   bool ThreadIndex::on_key_press_event (GdkEventKey *event) {

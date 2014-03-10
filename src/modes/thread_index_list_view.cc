@@ -196,6 +196,19 @@ namespace Astroid {
         }
         return true;
 
+      /* load more threads */
+      case GDK_KEY_M:
+        {
+          thread_index->load_more_threads ();
+          return true;
+        }
+
+      /* load all threads */
+      case GDK_KEY_exclam:
+        {
+          thread_index->load_more_threads (true);
+          return true;
+        }
 
     }
 
