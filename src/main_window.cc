@@ -89,7 +89,8 @@ namespace Astroid {
 
   bool MainWindow::on_key_press (GdkEventKey * event) {
     if (is_searching) {
-      return sbar.handle_event (event);
+      sbar.handle_event (event);
+      return true;
     }
 
     switch (event->keyval) {
