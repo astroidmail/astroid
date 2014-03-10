@@ -89,6 +89,9 @@ namespace Astroid {
       /* mode */
       virtual void grab_modal () override;
       virtual void release_modal () override;
+
+    protected:
+      virtual bool on_key_press_event (GdkEventKey *) override;
   };
 }
 

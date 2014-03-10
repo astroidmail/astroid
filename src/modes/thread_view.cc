@@ -82,7 +82,7 @@ namespace Astroid {
         (gpointer) this );
 
 
-
+    add_events (Gdk::KEY_PRESS_MASK);
   }
 
   ThreadView::~ThreadView () {
@@ -397,12 +397,44 @@ namespace Astroid {
     return e;
   }
 
+  bool ThreadView::on_key_press_event (GdkEventKey *event) {
+    cout << "tv: key press" << endl;
+    switch (event->keyval) {
+
+      case GDK_KEY_j:
+      case GDK_KEY_J:
+      case GDK_KEY_Down:
+        {
+          auto adj = scroll.get_vadjustment ();
+          adj->set_value (adj->get_value() + adj->get_step_increment ());
+        }
+        return true;
+
+      case GDK_KEY_k:
+      case GDK_KEY_K:
+      case GDK_KEY_Up:
+        {
+          auto adj = scroll.get_vadjustment ();
+          adj->set_value (adj->get_value() - adj->get_step_increment ());
+        }
+        return true;
+
+
+    }
+
+    return false;
+  }
+
   void ThreadView::grab_modal () {
+    add_modal_grab ();
+    grab_focus ();
+
     //gtk_grab_add (GTK_WIDGET (webview));
     //gtk_widget_grab_focus (GTK_WIDGET (webview));
   }
 
   void ThreadView::release_modal () {
+    remove_modal_grab ();
     //gtk_grab_remove (GTK_WIDGET (webview));
   }
 
