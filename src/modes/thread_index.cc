@@ -44,13 +44,13 @@ namespace Astroid {
     show_all ();
 
     /* add threads to model */
-    add_threads ();
+    load_more_threads ();
 
     /* select first */
     list_view->set_cursor (Gtk::TreePath("0"));
   }
 
-  void ThreadIndex::add_threads () {
+  void ThreadIndex::load_more_threads () {
     notmuch_threads_t * threads;
     notmuch_thread_t  * thread;
 
@@ -61,6 +61,12 @@ namespace Astroid {
     for (threads = notmuch_query_search_threads (query);
          notmuch_threads_valid (threads);
          notmuch_threads_move_to_next (threads)) {
+
+      /* skip current threads */
+      if (i < current_thread) {
+        i++;
+        continue;
+      }
 
       thread = notmuch_threads_get (threads);
 
@@ -78,6 +84,8 @@ namespace Astroid {
         break;
       }
     }
+
+    current_thread += (i - current_thread);
 
     notmuch_threads_destroy (threads);
     notmuch_query_destroy (query);

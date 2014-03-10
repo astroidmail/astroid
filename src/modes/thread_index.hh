@@ -24,8 +24,9 @@ namespace Astroid {
       MainWindow * main_window;
 
       int initial_max_threads = 20;
+      int current_thread = 0;
 
-      void add_threads ();
+      void load_more_threads ();
 
       void open_thread (ustring, bool);
       ThreadView * thread_view;

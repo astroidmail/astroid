@@ -104,11 +104,15 @@ namespace Astroid {
           Gtk::TreeViewColumn *c;
           get_cursor (path, c);
 
-          if (path) {
-            path.next ();
+          path.next ();
+          Gtk::TreeIter it = list_store->get_iter (path);
+
+          if (it) {
             set_cursor (path);
           } else {
-            path.prev ();
+            /* try to load more threads */
+            // TODO: async and lock
+            thread_index->load_more_threads ();
           }
 
           return true;
@@ -129,6 +133,25 @@ namespace Astroid {
           return true;
         }
         break;
+
+      case GDK_KEY_Home:
+      case GDK_KEY_1:
+        {
+          /* select first */
+          set_cursor (Gtk::TreePath("0"));
+          return true;
+        }
+
+      case GDK_KEY_0:
+        {
+          /* select last */
+          auto it = list_store->children().end ();
+          auto p  = list_store->get_path (--it);
+          set_cursor (p);
+
+          return true;
+        }
+
 
       case GDK_KEY_Return:
         {
