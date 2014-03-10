@@ -246,9 +246,21 @@ namespace Astroid {
           internet_address_list_to_string (m->bcc(), false), true);
     }
 
+    insert_header_address (header, "Date:", m->date (), true);
     insert_header_address (header, "Subject:", m->subject, true);
 
-    insert_header_address (header, "Date:", m->date (), true);
+    auto tags = m->tags ();
+    ustring tags_s;
+    for_each (tags.begin(), tags.end(),
+        [&](ustring t) {
+          if (t != *tags.begin()) {
+            tags_s += ", ";
+          }
+          tags_s = tags_s + t;
+        });
+
+    insert_header_address (header, "Tags:", tags_s, true);
+
 
     /* insert header html*/
     WebKitDOMHTMLElement * table_header =

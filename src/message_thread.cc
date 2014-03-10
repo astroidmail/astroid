@@ -18,6 +18,11 @@ namespace Astroid {
    */
   Message::Message () { }
   Message::Message (ustring _fname) : fname (_fname) {
+
+    if (mid == "") {
+      mid = g_mime_message_get_message_id (message);
+    }
+
   }
 
   Message::Message (notmuch_message_t *message) {
@@ -36,6 +41,36 @@ namespace Astroid {
 
   Message::~Message () {
     g_object_unref (message);
+  }
+
+  vector<ustring> Message::tags () {
+    vector<ustring> v;
+
+    if (mid == "") {
+      cout << "mt: error: mid not defined, no tags" << endl;
+      return v;
+    } else {
+      /* get tags from nm db */
+      notmuch_message_t  * msg;
+      notmuch_tags_t     * ntags;
+
+      auto s = notmuch_database_find_message (astroid->db->nm_db, mid.c_str(), &msg);
+      if (s == NOTMUCH_STATUS_SUCCESS) {
+        for (ntags = notmuch_message_get_tags (msg);
+             notmuch_tags_valid (ntags);
+             notmuch_tags_move_to_next (ntags)) {
+
+          v.push_back (ustring(notmuch_tags_get (ntags)));
+
+        }
+      } else {
+        cout << "mt: error: could not load message: " << mid << " from db." << endl;
+      }
+
+      notmuch_message_destroy (msg);
+
+      return v;
+    }
   }
 
   void Message::load_message () {

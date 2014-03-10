@@ -15,7 +15,7 @@ namespace Astroid {
     public:
       NotmuchThread (notmuch_thread_t *);
 
-      string              thread_id;
+      string thread_id;
 
       char * subject_chr;
       ustring subject;
@@ -38,7 +38,6 @@ namespace Astroid {
       notmuch_database_t * nm_db;
 
       void test_query ();
-
   };
 }
 

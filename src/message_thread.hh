@@ -33,7 +33,7 @@ namespace Astroid {
       InternetAddressList * bcc ();
 
       ustring date ();
-
+      vector<ustring> tags ();
 
       ustring body ();
   };
