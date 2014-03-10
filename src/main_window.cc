@@ -118,8 +118,10 @@ namespace Astroid {
       /* close page */
       case GDK_KEY_x:
         {
-          int c = notebook.get_current_page ();
-          del_mode (c);
+          if (modes.size() > 1) {
+            int c = notebook.get_current_page ();
+            del_mode (c);
+          }
         }
         return true;
 
