@@ -26,7 +26,7 @@ namespace Astroid {
   }
 
   Message::Message (notmuch_message_t *message) {
-    /* The initializer must make sure the message pointer
+    /* The caller must make sure the message pointer
      * is valid and not destroyed while initializing */
 
     mid = notmuch_message_get_message_id (message);
