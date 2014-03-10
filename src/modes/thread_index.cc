@@ -27,13 +27,6 @@ namespace Astroid {
     tab_widget = new Gtk::Label (query_string);
     tab_widget->set_can_focus (false);
 
-    /* set up notmuch query */
-    query =  notmuch_query_create (astroid->db->nm_db, query_string.c_str ());
-
-    cout << "index, query: " << notmuch_query_get_query_string (query) << ", approx: "
-         << notmuch_query_count_messages (query) << " messages." << endl;
-
-
     /* set up treeview */
     list_store = Glib::RefPtr<ThreadIndexListStore>(new ThreadIndexListStore ());
     list_view  = new ThreadIndexListView (this, list_store);
@@ -43,6 +36,14 @@ namespace Astroid {
 
     show_all ();
 
+    /* set up notmuch query */
+    query =  notmuch_query_create (astroid->db->nm_db, query_string.c_str ());
+
+    cout << "index, query: " << notmuch_query_get_query_string (query) << ", approx: "
+         << notmuch_query_count_messages (query) << " messages." << endl;
+
+    threads = notmuch_query_search_threads (query);
+
     /* add threads to model */
     load_more_threads ();
 
@@ -51,22 +52,15 @@ namespace Astroid {
   }
 
   void ThreadIndex::load_more_threads () {
-    notmuch_threads_t * threads;
     notmuch_thread_t  * thread;
 
-    cout << "index: add threads.." << endl;
+    cout << "index: load more threads.." << endl;
 
     int i = 0;
 
-    for (threads = notmuch_query_search_threads (query);
+    for (;
          notmuch_threads_valid (threads);
          notmuch_threads_move_to_next (threads)) {
-
-      /* skip current threads */
-      if (i < current_thread) {
-        i++;
-        continue;
-      }
 
       thread = notmuch_threads_get (threads);
 
@@ -84,11 +78,6 @@ namespace Astroid {
         break;
       }
     }
-
-    current_thread += (i - current_thread);
-
-    notmuch_threads_destroy (threads);
-    notmuch_query_destroy (query);
   }
 
   bool ThreadIndex::on_key_press_event (GdkEventKey *event) {
@@ -157,7 +146,8 @@ namespace Astroid {
   }
 
   ThreadIndex::~ThreadIndex () {
-
+    notmuch_threads_destroy (threads);
+    notmuch_query_destroy (query);
   }
 }
 

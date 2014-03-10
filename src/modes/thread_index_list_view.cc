@@ -97,7 +97,6 @@ namespace Astroid {
   bool ThreadIndexListView::on_key_press_event (GdkEventKey *event) {
     switch (event->keyval) {
       case GDK_KEY_j:
-      case GDK_KEY_J:
       case GDK_KEY_Down:
         {
           Gtk::TreePath path;
@@ -113,6 +112,10 @@ namespace Astroid {
             /* try to load more threads */
             // TODO: async and lock
             thread_index->load_more_threads ();
+
+            // retry to move down
+            it = list_store->get_iter (path);
+            if (it) set_cursor (path);
           }
 
           return true;
@@ -120,7 +123,6 @@ namespace Astroid {
         break;
 
       case GDK_KEY_k:
-      case GDK_KEY_K:
       case GDK_KEY_Up:
         {
           Gtk::TreePath path;
@@ -134,6 +136,20 @@ namespace Astroid {
         }
         break;
 
+      case GDK_KEY_J:
+        {
+          auto adj = get_vadjustment ();
+          adj->set_value (adj->get_value() + adj->get_step_increment ());
+          return true;
+        }
+
+      case GDK_KEY_K:
+        {
+          auto adj = get_vadjustment ();
+          adj->set_value (adj->get_value() - adj->get_step_increment ());
+          return true;
+        }
+
       case GDK_KEY_Home:
       case GDK_KEY_1:
         {
@@ -142,6 +158,7 @@ namespace Astroid {
           return true;
         }
 
+      case GDK_KEY_End:
       case GDK_KEY_0:
         {
           /* select last */
