@@ -189,7 +189,7 @@ namespace Astroid {
 
 
           } else {
-            /* open message in split pane*/
+            /* open message in split pane */
             thread_index->open_thread (thread_id, false);
 
           }
