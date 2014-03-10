@@ -7,8 +7,8 @@
 
 # include <notmuch.h>
 
-# include "../astroid.hh"
-# include "../db.hh"
+# include "astroid.hh"
+# include "db.hh"
 # include "paned_mode.hh"
 # include "thread_index.hh"
 # include "thread_index_list_view.hh"

@@ -4,7 +4,7 @@
 # include <gtkmm/liststore.h>
 # include <gtkmm/treeview.h>
 
-# include "../proto.hh"
+# include "proto.hh"
 
 using namespace std;
 
