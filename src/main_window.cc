@@ -148,7 +148,7 @@ namespace Astroid {
   }
 
   void MainWindow::del_mode (int c) {
-    notebook.remove_page (c);
+    notebook.remove_page (c); // this should free the widget
     auto it = modes.begin () + c;
     modes.erase(it);
     c = min (c, notebook.get_n_pages()-1);
