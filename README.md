@@ -4,7 +4,8 @@
   Written in C++ using GTK+, [WebKit] and [gmime].
 
 ## design and user interface goals
-* operated by keyboard only - but accept mouse clicks
+* fully operatable by keyboard only - but accept mouse clicks
+* possibly steal command style from [alot] and hooks from [sup]
 * very lightweight.
 * base interface on sup, but allow buffers to be dragged out
   or separated as windows so that multiple views/buffers can be
@@ -12,16 +13,17 @@
 * allow several simultaneous instances.
 * display html mail and some attachments inline - steal from
   thunderbird or geary or something.
-* render markdown (and friends) as well as syntax highlighting
-* built-in crypto (gpg,..) support
+* built-in crypto (gpg,..) support.
+* render markdown (and friends) as well as syntax highlighting.
+* editors: built-in simple editor, embed vim or emacs.
 * Support: Platforms supported by notmuch and other libraries, specifically:
   Linux, *BSD, Mac, Windows..
 
 ## considerations
-* Never use deprecated libraries - use as few libraries as possible
-* Never rewrite something it exists an active library for
+* Never use deprecated libraries - use as few libraries as possible.
+* Never rewrite something if it exists an active library for it.
 * All database operations / mail handling should be done by notmuch or other
-  tools.
+  tools. E.g. [afew] for automatic tagging and maildir <-> tag sync.
 
 ## acknowledgements
 
@@ -34,12 +36,15 @@
 
 ## licence
 
-  GNU GPL V3 or later.
+  GNU [GPL] v3 or later.
 
 
 [sup]: http://supmua.org
+[alot]: https://github.com/pazz/alot
+[afew]: https://github.com/teythoon/afew
 [notmuch]: http://notmuchmail.org/
 [Geary]: http://www.yorba.org/projects/geary/
 [gmime]: http://spruce.sourceforge.net/gmime/
 [webkit]: http://webkitgtk.org/
+[GPL]: https://www.gnu.org/copyleft/gpl.html
 
