@@ -99,6 +99,9 @@ namespace Astroid {
       case GDK_KEY_j:
       case GDK_KEY_Down:
         {
+          if (list_store->children().size() < 2)
+            return true;
+
           Gtk::TreePath path;
           Gtk::TreeViewColumn *c;
           get_cursor (path, c);
