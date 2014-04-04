@@ -29,8 +29,8 @@
   provided inspiration for [notmuch] which separates the mail index from the
   user interface. astroid is using [notmuch] as a backend.
 
-  Some parts of the user interface and layout have been copied or inspired
-  by the [Geary] mail client.
+  Some parts of the user interface and layout have been copied from or
+  inspired by the [Geary] mail client.
 
 ## licence
 
