@@ -22,6 +22,7 @@ namespace Astroid {
   class ThreadIndexListCellRenderer;
   class ThreadIndexListView;
   class ThreadView;
+  class HelpMode;
 
 }
 

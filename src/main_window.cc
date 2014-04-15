@@ -7,6 +7,7 @@
 # include "main_window.hh"
 # include "modes/mode.hh"
 # include "modes/thread_index.hh"
+# include "modes/help_mode.hh"
 
 using namespace std;
 
@@ -129,6 +130,11 @@ namespace Astroid {
       case GDK_KEY_F:
         enable_search ();
         return true;
+
+      /* help */
+      case GDK_KEY_question:
+        add_mode (new HelpMode ());
+        break;
 
     }
     return false;
