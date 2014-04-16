@@ -141,6 +141,8 @@ namespace Astroid {
   }
 
   MainWindow::~MainWindow () {
+    modes.clear (); // the modes themselves should be freed upon
+                    // widget desctruction
     cout << "mw: done." << endl;
   }
 
