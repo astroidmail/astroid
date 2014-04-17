@@ -55,7 +55,11 @@ namespace Astroid {
       int message_count_start  = date_start + date_width;
       int message_count_width = 25;
 
-      int subject_start = message_count_start + message_count_width;
+      int authors_start = message_count_start + message_count_width;
+      int authors_width = 150;
+      int authors_max_len = 80;
+
+      int subject_start = authors_start + authors_width;
       int subject_font_size = font_size;
 
       void render_subject (
@@ -69,6 +73,11 @@ namespace Astroid {
           const Gdk::Rectangle &cell_area );
 
       void render_message_count (
+          const ::Cairo::RefPtr< ::Cairo::Context>&cr,
+          Gtk::Widget &widget,
+          const Gdk::Rectangle &cell_area );
+
+      void render_authors (
           const ::Cairo::RefPtr< ::Cairo::Context>&cr,
           Gtk::Widget &widget,
           const Gdk::Rectangle &cell_area );

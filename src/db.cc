@@ -1,4 +1,5 @@
 # include <iostream>
+# include <vector>
 # include <boost/filesystem.hpp>
 
 # include <glibmm.h>
@@ -102,14 +103,35 @@ namespace Astroid {
       newest_date = notmuch_thread_get_newest_date (nm_thread);
       unread      = check_unread (nm_thread);
       attachment  = check_attachment (nm_thread);
-
       total_messages = check_total_messages (nm_thread);
+      authors     = get_authors (nm_thread);
 
       c++;
     }
 
     notmuch_threads_destroy (nm_threads);
     notmuch_query_destroy (query);
+  }
+
+  /* get and split authors */
+  vector<ustring> NotmuchThread::get_authors (notmuch_thread_t * nm_thread) {
+    ustring astr = ustring (notmuch_thread_get_authors (nm_thread));
+
+    vector<ustring> iaths = Glib::Regex::split_simple(",", astr);
+    vector<ustring> aths;
+
+    for_each (iaths.begin (),
+              iaths.end (),
+              [&](ustring a) {
+
+                /* strip */
+                while (a[0] == ' ') a = a.substr(1, a.size());
+                while (a[a.size()-1] == ' ') a = a.substr(0,a.size()-1);
+
+                aths.push_back (a);
+              });
+
+    return aths;
   }
 
   int NotmuchThread::check_total_messages (notmuch_thread_t * nm_thread) {

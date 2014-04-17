@@ -38,6 +38,7 @@ namespace Astroid {
 
     render_date (cr, widget, cell_area);
     render_message_count (cr, widget, cell_area);
+    render_authors (cr, widget, cell_area);
     render_subject (cr, widget, cell_area);
 
     /*
@@ -218,6 +219,65 @@ namespace Astroid {
     //subject_start = date_start + (w / Pango::SCALE) + padding;
 
     cr->move_to (cell_area.get_x() + message_count_start, cell_area.get_y() + y);
+    pango_layout->show_in_cairo_context (cr);
+
+  } // }}}
+
+  void ThreadIndexListCellRenderer::render_authors ( // {{{
+      const ::Cairo::RefPtr< ::Cairo::Context>&cr,
+      Gtk::Widget &widget,
+      const Gdk::Rectangle &cell_area ) {
+
+    /* format authors string */
+    ustring authors;
+
+    if (thread->authors.size () == 1) {
+      /* if only one, show full name */
+      authors = thread->authors[0];
+    } else {
+      /* show first names with comma between */
+      bool first = true;
+      for_each (thread->authors.begin (),
+                thread->authors.end (),
+                [&](ustring a) {
+
+                  if (!first) {
+                    authors += ",";
+                  } else {
+                    first = false;
+                  }
+                  a = a.substr(0,a.find_first_of(" "));
+                  authors += a;
+                });
+    }
+
+    authors = authors.substr (0, authors_max_len);
+
+    Glib::RefPtr<Pango::Layout> pango_layout = widget.create_pango_layout (authors);
+
+    Pango::FontDescription font_description;
+    font_description.set_size(Pango::SCALE * font_size);
+
+    if (thread->unread) {
+      font_description.set_weight (Pango::WEIGHT_BOLD);
+    }
+
+    pango_layout->set_font_description (font_description);
+
+    /* set color */
+    Glib::RefPtr<Gtk::StyleContext> stylecontext = widget.get_style_context();
+    Gdk::RGBA color = stylecontext->get_color(Gtk::STATE_FLAG_NORMAL);
+    cr->set_source_rgb (color.get_red(), color.get_green(), color.get_blue());
+
+    /* align in the middle */
+    int w, h;
+    pango_layout->get_size (w, h);
+    int y = max(0,(content_height / 2) - ((h / Pango::SCALE) / 2));
+
+    /* update subject start */
+    //subject_start = date_start + (w / Pango::SCALE) + padding;
+
+    cr->move_to (cell_area.get_x() + authors_start, cell_area.get_y() + y);
     pango_layout->show_in_cairo_context (cr);
 
   } // }}}
