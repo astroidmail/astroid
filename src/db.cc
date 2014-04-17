@@ -103,11 +103,17 @@ namespace Astroid {
       unread      = check_unread (nm_thread);
       attachment  = check_attachment (nm_thread);
 
+      total_messages = check_total_messages (nm_thread);
+
       c++;
     }
 
     notmuch_threads_destroy (nm_threads);
     notmuch_query_destroy (query);
+  }
+
+  int NotmuchThread::check_total_messages (notmuch_thread_t * nm_thread) {
+    return notmuch_thread_get_total_messages (nm_thread);
   }
 
   /* is there unread messages in thread */

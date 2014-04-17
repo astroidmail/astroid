@@ -23,11 +23,14 @@ namespace Astroid {
       bool    unread;
       bool    attachment;
 
-      void      ensure_valid ();
+      int     total_messages;
+
+      void    ensure_valid ();
 
     private:
-      bool      check_unread (notmuch_thread_t *);
-      bool      check_attachment (notmuch_thread_t *);
+      bool    check_unread (notmuch_thread_t *);
+      bool    check_attachment (notmuch_thread_t *);
+      int     check_total_messages (notmuch_thread_t *);
   };
 
   class Db {
