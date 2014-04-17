@@ -235,7 +235,7 @@ namespace Astroid {
       /* if only one, show full name */
       authors = thread->authors[0];
     } else {
-      /* show first names with comma between */
+      /* show first names separated by comma */
       bool first = true;
       for_each (thread->authors.begin (),
                 thread->authors.end (),
@@ -247,6 +247,7 @@ namespace Astroid {
                     first = false;
                   }
                   a = a.substr(0,a.find_first_of(" "));
+                  a = a.substr(0,a.find_first_of("@"));
                   authors += a;
                 });
     }
