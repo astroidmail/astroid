@@ -191,7 +191,7 @@ namespace Astroid {
 
     tag_string = tag_string.substr (0, tags_max_len);
 
-    pango_layout->set_markup ("<span color=\"#31587a\">" + tag_string + "</span>");
+    pango_layout->set_markup ("<span font_style=\"italic\"  color=\"#31587a\">" + tag_string + "</span>");
 
     /* align in the middle */
     int w, h;
