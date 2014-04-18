@@ -39,6 +39,10 @@ namespace Astroid {
     render_date (cr, widget, cell_area);
     render_message_count (cr, widget, cell_area);
     render_authors (cr, widget, cell_area);
+
+    tags_width = render_tags (cr, widget, cell_area);
+    subject_start = tags_start + tags_width / Pango::SCALE + ((tags_width > 0) ? padding : 0);
+
     render_subject (cr, widget, cell_area);
 
     /*
@@ -117,7 +121,7 @@ namespace Astroid {
       Gtk::Widget &widget,
       const Gdk::Rectangle &cell_area ) {
 
-    Glib::RefPtr<Pango::Layout> pango_layout = widget.create_pango_layout ((thread->subject));
+    Glib::RefPtr<Pango::Layout> pango_layout = widget.create_pango_layout ("");
 
     Pango::FontDescription font_description;
     font_description.set_size(Pango::SCALE * subject_font_size);
@@ -130,8 +134,11 @@ namespace Astroid {
 
     /* set color */
     Glib::RefPtr<Gtk::StyleContext> stylecontext = widget.get_style_context();
+
     Gdk::RGBA color = stylecontext->get_color(Gtk::STATE_FLAG_NORMAL);
     cr->set_source_rgb (color.get_red(), color.get_green(), color.get_blue());
+    pango_layout->set_markup ("<span color=\"#807d74\">" + thread->subject + "</span>");
+
 
     /* align in the middle */
     int w, h;
@@ -140,6 +147,61 @@ namespace Astroid {
 
     cr->move_to (cell_area.get_x() + subject_start, cell_area.get_y() + y);
     pango_layout->show_in_cairo_context (cr);
+
+  } // }}}
+
+  int ThreadIndexListCellRenderer::render_tags ( // {{{
+      const ::Cairo::RefPtr< ::Cairo::Context>&cr,
+      Gtk::Widget &widget,
+      const Gdk::Rectangle &cell_area ) {
+
+    Glib::RefPtr<Pango::Layout> pango_layout = widget.create_pango_layout ("");
+
+    Pango::FontDescription font_description;
+    font_description.set_size(Pango::SCALE * subject_font_size);
+
+    if (thread->unread) {
+      font_description.set_weight (Pango::WEIGHT_BOLD);
+    }
+
+    pango_layout->set_font_description (font_description);
+
+    /* set color */
+    Glib::RefPtr<Gtk::StyleContext> stylecontext = widget.get_style_context();
+
+    Gdk::RGBA color = stylecontext->get_color(Gtk::STATE_FLAG_NORMAL);
+    cr->set_source_rgb (color.get_red(), color.get_green(), color.get_blue());
+
+    ustring tag_string;
+
+    bool first = true;
+    for_each (thread->tags.begin (),
+              thread->tags.end (),
+              [&](ustring a) {
+
+                if (!first) {
+                  tag_string += ",";
+                } else {
+                  first = false;
+                }
+                a = a.substr(0,a.find_first_of(" "));
+                a = a.substr(0,a.find_first_of("@"));
+                tag_string += a;
+              });
+
+    tag_string = tag_string.substr (0, tags_max_len);
+
+    pango_layout->set_markup ("<span color=\"#31587a\">" + tag_string + "</span>");
+
+    /* align in the middle */
+    int w, h;
+    pango_layout->get_size (w, h);
+    int y = max(0,(content_height / 2) - ((h / Pango::SCALE) / 2));
+
+    cr->move_to (cell_area.get_x() + tags_start, cell_area.get_y() + y);
+    pango_layout->show_in_cairo_context (cr);
+
+    return w;
 
   } // }}}
 

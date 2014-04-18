@@ -26,14 +26,14 @@ namespace Astroid {
       bool    attachment;
       int     total_messages;
       vector<ustring> authors;
+      vector<ustring> tags;
 
       void    ensure_valid ();
 
     private:
-      bool    check_unread (notmuch_thread_t *);
-      bool    check_attachment (notmuch_thread_t *);
       int     check_total_messages (notmuch_thread_t *);
       vector<ustring> get_authors (notmuch_thread_t *);
+      vector<ustring> get_tags (notmuch_thread_t *);
   };
 
   class Db {

@@ -101,16 +101,41 @@ namespace Astroid {
       const char * s = notmuch_thread_get_subject (nm_thread);
       subject     = ustring (s);
       newest_date = notmuch_thread_get_newest_date (nm_thread);
-      unread      = check_unread (nm_thread);
-      attachment  = check_attachment (nm_thread);
       total_messages = check_total_messages (nm_thread);
       authors     = get_authors (nm_thread);
+      tags        = get_tags (nm_thread);
 
       c++;
     }
 
     notmuch_threads_destroy (nm_threads);
     notmuch_query_destroy (query);
+  }
+
+  vector<ustring> NotmuchThread::get_tags (notmuch_thread_t * nm_thread) {
+
+    notmuch_tags_t *  tags;
+    const char *      tag;
+
+    vector<ustring> ttags;
+
+    for (tags = notmuch_thread_get_tags (nm_thread);
+         notmuch_tags_valid (tags);
+         notmuch_tags_move_to_next (tags))
+    {
+      tag = notmuch_tags_get (tags);
+
+      if (string(tag) == "unread") {
+        unread = true;
+      } else if (string(tag) == "attachment") {
+        attachment = true;
+      }
+
+      ttags.push_back (ustring(tag));
+    }
+
+
+    return ttags;
   }
 
   /* get and split authors */
@@ -136,48 +161,6 @@ namespace Astroid {
 
   int NotmuchThread::check_total_messages (notmuch_thread_t * nm_thread) {
     return notmuch_thread_get_total_messages (nm_thread);
-  }
-
-  /* is there unread messages in thread */
-  bool NotmuchThread::check_unread (notmuch_thread_t * nm_thread) {
-
-    notmuch_tags_t *  tags;
-    const char *      tag;
-
-    for (tags = notmuch_thread_get_tags (nm_thread);
-         notmuch_tags_valid (tags);
-         notmuch_tags_move_to_next (tags))
-    {
-      tag = notmuch_tags_get (tags);
-
-      if (string(tag) == "unread") {
-        return true;
-      }
-    }
-
-    return false;
-
-  }
-
-  /* is there a message with an attachment in thread */
-  bool NotmuchThread::check_attachment (notmuch_thread_t * nm_thread) {
-
-    notmuch_tags_t *  tags;
-    const char *      tag;
-
-    for (tags = notmuch_thread_get_tags (nm_thread);
-         notmuch_tags_valid (tags);
-         notmuch_tags_move_to_next (tags))
-    {
-      tag = notmuch_tags_get (tags);
-
-      if (string(tag) == "attachment") {
-        return true;
-      }
-    }
-
-    return false;
-
   }
 }
 
