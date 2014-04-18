@@ -314,7 +314,10 @@ namespace Astroid {
                 });
     }
 
-    authors = authors.substr (0, authors_max_len);
+    if (authors.size() >= authors_max_len) {
+      authors = authors.substr (0, authors_max_len);
+      authors += ".";
+    }
 
     Glib::RefPtr<Pango::Layout> pango_layout = widget.create_pango_layout (authors);
 
