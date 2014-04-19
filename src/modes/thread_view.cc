@@ -31,30 +31,27 @@ namespace Astroid {
     webview = WEBKIT_WEB_VIEW (webkit_web_view_new ());
 
     websettings = WEBKIT_WEB_SETTINGS (webkit_web_settings_new ());
-    /* use g_object_set / g_object_get
-    webkit_settings_set_auto_load_images (websettings, false);
-    webkit_settings_set_enable_html5_database (websettings, false);
-    webkit_settings_set_enable_html5_local_storage (websettings, false);
-    webkit_settings_set_enable_hyperlink_auditing (websettings, false);
-    webkit_settings_set_enable_java (websettings, false);
-    webkit_settings_set_enable_javascript (websettings, false);
-    webkit_settings_set_enable_plugins (websettings, false);
-    webkit_settings_set_enable_xss_auditor (websettings, false);
-
-
-    //webkit_settings_set_enable_spatial_navigation (websettings, true);
-    webkit_settings_set_media_playback_requires_user_gesture (websettings, true);
-    webkit_settings_set_enable_webaudio (websettings, true);
-    webkit_settings_set_enable_webgl (websettings, true);
-    webkit_settings_set_enable_private_browsing (websettings, true);
-    webkit_settings_set_enable_fullscreen (websettings, true);
-    */
+    g_object_set (websettings, "enable-scripts", false);
+    g_object_set (websettings, "enable-java-applet", false);
+    g_object_set (websettings, "enable-plugins", false);
+    g_object_set (websettings, "auto-load-images", false);
+    g_object_set (websettings, "enable-display-of-insecure-content", false);
+    g_object_set (websettings, "enable-dns-prefetching", false);
+    g_object_set (websettings, "enable-fullscreen", false);
+    g_object_set (websettings, "enable-html5-database", false);
+    g_object_set (websettings, "enable-html5-local-storage", false);
+    g_object_set (websettings, "enable-mediastream", false);
+    g_object_set (websettings, "enable-mediasource", false);
+    g_object_set (websettings, "enable-offline-web-application-cache", false);
+    g_object_set (websettings, "enable-page-cache", false);
+    g_object_set (websettings, "enable-private-browsing", true);
+    g_object_set (websettings, "enable-running-of-insecure-content", false);
+    g_object_set (websettings, "enable-xss-auditor", true);
+    g_object_set (websettings, "media-playback-requires-user-gesture", true);
 
     webkit_web_view_set_settings (webview, websettings);
 
-
     gtk_container_add (GTK_CONTAINER (scroll.gobj()), GTK_WIDGET(webview));
-
 
     scroll.show_all ();
 

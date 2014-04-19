@@ -84,6 +84,9 @@ namespace Astroid {
     notmuch_threads_t * nm_threads;
     notmuch_thread_t  * nm_thread;
 
+    unread     = false;
+    attachment = false;
+
     int c = 0;
 
     for (nm_threads = notmuch_query_search_threads (query);
