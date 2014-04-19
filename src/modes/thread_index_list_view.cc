@@ -175,6 +175,9 @@ namespace Astroid {
 
       case GDK_KEY_Return:
         {
+          if (list_store->children().size() < 1)
+            return true;
+
           Gtk::TreePath path;
           Gtk::TreeViewColumn *c;
           get_cursor (path, c);
@@ -182,19 +185,23 @@ namespace Astroid {
 
           iter = list_store->get_iter (path);
 
-          Gtk::ListStore::Row row = *iter;
-          ustring thread_id = row[list_store->columns.thread_id];
-          cout << "ti_list: loading: " << thread_id << endl;
+          if (iter) {
+            Gtk::ListStore::Row row = *iter;
+            ustring thread_id = row[list_store->columns.thread_id];
+            cout << "ti_list: loading: " << thread_id << endl;
 
-          if (event->state & GDK_SHIFT_MASK) {
-            /* open message in new tab */
-            thread_index->open_thread (thread_id, true);
+            if (event->state & GDK_SHIFT_MASK) {
+              /* open message in new tab */
+              thread_index->open_thread (thread_id, true);
 
 
+            } else {
+              /* open message in split pane */
+              thread_index->open_thread (thread_id, false);
+
+            }
           } else {
-            /* open message in split pane */
-            thread_index->open_thread (thread_id, false);
-
+            return true;
           }
         }
         return true;
