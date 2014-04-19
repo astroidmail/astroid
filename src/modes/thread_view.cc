@@ -95,7 +95,7 @@ namespace Astroid {
    * http://gtk.10911.n7.nabble.com/Using-g-signal-connect-in-class-td57137.html
    *
    * to be portable we have to use a free function declared extern "C". a
-   * static member function * is likely to work at least on gcc/g++, but not
+   * static member function is likely to work at least on gcc/g++, but not
    * necessarily elsewhere.
    *
    */
