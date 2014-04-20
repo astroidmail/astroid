@@ -324,22 +324,26 @@ namespace Astroid {
       ustring title,
       ustring address,
       bool important) {
+
     header += create_header_row (title, address, important);
+
   }
 
   ustring ThreadView::create_header_row (
       ustring title,
       ustring value,
       bool important) {
+
     return ustring::compose (
         "<div class=\"field %1\">"
         "  <div class=\"title\">%2</div>"
         "  <div class=\"value\">%3</div>"
         "</div>",
         (important ? "important" : ""),
-        title,
-        value
+        Glib::Markup::escape_text (title),
+        Glib::Markup::escape_text (value)
         );
+
   }
 
 
