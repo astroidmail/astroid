@@ -1,5 +1,7 @@
 # include <iostream>
 
+# include <boost/tokenizer.hpp>
+
 # include <gtkmm.h>
 # include <gtkmm/widget.h>
 
@@ -89,8 +91,37 @@ namespace Astroid {
 
   void CommandBar::handle_command (ustring cmd) {
     cout << "cb: command: " << cmd << endl;
-    if (cmd == "help") {
+
+    /* extract tokens
+     *
+     * ustring tokenizer: http://lists.boost.org/boost-users/2007/01/24698.php
+     */
+    typedef boost::tokenizer<
+      boost::char_delimiters_separator< Glib::ustring::value_type > ,
+      Glib::ustring::const_iterator ,
+      Glib::ustring > utokenizer;
+
+    utokenizer tok (cmd);
+
+    auto it = tok.begin ();
+
+    if (it == tok.end ()) return;
+
+    if (*it == "help") {
       main_window->add_mode (new HelpMode ());
+
+    } else if (*it == "archive") {
+      it++;
+      if (it == tok.end ()) return;
+
+      if (*it == "thread") {
+        it++;
+        if (it == tok.end ()) return;
+
+        ustring thread_id = *it;
+
+        cout << "cb: toggle archive on thread: " << thread_id << endl;
+      }
 
     } else {
       cout  << "cb: unknown command: " << cmd << endl;

@@ -23,6 +23,7 @@ namespace Astroid {
       enum CommandMode {
         Search = 0,
         Generic,
+        Tag,        /* apply or remove tags */
       };
 
       CommandBar ();

@@ -44,9 +44,12 @@ namespace Astroid {
       ThreadIndexListView (ThreadIndex *, Glib::RefPtr<ThreadIndexListStore>);
 
       ThreadIndex * thread_index;
+      MainWindow  * main_window;
       Glib::RefPtr<ThreadIndexListStore> list_store;
 
       void set_thread_data (Gtk::CellRenderer *, const Gtk::TreeIter & );
+
+      ustring get_current_thread ();
 
 
     protected:

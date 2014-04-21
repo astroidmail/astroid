@@ -2,6 +2,7 @@
 
 # include "db.hh"
 # include "paned_mode.hh"
+# include "main_window.hh"
 # include "thread_index.hh"
 # include "thread_index_list_view.hh"
 # include "thread_index_list_cell_renderer.hh"
@@ -57,6 +58,7 @@ namespace Astroid {
    */
   ThreadIndexListView::ThreadIndexListView (ThreadIndex * _thread_index, Glib::RefPtr<ThreadIndexListStore> store) {
     thread_index = _thread_index;
+    main_window  = _thread_index->main_window;
     list_store = store;
 
     set_model (list_store);
@@ -175,19 +177,9 @@ namespace Astroid {
 
       case GDK_KEY_Return:
         {
-          if (list_store->children().size() < 1)
-            return true;
+          ustring thread_id = get_current_thread ();
 
-          Gtk::TreePath path;
-          Gtk::TreeViewColumn *c;
-          get_cursor (path, c);
-          Gtk::TreeIter iter;
-
-          iter = list_store->get_iter (path);
-
-          if (iter) {
-            Gtk::ListStore::Row row = *iter;
-            ustring thread_id = row[list_store->columns.thread_id];
+          if (thread_id != "") {
             cout << "ti_list: loading: " << thread_id << endl;
 
             if (event->state & GDK_SHIFT_MASK) {
@@ -220,9 +212,43 @@ namespace Astroid {
           return true;
         }
 
+      /* toggle archived */
+      case GDK_KEY_a:
+        {
+          ustring thread_id = get_current_thread ();
+          if (thread_id != "") {
+            ustring cmd = "archive thread:" + thread_id;
+
+            main_window->command.handle_command (cmd);
+          }
+
+          return true;
+        }
     }
 
     return false;
+  }
+
+  ustring ThreadIndexListView::get_current_thread () {
+    if (list_store->children().size() < 1)
+      return "";
+
+    Gtk::TreePath path;
+    Gtk::TreeViewColumn *c;
+    get_cursor (path, c);
+    Gtk::TreeIter iter;
+
+    iter = list_store->get_iter (path);
+
+    if (iter) {
+      Gtk::ListStore::Row row = *iter;
+      ustring thread_id = row[list_store->columns.thread_id];
+
+      return thread_id;
+
+    } else {
+      return "";
+    }
   }
 }
 
