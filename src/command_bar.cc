@@ -8,6 +8,7 @@
 # include "main_window.hh"
 # include "modes/mode.hh"
 # include "modes/thread_index.hh"
+# include "modes/help_mode.hh"
 
 using namespace std;
 
@@ -17,8 +18,11 @@ namespace Astroid {
     connect_entry (entry);
 
     hbox.set_orientation (Gtk::ORIENTATION_HORIZONTAL);
-    hbox.pack_start (entry, Gtk::PACK_EXPAND_WIDGET, 5);
-    add (hbox);
+    hbox.set_size_request (400, -1);
+
+    hbox.pack_start (mode_label, false, false, 5);
+    hbox.pack_start (entry, true, true, 5);
+    add(hbox);
 
     entry.signal_activate ().connect (
         sigc::mem_fun (*this, &CommandBar::on_entry_activated)
@@ -42,6 +46,9 @@ namespace Astroid {
         break;
 
       case CommandMode::Generic:
+        {
+          handle_command (cmd);
+        }
         break;
     }
   }
@@ -61,17 +68,33 @@ namespace Astroid {
 
       case CommandMode::Search:
         {
-          entry.set_text (cmd);
+          mode_label.set_text ("search >");
+          entry.set_icon_from_icon_name ("edit-find-symbolic");
         }
         break;
 
       case CommandMode::Generic:
+        {
+          mode_label.set_text (">");
+          entry.set_icon_from_icon_name ("system-run-symbolic");
+        }
         break;
 
     }
 
+    entry.set_text (cmd);
     entry.set_position (-1);
     set_search_mode (true);
+  }
+
+  void CommandBar::handle_command (ustring cmd) {
+    cout << "cb: command: " << cmd << endl;
+    if (cmd == "help") {
+      main_window->add_mode (new HelpMode ());
+
+    } else {
+      cout  << "cb: unknown command: " << cmd << endl;
+    }
   }
 
   void CommandBar::disable_command () {

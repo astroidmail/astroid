@@ -32,7 +32,7 @@ namespace Astroid {
         sigc::mem_fun (*this, &MainWindow::on_command_mode_changed)
         );
 
-    vbox.pack_start (command, Gtk::PACK_SHRINK, 0);
+    vbox.pack_start (command, false, true, 0);
     vbox.pack_start (notebook, Gtk::PACK_EXPAND_WIDGET, 0);
 
     add (vbox);
@@ -116,6 +116,11 @@ namespace Astroid {
       /* short cut for searching for label */
       case GDK_KEY_L:
         enable_command (CommandBar::CommandMode::Search, "tag:");
+        return true;
+
+      /* command */
+      case GDK_KEY_colon:
+        enable_command (CommandBar::CommandMode::Generic, "");
         return true;
 
       /* help */

@@ -31,12 +31,15 @@ namespace Astroid {
       CommandMode mode;
 
       Gtk::Box hbox;
+      Gtk::Label mode_label;
       Gtk::SearchEntry entry;
 
       void on_entry_activated ();
 
       void enable_command (CommandMode, ustring);
       void disable_command ();
+
+      void handle_command (ustring);
 
       ustring get_text ();
       void set_text (ustring);
