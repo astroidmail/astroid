@@ -4,6 +4,7 @@
 # include <gtkmm/window.h>
 
 # include "proto.hh"
+# include "command_bar.hh"
 
 using namespace std;
 
@@ -22,16 +23,13 @@ namespace Astroid {
       Gtk::Box vbox;
       Notebook notebook;
 
-      /* search bar */
-      Gtk::SearchBar sbar;
-      Gtk::SearchEntry sentry;
-      Gtk::Box s_hbox;
+      /* command bar */
+      CommandBar command;
 
-      bool is_searching = false;
-      void enable_search ();
-      void disable_search ();
-      void on_search_mode_changed ();
-      void on_search_entry_activated ();
+      bool is_command = false;
+      void enable_command (CommandBar::CommandMode, ustring);
+      void disable_command ();
+      void on_command_mode_changed ();
 
       vector<Mode*> modes;
       int lastcurrent = -1;

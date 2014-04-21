@@ -8,6 +8,7 @@
 # include "modes/mode.hh"
 # include "modes/thread_index.hh"
 # include "modes/help_mode.hh"
+# include "command_bar.hh"
 
 using namespace std;
 
@@ -24,22 +25,14 @@ namespace Astroid {
     set_icon (pixbuf);
 
     vbox.set_orientation (Gtk::ORIENTATION_VERTICAL);
-    s_hbox.set_orientation (Gtk::ORIENTATION_HORIZONTAL);
 
-    sbar.set_show_close_button ();
-    sbar.connect_entry (sentry);
-    s_hbox.pack_start (sentry, Gtk::PACK_EXPAND_WIDGET, 5);
-    sbar.add (s_hbox);
+    command.main_window = this;
 
-    sbar.property_search_mode_enabled().signal_changed().connect(
-        sigc::mem_fun (*this, &MainWindow::on_search_mode_changed)
+    command.property_search_mode_enabled().signal_changed().connect(
+        sigc::mem_fun (*this, &MainWindow::on_command_mode_changed)
         );
 
-    sentry.signal_activate ().connect (
-        sigc::mem_fun (*this, &MainWindow::on_search_entry_activated)
-        );
-
-    vbox.pack_start (sbar, Gtk::PACK_SHRINK, 0);
+    vbox.pack_start (command, Gtk::PACK_SHRINK, 0);
     vbox.pack_start (notebook, Gtk::PACK_EXPAND_WIDGET, 0);
 
     add (vbox);
@@ -53,44 +46,33 @@ namespace Astroid {
 
   }
 
-  void MainWindow::enable_search () {
-    cout << "mw: enable search" << endl;
-    sbar.set_search_mode (true);
-    is_searching = true;
+  void MainWindow::enable_command (CommandBar::CommandMode m, ustring cmd = "") {
+    cout << "mw: enable command: " << m << ", " << cmd << endl;
     unset_active ();
-    sbar.add_modal_grab ();
+    command.enable_command (m, cmd);
+    is_command = true;
+    command.add_modal_grab ();
   }
 
-  void MainWindow::disable_search () {
-    cout << "mw: disable search" << endl;
+  void MainWindow::disable_command () {
+    cout << "mw: disable command" << endl;
     // hides itself
-    sbar.remove_modal_grab();
+    command.disable_command ();
+    command.remove_modal_grab();
     set_active (lastcurrent);
-    is_searching = false;
+    is_command = false;
   }
 
-  void MainWindow::on_search_entry_activated () {
-    ustring stext = sentry.get_text ();
-    cout << "mw: search for: " << stext << endl;
-    sbar.set_search_mode (false); // emits changed -> disables search
-
-    if (stext.size() > 0) {
-      Mode * m = new ThreadIndex (this, stext);
-
-      add_mode (m);
-    }
-  }
-
-  void MainWindow::on_search_mode_changed () {
+  void MainWindow::on_command_mode_changed () {
     cout << "mw: smode changed" << endl;
-    if (!sbar.get_search_mode()) {
-      disable_search ();
+    if (!command.get_search_mode()) {
+      disable_command ();
     }
   }
 
   bool MainWindow::on_key_press (GdkEventKey * event) {
-    if (is_searching) {
-      sbar.handle_event (event);
+    if (is_command) {
+      command.command_handle_event (event);
       return true;
     }
 
@@ -128,7 +110,12 @@ namespace Astroid {
 
       /* search */
       case GDK_KEY_F:
-        enable_search ();
+        enable_command (CommandBar::CommandMode::Search, "");
+        return true;
+
+      /* short cut for searching for label */
+      case GDK_KEY_L:
+        enable_command (CommandBar::CommandMode::Search, "tag:");
         return true;
 
       /* help */

@@ -14,6 +14,7 @@ namespace Astroid {
 
   /* UI */
   class MainWindow;
+  class CommandBar;
   class Mode;
   class PanedMode;
   class ThreadIndex;
