@@ -63,7 +63,6 @@ namespace Astroid {
       case CommandMode::Search:
         {
           entry.set_text (cmd);
-          entry.set_position (-1);
         }
         break;
 
@@ -72,6 +71,7 @@ namespace Astroid {
 
     }
 
+    entry.set_position (-1);
     set_search_mode (true);
   }
 
