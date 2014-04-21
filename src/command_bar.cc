@@ -57,7 +57,21 @@ namespace Astroid {
 
   void CommandBar::enable_command (CommandMode m, ustring cmd = "") {
     mode = m;
-    entry.set_text (cmd);
+
+    switch (mode) {
+
+      case CommandMode::Search:
+        {
+          entry.set_text (cmd);
+          entry.set_position (-1);
+        }
+        break;
+
+      case CommandMode::Generic:
+        break;
+
+    }
+
     set_search_mode (true);
   }
 
