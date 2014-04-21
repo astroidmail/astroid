@@ -17,7 +17,6 @@ namespace Astroid {
     connect_entry (entry);
 
     hbox.set_orientation (Gtk::ORIENTATION_HORIZONTAL);
-
     hbox.pack_start (entry, Gtk::PACK_EXPAND_WIDGET, 5);
     add (hbox);
 

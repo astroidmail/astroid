@@ -40,7 +40,7 @@ namespace Astroid {
     g_object_set (websettings, "enable-fullscreen", false);
     g_object_set (websettings, "enable-html5-database", false);
     g_object_set (websettings, "enable-html5-local-storage", false);
-    g_object_set (websettings, "enable-mediastream", false);
+    //g_object_set (websettings, "enable-mediastream", false);
     g_object_set (websettings, "enable-mediasource", false);
     g_object_set (websettings, "enable-offline-web-application-cache", false);
     g_object_set (websettings, "enable-page-cache", false);
