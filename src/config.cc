@@ -12,14 +12,16 @@ namespace Astroid {
   Config::Config () {
     /* default config */
     char * config_home = getenv ("XDG_CONFIG_HOME");
-    char * home        = getenv ("HOME");
+    char * home_c      = getenv ("HOME");
 
-    if (home == NULL) {
+    if (home_c == NULL) {
       cerr << "cf: HOME environment variable not set." << endl;
       exit (1);
     }
 
-    path default_config = path(home) / path(".config/astroid/config");
+    home = path(home_c);
+
+    path default_config = home / path(".config/astroid/config");
 
     if (config_home == NULL) {
       config_file = default_config;
@@ -31,6 +33,15 @@ namespace Astroid {
   }
 
   Config::Config (const char * fname) {
+    char * home_c      = getenv ("HOME");
+
+    if (home_c == NULL) {
+      cerr << "cf: HOME environment variable not set." << endl;
+      exit (1);
+    }
+
+    home = path(home_c);
+
     config_file = path(fname);
 
     load_config ();
