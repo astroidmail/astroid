@@ -103,20 +103,19 @@ namespace Astroid {
 
     utokenizer tok (cmd);
 
-    auto it = tok.begin ();
+# define adv_or_return it++; if (it == tok.end()) return;
 
+    auto it = tok.begin ();
     if (it == tok.end ()) return;
 
     if (*it == "help") {
       main_window->add_mode (new HelpMode ());
 
     } else if (*it == "archive") {
-      it++;
-      if (it == tok.end ()) return;
+      adv_or_return;
 
       if (*it == "thread") {
-        it++;
-        if (it == tok.end ()) return;
+        adv_or_return;
 
         ustring thread_id = *it;
 
