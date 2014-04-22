@@ -5,8 +5,12 @@
 # include <gtkmm.h>
 # include <gtkmm/window.h>
 
+/* program options */
+# include <boost/program_options.hpp>
+
 # include "astroid.hh"
 # include "db.hh"
+# include "config.hh"
 
 /* UI */
 # include "main_window.hh"
@@ -33,8 +37,32 @@ namespace Astroid {
   int Astroid::main (int argc, char **argv) {
     cout << "welcome to astroid! - " << GIT_DESC << endl;
 
+    namespace po = boost::program_options;
+    po::options_description desc ("options");
+    desc.add_options ()
+      ( "help,h", "print this help message")
+      ( "config,c", po::value<ustring>(), "config file, default: $XDG_CONFIG_HOME/astroid/config");
+
+
+    po::variables_map vm;
+    po::store ( po::command_line_parser (argc, argv).options(desc).run(), vm );
+
+    if (vm.count ("help")) {
+      cout << desc << endl;
+
+      exit (1);
+    }
+
+    /* load config */
+    if (vm.count("config")) {
+      config = new Config (vm["config"].as<ustring>().c_str());
+    } else {
+      config = new Config ();
+    }
+
     /* set up gtk */
-    app = Gtk::Application::create (argc, argv, "org.astroid");
+    int aargc = 1;
+    app = Gtk::Application::create (aargc, argv, "org.astroid");
 
     /* notmuch db */
     db = new Db ();

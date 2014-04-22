@@ -6,6 +6,7 @@ namespace Astroid {
   class Astroid;
   class Db;
   class NotmuchThread;
+  class Config;
 
   /* message and thread */
   class Message;

@@ -29,6 +29,9 @@ namespace Astroid {
       /* list of main windows */
       vector<MainWindow*>  main_windows;
 
+      /* config */
+      Config * config;
+
 
   };
 

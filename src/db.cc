@@ -13,7 +13,6 @@ using namespace boost::filesystem;
 
 namespace Astroid {
   Db::Db () {
-    cout << "db: opening db..";
 
     const char * home = getenv ("HOME");
     if (home == NULL) {
@@ -25,6 +24,8 @@ namespace Astroid {
     path path_db (home);
     path_db /= ".mail";
 
+    cout << "db: opening db: " << path_db << endl;
+
 
     notmuch_status_t s = notmuch_database_open (path_db.c_str(),
         notmuch_database_mode_t::NOTMUCH_DATABASE_MODE_READ_ONLY,
@@ -34,8 +35,6 @@ namespace Astroid {
       cerr << "db: error: failed opening database." << endl;
       exit (1);
     }
-
-    cout << "ok." << endl;
 
     //test_query ();
   }

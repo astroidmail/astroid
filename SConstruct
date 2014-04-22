@@ -71,7 +71,8 @@ env.ParseConfig ('pkg-config --libs --cflags webkitgtk-3.0')
 
 libs   = ['notmuch',
           'boost_system',
-          'boost_filesystem',]
+          'boost_filesystem',
+          'boost_program_options',]
 
 env.Append (LIBS = libs)
 
