@@ -421,6 +421,37 @@ namespace Astroid {
         return true;
 
 
+      case GDK_KEY_Page_Up:
+        {
+          auto adj = scroll.get_vadjustment ();
+          adj->set_value (adj->get_value() - adj->get_page_increment ());
+        }
+        return true;
+
+      case GDK_KEY_Page_Down:
+        {
+          auto adj = scroll.get_vadjustment ();
+          adj->set_value (adj->get_value() + adj->get_page_increment ());
+        }
+        return true;
+
+      case GDK_KEY_1:
+      case GDK_KEY_Home:
+        {
+          auto adj = scroll.get_vadjustment ();
+          adj->set_value (adj->get_lower ());
+        }
+        return true;
+
+      case GDK_KEY_0:
+      case GDK_KEY_End:
+        {
+          auto adj = scroll.get_vadjustment ();
+          adj->set_value (adj->get_upper ());
+        }
+        return true;
+
+
     }
 
     return false;
