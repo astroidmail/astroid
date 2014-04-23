@@ -31,23 +31,27 @@ namespace Astroid {
     webview = WEBKIT_WEB_VIEW (webkit_web_view_new ());
 
     websettings = WEBKIT_WEB_SETTINGS (webkit_web_settings_new ());
-    g_object_set (websettings, "enable-scripts", false);
-    g_object_set (websettings, "enable-java-applet", false);
-    g_object_set (websettings, "enable-plugins", false);
-    g_object_set (websettings, "auto-load-images", false);
-    g_object_set (websettings, "enable-display-of-insecure-content", false);
-    g_object_set (websettings, "enable-dns-prefetching", false);
-    g_object_set (websettings, "enable-fullscreen", false);
-    g_object_set (websettings, "enable-html5-database", false);
-    g_object_set (websettings, "enable-html5-local-storage", false);
-    //g_object_set (websettings, "enable-mediastream", false);
-    g_object_set (websettings, "enable-mediasource", false);
-    g_object_set (websettings, "enable-offline-web-application-cache", false);
-    g_object_set (websettings, "enable-page-cache", false);
-    g_object_set (websettings, "enable-private-browsing", true);
-    g_object_set (websettings, "enable-running-of-insecure-content", false);
-    g_object_set (websettings, "enable-xss-auditor", true);
-    g_object_set (websettings, "media-playback-requires-user-gesture", true);
+    g_object_set (G_OBJECT(websettings),
+        "enable-scripts", FALSE,
+        "enable-java-applet", FALSE,
+        "enable-plugins", FALSE,
+        "auto-load-images", FALSE,
+        "enable-display-of-insecure-content", FALSE,
+        "enable-dns-prefetching", FALSE,
+        "enable-fullscreen", FALSE,
+        "enable-html5-database", FALSE,
+        "enable-html5-local-storage", FALSE,
+     /* "enable-mediastream", FALSE, */
+        "enable-mediasource", FALSE,
+        "enable-offline-web-application-cache", FALSE,
+        "enable-page-cache", FALSE,
+        "enable-private-browsing", TRUE,
+        "enable-running-of-insecure-content", FALSE,
+        "enable-display-of-insecure-content", FALSE,
+        "enable-xss-auditor", TRUE,
+        "media-playback-requires-user-gesture", TRUE,
+
+        NULL);
 
     webkit_web_view_set_settings (webview, websettings);
 
