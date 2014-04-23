@@ -13,6 +13,7 @@
 using namespace std;
 
 namespace Astroid {
+  /* the notmuch thread object should get by on the db only */
   class NotmuchThread : public Glib::Object {
     public:
       NotmuchThread (notmuch_thread_t *);

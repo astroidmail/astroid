@@ -17,7 +17,7 @@ namespace Astroid {
     cout << "mw: init.." << endl;
 
     set_title ("Astroid - " GIT_DESC);
-    set_default_size (800, 400);
+    set_default_size (840, 400);
 
     Glib::RefPtr<Gtk::IconTheme> theme = Gtk::IconTheme::get_default();
     Glib::RefPtr<Gdk::Pixbuf> pixbuf = theme->load_icon (
