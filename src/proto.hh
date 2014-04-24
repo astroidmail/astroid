@@ -16,6 +16,13 @@ namespace Astroid {
   /* UI */
   class MainWindow;
   class CommandBar;
+
+  /* actions */
+  class UndoManager;
+  class Action;
+  class TagAction;
+
+  /* modes */
   class Mode;
   class PanedMode;
   class ThreadIndex;
