@@ -93,12 +93,12 @@ hr {
     background-color: white;/* recv-normal */
     color: black;
     font-size: small;
-    box-shadow: 0 3px 11px rgba(0,0,0,1);
+    box-shadow: 0 3px 3px rgba(0,0,0,1);
     display: block;
     word-wrap: break-word;
     width: 100%;
     box-sizing:border-box;
-    margin-top: 16px;
+    margin-top: 5px;
 }
 
 .email.sent {
@@ -189,9 +189,9 @@ body:not(.nohide) .email.hide .header_container .avatar {
 
 .email .body {
     border-top: 1px solid #999;
-    margin: 16px;
+    margin: 5px;
     margin-top: 0;
-    padding-top: 16px;
+    padding-top: 5px;
     overflow-x: auto;
     overflow-y: hidden;
 }
@@ -363,7 +363,7 @@ body.nohide .email .compressed_note > span {
 }
 .email .header_container .attachment.icon {
     float: right;
-    margin-top: 7px;
+    margin-top: 5px;
 }
 .email > .attachment_container {
     padding-bottom: 10px;
@@ -528,7 +528,7 @@ body:not(.nohide) .quote_container.controllable.show > .quote {
     position: absolute;
     left: 0;
     right: 0;
-    padding: 0 15px 15px;
+    padding: 0 5px 0px;
 }
 #multiple_messages {
     display: none;
