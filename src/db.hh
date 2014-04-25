@@ -31,10 +31,16 @@ namespace Astroid {
 
       void    ensure_valid ();
 
+      bool remove_tag (ustring);
+      bool add_tag (ustring);
+
     private:
       int     check_total_messages (notmuch_thread_t *);
       vector<ustring> get_authors (notmuch_thread_t *);
       vector<ustring> get_tags (notmuch_thread_t *);
+
+      notmuch_thread_t * get_nm_thread ();
+      void destroy_nm_thread (notmuch_thread_t *);
   };
 
   class Db {

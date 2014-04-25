@@ -21,6 +21,8 @@ namespace Astroid {
     set_title ("Astroid - " GIT_DESC);
     set_default_size (840, 400);
 
+    actions.main_window = this;
+
     Glib::RefPtr<Gtk::IconTheme> theme = Gtk::IconTheme::get_default();
     Glib::RefPtr<Gdk::Pixbuf> pixbuf = theme->load_icon (
         "mail-send-symbolic", 42, Gtk::ICON_LOOKUP_USE_BUILTIN );

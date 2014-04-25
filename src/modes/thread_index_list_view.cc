@@ -223,6 +223,9 @@ namespace Astroid {
           if (thread) {
 
             main_window->actions.doit (refptr<Action>(new ArchiveAction(thread)));
+
+            /* update row */
+            update_current_row ();
           }
 
           return true;
@@ -230,6 +233,20 @@ namespace Astroid {
     }
 
     return false;
+  }
+
+  void ThreadIndexListView::update_current_row () {
+    Gtk::TreePath path;
+    Gtk::TreeViewColumn *c;
+    get_cursor (path, c);
+    Gtk::TreeIter iter;
+
+    iter = list_store->get_iter (path);
+
+    if (iter) {
+      list_store->row_changed (path, iter);
+    }
+
   }
 
   refptr<NotmuchThread> ThreadIndexListView::get_current_thread () {

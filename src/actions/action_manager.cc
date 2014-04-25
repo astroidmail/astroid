@@ -1,16 +1,16 @@
-# include "action_manager.hh"
 
 # include <iostream>
 # include <vector>
 
 # include "astroid.hh"
+# include "action_manager.hh"
+# include "main_window.hh"
 # include "action.hh"
 
 using namespace std;
 
 namespace Astroid {
   ActionManager::ActionManager () {
-
 
   }
 

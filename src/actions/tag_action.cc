@@ -44,10 +44,21 @@ namespace Astroid {
 
     cout << endl;
 
-    // TODO: Actually add and remove tags. Check for existence of tags,
-    //       handle existing or missing tags.
+    bool res = true;
 
-    return true;
+    for_each (add.begin(),
+              add.end(),
+              [&](ustring t) {
+                res &= thread->add_tag (t);
+              });
+
+    for_each (remove.begin(),
+              remove.end(),
+              [&](ustring t) {
+                res &= thread->remove_tag (t);
+              });
+
+    return res;
   }
 
   bool TagAction::undo () {

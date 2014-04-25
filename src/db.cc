@@ -1,5 +1,6 @@
 # include <iostream>
 # include <vector>
+# include <algorithm>
 # include <boost/filesystem.hpp>
 
 # include <glibmm.h>
@@ -28,7 +29,7 @@ namespace Astroid {
 
 
     notmuch_status_t s = notmuch_database_open (path_db.c_str(),
-        notmuch_database_mode_t::NOTMUCH_DATABASE_MODE_READ_ONLY,
+        notmuch_database_mode_t::NOTMUCH_DATABASE_MODE_READ_WRITE,
         &nm_db);
 
     if (s != 0) {
@@ -74,44 +75,60 @@ namespace Astroid {
     ensure_valid ();
   }
 
-  void NotmuchThread::ensure_valid () {
-    // create new threads object
-    //cout << "re-querying for thread id: " << thread_id << endl;
+  notmuch_thread_t * NotmuchThread::get_nm_thread () {
 
     string query_s = "thread:" + thread_id;
     notmuch_query_t * query = notmuch_query_create (astroid->db->nm_db, query_s.c_str());
     notmuch_threads_t * nm_threads;
     notmuch_thread_t  * nm_thread;
 
-    unread     = false;
-    attachment = false;
-
     int c = 0;
-
     for (nm_threads = notmuch_query_search_threads (query);
          notmuch_threads_valid (nm_threads);
          notmuch_threads_move_to_next (nm_threads)) {
-
       if (c > 0) {
         cerr << "notmuch_thread: got more than one thread for thread id!" << endl;
-        break;
+        return NULL;
       }
 
       nm_thread = notmuch_threads_get (nm_threads);
 
-      /* update values */
-      const char * s = notmuch_thread_get_subject (nm_thread);
-      subject     = ustring (s);
-      newest_date = notmuch_thread_get_newest_date (nm_thread);
-      total_messages = check_total_messages (nm_thread);
-      authors     = get_authors (nm_thread);
-      tags        = get_tags (nm_thread);
-
       c++;
     }
 
+    // TODO: Free query.
+
+    return nm_thread;
+  }
+
+  void NotmuchThread::destroy_nm_thread (notmuch_thread_t *) {
+
+    /*
     notmuch_threads_destroy (nm_threads);
     notmuch_query_destroy (query);
+    */
+
+  }
+
+  void NotmuchThread::ensure_valid () {
+    // create new threads object
+    //cout << "re-querying for thread id: " << thread_id << endl;
+
+    notmuch_thread_t * nm_thread = get_nm_thread ();
+
+    unread     = false;
+    attachment = false;
+
+    /* update values */
+    const char * s = notmuch_thread_get_subject (nm_thread);
+    subject     = ustring (s);
+    newest_date = notmuch_thread_get_newest_date (nm_thread);
+    total_messages = check_total_messages (nm_thread);
+    authors     = get_authors (nm_thread);
+    tags        = get_tags (nm_thread);
+
+
+    destroy_nm_thread (nm_thread);
   }
 
   vector<ustring> NotmuchThread::get_tags (notmuch_thread_t * nm_thread) {
@@ -163,6 +180,91 @@ namespace Astroid {
 
   int NotmuchThread::check_total_messages (notmuch_thread_t * nm_thread) {
     return notmuch_thread_get_total_messages (nm_thread);
+  }
+
+  /* tag actions */
+  bool NotmuchThread::add_tag (ustring tag) {
+    if (find(tags.begin (), tags.end (), tag) == tags.end ()) {
+      notmuch_thread_t * nm_thread = get_nm_thread ();
+
+      /* get messages from thread */
+      notmuch_messages_t * qmessages;
+      notmuch_message_t  * message;
+
+      bool res = true;
+
+      for (qmessages = notmuch_thread_get_messages (nm_thread);
+           notmuch_messages_valid (qmessages);
+           notmuch_messages_move_to_next (qmessages)) {
+
+        message = notmuch_messages_get (qmessages);
+
+        notmuch_status_t s = notmuch_message_add_tag (message, tag.c_str ());
+
+        if (s == NOTMUCH_STATUS_SUCCESS) {
+          res &= true;
+        } else {
+          cerr << "nm: could not add tag: " << tag << " to thread: " << thread_id << endl;
+          return false;
+        }
+
+      }
+
+      if (res) {
+        tags.push_back (tag);
+      }
+
+      destroy_nm_thread (nm_thread);
+
+
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  bool NotmuchThread::remove_tag (ustring tag) {
+    cout << "nm (" << thread_id << "): remove tag: " << tag << endl;
+    if (find(tags.begin (), tags.end (), tag) != tags.end ()) {
+      notmuch_thread_t * nm_thread = get_nm_thread ();
+
+      /* get messages from thread */
+      notmuch_messages_t * qmessages;
+      notmuch_message_t  * message;
+
+      bool res = true;
+
+      for (qmessages = notmuch_thread_get_messages (nm_thread);
+           notmuch_messages_valid (qmessages);
+           notmuch_messages_move_to_next (qmessages)) {
+
+        message = notmuch_messages_get (qmessages);
+
+        notmuch_status_t s = notmuch_message_remove_tag (message, tag.c_str ());
+
+        if (s == NOTMUCH_STATUS_SUCCESS) {
+          res &= true;
+        } else {
+          cerr << "nm: could not remove tag: " << tag << " from thread: " << thread_id << endl;
+          return false;
+        }
+
+      }
+
+      if (res) {
+        tags.erase (remove (tags.begin (),
+                            tags.end (),
+                            tag), tags.end ());
+      }
+
+      destroy_nm_thread (nm_thread);
+
+
+      return true;
+    } else {
+      cout << "nm: thread does not have tag." << endl;
+      return false;
+    }
   }
 }
 
