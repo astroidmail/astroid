@@ -50,13 +50,13 @@ namespace Astroid {
 
       int date_start = left_icons_width_n * left_icons_width +
         (left_icons_width_n-1) * left_icons_padding + padding;
-      int date_width = 90;
+      int date_width = 100;
 
       int message_count_start  = date_start + date_width;
-      int message_count_width = 25;
+      int message_count_width = 30;
 
       int authors_start = message_count_start + message_count_width;
-      int authors_width = 120;
+      int authors_width = 140;
       int authors_max_len = 20;
 
       int tags_start = authors_start + authors_width;
