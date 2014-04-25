@@ -66,6 +66,12 @@ namespace Astroid {
       int subject_start = tags_start + tags_width;
       int subject_font_size = font_size;
 
+      void render_background (
+          const ::Cairo::RefPtr< ::Cairo::Context>&cr,
+          Gtk::Widget &widget,
+          const Gdk::Rectangle &background_area,
+          Gtk::CellRendererState flags);
+
       void render_subject (
           const ::Cairo::RefPtr< ::Cairo::Context>&cr,
           Gtk::Widget &widget,

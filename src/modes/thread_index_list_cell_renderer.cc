@@ -36,6 +36,7 @@ namespace Astroid {
 
     thread->ensure_valid ();
 
+    render_background (cr, widget, background_area, flags);
     render_date (cr, widget, cell_area);
     render_message_count (cr, widget, cell_area);
     render_authors (cr, widget, cell_area);
@@ -56,6 +57,31 @@ namespace Astroid {
       render_attachment (cr, widget, cell_area);
 
   }
+
+  void ThreadIndexListCellRenderer::render_background ( // {{{
+      const ::Cairo::RefPtr< ::Cairo::Context>&cr,
+      Gtk::Widget &widget,
+      const Gdk::Rectangle &background_area,
+      Gtk::CellRendererState flags) {
+
+    int y = background_area.get_y ();
+    int x = background_area.get_x ();
+
+    int w = background_area.get_width ();
+    int h = background_area.get_height ();
+
+    Gdk::Color gray;
+    if (flags & Gtk::CELL_RENDERER_SELECTED != 0) {
+      gray.set_grey_p (.7);
+    } else {
+      gray.set_grey_p (1.);
+    }
+    cr->set_source_rgb (gray.get_red_p(), gray.get_green_p(), gray.get_blue_p());
+
+    cr->rectangle (x, y, w, h);
+    cr->fill ();
+
+  } // }}}
 
   /* render icons {{{ */
   void ThreadIndexListCellRenderer::render_starred (
