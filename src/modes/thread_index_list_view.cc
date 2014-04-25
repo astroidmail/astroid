@@ -7,6 +7,8 @@
 # include "thread_index_list_view.hh"
 # include "thread_index_list_cell_renderer.hh"
 
+# include "command_bar.hh"
+
 /* actions */
 # include "actions/tag_action.hh"
 # include "actions/archive_action.hh"
@@ -230,6 +232,35 @@ namespace Astroid {
 
           return true;
         }
+
+      case GDK_KEY_l:
+        {
+          auto thread = get_current_thread ();
+          if (thread) {
+            ustring tag_list;
+            bool first = true;
+            for_each (thread->tags.begin(),
+                      thread->tags.end (),
+                      [&](ustring t) {
+                      if (!first) {
+                        tag_list += ", ";
+                      } else {
+                        first = false;
+                      }
+
+                      tag_list += t;
+                      });
+
+            main_window->enable_command (CommandBar::CommandMode::Tag,
+                tag_list,
+                [&](ustring tgs) {
+                  cout << "ti: got tags: " << tgs << endl;
+
+
+                });
+          }
+        }
+        return true;
     }
 
     return false;

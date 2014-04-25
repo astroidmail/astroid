@@ -50,10 +50,10 @@ namespace Astroid {
 
   }
 
-  void MainWindow::enable_command (CommandBar::CommandMode m, ustring cmd = "") {
+  void MainWindow::enable_command (CommandBar::CommandMode m, ustring cmd, function<void(ustring)> f) {
     cout << "mw: enable command: " << m << ", " << cmd << endl;
     unset_active ();
-    command.enable_command (m, cmd);
+    command.enable_command (m, cmd, f);
     is_command = true;
     command.add_modal_grab ();
   }
@@ -114,17 +114,17 @@ namespace Astroid {
 
       /* search */
       case GDK_KEY_F:
-        enable_command (CommandBar::CommandMode::Search, "");
+        enable_command (CommandBar::CommandMode::Search, "", NULL);
         return true;
 
       /* short cut for searching for label */
       case GDK_KEY_L:
-        enable_command (CommandBar::CommandMode::Search, "tag:");
+        enable_command (CommandBar::CommandMode::Search, "tag:", NULL);
         return true;
 
       /* command */
       case GDK_KEY_colon:
-        enable_command (CommandBar::CommandMode::Generic, "");
+        enable_command (CommandBar::CommandMode::Generic, "", NULL);
         return true;
 
       /* help */

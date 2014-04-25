@@ -12,6 +12,8 @@
 
 # include <gtkmm.h>
 
+# include <functional>
+
 # include "astroid.hh"
 # include "proto.hh"
 
@@ -36,8 +38,9 @@ namespace Astroid {
       Gtk::SearchEntry entry;
 
       void on_entry_activated ();
+      function<void(ustring)> callback;
 
-      void enable_command (CommandMode, ustring);
+      void enable_command (CommandMode, ustring, function<void(ustring)>);
       void disable_command ();
 
       void handle_command (ustring);

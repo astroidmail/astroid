@@ -28,7 +28,8 @@ namespace Astroid {
       CommandBar command;
 
       bool is_command = false;
-      void enable_command (CommandBar::CommandMode, ustring);
+      void enable_command (CommandBar::CommandMode, ustring,
+          function<void(ustring)>);
       void disable_command ();
       void on_command_mode_changed ();
 

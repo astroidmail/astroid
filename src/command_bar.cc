@@ -1,4 +1,5 @@
 # include <iostream>
+# include <functional>
 
 # include <boost/tokenizer.hpp>
 
@@ -32,6 +33,14 @@ namespace Astroid {
 
   }
 
+  ustring CommandBar::get_text () {
+    return entry.get_text ();
+  }
+
+  void CommandBar::set_text (ustring txt) {
+    entry.set_text (txt);
+  }
+
   void CommandBar::on_entry_activated () {
     /* handle input */
     ustring cmd = get_text ();
@@ -52,18 +61,18 @@ namespace Astroid {
           handle_command (cmd);
         }
         break;
+
+      case CommandMode::Tag:
+        {
+        }
+        break;
     }
+
+    if (callback != NULL) callback (cmd);
+    callback = NULL;
   }
 
-  ustring CommandBar::get_text () {
-    return entry.get_text ();
-  }
-
-  void CommandBar::set_text (ustring txt) {
-    entry.set_text (txt);
-  }
-
-  void CommandBar::enable_command (CommandMode m, ustring cmd = "") {
+  void CommandBar::enable_command (CommandMode m, ustring cmd, function<void(ustring)> f) {
     mode = m;
 
     switch (mode) {
@@ -82,8 +91,15 @@ namespace Astroid {
         }
         break;
 
+      case CommandMode::Tag:
+        {
+          mode_label.set_text ("Tags for thread:");
+          entry.set_icon_from_icon_name ("system-run-symbolic");
+        }
+        break;
     }
 
+    callback = f;
     entry.set_text (cmd);
     entry.set_position (-1);
     set_search_mode (true);
@@ -128,7 +144,6 @@ namespace Astroid {
   }
 
   void CommandBar::disable_command () {
-
   }
 
   bool CommandBar::command_handle_event (GdkEventKey * event) {
