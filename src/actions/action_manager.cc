@@ -15,7 +15,9 @@ namespace Astroid {
   }
 
   bool ActionManager::doit (refptr<Action> action) {
-    actions.push_back (action);
+    if (action->undoable()) {
+      actions.push_back (action);
+    }
     return action->doit ();
   }
 

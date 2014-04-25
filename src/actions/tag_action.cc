@@ -13,7 +13,6 @@ namespace Astroid {
   TagAction::TagAction ( refptr<NotmuchThread> nmt)
   : Action(nmt)
   {
-    undoable = true;
   }
 
   TagAction::TagAction (
@@ -22,7 +21,10 @@ namespace Astroid {
       vector<ustring> _remove)
   : Action(nmt), add (_add), remove (_remove)
   {
-    undoable = true;
+  }
+
+  bool TagAction::undoable () {
+    return true;
   }
 
   bool TagAction::doit () {
@@ -41,6 +43,11 @@ namespace Astroid {
               });
 
     cout << endl;
+
+    // TODO: Actually add and remove tags. Check for existence of tags,
+    //       handle existing or missing tags.
+
+    return true;
   }
 
   bool TagAction::undo () {

@@ -13,5 +13,10 @@ namespace Astroid {
     thread = nmt;
 
   }
+
+  bool Action::undoable () {
+    return false;
+  }
+
 }
 

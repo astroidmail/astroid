@@ -14,11 +14,9 @@ namespace Astroid {
 
       refptr<NotmuchThread> thread;
 
-      bool undoable = false;
-
       virtual bool doit () = 0;
       virtual bool undo () = 0;
-
+      virtual bool undoable ();
 
   };
 }

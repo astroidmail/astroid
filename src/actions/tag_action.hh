@@ -20,6 +20,7 @@ namespace Astroid {
 
       bool doit () override;
       bool undo () override;
+      bool undoable () override;
 
   };
 
