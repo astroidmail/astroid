@@ -226,17 +226,6 @@ namespace Astroid {
           }
 
           return true;
-
-          /*
-          ustring thread_id = get_current_thread ();
-          if (thread_id != "") {
-            ustring cmd = "archive thread:" + thread_id;
-
-            main_window->command.handle_command (cmd);
-          }
-
-          return true;
-          */
         }
     }
 
