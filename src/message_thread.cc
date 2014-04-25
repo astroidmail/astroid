@@ -131,14 +131,14 @@ namespace Astroid {
    */
 
   MessageThread::MessageThread () { }
-  MessageThread::MessageThread (ustring _tid) : thread_id (_tid) {
+  MessageThread::MessageThread (refptr<NotmuchThread> _nmt) : thread (_nmt) {
 
   }
 
   void MessageThread::load_messages () {
     /* get thread from notmuch and load messages */
 
-    string query_s = "thread:" + thread_id;
+    string query_s = "thread:" + thread->thread_id;
     notmuch_query_t * query = notmuch_query_create (astroid->db->nm_db, query_s.c_str());
     notmuch_threads_t * nm_threads;
     notmuch_thread_t  * nm_thread;
@@ -161,7 +161,7 @@ namespace Astroid {
     }
 
     if (c != 1) {
-      cout << "mt: error: got more than one thread for id: " << thread_id << endl;
+      cout << "mt: error: got more than one thread for id: " << thread->thread_id << endl;
       return;
     }
 

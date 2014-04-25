@@ -7,6 +7,10 @@
 # include "thread_index_list_view.hh"
 # include "thread_index_list_cell_renderer.hh"
 
+/* actions */
+# include "actions/tag_action.hh"
+# include "actions/archive_action.hh"
+
 using namespace std;
 
 namespace Astroid {
@@ -177,19 +181,19 @@ namespace Astroid {
 
       case GDK_KEY_Return:
         {
-          ustring thread_id = get_current_thread ();
+          auto thread = get_current_thread ();
 
-          if (thread_id != "") {
-            cout << "ti_list: loading: " << thread_id << endl;
+          if (thread) {
+            cout << "ti_list: loading: " << thread->thread_id << endl;
 
             if (event->state & GDK_SHIFT_MASK) {
               /* open message in new tab */
-              thread_index->open_thread (thread_id, true);
+              thread_index->open_thread (thread, true);
 
 
             } else {
               /* open message in split pane */
-              thread_index->open_thread (thread_id, false);
+              thread_index->open_thread (thread, false);
 
             }
           } else {
@@ -215,6 +219,15 @@ namespace Astroid {
       /* toggle archived */
       case GDK_KEY_a:
         {
+          auto thread = get_current_thread ();
+          if (thread) {
+
+            main_window->actions.doit (refptr<Action>(new ArchiveAction(thread)));
+          }
+
+          return true;
+
+          /*
           ustring thread_id = get_current_thread ();
           if (thread_id != "") {
             ustring cmd = "archive thread:" + thread_id;
@@ -223,13 +236,34 @@ namespace Astroid {
           }
 
           return true;
+          */
         }
     }
 
     return false;
   }
 
-  ustring ThreadIndexListView::get_current_thread () {
+  refptr<NotmuchThread> ThreadIndexListView::get_current_thread () {
+    if (list_store->children().size() < 1)
+      return refptr<NotmuchThread>();
+
+    Gtk::TreePath path;
+    Gtk::TreeViewColumn *c;
+    get_cursor (path, c);
+    Gtk::TreeIter iter;
+
+    iter = list_store->get_iter (path);
+
+    if (iter) {
+      Gtk::ListStore::Row row = *iter;
+      return row[list_store->columns.thread];
+
+    } else {
+      return refptr<NotmuchThread>();
+    }
+  }
+
+  ustring ThreadIndexListView::get_current_thread_id () {
     if (list_store->children().size() < 1)
       return "";
 

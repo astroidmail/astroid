@@ -41,9 +41,9 @@ namespace Astroid {
   class MessageThread : public Glib::Object {
     public:
       MessageThread ();
-      MessageThread (ustring _tid);
+      MessageThread (refptr<NotmuchThread>);
 
-      ustring thread_id;
+      refptr<NotmuchThread> thread;
       ustring subject;
       vector<refptr<Message>> messages;
 

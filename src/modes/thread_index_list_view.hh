@@ -49,7 +49,8 @@ namespace Astroid {
 
       void set_thread_data (Gtk::CellRenderer *, const Gtk::TreeIter & );
 
-      ustring get_current_thread ();
+      ustring get_current_thread_id ();
+      refptr<NotmuchThread> get_current_thread ();
 
 
     protected:

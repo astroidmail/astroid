@@ -8,11 +8,14 @@
 using namespace std;
 
 namespace Astroid {
-  class UndoManager {
+  class ActionManager {
     public:
-      UndoManager ();
+      ActionManager ();
 
       vector<refptr<Action>> actions;
+
+      bool doit (refptr<Action>);
+      bool undo ();
 
   };
 }

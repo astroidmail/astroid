@@ -9,6 +9,8 @@
 # include "modes/thread_index.hh"
 # include "modes/help_mode.hh"
 # include "command_bar.hh"
+# include "actions/action.hh"
+# include "actions/action_manager.hh"
 
 using namespace std;
 
@@ -127,6 +129,13 @@ namespace Astroid {
       case GDK_KEY_question:
         add_mode (new HelpMode ());
         break;
+
+      /* undo */
+      case GDK_KEY_u:
+        {
+          actions.undo ();
+          return true;
+        }
 
     }
     return false;

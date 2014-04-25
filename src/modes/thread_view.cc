@@ -10,6 +10,7 @@
 # include "thread_view.hh"
 # include "message_thread.hh"
 # include "chunk.hh"
+# include "db.hh"
 
 
 using namespace std;
@@ -23,7 +24,7 @@ namespace Astroid {
 
 
   ThreadView::ThreadView () {
-    tab_widget = new Gtk::Label (thread_id);
+    tab_widget = new Gtk::Label ("");
 
     pack_start (scroll, true, true, 5);
 
@@ -155,12 +156,12 @@ namespace Astroid {
     return true;
   }
 
-  void ThreadView::load_thread (ustring _thread_id) {
-    thread_id = _thread_id;
+  void ThreadView::load_thread (refptr<NotmuchThread> _thread) {
+    thread = _thread;
 
-    ((Gtk::Label*) tab_widget)->set_text (thread_id);
+    ((Gtk::Label*) tab_widget)->set_text (thread->thread_id);
 
-    mthread = new MessageThread (thread_id);
+    mthread = new MessageThread (thread);
     mthread->load_messages ();
 
     ustring s = mthread->subject;

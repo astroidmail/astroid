@@ -10,6 +10,14 @@ namespace Astroid {
     public:
       TagAction (refptr<NotmuchThread>);
 
+      TagAction (
+          refptr<NotmuchThread>,
+          vector<ustring>,
+          vector<ustring>);
+
+      vector<ustring> add;
+      vector<ustring> remove;
+
       bool doit () override;
       bool undo () override;
 

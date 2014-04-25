@@ -18,7 +18,7 @@ namespace Astroid {
   class CommandBar;
 
   /* actions */
-  class UndoManager;
+  class ActionManager;
   class Action;
   class TagAction;
 

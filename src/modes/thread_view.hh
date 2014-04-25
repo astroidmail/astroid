@@ -30,9 +30,9 @@ namespace Astroid {
     public:
       ThreadView ();
       ~ThreadView ();
-      void load_thread (ustring);
+      void load_thread (refptr<NotmuchThread>);
 
-      ustring thread_id;
+      refptr<NotmuchThread> thread;
       MessageThread * mthread;
 
       Gtk::ScrolledWindow scroll;

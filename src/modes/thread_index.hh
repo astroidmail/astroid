@@ -28,7 +28,7 @@ namespace Astroid {
 
       void load_more_threads (bool all = false);
 
-      void open_thread (ustring, bool);
+      void open_thread (refptr<NotmuchThread>, bool);
       ThreadView * thread_view;
       bool thread_view_loaded  = false;
       bool thread_view_visible = false;

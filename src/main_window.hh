@@ -5,6 +5,7 @@
 
 # include "proto.hh"
 # include "command_bar.hh"
+# include "actions/action_manager.hh"
 
 using namespace std;
 
@@ -30,6 +31,10 @@ namespace Astroid {
       void enable_command (CommandBar::CommandMode, ustring);
       void disable_command ();
       void on_command_mode_changed ();
+
+      /* actions */
+      ActionManager actions;
+
 
       vector<Mode*> modes;
       int lastcurrent = -1;

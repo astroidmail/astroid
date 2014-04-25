@@ -110,13 +110,14 @@ namespace Astroid {
         }
         return true;
 
+
     }
 
     return false;
   }
 
-  void ThreadIndex::open_thread (ustring thread_id, bool new_tab) {
-    cout << "ti: open thread: " << thread_id << " (" << new_tab << ")" << endl;
+  void ThreadIndex::open_thread (refptr<NotmuchThread> thread, bool new_tab) {
+    cout << "ti: open thread: " << thread->thread_id << " (" << new_tab << ")" << endl;
     ThreadView * tv;
 
     if (new_tab) {
@@ -131,7 +132,7 @@ namespace Astroid {
       tv = thread_view;
     }
 
-    tv->load_thread (thread_id);
+    tv->load_thread (thread);
     tv->show ();
 
     if (!new_tab && !thread_view_visible) {
