@@ -7,7 +7,7 @@
 # include <glibmm.h>
 # include <notmuch.h>
 
-# include <astroid.hh>
+# include "astroid.hh"
 # include "proto.hh"
 
 using namespace std;
