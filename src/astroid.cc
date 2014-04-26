@@ -11,6 +11,7 @@
 # include "astroid.hh"
 # include "db.hh"
 # include "config.hh"
+# include "account_manager.hh"
 
 /* UI */
 # include "main_window.hh"
@@ -70,6 +71,9 @@ namespace Astroid {
     /* gmime settings */
     g_mime_init (0); // utf-8 is default
 
+    /* set up accounts */
+    AccountManager::initialize ();
+
     /* start up default window with default buffers */
     MainWindow * mw = new MainWindow (); // is freed / destroyed by application
     mw->add_mode (new ThreadIndex (mw, "tag:inbox"));
@@ -81,8 +85,8 @@ namespace Astroid {
 
     /* clean up and exit */
     main_windows.clear ();
+    AccountManager::deinitialize ();
     delete db;
-
 
     return 0;
   }

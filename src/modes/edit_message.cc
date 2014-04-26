@@ -43,6 +43,7 @@ namespace Astroid {
     if (in_edit) {
       fields[current_field]->set_icon_from_icon_name ("go-next");
       fields[current_field]->set_sensitive (true);
+      fields[current_field]->set_position (-1);
     } else {
       fields[current_field]->set_icon_from_icon_name ("media-playback-stop");
     }

@@ -7,6 +7,8 @@ namespace Astroid {
   class Db;
   class NotmuchThread;
   class Config;
+  class AccountManager;
+  class Account;
 
   /* message and thread */
   class Message;
