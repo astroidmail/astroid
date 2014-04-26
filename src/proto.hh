@@ -32,6 +32,7 @@ namespace Astroid {
   class ThreadIndexListView;
   class ThreadView;
   class HelpMode;
+  class EditMessage;
 
 }
 

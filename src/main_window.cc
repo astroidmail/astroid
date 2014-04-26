@@ -8,6 +8,7 @@
 # include "modes/mode.hh"
 # include "modes/thread_index.hh"
 # include "modes/help_mode.hh"
+# include "modes/edit_message.hh"
 # include "command_bar.hh"
 # include "actions/action.hh"
 # include "actions/action_manager.hh"
@@ -130,12 +131,18 @@ namespace Astroid {
       /* help */
       case GDK_KEY_question:
         add_mode (new HelpMode ());
-        break;
+        return true;
 
       /* undo */
       case GDK_KEY_u:
         {
           actions.undo ();
+          return true;
+        }
+
+      case GDK_KEY_m:
+        {
+          add_mode (new EditMessage ());
           return true;
         }
 
