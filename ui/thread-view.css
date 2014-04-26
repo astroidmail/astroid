@@ -92,7 +92,7 @@ hr {
     border: 1px rgba(0,0,0,1) solid;
     background-color: white;/* recv-normal */
     color: black;
-    font-size: small;
+    /*font-size: small;*/
     box-shadow: 0 3px 3px rgba(0,0,0,1);
     display: block;
     word-wrap: break-word;
@@ -529,6 +529,7 @@ body:not(.nohide) .quote_container.controllable.show > .quote {
     left: 0;
     right: 0;
     padding: 0 5px 0px;
+    font-family: monospace;
 }
 #multiple_messages {
     display: none;
