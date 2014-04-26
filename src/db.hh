@@ -17,6 +17,8 @@ namespace Astroid {
   class NotmuchThread : public Glib::Object {
     public:
       NotmuchThread (notmuch_thread_t *);
+      NotmuchThread (ustring);
+      ~NotmuchThread ();
 
       string thread_id;
 
@@ -29,18 +31,24 @@ namespace Astroid {
       vector<ustring> authors;
       vector<ustring> tags;
 
-      void    ensure_valid ();
+      void refresh ();
 
       bool remove_tag (ustring);
       bool add_tag (ustring);
 
     private:
-      int     check_total_messages (notmuch_thread_t *);
-      vector<ustring> get_authors (notmuch_thread_t *);
-      vector<ustring> get_tags (notmuch_thread_t *);
+      int     check_total_messages ();
+      vector<ustring> get_authors ();
+      vector<ustring> get_tags ();
 
-      notmuch_thread_t * get_nm_thread ();
-      void destroy_nm_thread (notmuch_thread_t *);
+      /* activate valid db objects */
+      void activate ();
+      void deactivate ();
+
+      int ref = 0;
+      notmuch_query_t *   query;
+      notmuch_threads_t * nm_threads;
+      notmuch_thread_t *  nm_thread;
   };
 
   class Db {

@@ -34,7 +34,7 @@ namespace Astroid {
     p.set_value ("#ffffff");
     */
 
-    thread->ensure_valid ();
+    thread->refresh ();
 
     render_background (cr, widget, background_area, flags);
     render_date (cr, widget, cell_area);

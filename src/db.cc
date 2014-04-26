@@ -1,6 +1,7 @@
 # include <iostream>
 # include <vector>
 # include <algorithm>
+# include <exception>
 # include <boost/filesystem.hpp>
 
 # include <glibmm.h>
@@ -40,7 +41,7 @@ namespace Astroid {
     //test_query ();
   }
 
-  void Db::test_query () {
+  void Db::test_query () { // {{{
     cout << "db: running test query.." << endl;
     auto q = notmuch_query_create (nm_db, "label:inbox");
 
@@ -59,7 +60,7 @@ namespace Astroid {
 
       notmuch_message_destroy (message);
     }
-  }
+  } // }}}
 
   Db::~Db () {
     cout << "db: closing notmuch database." << endl << flush;
@@ -72,49 +73,54 @@ namespace Astroid {
    */
   NotmuchThread::NotmuchThread (notmuch_thread_t * t) {
     thread_id = notmuch_thread_get_thread_id (t);
-    ensure_valid ();
   }
 
-  notmuch_thread_t * NotmuchThread::get_nm_thread () {
+  NotmuchThread::NotmuchThread (ustring tid) : thread_id (tid) { }
+
+  NotmuchThread::~NotmuchThread () {
+    if (ref > 0) {
+      cerr << "nmt: notmuchthread destroyed while ref count on db object > 0" << endl;
+    }
+    ref = 0;
+    deactivate ();
+  }
+
+  void NotmuchThread::activate () {
+    ref++;
+
+    if (ref > 1) {
+      return; // already set up
+    }
+
 
     string query_s = "thread:" + thread_id;
-    notmuch_query_t * query = notmuch_query_create (astroid->db->nm_db, query_s.c_str());
-    notmuch_threads_t * nm_threads;
-    notmuch_thread_t  * nm_thread;
+    query = notmuch_query_create (astroid->db->nm_db, query_s.c_str());
 
     int c = 0;
     for (nm_threads = notmuch_query_search_threads (query);
          notmuch_threads_valid (nm_threads);
          notmuch_threads_move_to_next (nm_threads)) {
       if (c > 0) {
-        cerr << "notmuch_thread: got more than one thread for thread id!" << endl;
-        return NULL;
+        throw invalid_argument ("nmt: got more than one thread for thread id.");
       }
 
       nm_thread = notmuch_threads_get (nm_threads);
 
       c++;
     }
-
-    // TODO: Free query.
-
-    return nm_thread;
   }
 
-  void NotmuchThread::destroy_nm_thread (notmuch_thread_t *) {
-
-    /*
-    notmuch_threads_destroy (nm_threads);
-    notmuch_query_destroy (query);
-    */
-
+  void NotmuchThread::deactivate () {
+    if (--ref <= 0) {
+      notmuch_threads_destroy (nm_threads);
+      notmuch_query_destroy (query);
+    }
   }
 
-  void NotmuchThread::ensure_valid () {
-    // create new threads object
-    //cout << "re-querying for thread id: " << thread_id << endl;
+  void NotmuchThread::refresh () {
+    /* do a new db query and update all fields */
 
-    notmuch_thread_t * nm_thread = get_nm_thread ();
+    activate ();
 
     unread     = false;
     attachment = false;
@@ -123,16 +129,17 @@ namespace Astroid {
     const char * s = notmuch_thread_get_subject (nm_thread);
     subject     = ustring (s);
     newest_date = notmuch_thread_get_newest_date (nm_thread);
-    total_messages = check_total_messages (nm_thread);
-    authors     = get_authors (nm_thread);
-    tags        = get_tags (nm_thread);
+    total_messages = check_total_messages ();
+    authors     = get_authors ();
+    tags        = get_tags ();
 
 
-    destroy_nm_thread (nm_thread);
+    deactivate ();
   }
 
-  vector<ustring> NotmuchThread::get_tags (notmuch_thread_t * nm_thread) {
+  vector<ustring> NotmuchThread::get_tags () {
 
+    activate ();
     notmuch_tags_t *  tags;
     const char *      tag;
 
@@ -154,11 +161,14 @@ namespace Astroid {
     }
 
 
+    deactivate ();
     return ttags;
   }
 
   /* get and split authors */
-  vector<ustring> NotmuchThread::get_authors (notmuch_thread_t * nm_thread) {
+  vector<ustring> NotmuchThread::get_authors () {
+    activate ();
+
     ustring astr = ustring (notmuch_thread_get_authors (nm_thread));
 
     vector<ustring> iaths = Glib::Regex::split_simple(",", astr);
@@ -175,18 +185,22 @@ namespace Astroid {
                 aths.push_back (a);
               });
 
+    deactivate ();
     return aths;
   }
 
-  int NotmuchThread::check_total_messages (notmuch_thread_t * nm_thread) {
-    return notmuch_thread_get_total_messages (nm_thread);
+  int NotmuchThread::check_total_messages () {
+    activate ();
+    int c = notmuch_thread_get_total_messages (nm_thread);
+    deactivate ();
+    return c;
   }
 
   /* tag actions */
   bool NotmuchThread::add_tag (ustring tag) {
     cout << "nm (" << thread_id << "): add tag: " << tag << endl;
     if (find(tags.begin (), tags.end (), tag) == tags.end ()) {
-      notmuch_thread_t * nm_thread = get_nm_thread ();
+      activate ();
 
       /* get messages from thread */
       notmuch_messages_t * qmessages;
@@ -215,7 +229,7 @@ namespace Astroid {
         tags.push_back (tag);
       }
 
-      destroy_nm_thread (nm_thread);
+      deactivate ();
 
 
       return true;
@@ -227,7 +241,7 @@ namespace Astroid {
   bool NotmuchThread::remove_tag (ustring tag) {
     cout << "nm (" << thread_id << "): remove tag: " << tag << endl;
     if (find(tags.begin (), tags.end (), tag) != tags.end ()) {
-      notmuch_thread_t * nm_thread = get_nm_thread ();
+      activate ();
 
       /* get messages from thread */
       notmuch_messages_t * qmessages;
@@ -258,7 +272,7 @@ namespace Astroid {
                             tag), tags.end ());
       }
 
-      destroy_nm_thread (nm_thread);
+      deactivate ();
 
 
       return true;
