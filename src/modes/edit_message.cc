@@ -56,6 +56,11 @@ namespace Astroid {
       fields[current_field]->set_icon_from_icon_name ("media-playback-stop");
     }
     fields[current_field]->grab_focus ();
+
+    /* update tab in case something changed */
+    if (subject->get_text ().size () > 0) {
+      ((Gtk::Label*)tab_widget)->set_text ("New message: " + subject->get_text ());
+    }
   }
 
   void EditMessage::reset_fields () {
