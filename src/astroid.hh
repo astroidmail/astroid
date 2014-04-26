@@ -32,6 +32,9 @@ namespace Astroid {
       /* config */
       Config * config;
 
+      /* accounts */
+      AccountManager * accounts;
+
 
   };
 

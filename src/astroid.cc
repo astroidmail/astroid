@@ -72,7 +72,7 @@ namespace Astroid {
     g_mime_init (0); // utf-8 is default
 
     /* set up accounts */
-    AccountManager::initialize ();
+    accounts = new AccountManager ();
 
     /* start up default window with default buffers */
     MainWindow * mw = new MainWindow (); // is freed / destroyed by application
@@ -85,7 +85,7 @@ namespace Astroid {
 
     /* clean up and exit */
     main_windows.clear ();
-    AccountManager::deinitialize ();
+    delete accounts;
     delete db;
 
     return 0;

@@ -10,19 +10,22 @@ using namespace std;
 namespace Astroid {
   class Account {
     public:
+      ustring id;
       ustring name;
       ustring email;
       ustring gpgkey;
       ustring sendmail;
+
+      bool isdefault;
   };
 
   class AccountManager {
     public:
-      static void initialize ();
-      static void deinitialize ();
+      AccountManager ();
+      ~AccountManager ();
 
-      static vector<Account> accounts;
-      static int default_account;
+      vector<Account> accounts;
+      int default_account;
   };
 }
 

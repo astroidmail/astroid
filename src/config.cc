@@ -61,6 +61,7 @@ namespace Astroid {
       default_config.put ("accounts.charlie.email", "root@localhost");
       default_config.put ("accounts.charlie.gpgkey", "");
       default_config.put ("accounts.charlie.sendmail", "msmtp -t");
+      default_config.put ("accounts.charlie.default", true);
     }
 
     /* ui behaviour */
