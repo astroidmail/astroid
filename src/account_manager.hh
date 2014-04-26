@@ -17,6 +17,8 @@ namespace Astroid {
       ustring sendmail;
 
       bool isdefault;
+
+      ustring full_address ();
   };
 
   class AccountManager {

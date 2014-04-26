@@ -3,6 +3,7 @@
 # include <algorithm>
 
 # include "astroid.hh"
+# include "account_manager.hh"
 # include "edit_message.hh"
 
 using namespace std;
@@ -20,16 +21,23 @@ namespace Astroid {
     builder->get_widget ("to", to);
     builder->get_widget ("cc", cc);
     builder->get_widget ("bcc", bcc);
+    builder->get_widget ("subject", subject);
 
     /* must be in the same order as enum Field */
     fields.push_back (from);
     fields.push_back (to);
     fields.push_back (cc);
     fields.push_back (bcc);
+    fields.push_back (subject);
 
     pack_start (*box_message, true, 5);
 
     show_all ();
+
+    /* defaults */
+    accounts = astroid->accounts;
+
+    from->set_text (accounts->accounts[accounts->default_account].full_address());
 
     activate_field (From);
   }
@@ -67,6 +75,7 @@ namespace Astroid {
   bool EditMessage::on_key_press_event (GdkEventKey * event) {
     cout << "em: got key press" << endl;
     switch (event->keyval) {
+      case GDK_KEY_Down:
       case GDK_KEY_j:
         if (in_edit) return false; // otherwise act as Tab
       case GDK_KEY_Tab:
@@ -75,6 +84,7 @@ namespace Astroid {
           return true;
         }
 
+      case GDK_KEY_Up:
       case GDK_KEY_k:
         if (in_edit) {
           return false;

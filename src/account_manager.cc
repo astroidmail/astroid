@@ -55,5 +55,12 @@ namespace Astroid {
     cout << "ac: deinitializing." << endl;
 
   }
+
+  /* --------
+   * Account
+   * -------- */
+  ustring Account::full_address () {
+    return name + "<" + email + ">";
+  }
 }
 

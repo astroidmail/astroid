@@ -4,6 +4,7 @@
 
 # include "astroid.hh"
 # include "mode.hh"
+# include "proto.hh"
 
 using namespace std;
 
@@ -19,10 +20,11 @@ namespace Astroid {
         To,
         Cc,
         Bcc,
+        Subject,
         Message,
       };
 
-      Gtk::Entry * from, *to, *cc, *bcc;
+      Gtk::Entry * from, *to, *cc, *bcc, *subject;
       vector<Gtk::Entry *> fields;
 
       Field current_field = From;
@@ -33,6 +35,8 @@ namespace Astroid {
       void reset_entry (Gtk::Entry *);
 
       bool in_edit = false;
+
+      AccountManager * accounts;
 
     public:
       void grab_modal () override;
