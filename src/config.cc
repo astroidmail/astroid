@@ -51,8 +51,20 @@ namespace Astroid {
     load_config ();
   }
 
-  void Config::setup_default_config () {
-    default_config.put ("astroid.db", "~/.mail");
+  void Config::setup_default_config (bool initial) {
+    default_config.put ("astroid.config.version", CONFIG_VERSION);
+    default_config.put ("astroid.notmuch.db", "~/.mail");
+
+    if (initial) {
+      /* account */
+      default_config.put ("accounts.charlie.name", "Charlie Root");
+      default_config.put ("accounts.charlie.email", "root@localhost");
+      default_config.put ("accounts.charlie.gpgkey", "");
+      default_config.put ("accounts.charlie.sendmail", "msmtp -t");
+    }
+
+    /* ui behaviour */
+    default_config.put ("thread_index.open_default", "paned");
   }
 
   void Config::write_back_config () {
@@ -64,25 +76,27 @@ namespace Astroid {
   void Config::load_config () {
     cout << "cf: loading: " << config_file << endl;
 
-    setup_default_config ();
-
     config_dir = absolute(config_file.parent_path());
     if (!is_directory(config_dir)) {
       cout << "cf: making config dir.." << endl;
       create_directories (config_dir);
     }
 
-    config = default_config;
 
     if (!is_regular_file (config_file)) {
       cout << "cf: no config, using defaults." << endl;
-      write_back_config ();
+      setup_default_config (true);
+      config = default_config;
     } else {
       ptree new_config;
+      setup_default_config (false);
+      config = default_config;
       read_json (config_file.c_str(), new_config);
 
       merge_ptree (new_config);
     }
+
+    write_back_config ();
 
   }
 

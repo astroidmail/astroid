@@ -23,11 +23,13 @@ namespace Astroid {
       path config_dir;
 
       void load_config ();
-      void setup_default_config ();
+      void setup_default_config (bool);
       void write_back_config ();
 
       ptree default_config;
       ptree config;
+
+      const int CONFIG_VERSION = 0;
 
     private:
       /* merging of the property trees */
@@ -51,23 +53,6 @@ namespace Astroid {
 
 
       void merge_ptree (const ptree &pt);
-
-
-      /* replace with a boost property tree
-      const char * default_config =
-        "[astroid]\n"
-        "db=~/.mail\n"
-        "\n"
-        "[account 0]\n"
-        "name=\n"
-        "email=\n"
-        "gpgkey=\n"
-        "\n"
-        "[thread_index]\n"
-        "open_default=paned\n"
-        "\n";
-        */
-
   };
 }
 
