@@ -1,4 +1,6 @@
 # include <iostream>
+# include <algorithm>
+# include <vector>
 
 # include "db.hh"
 # include "paned_mode.hh"
@@ -253,10 +255,51 @@ namespace Astroid {
 
             main_window->enable_command (CommandBar::CommandMode::Tag,
                 tag_list,
-                [&](ustring tgs) {
+                [&,thread](ustring tgs) {
                   cout << "ti: got tags: " << tgs << endl;
 
+                  vector<ustring> itags = Glib::Regex::split_simple(",", tgs);
+                  vector<ustring> tags;
 
+                  for_each (itags.begin (),
+                            itags.end (),
+                            [&](ustring t) {
+
+                              /* strip */
+                              while (t[0] == ' ') t = t.substr(1, t.size());
+                              while (t[t.size()-1] == ' ') t = t.substr(0,t.size()-1);
+
+                              tags.push_back (t);
+                            });
+
+                  sort (tags.begin (), tags.end ());
+                  sort (thread->tags.begin (), thread->tags.end ());
+
+                  vector<ustring> rem;
+                  vector<ustring> add;
+
+                  /* find tags that have been removed */
+                  set_difference (thread->tags.begin (),
+                                  thread->tags.end (),
+                                  tags.begin (),
+                                  tags.end (),
+                                  std::back_inserter (rem));
+
+                  /* find tags that should be added */
+                  set_difference (tags.begin (),
+                                  tags.end (),
+                                  thread->tags.begin (),
+                                  thread->tags.end (),
+                                  std::back_inserter (add));
+
+
+                  if (add.size () == 0 &&
+                      rem.size () == 0) {
+                    cout << "ti: nothing to do." << endl;
+                  } else {
+                    main_window->actions.doit (
+                       refptr<Action>(new TagAction (thread, add, rem)));
+                  }
                 });
           }
         }

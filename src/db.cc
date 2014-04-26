@@ -184,6 +184,7 @@ namespace Astroid {
 
   /* tag actions */
   bool NotmuchThread::add_tag (ustring tag) {
+    cout << "nm (" << thread_id << "): add tag: " << tag << endl;
     if (find(tags.begin (), tags.end (), tag) == tags.end ()) {
       notmuch_thread_t * nm_thread = get_nm_thread ();
 
