@@ -247,7 +247,7 @@ namespace Astroid {
                 [&,thread](ustring tgs) {
                   cout << "ti: got tags: " << tgs << endl;
 
-                  vector<ustring> tags = VectorUtils::split_and_strip (tgs, ",");
+                  vector<ustring> tags = VectorUtils::split_and_trim (tgs, ",");
 
                   sort (tags.begin (), tags.end ());
                   sort (thread->tags.begin (), thread->tags.end ());

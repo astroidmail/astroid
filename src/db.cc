@@ -171,7 +171,7 @@ namespace Astroid {
     activate ();
 
     ustring astr = ustring (notmuch_thread_get_authors (nm_thread));
-    vector<ustring> aths = VectorUtils::split_and_strip (astr, ",");
+    vector<ustring> aths = VectorUtils::split_and_trim (astr, ",");
 
     deactivate ();
 
