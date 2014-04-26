@@ -8,6 +8,7 @@
 # include "thread_index.hh"
 # include "thread_index_list_view.hh"
 # include "thread_index_list_cell_renderer.hh"
+# include "utils/utils.hh"
 
 # include "command_bar.hh"
 
@@ -239,38 +240,14 @@ namespace Astroid {
         {
           auto thread = get_current_thread ();
           if (thread) {
-            ustring tag_list;
-            bool first = true;
-            for_each (thread->tags.begin(),
-                      thread->tags.end (),
-                      [&](ustring t) {
-                      if (!first) {
-                        tag_list += ", ";
-                      } else {
-                        first = false;
-                      }
-
-                      tag_list += t;
-                      });
+            ustring tag_list = VectorUtils::concat_tags (thread->tags);
 
             main_window->enable_command (CommandBar::CommandMode::Tag,
                 tag_list,
                 [&,thread](ustring tgs) {
                   cout << "ti: got tags: " << tgs << endl;
 
-                  vector<ustring> itags = Glib::Regex::split_simple(",", tgs);
-                  vector<ustring> tags;
-
-                  for_each (itags.begin (),
-                            itags.end (),
-                            [&](ustring t) {
-
-                              /* strip */
-                              while (t[0] == ' ') t = t.substr(1, t.size());
-                              while (t[t.size()-1] == ' ') t = t.substr(0,t.size()-1);
-
-                              tags.push_back (t);
-                            });
+                  vector<ustring> tags = VectorUtils::split_and_strip (tgs, ",");
 
                   sort (tags.begin (), tags.end ());
                   sort (thread->tags.begin (), thread->tags.end ());

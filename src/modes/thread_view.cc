@@ -11,6 +11,7 @@
 # include "message_thread.hh"
 # include "chunk.hh"
 # include "db.hh"
+# include "utils/utils.hh"
 
 
 using namespace std;
@@ -251,16 +252,7 @@ namespace Astroid {
     insert_header_address (header, "Date:", m->date (), true);
     insert_header_address (header, "Subject:", m->subject, true);
 
-    auto tags = m->tags ();
-    ustring tags_s;
-    for_each (tags.begin(), tags.end(),
-        [&](ustring t) {
-          if (t != *tags.begin()) {
-            tags_s += ", ";
-          }
-          tags_s = tags_s + t;
-        });
-
+    ustring tags_s = VectorUtils::concat_tags (m->tags ());
     insert_header_address (header, "Tags:", tags_s, true);
 
 

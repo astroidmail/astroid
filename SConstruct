@@ -79,7 +79,7 @@ env.Append (LIBS = libs)
 env.Append (CPPDEFINES = { 'GIT_DESC' : ('\\"%s\\"' % GIT_DESC) }, CPPFLAGS = ['-g', '-std=c++11', '-pthread'] )
 
 env.Append (CPPPATH = 'src')
-source = Glob('src/*.cc') + Glob('src/modes/*.cc') + Glob('src/actions/*.cc')
+source = Glob('src/*.cc') + Glob('src/modes/*.cc') + Glob('src/actions/*.cc') + Glob('src/utils/*.cc')
 
 
 

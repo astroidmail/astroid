@@ -15,6 +15,7 @@
 
 # include "thread_index_list_cell_renderer.hh"
 # include "db.hh"
+# include "utils/utils.hh"
 
 using namespace std;
 
@@ -198,23 +199,7 @@ namespace Astroid {
     Gdk::RGBA color = stylecontext->get_color(Gtk::STATE_FLAG_NORMAL);
     cr->set_source_rgb (color.get_red(), color.get_green(), color.get_blue());
 
-    ustring tag_string;
-
-    bool first = true;
-    for_each (thread->tags.begin (),
-              thread->tags.end (),
-              [&](ustring a) {
-
-                if (!first) {
-                  tag_string += ",";
-                } else {
-                  first = false;
-                }
-                a = a.substr(0,a.find_first_of(" "));
-                a = a.substr(0,a.find_first_of("@"));
-                tag_string += a;
-              });
-
+    ustring tag_string = VectorUtils::concat_tags (thread->tags);
     tag_string = tag_string.substr (0, tags_max_len);
 
     pango_layout->set_markup ("<span font_style=\"italic\"  color=\"#31587a\">" + tag_string + "</span>");
@@ -324,20 +309,7 @@ namespace Astroid {
       authors = thread->authors[0];
     } else {
       /* show first names separated by comma */
-      bool first = true;
-      for_each (thread->authors.begin (),
-                thread->authors.end (),
-                [&](ustring a) {
-
-                  if (!first) {
-                    authors += ",";
-                  } else {
-                    first = false;
-                  }
-                  a = a.substr(0,a.find_first_of(" "));
-                  a = a.substr(0,a.find_first_of("@"));
-                  authors += a;
-                });
+      authors = VectorUtils::concat_authors (thread->authors);
     }
 
     if (authors.size() >= authors_max_len) {

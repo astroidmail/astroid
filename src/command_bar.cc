@@ -12,6 +12,7 @@
 # include "modes/mode.hh"
 # include "modes/thread_index.hh"
 # include "modes/help_mode.hh"
+# include "utils/utils.hh"
 
 using namespace std;
 
@@ -108,16 +109,7 @@ namespace Astroid {
   void CommandBar::handle_command (ustring cmd) {
     cout << "cb: command: " << cmd << endl;
 
-    /* extract tokens
-     *
-     * ustring tokenizer: http://lists.boost.org/boost-users/2007/01/24698.php
-     */
-    typedef boost::tokenizer<
-      boost::char_delimiters_separator< Glib::ustring::value_type > ,
-      Glib::ustring::const_iterator ,
-      Glib::ustring > utokenizer;
-
-    utokenizer tok (cmd);
+    UstringUtils::utokenizer tok (cmd);
 
 # define adv_or_return it++; if (it == tok.end()) return;
 

@@ -9,6 +9,7 @@
 # include <notmuch.h>
 
 # include "db.hh"
+# include "utils/utils.hh"
 
 using namespace std;
 using namespace boost::filesystem;
@@ -170,22 +171,10 @@ namespace Astroid {
     activate ();
 
     ustring astr = ustring (notmuch_thread_get_authors (nm_thread));
-
-    vector<ustring> iaths = Glib::Regex::split_simple(",", astr);
-    vector<ustring> aths;
-
-    for_each (iaths.begin (),
-              iaths.end (),
-              [&](ustring a) {
-
-                /* strip */
-                while (a[0] == ' ') a = a.substr(1, a.size());
-                while (a[a.size()-1] == ' ') a = a.substr(0,a.size()-1);
-
-                aths.push_back (a);
-              });
+    vector<ustring> aths = VectorUtils::split_and_strip (astr, ",");
 
     deactivate ();
+
     return aths;
   }
 
