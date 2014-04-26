@@ -4,6 +4,7 @@
 
 # include "astroid.hh"
 # include "account_manager.hh"
+# include "config.hh"
 
 using namespace std;
 
