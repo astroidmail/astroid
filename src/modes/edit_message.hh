@@ -3,6 +3,7 @@
 # include <vector>
 
 # include <gtkmm/socket.h>
+# include <glibmm/iochannel.h>
 
 # include "astroid.hh"
 # include "mode.hh"
@@ -41,6 +42,14 @@ namespace Astroid {
       bool plug_removed ();
       void socket_realized ();
       bool vim_started = false;
+
+      bool editor_listener (Glib::IOCondition);
+      bool on_incoming (const refptr<Gio::SocketConnection>&,
+                        const refptr<Glib::Object> &);
+      
+      refptr<Glib::IOChannel> channel;
+      refptr<Gio::InetSocketAddress> address;
+      refptr<Gio::Socket> vsock;
 
 
       void reset_fields ();

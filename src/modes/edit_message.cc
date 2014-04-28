@@ -3,6 +3,8 @@
 # include <algorithm>
 
 # include <gtkmm/socket.h>
+# include <giomm/socket.h>
+# include <glibmm/iochannel.h>
 
 # include "astroid.hh"
 # include "account_manager.hh"
@@ -37,6 +39,28 @@ namespace Astroid {
 
     pack_start (*box_message, true, 5);
 
+    /* set up io socket for communication with vim */
+
+    refptr<Gio::SocketService> service = Gio::SocketService::create ();
+    service->add_inet_port (12345);
+    service->signal_incoming().connect (sigc::mem_fun(*this,
+          &EditMessage::on_incoming));
+
+
+    /*
+    refptr<Gio::Socket> vsock = Gio::Socket::create(
+        Gio::SocketFamily::SOCKET_FAMILY_UNIX,
+        Gio::SocketType::SOCKET_TYPE_STREAM,
+        Gio::SocketProtocol::SOCKET_PROTOCOL_DEFAULT);
+
+    refptr<Gio::InetAddress> ip = Gio::InetAddress::create ("127.0.0.1");
+    address = Gio::InetSocketAddress::create(ip, 12345);
+    vsock->bind (address, false);
+    */
+
+
+
+
     /* gtk::socket:
      * http://stackoverflow.com/questions/13359699/pyside-embed-vim
      * https://developer.gnome.org/gtkmm-tutorial/stable/sec-plugs-sockets-example.html.en
@@ -62,13 +86,34 @@ namespace Astroid {
     activate_field (From);
   }
 
+  bool EditMessage::on_incoming (
+      const refptr<Gio::SocketConnection>& socket,
+      const refptr<Glib::Object> &obj) {
+    cout << "em: got incoming." << endl;
+
+    vsock = socket->get_socket ();
+    channel = Glib::IOChannel::create_from_fd (vsock->get_fd());
+    //Glib::signal_io().connect (sigc::mem_fun(*this, &EditMessage::editor_listener), channel, Glib::IO_IN | Glib::IO_HUP, G_PRIORITY_LOW);
+    channel->create_watch (Glib::IO_IN | Glib::IO_HUP)->connect (sigc::mem_fun (*this,
+          &EditMessage::editor_listener));
+
+    return true;
+  }
+
+  bool EditMessage::editor_listener (Glib::IOCondition condition) {
+    ustring s;
+    channel->read_line (s);
+    cout << "em: channel, got: " << s << endl;
+    return true;
+  }
+
   void EditMessage::socket_realized ()
   {
     cout << "em: socket realized." << endl;
 
     if (!vim_started) {
       cout << "em: starting gvim.." << endl;
-      ustring cmd = ustring::compose ("gvim --socketid %1", editor_socket->get_id ());
+      ustring cmd = ustring::compose ("gvim -nb:127.0.0.1:12345:asdf --socketid %1", editor_socket->get_id ());
       Glib::spawn_command_line_async (cmd.c_str());
       vim_started = true;
     }
@@ -89,14 +134,26 @@ namespace Astroid {
 
     current_field = f;
 
-    if (in_edit) {
-      fields[current_field]->set_icon_from_icon_name ("go-next");
-      fields[current_field]->set_sensitive (true);
-      fields[current_field]->set_position (-1);
+    if (f == Editor) {
+      Gtk::IconSize isize  (Gtk::BuiltinIconSize::ICON_SIZE_BUTTON);
+      if (in_edit) {
+        //editor_box->set_sensitive (true);
+        //editor_socket->set_sensitive (true);
+        editor_img->set_from_icon_name ("go-next", isize);
+      } else {
+        editor_img->set_from_icon_name ("media-playback-stop", isize);
+      }
+      editor_socket->grab_focus ();
     } else {
-      fields[current_field]->set_icon_from_icon_name ("media-playback-stop");
+      if (in_edit) {
+        fields[current_field]->set_icon_from_icon_name ("go-next");
+        fields[current_field]->set_sensitive (true);
+        fields[current_field]->set_position (-1);
+      } else {
+        fields[current_field]->set_icon_from_icon_name ("media-playback-stop");
+      }
+      fields[current_field]->grab_focus ();
     }
-    fields[current_field]->grab_focus ();
 
     /* update tab in case something changed */
     if (subject->get_text ().size () > 0) {
@@ -133,7 +190,7 @@ namespace Astroid {
         if (in_edit) return false; // otherwise act as Tab
       case GDK_KEY_Tab:
         {
-          activate_field ((Field) ((current_field+1) % ((int)fields.size())));
+          activate_field ((Field) ((current_field+1) % ((int)no_fields)));
           return true;
         }
 
@@ -142,7 +199,7 @@ namespace Astroid {
         if (in_edit) {
           return false;
         } else {
-          activate_field ((Field) (((current_field)+((int)fields.size())-1) % ((int)fields.size())));
+          activate_field ((Field) (((current_field)+((int)no_fields)-1) % ((int)fields.size())));
           return true;
         }
 
@@ -153,7 +210,7 @@ namespace Astroid {
             activate_field (current_field);
           } else {
             // go to next field
-            activate_field ((Field) ((current_field+1) % ((int)fields.size())));
+            activate_field ((Field) ((current_field+1) % ((int)no_fields)));
           }
           return true;
         }
