@@ -24,7 +24,7 @@ namespace Astroid {
         Message,
       };
 
-      Gtk::Entry * from, *to, *cc, *bcc, *subject;
+      Gtk::Entry *from, *to, *cc, *bcc, *subject;
       vector<Gtk::Entry *> fields;
 
       Field current_field = From;
