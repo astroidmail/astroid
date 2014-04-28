@@ -198,13 +198,43 @@
       </packing>
     </child>
     <child>
-      <object class="GtkTextView" id="text_message">
+      <object class="GtkBox" id="box1">
         <property name="visible">True</property>
         <property name="sensitive">False</property>
-        <property name="can_focus">True</property>
-        <property name="editable">False</property>
-        <property name="cursor_visible">False</property>
-        <property name="accepts_tab">False</property>
+        <property name="can_focus">False</property>
+        <child>
+          <object class="GtkImage" id="editor_img">
+            <property name="visible">True</property>
+            <property name="sensitive">False</property>
+            <property name="can_focus">False</property>
+            <property name="margin_left">53</property>
+            <property name="xalign">1</property>
+            <property name="yalign">0</property>
+            <property name="icon_name">edit-delete</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="padding">5</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkBox" id="editor_box">
+            <property name="visible">True</property>
+            <property name="sensitive">False</property>
+            <property name="can_focus">False</property>
+            <property name="orientation">vertical</property>
+            <child>
+              <placeholder/>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
       </object>
       <packing>
         <property name="expand">True</property>

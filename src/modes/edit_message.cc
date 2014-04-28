@@ -2,6 +2,8 @@
 # include <vector>
 # include <algorithm>
 
+# include <gtkmm/socket.h>
+
 # include "astroid.hh"
 # include "account_manager.hh"
 # include "edit_message.hh"
@@ -23,6 +25,9 @@ namespace Astroid {
     builder->get_widget ("bcc", bcc);
     builder->get_widget ("subject", subject);
 
+    builder->get_widget ("editor_box", editor_box);
+    builder->get_widget ("editor_img", editor_img);
+
     /* must be in the same order as enum Field */
     fields.push_back (from);
     fields.push_back (to);
@@ -32,6 +37,21 @@ namespace Astroid {
 
     pack_start (*box_message, true, 5);
 
+    /* gtk::socket:
+     * http://stackoverflow.com/questions/13359699/pyside-embed-vim
+     * https://developer.gnome.org/gtkmm-tutorial/stable/sec-plugs-sockets-example.html.en
+     * https://mail.gnome.org/archives/gtk-list/2011-January/msg00041.html
+     */
+    editor_socket = Gtk::manage(new Gtk::Socket ());
+    editor_socket->signal_plug_added ().connect (
+        sigc::mem_fun(*this, &EditMessage::plug_added) );
+    editor_socket->signal_plug_removed ().connect (
+        sigc::mem_fun(*this, &EditMessage::plug_removed) );
+
+    editor_socket->signal_realize ().connect (
+        sigc::mem_fun(*this, &EditMessage::socket_realized) );
+
+    editor_box->pack_start (*editor_socket, true, 5);
     show_all ();
 
     /* defaults */
@@ -40,6 +60,27 @@ namespace Astroid {
     from->set_text (accounts->accounts[accounts->default_account].full_address());
 
     activate_field (From);
+  }
+
+  void EditMessage::socket_realized ()
+  {
+    cout << "em: socket realized." << endl;
+
+    if (!vim_started) {
+      cout << "em: starting gvim.." << endl;
+      ustring cmd = ustring::compose ("gvim --socketid %1", editor_socket->get_id ());
+      Glib::spawn_command_line_async (cmd.c_str());
+      vim_started = true;
+    }
+  }
+
+  void EditMessage::plug_added () {
+    cout << "em: gvim connected" << endl;
+  }
+
+  bool EditMessage::plug_removed () {
+    cout << "em: gvim disconnected" << endl;
+    return true;
   }
 
   void EditMessage::activate_field (Field f) {
@@ -69,6 +110,13 @@ namespace Astroid {
               [&](Gtk::Entry * e) {
                 reset_entry (e);
               });
+
+    /* reset editor */
+    Gtk::IconSize isize  (Gtk::BuiltinIconSize::ICON_SIZE_BUTTON);
+    editor_img->set_from_icon_name ("", isize);
+    int w, h;
+    Gtk::IconSize::lookup (isize, w, h);
+    editor_img->set_size_request (w, h);
   }
 
   void EditMessage::reset_entry (Gtk::Entry *e) {

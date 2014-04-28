@@ -2,6 +2,8 @@
 
 # include <vector>
 
+# include <gtkmm/socket.h>
+
 # include "astroid.hh"
 # include "mode.hh"
 # include "proto.hh"
@@ -21,16 +23,26 @@ namespace Astroid {
         Cc,
         Bcc,
         Subject,
-        Message,
+        Editor,
+        no_fields // last
       };
 
       Gtk::Entry *from, *to, *cc, *bcc, *subject;
+      Gtk::Image *editor_img;
       vector<Gtk::Entry *> fields;
 
       Field current_field = From;
       void activate_field (Field);
 
     private:
+      Gtk::Box *editor_box;
+      Gtk::Socket *editor_socket;
+      void plug_added ();
+      bool plug_removed ();
+      void socket_realized ();
+      bool vim_started = false;
+
+
       void reset_fields ();
       void reset_entry (Gtk::Entry *);
 
