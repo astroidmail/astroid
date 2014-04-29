@@ -94,6 +94,7 @@ namespace Astroid {
       cout << "cf: no config, using defaults." << endl;
       setup_default_config (true);
       config = default_config;
+      write_back_config ();
     } else {
       ptree new_config;
       setup_default_config (false);
@@ -101,13 +102,16 @@ namespace Astroid {
       read_json (config_file.c_str(), new_config);
 
       merge_ptree (new_config);
+
+      if (new_config != config) {
+        cout << "cf: missing values in config have been updated with defaults." << endl;
+        write_back_config ();
+      }
     }
-
-    write_back_config ();
-
   }
 
-  /* merging of the property trees */
+  /* TODO: split into utils/ somewhere.. */
+  /* merge of property trees */
 
   // from http://stackoverflow.com/questions/8154107/how-do-i-merge-update-a-boostproperty-treeptree
   template<typename T>

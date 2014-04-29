@@ -39,7 +39,8 @@ namespace Astroid {
       const int CONFIG_VERSION = 0;
 
     private:
-      /* merging of the property trees */
+      /* TODO: split into utils/ somewhere.. */
+      /* merge of property trees */
 
       // from http://stackoverflow.com/questions/8154107/how-do-i-merge-update-a-boostproperty-treeptree
       template<typename T>
