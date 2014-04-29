@@ -52,11 +52,16 @@ namespace Astroid {
   }
 
   void Config::setup_default_config (bool initial) {
+    /* TODO: un-used */
     default_config.put ("astroid.config.version", CONFIG_VERSION);
     default_config.put ("astroid.notmuch.db", "~/.mail");
 
     if (initial) {
-      /* account */
+      /* account - only set if no other accounts, we accomplish that
+       * by only defining the default if there is no config file present.
+       *
+       * AccountManager will complain if there are no accounts defined.
+       */
       default_config.put ("accounts.charlie.name", "Charlie Root");
       default_config.put ("accounts.charlie.email", "root@localhost");
       default_config.put ("accounts.charlie.gpgkey", "");
@@ -64,6 +69,7 @@ namespace Astroid {
       default_config.put ("accounts.charlie.default", true);
     }
 
+    /* TODO: un-used */
     /* ui behaviour */
     default_config.put ("thread_index.open_default", "paned");
   }
