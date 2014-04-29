@@ -15,6 +15,7 @@ namespace Astroid {
   class EditMessage : public Mode {
     public:
       EditMessage ();
+      ~EditMessage ();
 
       Gtk::Box * box_message;
 
@@ -49,6 +50,7 @@ namespace Astroid {
       
       refptr<Gio::ThreadedSocketService> service;
       refptr<Gio::InetSocketAddress> address;
+      refptr<Gio::SocketConnection> sconn;
       refptr<Gio::InputStream> is;
       refptr<Gio::OutputStream> os;
 

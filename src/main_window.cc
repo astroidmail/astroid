@@ -166,11 +166,12 @@ namespace Astroid {
   }
 
   void MainWindow::del_mode (int c) {
+    int nc = min (c, notebook.get_n_pages()-2);
+    set_active(nc);
     notebook.remove_page (c); // this should free the widget
     auto it = modes.begin () + c;
     modes.erase(it);
-    c = min (c, notebook.get_n_pages()-1);
-    set_active(c);
+    delete *it;
   }
 
   void MainWindow::unset_active () {

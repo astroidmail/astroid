@@ -151,6 +151,7 @@ namespace Astroid {
   }
 
   ThreadIndex::~ThreadIndex () {
+    cout << "ti: deconstruct." << endl;
     notmuch_threads_destroy (threads);
     notmuch_query_destroy (query);
   }

@@ -71,23 +71,38 @@ namespace Astroid {
     activate_field (From);
   }
 
+  EditMessage::~EditMessage () {
+    cout << "em: deconstruct." << endl;
+    sconn->close ();
+
+    service->stop ();
+    service->close ();
+  }
+
   bool EditMessage::on_incoming (
       const refptr<Gio::SocketConnection>& socket,
       const refptr<Glib::Object> &obj) {
     cout << "em: got incoming." << endl;
 
-    socket->reference ();
+    sconn = socket;
     is    = socket->get_input_stream ();
     os    = socket->get_output_stream ();
 
     while (1) {
       char buf[300];
-      int n = is->read (buf, 290);
-      buf[n] = 0;
-      cout << "read: " << buf << endl;
+      try {
+        int n = is->read (buf, 290);
+        buf[n] = 0;
+        cout << "read: " << buf << endl;
+
+        if (n <= 0) break;
+      } catch (Gio::Error e) {
+        cout << "em: vim connection closed: " << e.what () << endl;
+        break;
+      }
     }
 
-    return true;
+    return false;
   }
 
   /*
@@ -108,7 +123,7 @@ namespace Astroid {
 
     if (!vim_started) {
       cout << "em: starting gvim.." << endl;
-      
+
       ustring cmd = ustring::compose ("gvim -nb:127.0.0.1:12345:asdf --socketid %1", editor_socket->get_id ());
       Glib::spawn_command_line_async (cmd.c_str());
       vim_started = true;
