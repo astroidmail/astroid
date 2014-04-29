@@ -47,9 +47,12 @@ namespace Astroid {
       bool on_incoming (const refptr<Gio::SocketConnection>&,
                         const refptr<Glib::Object> &);
       
+      refptr<Gio::ThreadedSocketService> service;
       refptr<Glib::IOChannel> channel;
       refptr<Gio::InetSocketAddress> address;
       refptr<Gio::Socket> vsock;
+      refptr<Gio::InputStream> is;
+      refptr<Gio::OutputStream> os;
 
 
       void reset_fields ();

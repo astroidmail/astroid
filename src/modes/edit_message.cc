@@ -40,26 +40,11 @@ namespace Astroid {
     pack_start (*box_message, true, 5);
 
     /* set up io socket for communication with vim */
-
-    refptr<Gio::SocketService> service = Gio::SocketService::create ();
+    service = Gio::ThreadedSocketService::create (1);
     service->add_inet_port (12345);
-    service->signal_incoming().connect (sigc::mem_fun(*this,
+    service->signal_run ().connect (sigc::mem_fun (*this,
           &EditMessage::on_incoming));
-
-
-    /*
-    refptr<Gio::Socket> vsock = Gio::Socket::create(
-        Gio::SocketFamily::SOCKET_FAMILY_UNIX,
-        Gio::SocketType::SOCKET_TYPE_STREAM,
-        Gio::SocketProtocol::SOCKET_PROTOCOL_DEFAULT);
-
-    refptr<Gio::InetAddress> ip = Gio::InetAddress::create ("127.0.0.1");
-    address = Gio::InetSocketAddress::create(ip, 12345);
-    vsock->bind (address, false);
-    */
-
-
-
+    service->start ();
 
     /* gtk::socket:
      * http://stackoverflow.com/questions/13359699/pyside-embed-vim
@@ -91,19 +76,27 @@ namespace Astroid {
       const refptr<Glib::Object> &obj) {
     cout << "em: got incoming." << endl;
 
-    vsock = socket->get_socket ();
-    channel = Glib::IOChannel::create_from_fd (vsock->get_fd());
-    //Glib::signal_io().connect (sigc::mem_fun(*this, &EditMessage::editor_listener), channel, Glib::IO_IN | Glib::IO_HUP, G_PRIORITY_LOW);
-    channel->create_watch (Glib::IO_IN | Glib::IO_HUP)->connect (sigc::mem_fun (*this,
-          &EditMessage::editor_listener));
+    socket->reference ();
+    is    = socket->get_input_stream ();
+    os    = socket->get_output_stream ();
+
+    while (1) {
+      char buf[300];
+      int n = is->read (buf, 10);
+      buf[n] = 0;
+      cout << "read: " << buf << endl;
+    }
 
     return true;
   }
 
   bool EditMessage::editor_listener (Glib::IOCondition condition) {
     ustring s;
+    cout << "em: channel, got: ";
+    Glib::IOStatus state;
     channel->read_line (s);
-    cout << "em: channel, got: " << s << endl;
+    cout << s;
+    cout << endl;
     return true;
   }
 
@@ -113,6 +106,7 @@ namespace Astroid {
 
     if (!vim_started) {
       cout << "em: starting gvim.." << endl;
+      
       ustring cmd = ustring::compose ("gvim -nb:127.0.0.1:12345:asdf --socketid %1", editor_socket->get_id ());
       Glib::spawn_command_line_async (cmd.c_str());
       vim_started = true;
