@@ -82,7 +82,7 @@ namespace Astroid {
 
     while (1) {
       char buf[300];
-      int n = is->read (buf, 10);
+      int n = is->read (buf, 290);
       buf[n] = 0;
       cout << "read: " << buf << endl;
     }
@@ -90,6 +90,7 @@ namespace Astroid {
     return true;
   }
 
+  /*
   bool EditMessage::editor_listener (Glib::IOCondition condition) {
     ustring s;
     cout << "em: channel, got: ";
@@ -99,6 +100,7 @@ namespace Astroid {
     cout << endl;
     return true;
   }
+  */
 
   void EditMessage::socket_realized ()
   {
