@@ -18,6 +18,13 @@ namespace Astroid {
       Config ();
       Config (const char *);
 
+      /* dir env vars from XDG with defaults:
+       * XDG_CONFIG_HOME  : $HOME/.config/
+       * XDG_DATA_HOME    : $HOME/.local/share/
+       * XDG_CACHE_HOME   : $HOME/.cache/
+       * XDG_RUNTIME_HOME : none
+       */
+
       path home;
       path config_file;
       path config_dir;
