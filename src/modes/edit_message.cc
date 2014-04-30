@@ -154,7 +154,15 @@ namespace Astroid {
       } else {
         editor_img->set_from_icon_name ("media-playback-stop", isize);
       }
+
+      cout << "em: focus editor.." << endl;
+      editor_socket->set_sensitive (true);
       editor_socket->grab_focus ();
+      editor_socket->activate ();
+      editor_socket->get_plug_window()->focus (-1);
+      editor_socket->get_plug_window()->raise ();
+      editor_socket->get_plug_window()->show ();
+
     } else {
       if (in_edit) {
         fields[current_field]->set_icon_from_icon_name ("go-next");
@@ -190,7 +198,8 @@ namespace Astroid {
   void EditMessage::reset_entry (Gtk::Entry *e) {
     e->set_icon_from_icon_name ("");
     e->set_activates_default (true);
-    fields[current_field]->set_sensitive (false);
+    if (current_field != Field::Editor)
+      fields[current_field]->set_sensitive (false);
   }
 
   bool EditMessage::on_key_press_event (GdkEventKey * event) {
@@ -210,7 +219,7 @@ namespace Astroid {
         if (in_edit) {
           return false;
         } else {
-          activate_field ((Field) (((current_field)+((int)no_fields)-1) % ((int)fields.size())));
+          activate_field ((Field) (((current_field)+((int)no_fields)-1) % ((int)no_fields)));
           return true;
         }
 

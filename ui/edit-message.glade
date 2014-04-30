@@ -200,7 +200,7 @@
     <child>
       <object class="GtkBox" id="box1">
         <property name="visible">True</property>
-        <property name="can_focus">False</property>
+        <property name="can_focus">True</property>
         <child>
           <object class="GtkImage" id="editor_img">
             <property name="visible">True</property>
@@ -221,7 +221,7 @@
         <child>
           <object class="GtkBox" id="editor_box">
             <property name="visible">True</property>
-            <property name="can_focus">False</property>
+            <property name="can_focus">True</property>
             <property name="orientation">vertical</property>
             <child>
               <placeholder/>
