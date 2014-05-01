@@ -2,6 +2,8 @@
 # include <vector>
 # include <algorithm>
 
+# include <gtkmm.h>
+# include <gdk/gdkx.h>
 # include <gtkmm/socket.h>
 # include <giomm/socket.h>
 # include <glibmm/iochannel.h>
@@ -124,7 +126,7 @@ namespace Astroid {
     if (!vim_started) {
       cout << "em: starting gvim.." << endl;
 
-      ustring cmd = ustring::compose ("gvim -nb:127.0.0.1:12345:asdf --socketid %1", editor_socket->get_id ());
+      ustring cmd = ustring::compose ("gvim --servername test -nb:127.0.0.1:12345:asdf --socketid %1", editor_socket->get_id ());
       Glib::spawn_command_line_async (cmd.c_str());
       vim_started = true;
     }
@@ -156,12 +158,15 @@ namespace Astroid {
       }
 
       cout << "em: focus editor.." << endl;
-      editor_socket->set_sensitive (true);
-      editor_socket->grab_focus ();
-      editor_socket->activate ();
-      editor_socket->get_plug_window()->focus (-1);
-      editor_socket->get_plug_window()->raise ();
-      editor_socket->get_plug_window()->show ();
+      if (in_edit) {
+        editor_socket->set_sensitive (true);
+        editor_socket->set_can_focus (true);
+
+        gtk_socket_focus_forward (editor_socket->gobj ());
+
+        editor_active = true;
+      }
+
 
     } else {
       if (in_edit) {
@@ -193,6 +198,10 @@ namespace Astroid {
     int w, h;
     Gtk::IconSize::lookup (isize, w, h);
     editor_img->set_size_request (w, h);
+
+    editor_active = false;
+    editor_socket->set_sensitive (false);
+    editor_socket->set_can_focus (false);
   }
 
   void EditMessage::reset_entry (Gtk::Entry *e) {
@@ -204,48 +213,65 @@ namespace Astroid {
 
   bool EditMessage::on_key_press_event (GdkEventKey * event) {
     cout << "em: got key press" << endl;
-    switch (event->keyval) {
-      case GDK_KEY_Down:
-      case GDK_KEY_j:
-        if (in_edit) return false; // otherwise act as Tab
-      case GDK_KEY_Tab:
-        {
-          activate_field ((Field) ((current_field+1) % ((int)no_fields)));
-          return true;
-        }
-
-      case GDK_KEY_Up:
-      case GDK_KEY_k:
-        if (in_edit) {
-          return false;
-        } else {
-          activate_field ((Field) (((current_field)+((int)no_fields)-1) % ((int)no_fields)));
-          return true;
-        }
-
-      case GDK_KEY_Return:
-        {
-          if (!in_edit) {
-            in_edit = true;
-            activate_field (current_field);
-          } else {
-            // go to next field
+    if (editor_active) {
+      switch (event->keyval) {
+        case GDK_KEY_Escape:
+          {
+            if (event->state & GDK_SHIFT_MASK) {
+              if (in_edit) {
+                in_edit = false;
+                activate_field (current_field);
+              }
+            }
+            return true;
+          }
+        default:
+          return false; // let editor handle
+      }
+    } else {
+      switch (event->keyval) {
+        case GDK_KEY_Down:
+        case GDK_KEY_j:
+          if (in_edit) return false; // otherwise act as Tab
+        case GDK_KEY_Tab:
+          {
             activate_field ((Field) ((current_field+1) % ((int)no_fields)));
+            return true;
           }
-          return true;
-        }
 
-      case GDK_KEY_Escape:
-        {
+        case GDK_KEY_Up:
+        case GDK_KEY_k:
           if (in_edit) {
-            in_edit = false;
-            activate_field (current_field);
+            return false;
+          } else {
+            activate_field ((Field) (((current_field)+((int)no_fields)-1) % ((int)no_fields)));
+            return true;
           }
-          return true;
-        }
 
-      default:
-        return false; // if from field, field will handle event
+        case GDK_KEY_Return:
+          {
+            if (!in_edit) {
+              in_edit = true;
+              activate_field (current_field);
+            } else {
+              // go to next field
+              activate_field ((Field) ((current_field+1) % ((int)no_fields)));
+            }
+            return true;
+          }
+
+        case GDK_KEY_Escape:
+          {
+            if (in_edit) {
+              in_edit = false;
+              activate_field (current_field);
+            }
+            return true;
+          }
+
+        default:
+          return false; // if from field, field will handle event
+      }
     }
   }
 

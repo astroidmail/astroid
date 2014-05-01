@@ -47,7 +47,7 @@ namespace Astroid {
       //bool editor_listener (Glib::IOCondition);
       bool on_incoming (const refptr<Gio::SocketConnection>&,
                         const refptr<Glib::Object> &);
-      
+
       refptr<Gio::ThreadedSocketService> service;
       refptr<Gio::InetSocketAddress> address;
       refptr<Gio::SocketConnection> sconn;
@@ -59,6 +59,7 @@ namespace Astroid {
       void reset_entry (Gtk::Entry *);
 
       bool in_edit = false;
+      bool editor_active = false;
 
       AccountManager * accounts;
 
