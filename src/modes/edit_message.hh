@@ -1,6 +1,7 @@
 # pragma once
 
 # include <vector>
+# include <ctime>
 
 # include <gtkmm/socket.h>
 # include <glibmm/iochannel.h>
@@ -44,16 +45,8 @@ namespace Astroid {
       void socket_realized ();
       bool vim_started = false;
 
-      //bool editor_listener (Glib::IOCondition);
-      bool on_incoming (const refptr<Gio::SocketConnection>&,
-                        const refptr<Glib::Object> &);
-
-      refptr<Gio::ThreadedSocketService> service;
-      refptr<Gio::InetSocketAddress> address;
-      refptr<Gio::SocketConnection> sconn;
-      refptr<Gio::InputStream> is;
-      refptr<Gio::OutputStream> os;
-
+      time_t  msg_time;
+      ustring vim_server;
 
       void reset_fields ();
       void reset_entry (Gtk::Entry *);
