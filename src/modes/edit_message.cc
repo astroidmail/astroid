@@ -146,6 +146,7 @@ namespace Astroid {
          */
         gtk_socket_focus_forward (editor_socket->gobj ());
 
+        esc_count     = 0;
         editor_active = true;
       } else {
         editor_img->set_from_icon_name ("media-playback-stop", isize);
@@ -201,7 +202,7 @@ namespace Astroid {
       switch (event->keyval) {
         case GDK_KEY_Escape:
           {
-            if (event->state & GDK_SHIFT_MASK) {
+            if (esc_count == 1 || event->state & GDK_SHIFT_MASK) {
               if (in_edit) {
                 in_edit = false;
                 activate_field (current_field);
@@ -209,11 +210,14 @@ namespace Astroid {
 
               return true;
 
+            } else {
+              esc_count++;
             }
 
             return false;
           }
         default:
+          esc_count = 0;
           return false; // let editor handle
       }
     } else {
@@ -257,8 +261,25 @@ namespace Astroid {
             return true;
           }
 
+        /* commonly used insert-mode chars */
+        case GDK_KEY_a:
+        case GDK_KEY_A:
+        case GDK_KEY_o:
+        case GDK_KEY_O:
+        case GDK_KEY_i:
+        case GDK_KEY_I:
+          if (current_field == Editor) {
+            if (!in_edit) {
+              in_edit = true;
+              activate_field (current_field);
+            }
+            ustring cmd = ustring::compose ("gvim --servername %1 --remote-send '%2'", vim_server, char(event->keyval));
+            Glib::spawn_command_line_async (cmd.c_str());
+            return true;
+          }
+
         default:
-          return false; // if from field, field will handle event
+          return false; // let active field handle event
       }
     }
   }

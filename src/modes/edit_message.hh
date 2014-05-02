@@ -57,6 +57,7 @@ namespace Astroid {
 
       bool in_edit = false;
       bool editor_active = false;
+      int  esc_count = 0;
 
       AccountManager * accounts;
 
