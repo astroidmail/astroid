@@ -7,6 +7,7 @@
 # include <glibmm/iochannel.h>
 
 # include "astroid.hh"
+# include "config.hh"
 # include "mode.hh"
 # include "proto.hh"
 
@@ -40,6 +41,8 @@ namespace Astroid {
       ustring msg_id;
 
     private:
+      ptree editor_config;
+
       Gtk::Box *editor_box;
       Gtk::Socket *editor_socket;
       void plug_added ();

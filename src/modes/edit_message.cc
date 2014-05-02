@@ -82,8 +82,10 @@ namespace Astroid {
 
     editor_box->pack_start (*editor_socket, true, 5);
 
+    editor_config = astroid->config->config.get_child ("editor");
+
     /* gvim settings */
-    double_esc_deactivates = astroid->config->config.get <bool>("editor.gvim.double_esc_deactivates");
+    double_esc_deactivates = editor_config.get <bool>("gvim.double_esc_deactivates");
 
     show_all ();
 
