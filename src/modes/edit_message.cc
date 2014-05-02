@@ -129,8 +129,8 @@ namespace Astroid {
 
   EditMessage::~EditMessage () {
     cout << "em: deconstruct." << endl;
-    
-    vim_remote_expr (":quit!");
+
+    vim_remote_keys ("<ESC>:quit!<CR>");
 
     if (is_regular_file (tmpfile_path)) {
       boost::filesystem::remove (tmpfile_path);
@@ -143,10 +143,6 @@ namespace Astroid {
 
     if (!vim_started) {
       vim_start ();
-
-      send_default = false;
-      activate_field (Editor);
-      activate_field (To);
     }
   }
 
