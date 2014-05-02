@@ -81,7 +81,12 @@ env.Append (CPPDEFINES = { 'GIT_DESC' : ('\\"%s\\"' % GIT_DESC) }, CPPFLAGS = ['
 env.Append (CPPPATH = 'src')
 source = Glob('src/*.cc') + Glob('src/modes/*.cc') + Glob('src/actions/*.cc') + Glob('src/utils/*.cc')
 
+conf = Configure(env)
+if not conf.CheckFunc ('gtk_socket_focus_forward'):
+  print "gtk_socket_focus_forward is missing, please see: https://bugzilla.gnome.org/show_bug.cgi?id=729248"
+  exit (1)
 
+env = conf.Finish ()
 
 env.Program (source = source, target = 'astroid')
 
