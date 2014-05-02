@@ -240,5 +240,20 @@
         <property name="position">5</property>
       </packing>
     </child>
+    <child>
+      <object class="GtkLabel" id="label6">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="halign">end</property>
+        <property name="label" translatable="yes">Use &lt;S-Escape&gt; to exit editor</property>
+        <property name="justify">right</property>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="fill">True</property>
+        <property name="pack_type">end</property>
+        <property name="position">6</property>
+      </packing>
+    </child>
   </object>
 </interface>

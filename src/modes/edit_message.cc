@@ -47,7 +47,7 @@ namespace Astroid {
     /* set up message id and random server name for gvim */
     id = edit_id++;
     msg_time = time(0);
-    string _chars = "abcdefghijklmnopqrstuvwxyz1234567890";
+    const string _chars = "abcdefghijklmnopqrstuvwxyz1234567890";
     random_device rd;
     mt19937 g(rd());
 
@@ -124,22 +124,31 @@ namespace Astroid {
 
     if (f == Editor) {
       Gtk::IconSize isize  (Gtk::BuiltinIconSize::ICON_SIZE_BUTTON);
-      if (in_edit) {
-        //editor_box->set_sensitive (true);
-        //editor_socket->set_sensitive (true);
-        editor_img->set_from_icon_name ("go-next", isize);
-      } else {
-        editor_img->set_from_icon_name ("media-playback-stop", isize);
-      }
 
-      cout << "em: focus editor.." << endl;
+      cout << "em: focus editor." << endl;
       if (in_edit) {
+        editor_img->set_from_icon_name ("go-next", isize);
         editor_socket->set_sensitive (true);
         editor_socket->set_can_focus (true);
 
+        /* TODO: this should probably only be done the first time,
+         *       in subsequent calls it should be sufficient to
+         *       just do grab_focus(). it probably works because
+         *       gvim only has one widget.
+         *
+         * Also, this requires GTK to be patched as in:
+         * https://bugzilla.gnome.org/show_bug.cgi?id=729248
+         * https://mail.gnome.org/archives/gtk-list/2014-May/msg00000.html
+         *
+         * as far as I can see, there are no other way to
+         * programatically set focus to a widget inside an embedded
+         * child (except for the user to press Tab).
+         */
         gtk_socket_focus_forward (editor_socket->gobj ());
 
         editor_active = true;
+      } else {
+        editor_img->set_from_icon_name ("media-playback-stop", isize);
       }
 
 
