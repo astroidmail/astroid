@@ -93,8 +93,13 @@ namespace Astroid {
 
   void Astroid::quit () {
     cout << "astroid: goodbye!" << endl;
-    app->quit ();
 
+    /* remove modes */
+    for (auto mw : main_windows) {
+      mw->remove_all_modes ();
+    }
+
+    app->quit ();
   }
 
 }

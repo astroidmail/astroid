@@ -43,6 +43,7 @@ namespace Astroid {
 
       void add_mode (Mode *);
       void del_mode (int);
+      void remove_all_modes ();
 
       void unset_active ();
       void set_active (int);

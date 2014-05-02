@@ -14,29 +14,20 @@ using boost::property_tree::ptree;
 
 namespace Astroid {
   Config::Config () {
-    /* default config */
-    char * config_home = getenv ("XDG_CONFIG_HOME");
-    char * home_c      = getenv ("HOME");
+    load_dirs ();
 
-    if (home_c == NULL) {
-      cerr << "cf: HOME environment variable not set." << endl;
-      exit (1);
-    }
+    config_file = config_dir / path("config");
 
-    home = path(home_c);
-
-    path default_config = home / path(".config/astroid/config");
-
-    if (config_home == NULL) {
-      config_file = default_config;
-    } else {
-      config_file = path(config_home) / path("astroid/config");
-    }
-
-    load_config ();
+    load_config (); // re-sets config_dir to parent of fname
   }
 
   Config::Config (const char * fname) {
+    load_dirs ();
+    config_file = path(fname);
+    load_config (); // re-sets config_dir to parent of fname
+  }
+
+  void Config::load_dirs () {
     char * home_c      = getenv ("HOME");
 
     if (home_c == NULL) {
@@ -46,9 +37,37 @@ namespace Astroid {
 
     home = path(home_c);
 
-    config_file = path(fname);
+    /* default config */
+    char * config_home = getenv ("XDG_CONFIG_HOME");
+    if (config_home == NULL) {
+      config_dir = home / path(".config/astroid");
+    } else {
+      config_dir = path(config_home) / path("astroid");
+    }
 
-    load_config ();
+    /* default data */
+    char * data = getenv ("XDG_DATA_HOME");
+    if (data == NULL) {
+      data_dir = home / path(".local/share/astroid");
+    } else {
+      data_dir = path(data) / path("astroid");
+    }
+
+    /* default cache */
+    char * cache = getenv ("XDG_CACHE_HOME");
+    if (cache == NULL) {
+      cache_dir = home / path(".cache/astroid");
+    } else {
+      cache_dir = path(cache) / path("astroid");
+    }
+
+    /* default runtime */
+    char * runtime = getenv ("XDG_RUNTIME_HOME");
+    if (runtime == NULL) {
+      runtime_dir = cache_dir;
+    } else {
+      runtime_dir = path(runtime) / path("astroid");
+    }
   }
 
   void Config::setup_default_config (bool initial) {

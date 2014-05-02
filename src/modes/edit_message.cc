@@ -23,6 +23,8 @@ namespace Astroid {
   EditMessage::EditMessage () {
     editor_config = astroid->config->config.get_child ("editor");
 
+    tmpfile_path = astroid->config->runtime_dir;
+
     tab_widget = new Gtk::Label ("New message");
 
     Glib::RefPtr<Gtk::Builder> builder = Gtk::Builder::create_from_file("ui/edit-message.glade", "box_message");
@@ -76,6 +78,8 @@ namespace Astroid {
     cout << "em: msg id: " << msg_id << endl;
     cout << "em: vim server name: " << vim_server << endl;
 
+    make_tmpfile ();
+
     /* gvim settings */
     double_esc_deactivates  = editor_config.get <bool>("gvim.double_esc_deactivates");
     default_cmd_on_enter    = editor_config.get <string>("gvim.default_cmd_on_enter");
@@ -125,6 +129,10 @@ namespace Astroid {
 
   EditMessage::~EditMessage () {
     cout << "em: deconstruct." << endl;
+
+    if (is_regular_file (tmpfile_path)) {
+      boost::filesystem::remove (tmpfile_path);
+    }
   }
 
   void EditMessage::socket_realized ()
@@ -357,6 +365,30 @@ namespace Astroid {
     Glib::spawn_command_line_async (cmd.c_str());
   }
 
+  void EditMessage::make_tmpfile () {
+    tmpfile_path = tmpfile_path / path(msg_id);
+
+    cout << "em: tmpfile: " << tmpfile_path << endl;
+
+    if (!is_directory(astroid->config->runtime_dir)) {
+      cout << "em: making runtime dir.." << endl;
+      create_directories (astroid->config->runtime_dir);
+    }
+
+    if (is_regular_file (tmpfile_path)) {
+      cout << "em: error: tmpfile already exists!" << endl;
+      exit (1);
+    }
+
+    tmpfile.open (tmpfile_path.c_str(), fstream::out);
+
+    if (tmpfile.fail()) {
+      cout << "em: error: could not create tmpfile!" << endl;
+      exit (1);
+    }
+
+    tmpfile.close ();
+  }
 
   void EditMessage::grab_modal () {
     add_modal_grab ();

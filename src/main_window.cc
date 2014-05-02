@@ -166,12 +166,26 @@ namespace Astroid {
   }
 
   void MainWindow::del_mode (int c) {
-    int nc = min (c, notebook.get_n_pages()-2);
-    set_active(nc);
-    notebook.remove_page (c); // this should free the widget
-    auto it = modes.begin () + c;
-    modes.erase(it);
-    delete *it;
+    cout << "mw: del mode: " << c << endl;
+    if (c >= 0) {
+      int nc = min (c, notebook.get_n_pages()-2);
+      set_active(nc);
+      notebook.remove_page (c); // this should free the widget
+      auto it = modes.begin () + c;
+      modes.erase(it);
+      delete *it;
+    } else {
+      cout << "mw: attempt to remove negative page" << endl;
+    }
+  }
+
+  void MainWindow::remove_all_modes () {
+    // used by Astroid::quit to deconstruct all modes before
+    // exiting.
+
+    for (int n = modes.size ()-1; n >= 0; n--)
+      del_mode (n);
+
   }
 
   void MainWindow::unset_active () {

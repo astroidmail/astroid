@@ -6,12 +6,15 @@
 # include <gtkmm/socket.h>
 # include <glibmm/iochannel.h>
 
+# include <boost/filesystem.hpp>
+
 # include "astroid.hh"
 # include "config.hh"
 # include "mode.hh"
 # include "proto.hh"
 
 using namespace std;
+using namespace boost::filesystem;
 
 namespace Astroid {
   class EditMessage : public Mode {
@@ -83,6 +86,10 @@ namespace Astroid {
       string gvim_args;
 
       AccountManager * accounts;
+
+      path tmpfile_path;
+      fstream tmpfile;
+      void make_tmpfile ();
 
     public:
       void grab_modal () override;

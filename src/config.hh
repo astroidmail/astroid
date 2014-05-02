@@ -26,10 +26,15 @@ namespace Astroid {
        */
 
       path home;
-      path config_file;
       path config_dir;
+      path data_dir;
+      path cache_dir;
+      path runtime_dir;
+      
+      path config_file;
 
       void load_config ();
+      void load_dirs ();
       void setup_default_config (bool);
       void write_back_config ();
 
