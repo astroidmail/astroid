@@ -47,17 +47,24 @@ namespace Astroid {
 
     /* set up message id and random server name for gvim */
     id = edit_id++;
+
+    char hostname[1024];
+    hostname[1024] = 0;
+    gethostname (hostname, 1023);
+
+    int pid = getpid ();
+
     msg_time = time(0);
     const string _chars = "abcdefghijklmnopqrstuvwxyz1234567890";
     random_device rd;
     mt19937 g(rd());
 
-    int len = 35;
+    int len = 10;
     for (int i = 0; i < len; i++)
       vim_server += _chars[g() % _chars.size()];
 
-    vim_server = ustring::compose ("astroid-%1-%2-%3", id,
-        msg_time, vim_server);
+    vim_server = ustring::compose ("%2-astroid-%1-%3-%5@%4", id,
+        msg_time, vim_server, hostname, pid);
 
     if (msg_id == "") {
       msg_id = vim_server;
