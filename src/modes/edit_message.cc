@@ -101,7 +101,8 @@ namespace Astroid {
 
     from->set_text (accounts->accounts[accounts->default_account].full_address());
 
-    activate_field (From);
+    in_edit = true;
+    activate_field (To);
   }
 
   EditMessage::~EditMessage () {
