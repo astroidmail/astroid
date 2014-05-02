@@ -70,7 +70,10 @@ namespace Astroid {
       time_t  msg_time;
       ustring vim_server;
 
-      void vim_send (ustring);
+      void vim_start ();
+      void vim_remote_expr (ustring);
+      void vim_remote_keys (ustring);
+      void vim_remote_files (ustring);
 
       void reset_fields ();
       void reset_entry (Gtk::Entry *);
@@ -81,6 +84,7 @@ namespace Astroid {
 
       /* gvim config */
       bool double_esc_deactivates = true; // set in user config
+      bool send_default = true;
       string default_cmd_on_enter;
       string gvim_cmd;
       string gvim_args;

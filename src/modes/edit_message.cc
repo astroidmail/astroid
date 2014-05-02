@@ -129,6 +129,8 @@ namespace Astroid {
 
   EditMessage::~EditMessage () {
     cout << "em: deconstruct." << endl;
+    
+    vim_remote_expr (":quit!");
 
     if (is_regular_file (tmpfile_path)) {
       boost::filesystem::remove (tmpfile_path);
@@ -140,12 +142,11 @@ namespace Astroid {
     cout << "em: socket realized." << endl;
 
     if (!vim_started) {
+      vim_start ();
 
-      ustring cmd = ustring::compose ("%1 %2 --servername %3 --socketid %4",
-          gvim_cmd, gvim_args, vim_server, editor_socket->get_id ());
-      cout << "em: starting gvim: " << cmd << endl;
-      Glib::spawn_command_line_async (cmd.c_str());
-      vim_started = true;
+      send_default = false;
+      activate_field (Editor);
+      activate_field (To);
     }
   }
 
@@ -155,6 +156,7 @@ namespace Astroid {
 
   bool EditMessage::plug_removed () {
     cout << "em: gvim disconnected" << endl;
+    vim_started = false;
     return true;
   }
 
@@ -191,7 +193,9 @@ namespace Astroid {
         esc_count     = 0;
         editor_active = true;
 
-        vim_send (default_cmd_on_enter);
+        if (send_default)
+          vim_remote_keys (default_cmd_on_enter);
+        else send_default = true;
       } else {
         editor_img->set_from_icon_name ("media-playback-stop", isize);
       }
@@ -345,11 +349,12 @@ namespace Astroid {
         case GDK_KEY_i:
         case GDK_KEY_I:
           if (current_field == Editor) {
+            send_default = false;
             if (!in_edit) {
               in_edit = true;
               activate_field (current_field);
             }
-            vim_send (ustring(1, char(event->keyval)));
+            vim_remote_keys (ustring(1, char(event->keyval)));
             return true;
           }
 
@@ -359,10 +364,43 @@ namespace Astroid {
     }
   }
 
-  void EditMessage::vim_send (ustring keys) {
-    ustring cmd = ustring::compose ("%1 --servername %2 --remote-send '%3'", gvim_cmd, vim_server, keys);
+  void EditMessage::vim_remote_keys (ustring keys) {
+    ustring cmd = ustring::compose ("%1 --servername %2 --remote-send %3", gvim_cmd, vim_server, keys);
     cout << "em: to vim: " << cmd << endl;
+    if (!vim_started) {
+      cout << "em: to vim: error, vim not started." << endl;
+    } else {
+      Glib::spawn_command_line_async (cmd.c_str());
+    }
+  }
+
+  void EditMessage::vim_remote_files (ustring files) {
+    ustring cmd = ustring::compose ("%1 --servername %2 --remote %3", gvim_cmd, vim_server, files);
+    cout << "em: to vim: " << cmd << endl;
+    if (!vim_started) {
+      cout << "em: to vim: error, vim not started." << endl;
+    } else {
+      Glib::spawn_command_line_async (cmd.c_str());
+    }
+  }
+
+  void EditMessage::vim_remote_expr (ustring expr) {
+    ustring cmd = ustring::compose ("%1 --servername %2 --remote-expr %3", gvim_cmd, vim_server, expr);
+    cout << "em: to vim: " << cmd << endl;
+    if (!vim_started) {
+      cout << "em: to vim: error, vim not started." << endl;
+    } else {
+      Glib::spawn_command_line_async (cmd.c_str());
+    }
+  }
+
+  void EditMessage::vim_start () {
+    ustring cmd = ustring::compose ("%1 --servername %3 --socketid %4 %2 %5",
+        gvim_cmd, gvim_args, vim_server, editor_socket->get_id (),
+        tmpfile_path.c_str());
+    cout << "em: starting gvim: " << cmd << endl;
     Glib::spawn_command_line_async (cmd.c_str());
+    vim_started = true;
   }
 
   void EditMessage::make_tmpfile () {
