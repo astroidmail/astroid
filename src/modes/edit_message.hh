@@ -32,6 +32,7 @@ namespace Astroid {
       };
 
       Gtk::Entry *from, *to, *cc, *bcc, *subject;
+      Gtk::ComboBox *from_combo;
       Gtk::Image *editor_img;
       vector<Gtk::Entry *> fields;
 
@@ -39,6 +40,17 @@ namespace Astroid {
       void activate_field (Field);
 
       ustring msg_id;
+
+      /* from combobox */
+      class FromColumns : public Gtk::TreeModel::ColumnRecord {
+        public:
+          FromColumns () { add (name_and_address); add (no); }
+          Gtk::TreeModelColumn<ustring> name_and_address;
+          Gtk::TreeModelColumn<int>     no;
+      };
+
+      FromColumns from_columns;
+      refptr<Gtk::ListStore> from_store;
 
     private:
       ptree editor_config;

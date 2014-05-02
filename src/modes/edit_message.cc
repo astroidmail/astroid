@@ -27,6 +27,7 @@ namespace Astroid {
 
     builder->get_widget ("box_message", box_message);
 
+    builder->get_widget ("from_combo", from_combo);
     builder->get_widget ("from", from);
     builder->get_widget ("to", to);
     builder->get_widget ("cc", cc);
@@ -99,7 +100,21 @@ namespace Astroid {
     /* defaults */
     accounts = astroid->accounts;
 
-    from->set_text (accounts->accounts[accounts->default_account].full_address());
+    /* from combobox */
+    from_store = Gtk::ListStore::create (from_columns);
+    from_combo->set_model (from_store);
+    from_combo->set_entry_text_column (from_columns.name_and_address);
+
+    int no = 0;
+    for (Account &a : accounts->accounts) {
+      auto row = *(from_store->append ());
+      row[from_columns.name_and_address] = a.full_address();
+      row[from_columns.no] = no++;
+
+      if (a.isdefault) {
+        from_combo->set_active (no-1);
+      }
+    }
 
     in_edit = true;
     activate_field (To);
@@ -168,6 +183,16 @@ namespace Astroid {
       }
 
 
+    } else if (f == From) {
+      if (in_edit) {
+        from_combo->set_sensitive (true);
+        fields[current_field]->set_icon_from_icon_name ("go-next");
+        fields[current_field]->set_sensitive (true);
+        fields[current_field]->set_position (-1);
+      } else {
+        fields[current_field]->set_icon_from_icon_name ("media-playback-stop");
+      }
+      from_combo->grab_focus ();
     } else {
       if (in_edit) {
         fields[current_field]->set_icon_from_icon_name ("go-next");
@@ -191,6 +216,10 @@ namespace Astroid {
               [&](Gtk::Entry * e) {
                 reset_entry (e);
               });
+
+    /* reset from combo */
+    from_combo->popdown ();
+    from_combo->set_sensitive (false);
 
     /* reset editor */
     Gtk::IconSize isize  (Gtk::BuiltinIconSize::ICON_SIZE_BUTTON);
@@ -237,7 +266,25 @@ namespace Astroid {
       }
     } else {
       switch (event->keyval) {
+        /*
+        case GDK_KEY_Right:
+          if (current_field == From && !in_edit) {
+            from_combo->set_active (from_combo->get_active()+1);
+            return true;
+          }
+
+        case GDK_KEY_Left:
+          if (current_field == From && !in_edit) {
+            from_combo->set_active (from_combo->get_active()-1);
+            return true;
+          }
+          */
+
         case GDK_KEY_Down:
+          if (current_field == From && in_edit) {
+            from_combo->popup();
+            return true;
+          }
         case GDK_KEY_j:
           if (in_edit) return false; // otherwise act as Tab
         case GDK_KEY_Tab:
