@@ -72,6 +72,9 @@ namespace Astroid {
     /* TODO: un-used */
     /* ui behaviour */
     default_config.put ("thread_index.open_default", "paned");
+
+    /* editor */
+    default_config.put ("editor.gvim.double_esc_deactivates", true);
   }
 
   void Config::write_back_config () {

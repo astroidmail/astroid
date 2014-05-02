@@ -11,6 +11,7 @@
 # include <glibmm/iochannel.h>
 
 # include "astroid.hh"
+# include "config.hh"
 # include "account_manager.hh"
 # include "edit_message.hh"
 
@@ -80,6 +81,10 @@ namespace Astroid {
         sigc::mem_fun(*this, &EditMessage::socket_realized) );
 
     editor_box->pack_start (*editor_socket, true, 5);
+
+    /* gvim settings */
+    double_esc_deactivates = astroid->config->config.get <bool>("editor.gvim.double_esc_deactivates");
+
     show_all ();
 
     /* defaults */
@@ -202,7 +207,7 @@ namespace Astroid {
       switch (event->keyval) {
         case GDK_KEY_Escape:
           {
-            if (esc_count == 1 || event->state & GDK_SHIFT_MASK) {
+            if ((double_esc_deactivates && esc_count == 1) || event->state & GDK_SHIFT_MASK) {
               if (in_edit) {
                 in_edit = false;
                 activate_field (current_field);
