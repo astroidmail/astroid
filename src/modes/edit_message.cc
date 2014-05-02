@@ -21,6 +21,8 @@ namespace Astroid {
   int EditMessage::edit_id = 0;
 
   EditMessage::EditMessage () {
+    editor_config = astroid->config->config.get_child ("editor");
+
     tab_widget = new Gtk::Label ("New message");
 
     Glib::RefPtr<Gtk::Builder> builder = Gtk::Builder::create_from_file("ui/edit-message.glade", "box_message");
@@ -74,6 +76,12 @@ namespace Astroid {
     cout << "em: msg id: " << msg_id << endl;
     cout << "em: vim server name: " << vim_server << endl;
 
+    /* gvim settings */
+    double_esc_deactivates  = editor_config.get <bool>("gvim.double_esc_deactivates");
+    default_cmd_on_enter    = editor_config.get <string>("gvim.default_cmd_on_enter");
+    gvim_cmd                = editor_config.get <string>("gvim.cmd");
+    gvim_args               = editor_config.get <string>("gvim.args");
+
     /* gtk::socket:
      * http://stackoverflow.com/questions/13359699/pyside-embed-vim
      * https://developer.gnome.org/gtkmm-tutorial/stable/sec-plugs-sockets-example.html.en
@@ -89,11 +97,6 @@ namespace Astroid {
         sigc::mem_fun(*this, &EditMessage::socket_realized) );
 
     editor_box->pack_start (*editor_socket, true, 5);
-
-    editor_config = astroid->config->config.get_child ("editor");
-
-    /* gvim settings */
-    double_esc_deactivates = editor_config.get <bool>("gvim.double_esc_deactivates");
 
     show_all ();
 
@@ -129,9 +132,10 @@ namespace Astroid {
     cout << "em: socket realized." << endl;
 
     if (!vim_started) {
-      cout << "em: starting gvim.." << endl;
 
-      ustring cmd = ustring::compose ("gvim --servername %1 --socketid %2", vim_server, editor_socket->get_id ());
+      ustring cmd = ustring::compose ("%1 %2 --servername %3 --socketid %4",
+          gvim_cmd, gvim_args, vim_server, editor_socket->get_id ());
+      cout << "em: starting gvim: " << cmd << endl;
       Glib::spawn_command_line_async (cmd.c_str());
       vim_started = true;
     }
@@ -178,6 +182,8 @@ namespace Astroid {
 
         esc_count     = 0;
         editor_active = true;
+
+        vim_send (default_cmd_on_enter);
       } else {
         editor_img->set_from_icon_name ("media-playback-stop", isize);
       }
@@ -335,8 +341,7 @@ namespace Astroid {
               in_edit = true;
               activate_field (current_field);
             }
-            ustring cmd = ustring::compose ("gvim --servername %1 --remote-send '%2'", vim_server, char(event->keyval));
-            Glib::spawn_command_line_async (cmd.c_str());
+            vim_send (ustring(1, char(event->keyval)));
             return true;
           }
 
@@ -344,6 +349,12 @@ namespace Astroid {
           return false; // let active field handle event
       }
     }
+  }
+
+  void EditMessage::vim_send (ustring keys) {
+    ustring cmd = ustring::compose ("%1 --servername %2 --remote-send '%3'", gvim_cmd, vim_server, keys);
+    cout << "em: to vim: " << cmd << endl;
+    Glib::spawn_command_line_async (cmd.c_str());
   }
 
 

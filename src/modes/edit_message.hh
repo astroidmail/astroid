@@ -67,13 +67,20 @@ namespace Astroid {
       time_t  msg_time;
       ustring vim_server;
 
+      void vim_send (ustring);
+
       void reset_fields ();
       void reset_entry (Gtk::Entry *);
 
       bool in_edit = false;
       bool editor_active = false;
-      bool double_esc_deactivates = true; // set in user config
       int  esc_count = 0;
+
+      /* gvim config */
+      bool double_esc_deactivates = true; // set in user config
+      string default_cmd_on_enter;
+      string gvim_cmd;
+      string gvim_args;
 
       AccountManager * accounts;
 
