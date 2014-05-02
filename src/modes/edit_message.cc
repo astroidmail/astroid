@@ -17,6 +17,7 @@
 using namespace std;
 
 namespace Astroid {
+  int EditMessage::edit_id = 0;
 
   EditMessage::EditMessage () {
     tab_widget = new Gtk::Label ("New message");
@@ -44,12 +45,24 @@ namespace Astroid {
     pack_start (*box_message, true, 5);
 
     /* set up message id and random server name for gvim */
+    id = edit_id++;
     msg_time = time(0);
-    string _vim_server = "abcdefghijklmnopqrstuvwxyz1234567890";
+    string _chars = "abcdefghijklmnopqrstuvwxyz1234567890";
     random_device rd;
     mt19937 g(rd());
-    shuffle (_vim_server.begin(), _vim_server.end(), g);
-    vim_server = ustring::compose ("%1_%2", msg_time, _vim_server);
+
+    int len = 35;
+    for (int i = 0; i < len; i++)
+      vim_server += _chars[g() % _chars.size()];
+
+    vim_server = ustring::compose ("astroid-%1-%2-%3", id,
+        msg_time, vim_server);
+
+    if (msg_id == "") {
+      msg_id = vim_server;
+    }
+
+    cout << "em: msg id: " << msg_id << endl;
     cout << "em: vim server name: " << vim_server << endl;
 
     /* gtk::socket:

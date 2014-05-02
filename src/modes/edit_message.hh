@@ -37,6 +37,8 @@ namespace Astroid {
       Field current_field = From;
       void activate_field (Field);
 
+      ustring msg_id;
+
     private:
       Gtk::Box *editor_box;
       Gtk::Socket *editor_socket;
@@ -45,6 +47,8 @@ namespace Astroid {
       void socket_realized ();
       bool vim_started = false;
 
+      static  int edit_id; // must be incremented each time a new editor is started
+      int     id;          // id of this instance
       time_t  msg_time;
       ustring vim_server;
 
