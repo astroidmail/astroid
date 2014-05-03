@@ -35,6 +35,8 @@ namespace Astroid {
       /* accounts */
       AccountManager * accounts;
 
+      /* contacts */
+      Contacts * contacts;
 
   };
 

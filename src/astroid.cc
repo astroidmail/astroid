@@ -12,6 +12,7 @@
 # include "db.hh"
 # include "config.hh"
 # include "account_manager.hh"
+# include "contacts.hh"
 
 /* UI */
 # include "main_window.hh"
@@ -74,6 +75,9 @@ namespace Astroid {
     /* set up accounts */
     accounts = new AccountManager ();
 
+    /* set up contacts */
+    contacts = new Contacts ();
+
     /* start up default window with default buffers */
     MainWindow * mw = new MainWindow (); // is freed / destroyed by application
     mw->add_mode (new ThreadIndex (mw, "tag:inbox"));
@@ -86,6 +90,7 @@ namespace Astroid {
     /* clean up and exit */
     main_windows.clear ();
     delete accounts;
+    delete contacts;
     delete db;
 
     return 0;

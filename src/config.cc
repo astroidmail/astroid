@@ -96,6 +96,12 @@ namespace Astroid {
     default_config.put ("editor.gvim.cmd", "gvim");
     default_config.put ("editor.gvim.args", "-f -c 'set ft=mail' '+/^\\s*\\n/' '+nohl'");
 
+    /* contacts */
+    default_config.put ("contacts.lbdb.cmd", "lbdb");
+    default_config.put ("contacts.lbdb.enable", false);
+    default_config.put ("contacts.recent.load", 100);
+    default_config.put ("contacts.recent.query", "not tag:spam");
+
   }
 
   void Config::write_back_config () {

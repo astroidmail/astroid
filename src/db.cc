@@ -213,6 +213,7 @@ namespace Astroid {
     tag = sanitize_tag (tag);
     if (!check_tag (tag)) {
       cout << "nm (" << thread_id << "): error, invalid tag: " << tag << endl;
+      return false;
     }
 
     if (find(tags.begin (), tags.end (), tag) == tags.end ()) {
@@ -266,6 +267,7 @@ namespace Astroid {
     tag = sanitize_tag (tag);
     if (!check_tag (tag)) {
       cout << "nm (" << thread_id << "): error, invalid tag: " << tag << endl;
+      return false;
     }
 
     if (find(tags.begin (), tags.end (), tag) != tags.end ()) {

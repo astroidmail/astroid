@@ -9,6 +9,7 @@ namespace Astroid {
   class Config;
   class AccountManager;
   class Account;
+  class Contacts;
 
   /* message and thread */
   class Message;
