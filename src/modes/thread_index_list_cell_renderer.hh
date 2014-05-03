@@ -56,7 +56,7 @@ namespace Astroid {
       int message_count_width = 30;
 
       int authors_start = message_count_start + message_count_width;
-      int authors_width = 140;
+      int authors_width = 150;
       int authors_max_len = 20;
 
       int tags_start = authors_start + authors_width;

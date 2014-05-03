@@ -35,6 +35,8 @@ namespace Astroid {
 
       bool remove_tag (ustring);
       bool add_tag (ustring);
+      ustring sanitize_tag (ustring);
+      bool check_tag (ustring);
 
     private:
       int     check_total_messages ();
@@ -58,6 +60,9 @@ namespace Astroid {
 
       notmuch_database_t * nm_db;
 
+      vector<ustring> tags;
+
+      void load_tags ();
       void test_query ();
   };
 }

@@ -40,6 +40,28 @@ namespace Astroid {
     }
 
     //test_query ();
+
+    load_tags ();
+  }
+
+  void Db::load_tags () {
+    notmuch_tags_t * nm_tags = notmuch_database_get_all_tags (nm_db);
+    const char * tag;
+
+    tags.clear ();
+
+    for (; notmuch_tags_valid (nm_tags);
+           notmuch_tags_move_to_next (nm_tags))
+
+    {
+      tag = notmuch_tags_get (nm_tags);
+
+      tags.push_back (ustring(tag));
+    }
+
+    notmuch_tags_destroy (nm_tags);
+
+    cout << "db: loaded " << tags.size () << " tags." << endl;
   }
 
   void Db::test_query () { // {{{
@@ -188,6 +210,11 @@ namespace Astroid {
   /* tag actions */
   bool NotmuchThread::add_tag (ustring tag) {
     cout << "nm (" << thread_id << "): add tag: " << tag << endl;
+    tag = sanitize_tag (tag);
+    if (!check_tag (tag)) {
+      cout << "nm (" << thread_id << "): error, invalid tag: " << tag << endl;
+    }
+
     if (find(tags.begin (), tags.end (), tag) == tags.end ()) {
       activate ();
 
@@ -216,6 +243,13 @@ namespace Astroid {
 
       if (res) {
         tags.push_back (tag);
+
+        // add to global tag list
+        if (find(astroid->db->tags.begin (),
+              astroid->db->tags.end (),
+              tag) == astroid->db->tags.end ()) {
+          astroid->db->tags.push_back (tag);
+        }
       }
 
       deactivate ();
@@ -229,6 +263,11 @@ namespace Astroid {
 
   bool NotmuchThread::remove_tag (ustring tag) {
     cout << "nm (" << thread_id << "): remove tag: " << tag << endl;
+    tag = sanitize_tag (tag);
+    if (!check_tag (tag)) {
+      cout << "nm (" << thread_id << "): error, invalid tag: " << tag << endl;
+    }
+
     if (find(tags.begin (), tags.end (), tag) != tags.end ()) {
       activate ();
 
@@ -269,6 +308,25 @@ namespace Astroid {
       cout << "nm: thread does not have tag." << endl;
       return false;
     }
+  }
+
+  ustring NotmuchThread::sanitize_tag (ustring tag) {
+    UstringUtils::trim (tag);
+
+    return tag;
+  }
+
+  bool NotmuchThread::check_tag (ustring tag) {
+    if (tag.size() == 0) return false;
+    if (tag.empty()) return false;
+
+    const vector<ustring> invalid_chars = { "\"" };
+
+    for (const ustring &c : invalid_chars) {
+      if (tag.find_first_of (c) == ustring::npos) return false;
+    }
+
+    return true;
   }
 }
 
