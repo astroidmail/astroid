@@ -55,8 +55,10 @@ namespace Astroid {
           void execute_search ();
           ustring get_partial_contact (ustring);
 
-          bool match (const ustring& key, const
-              Gtk::TreeModel::const_iterator& iter);
+          bool match (const ustring&, const
+              Gtk::TreeModel::const_iterator&);
+
+          bool on_match_selected(const Gtk::TreeModel::iterator& iter);
 
       };
 

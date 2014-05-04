@@ -93,7 +93,7 @@ namespace Astroid {
     contacts = astroid->contacts;
     completion_model = Gtk::ListStore::create (m_columns);
     set_model (completion_model);
-    //set_text_column (m_columns.m_cont);
+    set_text_column (m_columns.m_cont);
     set_match_func (sigc::mem_fun (*this,
           &Contacts::ContactCompletion::match));
 
@@ -121,31 +121,59 @@ namespace Astroid {
     int n = c.find_last_of (",");
     if (n == ustring::npos) return c;
 
-    return c.substr (n+1, c.size());
+    c = c.substr (n+1, c.size());
+    UstringUtils::trim_left (c);
+    return c;
   }
 
   bool Contacts::ContactCompletion::match (
-      const ustring& key, const
+      const ustring& raw_key, const
       Gtk::TreeModel::const_iterator& iter)
   {
     if (iter)
     {
+      ustring key = get_partial_contact (raw_key);
+
       Gtk::TreeModel::Row row = *iter;
 
       Glib::ustring::size_type key_length = key.size();
       Glib::ustring filter_string = row[m_columns.m_cont];
 
       Glib::ustring filter_string_start = filter_string.substr(0, key_length);
-      //The key is lower-case, even if the user input is not.
+
+      // the key is lower-case, even if the user input is not.
       filter_string_start = filter_string_start.lowercase();
 
-      cout << "matching: " << key  << " against: " << filter_string_start << ": " << (key == filter_string_start) << endl;
-
       if(key == filter_string_start)
-        return true; //A match was found.
+        return true; // a match was found.
     }
 
-    return false; //No match.
+    return false; // no match.
+  }
+
+
+  bool Contacts::ContactCompletion::on_match_selected (
+      const Gtk::TreeModel::iterator& iter) {
+    if (iter)
+    {
+      Gtk::Entry * entry = get_entry();
+
+      Gtk::TreeModel::Row row = *iter;
+      ustring completion = row[m_columns.m_cont];
+
+      ustring t = entry->get_text ();
+      int n = t.find_last_of (",");
+      if (n == ustring::npos) n = 0;
+
+      t = t.substr (0, n);
+      if (n == 0) t += completion;
+      else        t += ", " + completion;
+
+      entry->set_text (t);
+      entry->set_position (-1);
+    }
+
+    return true;
   }
 };
 
