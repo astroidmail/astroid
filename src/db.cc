@@ -147,6 +147,7 @@ namespace Astroid {
 
     unread     = false;
     attachment = false;
+    starred    = false;
 
     /* update values */
     const char * s = notmuch_thread_get_subject (nm_thread);
@@ -178,6 +179,8 @@ namespace Astroid {
         unread = true;
       } else if (string(tag) == "attachment") {
         attachment = true;
+      } else if (string(tag) == "starred") {
+        starred = true;
       }
 
       ttags.push_back (ustring(tag));
@@ -319,13 +322,12 @@ namespace Astroid {
   }
 
   bool NotmuchThread::check_tag (ustring tag) {
-    if (tag.size() == 0) return false;
     if (tag.empty()) return false;
 
     const vector<ustring> invalid_chars = { "\"" };
 
     for (const ustring &c : invalid_chars) {
-      if (tag.find_first_of (c) == ustring::npos) return false;
+      if (tag.find_first_of (c) != ustring::npos) return false;
     }
 
     return true;

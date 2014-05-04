@@ -52,7 +52,8 @@ namespace Astroid {
       render_delimiter (cr, widget, cell_area);
     */
 
-    render_starred (cr, widget, cell_area);
+    if (thread->starred)
+      render_starred (cr, widget, cell_area);
 
     if (thread->attachment)
       render_attachment (cr, widget, cell_area);

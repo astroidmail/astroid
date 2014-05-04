@@ -24,6 +24,8 @@ namespace Astroid {
   class ActionManager;
   class Action;
   class TagAction;
+  class ArchiveAction;
+  class StarAction;
 
   /* modes */
   class Mode;

@@ -27,6 +27,7 @@ namespace Astroid {
       time_t  newest_date;
       bool    unread;
       bool    attachment;
+      bool    starred;
       int     total_messages;
       vector<ustring> authors;
       vector<ustring> tags;

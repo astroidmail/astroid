@@ -15,6 +15,7 @@
 /* actions */
 # include "actions/tag_action.hh"
 # include "actions/archive_action.hh"
+# include "actions/star_action.hh"
 
 using namespace std;
 
@@ -228,6 +229,21 @@ namespace Astroid {
           if (thread) {
 
             main_window->actions.doit (refptr<Action>(new ArchiveAction(thread)));
+
+            /* update row */
+            update_current_row ();
+          }
+
+          return true;
+        }
+
+      /* toggle starred */
+      case GDK_KEY_asterisk:
+        {
+          auto thread = get_current_thread ();
+          if (thread) {
+
+            main_window->actions.doit (refptr<Action>(new StarAction(thread)));
 
             /* update row */
             update_current_row ();
