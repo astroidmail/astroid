@@ -6,9 +6,9 @@ using namespace std;
 # include "action.hh"
 
 namespace Astroid {
-  class StarAction : public TagAction {
+  class ToggleAction : public TagAction {
     public:
-      StarAction (refptr<NotmuchThread>);
+      ToggleAction (refptr<NotmuchThread>, ustring);
   };
 
 }

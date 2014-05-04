@@ -14,8 +14,7 @@
 
 /* actions */
 # include "actions/tag_action.hh"
-# include "actions/archive_action.hh"
-# include "actions/star_action.hh"
+# include "actions/toggle_action.hh"
 
 using namespace std;
 
@@ -226,7 +225,7 @@ namespace Astroid {
           auto thread = get_current_thread ();
           if (thread) {
 
-            main_window->actions.doit (refptr<Action>(new ArchiveAction(thread)));
+            main_window->actions.doit (refptr<Action>(new ToggleAction(thread, "inbox")));
 
             /* update row */
             update_current_row ();
@@ -241,7 +240,22 @@ namespace Astroid {
           auto thread = get_current_thread ();
           if (thread) {
 
-            main_window->actions.doit (refptr<Action>(new StarAction(thread)));
+            main_window->actions.doit (refptr<Action>(new ToggleAction(thread, "starred")));
+
+            /* update row */
+            update_current_row ();
+          }
+
+          return true;
+        }
+
+      /* toggle unread */
+      case GDK_KEY_N:
+        {
+          auto thread = get_current_thread ();
+          if (thread) {
+
+            main_window->actions.doit (refptr<Action>(new ToggleAction(thread, "unread")));
 
             /* update row */
             update_current_row ();
