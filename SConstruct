@@ -6,7 +6,7 @@ def getGitDesc():
 
 
 GIT_DESC = getGitDesc ()
-print "building " + getGitDesc () + ".."
+print "building " + GIT_DESC + ".."
 env = Environment ()
 
 # Verbose / Non-verbose output{{{
@@ -81,11 +81,18 @@ env.Append (CPPFLAGS = ['-g', '-std=c++11', '-pthread'] )
 print ("writing src/version.hh..")
 vfd = open ('src/version.hh', 'w')
 vfd.write ("# pragma once\n")
-vfd.write ("# define GIT_DESC \"%s\"\n" % GIT_DESC)
+vfd.write ("# define GIT_DESC \"%s\"\n\n" % GIT_DESC)
 vfd.close ()
 
 env.Append (CPPPATH = 'src')
-source = Glob('src/*.cc') + Glob('src/modes/*.cc') + Glob('src/actions/*.cc') + Glob('src/utils/*.cc')
+source = (
+
+          Glob('src/*.cc') +
+          Glob('src/modes/*.cc') +
+          Glob('src/actions/*.cc') +
+          Glob('src/utils/*.cc')
+
+          )
 
 conf = Configure(env)
 if not conf.CheckFunc ('gtk_socket_focus_forward'):
