@@ -71,6 +71,9 @@ namespace Astroid {
     main_window  = _thread_index->main_window;
     list_store = store;
 
+    config = astroid->config->config.get_child ("thread_index");
+    open_paned_default = config.get<bool>("open_default_paned");
+
     set_model (list_store);
     set_enable_search (false);
 
@@ -193,13 +196,13 @@ namespace Astroid {
             cout << "ti_list: loading: " << thread->thread_id << endl;
 
             if (event->state & GDK_SHIFT_MASK) {
-              /* open message in new tab */
-              thread_index->open_thread (thread, true);
+              /* open message in new tab (if configured) */
+              thread_index->open_thread (thread, open_paned_default);
 
 
             } else {
-              /* open message in split pane */
-              thread_index->open_thread (thread, false);
+              /* open message in split pane (if configured)*/
+              thread_index->open_thread (thread, !open_paned_default);
 
             }
           } else {

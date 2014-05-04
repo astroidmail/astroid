@@ -16,6 +16,7 @@ using namespace boost::filesystem;
 
 namespace Astroid {
   Db::Db () {
+    config = astroid->config->config.get_child ("astroid.notmuch");
 
     const char * home = getenv ("HOME");
     if (home == NULL) {
@@ -23,9 +24,16 @@ namespace Astroid {
       exit (1);
     }
 
-    /* TODO: get this from config or .notmuch-config */
-    path path_db (home);
-    path_db /= ".mail";
+    ustring db_path = ustring (config.get<string> ("db"));
+
+    path path_db;
+
+    /* replace ~ with home */
+    if (db_path[0] == '~') {
+      path_db = path(home) / path(db_path.substr(1,db_path.size()));
+    } else {
+      path_db = path(db_path);
+    }
 
     cout << "db: opening db: " << path_db << endl;
 

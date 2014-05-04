@@ -8,6 +8,7 @@
 # include <notmuch.h>
 
 # include "astroid.hh"
+# include "config.hh"
 # include "proto.hh"
 
 using namespace std;
@@ -58,6 +59,8 @@ namespace Astroid {
     public:
       Db ();
       ~Db ();
+
+      ptree config;
 
       notmuch_database_t * nm_db;
 

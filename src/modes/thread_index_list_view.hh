@@ -4,6 +4,8 @@
 # include <gtkmm/liststore.h>
 # include <gtkmm/treeview.h>
 
+# include "config.hh"
+
 # include "proto.hh"
 
 using namespace std;
@@ -42,6 +44,9 @@ namespace Astroid {
   class ThreadIndexListView : public Gtk::TreeView {
     public:
       ThreadIndexListView (ThreadIndex *, Glib::RefPtr<ThreadIndexListStore>);
+
+      ptree config;
+      bool  open_paned_default = true;
 
       ThreadIndex * thread_index;
       MainWindow  * main_window;

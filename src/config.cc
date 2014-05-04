@@ -71,8 +71,8 @@ namespace Astroid {
   }
 
   void Config::setup_default_config (bool initial) {
-    default_config.put ("astroid.config.version", CONFIG_VERSION);  // TODO: unused
-    default_config.put ("astroid.notmuch.db", "~/.mail");           // TODO: unused
+    default_config.put ("astroid.config.version", CONFIG_VERSION);
+    default_config.put ("astroid.notmuch.db", "~/.mail");
 
     if (initial) {
       /* account - only set if no other accounts, we accomplish that
@@ -88,7 +88,7 @@ namespace Astroid {
     }
 
     /* ui behaviour */
-    default_config.put ("thread_index.open_default", "paned");    // TODO: unused
+    default_config.put ("thread_index.open_default_paned", true);
 
     /* editor */
     default_config.put ("editor.gvim.double_esc_deactivates", true);
