@@ -92,6 +92,7 @@ namespace Astroid {
     delete accounts;
     delete contacts;
     delete db;
+    delete config;
 
     return 0;
   }
