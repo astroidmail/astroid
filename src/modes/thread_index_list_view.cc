@@ -196,20 +196,15 @@ namespace Astroid {
             cout << "ti_list: loading: " << thread->thread_id << endl;
 
             if (event->state & GDK_SHIFT_MASK) {
-              /* open message in new tab (if configured) */
+              /* open message in new tab (if so configured) */
               thread_index->open_thread (thread, open_paned_default);
-
-
             } else {
-              /* open message in split pane (if configured)*/
+              /* open message in split pane (if so configured) */
               thread_index->open_thread (thread, !open_paned_default);
-
             }
-          } else {
-            return true;
           }
+          return true;
         }
-        return true;
 
       /* load more threads */
       case GDK_KEY_M:
