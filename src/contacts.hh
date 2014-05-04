@@ -29,8 +29,6 @@ namespace Astroid {
       vector<ustring> contacts;
       vector<ustring>::iterator search_external (ustring);
 
-      
-
       class ContactCompletion : public Gtk::EntryCompletion {
         public:
           ContactCompletion ();
@@ -59,9 +57,7 @@ namespace Astroid {
               Gtk::TreeModel::const_iterator&);
 
           bool on_match_selected(const Gtk::TreeModel::iterator& iter);
-
       };
-
   };
 }
 

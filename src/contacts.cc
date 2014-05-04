@@ -106,7 +106,7 @@ namespace Astroid {
     }
   }
 
-  /* search in external contacts for the qurrent key
+  /* search in external contacts for the current key
    * and populate contact list with results so that
    * they too can be used for matching. */
   void Contacts::ContactCompletion::execute_search () {
@@ -114,10 +114,11 @@ namespace Astroid {
 
   }
 
-  /* searches backwards to the previous , and extracts the
+  /* searches backwards to the previous ',' and extracts the
    * part of the partially entered contact to be matched on.
    */
   ustring Contacts::ContactCompletion::get_partial_contact (ustring c) {
+    // TODO: handle completions when not editing the last contact
     int n = c.find_last_of (",");
     if (n == ustring::npos) return c;
 

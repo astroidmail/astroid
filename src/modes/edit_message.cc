@@ -226,7 +226,7 @@ namespace Astroid {
         fields[current_field]->set_sensitive (true);
         fields[current_field]->set_position (-1);
         if (current_field >= To && current_field <= Bcc) {
-          fields[current_field]->set_completion (contact_completion); 
+          fields[current_field]->set_completion (contact_completion);
         }
       } else {
         fields[current_field]->set_icon_from_icon_name ("media-playback-stop");
@@ -268,7 +268,7 @@ namespace Astroid {
     e->set_activates_default (true);
     if (current_field != Field::Editor)
       fields[current_field]->set_sensitive (false);
-    e->set_completion (refptr<Gtk::EntryCompletion>()); 
+    e->set_completion (refptr<Gtk::EntryCompletion>());
   }
 
   bool EditMessage::on_key_press_event (GdkEventKey * event) {
@@ -326,8 +326,10 @@ namespace Astroid {
             if (!in_edit) {
               activate_field ((Field) ((current_field+1) % ((int)no_fields)));
             } else {
+              /*
               if (current_field >= To && current_field <= Bcc)
                 contact_completion->complete ();
+              */
             }
             return true;
           }
