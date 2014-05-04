@@ -11,6 +11,7 @@
 # include "astroid.hh"
 # include "config.hh"
 # include "mode.hh"
+# include "contacts.hh"
 # include "proto.hh"
 
 using namespace std;
@@ -36,6 +37,10 @@ namespace Astroid {
 
       Gtk::Entry *from, *to, *cc, *bcc, *subject;
       Gtk::ComboBox *from_combo;
+
+      Contacts * contacts;
+      refptr<Contacts::ContactCompletion> contact_completion;
+
       Gtk::Image *editor_img;
       vector<Gtk::Entry *> fields;
 

@@ -14,6 +14,7 @@
 # include "config.hh"
 # include "account_manager.hh"
 # include "edit_message.hh"
+# include "contacts.hh"
 
 using namespace std;
 
@@ -22,6 +23,7 @@ namespace Astroid {
 
   EditMessage::EditMessage () {
     editor_config = astroid->config->config.get_child ("editor");
+    contacts = astroid->contacts;
 
     tmpfile_path = astroid->config->runtime_dir;
 
@@ -47,6 +49,17 @@ namespace Astroid {
     fields.push_back (cc);
     fields.push_back (bcc);
     fields.push_back (subject);
+
+    /* set up completion */
+    contact_completion = refptr<Contacts::ContactCompletion>(new Contacts::ContactCompletion());
+
+    to->set_completion (contact_completion);
+
+    /*
+    contact_completion->set_match_func (sigc::mem_fun (contacts,
+          &Contacts::match_contact));
+
+          */
 
     pack_start (*box_message, true, 5);
 
@@ -301,9 +314,16 @@ namespace Astroid {
           }
         case GDK_KEY_j:
           if (in_edit) return false; // otherwise act as Tab
+          activate_field ((Field) ((current_field+1) % ((int)no_fields)));
+          return true;
+
         case GDK_KEY_Tab:
           {
-            activate_field ((Field) ((current_field+1) % ((int)no_fields)));
+            if (!in_edit) {
+              activate_field ((Field) ((current_field+1) % ((int)no_fields)));
+            } else {
+              contact_completion->complete ();
+            }
             return true;
           }
 
