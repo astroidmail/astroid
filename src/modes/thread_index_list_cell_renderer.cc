@@ -39,7 +39,10 @@ namespace Astroid {
 
     render_background (cr, widget, background_area, flags);
     render_date (cr, widget, cell_area);
-    render_message_count (cr, widget, cell_area);
+
+    if (thread->total_messages > 1)
+      render_message_count (cr, widget, cell_area);
+
     render_authors (cr, widget, cell_area);
 
     tags_width = render_tags (cr, widget, cell_area);
