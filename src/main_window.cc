@@ -4,6 +4,7 @@
 # include <gtkmm/widget.h>
 
 # include "astroid.hh"
+# include "version.hh"
 # include "main_window.hh"
 # include "modes/mode.hh"
 # include "modes/thread_index.hh"

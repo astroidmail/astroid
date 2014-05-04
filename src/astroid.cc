@@ -9,6 +9,7 @@
 # include <boost/program_options.hpp>
 
 # include "astroid.hh"
+# include "version.hh"
 # include "db.hh"
 # include "config.hh"
 # include "account_manager.hh"
@@ -44,7 +45,6 @@ namespace Astroid {
     desc.add_options ()
       ( "help,h", "print this help message")
       ( "config,c", po::value<ustring>(), "config file, default: $XDG_CONFIG_HOME/astroid/config");
-
 
     po::variables_map vm;
     po::store ( po::command_line_parser (argc, argv).options(desc).run(), vm );

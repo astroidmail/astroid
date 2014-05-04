@@ -2,11 +2,11 @@ import os, sys
 from subprocess import *
 
 def getGitDesc():
-  return Popen('git describe --tags --always', stdout=PIPE, shell=True).stdout.read ().strip ()
+  return Popen('git describe --abbrev=8 --tags --always', stdout=PIPE, shell=True).stdout.read ().strip ()
 
 
 GIT_DESC = getGitDesc ()
-print "Building " + getGitDesc () + ".."
+print "building " + getGitDesc () + ".."
 env = Environment ()
 
 # Verbose / Non-verbose output{{{
@@ -24,28 +24,28 @@ if not sys.stdout.isatty():
    for key, value in colors.iteritems():
       colors[key] = ''
 
-compile_source_message = '%sCompiling %s==> %s$SOURCE%s' % \
+compile_source_message = '%scompiling %s==> %s$SOURCE%s' % \
    (colors['blue'], colors['purple'], colors['yellow'], colors['end'])
 
-compile_shared_source_message = '%sCompiling shared %s==> %s$SOURCE%s' % \
+compile_shared_source_message = '%scompiling shared %s==> %s$SOURCE%s' % \
    (colors['blue'], colors['purple'], colors['yellow'], colors['end'])
 
-link_program_message = '%sLinking Program %s==> %s$TARGET%s' % \
+link_program_message = '%slinking Program %s==> %s$TARGET%s' % \
    (colors['red'], colors['purple'], colors['yellow'], colors['end'])
 
-link_library_message = '%sLinking Static Library %s==> %s$TARGET%s' % \
+link_library_message = '%slinking Static Library %s==> %s$TARGET%s' % \
    (colors['red'], colors['purple'], colors['yellow'], colors['end'])
 
-ranlib_library_message = '%sRanlib Library %s==> %s$TARGET%s' % \
+ranlib_library_message = '%sranlib Library %s==> %s$TARGET%s' % \
    (colors['red'], colors['purple'], colors['yellow'], colors['end'])
 
-link_shared_library_message = '%sLinking Shared Library %s==> %s$TARGET%s' % \
+link_shared_library_message = '%slinking Shared Library %s==> %s$TARGET%s' % \
    (colors['red'], colors['purple'], colors['yellow'], colors['end'])
 
-java_compile_source_message = '%sCompiling %s==> %s$SOURCE%s' % \
+java_compile_source_message = '%scompiling %s==> %s$SOURCE%s' % \
    (colors['blue'], colors['purple'], colors['yellow'], colors['end'])
 
-java_library_message = '%sCreating Java Archive %s==> %s$TARGET%s' % \
+java_library_message = '%screating Java Archive %s==> %s$TARGET%s' % \
    (colors['red'], colors['purple'], colors['yellow'], colors['end'])
 
 AddOption("--verbose",action="store_true", dest="verbose_flag",default=False,help="verbose output")
@@ -75,8 +75,14 @@ libs   = ['notmuch',
           'boost_program_options',]
 
 env.Append (LIBS = libs)
+env.Append (CPPFLAGS = ['-g', '-std=c++11', '-pthread'] )
 
-env.Append (CPPDEFINES = { 'GIT_DESC' : ('\\"%s\\"' % GIT_DESC) }, CPPFLAGS = ['-g', '-std=c++11', '-pthread'] )
+# write version file
+print ("writing src/version.hh..")
+vfd = open ('src/version.hh', 'w')
+vfd.write ("# pragma once\n")
+vfd.write ("# define GIT_DESC \"%s\"\n" % GIT_DESC)
+vfd.close ()
 
 env.Append (CPPPATH = 'src')
 source = Glob('src/*.cc') + Glob('src/modes/*.cc') + Glob('src/actions/*.cc') + Glob('src/utils/*.cc')

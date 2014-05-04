@@ -17,6 +17,7 @@ test/gnupg_test_home/random_seed
 
 astroid
 *.o
+src/version.hh
 
 .sconsign.dblite
 config.log
