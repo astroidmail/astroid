@@ -38,10 +38,10 @@ namespace Astroid {
           int& natural_height) const override;
 
     private:
-      int content_height = 20;
+      int content_height = 11;
       int line_spacing = 2;
       int height = content_height + line_spacing;
-      int left_icons_size = 15;
+      int left_icons_size = 11;
       int left_icons_width  = 15;
       int left_icons_width_n = 2;
       int left_icons_padding = 2;
