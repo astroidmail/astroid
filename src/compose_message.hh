@@ -38,6 +38,7 @@ namespace Astroid {
 
       void build ();    // call to build message from content
       void finalize (); // call before sending
+      bool send ();
       ustring write_tmp (); // write message to tmpfile
       void write (ustring); // write message to some file
 

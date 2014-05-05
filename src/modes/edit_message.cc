@@ -434,7 +434,13 @@ namespace Astroid {
     c.finalize ();
 
     ustring file = c.write_tmp();
+
     cout << "em: message written to: " << file << endl;
+
+    bool success = c.send ();
+    if (success) {
+      unlink (file.c_str());
+    }
   }
 
   void EditMessage::vim_remote_keys (ustring keys) {

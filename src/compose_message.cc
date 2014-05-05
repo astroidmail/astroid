@@ -13,7 +13,7 @@ using namespace boost::filesystem;
 
 namespace Astroid {
   ComposeMessage::ComposeMessage () {
-    cout << "compose: initialize.." << endl;
+    cout << "cm: initialize.." << endl;
     message = g_mime_message_new (true);
   }
 
@@ -22,7 +22,7 @@ namespace Astroid {
 
     //if (message_file != "") unlink(message_file.c_str());
 
-    cout << "compose: deinitialized." << endl;
+    cout << "cm: deinitialized." << endl;
   }
 
   void ComposeMessage::set_from (Account *a) {
@@ -57,7 +57,7 @@ namespace Astroid {
   }
 
   void ComposeMessage::build () {
-    cout << "compose: build.." << endl;
+    cout << "cm: build.." << endl;
 
     std::string body_content(body.str());
 
@@ -131,6 +131,27 @@ namespace Astroid {
         g_object_unref(multipart);
     }
     }}} */
+  }
+
+  bool ComposeMessage::send () {
+    /* Send the message */
+    ustring send_command = account->sendmail ;
+    FILE * sendMailPipe = popen(send_command.c_str(), "w");
+    GMimeStream * sendMailStream = g_mime_stream_file_new(sendMailPipe);
+    g_mime_stream_file_set_owner(GMIME_STREAM_FILE(sendMailStream), false);
+    g_mime_object_write_to_stream(GMIME_OBJECT(message), sendMailStream);
+    g_object_unref(sendMailStream);
+
+    int status = pclose(sendMailPipe);
+
+    if (status == 0)
+    {
+      cout << "cm: message sent successfully!" << endl;
+      return true;
+    } else {
+      cout << "cm: could not send message!" << endl;
+      return false;
+    }
   }
 
   ustring ComposeMessage::write_tmp () {
