@@ -8,11 +8,12 @@
 
 # include <boost/filesystem.hpp>
 
+# include "proto.hh"
 # include "astroid.hh"
 # include "config.hh"
 # include "mode.hh"
 # include "contacts.hh"
-# include "proto.hh"
+# include "account_manager.hh"
 
 using namespace std;
 using namespace boost::filesystem;
@@ -52,13 +53,16 @@ namespace Astroid {
       /* from combobox */
       class FromColumns : public Gtk::TreeModel::ColumnRecord {
         public:
-          FromColumns () { add (name_and_address); add (no); }
+          FromColumns () { add (name_and_address); add (account); }
           Gtk::TreeModelColumn<ustring> name_and_address;
-          Gtk::TreeModelColumn<int>     no;
+          Gtk::TreeModelColumn<Account *> account;
       };
 
       FromColumns from_columns;
       refptr<Gtk::ListStore> from_store;
+
+      bool check_fields ();
+      void send_message ();
 
     private:
       ptree editor_config;

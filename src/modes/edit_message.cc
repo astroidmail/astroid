@@ -15,6 +15,7 @@
 # include "account_manager.hh"
 # include "edit_message.hh"
 # include "contacts.hh"
+# include "compose_message.hh"
 
 using namespace std;
 
@@ -113,8 +114,8 @@ namespace Astroid {
     editor_socket->signal_realize ().connect (
         sigc::mem_fun(*this, &EditMessage::socket_realized) );
 
+    show_all ();
     editor_box->pack_start (*editor_socket, true, 5);
-
     show_all ();
 
     /* defaults */
@@ -129,11 +130,13 @@ namespace Astroid {
     for (Account &a : accounts->accounts) {
       auto row = *(from_store->append ());
       row[from_columns.name_and_address] = a.full_address();
-      row[from_columns.no] = no++;
+      row[from_columns.account] = &a;
 
       if (a.isdefault) {
-        from_combo->set_active (no-1);
+        from_combo->set_active (no);
       }
+
+      no++;
     }
 
     in_edit = true;
@@ -381,10 +384,57 @@ namespace Astroid {
             return true;
           }
 
+        case GDK_KEY_y:
+          {
+            if (in_edit) {
+              return false;
+            } else {
+              send_message ();
+              return true;
+            }
+          }
         default:
           return false; // let active field handle event
       }
     }
+  }
+
+  bool EditMessage::check_fields () {
+    /* TODO: check fields.. */
+    return true;
+  }
+
+  void EditMessage::send_message () {
+    cout << "em: sending message.." << endl;
+    if (!check_fields ()) {
+      cout << "em: error problem with some of the input fields.." << endl;
+    }
+
+    auto iter = from_combo->get_active ();
+    if (!iter) {
+      cout << "em: error: no from account selected." << endl;
+    }
+
+    auto row = *iter;
+
+    ComposeMessage c;
+    c.set_id (msg_id);
+    c.set_from (row[from_columns.account]);
+    c.set_to (to->get_text());
+    c.set_cc (cc->get_text());
+    c.set_bcc (bcc->get_text());
+    c.set_subject (subject->get_text());
+
+    /* load body */
+    // TODO: send command to vim for writing?
+    tmpfile.open (tmpfile_path.c_str(), fstream::in);
+    c.body << tmpfile.rdbuf();
+
+    c.build ();
+    c.finalize ();
+
+    ustring file = c.write_tmp();
+    cout << "em: message written to: " << file << endl;
   }
 
   void EditMessage::vim_remote_keys (ustring keys) {

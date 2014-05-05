@@ -16,6 +16,9 @@ namespace Astroid {
   class MessageThread;
   class Chunk;
 
+  /* composing */
+  class ComposeMessage;
+
   /* UI */
   class MainWindow;
   class CommandBar;
