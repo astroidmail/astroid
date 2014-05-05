@@ -70,6 +70,7 @@ namespace Astroid {
   }
 
   void Contacts::add_contact (ustring c) {
+    /* TODO: use InternetAddress */
     UstringUtils::trim (c);
     if (c.empty()) return;
 
@@ -110,6 +111,7 @@ namespace Astroid {
    * and populate contact list with results so that
    * they too can be used for matching. */
   void Contacts::ContactCompletion::execute_search () {
+    /* TODO: use InternetAddress */
     ustring key = get_partial_contact (get_entry()->get_text ());
 
   }
