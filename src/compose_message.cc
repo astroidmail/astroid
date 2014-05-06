@@ -67,6 +67,9 @@ namespace Astroid {
     g_mime_part_set_content_object(messagePart, contentWrapper);
     g_mime_message_set_mime_part(message, GMIME_OBJECT(messagePart));
 
+    /* set mailer */
+    g_mime_object_set_header (GMIME_OBJECT(message), "X-Mailer", astroid->mailer.c_str());
+
     g_object_unref(messagePart);
     g_object_unref(contentWrapper);
     g_object_unref(contentStream);
@@ -97,9 +100,7 @@ namespace Astroid {
     g_mime_message_set_date(message, timeValue.tv_sec, -100 * timeZone.tz_minuteswest / 60);
 
     /* Give the message an ID */
-    char hostname[256];
-    gethostname(hostname, sizeof(hostname));
-
+    // TODO: leaking astroid PID
     g_mime_message_set_message_id(message, id.c_str());
 
     /* attachments {{{
