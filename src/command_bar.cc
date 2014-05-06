@@ -80,14 +80,14 @@ namespace Astroid {
 
       case CommandMode::Search:
         {
-          mode_label.set_text ("search >");
+          mode_label.set_text ("");
           entry.set_icon_from_icon_name ("edit-find-symbolic");
         }
         break;
 
       case CommandMode::Generic:
         {
-          mode_label.set_text (">");
+          mode_label.set_text ("");
           entry.set_icon_from_icon_name ("system-run-symbolic");
         }
         break;
