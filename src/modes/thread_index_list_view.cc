@@ -264,6 +264,21 @@ namespace Astroid {
           return true;
         }
 
+      /* toggle spam */
+      case GDK_KEY_S:
+        {
+          auto thread = get_current_thread ();
+          if (thread) {
+
+            main_window->actions.doit (refptr<Action>(new ToggleAction(thread, "spam")));
+
+            /* update row */
+            update_current_row ();
+          }
+
+          return true;
+        }
+
       case GDK_KEY_l:
         {
           auto thread = get_current_thread ();
