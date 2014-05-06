@@ -102,6 +102,7 @@ if not conf.CheckFunc ('gtk_socket_focus_forward'):
 env = conf.Finish ()
 
 env.Program (source = source, target = 'astroid')
+env.Alias ('build', 'astroid')
 
 Export ('env')
 

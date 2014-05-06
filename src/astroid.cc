@@ -40,7 +40,7 @@ namespace Astroid {
   int Astroid::main (int argc, char **argv) {
     cout << "welcome to astroid! - " << GIT_DESC << endl;
 
-    mailer = ustring::compose ("astroid v%1", GIT_DESC);
+    user_agent = ustring::compose ("astroid/v%1 (https://github.com/gauteh/astroid)", GIT_DESC);
 
     namespace po = boost::program_options;
     po::options_description desc ("options");

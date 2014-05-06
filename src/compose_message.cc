@@ -67,8 +67,8 @@ namespace Astroid {
     g_mime_part_set_content_object(messagePart, contentWrapper);
     g_mime_message_set_mime_part(message, GMIME_OBJECT(messagePart));
 
-    /* set mailer */
-    g_mime_object_set_header (GMIME_OBJECT(message), "X-Mailer", astroid->mailer.c_str());
+    /* set user agent */
+    g_mime_object_set_header (GMIME_OBJECT(message), "User-Agent", astroid->user_agent.c_str());
 
     g_object_unref(messagePart);
     g_object_unref(contentWrapper);

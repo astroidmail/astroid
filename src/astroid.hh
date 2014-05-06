@@ -26,7 +26,7 @@ namespace Astroid {
       Glib::RefPtr<Gtk::Application> app;
       Db *db;
 
-      ustring mailer;
+      ustring user_agent;
 
       /* list of main windows */
       vector<MainWindow*>  main_windows;
