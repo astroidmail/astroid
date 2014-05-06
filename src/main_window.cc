@@ -169,12 +169,16 @@ namespace Astroid {
   void MainWindow::del_mode (int c) {
     cout << "mw: del mode: " << c << endl;
     if (c >= 0) {
-      int nc = min (c, notebook.get_n_pages()-2);
-      set_active(nc);
-      notebook.remove_page (c); // this should free the widget
-      auto it = modes.begin () + c;
-      modes.erase(it);
-      delete *it;
+      set_active(c - 1);
+      notebook.remove_page (c); // this should free the widget (?)
+
+      if (modes.size() > 0) {
+        auto it = modes.begin () + c;
+        Mode * m = *it;
+        modes.erase (it);
+
+        delete m; // free Mode
+      }
     } else {
       cout << "mw: attempt to remove negative page" << endl;
     }
