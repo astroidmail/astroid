@@ -89,9 +89,13 @@ namespace Astroid {
   }
 
   ThreadView::~ThreadView () {
+    cout << "tv: deconstruct." << endl;
+    // TODO: still some errors here in paned mode
+    /* is handled by Gtk::manage
     g_object_unref (webview);
     g_object_unref (websettings);
     if (container) g_object_unref (container);
+    */
   }
 
   /* is this callback setup safe?

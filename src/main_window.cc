@@ -158,6 +158,7 @@ namespace Astroid {
   }
 
   void MainWindow::add_mode (Mode * m) {
+    m = Gtk::manage (m);
     modes.push_back (m);
     Gtk::Widget * w = m;
     int n = notebook.append_page ((*w), *(m->tab_widget));
@@ -177,7 +178,7 @@ namespace Astroid {
         Mode * m = *it;
         modes.erase (it);
 
-        delete m; // free Mode
+        // mode is deleted by Gtk::manage.
       }
     } else {
       cout << "mw: attempt to remove negative page" << endl;

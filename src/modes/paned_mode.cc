@@ -27,6 +27,7 @@ namespace Astroid {
       throw out_of_range ("Can only embed two panes.");
     }
 
+    Gtk::manage (&w);
 
     if (p == 0) pw1 = &w;
     else        pw2 = &w;
