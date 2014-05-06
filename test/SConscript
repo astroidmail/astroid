@@ -1,0 +1,19 @@
+#-------------------------------------------------------------------------------
+# Unit tests
+Import('testEnv')
+Import('env')
+testEnv = testEnv.Clone()
+testEnv.AppendUnique(LIBPATH=[env.Dir('../lib')], LIBS=[])
+testEnv.PrependENVPath('LD_LIBRARY_PATH', env.Dir('.').abspath)
+# We can add single file unit tests very easily.
+#testEnv.addUnitTest('test.cpp')
+# also, multiple files can be compiled into a single test suite.
+#files = Split('''
+#        one_test.cpp
+#        two_test.cpp
+#        ''')
+#testEnv.addUnitTest('test_suite', files)
+# you can also use glob to add all the files in the folder.
+files = Glob('*.cc')
+testEnv.addUnitTest('test_suite', files)
+# all the tests added above are automatically added to the 'test' alias
