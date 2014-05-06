@@ -90,7 +90,7 @@ namespace Astroid {
 
   ThreadView::~ThreadView () {
     cout << "tv: deconstruct." << endl;
-    // TODO: still some errors here in paned mode
+    // TODO: possibly still some errors here in paned mode
     /* is handled by Gtk::manage
     g_object_unref (webview);
     g_object_unref (websettings);

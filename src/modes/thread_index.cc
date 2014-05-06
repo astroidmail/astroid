@@ -154,6 +154,10 @@ namespace Astroid {
     cout << "ti: deconstruct." << endl;
     notmuch_threads_destroy (threads);
     notmuch_query_destroy (query);
+
+    if (thread_view_loaded) {
+      delete thread_view; // apparently not done by Gtk::manage
+    }
   }
 }
 
