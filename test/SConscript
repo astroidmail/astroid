@@ -14,6 +14,6 @@ testEnv.PrependENVPath('LD_LIBRARY_PATH', env.Dir('.').abspath)
 #        ''')
 #testEnv.addUnitTest('test_suite', files)
 # you can also use glob to add all the files in the folder.
-files = Glob('*.cc')
-testEnv.addUnitTest('test_suite', files)
+composed_files = Glob('test_composed*.cc')
+testEnv.addUnitTest('test_composed', composed_files)
 # all the tests added above are automatically added to the 'test' alias
