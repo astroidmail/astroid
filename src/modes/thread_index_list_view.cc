@@ -8,6 +8,8 @@
 # include "thread_index.hh"
 # include "thread_index_list_view.hh"
 # include "thread_index_list_cell_renderer.hh"
+# include "reply_message.hh"
+# include "message_thread.hh"
 # include "utils/utils.hh"
 
 # include "command_bar.hh"
@@ -201,6 +203,22 @@ namespace Astroid {
               /* open message in split pane (if so configured) */
               thread_index->open_thread (thread, !open_paned_default);
             }
+          }
+          return true;
+        }
+
+      /* reply */
+      case GDK_KEY_r:
+        {
+          auto thread = get_current_thread ();
+          if (thread) {
+
+            MessageThread mthread (thread);
+            mthread.load_messages ();
+
+            /* reply to last message */
+            main_window->add_mode (new ReplyMessage (*(--mthread.messages.end())));
+
           }
           return true;
         }

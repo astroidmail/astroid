@@ -41,6 +41,7 @@ namespace Astroid {
   class ThreadView;
   class HelpMode;
   class EditMessage;
+  class ReplyMessage;
 
 }
 

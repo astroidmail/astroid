@@ -40,7 +40,7 @@ namespace Astroid {
   }
 
   Message::~Message () {
-    g_object_unref (message);
+    // message is freed by the root chunk.
   }
 
   vector<ustring> Message::tags () {
