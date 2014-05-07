@@ -74,6 +74,9 @@ namespace Astroid {
     default_config.put ("astroid.config.version", CONFIG_VERSION);
     default_config.put ("astroid.notmuch.db", "~/.mail");
 
+    /* TODO: eventually these should be removed */
+    default_config.put ("astroid.debug.dryrun_sending", true);
+
     if (initial) {
       /* account - only set if no other accounts, we accomplish that
        * by only defining the default if there is no config file present.

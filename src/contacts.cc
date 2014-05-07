@@ -1,6 +1,8 @@
 # include <iostream>
 # include <vector>
 
+# include <gmime/gmime.h>
+
 # include "astroid.hh"
 # include "db.hh"
 # include "config.hh"

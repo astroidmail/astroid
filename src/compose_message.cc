@@ -5,6 +5,7 @@
 # include <gmime/gmime.h>
 
 # include "astroid.hh"
+# include "config.hh"
 # include "compose_message.hh"
 # include "account_manager.hh"
 
@@ -135,23 +136,32 @@ namespace Astroid {
   }
 
   bool ComposeMessage::send () {
+    bool dryrun = astroid->config->config.get<bool>("astroid.debug.dryrun_sending");
+
     /* Send the message */
-    ustring send_command = account->sendmail ;
-    FILE * sendMailPipe = popen(send_command.c_str(), "w");
-    GMimeStream * sendMailStream = g_mime_stream_file_new(sendMailPipe);
-    g_mime_stream_file_set_owner(GMIME_STREAM_FILE(sendMailStream), false);
-    g_mime_object_write_to_stream(GMIME_OBJECT(message), sendMailStream);
-    g_object_unref(sendMailStream);
+    if (!dryrun) {
+      ustring send_command = account->sendmail ;
+      FILE * sendMailPipe = popen(send_command.c_str(), "w");
+      GMimeStream * sendMailStream = g_mime_stream_file_new(sendMailPipe);
+      g_mime_stream_file_set_owner(GMIME_STREAM_FILE(sendMailStream), false);
+      g_mime_object_write_to_stream(GMIME_OBJECT(message), sendMailStream);
+      g_object_unref(sendMailStream);
 
-    int status = pclose(sendMailPipe);
+      int status = pclose(sendMailPipe);
 
-    if (status == 0)
-    {
-      cout << "cm: message sent successfully!" << endl;
-      return true;
+      if (status == 0)
+      {
+        cout << "cm: message sent successfully!" << endl;
+        return true;
+      } else {
+        cout << "cm: could not send message!" << endl;
+        return false;
+      }
     } else {
-      cout << "cm: could not send message!" << endl;
-      return false;
+      ustring fname = "/tmp/" + id;
+      cout << "cm: sending disabled in config, message written to: " << fname << endl;
+
+      write (fname);
     }
   }
 
