@@ -15,7 +15,9 @@ namespace Astroid {
 
     if (GMIME_IS_PART (mime_object)) {
       // has no sub-parts
-      viewable = true;
+
+      string disposition = g_mime_object_get_disposition(mime_object) ? : string();
+      viewable = !(disposition == "attachment");
 
       const char * cid = g_mime_part_get_content_id ((GMimePart *) mime_object);
       if (cid != NULL) {
@@ -131,6 +133,19 @@ namespace Astroid {
         GMimeStream * filter_stream = g_mime_stream_filter_new (stream);
         g_mime_stream_filter_add ((GMimeStreamFilter *) filter_stream,
                                   html_filter);
+
+        GMimeFilter * filter = g_mime_filter_basic_new(g_mime_data_wrapper_get_encoding(content), false);
+        g_mime_stream_filter_add(GMIME_STREAM_FILTER(filter_stream), filter);
+        g_object_unref(filter);
+
+        const char * charset = g_mime_object_get_content_type_parameter(GMIME_OBJECT(mime_object), "charset");
+        if (charset)
+        {
+            GMimeFilter * filter = g_mime_filter_charset_new(charset, "UTF-8");
+            g_mime_stream_filter_add(GMIME_STREAM_FILTER(filter_stream), filter);
+            g_object_unref(filter);
+        }
+
         g_mime_data_wrapper_write_to_stream (content, filter_stream);
 
         g_mime_stream_flush (filter_stream);
