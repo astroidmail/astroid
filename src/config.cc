@@ -98,6 +98,7 @@ namespace Astroid {
     default_config.put ("editor.gvim.default_cmd_on_enter", "i");
     default_config.put ("editor.gvim.cmd", "gvim");
     default_config.put ("editor.gvim.args", "-f -c 'set ft=mail' '+/^\\s*\\n/' '+nohl'");
+    default_config.put ("editor.charset", "utf-8");
 
     /* contacts */
     default_config.put ("contacts.lbdb.cmd", "lbdb");

@@ -63,9 +63,17 @@ namespace Astroid {
     std::string body_content(body.str());
 
     GMimeStream * contentStream = g_mime_stream_mem_new_with_buffer(body_content.c_str(), body_content.size());
-    GMimePart * messagePart = g_mime_part_new_with_type("text", "plain");
+    GMimePart * messagePart = g_mime_part_new_with_type ("text", "plain");
+
+    //g_mime_object_set_content_type (GMIME_OBJECT(messagePart), "text/plain; charset=utf-8; format=flowed");
+    g_mime_object_set_content_type_parameter ((GMimeObject *) messagePart, "charset", astroid->config->config.get<string>("editor.charset").c_str());
+    g_mime_object_set_content_type_parameter ((GMimeObject *) messagePart, "format", "flowed");
+
     GMimeDataWrapper * contentWrapper = g_mime_data_wrapper_new_with_stream(contentStream, GMIME_CONTENT_ENCODING_DEFAULT);
+
+    g_mime_part_set_content_encoding (messagePart, GMIME_CONTENT_ENCODING_QUOTEDPRINTABLE);
     g_mime_part_set_content_object(messagePart, contentWrapper);
+
     g_mime_message_set_mime_part(message, GMIME_OBJECT(messagePart));
 
     /* set user agent */
@@ -84,7 +92,6 @@ namespace Astroid {
     /* make message ready to be sent */
 
     /* again: ripped more or less from ner */
-    /* add the date to the message */
 
     /*
     FILE * file = fopen(_messageFile.c_str(), "r");
@@ -93,6 +100,7 @@ namespace Astroid {
     GMimeMessage * message = g_mime_parser_construct_message(parser);
     */
 
+    /* add date to the message */
     struct timeval timeValue;
     struct timezone timeZone;
 
