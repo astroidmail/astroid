@@ -7,8 +7,6 @@
 # include <gtkmm.h>
 # include <gdk/gdkx.h>
 # include <gtkmm/socket.h>
-# include <giomm/socket.h>
-# include <glibmm/iochannel.h>
 
 # include "astroid.hh"
 # include "config.hh"
@@ -115,14 +113,15 @@ namespace Astroid {
         sigc::mem_fun(*this, &EditMessage::socket_realized) );
 
     show_all ();
-    editor_box->pack_start (*editor_socket, false, false, 5);
+    editor_box->pack_start (*editor_socket, false, false, 2);
+    show_all ();
 
     text_view = Gtk::manage (new Gtk::TextView ());
     text_view->set_sensitive (false);
     text_view->set_editable (false);
-    editor_box->pack_start (*text_view, true, 5);
+    editor_box->pack_start (*text_view, true, 2);
+    text_view->hide ();
 
-    show_all ();
 
     /* defaults */
     accounts = astroid->accounts;
