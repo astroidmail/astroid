@@ -36,7 +36,7 @@ namespace Astroid {
         no_fields // last
       };
 
-      Gtk::Entry *from, *to, *cc, *bcc, *subject;
+      Gtk::Entry *to, *cc, *bcc, *subject;
       Gtk::ComboBox *from_combo;
 
       Contacts * contacts;
@@ -60,6 +60,7 @@ namespace Astroid {
 
       FromColumns from_columns;
       refptr<Gtk::ListStore> from_store;
+      int account_no;
 
       bool check_fields ();
       void send_message ();

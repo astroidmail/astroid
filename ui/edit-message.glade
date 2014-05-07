@@ -10,7 +10,7 @@
     <property name="margin_top">5</property>
     <property name="margin_bottom">5</property>
     <property name="orientation">vertical</property>
-    <property name="spacing">5</property>
+    <property name="spacing">2</property>
     <child>
       <object class="GtkBox" id="box3">
         <property name="visible">True</property>
@@ -31,14 +31,23 @@
           </packing>
         </child>
         <child>
-          <object class="GtkComboBox" id="from_combo">
+          <object class="GtkBox" id="box2">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="has_entry">True</property>
-            <child internal-child="entry">
-              <object class="GtkEntry" id="from">
-                <property name="can_focus">True</property>
+            <property name="spacing">5</property>
+            <child>
+              <object class="GtkComboBox" id="from_combo">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
               </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <placeholder/>
             </child>
           </object>
           <packing>
@@ -77,6 +86,8 @@
             <property name="visible">True</property>
             <property name="sensitive">False</property>
             <property name="can_focus">True</property>
+            <property name="shadow_type">none</property>
+            <property name="input_purpose">email</property>
           </object>
           <packing>
             <property name="expand">True</property>
@@ -114,6 +125,7 @@
             <property name="visible">True</property>
             <property name="sensitive">False</property>
             <property name="can_focus">True</property>
+            <property name="input_purpose">email</property>
           </object>
           <packing>
             <property name="expand">True</property>
@@ -151,6 +163,7 @@
             <property name="visible">True</property>
             <property name="sensitive">False</property>
             <property name="can_focus">True</property>
+            <property name="input_purpose">email</property>
           </object>
           <packing>
             <property name="expand">True</property>
@@ -243,21 +256,6 @@
         <property name="expand">True</property>
         <property name="fill">True</property>
         <property name="position">5</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkLabel" id="label6">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="halign">end</property>
-        <property name="label" translatable="yes">Use &lt;S-Escape&gt; to exit editor</property>
-        <property name="justify">right</property>
-      </object>
-      <packing>
-        <property name="expand">False</property>
-        <property name="fill">True</property>
-        <property name="pack_type">end</property>
-        <property name="position">6</property>
       </packing>
     </child>
   </object>

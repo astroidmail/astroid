@@ -33,7 +33,6 @@ namespace Astroid {
     builder->get_widget ("box_message", box_message);
 
     builder->get_widget ("from_combo", from_combo);
-    builder->get_widget ("from", from);
     builder->get_widget ("to", to);
     builder->get_widget ("cc", cc);
     builder->get_widget ("bcc", bcc);
@@ -43,7 +42,6 @@ namespace Astroid {
     builder->get_widget ("editor_img", editor_img);
 
     /* must be in the same order as enum Field */
-    fields.push_back (from);
     fields.push_back (to);
     fields.push_back (cc);
     fields.push_back (bcc);
@@ -129,20 +127,21 @@ namespace Astroid {
     /* from combobox */
     from_store = Gtk::ListStore::create (from_columns);
     from_combo->set_model (from_store);
-    from_combo->set_entry_text_column (from_columns.name_and_address);
 
-    int no = 0;
+    account_no = 0;
     for (Account &a : accounts->accounts) {
       auto row = *(from_store->append ());
       row[from_columns.name_and_address] = a.full_address();
       row[from_columns.account] = &a;
 
       if (a.isdefault) {
-        from_combo->set_active (no);
+        from_combo->set_active (account_no);
       }
 
-      no++;
+      account_no++;
     }
+
+    from_combo->pack_start (from_columns.name_and_address);
 
     in_edit = true;
     activate_field (To);
@@ -272,27 +271,20 @@ namespace Astroid {
 
 
     } else if (f == From) {
-      if (in_edit) {
-        from_combo->set_sensitive (true);
-        fields[current_field]->set_icon_from_icon_name ("go-next");
-        fields[current_field]->set_sensitive (true);
-        fields[current_field]->set_position (-1);
-      } else {
-        fields[current_field]->set_icon_from_icon_name ("media-playback-stop");
-      }
+      from_combo->set_sensitive (true);
       from_combo->grab_focus ();
     } else {
       if (in_edit) {
-        fields[current_field]->set_icon_from_icon_name ("go-next");
-        fields[current_field]->set_sensitive (true);
-        fields[current_field]->set_position (-1);
+        fields[current_field - To]->set_icon_from_icon_name ("go-next");
+        fields[current_field - To]->set_sensitive (true);
+        fields[current_field - To]->set_position (-1);
         if (current_field >= To && current_field <= Bcc) {
-          fields[current_field]->set_completion (contact_completion);
+          fields[current_field - To]->set_completion (contact_completion);
         }
       } else {
-        fields[current_field]->set_icon_from_icon_name ("media-playback-stop");
+        fields[current_field - To]->set_icon_from_icon_name ("media-playback-stop");
       }
-      fields[current_field]->grab_focus ();
+      fields[current_field - To]->grab_focus ();
     }
 
     /* update tab in case something changed */
@@ -307,6 +299,9 @@ namespace Astroid {
               [&](Gtk::Entry * e) {
                 reset_entry (e);
               });
+
+    if (current_field >= To && current_field < Field::Editor)
+      fields[current_field - To]->set_sensitive (false);
 
     /* reset from combo */
     from_combo->popdown ();
@@ -327,8 +322,7 @@ namespace Astroid {
   void EditMessage::reset_entry (Gtk::Entry *e) {
     e->set_icon_from_icon_name ("");
     e->set_activates_default (true);
-    if (current_field != Field::Editor)
-      fields[current_field]->set_sensitive (false);
+
     e->set_completion (refptr<Gtk::EntryCompletion>());
   }
 
@@ -358,19 +352,21 @@ namespace Astroid {
       }
     } else {
       switch (event->keyval) {
-        /*
         case GDK_KEY_Right:
-          if (current_field == From && !in_edit) {
-            from_combo->set_active (from_combo->get_active()+1);
+          if (current_field == From) {
+            int act = from_combo->get_active_row_number ();
+            if (act < (account_no-1) )
+              from_combo->set_active (++from_combo->get_active());
             return true;
           }
 
         case GDK_KEY_Left:
-          if (current_field == From && !in_edit) {
-            from_combo->set_active (from_combo->get_active()-1);
+          if (current_field == From) {
+            int act = from_combo->get_active_row_number ();
+            if (act > 0)
+              from_combo->set_active (--from_combo->get_active());
             return true;
           }
-          */
 
         case GDK_KEY_Down:
           if (current_field == From && in_edit) {
@@ -461,6 +457,7 @@ namespace Astroid {
 
   void EditMessage::send_message () {
     cout << "em: sending message.." << endl;
+
     if (!check_fields ()) {
       cout << "em: error problem with some of the input fields.." << endl;
     }

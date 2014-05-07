@@ -60,7 +60,7 @@ namespace Astroid {
    * Account
    * -------- */
   ustring Account::full_address () {
-    return name + "<" + email + ">";
+    return name + " <" + email + ">";
   }
 }
 
