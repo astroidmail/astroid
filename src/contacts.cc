@@ -107,6 +107,8 @@ namespace Astroid {
       row[m_columns.m_id] = i++;
       row[m_columns.m_cont] = c;
     }
+
+    set_inline_completion (true);
   }
 
   /* search in external contacts for the current key

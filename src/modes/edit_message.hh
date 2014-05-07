@@ -69,6 +69,7 @@ namespace Astroid {
 
       Gtk::Box *editor_box;
       Gtk::Socket *editor_socket;
+      Gtk::TextView *text_view;
       void plug_added ();
       bool plug_removed ();
       void socket_realized ();
@@ -79,7 +80,9 @@ namespace Astroid {
       time_t  msg_time;
       ustring vim_server;
 
+      void editor_toggle (bool);
       void vim_start ();
+      void vim_stop ();
       void vim_remote_expr (ustring);
       void vim_remote_keys (ustring);
       void vim_remote_files (ustring);

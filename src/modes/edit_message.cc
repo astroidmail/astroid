@@ -115,7 +115,13 @@ namespace Astroid {
         sigc::mem_fun(*this, &EditMessage::socket_realized) );
 
     show_all ();
-    editor_box->pack_start (*editor_socket, true, 5);
+    editor_box->pack_start (*editor_socket, false, false, 5);
+
+    text_view = Gtk::manage (new Gtk::TextView ());
+    text_view->set_sensitive (false);
+    text_view->set_editable (false);
+    editor_box->pack_start (*text_view, true, 5);
+
     show_all ();
 
     /* defaults */
@@ -158,18 +164,62 @@ namespace Astroid {
     cout << "em: socket realized." << endl;
 
     if (!vim_started) {
-      vim_start ();
+      editor_toggle (true);
     }
+
   }
 
   void EditMessage::plug_added () {
     cout << "em: gvim connected" << endl;
+    gtk_box_set_child_packing (editor_box->gobj (), GTK_WIDGET(editor_socket->gobj ()), true, true, 5, GTK_PACK_END);
+
+    if (current_field == Editor && in_edit) {
+      /* vim has been started with user input */
+      activate_field (current_field);
+    }
   }
 
   bool EditMessage::plug_removed () {
     cout << "em: gvim disconnected" << endl;
     vim_started = false;
+    editor_toggle (false);
+
+    /* reset edit state */
+    if (current_field == Editor) {
+      in_edit = false;
+      activate_field (Editor);
+    }
+
     return true;
+  }
+
+  /* turn on or off the editor or set up for the editor */
+  void EditMessage::editor_toggle (bool on) {
+    if (on) {
+      editor_socket->show ();
+      text_view->hide ();
+
+      if (!vim_started) {
+        vim_start ();
+      }
+
+    } else {
+      if (vim_started) {
+        vim_stop ();
+      }
+
+      editor_socket->hide ();
+      text_view->show ();
+
+      /* refresh text in text_view */
+      tmpfile.open (tmpfile_path.c_str(), fstream::in);
+      auto bfr = text_view->get_buffer ();
+      ostringstream msg;
+      msg << tmpfile.rdbuf ();
+      bfr->set_text (msg.str());
+
+      tmpfile.close ();
+    }
   }
 
   void EditMessage::activate_field (Field f) {
@@ -184,6 +234,7 @@ namespace Astroid {
       cout << "em: focus editor." << endl;
       if (in_edit) {
         editor_img->set_from_icon_name ("go-next", isize);
+
         editor_socket->set_sensitive (true);
         editor_socket->set_can_focus (true);
 
@@ -200,14 +251,22 @@ namespace Astroid {
          * programatically set focus to a widget inside an embedded
          * child (except for the user to press Tab).
          */
-        gtk_socket_focus_forward (editor_socket->gobj ());
+        if (vim_started) {
+          gtk_socket_focus_forward (editor_socket->gobj ());
 
-        esc_count     = 0;
-        editor_active = true;
+          esc_count     = 0;
+          editor_active = true;
 
-        if (send_default)
-          vim_remote_keys (default_cmd_on_enter);
-        else send_default = true;
+          if (send_default)
+            vim_remote_keys (default_cmd_on_enter);
+          else send_default = true;
+
+        } else {
+
+          editor_toggle (true);
+
+        }
+
       } else {
         editor_img->set_from_icon_name ("media-playback-stop", isize);
       }
@@ -328,13 +387,10 @@ namespace Astroid {
           {
             if (!in_edit) {
               activate_field ((Field) ((current_field+1) % ((int)no_fields)));
+              return true;
             } else {
-              /*
-              if (current_field >= To && current_field <= Bcc)
-                contact_completion->complete ();
-              */
+              return false;
             }
-            return true;
           }
 
         case GDK_KEY_Up:
@@ -426,21 +482,15 @@ namespace Astroid {
     c.set_subject (subject->get_text());
 
     /* load body */
-    // TODO: send command to vim for writing?
+    editor_toggle (false);
     tmpfile.open (tmpfile_path.c_str(), fstream::in);
     c.body << tmpfile.rdbuf();
+    tmpfile.close ();
 
     c.build ();
     c.finalize ();
 
-    ustring file = c.write_tmp();
-
-    cout << "em: message written to: " << file << endl;
-
     bool success = c.send ();
-    if (success) {
-      unlink (file.c_str());
-    }
   }
 
   void EditMessage::vim_remote_keys (ustring keys) {
@@ -474,12 +524,19 @@ namespace Astroid {
   }
 
   void EditMessage::vim_start () {
-    ustring cmd = ustring::compose ("%1 --servername %3 --socketid %4 %2 %5",
+    gtk_box_set_child_packing (editor_box->gobj (), GTK_WIDGET(editor_socket->gobj ()), false, false, 5, GTK_PACK_END);
+    ustring cmd = ustring::compose ("%1 -geom 10x10 --servername %3 --socketid %4 %2 %5",
         gvim_cmd, gvim_args, vim_server, editor_socket->get_id (),
         tmpfile_path.c_str());
     cout << "em: starting gvim: " << cmd << endl;
     Glib::spawn_command_line_async (cmd.c_str());
     vim_started = true;
+  }
+
+  void EditMessage::vim_stop () {
+    vim_remote_keys (ustring::compose("<ESC>:b %1<CR>", tmpfile_path.c_str()));
+    vim_remote_keys ("<ESC>:wq!<CR>");
+    vim_started = false;
   }
 
   void EditMessage::make_tmpfile () {
