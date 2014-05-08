@@ -33,7 +33,7 @@ namespace Astroid {
       void load_thread (refptr<NotmuchThread>);
 
       refptr<NotmuchThread> thread;
-      MessageThread * mthread;
+      refptr<MessageThread> mthread;
 
       Gtk::ScrolledWindow scroll;
 

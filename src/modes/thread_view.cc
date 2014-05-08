@@ -91,11 +91,9 @@ namespace Astroid {
   ThreadView::~ThreadView () {
     cout << "tv: deconstruct." << endl;
     // TODO: possibly still some errors here in paned mode
-    /* is handled by Gtk::manage
-    g_object_unref (webview);
+    //g_object_unref (webview); // probably garbage collected since it has a parent widget
     g_object_unref (websettings);
     if (container) g_object_unref (container);
-    */
   }
 
   /* is this callback setup safe?
@@ -166,7 +164,7 @@ namespace Astroid {
 
     ((Gtk::Label*) tab_widget)->set_text (thread->thread_id);
 
-    mthread = new MessageThread (thread);
+    mthread = refptr<MessageThread>(new MessageThread (thread));
     mthread->load_messages ();
 
     ustring s = mthread->subject;

@@ -41,6 +41,7 @@ namespace Astroid {
 
   Message::~Message () {
     // message is freed by the root chunk.
+    g_object_unref (message);
   }
 
   vector<ustring> Message::tags () {
@@ -103,6 +104,8 @@ namespace Astroid {
     g_object_unref (stream); // reffed from parser
     g_object_unref (parser); // reffed from message
 
+    g_object_ref (message);  // TODO: a little bit at loss here -> change to
+                             //       std::something.
   }
 
   ustring Message::body () {
