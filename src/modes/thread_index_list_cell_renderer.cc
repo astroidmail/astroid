@@ -33,15 +33,33 @@ namespace Astroid {
       const Gdk::Rectangle &cell_area,
       Gtk::CellRendererState flags)
   {
+    // calculate text width, we don't need to do this every time,
+    // but we need access to the context.
+    refptr<Pango::Context> pango_cr = widget.create_pango_context ();
+    font_description.set_size (Pango::SCALE * subject_font_size);
+    font_description.set_family (font_family);
+    font_metrics = pango_cr->get_metrics (font_description);
 
-    //cout << "render..:" << thread->thread_id << endl;
-
-    /*
-    auto p = property_cell_background ();
-    p.set_value ("#ffffff");
-    */
+    int char_width = font_metrics.get_approximate_char_width () / Pango::SCALE;
+    padding = char_width;
 
     thread->refresh ();
+
+    if (thread->unread) {
+      font_description.set_weight (Pango::WEIGHT_BOLD);
+    }
+
+    date_width          = char_width * date_len;
+    message_count_width = char_width * message_count_len;
+    message_count_start = date_start + date_width + padding;
+    authors_width       = char_width * authors_len;
+    authors_start       = message_count_start + message_count_width + padding;
+    tags_width          = char_width * tags_len;
+    tags_start          = authors_start + authors_width + padding;
+    subject_start       = tags_start + tags_width + padding;
+
+
+    render_background (cr, widget, background_area, flags);
 
     int h = render_date (cr, widget, cell_area); // returns height
     /*
@@ -49,8 +67,6 @@ namespace Astroid {
     left_icons_size = content_height;
     height = content_height + line_spacing;
     */
-
-    render_background (cr, widget, background_area, flags);
 
     if (thread->total_messages > 1)
       render_message_count (cr, widget, cell_area);
@@ -166,15 +182,6 @@ namespace Astroid {
 
     Glib::RefPtr<Pango::Layout> pango_layout = widget.create_pango_layout ("");
 
-    Pango::FontDescription font_description;
-    font_description.set_size(Pango::SCALE * subject_font_size);
-
-    font_description.set_family ("Sans Mono");
-
-    if (thread->unread) {
-      font_description.set_weight (Pango::WEIGHT_BOLD);
-    }
-
     pango_layout->set_font_description (font_description);
 
     /* set color */
@@ -202,13 +209,6 @@ namespace Astroid {
 
     Glib::RefPtr<Pango::Layout> pango_layout = widget.create_pango_layout ("");
 
-    Pango::FontDescription font_description;
-    font_description.set_size(Pango::SCALE * subject_font_size);
-
-    if (thread->unread) {
-      font_description.set_weight (Pango::WEIGHT_BOLD);
-    }
-
     pango_layout->set_font_description (font_description);
 
     /* set color */
@@ -218,7 +218,7 @@ namespace Astroid {
     cr->set_source_rgb (color.get_red(), color.get_green(), color.get_blue());
 
     ustring tag_string = VectorUtils::concat_tags (thread->tags);
-    tag_string = tag_string.substr (0, tags_max_len);
+    tag_string = tag_string.substr (0, tags_len);
 
     pango_layout->set_markup ("<span font_style=\"italic\"  color=\"#31587a\">" + tag_string + "</span>");
 
@@ -245,15 +245,7 @@ namespace Astroid {
     timeinfo = localtime (&newest);
     strftime (buf, 80, "%D %R", timeinfo);
 
-
     Glib::RefPtr<Pango::Layout> pango_layout = widget.create_pango_layout (buf);
-
-    Pango::FontDescription font_description;
-    font_description.set_size(Pango::SCALE * font_size);
-
-    if (thread->unread) {
-      font_description.set_weight (Pango::WEIGHT_BOLD);
-    }
 
     pango_layout->set_font_description (font_description);
 
@@ -288,13 +280,6 @@ namespace Astroid {
 
 
     Glib::RefPtr<Pango::Layout> pango_layout = widget.create_pango_layout (buf);
-
-    Pango::FontDescription font_description;
-    font_description.set_size(Pango::SCALE * font_size);
-
-    if (thread->unread) {
-      font_description.set_weight (Pango::WEIGHT_BOLD);
-    }
 
     pango_layout->set_font_description (font_description);
 
@@ -332,19 +317,12 @@ namespace Astroid {
       authors = VectorUtils::concat_authors (thread->authors);
     }
 
-    if (authors.size() >= authors_max_len) {
-      authors = authors.substr (0, authors_max_len);
+    if (authors.size() >= authors_len) {
+      authors = authors.substr (0, authors_len);
       authors += ".";
     }
 
     Glib::RefPtr<Pango::Layout> pango_layout = widget.create_pango_layout (authors);
-
-    Pango::FontDescription font_description;
-    font_description.set_size(Pango::SCALE * font_size);
-
-    if (thread->unread) {
-      font_description.set_weight (Pango::WEIGHT_BOLD);
-    }
 
     pango_layout->set_font_description (font_description);
 
