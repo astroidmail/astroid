@@ -299,7 +299,7 @@ namespace Astroid {
       }
 
       if (use) {
-        if (c->viewable) body += c->body();
+        if (c->viewable) body += c->body(true);
 
         for_each (c->kids.begin(),
                   c->kids.end (),

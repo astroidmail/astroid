@@ -11,6 +11,8 @@ using namespace std;
 namespace Astroid {
   class ThreadIndexListCellRenderer : public Gtk::CellRenderer {
     public:
+      ThreadIndexListCellRenderer ();
+
       Glib::RefPtr<NotmuchThread> thread; /* thread that should be rendered now */
       bool last;
 
@@ -38,7 +40,7 @@ namespace Astroid {
           int& natural_height) const override;
 
     private:
-      int content_height = 15;
+      int content_height = 35;
       int line_spacing = 2;
       int height = content_height + line_spacing;
       int left_icons_size = 15;
@@ -47,6 +49,7 @@ namespace Astroid {
       int left_icons_padding = 2;
       int padding = 5;
       int font_size = 9;
+      ustring font_family = "monospace";
 
       int date_start = left_icons_width_n * left_icons_width +
         (left_icons_width_n-1) * left_icons_padding + padding;
@@ -82,7 +85,7 @@ namespace Astroid {
           Gtk::Widget &widget,
           const Gdk::Rectangle &cell_area );
 
-      void render_date (
+      int render_date (
           const ::Cairo::RefPtr< ::Cairo::Context>&cr,
           Gtk::Widget &widget,
           const Gdk::Rectangle &cell_area );

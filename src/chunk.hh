@@ -21,7 +21,7 @@ namespace Astroid {
       GMimeContentType *  content_type;
       ustring content_id;
 
-      ustring body ();
+      ustring body (bool);
 
       vector<refptr<Chunk>> kids;
       vector<refptr<Chunk>> siblings;
@@ -36,6 +36,8 @@ namespace Astroid {
 
       GMimeContentType * preferred_type = viewable_text["plain"];
 
+      static ustring all_text ();
+      static ustring all_html ();
   };
 }
 

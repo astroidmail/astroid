@@ -20,7 +20,9 @@ namespace Astroid {
     } else {
       subject->set_text (msg->subject);
     }
-  }
 
+    
+
+  }
 }
 

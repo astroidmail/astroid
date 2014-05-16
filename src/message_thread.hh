@@ -35,7 +35,7 @@ namespace Astroid {
       ustring date ();
       vector<ustring> tags ();
 
-      ustring body ();
+      ustring body (bool);
   };
 
   class MessageThread : public Glib::Object {

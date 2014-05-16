@@ -95,7 +95,7 @@ namespace Astroid {
     }
   }
 
-  ustring Chunk::body () {
+  ustring Chunk::body (bool html = true) {
     if (GMIME_IS_PART(mime_object)) {
       cout << "chunk: body: part" << endl;
       if (g_mime_content_type_is_type (content_type, "text", "plain")) {
@@ -131,7 +131,9 @@ namespace Astroid {
             html_filter_flags, cite_color);
 
         GMimeStream * filter_stream = g_mime_stream_filter_new (stream);
-        g_mime_stream_filter_add ((GMimeStreamFilter *) filter_stream,
+
+        if (html)
+          g_mime_stream_filter_add ((GMimeStreamFilter *) filter_stream,
                                   html_filter);
 
         GMimeFilter * filter = g_mime_filter_basic_new(g_mime_data_wrapper_get_encoding(content), false);

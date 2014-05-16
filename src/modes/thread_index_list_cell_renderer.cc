@@ -20,6 +20,12 @@
 using namespace std;
 
 namespace Astroid {
+
+  ThreadIndexListCellRenderer::ThreadIndexListCellRenderer () {
+
+  }
+
+
   void ThreadIndexListCellRenderer::render_vfunc (
       const ::Cairo::RefPtr< ::Cairo::Context>&cr,
       Gtk::Widget    &widget,
@@ -37,15 +43,21 @@ namespace Astroid {
 
     thread->refresh ();
 
+    int h = render_date (cr, widget, cell_area); // returns height
+    /*
+    content_height = h / Pango::SCALE;
+    left_icons_size = content_height;
+    height = content_height + line_spacing;
+    */
+
     render_background (cr, widget, background_area, flags);
-    render_date (cr, widget, cell_area);
 
     if (thread->total_messages > 1)
       render_message_count (cr, widget, cell_area);
 
     render_authors (cr, widget, cell_area);
 
-    tags_width = render_tags (cr, widget, cell_area);
+    tags_width = render_tags (cr, widget, cell_area); // returns width
     subject_start = tags_start + tags_width / Pango::SCALE + ((tags_width > 0) ? padding : 0);
 
     render_subject (cr, widget, cell_area);
@@ -157,6 +169,8 @@ namespace Astroid {
     Pango::FontDescription font_description;
     font_description.set_size(Pango::SCALE * subject_font_size);
 
+    font_description.set_family ("Sans Mono");
+
     if (thread->unread) {
       font_description.set_weight (Pango::WEIGHT_BOLD);
     }
@@ -220,7 +234,7 @@ namespace Astroid {
 
   } // }}}
 
-  void ThreadIndexListCellRenderer::render_date ( // {{{
+  int ThreadIndexListCellRenderer::render_date ( // {{{
       const ::Cairo::RefPtr< ::Cairo::Context>&cr,
       Gtk::Widget &widget,
       const Gdk::Rectangle &cell_area ) {
@@ -258,6 +272,8 @@ namespace Astroid {
 
     cr->move_to (cell_area.get_x() + date_start, cell_area.get_y() + y);
     pango_layout->show_in_cairo_context (cr);
+
+    return h; // return height!
 
   } // }}}
 

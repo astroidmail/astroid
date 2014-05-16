@@ -108,8 +108,8 @@ namespace Astroid {
                              //       std::something.
   }
 
-  ustring Message::body () {
-    return root->body();
+  ustring Message::body (bool html) {
+    return root->body(html);
   }
 
   ustring Message::date () {

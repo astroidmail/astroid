@@ -21,7 +21,7 @@ namespace Astroid {
     cout << "mw: init.." << endl;
 
     set_title ("Astroid - " GIT_DESC);
-    set_default_size (840, 400);
+    set_default_size (1840, 800);
 
     actions.main_window = this;
 
