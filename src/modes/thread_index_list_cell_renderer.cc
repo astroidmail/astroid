@@ -42,6 +42,8 @@ namespace Astroid {
 
     int char_width = font_metrics.get_approximate_char_width () / Pango::SCALE;
     padding = char_width;
+    left_icons_size = char_width;
+    left_icons_width = char_width;
 
     thread->refresh ();
 
@@ -49,6 +51,8 @@ namespace Astroid {
       font_description.set_weight (Pango::WEIGHT_BOLD);
     }
 
+    date_start          = left_icons_width_n * left_icons_width +
+        (left_icons_width_n-1) * left_icons_padding + padding;
     date_width          = char_width * date_len;
     message_count_width = char_width * message_count_len;
     message_count_start = date_start + date_width + padding;

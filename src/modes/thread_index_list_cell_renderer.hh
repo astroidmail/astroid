@@ -54,8 +54,7 @@ namespace Astroid {
       Pango::FontDescription font_description;
       Pango::FontMetrics     font_metrics;
 
-      int date_start = left_icons_width_n * left_icons_width +
-        (left_icons_width_n-1) * left_icons_padding + padding;
+      int date_start;
       int date_len   = 14;
       int date_width;
 
