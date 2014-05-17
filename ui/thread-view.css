@@ -96,7 +96,8 @@ hr {
     box-shadow: 0 3px 3px rgba(0,0,0,1);
     display: block;
     word-wrap: break-word;
-    width: 100%;
+    /*width: 100%;*/
+    width: 50em;
     box-sizing:border-box;
     margin-top: 5px;
 }
