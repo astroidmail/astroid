@@ -21,7 +21,10 @@ namespace Astroid {
       subject->set_text (msg->subject);
     }
 
-    
+    if (subject->get_text ().size () > 0) {
+      ((Gtk::Label*)tab_widget)->set_text ("New message: " + subject->get_text ());
+    }
+
 
   }
 }
