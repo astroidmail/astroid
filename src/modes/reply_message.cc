@@ -30,6 +30,7 @@ namespace Astroid {
     tmpfile << ustring::compose ("%1 wrote on %2:", msg->sender, msg->date()) << endl;
 
     tmpfile << msg->viewable_text (false) << endl;
+    tmpfile.close ();
 
 
 
