@@ -34,6 +34,8 @@ namespace Astroid {
           const Gdk::Rectangle &,
           Gtk::CellRendererState) override;
 
+      int calculate_height (Gtk::Widget &) const;
+
       virtual void get_preferred_height_vfunc (
           Gtk::Widget& widget,
           int& minimum_height,
@@ -43,6 +45,7 @@ namespace Astroid {
       int content_height = 35;
       int line_spacing = 2;
       int height = content_height + line_spacing;
+
       int left_icons_size = 15;
       int left_icons_width  = 15;
       int left_icons_width_n = 2;

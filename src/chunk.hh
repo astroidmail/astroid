@@ -35,9 +35,6 @@ namespace Astroid {
       };
 
       GMimeContentType * preferred_type = viewable_text["plain"];
-
-      static ustring all_text ();
-      static ustring all_html ();
   };
 }
 

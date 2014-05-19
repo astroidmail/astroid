@@ -65,7 +65,7 @@ namespace Astroid {
       bool check_fields ();
       void send_message ();
 
-    private:
+    protected:
       ptree editor_config;
 
       Gtk::Box *editor_box;

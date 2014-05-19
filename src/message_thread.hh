@@ -36,6 +36,7 @@ namespace Astroid {
       vector<ustring> tags ();
 
       ustring body (bool);
+      ustring viewable_text (bool);
   };
 
   class MessageThread : public Glib::Object {

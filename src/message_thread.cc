@@ -111,6 +111,47 @@ namespace Astroid {
   ustring Message::body (bool html) {
     return root->body(html);
   }
+  
+  ustring Message::viewable_text (bool html) {
+    refptr<Chunk> c = root;
+    ustring body;
+
+    function< void (refptr<Chunk>) > app_body =
+      [&] (refptr<Chunk> c)
+    {
+      /* check if we're the preferred sibling */
+      bool use = false;
+
+      if (c->siblings.size() >= 1) {
+        if (c->preferred) {
+          use = true;
+        } else {
+          /* check if there are any other preferred */
+          if (all_of (c->siblings.begin (),
+                      c->siblings.end (),
+                      [](refptr<Chunk> c) { return (!c->preferred); })) {
+            use = true;
+          } else {
+            use = false;
+          }
+        }
+      } else {
+        use = true;
+      }
+
+      if (use) {
+        if (c->viewable) body += c->body(html);
+
+        for_each (c->kids.begin(),
+                  c->kids.end (),
+                  app_body);
+      }
+    };
+
+    app_body (c);
+
+    return body;
+  }
 
   ustring Message::date () {
     return ustring (g_mime_message_get_date_as_string (message));

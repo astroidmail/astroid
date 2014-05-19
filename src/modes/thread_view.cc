@@ -272,43 +272,7 @@ namespace Astroid {
     WebKitDOMHTMLElement * span_body =
       select (WEBKIT_DOM_NODE(div_email_container), ".body");
 
-    refptr<Chunk> c = m->root;
-    ustring body;
-
-    function< void (refptr<Chunk>) > app_body =
-      [&] (refptr<Chunk> c)
-    {
-      /* check if we're the preferred sibling */
-      bool use = false;
-
-      if (c->siblings.size() >= 1) {
-        if (c->preferred) {
-          use = true;
-        } else {
-          /* check if there are any other preferred */
-          if (all_of (c->siblings.begin (),
-                      c->siblings.end (),
-                      [](refptr<Chunk> c) { return (!c->preferred); })) {
-            use = true;
-          } else {
-            use = false;
-          }
-        }
-      } else {
-        use = true;
-      }
-
-      if (use) {
-        if (c->viewable) body += c->body(true);
-
-        for_each (c->kids.begin(),
-                  c->kids.end (),
-                  app_body);
-      }
-    };
-
-    app_body (c);
-
+    ustring body = m->viewable_text (true);
 
     webkit_dom_html_element_set_inner_html (
         span_body,

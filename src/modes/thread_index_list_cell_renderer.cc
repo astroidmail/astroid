@@ -62,15 +62,11 @@ namespace Astroid {
     tags_start          = authors_start + authors_width + padding;
     subject_start       = tags_start + tags_width + padding;
 
+    content_height = calculate_height (widget);
+    height         = content_height + line_spacing;
 
     render_background (cr, widget, background_area, flags);
-
-    int h = render_date (cr, widget, cell_area); // returns height
-    /*
-    content_height = h / Pango::SCALE;
-    left_icons_size = content_height;
-    height = content_height + line_spacing;
-    */
+    render_date (cr, widget, cell_area); // returns height
 
     if (thread->total_messages > 1)
       render_message_count (cr, widget, cell_area);
@@ -348,11 +344,25 @@ namespace Astroid {
 
   } // }}}
 
+  int ThreadIndexListCellRenderer::calculate_height (Gtk::Widget &widget) const {
+    /* figure out font height */
+    Glib::RefPtr<Pango::Layout> pango_layout = widget.create_pango_layout ("TEST HEIGHT STRING");
+
+    pango_layout->set_font_description (font_description);
+
+    int w, h;
+    pango_layout->get_size (w, h);
+    int content_height = h / Pango::SCALE;
+    return content_height;
+  }
+
   /* cellrenderer overloads {{{ */
   void ThreadIndexListCellRenderer::get_preferred_height_vfunc (
       Gtk::Widget& widget,
       int& minimum_height,
       int& natural_height) const {
+
+    int height = calculate_height (widget) + line_spacing;
 
     minimum_height = height;
     natural_height = height;

@@ -126,9 +126,9 @@ namespace Astroid {
                                     GMIME_FILTER_HTML_CONVERT_ADDRESSES |
                                     GMIME_FILTER_HTML_CITE;
 
-
-        GMimeFilter * html_filter = g_mime_filter_html_new (
-            html_filter_flags, cite_color);
+        GMimeFilter * html_filter;
+        if (html)
+          html_filter = g_mime_filter_html_new (html_filter_flags, cite_color);
 
         GMimeStream * filter_stream = g_mime_stream_filter_new (stream);
 
@@ -152,14 +152,15 @@ namespace Astroid {
 
         g_mime_stream_flush (filter_stream);
 
-        g_object_unref (html_filter); // owned by filter_stream
+        if (html)
+          g_object_unref (html_filter); // owned by filter_stream
         g_object_unref (filter_stream);
         g_object_unref (stream);
         g_object_unref (content);
 
         const char * ss = (const char *) bytearray->get_data ();
 
-        return ustring(ss, bytearray->size());
+        return ustring(ss); // also issues with size in plain-text mode
 
       } else if (g_mime_content_type_is_type (content_type, "text", "html")) {
         cout << "chunk: html text" << endl;
