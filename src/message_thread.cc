@@ -113,6 +113,9 @@ namespace Astroid {
   }
   
   ustring Message::viewable_text (bool html) {
+    /* build message body:
+     * html:      output html (using gmimes html filter)
+     */
     refptr<Chunk> c = root;
     ustring body;
 

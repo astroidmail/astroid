@@ -160,6 +160,8 @@ namespace Astroid {
 
         const char * ss = (const char *) bytearray->get_data ();
 
+        viewable = true;
+
         return ustring(ss); // also issues with size in plain-text mode
 
       } else if (g_mime_content_type_is_type (content_type, "text", "html")) {
@@ -183,14 +185,19 @@ namespace Astroid {
         g_object_unref (content);
 
         const char * ss = (const char *) bytearray->get_data ();
+
+        viewable = true;
+
         return ustring (ss); // TODO: apparently some issues with using the
                              //       bytearray size here..
 
       } else {
+        viewable = false;
         return ustring ("non-viewable part");
       }
     } else {
 
+      viewable = false;
       return ustring("not part");
 
     }
