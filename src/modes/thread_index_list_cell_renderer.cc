@@ -49,6 +49,8 @@ namespace Astroid {
 
     if (thread->unread) {
       font_description.set_weight (Pango::WEIGHT_BOLD);
+    } else {
+      font_description.set_weight (Pango::WEIGHT_NORMAL);
     }
 
     date_start          = left_icons_width_n * left_icons_width +
