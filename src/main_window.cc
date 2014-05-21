@@ -170,7 +170,12 @@ namespace Astroid {
   void MainWindow::del_mode (int c) {
     cout << "mw: del mode: " << c << endl;
     if (c >= 0) {
-      set_active(c - 1);
+      if (c == 0) {
+        set_active (c + 1);
+      } else {
+        set_active (c - 1);
+      }
+
       notebook.remove_page (c); // this should free the widget (?)
 
       if (modes.size() > 0) {
