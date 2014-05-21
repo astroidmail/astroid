@@ -136,10 +136,12 @@ namespace Astroid {
           g_mime_stream_filter_add ((GMimeStreamFilter *) filter_stream,
                                   html_filter);
 
+        /* convert encoding */
         GMimeFilter * filter = g_mime_filter_basic_new(g_mime_data_wrapper_get_encoding(content), false);
         g_mime_stream_filter_add(GMIME_STREAM_FILTER(filter_stream), filter);
         g_object_unref(filter);
 
+        /*
         const char * charset = g_mime_object_get_content_type_parameter(GMIME_OBJECT(mime_object), "charset");
         if (charset)
         {
@@ -147,6 +149,7 @@ namespace Astroid {
             g_mime_stream_filter_add(GMIME_STREAM_FILTER(filter_stream), filter);
             g_object_unref(filter);
         }
+        */
 
         g_mime_data_wrapper_write_to_stream (content, filter_stream);
 
@@ -178,9 +181,18 @@ namespace Astroid {
 
         g_mime_stream_mem_set_owner ((GMimeStreamMem *) stream, false);
 
-        g_mime_data_wrapper_write_to_stream (content, stream);
-        g_mime_stream_flush (stream);
+        GMimeStream * filter_stream = g_mime_stream_filter_new (stream);
 
+        /* convert encoding */
+        GMimeFilter * filter = g_mime_filter_basic_new(g_mime_data_wrapper_get_encoding(content), false);
+        g_mime_stream_filter_add(GMIME_STREAM_FILTER(filter_stream), filter);
+        g_object_unref(filter);
+
+
+        g_mime_data_wrapper_write_to_stream (content, filter_stream);
+        g_mime_stream_flush (filter_stream);
+
+        g_object_unref (filter_stream);
         g_object_unref (stream);
         g_object_unref (content);
 
