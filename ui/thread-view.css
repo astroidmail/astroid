@@ -37,7 +37,7 @@
 body {
     margin: 0 !important;
     padding: 0 !important;
-    font-size: small !important;
+    font-size: normal !important;
     -webkit-user-select: none;
     -webkit-user-drag: none;
 }
@@ -442,7 +442,7 @@ body.nohide .email .compressed_note > span {
     clear: both;
     overflow: hidden;
     /*font-size: 9pt;*/
-    font-size: small;
+    font-size: normal;
 }
 .header .field .title,
 .header .field .value {
