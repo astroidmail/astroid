@@ -88,6 +88,9 @@ namespace Astroid {
       default_config.put ("accounts.charlie.gpgkey", "");
       default_config.put ("accounts.charlie.sendmail", "msmtp -t");
       default_config.put ("accounts.charlie.default", true);
+
+      /* default searches, also only set if initial */
+      default_config.put("startup.queries.unread", "tag:unread");
     }
 
     /* ui behaviour */

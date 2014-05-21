@@ -82,7 +82,18 @@ namespace Astroid {
 
     /* start up default window with default buffers */
     MainWindow * mw = new MainWindow (); // is freed / destroyed by application
-    mw->add_mode (new ThreadIndex (mw, "tag:new"));
+
+    ptree qpt = config->config.get_child ("startup.queries");
+
+    for (const auto &kv : qpt) {
+      ustring name = kv.first;
+      ustring query = kv.second.data();
+
+      cout << "astroid: got query: " << name << ": " << query << endl;
+      mw->add_mode (new ThreadIndex (mw, query));
+    }
+
+    mw->set_active (0);
 
     main_windows.push_back (mw);
     main_windows.shrink_to_fit ();
