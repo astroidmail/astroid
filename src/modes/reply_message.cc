@@ -27,10 +27,14 @@ namespace Astroid {
 
     /* quote original message */
     tmpfile.open (tmpfile_path.c_str(), fstream::out);
-    tmpfile << ustring::compose ("%1 wrote on %2:", msg->sender, msg->date())
+
+    ustring quoting_a = ustring::compose ("%1 wrote on %2:", msg->sender.raw(), msg->date());
+
+    tmpfile << quoting_a.raw ()
             << endl;
 
-    tmpfile << msg->viewable_text (false) << endl;
+    string vt = msg->viewable_text(false);
+    tmpfile << vt << endl;
     tmpfile.close ();
 
 

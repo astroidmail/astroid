@@ -99,18 +99,24 @@ namespace Astroid {
     if (GMIME_IS_PART(mime_object)) {
       cout << "chunk: body: part" << endl;
       if (g_mime_content_type_is_type (content_type, "text", "plain")) {
-        cout << "chunk: plain text" << endl;
+        cout << "chunk: plain text (out html: " << html << ")" << endl;
 
         GMimeDataWrapper * content = g_mime_part_get_content_object (
             (GMimePart *) mime_object);
 
 
-        refptr<Glib::ByteArray> bytearray = Glib::ByteArray::create ();
+        //refptr<Glib::ByteArray> bytearray = Glib::ByteArray::create ();
 
+        /*
         GMimeStream * stream =
           g_mime_stream_mem_new_with_byte_array (bytearray->gobj());
         g_mime_stream_mem_set_owner ((GMimeStreamMem *) stream, false);
+        */
+        GMimeStream * stream =
+          g_mime_stream_mem_new ();
 
+
+        GMimeStream * filter_stream = g_mime_stream_filter_new (stream);
 
         /* convert to html */
         guint32 cite_color = 0x1e1e1e;
@@ -126,34 +132,49 @@ namespace Astroid {
                                     GMIME_FILTER_HTML_CONVERT_ADDRESSES |
                                     GMIME_FILTER_HTML_CITE;
 
-        GMimeFilter * html_filter;
-        if (html)
-          html_filter = g_mime_filter_html_new (html_filter_flags, cite_color);
-
-        GMimeStream * filter_stream = g_mime_stream_filter_new (stream);
-
-        if (html)
-          g_mime_stream_filter_add ((GMimeStreamFilter *) filter_stream,
-                                  html_filter);
-
         /* convert encoding */
+        cout << "enc: " << g_mime_content_encoding_to_string(g_mime_data_wrapper_get_encoding (content)) << endl;
         GMimeFilter * filter = g_mime_filter_basic_new(g_mime_data_wrapper_get_encoding(content), false);
         g_mime_stream_filter_add(GMIME_STREAM_FILTER(filter_stream), filter);
         g_object_unref(filter);
 
-        /*
         const char * charset = g_mime_object_get_content_type_parameter(GMIME_OBJECT(mime_object), "charset");
+        cout << "charset: " << charset << endl;
+        if (string(charset) == "utf-8") {
+          cout << "yeah" << endl;
+          charset = "UTF-8";
+        }
         if (charset)
         {
             GMimeFilter * filter = g_mime_filter_charset_new(charset, "UTF-8");
             g_mime_stream_filter_add(GMIME_STREAM_FILTER(filter_stream), filter);
             g_object_unref(filter);
         }
-        */
+
+        GMimeFilter * html_filter;
+        if (html)
+          html_filter = g_mime_filter_html_new (html_filter_flags, cite_color);
+
+
+        if (html)
+          g_mime_stream_filter_add ((GMimeStreamFilter *) filter_stream,
+                                  html_filter);
 
         g_mime_data_wrapper_write_to_stream (content, filter_stream);
 
         g_mime_stream_flush (filter_stream);
+
+
+        GByteArray * ba = g_mime_stream_mem_get_byte_array (GMIME_STREAM_MEM(stream));
+
+        viewable = true;
+
+        gchar * str = (gchar*)(ba->data);
+        guint   len = ba->len;
+
+        //cout << "str: " << str << endl;
+
+        ustring ss (str);
 
         if (html)
           g_object_unref (html_filter); // owned by filter_stream
@@ -161,11 +182,7 @@ namespace Astroid {
         g_object_unref (stream);
         g_object_unref (content);
 
-        const char * ss = (const char *) bytearray->get_data ();
-
-        viewable = true;
-
-        return ustring(ss); // also issues with size in plain-text mode
+        return ss; // also issues with size in plain-text mode
 
       } else if (g_mime_content_type_is_type (content_type, "text", "html")) {
         cout << "chunk: html text" << endl;
