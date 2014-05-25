@@ -171,16 +171,19 @@ namespace Astroid {
 
         gchar * str = (gchar*)(ba->data);
         guint   len = ba->len;
+        char  * buf = new char[len+1];
+        strncpy (buf, str, len);
+        buf[len] = 0;
 
-        //cout << "str: " << str << endl;
-
-        ustring ss (str);
+        ustring ss (buf, len);
 
         if (html)
           g_object_unref (html_filter); // owned by filter_stream
         g_object_unref (filter_stream);
         g_object_unref (stream);
         g_object_unref (content);
+
+        cout << "s: " << buf << endl;
 
         return ss; // also issues with size in plain-text mode
 
@@ -209,17 +212,22 @@ namespace Astroid {
         g_mime_data_wrapper_write_to_stream (content, filter_stream);
         g_mime_stream_flush (filter_stream);
 
+
+        const char * ss = (const char *) bytearray->get_data ();
+        char buf[bytearray->size()+1];
+        strncpy (buf, ss, bytearray->size());
+        buf[bytearray->size()] = 0;
+
+        viewable = true;
+
+        ustring uss (buf, bytearray->size()); // TODO: apparently some issues with using the
+                                              //       bytearray size here..
         g_object_unref (filter_stream);
         g_object_unref (stream);
         g_object_unref (content);
 
-        const char * ss = (const char *) bytearray->get_data ();
-
-        viewable = true;
-
-        return ustring (ss); // TODO: apparently some issues with using the
-                             //       bytearray size here..
-
+        cout << "s: " << uss << endl;
+        return uss;
       } else {
         viewable = false;
         return ustring ("non-viewable part");
