@@ -322,6 +322,7 @@ namespace Astroid {
 
     if (authors.size() >= authors_len) {
       authors = authors.substr (0, authors_len);
+      UstringUtils::trim_right(authors);
       authors += ".";
     }
 
