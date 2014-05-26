@@ -113,7 +113,7 @@ namespace Astroid {
      * html:      output html (using gmimes html filter)
      */
     refptr<Chunk> c = root;
-    ustring body;
+    stringstream body;
 
     function< void (refptr<Chunk>) > app_body =
       [&] (refptr<Chunk> c)
@@ -139,7 +139,7 @@ namespace Astroid {
       }
 
       if (use) {
-        if (c->viewable) body += c->viewable_text(html);
+        if (c->viewable) body << c->viewable_text(html);
 
         for_each (c->kids.begin(),
                   c->kids.end (),
@@ -149,7 +149,7 @@ namespace Astroid {
 
     app_body (c);
 
-    return body;
+    return ustring(body.str());
   }
 
   ustring Message::date () {

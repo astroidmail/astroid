@@ -136,24 +136,25 @@ namespace Astroid {
         g_mime_stream_filter_add(GMIME_STREAM_FILTER(filter_stream), filter);
         g_object_unref(filter);
 
-        cout << "charset: " << charset << endl;
-        if (string(charset) == "utf-8") {
-          charset = "UTF-8";
-        }
         if (charset)
         {
-            GMimeFilter * filter = g_mime_filter_charset_new(charset, "UTF-8");
-            g_mime_stream_filter_add(GMIME_STREAM_FILTER(filter_stream), filter);
-            g_object_unref(filter);
+          cout << "charset: " << charset << endl;
+          if (string(charset) == "utf-8") {
+            charset = "UTF-8";
+          }
+
+          GMimeFilter * filter = g_mime_filter_charset_new(charset, "UTF-8");
+          g_mime_stream_filter_add(GMIME_STREAM_FILTER(filter_stream), filter);
+          g_object_unref(filter);
+        } else {
+          cout << "charset: not defined." << endl;
         }
 
         GMimeFilter * html_filter;
-        if (html)
-          html_filter = g_mime_filter_html_new (html_filter_flags, cite_color);
-
-
         if (html) {
-          g_mime_stream_filter_add ((GMimeStreamFilter *) filter_stream,
+
+          html_filter = g_mime_filter_html_new (html_filter_flags, cite_color);
+          g_mime_stream_filter_add (GMIME_STREAM_FILTER(filter_stream),
                                   html_filter);
           g_object_unref (html_filter);
         }
@@ -180,16 +181,21 @@ namespace Astroid {
         g_mime_stream_filter_add(GMIME_STREAM_FILTER(filter_stream), filter);
         g_object_unref(filter);
 
-        cout << "charset: " << charset << endl;
-        if (string(charset) == "utf-8") {
-          charset = "UTF-8";
-        }
         if (charset)
         {
-            GMimeFilter * filter = g_mime_filter_charset_new(charset, "UTF-8");
-            g_mime_stream_filter_add(GMIME_STREAM_FILTER(filter_stream), filter);
-            g_object_unref(filter);
+          cout << "charset: " << charset << endl;
+          if (string(charset) == "utf-8") {
+            charset = "UTF-8";
+          }
+
+          GMimeFilter * filter = g_mime_filter_charset_new(charset, "UTF-8");
+          g_mime_stream_filter_add(GMIME_STREAM_FILTER(filter_stream), filter);
+          g_object_unref(filter);
+        } else {
+          cout << "charset: not defined" << endl;
         }
+
+
 
         g_mime_stream_reset (stream);
 

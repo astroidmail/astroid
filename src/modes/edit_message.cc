@@ -261,9 +261,11 @@ namespace Astroid {
           esc_count     = 0;
           editor_active = true;
 
-          if (send_default)
+          if (send_default) {
             vim_remote_keys (default_cmd_on_enter);
-          else send_default = true;
+          } else {
+            send_default = true;
+          }
 
         } else {
 

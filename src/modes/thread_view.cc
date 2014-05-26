@@ -153,6 +153,7 @@ namespace Astroid {
           render_post ();
 
         }
+      default:
         break;
     }
 
