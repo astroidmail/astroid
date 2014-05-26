@@ -21,4 +21,21 @@ namespace Astroid {
       add.push_back (toggle_tag);
     }
   }
+
+  SpamAction::SpamAction (refptr<NotmuchThread> nmt)
+    : TagAction (nmt) {
+      ustring spam = "spam";
+      ustring inbox = "inbox";
+
+      if (find (nmt->tags.begin(), nmt->tags.end(), spam) != nmt->tags.end())
+      {
+        remove.push_back (spam);
+      } else {
+        add.push_back (spam);
+        if (find (nmt->tags.begin(), nmt->tags.end(), inbox) != nmt->tags.end())
+        {
+          remove.push_back (inbox);
+        }
+      }
+    }
 }

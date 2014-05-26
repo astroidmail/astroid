@@ -11,5 +11,10 @@ namespace Astroid {
       ToggleAction (refptr<NotmuchThread>, ustring);
   };
 
+  class SpamAction : public TagAction {
+    public:
+      SpamAction (refptr<NotmuchThread>);
+  };
+
 }
 

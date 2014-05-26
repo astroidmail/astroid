@@ -288,7 +288,7 @@ namespace Astroid {
           auto thread = get_current_thread ();
           if (thread) {
 
-            main_window->actions.doit (refptr<Action>(new ToggleAction(thread, "spam")));
+            main_window->actions.doit (refptr<Action>(new SpamAction(thread)));
 
             /* update row */
             update_current_row ();
