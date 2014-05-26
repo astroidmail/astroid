@@ -48,8 +48,6 @@ namespace Astroid {
 
     messages = notmuch_query_search_messages (query);
 
-    int i = 0;
-
     for (;
          notmuch_messages_valid (messages);
          notmuch_messages_move_to_next (messages)) {
@@ -64,7 +62,7 @@ namespace Astroid {
       aths = VectorUtils::split_and_trim (astr, ",");
       for (ustring &a : aths) add_contact (a);
 
-      if (contacts.size() >= n) break;
+      if (static_cast<int>(contacts.size()) >= n) break;
     }
 
     notmuch_messages_destroy (messages);
@@ -125,7 +123,7 @@ namespace Astroid {
    */
   ustring Contacts::ContactCompletion::get_partial_contact (ustring c) {
     // TODO: handle completions when not editing the last contact
-    int n = c.find_last_of (",");
+    uint n = c.find_last_of (",");
     if (n == ustring::npos) return c;
 
     c = c.substr (n+1, c.size());
@@ -169,7 +167,7 @@ namespace Astroid {
       ustring completion = row[m_columns.m_cont];
 
       ustring t = entry->get_text ();
-      int n = t.find_last_of (",");
+      uint n = t.find_last_of (",");
       if (n == ustring::npos) n = 0;
 
       t = t.substr (0, n);

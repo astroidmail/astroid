@@ -75,7 +75,7 @@ libs   = ['notmuch',
           'boost_program_options',]
 
 env.Append (LIBS = libs)
-env.Append (CPPFLAGS = ['-g', '-std=c++11', '-pthread'] )
+env.Append (CPPFLAGS = ['-g', '-Wall', '-std=c++11', '-pthread'] )
 
 # write version file
 print ("writing src/version.hh..")

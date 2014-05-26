@@ -44,7 +44,7 @@ namespace Astroid {
                                 return a.isdefault;
                                }) - accounts.begin());
 
-    if (default_account >= accounts.size()) {
+    if (default_account >= static_cast<int>(accounts.size())) {
       cout << "ac: no default account set, using first." << endl;
       default_account = 0;
       accounts[0].isdefault = true;

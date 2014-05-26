@@ -170,6 +170,7 @@ namespace Astroid {
       cout << "cm: sending disabled in config, message written to: " << fname << endl;
 
       write (fname);
+      return false;
     }
   }
 
