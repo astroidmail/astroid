@@ -251,6 +251,9 @@ namespace Astroid {
          * as far as I can see, there are no other way to
          * programatically set focus to a widget inside an embedded
          * child (except for the user to press Tab).
+         *
+         * TODO: ship, as back up, the necessary code from gtk+
+         *       to move focus to do gtk_socket_focus_forward.
          */
         if (vim_started) {
           gtk_socket_focus_forward (editor_socket->gobj ());
