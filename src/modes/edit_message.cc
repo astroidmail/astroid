@@ -160,6 +160,7 @@ namespace Astroid {
   void EditMessage::socket_realized ()
   {
     cout << "em: socket realized." << endl;
+    socket_ready = true;
 
     if (!vim_started) {
       editor_toggle (true);
@@ -230,6 +231,8 @@ namespace Astroid {
       Gtk::IconSize isize  (Gtk::BuiltinIconSize::ICON_SIZE_BUTTON);
 
       cout << "em: focus editor." << endl;
+      if (!socket_ready) return;
+
       if (in_edit) {
         editor_img->set_from_icon_name ("go-next", isize);
 

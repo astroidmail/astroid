@@ -37,8 +37,9 @@ namespace Astroid {
     tmpfile << vt << endl;
     tmpfile.close ();
 
+    to->set_text (msg->sender);
 
-
+    activate_field (Editor);
   }
 }
 

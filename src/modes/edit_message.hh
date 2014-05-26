@@ -74,6 +74,7 @@ namespace Astroid {
       void plug_added ();
       bool plug_removed ();
       void socket_realized ();
+      bool socket_ready = false;
       bool vim_started = false;
 
       static  int edit_id; // must be incremented each time a new editor is started
