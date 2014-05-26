@@ -108,10 +108,6 @@ namespace Astroid {
                              //       std::something.
   }
 
-  ustring Message::body (bool html) {
-    return root->body(html);
-  }
-  
   ustring Message::viewable_text (bool html) {
     /* build message body:
      * html:      output html (using gmimes html filter)
@@ -143,7 +139,7 @@ namespace Astroid {
       }
 
       if (use) {
-        if (c->viewable) body += c->body(html);
+        if (c->viewable) body += c->viewable_text(html);
 
         for_each (c->kids.begin(),
                   c->kids.end (),

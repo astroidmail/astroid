@@ -21,7 +21,7 @@ namespace Astroid {
       GMimeContentType *  content_type;
       ustring content_id;
 
-      ustring body (bool);
+      ustring viewable_text (bool);
 
       vector<refptr<Chunk>> kids;
       vector<refptr<Chunk>> siblings;
@@ -29,12 +29,12 @@ namespace Astroid {
       bool viewable  = false;
       bool preferred = false;
 
-      map<ustring, GMimeContentType *> viewable_text = {
+      map<ustring, GMimeContentType *> viewable_types = {
         { "plain", g_mime_content_type_new ("text", "plain") },
         { "html" , g_mime_content_type_new ("text", "html") }
       };
 
-      GMimeContentType * preferred_type = viewable_text["plain"];
+      GMimeContentType * preferred_type = viewable_types["plain"];
   };
 }
 

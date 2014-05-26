@@ -6,6 +6,7 @@
 
 # include "astroid.hh"
 # include "chunk.hh"
+# include "gmime_iostream.hh"
 
 namespace Astroid {
   Chunk::Chunk (GMimeObject * mp) : mime_object (mp) {
@@ -95,26 +96,22 @@ namespace Astroid {
     }
   }
 
-  ustring Chunk::body (bool html = true) {
+  ustring Chunk::viewable_text (bool html = true) {
+
+    GMimeStream * content_stream = NULL;
+
     if (GMIME_IS_PART(mime_object)) {
       cout << "chunk: body: part" << endl;
+
+
       if (g_mime_content_type_is_type (content_type, "text", "plain")) {
         cout << "chunk: plain text (out html: " << html << ")" << endl;
 
         GMimeDataWrapper * content = g_mime_part_get_content_object (
             (GMimePart *) mime_object);
 
-
-        //refptr<Glib::ByteArray> bytearray = Glib::ByteArray::create ();
-
-        /*
-        GMimeStream * stream =
-          g_mime_stream_mem_new_with_byte_array (bytearray->gobj());
-        g_mime_stream_mem_set_owner ((GMimeStreamMem *) stream, false);
-        */
-        GMimeStream * stream =
-          g_mime_stream_mem_new ();
-
+        const char * charset = g_mime_object_get_content_type_parameter(GMIME_OBJECT(mime_object), "charset");
+        GMimeStream * stream = g_mime_data_wrapper_get_stream (content);
 
         GMimeStream * filter_stream = g_mime_stream_filter_new (stream);
 
@@ -134,14 +131,13 @@ namespace Astroid {
 
         /* convert encoding */
         cout << "enc: " << g_mime_content_encoding_to_string(g_mime_data_wrapper_get_encoding (content)) << endl;
+
         GMimeFilter * filter = g_mime_filter_basic_new(g_mime_data_wrapper_get_encoding(content), false);
         g_mime_stream_filter_add(GMIME_STREAM_FILTER(filter_stream), filter);
         g_object_unref(filter);
 
-        const char * charset = g_mime_object_get_content_type_parameter(GMIME_OBJECT(mime_object), "charset");
         cout << "charset: " << charset << endl;
         if (string(charset) == "utf-8") {
-          cout << "yeah" << endl;
           charset = "UTF-8";
         }
         if (charset)
@@ -156,36 +152,15 @@ namespace Astroid {
           html_filter = g_mime_filter_html_new (html_filter_flags, cite_color);
 
 
-        if (html)
+        if (html) {
           g_mime_stream_filter_add ((GMimeStreamFilter *) filter_stream,
                                   html_filter);
+          g_object_unref (html_filter);
+        }
 
-        g_mime_data_wrapper_write_to_stream (content, filter_stream);
+        g_mime_stream_reset (stream);
 
-        g_mime_stream_flush (filter_stream);
-
-
-        GByteArray * ba = g_mime_stream_mem_get_byte_array (GMIME_STREAM_MEM(stream));
-
-        viewable = true;
-
-        gchar * str = (gchar*)(ba->data);
-        guint   len = ba->len;
-        char  * buf = new char[len+1];
-        strncpy (buf, str, len);
-        buf[len] = 0;
-
-        ustring ss (buf, len);
-
-        if (html)
-          g_object_unref (html_filter); // owned by filter_stream
-        g_object_unref (filter_stream);
-        g_object_unref (stream);
-        g_object_unref (content);
-
-        cout << "s: " << buf << endl;
-
-        return ss; // also issues with size in plain-text mode
+        content_stream = filter_stream;
 
       } else if (g_mime_content_type_is_type (content_type, "text", "html")) {
         cout << "chunk: html text" << endl;
@@ -193,50 +168,45 @@ namespace Astroid {
         GMimeDataWrapper * content = g_mime_part_get_content_object (
             (GMimePart *) mime_object);
 
-
-        refptr<Glib::ByteArray> bytearray = Glib::ByteArray::create ();
-
-        GMimeStream * stream =
-          g_mime_stream_mem_new_with_byte_array (bytearray->gobj());
-
-        g_mime_stream_mem_set_owner ((GMimeStreamMem *) stream, false);
+        const char * charset = g_mime_object_get_content_type_parameter(GMIME_OBJECT(mime_object), "charset");
+        GMimeStream * stream = g_mime_data_wrapper_get_stream (content);
 
         GMimeStream * filter_stream = g_mime_stream_filter_new (stream);
 
         /* convert encoding */
+        cout << "enc: " << g_mime_content_encoding_to_string(g_mime_data_wrapper_get_encoding (content)) << endl;
+
         GMimeFilter * filter = g_mime_filter_basic_new(g_mime_data_wrapper_get_encoding(content), false);
         g_mime_stream_filter_add(GMIME_STREAM_FILTER(filter_stream), filter);
         g_object_unref(filter);
 
+        cout << "charset: " << charset << endl;
+        if (string(charset) == "utf-8") {
+          charset = "UTF-8";
+        }
+        if (charset)
+        {
+            GMimeFilter * filter = g_mime_filter_charset_new(charset, "UTF-8");
+            g_mime_stream_filter_add(GMIME_STREAM_FILTER(filter_stream), filter);
+            g_object_unref(filter);
+        }
 
-        g_mime_data_wrapper_write_to_stream (content, filter_stream);
-        g_mime_stream_flush (filter_stream);
+        g_mime_stream_reset (stream);
 
-
-        const char * ss = (const char *) bytearray->get_data ();
-        char buf[bytearray->size()+1];
-        strncpy (buf, ss, bytearray->size());
-        buf[bytearray->size()] = 0;
-
-        viewable = true;
-
-        ustring uss (buf, bytearray->size()); // TODO: apparently some issues with using the
-                                              //       bytearray size here..
-        g_object_unref (filter_stream);
-        g_object_unref (stream);
-        g_object_unref (content);
-
-        cout << "s: " << uss << endl;
-        return uss;
-      } else {
-        viewable = false;
-        return ustring ("non-viewable part");
+        content_stream = filter_stream;
       }
+    }
+
+    if (content_stream != NULL) {
+      GMimeIOStream io_stream (content_stream);
+      g_object_unref (content_stream);
+
+      stringstream sstr;
+      sstr << io_stream.rdbuf();
+      return ustring (sstr.str());
     } else {
-
       viewable = false;
-      return ustring("not part");
-
+      return ustring ("non-viewable part");
     }
   }
 

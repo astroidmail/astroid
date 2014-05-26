@@ -35,7 +35,6 @@ namespace Astroid {
       ustring date ();
       vector<ustring> tags ();
 
-      ustring body (bool);
       ustring viewable_text (bool);
   };
 
