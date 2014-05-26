@@ -34,7 +34,12 @@ namespace Astroid {
             << endl;
 
     string vt = msg->viewable_text(false);
-    tmpfile << vt << endl;
+    stringstream sstr (vt);
+    while (sstr.good()) {
+      string line;
+      getline (sstr, line);
+      tmpfile << "> " << line << endl;
+    }
     tmpfile.close ();
 
     to->set_text (msg->sender);
