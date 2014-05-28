@@ -165,8 +165,13 @@ namespace Astroid {
 
     ((Gtk::Label*) tab_widget)->set_text (thread->thread_id);
 
-    mthread = refptr<MessageThread>(new MessageThread (thread));
-    mthread->load_messages ();
+    auto _mthread = refptr<MessageThread>(new MessageThread (thread));
+    _mthread->load_messages ();
+    load_message_thread (_mthread);
+  }
+
+  void ThreadView::load_message_thread (refptr<MessageThread> _mthread) {
+    mthread = _mthread;
 
     ustring s = mthread->subject;
     if (s.size() > MAX_TAB_SUBJECT_LEN)
@@ -255,8 +260,10 @@ namespace Astroid {
     insert_header_address (header, "Date:", m->date (), true);
     insert_header_address (header, "Subject:", m->subject, true);
 
+    /*
     ustring tags_s = VectorUtils::concat_tags (m->tags ());
     insert_header_address (header, "Tags:", tags_s, true);
+    */
 
 
     /* insert header html*/

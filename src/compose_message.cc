@@ -185,6 +185,8 @@ namespace Astroid {
 
     g_object_unref(stream);
 
+    cout << "cm: wrote tmp file: " << message_file << endl;
+
     return message_file;
   }
 

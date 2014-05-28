@@ -31,6 +31,7 @@ namespace Astroid {
       ThreadView ();
       ~ThreadView ();
       void load_thread (refptr<NotmuchThread>);
+      void load_message_thread (refptr<MessageThread>);
 
       refptr<NotmuchThread> thread;
       refptr<MessageThread> mthread;

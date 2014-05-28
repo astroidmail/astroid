@@ -19,9 +19,8 @@ namespace Astroid {
   Message::Message () { }
   Message::Message (ustring _fname) : fname (_fname) {
 
-    if (mid == "") {
-      mid = g_mime_message_get_message_id (message);
-    }
+    cout << "msg: loading message from file: " << fname << endl;
+    load_message ();
 
   }
 
@@ -89,9 +88,14 @@ namespace Astroid {
      *
      */
 
+
     GMimeStream   * stream  = g_mime_stream_file_new_for_path (fname.c_str(), "r");
     GMimeParser   * parser  = g_mime_parser_new_with_stream (stream);
     message = g_mime_parser_construct_message (parser);
+
+    if (mid == "") {
+      mid = g_mime_message_get_message_id (message);
+    }
 
     /* read header fields */
     sender  = g_mime_message_get_sender (message);
@@ -233,6 +237,10 @@ namespace Astroid {
 
     notmuch_threads_destroy (nm_threads);
     notmuch_query_destroy (query);
+  }
+
+  void MessageThread::add_message (ustring fname) {
+    messages.push_back (refptr<Message>(new Message (fname)));
   }
 
   void MessageThread::reload_messages () {

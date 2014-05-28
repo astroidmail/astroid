@@ -63,14 +63,15 @@ namespace Astroid {
       int account_no;
 
       bool check_fields ();
-      void send_message ();
+      bool send_message ();
+      ComposeMessage * make_message ();
 
     protected:
       ptree editor_config;
 
       Gtk::Box *editor_box;
       Gtk::Socket *editor_socket;
-      Gtk::TextView *text_view;
+      ThreadView * thread_view;
       void plug_added ();
       bool plug_removed ();
       void socket_realized ();

@@ -48,6 +48,7 @@ namespace Astroid {
       vector<refptr<Message>> messages;
 
       void load_messages ();
+      void add_message (ustring);
       void reload_messages ();
   };
 }

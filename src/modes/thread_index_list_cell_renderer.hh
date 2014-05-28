@@ -53,7 +53,7 @@ namespace Astroid {
       int left_icons_padding = 2;
       int padding = 5;
 
-      float font_size = 9.0; // TODO: get from settings
+      float font_size = 8.5; // TODO: get from settings
       ustring font_family = "monospace";
       Pango::FontDescription font_description;
       Pango::FontMetrics     font_metrics;
