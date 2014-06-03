@@ -66,6 +66,8 @@ namespace Astroid {
       bool send_message ();
       ComposeMessage * make_message ();
 
+      virtual void prepare_message ();
+
     protected:
       ptree editor_config;
 

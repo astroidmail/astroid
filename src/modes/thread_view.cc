@@ -260,10 +260,10 @@ namespace Astroid {
     insert_header_address (header, "Date:", m->date (), true);
     insert_header_address (header, "Subject:", m->subject, true);
 
-    /*
-    ustring tags_s = VectorUtils::concat_tags (m->tags ());
-    insert_header_address (header, "Tags:", tags_s, true);
-    */
+    if (m->in_notmuch) {
+      ustring tags_s = VectorUtils::concat_tags (m->tags ());
+      insert_header_address (header, "Tags:", tags_s, true);
+    }
 
 
     /* insert header html*/

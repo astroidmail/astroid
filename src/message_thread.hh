@@ -20,6 +20,7 @@ namespace Astroid {
 
       ustring fname;
       ustring mid;
+      bool    in_notmuch;
 
       void load_message ();
 

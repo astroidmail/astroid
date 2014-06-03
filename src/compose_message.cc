@@ -65,7 +65,6 @@ namespace Astroid {
     GMimeStream * contentStream = g_mime_stream_mem_new_with_buffer(body_content.c_str(), body_content.size());
     GMimePart * messagePart = g_mime_part_new_with_type ("text", "plain");
 
-    //g_mime_object_set_content_type (GMIME_OBJECT(messagePart), "text/plain; charset=utf-8; format=flowed");
     g_mime_object_set_content_type_parameter ((GMimeObject *) messagePart, "charset", astroid->config->config.get<string>("editor.charset").c_str());
     g_mime_object_set_content_type_parameter ((GMimeObject *) messagePart, "format", "flowed");
 
@@ -75,9 +74,6 @@ namespace Astroid {
     g_mime_part_set_content_object(messagePart, contentWrapper);
 
     g_mime_message_set_mime_part(message, GMIME_OBJECT(messagePart));
-
-    /* set user agent */
-    g_mime_object_set_header (GMIME_OBJECT(message), "User-Agent", astroid->user_agent.c_str());
 
     g_object_unref(messagePart);
     g_object_unref(contentWrapper);
@@ -99,6 +95,10 @@ namespace Astroid {
     GMimeParser * parser = g_mime_parser_new_with_stream(stream);
     GMimeMessage * message = g_mime_parser_construct_message(parser);
     */
+
+    /* set user agent */
+    g_mime_object_set_header (GMIME_OBJECT(message), "User-Agent", astroid->user_agent.c_str());
+
 
     /* add date to the message */
     struct timeval timeValue;

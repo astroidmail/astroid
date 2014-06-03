@@ -117,7 +117,7 @@ namespace Astroid {
     editor_box->pack_start (*editor_socket, false, false, 2);
     show_all ();
 
-    thread_view = Gtk::manage(new ThreadView()); 
+    thread_view = Gtk::manage(new ThreadView());
     //text_view->set_sensitive (false);
     //text_view->set_editable (false);
     editor_box->pack_start (*thread_view, true, 2);
@@ -148,6 +148,30 @@ namespace Astroid {
 
     in_edit = true;
     activate_field (To);
+
+    prepare_message ();
+  }
+
+  void EditMessage::prepare_message () {
+    auto iter = from_combo->get_active ();
+    if (!iter) {
+      cout << "em: error: no from account selected." << endl;
+      return;
+    }
+
+    auto row = *iter;
+    Account * a = row[from_columns.account];
+    auto from_ia = internet_address_mailbox_new (a->name.c_str(), a->email.c_str());
+    ustring from = internet_address_to_string (from_ia, true);
+
+    tmpfile.open (tmpfile_path.c_str(), fstream::out);
+    tmpfile << "From: " << from << endl;
+    tmpfile << "To: " << endl;
+    tmpfile << "Cc: " << endl;
+    tmpfile << "Subject: " << endl;
+    tmpfile << endl;
+
+    tmpfile.close ();
   }
 
   EditMessage::~EditMessage () {
@@ -211,12 +235,11 @@ namespace Astroid {
       }
 
       editor_socket->hide ();
-      //thread_view->load_thread(refptr<NotmuchThread>(new NotmuchThread("0000000000001e40")));
       auto msgt = refptr<MessageThread>(new MessageThread());
 
       thread_view->show_all ();
 
-
+      /* make message */
       ComposeMessage * c = make_message ();
 
       if (c == NULL) {
@@ -231,7 +254,6 @@ namespace Astroid {
       delete c;
 
       unlink (tmpf.c_str());
-
     }
   }
 

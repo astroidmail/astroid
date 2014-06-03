@@ -16,10 +16,14 @@ namespace Astroid {
    * Message
    * --------
    */
-  Message::Message () { }
+  Message::Message () {
+    in_notmuch = false;
+  }
+
   Message::Message (ustring _fname) : fname (_fname) {
 
     cout << "msg: loading message from file: " << fname << endl;
+    in_notmuch = false;
     load_message ();
 
   }
@@ -29,6 +33,7 @@ namespace Astroid {
      * is valid and not destroyed while initializing */
 
     mid = notmuch_message_get_message_id (message);
+    in_notmuch = true;
 
     cout << "msg: loading mid: " << mid << endl;
 
@@ -45,6 +50,11 @@ namespace Astroid {
 
   vector<ustring> Message::tags () {
     vector<ustring> v;
+
+    if (!in_notmuch) {
+      cout << "mt: error: message not in database." << endl;
+      return v;
+    }
 
     if (mid == "") {
       cout << "mt: error: mid not defined, no tags" << endl;
