@@ -292,7 +292,9 @@ namespace Astroid {
          *       to move focus to do gtk_socket_focus_forward.
          */
         if (vim_started) {
+# ifdef HAVE_GTK_SOCKET_FOCUS_FORWARD
           gtk_socket_focus_forward (editor_socket->gobj ());
+# endif
 
           esc_count     = 0;
           editor_active = true;

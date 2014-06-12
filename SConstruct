@@ -97,7 +97,8 @@ source = (
 conf = Configure(env)
 if not conf.CheckFunc ('gtk_socket_focus_forward'):
   print "gtk_socket_focus_forward is missing, please see: https://bugzilla.gnome.org/show_bug.cgi?id=729248"
-  exit (1)
+else:
+  env.Append (CPPFLAGS = ['-DHAVE_GTK_SOCKET_FOCUS_FORWARD'])
 
 env = conf.Finish ()
 
