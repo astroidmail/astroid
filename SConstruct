@@ -63,6 +63,21 @@ if not GetOption("verbose_flag"):
 
 # Verbose }}}
 
+# set up compiler and linker from env variables
+if os.environ.has_key('CC'):
+  env['CC'] = os.environ['CC']
+if os.environ.has_key('CFLAGS'):
+  env['CCFLAGS'] += SCons.Util.CLVar(os.environ['CFLAGS'])
+if os.environ.has_key('CXX'):
+  env['CXX'] = os.environ['CXX']
+if os.environ.has_key('CXXFLAGS'):
+  env['CXXFLAGS'] += SCons.Util.CLVar(os.environ['CXXFLAGS'])
+if os.environ.has_key('CPPFLAGS'):
+  env['CCFLAGS'] += SCons.Util.CLVar(os.environ['CPPFLAGS'])
+if os.environ.has_key('LDFLAGS'):
+  env['LINKFLAGS'] += SCons.Util.CLVar(os.environ['LDFLAGS'])
+
+
 # external libraries
 env.ParseConfig ('pkg-config --libs --cflags glibmm-2.4')
 env.ParseConfig ('pkg-config --libs --cflags gtkmm-3.0')
