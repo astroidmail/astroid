@@ -54,7 +54,7 @@ namespace Astroid {
     if (vm.count ("help")) {
       cout << desc << endl;
 
-      exit (1);
+      exit (0);
     }
 
     /* load config */
@@ -65,7 +65,7 @@ namespace Astroid {
     }
 
     /* set up gtk */
-    int aargc = 1;
+    int aargc = 1; // TODO: allow GTK to get some options aswell.
     app = Gtk::Application::create (aargc, argv, "org.astroid");
 
     /* notmuch db */
@@ -113,7 +113,7 @@ namespace Astroid {
   void Astroid::quit () {
     cout << "astroid: goodbye!" << endl;
 
-    /* remove modes */
+    /* remove modes (TODO: should be done in ~mainwindow) */
     for (auto mw : main_windows) {
       mw->remove_all_modes ();
     }
