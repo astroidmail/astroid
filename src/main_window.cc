@@ -180,7 +180,6 @@ namespace Astroid {
 
       if (modes.size() > 0) {
         auto it = modes.begin () + c;
-        Mode * m = *it;
         modes.erase (it);
 
         // mode is deleted by Gtk::manage.
@@ -201,7 +200,7 @@ namespace Astroid {
 
   void MainWindow::unset_active () {
     if (current >= 0) {
-      if (modes.size() > current) {
+      if (static_cast<int>(modes.size()) > current) {
         cout << "mw: release modal, from: " << current << endl;
         modes[current]->release_modal ();
         lastcurrent = current;
