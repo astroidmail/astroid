@@ -15,6 +15,7 @@ namespace Astroid {
     public:
       Message ();
       Message (ustring _fname);
+      Message (ustring _mid, ustring _fname);
       Message (notmuch_message_t *);
       ~Message ();
 

@@ -28,6 +28,7 @@ namespace Astroid {
 
       vector<Account> accounts;
       int default_account;
+      Account * get_account_for_address (ustring);
   };
 }
 

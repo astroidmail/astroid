@@ -7,6 +7,7 @@
 # include "astroid.hh"
 # include "config.hh"
 # include "compose_message.hh"
+# include "message_thread.hh"
 # include "account_manager.hh"
 
 using namespace std;
@@ -80,8 +81,24 @@ namespace Astroid {
     g_object_unref(contentStream);
   }
 
-  void ComposeMessage::load_message (ustring fname) {
-    /* TODO: load message from fname */
+  void ComposeMessage::load_message (ustring _mid, ustring fname) {
+    set_id (_mid);
+    Message msg (_mid, fname);
+
+    set_from (astroid->accounts->get_account_for_address (msg.sender));
+
+    char * cto = internet_address_list_to_string (msg.to(), false);
+    if (cto) set_to (cto);
+
+    cto = internet_address_list_to_string (msg.cc(), false);
+    if (cto) set_cc (cto);
+
+    cto = internet_address_list_to_string (msg.bcc(), false);
+    if (cto) set_bcc (cto);
+
+    set_subject (msg.subject);
+    body << msg.viewable_text (false);
+
   }
 
   void ComposeMessage::finalize () {

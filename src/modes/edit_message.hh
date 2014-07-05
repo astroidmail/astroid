@@ -28,27 +28,22 @@ namespace Astroid {
 
       enum Field {
         From = 0,
-        To,
-        Cc,
-        Bcc,
-        Subject,
+        Encryption,
         Editor,
         no_fields // last
       };
 
-      Gtk::Entry *to, *cc, *bcc, *subject;
-      Gtk::ComboBox *from_combo;
-
-      Contacts * contacts;
-      refptr<Contacts::ContactCompletion> contact_completion;
-
-      Gtk::Image *editor_img;
-      vector<Gtk::Entry *> fields;
+      Gtk::ComboBox *from_combo, *encryption_combo;
 
       Field current_field = From;
       void activate_field (Field);
 
       ustring msg_id;
+
+      ustring to;
+      ustring cc;
+      ustring bcc;
+      ustring subject;
 
       /* from combobox */
       class FromColumns : public Gtk::TreeModel::ColumnRecord {
@@ -71,9 +66,9 @@ namespace Astroid {
     protected:
       ptree editor_config;
 
-      Gtk::Box *editor_box;
-      Gtk::Socket *editor_socket;
-      ThreadView * thread_view;
+      Gtk::Box *    editor_box;
+      Gtk::Socket * editor_socket;
+      ThreadView *  thread_view;
       void plug_added ();
       bool plug_removed ();
       void socket_realized ();

@@ -51,6 +51,17 @@ namespace Astroid {
     }
   }
 
+  Account * AccountManager::get_account_for_address (ustring address) {
+    for (auto &a : accounts) {
+      if (a.full_address() == address) {
+        return &a;
+      }
+    }
+
+    cout << "ac: error: could not figure out which account: " << address << " belongs to." << endl;
+    return NULL;
+  }
+
   AccountManager::~AccountManager () {
     cout << "ac: deinitializing." << endl;
 

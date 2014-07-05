@@ -16,13 +16,13 @@ namespace Astroid {
 
     /* set subject */
     if (!(msg->subject.find_first_of ("Re:") == 0)) {
-      subject->set_text (ustring::compose ("Re: %1", msg->subject));
+      subject = ustring::compose ("Re: %1", msg->subject);
     } else {
-      subject->set_text (msg->subject);
+      subject = msg->subject;
     }
 
-    if (subject->get_text ().size () > 0) {
-      ((Gtk::Label*)tab_widget)->set_text ("New message: " + subject->get_text ());
+    if (subject.size () > 0) {
+      ((Gtk::Label*)tab_widget)->set_text ("New message: " + subject);
     }
 
     /* quote original message */
@@ -42,7 +42,7 @@ namespace Astroid {
     }
     tmpfile.close ();
 
-    to->set_text (msg->sender);
+    to = msg->sender;
 
     activate_field (Editor);
   }

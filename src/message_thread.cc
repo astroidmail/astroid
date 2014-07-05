@@ -25,7 +25,14 @@ namespace Astroid {
     cout << "msg: loading message from file: " << fname << endl;
     in_notmuch = false;
     load_message ();
+  }
 
+  Message::Message (ustring _mid, ustring _fname) {
+    mid = _mid;
+    fname = _fname;
+    cout << "msg: loading message from file (mid supplied): " << fname << endl;
+    in_notmuch = false;
+    load_message ();
   }
 
   Message::Message (notmuch_message_t *message) {

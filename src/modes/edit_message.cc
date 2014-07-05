@@ -25,7 +25,6 @@ namespace Astroid {
 
   EditMessage::EditMessage () {
     editor_config = astroid->config->config.get_child ("editor");
-    contacts = astroid->contacts;
 
     tmpfile_path = astroid->config->runtime_dir;
 
@@ -36,30 +35,9 @@ namespace Astroid {
     builder->get_widget ("box_message", box_message);
 
     builder->get_widget ("from_combo", from_combo);
-    builder->get_widget ("to", to);
-    builder->get_widget ("cc", cc);
-    builder->get_widget ("bcc", bcc);
-    builder->get_widget ("subject", subject);
+    builder->get_widget ("encryption_combo", encryption_combo);
 
     builder->get_widget ("editor_box", editor_box);
-    builder->get_widget ("editor_img", editor_img);
-
-    /* must be in the same order as enum Field */
-    fields.push_back (to);
-    fields.push_back (cc);
-    fields.push_back (bcc);
-    fields.push_back (subject);
-
-    /* set up completion */
-    contact_completion = refptr<Contacts::ContactCompletion>(new Contacts::ContactCompletion());
-
-    to->set_completion (contact_completion);
-
-    /*
-    contact_completion->set_match_func (sigc::mem_fun (contacts,
-          &Contacts::match_contact));
-
-          */
 
     pack_start (*box_message, true, 5);
 
@@ -146,8 +124,7 @@ namespace Astroid {
 
     from_combo->pack_start (from_columns.name_and_address);
 
-    in_edit = true;
-    activate_field (To);
+    activate_field (From);
 
     prepare_message ();
   }
@@ -189,17 +166,14 @@ namespace Astroid {
     cout << "em: socket realized." << endl;
     socket_ready = true;
 
-    if (!vim_started) {
-      editor_toggle (true);
-    }
-
+    editor_toggle (false);
   }
 
   void EditMessage::plug_added () {
     cout << "em: gvim connected" << endl;
     gtk_box_set_child_packing (editor_box->gobj (), GTK_WIDGET(editor_socket->gobj ()), true, true, 5, GTK_PACK_END);
 
-    if (current_field == Editor && in_edit) {
+    if (current_field == Editor) {
       /* vim has been started with user input */
       activate_field (current_field);
     }
@@ -270,8 +244,6 @@ namespace Astroid {
       if (!socket_ready) return;
 
       if (in_edit) {
-        editor_img->set_from_icon_name ("go-next", isize);
-
         editor_socket->set_sensitive (true);
         editor_socket->set_can_focus (true);
 
@@ -310,56 +282,30 @@ namespace Astroid {
           editor_toggle (true);
 
         }
-
-      } else {
-        editor_img->set_from_icon_name ("media-playback-stop", isize);
       }
 
 
     } else if (f == From) {
       //from_combo->set_sensitive (true);
       from_combo->grab_focus ();
-    } else {
-      if (in_edit) {
-        fields[current_field - To]->set_icon_from_icon_name ("go-next");
-        fields[current_field - To]->set_sensitive (true);
-        fields[current_field - To]->set_position (-1);
-        if (current_field >= To && current_field <= Bcc) {
-          fields[current_field - To]->set_completion (contact_completion);
-        }
-      } else {
-        fields[current_field - To]->set_icon_from_icon_name ("media-playback-stop");
-      }
-      fields[current_field - To]->grab_focus ();
+    } else if (f == Encryption) {
+      encryption_combo->grab_focus ();
     }
 
     /* update tab in case something changed */
-    if (subject->get_text ().size () > 0) {
-      ((Gtk::Label*)tab_widget)->set_text ("New message: " + subject->get_text ());
+    if (subject.size () > 0) {
+      ((Gtk::Label*)tab_widget)->set_text ("New message: " + subject);
     }
   }
 
   void EditMessage::reset_fields () {
-    for_each (fields.begin (),
-              fields.end (),
-              [&](Gtk::Entry * e) {
-                reset_entry (e);
-              });
-
-    if (current_field >= To && current_field < Field::Editor)
-      //fields[current_field - To]->set_sensitive (false);
 
     /* reset from combo */
     from_combo->popdown ();
+    encryption_combo->popdown ();
     //from_combo->set_sensitive (false);
 
     /* reset editor */
-    Gtk::IconSize isize  (Gtk::BuiltinIconSize::ICON_SIZE_BUTTON);
-    editor_img->set_from_icon_name ("", isize);
-    int w, h;
-    Gtk::IconSize::lookup (isize, w, h);
-    editor_img->set_size_request (w, h);
-
     editor_active = false;
     //editor_socket->set_sensitive (false);
     editor_socket->set_can_focus (false);
@@ -371,135 +317,21 @@ namespace Astroid {
     }
   }
 
-  void EditMessage::reset_entry (Gtk::Entry *e) {
-    e->set_icon_from_icon_name ("");
-    e->set_activates_default (true);
-
-    e->set_completion (refptr<Gtk::EntryCompletion>());
-  }
-
   bool EditMessage::on_key_press_event (GdkEventKey * event) {
     cout << "em: got key press" << endl;
-    if (editor_active) {
-      switch (event->keyval) {
-        case GDK_KEY_Escape:
-          {
-            if ((double_esc_deactivates && esc_count == 1) || event->state & GDK_SHIFT_MASK) {
-              if (in_edit) {
-                in_edit = false;
-                activate_field (current_field);
-              }
-
-              return true;
-
-            } else {
-              esc_count++;
-            }
-
-            return false;
+    switch (event->keyval) {
+      case GDK_KEY_Return:
+        {
+          if (!editor_active) {
+            editor_active = true;
+            in_edit       = true;
+            activate_field (Editor);
+            return true;
           }
-        default:
-          esc_count = 0;
-          return false; // let editor handle
-      }
-    } else {
-      if (in_edit) {
-        switch (event->keyval) {
-          case GDK_KEY_Down:
-            if (current_field == From && in_edit) {
-              from_combo->popup();
-              return true;
-            }
-            return false;
-
-          case GDK_KEY_Return:
-            {
-              // go to next field
-              activate_field ((Field) ((current_field+1) % ((int)no_fields)));
-              return true;
-            }
-
-          case GDK_KEY_Escape:
-            {
-              in_edit = false;
-              activate_field (current_field);
-              return true;
-            }
-
-
-          default:
-            return false;
         }
-
-      } else {
-
-        switch (event->keyval) {
-          case GDK_KEY_Right:
-            if (current_field == From) {
-              int act = from_combo->get_active_row_number ();
-              if (act < (account_no-1) )
-                from_combo->set_active (++from_combo->get_active());
-              return true;
-            }
-
-          case GDK_KEY_Left:
-            if (current_field == From) {
-              int act = from_combo->get_active_row_number ();
-              if (act > 0)
-                from_combo->set_active (--from_combo->get_active());
-              return true;
-            }
-
-          case GDK_KEY_Down:
-          case GDK_KEY_j:
-            activate_field ((Field) ((current_field+1) % ((int)no_fields)));
-            return true;
-
-          case GDK_KEY_Tab:
-            {
-              activate_field ((Field) ((current_field+1) % ((int)no_fields)));
-              return true;
-            }
-
-          case GDK_KEY_Up:
-          case GDK_KEY_k:
-            activate_field ((Field) (((current_field)+((int)no_fields)-1) % ((int)no_fields)));
-            return true;
-
-          case GDK_KEY_Return:
-            {
-              in_edit = true;
-              activate_field (current_field);
-              return true;
-            }
-
-          case GDK_KEY_y:
-            {
-              send_message ();
-              return true;
-            }
-
-          /* commonly used insert-mode chars */
-          case GDK_KEY_a:
-          case GDK_KEY_A:
-          case GDK_KEY_o:
-          case GDK_KEY_O:
-          case GDK_KEY_i:
-          case GDK_KEY_I:
-            if (current_field == Editor) {
-              send_default = false;
-              in_edit = true;
-              activate_field (current_field);
-              vim_remote_keys (ustring(1, char(event->keyval)));
-              return true;
-            }
-            return false;
-
-          default:
-            return true;
-        }
-      }
     }
+
+    return false;
   }
 
   bool EditMessage::check_fields () {
@@ -531,7 +363,7 @@ namespace Astroid {
   ComposeMessage * EditMessage::make_message () {
 
     if (!check_fields ()) {
-      cout << "em: error problem with some of the input fields.." << endl;
+      cout << "em: error, problem with some of the input fields.." << endl;
       return NULL;
     }
 
@@ -541,21 +373,24 @@ namespace Astroid {
       return NULL;
     }
 
-    auto row = *iter;
 
 
     ComposeMessage * c = new ComposeMessage ();
 
+    /*
     c->set_id (msg_id);
+    auto row = *iter;
     c->set_from (row[from_columns.account]);
-    c->set_to (to->get_text());
-    c->set_cc (cc->get_text());
-    c->set_bcc (bcc->get_text());
-    c->set_subject (subject->get_text());
+    c->set_to (to);
+    c->set_cc (cc);
+    c->set_bcc (bcc);
+    c->set_subject (subject);
 
     tmpfile.open (tmpfile_path.c_str(), fstream::in);
     c->body << tmpfile.rdbuf();
     tmpfile.close ();
+    */
+    c->load_message (msg_id, tmpfile_path.c_str());
 
     c->build ();
     c->finalize ();

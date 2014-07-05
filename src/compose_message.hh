@@ -34,7 +34,7 @@ namespace Astroid {
 
       void add_attachment (path);
 
-      void load_message (ustring); // load draft or message as new
+      void load_message (ustring, ustring); // load draft or message as new
 
       void build ();    // call to build message from content
       void finalize (); // call before sending
