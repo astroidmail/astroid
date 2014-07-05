@@ -174,6 +174,7 @@ namespace Astroid {
     if (start_vim_on_socket_ready) {
       editor_toggle (true);
       activate_field (Editor);
+      start_vim_on_socket_ready = false;
     }
   }
 
