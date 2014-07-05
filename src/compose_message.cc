@@ -85,7 +85,12 @@ namespace Astroid {
     set_id (_mid);
     Message msg (_mid, fname);
 
-    set_from (astroid->accounts->get_account_for_address (msg.sender));
+    Account * from = astroid->accounts->get_account_for_address (msg.sender);
+    if (from == NULL) {
+      cout << "cm: warning: unknown sending address, using default." << endl;
+      from = &(astroid->accounts->accounts[astroid->accounts->default_account]);
+    }
+    set_from (from);
 
     char * cto = internet_address_list_to_string (msg.to(), false);
     if (cto) set_to (cto);

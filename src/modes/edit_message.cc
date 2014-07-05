@@ -367,17 +367,14 @@ namespace Astroid {
       return NULL;
     }
 
+    ComposeMessage * c = new ComposeMessage ();
+
+    /*
     auto iter = from_combo->get_active ();
     if (!iter) {
       cout << "em: error: no from account selected." << endl;
       return NULL;
     }
-
-
-
-    ComposeMessage * c = new ComposeMessage ();
-
-    /*
     c->set_id (msg_id);
     auto row = *iter;
     c->set_from (row[from_columns.account]);
@@ -391,6 +388,16 @@ namespace Astroid {
     tmpfile.close ();
     */
     c->load_message (msg_id, tmpfile_path.c_str());
+
+    /* set account selector to from address email */
+    Account * account = c->account;
+    for (Gtk::TreeRow row : from_store->children ()) {
+      //auto row = *iter;
+      if (row[from_columns.account] == account) {
+        from_combo->set_active (row);
+        break;
+      }
+    }
 
     c->build ();
     c->finalize ();
