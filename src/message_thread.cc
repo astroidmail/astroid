@@ -230,11 +230,6 @@ namespace Astroid {
       c++;
     }
 
-    if (c != 1) {
-      cout << "mt: error: got more than one thread for id: " << thread->thread_id << endl;
-      return;
-    }
-
     /* update values */
     const char * s = notmuch_thread_get_subject (nm_thread);
     subject     = ustring (s);
