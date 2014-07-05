@@ -149,7 +149,7 @@ namespace Astroid {
     if (bcc.size() > 0) {
       tmpfile << "Bcc: " << bcc << endl;
     }
-    tmpfile << "Subject: " << endl;
+    tmpfile << "Subject: " << subject << endl;
     tmpfile << endl;
     tmpfile << body;
 
@@ -342,6 +342,12 @@ namespace Astroid {
             activate_field (Editor);
             return true;
           }
+        }
+
+      case GDK_KEY_y:
+        {
+          send_message ();
+          return true;
         }
     }
 
