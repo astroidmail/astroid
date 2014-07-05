@@ -130,9 +130,12 @@ namespace Astroid {
                                     GMIME_FILTER_HTML_CITE;
 
         /* convert encoding */
-        cout << "enc: " << g_mime_content_encoding_to_string(g_mime_data_wrapper_get_encoding (content)) << endl;
+        GMimeContentEncoding enc = g_mime_data_wrapper_get_encoding (content);
+        if (enc) {
+          cout << "enc: " << g_mime_content_encoding_to_string(enc) << endl;
+        }
 
-        GMimeFilter * filter = g_mime_filter_basic_new(g_mime_data_wrapper_get_encoding(content), false);
+        GMimeFilter * filter = g_mime_filter_basic_new(enc, false);
         g_mime_stream_filter_add(GMIME_STREAM_FILTER(filter_stream), filter);
         g_object_unref(filter);
 
@@ -175,9 +178,12 @@ namespace Astroid {
         GMimeStream * filter_stream = g_mime_stream_filter_new (stream);
 
         /* convert encoding */
-        cout << "enc: " << g_mime_content_encoding_to_string(g_mime_data_wrapper_get_encoding (content)) << endl;
+        GMimeContentEncoding enc = g_mime_data_wrapper_get_encoding (content);
+        if (enc) {
+          cout << "enc: " << g_mime_content_encoding_to_string(enc) << endl;
+        }
 
-        GMimeFilter * filter = g_mime_filter_basic_new(g_mime_data_wrapper_get_encoding(content), false);
+        GMimeFilter * filter = g_mime_filter_basic_new(enc, false);
         g_mime_stream_filter_add(GMIME_STREAM_FILTER(filter_stream), filter);
         g_object_unref(filter);
 

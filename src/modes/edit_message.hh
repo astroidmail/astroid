@@ -44,6 +44,7 @@ namespace Astroid {
       ustring cc;
       ustring bcc;
       ustring subject;
+      ustring body;
 
       /* from combobox */
       class FromColumns : public Gtk::TreeModel::ColumnRecord {
@@ -92,12 +93,8 @@ namespace Astroid {
 
       bool in_edit = false;
       bool editor_active = false;
-      int  esc_count = 0;
 
       /* gvim config */
-      bool double_esc_deactivates = true; // set in user config
-      bool send_default = true;
-      string default_cmd_on_enter;
       string gvim_cmd;
       string gvim_args;
 

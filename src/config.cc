@@ -97,8 +97,6 @@ namespace Astroid {
     default_config.put ("thread_index.open_default_paned", true);
 
     /* editor */
-    default_config.put ("editor.gvim.double_esc_deactivates", true);
-    default_config.put ("editor.gvim.default_cmd_on_enter", "i");
     default_config.put ("editor.gvim.cmd", "gvim");
     default_config.put ("editor.gvim.args", "-f -c 'set ft=mail' '+set fileencoding=utf-8' '+set ff=unix' '+set enc=utf-8'"); //  '+/^\\s*\\n/' '+nohl'
     default_config.put ("editor.charset", "utf-8");

@@ -72,8 +72,6 @@ namespace Astroid {
     make_tmpfile ();
 
     /* gvim settings */
-    double_esc_deactivates  = editor_config.get <bool>("gvim.double_esc_deactivates");
-    default_cmd_on_enter    = editor_config.get <string>("gvim.default_cmd_on_enter");
     gvim_cmd                = editor_config.get <string>("gvim.cmd");
     gvim_args               = editor_config.get <string>("gvim.args");
 
@@ -124,12 +122,15 @@ namespace Astroid {
 
     from_combo->pack_start (from_columns.name_and_address);
 
-    activate_field (From);
-
     prepare_message ();
+
+    activate_field (From);
+    editor_toggle (false);
   }
 
   void EditMessage::prepare_message () {
+    cout << "em: preparing message from fields.." << endl;
+
     auto iter = from_combo->get_active ();
     if (!iter) {
       cout << "em: error: no from account selected." << endl;
@@ -143,10 +144,14 @@ namespace Astroid {
 
     tmpfile.open (tmpfile_path.c_str(), fstream::out);
     tmpfile << "From: " << from << endl;
-    tmpfile << "To: " << endl;
-    tmpfile << "Cc: " << endl;
+    tmpfile << "To: " << to << endl;
+    tmpfile << "Cc: " << cc << endl;
+    if (bcc.size() > 0) {
+      tmpfile << "Bcc: " << bcc << endl;
+    }
     tmpfile << "Subject: " << endl;
     tmpfile << endl;
+    tmpfile << body;
 
     tmpfile.close ();
   }
@@ -165,8 +170,6 @@ namespace Astroid {
   {
     cout << "em: socket realized." << endl;
     socket_ready = true;
-
-    editor_toggle (false);
   }
 
   void EditMessage::plug_added () {
@@ -221,6 +224,22 @@ namespace Astroid {
         return;
       }
 
+      /* set account selector to from address email */
+      Account * account = c->account;
+      for (Gtk::TreeRow row : from_store->children ()) {
+        //auto row = *iter;
+        if (row[from_columns.account] == account) {
+          from_combo->set_active (row);
+          break;
+        }
+      }
+
+      to = c->to;
+      cc = c->cc;
+      bcc = c->bcc;
+      subject = c->subject;
+      body = ustring(c->body.str());
+
       ustring tmpf = c->write_tmp ();
       msgt->add_message (tmpf);
       thread_view->load_message_thread (msgt);
@@ -242,6 +261,8 @@ namespace Astroid {
 
       cout << "em: focus editor." << endl;
       if (!socket_ready) return;
+
+      prepare_message ();
 
       if (in_edit) {
         editor_socket->set_sensitive (true);
@@ -268,14 +289,7 @@ namespace Astroid {
           gtk_socket_focus_forward (editor_socket->gobj ());
 # endif
 
-          esc_count     = 0;
           editor_active = true;
-
-          if (send_default) {
-            vim_remote_keys (default_cmd_on_enter);
-          } else {
-            send_default = true;
-          }
 
         } else {
 
@@ -389,15 +403,6 @@ namespace Astroid {
     */
     c->load_message (msg_id, tmpfile_path.c_str());
 
-    /* set account selector to from address email */
-    Account * account = c->account;
-    for (Gtk::TreeRow row : from_store->children ()) {
-      //auto row = *iter;
-      if (row[from_columns.account] == account) {
-        from_combo->set_active (row);
-        break;
-      }
-    }
 
     c->build ();
     c->finalize ();
