@@ -170,6 +170,11 @@ namespace Astroid {
   {
     cout << "em: socket realized." << endl;
     socket_ready = true;
+
+    if (start_vim_on_socket_ready) {
+      editor_toggle (true);
+      activate_field (Editor);
+    }
   }
 
   void EditMessage::plug_added () {
@@ -190,8 +195,9 @@ namespace Astroid {
     /* reset edit state */
     if (current_field == Editor) {
       in_edit = false;
-      activate_field (Editor);
     }
+
+    activate_field (current_field);
 
     return true;
   }
@@ -447,13 +453,18 @@ namespace Astroid {
   }
 
   void EditMessage::vim_start () {
-    gtk_box_set_child_packing (editor_box->gobj (), GTK_WIDGET(editor_socket->gobj ()), false, false, 5, GTK_PACK_END);
-    ustring cmd = ustring::compose ("%1 -geom 10x10 --servername %3 --socketid %4 %2 %5",
-        gvim_cmd, gvim_args, vim_server, editor_socket->get_id (),
-        tmpfile_path.c_str());
-    cout << "em: starting gvim: " << cmd << endl;
-    Glib::spawn_command_line_async (cmd.c_str());
-    vim_started = true;
+    if (socket_ready) {
+      gtk_box_set_child_packing (editor_box->gobj (), GTK_WIDGET(editor_socket->gobj ()), false, false, 5, GTK_PACK_END);
+      ustring cmd = ustring::compose ("%1 -geom 10x10 --servername %3 --socketid %4 %2 %5",
+          gvim_cmd, gvim_args, vim_server, editor_socket->get_id (),
+          tmpfile_path.c_str());
+      cout << "em: starting gvim: " << cmd << endl;
+      Glib::spawn_command_line_async (cmd.c_str());
+      vim_started = true;
+    } else {
+      start_vim_on_socket_ready = true; // TODO: not thread-safe
+      cout << "em: gvim, waiting for socket.." << endl;
+    }
   }
 
   void EditMessage::vim_stop () {

@@ -75,6 +75,7 @@ namespace Astroid {
       void socket_realized ();
       bool socket_ready = false;
       bool vim_started = false;
+      bool start_vim_on_socket_ready = false;
 
       static  int edit_id; // must be incremented each time a new editor is started
       int     id;          // id of this instance

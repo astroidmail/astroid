@@ -26,11 +26,11 @@ namespace Astroid {
     }
 
     /* quote original message */
-    tmpfile.open (tmpfile_path.c_str(), fstream::out);
+    ostringstream quoted;
 
     ustring quoting_a = ustring::compose ("%1 wrote on %2:", msg->sender.raw(), msg->date());
 
-    tmpfile << quoting_a.raw ()
+    quoted  << quoting_a.raw ()
             << endl;
 
     string vt = msg->viewable_text(false);
@@ -38,12 +38,16 @@ namespace Astroid {
     while (sstr.good()) {
       string line;
       getline (sstr, line);
-      tmpfile << "> " << line << endl;
+      quoted << "> " << line << endl;
     }
-    tmpfile.close ();
+
+    body = ustring(quoted.str());
 
     to = msg->sender;
 
+    editor_active = true;
+    in_edit       = true;
+    editor_toggle (true);
     activate_field (Editor);
   }
 }
