@@ -192,7 +192,7 @@ namespace Astroid {
 
     Gdk::RGBA color = stylecontext->get_color(Gtk::STATE_FLAG_NORMAL);
     cr->set_source_rgb (color.get_red(), color.get_green(), color.get_blue());
-    pango_layout->set_markup ("<span color=\"#807d74\">" + thread->subject + "</span>");
+    pango_layout->set_markup ("<span color=\"#807d74\">" + Glib::Markup::escape_text(thread->subject) + "</span>");
 
 
     /* align in the middle */
@@ -223,7 +223,7 @@ namespace Astroid {
     ustring tag_string = VectorUtils::concat_tags (thread->tags);
     tag_string = tag_string.substr (0, tags_len);
 
-    pango_layout->set_markup ("<span font_style=\"italic\"  color=\"#31587a\">" + tag_string + "</span>");
+    pango_layout->set_markup ("<span font_style=\"italic\"  color=\"#31587a\">" + Glib::Markup::escape_text(tag_string) + "</span>");
 
     /* align in the middle */
     int w, h;
@@ -326,7 +326,7 @@ namespace Astroid {
       authors += ".";
     }
 
-    Glib::RefPtr<Pango::Layout> pango_layout = widget.create_pango_layout (authors);
+    Glib::RefPtr<Pango::Layout> pango_layout = widget.create_pango_layout (Glib::Markup::escape_text(authors));
 
     pango_layout->set_font_description (font_description);
 
