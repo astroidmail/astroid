@@ -34,6 +34,9 @@ namespace Astroid {
       InternetAddressList * cc ();
       InternetAddressList * bcc ();
 
+      ustring references;
+      ustring inreplyto;
+
       ustring date ();
       vector<ustring> tags ();
 

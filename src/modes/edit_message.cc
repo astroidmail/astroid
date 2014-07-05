@@ -416,6 +416,8 @@ namespace Astroid {
     */
     c->load_message (msg_id, tmpfile_path.c_str());
 
+    c->set_references (references);
+    c->set_inreplyto (inreplyto);
 
     c->build ();
     c->finalize ();

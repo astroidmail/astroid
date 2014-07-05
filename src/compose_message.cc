@@ -58,6 +58,18 @@ namespace Astroid {
     id = _id;
   }
 
+  void ComposeMessage::set_references (ustring _refs) {
+    references = _refs;
+    g_mime_object_set_header (GMIME_OBJECT(message), "References",
+        references.c_str());
+  }
+
+  void ComposeMessage::set_inreplyto (ustring _inreplyto) {
+    inreplyto = _inreplyto;
+    g_mime_object_set_header (GMIME_OBJECT(message), "In-Reply-To",
+        inreplyto.c_str());
+  }
+
   void ComposeMessage::build () {
     cout << "cm: build.." << endl;
 

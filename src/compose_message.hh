@@ -21,7 +21,7 @@ namespace Astroid {
       Account         * account;
       InternetAddress * from;
 
-      ustring to, cc, bcc, id, subject;
+      ustring to, cc, bcc, id, subject, references, inreplyto;
 
       ostringstream body;
 
@@ -31,6 +31,8 @@ namespace Astroid {
       void set_bcc  (ustring);
       void set_subject (ustring);
       void set_id   (ustring);
+      void set_inreplyto (ustring);
+      void set_references (ustring);
 
       void add_attachment (path);
 

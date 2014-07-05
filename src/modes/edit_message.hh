@@ -46,6 +46,9 @@ namespace Astroid {
       ustring subject;
       ustring body;
 
+      ustring references;
+      ustring inreplyto;
+
       /* from combobox */
       class FromColumns : public Gtk::TreeModel::ColumnRecord {
         public:

@@ -45,6 +45,9 @@ namespace Astroid {
 
     to = msg->sender;
 
+    references = msg->references + " <" + msg->mid + ">";
+    inreplyto  = "<" + msg->mid + ">";
+
     editor_active = true;
     in_edit       = true;
     editor_toggle (true);

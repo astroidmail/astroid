@@ -117,6 +117,12 @@ namespace Astroid {
     /* read header fields */
     sender  = g_mime_message_get_sender (message);
     subject = g_mime_message_get_subject (message);
+    const char *c;
+    c = g_mime_object_get_header (GMIME_OBJECT(message), "In-Reply-To");
+    if (c != NULL) inreplyto = ustring (c);
+
+    c = g_mime_object_get_header (GMIME_OBJECT(message), "References");
+    if (c != NULL) references = ustring (c);
 
 
     root = refptr<Chunk>(new Chunk (g_mime_message_get_mime_part (message)));
