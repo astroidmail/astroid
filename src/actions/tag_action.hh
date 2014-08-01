@@ -12,8 +12,8 @@ namespace Astroid {
 
       TagAction (
           refptr<NotmuchThread>,
-          vector<ustring>,
-          vector<ustring>);
+          const vector<ustring>,
+          const vector<ustring>);
 
       vector<ustring> add;
       vector<ustring> remove;

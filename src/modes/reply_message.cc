@@ -9,7 +9,7 @@
 using namespace std;
 
 namespace Astroid {
-  ReplyMessage::ReplyMessage (refptr<Message> _msg) : EditMessage () {
+  ReplyMessage::ReplyMessage (MainWindow * mw, refptr<Message> _msg) : EditMessage (mw) {
     msg = _msg;
 
     cout << "re: reply to: " << msg->mid << endl;

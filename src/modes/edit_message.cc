@@ -23,7 +23,8 @@ using namespace std;
 namespace Astroid {
   int EditMessage::edit_id = 0;
 
-  EditMessage::EditMessage () {
+  EditMessage::EditMessage (MainWindow * mw) {
+    main_window   = mw;
     editor_config = astroid->config->config.get_child ("editor");
 
     tmpfile_path = astroid->config->runtime_dir;
@@ -93,7 +94,7 @@ namespace Astroid {
     editor_box->pack_start (*editor_socket, false, false, 2);
     show_all ();
 
-    thread_view = Gtk::manage(new ThreadView());
+    thread_view = Gtk::manage(new ThreadView(main_window));
     //text_view->set_sensitive (false);
     //text_view->set_editable (false);
     editor_box->pack_start (*thread_view, true, 2);

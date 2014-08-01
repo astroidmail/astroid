@@ -8,10 +8,13 @@
 # include <webkit/webkit.h>
 
 # include "thread_view.hh"
+# include "main_window.hh"
 # include "message_thread.hh"
 # include "chunk.hh"
 # include "db.hh"
 # include "utils/utils.hh"
+# include "actions/action.hh"
+# include "actions/tag_action.hh"
 
 
 using namespace std;
@@ -23,8 +26,8 @@ namespace Astroid {
   ustring ThreadView::thread_view_html;
   ustring ThreadView::thread_view_css;
 
-
-  ThreadView::ThreadView () {
+  ThreadView::ThreadView (MainWindow * mw) {
+    main_window = mw;
     tab_widget = new Gtk::Label ("");
 
     pack_start (scroll, true, true, 5);
@@ -172,6 +175,9 @@ namespace Astroid {
 
   void ThreadView::load_message_thread (refptr<MessageThread> _mthread) {
     mthread = _mthread;
+
+    /* remove unread status */
+    main_window->actions.doit (refptr<Action>(new TagAction(mthread->thread, {}, {"unread"})));
 
     ustring s = mthread->subject;
     if (s.size() > MAX_TAB_SUBJECT_LEN)

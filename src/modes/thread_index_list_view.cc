@@ -217,7 +217,7 @@ namespace Astroid {
             mthread.load_messages ();
 
             /* reply to last message */
-            main_window->add_mode (new ReplyMessage (*(--mthread.messages.end())));
+            main_window->add_mode (new ReplyMessage (main_window, *(--mthread.messages.end())));
 
           }
           return true;

@@ -23,9 +23,8 @@ namespace Astroid {
       const char * cid = g_mime_part_get_content_id ((GMimePart *) mime_object);
       if (cid != NULL) {
         content_id = ustring(cid);
+        cout << "chunk: part, id: " << content_id << endl;
       }
-
-      cout << "chunk: part, id: " << content_id << endl;
 
     } else if GMIME_IS_MESSAGE_PART (mime_object) {
       cout << "chunk: message part" << endl;

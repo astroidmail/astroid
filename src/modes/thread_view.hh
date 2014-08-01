@@ -28,7 +28,7 @@ namespace Astroid {
           gpointer );
     */
     public:
-      ThreadView ();
+      ThreadView (MainWindow *);
       ~ThreadView ();
       void load_thread (refptr<NotmuchThread>);
       void load_message_thread (refptr<MessageThread>);
@@ -40,6 +40,7 @@ namespace Astroid {
 
       const int MAX_TAB_SUBJECT_LEN = 15;
 
+      MainWindow  * main_window;
     private:
       /* webkit (using C api) */
       WebKitWebView     * webview;

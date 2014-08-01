@@ -121,11 +121,11 @@ namespace Astroid {
     ThreadView * tv;
 
     if (new_tab) {
-      tv = new ThreadView ();
+      tv = new ThreadView (main_window);
     } else {
       if (!thread_view_loaded) {
         cout << "ti: init paned tv" << endl;
-        thread_view = new ThreadView ();
+        thread_view = new ThreadView (main_window);
         thread_view_loaded = true;
       }
 

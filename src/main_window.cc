@@ -143,7 +143,7 @@ namespace Astroid {
 
       case GDK_KEY_m:
         {
-          add_mode (new EditMessage ());
+          add_mode (new EditMessage (this));
           return true;
         }
 

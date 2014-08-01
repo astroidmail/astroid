@@ -21,9 +21,10 @@ using namespace boost::filesystem;
 namespace Astroid {
   class EditMessage : public Mode {
     public:
-      EditMessage ();
+      EditMessage (MainWindow *);
       ~EditMessage ();
 
+      MainWindow * main_window;
       Gtk::Box * box_message;
 
       enum Field {

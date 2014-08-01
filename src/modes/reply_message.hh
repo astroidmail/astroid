@@ -11,7 +11,7 @@ using namespace std;
 namespace Astroid {
   class ReplyMessage : public EditMessage {
     public:
-      ReplyMessage (refptr<Message>);
+      ReplyMessage (MainWindow *, refptr<Message>);
 
       refptr<Message> msg;
 
