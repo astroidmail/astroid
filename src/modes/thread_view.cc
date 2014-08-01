@@ -254,6 +254,8 @@ namespace Astroid {
     if (internet_address_list_length (m->to()) > 0) {
       insert_header_address (header, "To:",
           internet_address_list_to_string (m->to(), false), true);
+    } else {
+      insert_header_address (header, "To:", "", true);
     }
 
     if (internet_address_list_length (m->cc()) > 0) {
