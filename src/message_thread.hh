@@ -48,6 +48,7 @@ namespace Astroid {
       MessageThread ();
       MessageThread (refptr<NotmuchThread>);
 
+      bool in_notmuch;
       refptr<NotmuchThread> thread;
       ustring subject;
       vector<refptr<Message>> messages;

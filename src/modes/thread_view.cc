@@ -177,10 +177,13 @@ namespace Astroid {
     mthread = _mthread;
 
     /* remove unread status */
-    main_window->actions.doit (refptr<Action>(new TagAction(mthread->thread, {}, {"unread"})));
+    if (mthread->in_notmuch) {
+      main_window->actions.doit (refptr<Action>(new TagAction(mthread->thread, {}, {"unread"})));
+    }
+
 
     ustring s = mthread->subject;
-    if (s.size() > MAX_TAB_SUBJECT_LEN)
+    if (static_cast<int>(s.size()) > MAX_TAB_SUBJECT_LEN)
       s = s.substr(0, MAX_TAB_SUBJECT_LEN - 3) + "...";
 
     ((Gtk::Label*)tab_widget)->set_text (s);

@@ -200,8 +200,12 @@ namespace Astroid {
    * --------
    */
 
-  MessageThread::MessageThread () { }
+  MessageThread::MessageThread () {
+    in_notmuch = false;
+  }
+
   MessageThread::MessageThread (refptr<NotmuchThread> _nmt) : thread (_nmt) {
+    in_notmuch = true;
 
   }
 
