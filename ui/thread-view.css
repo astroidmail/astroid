@@ -37,7 +37,7 @@
 body {
     margin: 0 !important;
     padding: 0 !important;
-    font-size: 15pt !important;
+    font-size: medium !important;
     -webkit-user-select: none;
     -webkit-user-drag: none;
 }
