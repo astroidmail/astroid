@@ -455,7 +455,14 @@ namespace Astroid {
             adj->set_value (adj->get_value() + adj->get_page_increment ());
           } else {
             auto adj = scroll.get_vadjustment ();
+            double v = adj->get_value ();
             adj->set_value (adj->get_value() + adj->get_step_increment ());
+
+            if (v == adj->get_value ()) {
+              /* we're at the bottom, just move focus down */
+              focus_next ();
+            }
+
           }
           update_focus_to_view ();
         }
@@ -470,7 +477,13 @@ namespace Astroid {
             adj->set_value (adj->get_value() - adj->get_page_increment ());
           } else {
             auto adj = scroll.get_vadjustment ();
-            adj->set_value (adj->get_value() - adj->get_step_increment ());
+            if (adj->get_value () == adj->get_lower ()) {
+              /* we're at the top, move focus up */
+              focus_previous ();
+
+            } else {
+              adj->set_value (adj->get_value() - adj->get_step_increment ());
+            }
           }
           update_focus_to_view ();
         }
@@ -652,6 +665,31 @@ namespace Astroid {
         webkit_dom_dom_token_list_remove (class_list, "focused",
             (gerr = NULL, &gerr));
       }
+    }
+  }
+
+  void ThreadView::focus_next () {
+    cout << "tv: focus_next." << endl;
+    int focused_position = find (
+        mthread->messages.begin (),
+        mthread->messages.end (),
+        focused_message) - mthread->messages.begin ();
+
+    if (focused_position < (mthread->messages.size ()-1)) {
+      focused_message = mthread->messages[focused_position + 1];
+      update_focus_status ();
+    }
+  }
+
+  void ThreadView::focus_previous () {
+    int focused_position = find (
+        mthread->messages.begin (),
+        mthread->messages.end (),
+        focused_message) - mthread->messages.begin ();
+
+    if (focused_position > 0) {
+      focused_message = mthread->messages[focused_position - 1];
+      update_focus_status ();
     }
   }
 
