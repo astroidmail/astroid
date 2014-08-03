@@ -55,7 +55,7 @@ namespace Astroid {
         "enable-display-of-insecure-content", FALSE,
         "enable-xss-auditor", TRUE,
         "media-playback-requires-user-gesture", TRUE,
-        "enable-developer-extras", TRUE,
+        "enable-developer-extras", TRUE, // TODO: should only enabled conditionally
 
         NULL);
 
