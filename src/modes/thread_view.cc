@@ -545,6 +545,13 @@ namespace Astroid {
     /* check currently focused message */
     bool take_next = false;
 
+    /* take first */
+    if (!focused_message) {
+      focused_message = mthread->messages[0];
+      update_focus_status ();
+    }
+
+    /* check if focused message is still visible */
     if (focused_message) {
       ustring mid = "message_" + focused_message->mid;
 
@@ -556,7 +563,7 @@ namespace Astroid {
       cout << "y = " << clientY << endl;
       cout << "h = " << clientH << endl;
 
-      if ((clientY <= (scrolled + height)) && ((clientY + clientH) >= scrolled)) {
+      if ((clientY <= (scrolled + height)) && ((clientY + clientH) >= scrolled) ) {
         cout << "message: " << focused_message->date() << " still in view." << endl;
       } else {
         take_next = true;
@@ -566,8 +573,16 @@ namespace Astroid {
     }
 
 
+    /* find first message that is in view and update focused status */
     if (take_next) {
+      int focused_position = find (
+          mthread->messages.begin (),
+          mthread->messages.end (),
+          focused_message) - mthread->messages.begin ();
+      int cur_position = 0;
+
       bool found = false;
+      bool redo_focus_tags = false;
 
       for (auto &m : mthread->messages) {
         ustring mid = "message_" + m->mid;
@@ -585,9 +600,15 @@ namespace Astroid {
 
         GError * gerr = NULL;
 
-        if (!found && clientY >= scrolled) {
-          cout << "message: " << m->date() << " in view." << endl;
+        /* search for the last message that is currently in view
+         * if the focused message is now below / beyond the view */
 
+        if ((!found || cur_position < focused_position) &&
+            ((clientY <= (scrolled + height)) && ((clientY + clientH) >= scrolled)))
+        {
+          cout << "message: " << m->date() << " now in view." << endl;
+
+          if (found) redo_focus_tags = true;
           found = true;
           focused_message = m;
 
@@ -600,6 +621,36 @@ namespace Astroid {
           webkit_dom_dom_token_list_remove (class_list, "focused",
               (gerr = NULL, &gerr));
         }
+
+        cur_position++;
+      }
+
+      if (redo_focus_tags) update_focus_status ();
+    }
+  }
+
+  void ThreadView::update_focus_status () {
+    WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
+    for (auto &m : mthread->messages) {
+      ustring mid = "message_" + m->mid;
+
+      WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
+
+      WebKitDOMDOMTokenList * class_list =
+        webkit_dom_element_get_class_list (e);
+
+      GError * gerr = NULL;
+
+      if (focused_message == m)
+      {
+        /* set class  */
+        webkit_dom_dom_token_list_add (class_list, "focused",
+            (gerr = NULL, &gerr));
+
+      } else {
+        /* reset class */
+        webkit_dom_dom_token_list_remove (class_list, "focused",
+            (gerr = NULL, &gerr));
       }
     }
   }

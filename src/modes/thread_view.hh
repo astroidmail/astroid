@@ -57,6 +57,7 @@ namespace Astroid {
       refptr<Message> get_next_message (refptr<Message>);
       void scroll_to_message (refptr<Message>);
       void update_focus_to_view ();
+      void update_focus_status ();
 
       /* focused message */
       refptr<Message> focused_message;
