@@ -102,8 +102,6 @@ namespace Astroid {
         (gpointer) this);
   }
 
-
-
   ThreadView::~ThreadView () {
     cout << "tv: deconstruct." << endl;
     // TODO: possibly still some errors here in paned mode
@@ -176,6 +174,9 @@ namespace Astroid {
     return true;
   }
 
+  /*
+   * Web inspector
+   */
   extern "C" WebKitWebView * ThreadView_activate_inspector (
       WebKitWebInspector * wi,
       WebKitWebView *          w,
@@ -219,7 +220,9 @@ namespace Astroid {
     return true;
   }
 
-
+  /*
+   * Inspector end
+   */
 
   void ThreadView::load_thread (refptr<NotmuchThread> _thread) {
     thread = _thread;
