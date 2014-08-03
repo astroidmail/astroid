@@ -55,6 +55,7 @@ namespace Astroid {
         "enable-display-of-insecure-content", FALSE,
         "enable-xss-auditor", TRUE,
         "media-playback-requires-user-gesture", TRUE,
+        "enable-developer-extras", TRUE,
 
         NULL);
 
@@ -89,7 +90,19 @@ namespace Astroid {
 
 
     add_events (Gdk::KEY_PRESS_MASK);
+
+    /* set up web view inspector */
+    web_inspector = webkit_web_view_get_inspector (webview);
+    g_signal_connect (web_inspector, "inspect-web-view",
+        G_CALLBACK(ThreadView_activate_inspector),
+        (gpointer) this);
+
+    g_signal_connect (web_inspector, "show-window",
+        G_CALLBACK(ThreadView_show_inspector),
+        (gpointer) this);
   }
+
+
 
   ThreadView::~ThreadView () {
     cout << "tv: deconstruct." << endl;
@@ -163,6 +176,51 @@ namespace Astroid {
     return true;
   }
 
+  extern "C" WebKitWebView * ThreadView_activate_inspector (
+      WebKitWebInspector * wi,
+      WebKitWebView *          w,
+      gpointer                 data )
+  {
+    return ((ThreadView *) data)->activate_inspector (wi, w);
+  }
+
+
+  WebKitWebView * ThreadView::activate_inspector (
+      WebKitWebInspector     * web_inspector,
+      WebKitWebView          * web_view)
+  {
+    /* set up inspector window */
+    cout << "tv: starting conversation inspector.." << endl;
+    inspector_window = new Gtk::Window ();
+    inspector_window->set_default_size (600, 600);
+    inspector_window->set_title (ustring::compose("Conversation inspector: %1", thread->subject));
+    inspector_window->add (inspector_scroll);
+    WebKitWebView * inspector_view = WEBKIT_WEB_VIEW (webkit_web_view_new ());
+    gtk_container_add (GTK_CONTAINER (inspector_scroll.gobj()),
+          GTK_WIDGET (inspector_view));
+
+    return inspector_view;
+  }
+
+  extern "C" bool ThreadView_show_inspector (
+      WebKitWebInspector * wi,
+      gpointer data)
+  {
+    return ((ThreadView *) data)->show_inspector (wi);
+  }
+
+  bool ThreadView::show_inspector (WebKitWebInspector * wi) {
+    cout << "tv: show inspector.." << endl;
+
+    inspector_window->show_all ();
+
+    release_modal ();
+
+    return true;
+  }
+
+
+
   void ThreadView::load_thread (refptr<NotmuchThread> _thread) {
     thread = _thread;
 
@@ -209,6 +267,7 @@ namespace Astroid {
               [&](refptr<Message> m) {
                 add_message (m);
               });
+
   }
 
   void ThreadView::add_message (refptr<Message> m) {
@@ -395,6 +454,7 @@ namespace Astroid {
             auto adj = scroll.get_vadjustment ();
             adj->set_value (adj->get_value() + adj->get_step_increment ());
           }
+          update_focus_to_view ();
         }
         return true;
 
@@ -409,6 +469,7 @@ namespace Astroid {
             auto adj = scroll.get_vadjustment ();
             adj->set_value (adj->get_value() - adj->get_step_increment ());
           }
+          update_focus_to_view ();
         }
         return true;
 
@@ -443,10 +504,154 @@ namespace Astroid {
         }
         return true;
 
+      case GDK_KEY_n:
+        {
+          //scroll_to_message (get_next_message ());
+          get_current_message ();
+          return true;
+        }
+
 
     }
 
     return false;
+  }
+
+  void ThreadView::update_focus_to_view () {
+    /* check if currently focused message has gone out of focus
+     * and update focus */
+
+    /* loop through elements from the top and test whether the top
+     * of it is within the view
+     */
+
+    WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
+
+    /*
+    WebKitDOMDOMWindow * w = webkit_dom_document_get_default_view (d);
+    WebKitDOMScreen * s = webkit_dom_dom_window_get_screen (w);
+    double height = webkit_dom_screen_get_height (s);
+    */
+
+    auto adj = scroll.get_vadjustment ();
+    double scrolled = adj->get_value ();
+    double height   = adj->get_page_size ();
+
+    cout << "scrolled = " << scrolled << ", height = " << height << endl;
+
+    /* check currently focused message */
+    bool take_next = false;
+
+    if (focused_message) {
+      ustring mid = "message_" + focused_message->mid;
+
+      WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
+
+      double clientY = webkit_dom_element_get_offset_top (e);
+      double clientH = webkit_dom_element_get_client_height (e);
+
+      cout << "y = " << clientY << endl;
+      cout << "h = " << clientH << endl;
+
+      if ((clientY <= (scrolled + height)) && ((clientY + clientH) >= scrolled)) {
+        cout << "message: " << focused_message->date() << " still in view." << endl;
+      } else {
+        take_next = true;
+      }
+    } else {
+      take_next = true;
+    }
+
+
+    if (take_next) {
+      bool found = false;
+
+      for (auto &m : mthread->messages) {
+        ustring mid = "message_" + m->mid;
+
+        WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
+
+        double clientY = webkit_dom_element_get_offset_top (e);
+        double clientH = webkit_dom_element_get_client_height (e);
+
+        cout << "y = " << clientY << endl;
+        cout << "h = " << clientH << endl;
+
+        WebKitDOMDOMTokenList * class_list =
+          webkit_dom_element_get_class_list (e);
+
+        GError * gerr = NULL;
+
+        if (!found && clientY >= scrolled) {
+          cout << "message: " << m->date() << " in view." << endl;
+
+          found = true;
+          focused_message = m;
+
+          /* set class  */
+          webkit_dom_dom_token_list_add (class_list, "focused",
+              (gerr = NULL, &gerr));
+
+        } else {
+          /* reset class */
+          webkit_dom_dom_token_list_remove (class_list, "focused",
+              (gerr = NULL, &gerr));
+        }
+      }
+    }
+  }
+
+  refptr<Message> ThreadView::get_current_message () {
+    /* loop through elements from the top and test whether the top
+     * of it is within the view
+     */
+
+    WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
+
+    WebKitDOMDOMWindow * w = webkit_dom_document_get_default_view (d);
+    WebKitDOMScreen * s = webkit_dom_dom_window_get_screen (w);
+    double height = webkit_dom_screen_get_height (s);
+
+    auto adj = scroll.get_vadjustment ();
+    double scrolled = adj->get_value ();
+
+    cout << "scrolled = " << scrolled << endl;
+
+    for (auto &m : mthread->messages) {
+      ustring mid = "message_" + m->mid;
+
+      WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
+
+      double clientY = webkit_dom_element_get_offset_top (e);
+      double clientH = webkit_dom_element_get_client_height (e);
+
+      cout << "y = " << clientY << endl;
+      cout << "h = " << clientH << endl;
+
+      if (clientY >= scrolled) {
+        cout << "message: " << m->date() << " in view." << endl;
+        return m;
+      }
+    }
+
+    /* none */
+    return refptr<Message>();
+  }
+
+  refptr<Message> ThreadView::get_next_message (refptr<Message> m) {
+    bool next = false;
+    for (auto &mm : mthread->messages) {
+      if (next) return mm;
+      if (m == mm) next = true;
+    }
+
+    /* none */
+    return refptr<Message>();
+  }
+
+  void ThreadView::scroll_to_message (refptr<Message> m) {
+    focused_message = m;
+
   }
 
   void ThreadView::grab_modal () {

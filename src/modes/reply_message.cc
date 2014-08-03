@@ -28,7 +28,8 @@ namespace Astroid {
     /* quote original message */
     ostringstream quoted;
 
-    ustring quoting_a = ustring::compose ("%1 wrote on %2:", msg->sender.raw(), msg->date());
+    ustring quoting_a = ustring::compose ("%1 wrote on %2:",
+        msg->sender.raw(), msg->date());
 
     quoted  << quoting_a.raw ()
             << endl;

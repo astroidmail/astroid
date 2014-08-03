@@ -161,6 +161,7 @@ hr {
     width: 16px;
     height: 16px;
 }
+
 .email_container .header_container .preview {
   /*font-size: 8pt;*/
     font-size: x-small;
@@ -169,6 +170,11 @@ hr {
     text-overflow: ellipsis;
     overflow: hidden;
 }
+
+.focused {
+  box-shadow: 0 3px 3px rgba(1,1,1,1) !important;
+}
+
 .avatar {
     display: none;
     image-rendering: optimizeQuality;

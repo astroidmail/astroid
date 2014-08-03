@@ -18,6 +18,16 @@ namespace Astroid {
           GParamSpec *,
           gpointer );
 
+  extern "C" WebKitWebView * ThreadView_activate_inspector (
+      WebKitWebInspector *,
+      WebKitWebView *,
+      gpointer );
+
+  extern "C" bool ThreadView_show_inspector (
+      WebKitWebInspector *,
+      gpointer);
+
+
   class ThreadView : public Mode {
     /*
     friend bool ThreadView_on_load_changed (
@@ -42,10 +52,20 @@ namespace Astroid {
 
       MainWindow  * main_window;
     private:
+      /* message manipulation and location */
+      refptr<Message> get_current_message ();
+      refptr<Message> get_next_message (refptr<Message>);
+      void scroll_to_message (refptr<Message>);
+      void update_focus_to_view ();
+
+      /* focused message */
+      refptr<Message> focused_message;
+
       /* webkit (using C api) */
       WebKitWebView     * webview;
       WebKitWebSettings * websettings;
       WebKitDOMHTMLDivElement * container = NULL;
+      WebKitWebInspector * web_inspector;
 
       static bool theme_loaded;
       static const char *  thread_view_html_f;
@@ -87,6 +107,14 @@ namespace Astroid {
       bool on_load_changed (
           GtkWidget *,
           GParamSpec *);
+
+      Gtk::Window * inspector_window;
+      Gtk::ScrolledWindow inspector_scroll;
+      WebKitWebView * activate_inspector (
+          WebKitWebInspector *,
+          WebKitWebView *);
+      bool show_inspector (WebKitWebInspector *);
+
 
       /* mode */
       virtual void grab_modal () override;
