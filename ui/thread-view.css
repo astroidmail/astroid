@@ -172,7 +172,7 @@ hr {
 }
 
 .focused {
-  box-shadow: 0 3px 3px rgba(1,1,1,1) !important;
+  box-shadow: 5px 3px 3px rgba(71,71,173,1) !important;
 }
 
 .avatar {
