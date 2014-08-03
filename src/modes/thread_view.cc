@@ -15,6 +15,7 @@
 # include "utils/utils.hh"
 # include "actions/action.hh"
 # include "actions/tag_action.hh"
+# include "reply_message.hh"
 
 
 using namespace std;
@@ -554,6 +555,14 @@ namespace Astroid {
             focused_message = mthread->messages[focused_position - 1];
             scroll_to_message (focused_message);
           }
+          return true;
+        }
+
+      case GDK_KEY_r:
+        {
+          /* reply to currently focused message */
+          main_window->add_mode (new ReplyMessage (main_window, focused_message));
+
           return true;
         }
     }
