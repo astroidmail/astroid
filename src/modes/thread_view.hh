@@ -53,8 +53,6 @@ namespace Astroid {
       MainWindow  * main_window;
     private:
       /* message manipulation and location */
-      refptr<Message> get_current_message ();
-      refptr<Message> get_next_message (refptr<Message>);
       void scroll_to_message (refptr<Message>);
       void update_focus_to_view ();
       void update_focus_status ();

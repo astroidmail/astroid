@@ -271,10 +271,15 @@ namespace Astroid {
                 add_message (m);
               });
 
+    update_focus_status ();
   }
 
   void ThreadView::add_message (refptr<Message> m) {
     cout << "tv: adding message: " << m->mid << endl;
+
+    if (!focused_message) {
+      focused_message = m;
+    }
 
     ustring div_id = "message_" + m->mid;
 
@@ -494,6 +499,7 @@ namespace Astroid {
         {
           auto adj = scroll.get_vadjustment ();
           adj->set_value (adj->get_value() - adj->get_page_increment ());
+          update_focus_to_view ();
         }
         return true;
 
@@ -501,6 +507,7 @@ namespace Astroid {
         {
           auto adj = scroll.get_vadjustment ();
           adj->set_value (adj->get_value() + adj->get_page_increment ());
+          update_focus_to_view ();
         }
         return true;
 
@@ -509,6 +516,7 @@ namespace Astroid {
         {
           auto adj = scroll.get_vadjustment ();
           adj->set_value (adj->get_lower ());
+          update_focus_to_view ();
         }
         return true;
 
@@ -517,17 +525,37 @@ namespace Astroid {
         {
           auto adj = scroll.get_vadjustment ();
           adj->set_value (adj->get_upper ());
+          update_focus_to_view ();
         }
         return true;
 
       case GDK_KEY_n:
         {
-          //scroll_to_message (get_next_message ());
-          get_current_message ();
+          int focused_position = find (
+              mthread->messages.begin (),
+              mthread->messages.end (),
+              focused_message) - mthread->messages.begin ();
+
+          if (focused_position < (mthread->messages.size () - 1)) {
+            focused_message = mthread->messages[focused_position + 1];
+            scroll_to_message (focused_message);
+          }
           return true;
         }
 
+      case GDK_KEY_p:
+        {
+          int focused_position = find (
+              mthread->messages.begin (),
+              mthread->messages.end (),
+              focused_message) - mthread->messages.begin ();
 
+          if (focused_position > 0) {
+            focused_message = mthread->messages[focused_position - 1];
+            scroll_to_message (focused_message);
+          }
+          return true;
+        }
     }
 
     return false;
@@ -693,57 +721,24 @@ namespace Astroid {
     }
   }
 
-  refptr<Message> ThreadView::get_current_message () {
-    /* loop through elements from the top and test whether the top
-     * of it is within the view
-     */
+  void ThreadView::scroll_to_message (refptr<Message> m) {
+    cout << "tv: focusing: " << m->date () << endl;
+    focused_message = m;
 
     WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
 
-    WebKitDOMDOMWindow * w = webkit_dom_document_get_default_view (d);
-    WebKitDOMScreen * s = webkit_dom_dom_window_get_screen (w);
-    double height = webkit_dom_screen_get_height (s);
-
     auto adj = scroll.get_vadjustment ();
-    double scrolled = adj->get_value ();
 
-    cout << "scrolled = " << scrolled << endl;
+    ustring mid = "message_" + m->mid;
 
-    for (auto &m : mthread->messages) {
-      ustring mid = "message_" + m->mid;
+    WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
 
-      WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
+    double clientY = webkit_dom_element_get_offset_top (e);
+    double clientH = webkit_dom_element_get_client_height (e);
 
-      double clientY = webkit_dom_element_get_offset_top (e);
-      double clientH = webkit_dom_element_get_client_height (e);
+    adj->set_value (clientY);
 
-      cout << "y = " << clientY << endl;
-      cout << "h = " << clientH << endl;
-
-      if (clientY >= scrolled) {
-        cout << "message: " << m->date() << " in view." << endl;
-        return m;
-      }
-    }
-
-    /* none */
-    return refptr<Message>();
-  }
-
-  refptr<Message> ThreadView::get_next_message (refptr<Message> m) {
-    bool next = false;
-    for (auto &mm : mthread->messages) {
-      if (next) return mm;
-      if (m == mm) next = true;
-    }
-
-    /* none */
-    return refptr<Message>();
-  }
-
-  void ThreadView::scroll_to_message (refptr<Message> m) {
-    focused_message = m;
-
+    update_focus_status ();
   }
 
   void ThreadView::grab_modal () {
