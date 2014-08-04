@@ -551,9 +551,11 @@ namespace Astroid {
       case GDK_KEY_r:
         {
           /* reply to currently focused message */
-          main_window->add_mode (new ReplyMessage (main_window, focused_message));
+          if (!edit_mode) {
+            main_window->add_mode (new ReplyMessage (main_window, focused_message));
 
-          return true;
+            return true;
+          }
         }
     }
 
@@ -564,6 +566,11 @@ namespace Astroid {
     /* check if currently focused message has gone out of focus
      * and update focus */
     cout << "tv: update_focus_to_view" << endl;
+
+    if (edit_mode) {
+      focused_message = refptr<Message>();
+      return;
+    }
 
     /* loop through elements from the top and test whether the top
      * of it is within the view
@@ -674,6 +681,10 @@ namespace Astroid {
   }
 
   void ThreadView::update_focus_status () {
+    if (edit_mode) {
+      focused_message = refptr<Message>();
+    }
+
     WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
     for (auto &m : mthread->messages) {
       ustring mid = "message_" + m->mid;
@@ -706,6 +717,9 @@ namespace Astroid {
 
   void ThreadView::focus_next () {
     cout << "tv: focus_next." << endl;
+
+    if (edit_mode) return;
+
     int focused_position = find (
         mthread->messages.begin (),
         mthread->messages.end (),
@@ -719,6 +733,9 @@ namespace Astroid {
 
   void ThreadView::focus_previous () {
     cout << "tv: focus previous." << endl;
+
+    if (edit_mode) return;
+
     int focused_position = find (
         mthread->messages.begin (),
         mthread->messages.end (),
@@ -731,8 +748,16 @@ namespace Astroid {
   }
 
   void ThreadView::scroll_to_message (refptr<Message> m) {
-    cout << "tv: focusing: " << m->date () << endl;
     focused_message = m;
+
+    if (edit_mode) return;
+
+    if (!focused_message) {
+      cout << "tv: focusing: no message selected for focus." << endl;
+      return;
+    }
+
+    cout << "tv: focusing: " << m->date () << endl;
 
     WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
 

@@ -95,6 +95,7 @@ namespace Astroid {
     show_all ();
 
     thread_view = Gtk::manage(new ThreadView(main_window));
+    thread_view->edit_mode = true;
     //text_view->set_sensitive (false);
     //text_view->set_editable (false);
     editor_box->pack_start (*thread_view, true, 2);

@@ -51,6 +51,9 @@ namespace Astroid {
       const int MAX_TAB_SUBJECT_LEN = 15;
 
       MainWindow  * main_window;
+
+      bool edit_mode = false;
+
     private:
       /* message manipulation and location */
       void scroll_to_message (refptr<Message>);
