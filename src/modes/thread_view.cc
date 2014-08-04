@@ -569,15 +569,10 @@ namespace Astroid {
 
     WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
 
-    /*
-    WebKitDOMDOMWindow * w = webkit_dom_document_get_default_view (d);
-    WebKitDOMScreen * s = webkit_dom_dom_window_get_screen (w);
-    double height = webkit_dom_screen_get_height (s);
-    */
-
     auto adj = scroll.get_vadjustment ();
     double scrolled = adj->get_value ();
-    double height   = adj->get_page_size ();
+    double height   = adj->get_page_size (); // 0 when there is
+                                             // no paging.
 
     cout << "scrolled = " << scrolled << ", height = " << height << endl;
 
@@ -586,33 +581,35 @@ namespace Astroid {
 
     /* take first */
     if (!focused_message) {
+      cout << "tv: u_f_t_v: none focused, take first initially." << endl;
       focused_message = mthread->messages[0];
       update_focus_status ();
     }
 
     /* check if focused message is still visible */
-    if (focused_message) {
-      ustring mid = "message_" + focused_message->mid;
+    ustring mid = "message_" + focused_message->mid;
 
-      WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
+    WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
 
-      double clientY = webkit_dom_element_get_offset_top (e);
-      double clientH = webkit_dom_element_get_client_height (e);
+    double clientY = webkit_dom_element_get_offset_top (e);
+    double clientH = webkit_dom_element_get_client_height (e);
 
-      cout << "y = " << clientY << endl;
-      cout << "h = " << clientH << endl;
+    g_object_unref (e);
 
-      if ((clientY <= (scrolled + height)) && ((clientY + clientH) >= scrolled) ) {
-        cout << "message: " << focused_message->date() << " still in view." << endl;
-      } else {
-        take_next = true;
-      }
+    cout << "y = " << clientY << endl;
+    cout << "h = " << clientH << endl;
+
+    // height = 0 if there is no paging: all messages are in view.
+    if ((height == 0) || ( (clientY <= (scrolled + height)) && ((clientY + clientH) >= scrolled) )) {
+      cout << "message: " << focused_message->date() << " still in view." << endl;
     } else {
+      cout << "message: " << focused_message->date() << " out of view." << endl;
       take_next = true;
     }
 
 
-    /* find first message that is in view and update focused status */
+    /* find first message that is in view and update
+     * focused status */
     if (take_next) {
       int focused_position = find (
           mthread->messages.begin (),
@@ -640,10 +637,11 @@ namespace Astroid {
         GError * gerr = NULL;
 
         /* search for the last message that is currently in view
-         * if the focused message is now below / beyond the view */
+         * if the focused message is now below / beyond the view.
+         * otherwise, take first that is in view now. */
 
         if ((!found || cur_position < focused_position) &&
-            ((clientY <= (scrolled + height)) && ((clientY + clientH) >= scrolled)))
+            ( (height == 0) || ((clientY <= (scrolled + height)) && ((clientY + clientH) >= scrolled)) ))
         {
           cout << "message: " << m->date() << " now in view." << endl;
 
@@ -661,8 +659,13 @@ namespace Astroid {
               (gerr = NULL, &gerr));
         }
 
+        g_object_unref (class_list);
+        g_object_unref (e);
+
         cur_position++;
       }
+
+      g_object_unref (d);
 
       if (redo_focus_tags) update_focus_status ();
     }
@@ -691,7 +694,12 @@ namespace Astroid {
         webkit_dom_dom_token_list_remove (class_list, "focused",
             (gerr = NULL, &gerr));
       }
+
+      g_object_unref (class_list);
+      g_object_unref (e);
     }
+
+    g_object_unref (d);
   }
 
   void ThreadView::focus_next () {
@@ -734,6 +742,9 @@ namespace Astroid {
 
     double clientY = webkit_dom_element_get_offset_top (e);
     double clientH = webkit_dom_element_get_client_height (e);
+
+    g_object_unref (e);
+    g_object_unref (d);
 
     adj->set_value (clientY);
 
