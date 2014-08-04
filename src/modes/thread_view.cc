@@ -519,7 +519,8 @@ namespace Astroid {
         {
           auto adj = scroll.get_vadjustment ();
           adj->set_value (adj->get_lower ());
-          update_focus_to_view ();
+          focused_message = mthread->messages[0];
+          update_focus_status ();
         }
         return true;
 
@@ -528,7 +529,8 @@ namespace Astroid {
         {
           auto adj = scroll.get_vadjustment ();
           adj->set_value (adj->get_upper ());
-          update_focus_to_view ();
+          focused_message = mthread->messages[mthread->messages.size()-1];
+          update_focus_status ();
         }
         return true;
 
@@ -709,7 +711,7 @@ namespace Astroid {
         mthread->messages.end (),
         focused_message) - mthread->messages.begin ();
 
-    if (focused_position < (mthread->messages.size ()-1)) {
+    if (focused_position < static_cast<int>((mthread->messages.size ()-1))) {
       focused_message = mthread->messages[focused_position + 1];
       update_focus_status ();
     }
@@ -741,7 +743,7 @@ namespace Astroid {
     WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
 
     double clientY = webkit_dom_element_get_offset_top (e);
-    double clientH = webkit_dom_element_get_client_height (e);
+    //double clientH = webkit_dom_element_get_client_height (e);
 
     g_object_unref (e);
     g_object_unref (d);
