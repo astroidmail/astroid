@@ -459,6 +459,7 @@ namespace Astroid {
           if (event->state & GDK_CONTROL_MASK) {
             auto adj = scroll.get_vadjustment ();
             adj->set_value (adj->get_value() + adj->get_page_increment ());
+            update_focus_to_view ();
           } else {
             auto adj = scroll.get_vadjustment ();
             double v = adj->get_value ();
@@ -467,10 +468,10 @@ namespace Astroid {
             if (v == adj->get_value ()) {
               /* we're at the bottom, just move focus down */
               focus_next ();
+            } else {
+              update_focus_to_view ();
             }
-
           }
-          update_focus_to_view ();
         }
         return true;
 
@@ -481,6 +482,7 @@ namespace Astroid {
           if (event->state & GDK_CONTROL_MASK) {
             auto adj = scroll.get_vadjustment ();
             adj->set_value (adj->get_value() - adj->get_page_increment ());
+            update_focus_to_view ();
           } else {
             auto adj = scroll.get_vadjustment ();
             if (adj->get_value () == adj->get_lower ()) {
@@ -489,9 +491,9 @@ namespace Astroid {
 
             } else {
               adj->set_value (adj->get_value() - adj->get_step_increment ());
+              update_focus_to_view ();
             }
           }
-          update_focus_to_view ();
         }
         return true;
 
@@ -532,29 +534,15 @@ namespace Astroid {
 
       case GDK_KEY_n:
         {
-          int focused_position = find (
-              mthread->messages.begin (),
-              mthread->messages.end (),
-              focused_message) - mthread->messages.begin ();
-
-          if (focused_position < (mthread->messages.size () - 1)) {
-            focused_message = mthread->messages[focused_position + 1];
-            scroll_to_message (focused_message);
-          }
+          focus_next ();
+          scroll_to_message (focused_message);
           return true;
         }
 
       case GDK_KEY_p:
         {
-          int focused_position = find (
-              mthread->messages.begin (),
-              mthread->messages.end (),
-              focused_message) - mthread->messages.begin ();
-
-          if (focused_position > 0) {
-            focused_message = mthread->messages[focused_position - 1];
-            scroll_to_message (focused_message);
-          }
+          focus_previous ();
+          scroll_to_message (focused_message);
           return true;
         }
 
@@ -573,6 +561,7 @@ namespace Astroid {
   void ThreadView::update_focus_to_view () {
     /* check if currently focused message has gone out of focus
      * and update focus */
+    cout << "tv: update_focus_to_view" << endl;
 
     /* loop through elements from the top and test whether the top
      * of it is within the view
@@ -719,6 +708,7 @@ namespace Astroid {
   }
 
   void ThreadView::focus_previous () {
+    cout << "tv: focus previous." << endl;
     int focused_position = find (
         mthread->messages.begin (),
         mthread->messages.end (),
