@@ -42,8 +42,11 @@ namespace Astroid {
 
     int char_width = font_metrics.get_approximate_char_width () / Pango::SCALE;
     padding = char_width;
-    left_icons_size = char_width;
-    left_icons_width = char_width;
+
+    content_height  = calculate_height (widget);
+
+    left_icons_size = content_height;
+    left_icons_width = content_height;
 
     thread->refresh ();
 
@@ -64,7 +67,6 @@ namespace Astroid {
     tags_start          = authors_start + authors_width + padding;
     subject_start       = tags_start + tags_width + padding;
 
-    content_height  = calculate_height (widget);
     height          = content_height + line_spacing;
     height_set      = true;
 
