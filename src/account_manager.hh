@@ -18,6 +18,10 @@ namespace Astroid {
 
       bool isdefault;
 
+      bool save_sent;
+      ustring save_sent_to;
+
+
       ustring full_address ();
   };
 

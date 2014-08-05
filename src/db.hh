@@ -68,6 +68,9 @@ namespace Astroid {
 
       void load_tags ();
       void test_query ();
+
+      vector<ustring> sent_tags = { "sent" };
+      void add_sent_message (ustring);
   };
 }
 

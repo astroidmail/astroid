@@ -28,6 +28,9 @@ namespace Astroid {
 
       a->isdefault = kv.second.get<bool> ("default");
 
+      a->save_sent = kv.second.get<bool> ("save_sent");
+      a->save_sent_to = kv.second.get<string> ("save_sent_to");
+
       cout << "ac: setup account: " << a->id << " for " << a->name << " (default: " << a->isdefault << ")" << endl;
 
       accounts.push_back (*a);

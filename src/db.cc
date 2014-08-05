@@ -72,6 +72,28 @@ namespace Astroid {
     cout << "db: loaded " << tags.size () << " tags." << endl;
   }
 
+  void Db::add_sent_message (ustring fname) {
+    cout << "db: adding sent message: " << fname << endl;
+
+    notmuch_message_t * msg;
+
+    notmuch_status_t s = notmuch_database_add_message (nm_db,
+        fname.c_str (),
+        &msg);
+
+    if (s != NOTMUCH_STATUS_SUCCESS) {
+      cout << "db: error adding message: " << s << endl;
+      return;
+    }
+
+    /* add tags */
+    for (ustring &t : sent_tags) {
+      s = notmuch_message_add_tag (msg, t.c_str());
+    }
+
+    notmuch_message_destroy (msg);
+  }
+
   void Db::test_query () { // {{{
     cout << "db: running test query.." << endl;
     auto q = notmuch_query_create (nm_db, "label:inbox");

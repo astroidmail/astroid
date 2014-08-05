@@ -5,6 +5,7 @@
 # include <gmime/gmime.h>
 
 # include "astroid.hh"
+# include "db.hh"
 # include "config.hh"
 # include "compose_message.hh"
 # include "message_thread.hh"
@@ -194,7 +195,19 @@ namespace Astroid {
       if (status == 0)
       {
         cout << "cm: message sent successfully!" << endl;
+
+        if (account->save_sent) {
+          path save_to = path(account->save_sent_to) / path(id + ":2,");
+          cout << "cm: saving message to: " << save_to << endl;
+
+          write (save_to.c_str());
+
+          /* add to notmuch with sent tag */
+          astroid->db->add_sent_message (save_to.c_str());
+        }
+
         return true;
+
       } else {
         cout << "cm: could not send message!" << endl;
         return false;
