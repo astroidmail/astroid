@@ -109,7 +109,7 @@ namespace Astroid {
     int h = background_area.get_height ();
 
     Gdk::Color gray;
-    if (flags & Gtk::CELL_RENDERER_SELECTED != 0) {
+    if ((flags & Gtk::CELL_RENDERER_SELECTED) != 0) {
       gray.set_grey_p (.7);
     } else {
       gray.set_grey_p (1.);
@@ -222,7 +222,13 @@ namespace Astroid {
     Gdk::RGBA color = stylecontext->get_color(Gtk::STATE_FLAG_NORMAL);
     cr->set_source_rgb (color.get_red(), color.get_green(), color.get_blue());
 
-    ustring tag_string = VectorUtils::concat_tags (thread->tags);
+    vector<ustring> tags;
+    set_difference (thread->tags.begin(),
+                    thread->tags.end(),
+                    hidden_tags.begin (),
+                    hidden_tags.end (),
+                    back_inserter(tags));
+    ustring tag_string = VectorUtils::concat_tags (tags);
     tag_string = tag_string.substr (0, tags_len);
 
     pango_layout->set_markup ("<span font_style=\"italic\"  color=\"#31587a\">" + Glib::Markup::escape_text(tag_string) + "</span>");
@@ -322,7 +328,7 @@ namespace Astroid {
       authors = VectorUtils::concat_authors (thread->authors);
     }
 
-    if (authors.size() >= authors_len) {
+    if (static_cast<int>(authors.size()) >= authors_len) {
       authors = authors.substr (0, authors_len);
       UstringUtils::trim_right(authors);
       authors += ".";

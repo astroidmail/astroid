@@ -16,6 +16,13 @@ namespace Astroid {
       Glib::RefPtr<NotmuchThread> thread; /* thread that should be rendered now */
       bool last;
 
+      /* these tags are displayed otherwise, so they are not
+       * shown explicitly */
+      const vector<ustring> hidden_tags =
+              { "attachment", "unread",
+                "starred"
+              };
+
     protected:
       /* best documentation so far from here:
        * https://git.gnome.org/browse/gtkmm/tree/gtk/src/cellrenderer.hg
