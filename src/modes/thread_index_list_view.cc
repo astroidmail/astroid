@@ -252,13 +252,13 @@ namespace Astroid {
           return true;
         }
 
-      /* toggle starred */
+      /* toggle flagged */
       case GDK_KEY_asterisk:
         {
           auto thread = get_current_thread ();
           if (thread) {
 
-            main_window->actions.doit (refptr<Action>(new ToggleAction(thread, "starred")));
+            main_window->actions.doit (refptr<Action>(new ToggleAction(thread, "flagged")));
 
             /* update row */
             update_current_row ();

@@ -88,8 +88,8 @@ namespace Astroid {
       render_delimiter (cr, widget, cell_area);
     */
 
-    if (thread->starred)
-      render_starred (cr, widget, cell_area);
+    if (thread->flagged)
+      render_flagged (cr, widget, cell_area);
 
     if (thread->attachment)
       render_attachment (cr, widget, cell_area);
@@ -122,7 +122,7 @@ namespace Astroid {
   } // }}}
 
   /* render icons {{{ */
-  void ThreadIndexListCellRenderer::render_starred (
+  void ThreadIndexListCellRenderer::render_flagged (
       const ::Cairo::RefPtr< ::Cairo::Context>&cr,
       Gtk::Widget &widget,
       const Gdk::Rectangle &cell_area ) {

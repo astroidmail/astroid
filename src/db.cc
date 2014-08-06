@@ -177,7 +177,7 @@ namespace Astroid {
 
     unread     = false;
     attachment = false;
-    starred    = false;
+    flagged    = false;
 
     /* update values */
     const char * s = notmuch_thread_get_subject (nm_thread);
@@ -209,8 +209,8 @@ namespace Astroid {
         unread = true;
       } else if (string(tag) == "attachment") {
         attachment = true;
-      } else if (string(tag) == "starred") {
-        starred = true;
+      } else if (string(tag) == "flagged") {
+        flagged = true;
       }
 
       ttags.push_back (ustring(tag));

@@ -19,7 +19,7 @@ namespace Astroid {
       /* these tags are displayed otherwise, so they are not
        * shown explicitly: MUST BE SORTED */
       const vector<ustring> hidden_tags =
-              { "attachment", "starred", "unread"
+              { "attachment", "flagged", "unread"
               };
 
     protected:
@@ -119,7 +119,7 @@ namespace Astroid {
           Gtk::Widget &widget,
           const Gdk::Rectangle &cell_area );
 
-      void render_starred (
+      void render_flagged (
           const ::Cairo::RefPtr< ::Cairo::Context>&cr,
           Gtk::Widget &widget,
           const Gdk::Rectangle &cell_area );
