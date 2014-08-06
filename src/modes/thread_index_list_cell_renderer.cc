@@ -228,6 +228,7 @@ namespace Astroid {
                     hidden_tags.begin (),
                     hidden_tags.end (),
                     back_inserter(tags));
+
     ustring tag_string = VectorUtils::concat_tags (tags);
     tag_string = tag_string.substr (0, tags_len);
 

@@ -17,10 +17,9 @@ namespace Astroid {
       bool last;
 
       /* these tags are displayed otherwise, so they are not
-       * shown explicitly */
+       * shown explicitly: MUST BE SORTED */
       const vector<ustring> hidden_tags =
-              { "attachment", "unread",
-                "starred"
+              { "attachment", "starred", "unread"
               };
 
     protected:
