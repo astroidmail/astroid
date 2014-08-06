@@ -98,6 +98,9 @@ namespace Astroid {
 
     /* ui behaviour */
     default_config.put ("thread_index.open_default_paned", true);
+    default_config.put ("general.time.clock_format", "local"); // or 24h, 12h
+    default_config.put ("general.time.same_year", "%b %-e");
+    default_config.put ("general.time.diff_year", "%x");
 
     /* editor */
     default_config.put ("editor.gvim.cmd", "gvim");

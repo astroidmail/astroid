@@ -8,6 +8,7 @@
 # include "db.hh"
 # include "message_thread.hh"
 # include "chunk.hh"
+# include "utils/date_utils.hh"
 
 using namespace std;
 
@@ -181,6 +182,13 @@ namespace Astroid {
 
   ustring Message::date () {
     return ustring (g_mime_message_get_date_as_string (message));
+  }
+
+  ustring Message::pretty_verbose_date () {
+    time_t t;
+    g_mime_message_get_date (message, &t, NULL);
+
+    return Date::pretty_print_verbose (t);
   }
 
   InternetAddressList * Message::to () {

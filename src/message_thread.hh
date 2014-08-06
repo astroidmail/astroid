@@ -38,6 +38,7 @@ namespace Astroid {
       ustring inreplyto;
 
       ustring date ();
+      ustring pretty_verbose_date ();
       vector<ustring> tags ();
 
       ustring viewable_text (bool);

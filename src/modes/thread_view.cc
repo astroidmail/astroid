@@ -335,7 +335,7 @@ namespace Astroid {
           internet_address_list_to_string (m->bcc(), false), true);
     }
 
-    insert_header_address (header, "Date:", m->date (), true);
+    insert_header_address (header, "Date:", m->pretty_verbose_date (), true);
     insert_header_address (header, "Subject:", m->subject, true);
 
     if (m->in_notmuch) {
