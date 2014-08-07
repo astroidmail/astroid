@@ -45,7 +45,7 @@ namespace Astroid {
 
     content_height  = calculate_height (widget);
 
-    left_icons_size = content_height;
+    left_icons_size  = content_height;
     left_icons_width = content_height;
 
     thread->refresh ();
@@ -67,8 +67,8 @@ namespace Astroid {
     tags_start          = authors_start + authors_width + padding;
     subject_start       = tags_start + tags_width + padding;
 
-    height          = content_height + line_spacing;
-    height_set      = true;
+    height              = content_height + line_spacing;
+    height_set          = true;
 
     render_background (cr, widget, background_area, flags);
     render_date (cr, widget, cell_area); // returns height
