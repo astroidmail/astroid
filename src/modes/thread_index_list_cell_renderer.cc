@@ -251,14 +251,6 @@ namespace Astroid {
       Gtk::Widget &widget,
       const Gdk::Rectangle &cell_area ) {
 
-    /*
-    time_t newest = thread->newest_date;
-    struct tm * timeinfo;
-    char buf[80];
-    timeinfo = localtime (&newest);
-    strftime (buf, 80, "%D %R", timeinfo);
-    */
-
     ustring date = Date::pretty_print (thread->newest_date);
 
     Glib::RefPtr<Pango::Layout> pango_layout = widget.create_pango_layout (date);
