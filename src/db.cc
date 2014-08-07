@@ -4,6 +4,9 @@
 # include <exception>
 # include <boost/filesystem.hpp>
 
+# include <thread>
+# include <chrono>
+
 # include <glibmm.h>
 
 # include <notmuch.h>
@@ -16,6 +19,8 @@ using namespace boost::filesystem;
 
 namespace Astroid {
   Db::Db () {
+    db_lock.lock ();
+
     config = astroid->config->config.get_child ("astroid.notmuch");
 
     const char * home = getenv ("HOME");
@@ -26,8 +31,6 @@ namespace Astroid {
 
     ustring db_path = ustring (config.get<string> ("db"));
 
-    path path_db;
-
     /* replace ~ with home */
     if (db_path[0] == '~') {
       path_db = path(home) / path(db_path.substr(1,db_path.size()));
@@ -37,19 +40,154 @@ namespace Astroid {
 
     cout << "db: opening db: " << path_db << endl;
 
-
-    notmuch_status_t s = notmuch_database_open (path_db.c_str(),
-        notmuch_database_mode_t::NOTMUCH_DATABASE_MODE_READ_WRITE,
-        &nm_db);
-
-    if (s != 0) {
-      cerr << "db: error: failed opening database." << endl;
-      exit (1);
-    }
+    nm_db = NULL;
+    open_db_read_only ();
 
     //test_query ();
 
     load_tags ();
+
+    db_lock.unlock ();
+  }
+
+  void Db::close_db () {
+    cout << "db: closing db." << endl;
+    if (db_lock.try_lock ()) {
+      if (nm_db != NULL) {
+        notmuch_database_close (nm_db);
+        nm_db = NULL;
+      }
+      db_lock.unlock ();
+    } else {
+      cout << "db: error: multiple locks from other threads on db." << endl;
+      exit (1);
+    }
+  }
+
+  bool Db::open_db_write (bool block) {
+    cout << "db: open db read-write." << endl;
+    if (db_lock.try_lock ()) {
+
+      close_db ();
+
+      notmuch_status_t s;
+
+      int time = 0;
+
+      do {
+        s = notmuch_database_open (
+          path_db.c_str(),
+          notmuch_database_mode_t::NOTMUCH_DATABASE_MODE_READ_WRITE,
+          &nm_db);
+
+        if (s == NOTMUCH_STATUS_FILE_ERROR) {
+          cout << "db: error: could not open db r/w, waiting " <<
+                  db_write_open_delay << " of maximum " <<
+                  db_write_open_timeout << endl;
+
+          chrono::seconds duration (db_write_open_delay);
+          this_thread::sleep_for (duration);
+
+          time += db_write_open_delay;
+
+        }
+
+      } while ((s == NOTMUCH_STATUS_FILE_ERROR) && (time <= db_write_open_timeout));
+
+      if (s != NOTMUCH_STATUS_SUCCESS) {
+        cerr << "db: error: failed opening database for writing." << endl;
+
+        exit (1); // TODO
+
+        db_lock.unlock ();
+        return false;
+      }
+
+      db_lock.unlock ();
+      return true;
+
+    } else {
+      cout << "db: error: multiple locks from other threads on db." << endl;
+      exit (1); return false;
+    }
+  }
+
+  bool Db::open_db_read_only () {
+    cout << "db: open db read-only." << endl;
+    if (db_lock.try_lock ()) {
+
+      if (nm_db != NULL) close_db ();
+
+      notmuch_status_t s =
+        notmuch_database_open (
+          path_db.c_str(),
+          notmuch_database_mode_t::NOTMUCH_DATABASE_MODE_READ_ONLY,
+          &nm_db);
+
+      if (s != NOTMUCH_STATUS_SUCCESS) {
+        cerr << "db: error: failed opening database." << endl;
+
+        exit (1); // TODO
+
+        db_lock.unlock ();
+        return false;
+      }
+
+      db_lock.unlock ();
+      return true;
+
+    } else {
+      cout << "db: error: multiple locks from other threads on db." << endl;
+      exit (1); return false;
+    }
+  }
+
+  bool Db::acquire_write_lock (bool block = true) {
+    bool r = false;
+    if (block) {
+      db_lock.lock ();
+      r = true;
+    } else {
+      r = db_lock.try_lock ();
+    }
+
+    if (r) {
+      r = open_db_write (block); // open R/W
+      if (r) {
+        return true;
+      } else {
+        open_db_read_only (); // failed opening R/W, falling back to read-only
+        return false;
+      }
+    } else {
+      // failed opening (only for try_lock)
+      return false;
+    }
+  }
+
+  void Db::release_write_lock () {
+    open_db_read_only ();
+
+    db_lock.unlock ();
+  }
+
+  bool Db::acquire_lock (bool block = true) {
+    if (block) {
+      db_lock.lock ();
+      return true;
+    } else {
+      return db_lock.try_lock ();
+    }
+  }
+
+  void Db::release_lock () {
+    db_lock.unlock ();
+  }
+
+
+  Db::~Db () {
+    cout << "db: closing notmuch database." << endl << flush;
+    close_db ();
   }
 
   void Db::load_tags () {
@@ -115,10 +253,6 @@ namespace Astroid {
     }
   } // }}}
 
-  Db::~Db () {
-    cout << "db: closing notmuch database." << endl << flush;
-    if (nm_db != NULL) notmuch_database_close (nm_db);
-  }
 
   /* --------------
    * notmuch thread

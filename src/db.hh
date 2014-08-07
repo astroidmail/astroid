@@ -1,5 +1,8 @@
 # pragma once
 
+# include <thread>
+# include <mutex>
+
 # include <vector>
 
 # include <time.h>
@@ -60,9 +63,32 @@ namespace Astroid {
       Db ();
       ~Db ();
 
-      ptree config;
+      /* both these locking methods work on the same
+       * recursive mutex, but a write lock will open the
+       * database for writing - and the release will return
+       * the database handle to a read-only handle (the default
+       * state) */
+      bool acquire_lock (bool);
+      void release_lock ();
 
+      bool acquire_write_lock (bool);
+      void release_write_lock ();
+
+    private:
+      recursive_mutex db_lock;
+      bool open_db_write (bool);
+      bool open_db_read_only ();
+      void close_db ();
+
+      path path_db;
+      const int db_write_open_timeout = 30; // seconds
+      const int db_write_open_delay   = 1; // seconds
+
+    public:
       notmuch_database_t * nm_db;
+
+
+      ptree config;
 
       vector<ustring> tags;
 
