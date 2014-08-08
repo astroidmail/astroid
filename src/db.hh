@@ -2,6 +2,8 @@
 
 # include <thread>
 # include <mutex>
+# include <atomic>
+# include <condition_variable>
 
 # include <vector>
 
@@ -49,6 +51,7 @@ namespace Astroid {
       vector<ustring> get_tags ();
 
       /* activate valid db objects */
+      Db * db;
       void activate ();
       void deactivate ();
 
@@ -63,19 +66,59 @@ namespace Astroid {
       Db ();
       ~Db ();
 
-      /* both these locking methods work on the same
-       * recursive mutex, but a write lock will open the
-       * database for writing - and the release will return
-       * the database handle to a read-only handle (the default
-       * state) */
-      bool acquire_lock (bool);
-      void release_lock ();
+      /* the database should only be open in a read-write state
+       * when necessary. all write-operations should be wrapped
+       * in a write_lock which ensures that the database is open
+       * in a read-write state. a lock or condition variable is
+       * required for all db-operations to ensure that a database
+       * re-open (change from read-only to read-write) is not in
+       * progress.
+       *
+       * read and write operations may happen in parallel.
+       *
+       */
 
-      bool acquire_write_lock (bool);
-      void release_write_lock ();
+      void read_lock ();
+      void read_release ();
+
+      void write_lock ();
+      void write_release ();
 
     private:
-      recursive_mutex db_lock;
+      enum DbState {
+        READ_ONLY,
+        READ_WRITE,
+        IN_CHANGE,
+        CLOSED,
+      };
+
+      mutex               db_ready_mut;
+      condition_variable  db_ready_cv;
+
+      /* internal lock for open and close operations */
+      atomic<DbState> db_state;
+
+
+      /* each time a write lock is requested this reference
+       * count is incremented. if it is 0 upon reference
+       * increment, a read-write connection must first be made.
+       *
+       * readers may use db_open_cv on db_state to check whether
+       * the db is ready (READ_ONLY or READ_WRITE).
+       *
+       *
+       */
+      int                writers;
+      mutex              writers_mux;
+      condition_variable writers_cv;
+
+      /* used by open_db methods to wait for all readers
+       * to finish */
+      int                 readers;
+      mutex               readers_mux;
+      condition_variable  readers_cv;
+
+
       bool open_db_write (bool);
       bool open_db_read_only ();
       void close_db ();
@@ -86,7 +129,6 @@ namespace Astroid {
 
     public:
       notmuch_database_t * nm_db;
-
 
       ptree config;
 

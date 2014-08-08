@@ -6,6 +6,8 @@
 
 # include <thread>
 # include <chrono>
+# include <atomic>
+# include <condition_variable>
 
 # include <glibmm.h>
 
@@ -19,8 +21,6 @@ using namespace boost::filesystem;
 
 namespace Astroid {
   Db::Db () {
-    db_lock.lock ();
-
     config = astroid->config->config.get_child ("astroid.notmuch");
 
     const char * home = getenv ("HOME");
@@ -40,153 +40,195 @@ namespace Astroid {
 
     cout << "db: opening db: " << path_db << endl;
 
-    nm_db = NULL;
+    writers = 0;
+    readers = 0;
+
+    db_state  = CLOSED;
+    nm_db     = NULL;
     open_db_read_only ();
 
     //test_query ();
 
     load_tags ();
-
-    db_lock.unlock ();
   }
 
   void Db::close_db () {
-    cout << "db: closing db." << endl;
-    if (db_lock.try_lock ()) {
-      if (nm_db != NULL) {
-        notmuch_database_close (nm_db);
-        nm_db = NULL;
-      }
-      db_lock.unlock ();
+    if (nm_db != NULL) {
+      cout << "db: closing db." << endl;
+      notmuch_database_close (nm_db);
+      nm_db = NULL;
+      db_state = CLOSED;
     } else {
-      cout << "db: error: multiple locks from other threads on db." << endl;
-      exit (1);
+      cout << "db: already closed." << endl;
     }
   }
 
   bool Db::open_db_write (bool block) {
     cout << "db: open db read-write." << endl;
-    if (db_lock.try_lock ()) {
+    close_db ();
+    db_state = IN_CHANGE;
 
-      close_db ();
+    notmuch_status_t s;
 
-      notmuch_status_t s;
+    int time = 0;
 
-      int time = 0;
+    /* in case a long notmuch new or similar operation is running
+     * we won't be able to get read-write access to the db untill
+     * it is done.
+     */
+    do {
+      s = notmuch_database_open (
+        path_db.c_str(),
+        notmuch_database_mode_t::NOTMUCH_DATABASE_MODE_READ_WRITE,
+        &nm_db);
 
-      do {
-        s = notmuch_database_open (
-          path_db.c_str(),
-          notmuch_database_mode_t::NOTMUCH_DATABASE_MODE_READ_WRITE,
-          &nm_db);
+      if (s == NOTMUCH_STATUS_XAPIAN_EXCEPTION) {
+        cout << "db: error: could not open db r/w, waited " <<
+                time << " of maximum " <<
+                db_write_open_timeout << " seconds." << endl;
 
-        if (s == NOTMUCH_STATUS_FILE_ERROR) {
-          cout << "db: error: could not open db r/w, waiting " <<
-                  db_write_open_delay << " of maximum " <<
-                  db_write_open_timeout << endl;
+        chrono::seconds duration (db_write_open_delay);
+        this_thread::sleep_for (duration);
 
-          chrono::seconds duration (db_write_open_delay);
-          this_thread::sleep_for (duration);
+        time += db_write_open_delay;
 
-          time += db_write_open_delay;
-
-        }
-
-      } while ((s == NOTMUCH_STATUS_FILE_ERROR) && (time <= db_write_open_timeout));
-
-      if (s != NOTMUCH_STATUS_SUCCESS) {
-        cerr << "db: error: failed opening database for writing." << endl;
-
-        exit (1); // TODO
-
-        db_lock.unlock ();
-        return false;
       }
 
-      db_lock.unlock ();
-      return true;
+    } while ((s == NOTMUCH_STATUS_XAPIAN_EXCEPTION) && (time <= db_write_open_timeout));
 
-    } else {
-      cout << "db: error: multiple locks from other threads on db." << endl;
-      exit (1); return false;
+    if (s != NOTMUCH_STATUS_SUCCESS) {
+      cerr << "db: error: failed opening database for writing." << endl;
+
+      exit (1); // TODO
+
+      db_state = CLOSED;
+
+      return false;
     }
+
+    db_state = READ_WRITE;
+    cout << "db: open in r/w mode." << endl;
+    return true;
   }
 
   bool Db::open_db_read_only () {
     cout << "db: open db read-only." << endl;
-    if (db_lock.try_lock ()) {
+    close_db ();
 
-      if (nm_db != NULL) close_db ();
+    db_state = IN_CHANGE;
 
-      notmuch_status_t s =
-        notmuch_database_open (
-          path_db.c_str(),
-          notmuch_database_mode_t::NOTMUCH_DATABASE_MODE_READ_ONLY,
-          &nm_db);
+    notmuch_status_t s =
+      notmuch_database_open (
+        path_db.c_str(),
+        notmuch_database_mode_t::NOTMUCH_DATABASE_MODE_READ_ONLY,
+        &nm_db);
 
-      if (s != NOTMUCH_STATUS_SUCCESS) {
-        cerr << "db: error: failed opening database." << endl;
+    if (s != NOTMUCH_STATUS_SUCCESS) {
+      cerr << "db: error: failed opening database." << endl;
 
-        exit (1); // TODO
+      exit (1); // TODO
 
-        db_lock.unlock ();
-        return false;
-      }
+      db_state = CLOSED;
 
-      db_lock.unlock ();
-      return true;
-
-    } else {
-      cout << "db: error: multiple locks from other threads on db." << endl;
-      exit (1); return false;
-    }
-  }
-
-  bool Db::acquire_write_lock (bool block = true) {
-    bool r = false;
-    if (block) {
-      db_lock.lock ();
-      r = true;
-    } else {
-      r = db_lock.try_lock ();
-    }
-
-    if (r) {
-      r = open_db_write (block); // open R/W
-      if (r) {
-        return true;
-      } else {
-        open_db_read_only (); // failed opening R/W, falling back to read-only
-        return false;
-      }
-    } else {
-      // failed opening (only for try_lock)
       return false;
     }
+
+    db_state = READ_ONLY;
+    cout << "db: open in read-only mode." << endl;
+    return true;
   }
 
-  void Db::release_write_lock () {
-    open_db_read_only ();
+  void Db::write_lock () {
+    cout << "db: acquire write lock.." << endl;
+    writers_mux.lock ();
 
-    db_lock.unlock ();
-  }
+    if (writers == 0) {
+      cout << "db: no active writers, must open db for r/w.." << endl;
 
-  bool Db::acquire_lock (bool block = true) {
-    if (block) {
-      db_lock.lock ();
-      return true;
+      lock_guard<mutex> r_lk (db_ready_mut);
+      db_state = IN_CHANGE; // no new readers may be added
+
+      /* wait for all readers to finish */
+      cout << "db: waiting for readers: " << readers << endl;
+      unique_lock<mutex> lk (readers_mux);
+      readers_cv.wait (lk, [&] { return (readers == 0); });
+
+      cout << "db: no readers left, changing to r/w.." << endl;
+
+      open_db_write (true);
+      db_ready_cv.notify_all (); // let all readers know the db is ready again.
+
     } else {
-      return db_lock.try_lock ();
+      cout << "db: already open as r/w." << endl;
+
     }
+
+    writers++;
+    writers_mux.unlock ();
   }
 
-  void Db::release_lock () {
-    db_lock.unlock ();
+  void Db::write_release () {
+    cout << "db: writing done. " << endl;
+    writers_mux.lock ();
+
+    if (writers == 1) {
+      /* we're last, close db to read-only */
+      cout << "db: all writers done, going to read-only." << endl;
+
+      lock_guard<mutex> r_lk (db_ready_mut);
+      db_state = IN_CHANGE; // no new readers may be added
+
+      /* wait for all readers to finish */
+      cout << "db: waiting for readers: " << readers << endl;
+      unique_lock<mutex> lk (readers_mux);
+      readers_cv.wait (lk, [&] { return (readers == 0); });
+
+      cout << "db: no readers left, changing to read-only.." << endl;
+
+      open_db_read_only ();
+      db_ready_cv.notify_all (); // let all readers know the db is ready again.
+
+    } else {
+      cout << "db: other writers left, leaving db in r/w." << endl;
+    }
+
+    writers--;
+
+    writers_mux.unlock ();
+    writers_cv.notify_all ();
+  }
+
+  void Db::read_lock () {
+
+    unique_lock<mutex> lk (db_ready_mut);
+
+    db_ready_cv.wait (lk,
+        [&] {
+          return ((db_state == READ_ONLY) || (db_state == READ_WRITE));
+        });
+
+    lock_guard <mutex> r_lk (readers_mux);
+
+    readers++;
+  }
+
+  void Db::read_release () {
+    lock_guard<mutex> lk (readers_mux);
+    readers--;
+
+    readers_cv.notify_all ();
   }
 
 
   Db::~Db () {
     cout << "db: closing notmuch database." << endl << flush;
+
+    /* wait for writers or readers */
+    unique_lock<mutex> wlk (writers_mux);
+    writers_cv.wait (wlk, [&] { return (writers == 0); });
+    unique_lock<mutex> rlk (readers_mux);
+    readers_cv.wait (rlk, [&] { return (readers == 0); });
+
     close_db ();
   }
 
@@ -212,6 +254,7 @@ namespace Astroid {
 
   void Db::add_sent_message (ustring fname) {
     cout << "db: adding sent message: " << fname << endl;
+    write_lock ();
 
     notmuch_message_t * msg;
 
@@ -230,6 +273,7 @@ namespace Astroid {
     }
 
     notmuch_message_destroy (msg);
+    write_release ();
   }
 
   void Db::test_query () { // {{{
@@ -260,9 +304,12 @@ namespace Astroid {
    */
   NotmuchThread::NotmuchThread (notmuch_thread_t * t) {
     thread_id = notmuch_thread_get_thread_id (t);
+    db = astroid->db;
   }
 
-  NotmuchThread::NotmuchThread (ustring tid) : thread_id (tid) { }
+  NotmuchThread::NotmuchThread (ustring tid) : thread_id (tid) {
+    db = astroid->db;
+  }
 
   NotmuchThread::~NotmuchThread () {
     if (ref > 0) {
@@ -307,6 +354,7 @@ namespace Astroid {
   void NotmuchThread::refresh () {
     /* do a new db query and update all fields */
 
+    db->read_lock ();
     activate ();
 
     unread     = false;
@@ -323,10 +371,12 @@ namespace Astroid {
 
 
     deactivate ();
+    db->read_release ();
   }
 
   vector<ustring> NotmuchThread::get_tags () {
 
+    db->read_lock ();
     activate ();
     notmuch_tags_t *  tags;
     const char *      tag;
@@ -352,34 +402,41 @@ namespace Astroid {
 
 
     deactivate ();
+    db->read_release ();
     return ttags;
   }
 
   /* get and split authors */
   vector<ustring> NotmuchThread::get_authors () {
+    db->read_lock ();
     activate ();
 
     ustring astr = ustring (notmuch_thread_get_authors (nm_thread));
     vector<ustring> aths = VectorUtils::split_and_trim (astr, ",");
 
     deactivate ();
+    db->read_release ();
 
     return aths;
   }
 
   int NotmuchThread::check_total_messages () {
+    db->read_lock ();
     activate ();
     int c = notmuch_thread_get_total_messages (nm_thread);
     deactivate ();
+    db->read_release ();
     return c;
   }
 
   /* tag actions */
   bool NotmuchThread::add_tag (ustring tag) {
+    db->write_lock ();
     cout << "nm (" << thread_id << "): add tag: " << tag << endl;
     tag = sanitize_tag (tag);
     if (!check_tag (tag)) {
       cout << "nm (" << thread_id << "): error, invalid tag: " << tag << endl;
+      db->write_release ();
       return false;
     }
 
@@ -404,6 +461,7 @@ namespace Astroid {
           res &= true;
         } else {
           cerr << "nm: could not add tag: " << tag << " to thread: " << thread_id << endl;
+          db->write_release ();
           return false;
         }
 
@@ -421,19 +479,23 @@ namespace Astroid {
       }
 
       deactivate ();
+      db->write_release ();
 
 
       return true;
     } else {
+      db->write_release ();
       return false;
     }
   }
 
   bool NotmuchThread::remove_tag (ustring tag) {
+    db->write_lock ();
     cout << "nm (" << thread_id << "): remove tag: " << tag << endl;
     tag = sanitize_tag (tag);
     if (!check_tag (tag)) {
       cout << "nm (" << thread_id << "): error, invalid tag: " << tag << endl;
+      db->write_release ();
       return false;
     }
 
@@ -458,6 +520,7 @@ namespace Astroid {
           res &= true;
         } else {
           cerr << "nm: could not remove tag: " << tag << " from thread: " << thread_id << endl;
+          db->write_release ();
           return false;
         }
 
@@ -470,11 +533,12 @@ namespace Astroid {
       }
 
       deactivate ();
-
+      db->write_release ();
 
       return true;
     } else {
       cout << "nm: thread does not have tag." << endl;
+      db->write_release ();
       return false;
     }
   }
