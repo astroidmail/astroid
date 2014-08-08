@@ -37,6 +37,7 @@ namespace Astroid {
     show_all ();
 
     /* set up notmuch query */
+    astroid->db->read_lock ();
     query =  notmuch_query_create (astroid->db->nm_db, query_string.c_str ());
 
     cout << "ti, query: " << notmuch_query_get_query_string (query) << ", approx: "
@@ -46,6 +47,7 @@ namespace Astroid {
 
     /* add threads to model */
     load_more_threads ();
+    astroid->db->read_release ();
 
     /* select first */
     list_view->set_cursor (Gtk::TreePath("0"));
@@ -55,6 +57,7 @@ namespace Astroid {
     notmuch_thread_t  * thread;
 
     cout << "ti: load more (all: " << all << ") threads.." << endl;
+    astroid->db->read_lock ();
 
     int i = 0;
 
@@ -81,6 +84,7 @@ namespace Astroid {
       }
     }
 
+    astroid->db->read_release ();
     cout << "ti: loaded " << i << " threads." << endl;
   }
 
