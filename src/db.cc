@@ -558,6 +558,10 @@ namespace Astroid {
       if (tag.find_first_of (c) != ustring::npos) return false;
     }
 
+    if (tag.size() > NOTMUCH_TAG_MAX) {
+      cout << "db: error: maximum tag length is: " << NOTMUCH_TAG_MAX << endl;
+    }
+
     return true;
   }
 }
