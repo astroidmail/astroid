@@ -84,6 +84,8 @@ namespace Astroid {
       void write_lock ();
       void write_release ();
 
+      void reopen ();
+
     private:
       enum DbState {
         READ_ONLY,
@@ -139,6 +141,13 @@ namespace Astroid {
 
       vector<ustring> sent_tags = { "sent" };
       void add_sent_message (ustring);
+  };
+
+  /* exceptions */
+  class database_error : public runtime_error {
+    public:
+      database_error (const char *);
+
   };
 }
 

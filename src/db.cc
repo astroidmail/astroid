@@ -52,6 +52,37 @@ namespace Astroid {
     load_tags ();
   }
 
+  void Db::reopen () {
+    cout << "db: reopening datbase.." << endl;
+
+    /* wait for writers or readers */
+    unique_lock<mutex> wlk (writers_mux);
+    writers_cv.wait (wlk, [&] { return (writers == 0); });
+
+    unique_lock<mutex> rlk (readers_mux);
+    readers_cv.wait (rlk, [&] { return (readers == 0); });
+
+    db_ready_mut.lock ();
+
+    /* we now have all locks */
+    bool reopen_rw = (db_state == READ_WRITE);
+
+    /* these methods close the db before opening */
+    if (reopen_rw) {
+      open_db_write (true);
+    } else {
+      open_db_read_only ();
+    }
+
+    /* release locks and let waiters know */
+    db_ready_mut.unlock ();
+    wlk.unlock ();
+    rlk.unlock ();
+
+    writers_cv.notify_all ();
+    readers_cv.notify_all ();
+  }
+
   void Db::close_db () {
     if (nm_db != NULL) {
       cout << "db: closing db." << endl;
@@ -320,19 +351,41 @@ namespace Astroid {
   }
 
   void NotmuchThread::activate () {
+
     ref++;
 
     if (ref > 1) {
       return; // already set up
     }
 
-
     string query_s = "thread:" + thread_id;
+
+    db->read_lock ();
     query = notmuch_query_create (astroid->db->nm_db, query_s.c_str());
+    nm_threads = notmuch_query_search_threads (query);
+
+    if (nm_threads == NULL) {
+      /* try to reopen db in case we got an Xapian::DatabaseModifiedError */
+      cout << "nmt: activate: trying to reopen database.." << endl;
+
+      db->read_release ();
+      astroid->db->reopen ();
+
+      db->read_lock ();
+      query = notmuch_query_create (astroid->db->nm_db, query_s.c_str());
+      nm_threads = notmuch_query_search_threads (query);
+
+      if (nm_threads == NULL) {
+        /* could not do that, failing */
+        cout << "nmt: to no avail, failure is iminent." << endl;
+
+        throw database_error ("nmt: could not get a valid notmuch_threads_t from query.");
+
+      }
+    }
 
     int c = 0;
-    for (nm_threads = notmuch_query_search_threads (query);
-         notmuch_threads_valid (nm_threads);
+    for ( ; notmuch_threads_valid (nm_threads);
          notmuch_threads_move_to_next (nm_threads)) {
       if (c > 0) {
         throw invalid_argument ("nmt: got more than one thread for thread id.");
@@ -342,6 +395,12 @@ namespace Astroid {
 
       c++;
     }
+
+    if (c < 1) {
+      throw invalid_argument ("nmt: could not find thread!");
+    }
+
+    db->read_release ();
   }
 
   void NotmuchThread::deactivate () {
@@ -353,14 +412,13 @@ namespace Astroid {
 
   void NotmuchThread::refresh () {
     /* do a new db query and update all fields */
-
-    db->read_lock ();
     activate ();
 
     unread     = false;
     attachment = false;
     flagged    = false;
 
+    db->read_lock ();
     /* update values */
     const char * s = notmuch_thread_get_subject (nm_thread);
     subject     = ustring (s);
@@ -368,21 +426,21 @@ namespace Astroid {
     total_messages = check_total_messages ();
     authors     = get_authors ();
     tags        = get_tags ();
+    db->read_release ();
 
 
     deactivate ();
-    db->read_release ();
   }
 
   vector<ustring> NotmuchThread::get_tags () {
 
-    db->read_lock ();
     activate ();
     notmuch_tags_t *  tags;
     const char *      tag;
 
     vector<ustring> ttags;
 
+    db->read_lock ();
     for (tags = notmuch_thread_get_tags (nm_thread);
          notmuch_tags_valid (tags);
          notmuch_tags_move_to_next (tags))
@@ -399,49 +457,49 @@ namespace Astroid {
 
       ttags.push_back (ustring(tag));
     }
+    db->read_release ();
 
 
     deactivate ();
-    db->read_release ();
     return ttags;
   }
 
   /* get and split authors */
   vector<ustring> NotmuchThread::get_authors () {
-    db->read_lock ();
     activate ();
 
+    db->read_lock ();
     ustring astr = ustring (notmuch_thread_get_authors (nm_thread));
+    db->read_release ();
+
     vector<ustring> aths = VectorUtils::split_and_trim (astr, ",");
 
     deactivate ();
-    db->read_release ();
 
     return aths;
   }
 
   int NotmuchThread::check_total_messages () {
-    db->read_lock ();
     activate ();
+    db->read_lock ();
     int c = notmuch_thread_get_total_messages (nm_thread);
-    deactivate ();
     db->read_release ();
+    deactivate ();
     return c;
   }
 
   /* tag actions */
   bool NotmuchThread::add_tag (ustring tag) {
-    db->write_lock ();
     cout << "nm (" << thread_id << "): add tag: " << tag << endl;
     tag = sanitize_tag (tag);
     if (!check_tag (tag)) {
       cout << "nm (" << thread_id << "): error, invalid tag: " << tag << endl;
-      db->write_release ();
       return false;
     }
 
     if (find(tags.begin (), tags.end (), tag) == tags.end ()) {
       activate ();
+      db->write_lock ();
 
       /* get messages from thread */
       notmuch_messages_t * qmessages;
@@ -478,29 +536,27 @@ namespace Astroid {
         }
       }
 
-      deactivate ();
       db->write_release ();
+      deactivate ();
 
 
       return true;
     } else {
-      db->write_release ();
       return false;
     }
   }
 
   bool NotmuchThread::remove_tag (ustring tag) {
-    db->write_lock ();
     cout << "nm (" << thread_id << "): remove tag: " << tag << endl;
     tag = sanitize_tag (tag);
     if (!check_tag (tag)) {
       cout << "nm (" << thread_id << "): error, invalid tag: " << tag << endl;
-      db->write_release ();
       return false;
     }
 
     if (find(tags.begin (), tags.end (), tag) != tags.end ()) {
       activate ();
+      db->write_lock ();
 
       /* get messages from thread */
       notmuch_messages_t * qmessages;
@@ -532,13 +588,12 @@ namespace Astroid {
                             tag), tags.end ());
       }
 
-      deactivate ();
       db->write_release ();
+      deactivate ();
 
       return true;
     } else {
       cout << "nm: thread does not have tag." << endl;
-      db->write_release ();
       return false;
     }
   }
@@ -559,10 +614,22 @@ namespace Astroid {
     }
 
     if (tag.size() > NOTMUCH_TAG_MAX) {
-      cout << "db: error: maximum tag length is: " << NOTMUCH_TAG_MAX << endl;
+      cout << "nmt: error: maximum tag length is: " << NOTMUCH_TAG_MAX << endl;
+      return false;
     }
 
     return true;
   }
+
+  /************
+   * exceptions
+   * **********
+   */
+
+  database_error::database_error (const char * w) : runtime_error (w)
+  {
+  }
+
+
 }
 

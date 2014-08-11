@@ -13,3 +13,4 @@ config.log
 .sconf_temp
 
 *.pyc
+core*
