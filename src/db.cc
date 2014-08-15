@@ -26,7 +26,7 @@ namespace Astroid {
     const char * home = getenv ("HOME");
     if (home == NULL) {
       cerr << "db: error: HOME variable not set." << endl;
-      exit (1);
+      throw invalid_argument ("db: error: HOME environment variable not set.");
     }
 
     ustring db_path = ustring (config.get<string> ("db"));
@@ -130,7 +130,7 @@ namespace Astroid {
     if (s != NOTMUCH_STATUS_SUCCESS) {
       cerr << "db: error: failed opening database for writing." << endl;
 
-      exit (1); // TODO
+      throw database_error ("failed to open database for writing");
 
       db_state = CLOSED;
 
@@ -157,7 +157,7 @@ namespace Astroid {
     if (s != NOTMUCH_STATUS_SUCCESS) {
       cerr << "db: error: failed opening database." << endl;
 
-      exit (1); // TODO
+      throw database_error ("failed to open database (read-only)");
 
       db_state = CLOSED;
 
