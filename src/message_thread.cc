@@ -56,33 +56,38 @@ namespace Astroid {
     g_object_unref (message);
   }
 
-  vector<ustring> Message::load_tags (Db * db) {
-    vector<ustring> v;
-
+  void Message::load_tags (Db * db) {
     if (!in_notmuch) {
       cout << "mt: error: message not in database." << endl;
-      return v;
+      throw invalid_argument ("mt: load_tags on message not in database.");
     }
 
     if (mid == "") {
       cout << "mt: error: mid not defined, no tags" << endl;
-      return v;
+      throw invalid_argument ("mt: load_tags on message without message id.");
     } else {
       /* get tags from nm db */
-      tags.clear ();
 
+      lock_guard<Db> grd (*db);
       db->on_message (mid, [&](notmuch_message_t * msg)
         {
-          notmuch_tags_t     * ntags;
-          for (ntags = notmuch_message_get_tags (msg);
-               notmuch_tags_valid (ntags);
-               notmuch_tags_move_to_next (ntags)) {
-
-            tags.push_back (ustring(notmuch_tags_get (ntags)));
-
-          }
+          load_tags (msg);
         });
     }
+  }
+
+  void Message::load_tags (notmuch_message_t * msg) {
+
+    tags.clear ();
+
+    notmuch_tags_t * ntags;
+    for (ntags = notmuch_message_get_tags (msg);
+         notmuch_tags_valid (ntags);
+         notmuch_tags_move_to_next (ntags)) {
+
+      tags.push_back (ustring(notmuch_tags_get (ntags)));
+    }
+
   }
 
   void Message::load_message () {

@@ -203,8 +203,7 @@ namespace Astroid {
     notmuch_message_destroy (msg);
   }
 
-  template <typename Func>
-  void Db::on_thread (ustring thread_id, Func func) {
+  void Db::on_thread (ustring thread_id, function<void(notmuch_thread_t *)> func) {
 
     string query_s = "thread:" + thread_id;
 
@@ -253,8 +252,7 @@ namespace Astroid {
     notmuch_query_destroy (query);
   }
 
-  template <typename Func>
-  void Db::on_message (ustring mid, Func func) {
+  void Db::on_message (ustring mid, function<void(notmuch_message_t *)> func) {
 
     notmuch_message_t * msg;
     notmuch_status_t s = notmuch_database_find_message (nm_db, mid.c_str(), &msg);

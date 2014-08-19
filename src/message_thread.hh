@@ -24,7 +24,8 @@ namespace Astroid {
       bool    in_notmuch;
 
       void load_message ();
-      vector<ustring> load_tags (Db *);
+      void load_tags (Db *);
+      void load_tags (notmuch_message_t *); 
 
       GMimeMessage * message;
       refptr<Chunk>     root;
@@ -55,7 +56,7 @@ namespace Astroid {
       ustring subject;
       vector<refptr<Message>> messages;
 
-      void load_messages ();
+      void load_messages (Db *);
       void add_message (ustring);
       void reload_messages ();
   };

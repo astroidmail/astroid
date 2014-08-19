@@ -64,11 +64,9 @@ namespace Astroid {
 
       void reopen ();
 
-      template <typename Func>
-      void on_thread (ustring, Func);
+      void on_thread (ustring, function < void(notmuch_thread_t *)>);
 
-      template <typename Func>
-      void on_message (ustring, Func);
+      void on_message (ustring, function< void(notmuch_message_t *)> );
     private:
       enum DbState {
         READ_ONLY,
