@@ -69,9 +69,6 @@ namespace Astroid {
     int aargc = 1; // TODO: allow GTK to get some options aswell.
     app = Gtk::Application::create (aargc, argv, "org.astroid");
 
-    /* notmuch db */
-    db = new Db ();
-
     /* gmime settings */
     g_mime_init (0); // utf-8 is default
 
@@ -108,7 +105,6 @@ namespace Astroid {
     main_windows.clear ();
     delete accounts;
     delete contacts;
-    delete db;
     delete config;
 
     return 0;

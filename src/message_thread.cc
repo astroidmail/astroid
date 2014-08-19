@@ -56,7 +56,7 @@ namespace Astroid {
     g_object_unref (message);
   }
 
-  vector<ustring> Message::tags () {
+  vector<ustring> Message::load_tags (Db * db) {
     vector<ustring> v;
 
     if (!in_notmuch) {
@@ -69,25 +69,19 @@ namespace Astroid {
       return v;
     } else {
       /* get tags from nm db */
-      notmuch_message_t  * msg;
-      notmuch_tags_t     * ntags;
+      tags.clear ();
 
-      auto s = notmuch_database_find_message (astroid->db->nm_db, mid.c_str(), &msg);
-      if (s == NOTMUCH_STATUS_SUCCESS) {
-        for (ntags = notmuch_message_get_tags (msg);
-             notmuch_tags_valid (ntags);
-             notmuch_tags_move_to_next (ntags)) {
+      db->on_message (mid, [&](notmuch_message_t * msg)
+        {
+          notmuch_tags_t     * ntags;
+          for (ntags = notmuch_message_get_tags (msg);
+               notmuch_tags_valid (ntags);
+               notmuch_tags_move_to_next (ntags)) {
 
-          v.push_back (ustring(notmuch_tags_get (ntags)));
+            tags.push_back (ustring(notmuch_tags_get (ntags)));
 
-        }
-      } else {
-        cout << "mt: error: could not load message: " << mid << " from db." << endl;
-      }
-
-      notmuch_message_destroy (msg);
-
-      return v;
+          }
+        });
     }
   }
 
@@ -217,34 +211,9 @@ namespace Astroid {
 
   }
 
-  void MessageThread::load_messages () {
-    /* get thread from notmuch and load messages */
-
-    string query_s = "thread:" + thread->thread_id;
-    notmuch_query_t * query = notmuch_query_create (astroid->db->nm_db, query_s.c_str());
-    notmuch_threads_t * nm_threads;
-    notmuch_thread_t  * nm_thread;
-
-    int c = 0;
-
-    for (nm_threads = notmuch_query_search_threads (query);
-         notmuch_threads_valid (nm_threads);
-         notmuch_threads_move_to_next (nm_threads)) {
-
-      if (c > 0) {
-        cerr << "notmuch_thread: got more than one thread for thread id!" << endl;
-        break;
-      }
-
-      /* thread */
-      nm_thread = notmuch_threads_get (nm_threads);
-
-      c++;
-    }
-
+  void MessageThread::load_messages (Db * db) {
     /* update values */
-    const char * s = notmuch_thread_get_subject (nm_thread);
-    subject     = ustring (s);
+    subject     = thread->subject;
     /*
     newest_date = notmuch_thread_get_newest_date (nm_thread);
     unread      = check_unread (nm_thread);
@@ -253,20 +222,21 @@ namespace Astroid {
 
 
     /* get messages from thread */
-    notmuch_messages_t * qmessages;
-    notmuch_message_t  * message;
+    db->on_thread (thread->thread_id, [&](notmuch_thread_t * nm_thread)
+      {
 
-    for (qmessages = notmuch_thread_get_messages (nm_thread);
-         notmuch_messages_valid (qmessages);
-         notmuch_messages_move_to_next (qmessages)) {
+        notmuch_messages_t * qmessages;
+        notmuch_message_t  * message;
 
-      message = notmuch_messages_get (qmessages);
+        for (qmessages = notmuch_thread_get_messages (nm_thread);
+             notmuch_messages_valid (qmessages);
+             notmuch_messages_move_to_next (qmessages)) {
 
-      messages.push_back (refptr<Message>(new Message (message)));
-    }
+          message = notmuch_messages_get (qmessages);
 
-    notmuch_threads_destroy (nm_threads);
-    notmuch_query_destroy (query);
+          messages.push_back (refptr<Message>(new Message (message)));
+        }
+      });
   }
 
   void MessageThread::add_message (ustring fname) {

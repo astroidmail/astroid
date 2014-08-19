@@ -24,7 +24,6 @@ namespace Astroid {
       void quit ();
 
       Glib::RefPtr<Gtk::Application> app;
-      Db *db;
 
       ustring user_agent;
 

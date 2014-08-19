@@ -37,11 +37,14 @@ namespace Astroid {
     if (n <= 0) return;
 
     /* set up notmuch query */
+    Db db (Db::DbMode::DATABASE_READ_ONLY);
+    lock_guard<Db> lk (db);
+
     notmuch_query_t *     query;
     notmuch_messages_t *  messages;
     notmuch_message_t *   message;
 
-    query =  notmuch_query_create (astroid->db->nm_db, recent_query.c_str());
+    query =  notmuch_query_create (db.nm_db, recent_query.c_str());
 
     cout << "ct, query: " << notmuch_query_get_query_string (query) << ", approx: "
          << notmuch_query_count_messages (query) << " messages." << endl;

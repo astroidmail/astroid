@@ -24,6 +24,7 @@ namespace Astroid {
       bool    in_notmuch;
 
       void load_message ();
+      vector<ustring> load_tags (Db *);
 
       GMimeMessage * message;
       refptr<Chunk>     root;
@@ -39,7 +40,7 @@ namespace Astroid {
 
       ustring date ();
       ustring pretty_verbose_date ();
-      vector<ustring> tags ();
+      vector<ustring> tags;
 
       ustring viewable_text (bool);
   };

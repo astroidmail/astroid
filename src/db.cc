@@ -20,7 +20,7 @@ using namespace std;
 using namespace boost::filesystem;
 
 namespace Astroid {
-  Db::Db () {
+  Db::Db (DbMode mode) {
     config = astroid->config->config.get_child ("astroid.notmuch");
 
     const char * home = getenv ("HOME");
@@ -40,12 +40,15 @@ namespace Astroid {
 
     cout << "db: opening db: " << path_db << endl;
 
-    writers = 0;
-    readers = 0;
-
     db_state  = CLOSED;
     nm_db     = NULL;
-    open_db_read_only ();
+    if (mode == DATABASE_READ_ONLY) {
+      open_db_read_only ();
+    } else if (mode == DATABASE_READ_WRITE) {
+      open_db_write (true);
+    } else {
+      throw invalid_argument ("db: mode must be read-only or read-write");
+    }
 
     //test_query ();
 
@@ -54,15 +57,6 @@ namespace Astroid {
 
   void Db::reopen () {
     cout << "db: reopening datbase.." << endl;
-
-    /* wait for writers or readers */
-    unique_lock<mutex> wlk (writers_mux);
-    writers_cv.wait (wlk, [&] { return (writers == 0); });
-
-    unique_lock<mutex> rlk (readers_mux);
-    readers_cv.wait (rlk, [&] { return (readers == 0); });
-
-    db_ready_mut.lock ();
 
     /* we now have all locks */
     bool reopen_rw = (db_state == READ_WRITE);
@@ -73,14 +67,6 @@ namespace Astroid {
     } else {
       open_db_read_only ();
     }
-
-    /* release locks and let waiters know */
-    db_ready_mut.unlock ();
-    wlk.unlock ();
-    rlk.unlock ();
-
-    writers_cv.notify_all ();
-    readers_cv.notify_all ();
   }
 
   void Db::close_db () {
@@ -169,96 +155,8 @@ namespace Astroid {
     return true;
   }
 
-  void Db::write_lock () {
-    cout << "db: acquire write lock.." << endl;
-    writers_mux.lock ();
-
-    if (writers == 0) {
-      cout << "db: no active writers, must open db for r/w.." << endl;
-
-      lock_guard<mutex> r_lk (db_ready_mut);
-      db_state = IN_CHANGE; // no new readers may be added
-
-      /* wait for all readers to finish */
-      cout << "db: waiting for readers: " << readers << endl;
-      unique_lock<mutex> lk (readers_mux);
-      readers_cv.wait (lk, [&] { return (readers == 0); });
-
-      cout << "db: no readers left, changing to r/w.." << endl;
-
-      open_db_write (true);
-      db_ready_cv.notify_all (); // let all readers know the db is ready again.
-
-    } else {
-      cout << "db: already open as r/w." << endl;
-
-    }
-
-    writers++;
-    writers_mux.unlock ();
-  }
-
-  void Db::write_release () {
-    cout << "db: writing done. " << endl;
-    writers_mux.lock ();
-
-    if (writers == 1) {
-      /* we're last, close db to read-only */
-      cout << "db: all writers done, going to read-only." << endl;
-
-      lock_guard<mutex> r_lk (db_ready_mut);
-      db_state = IN_CHANGE; // no new readers may be added
-
-      /* wait for all readers to finish */
-      cout << "db: waiting for readers: " << readers << endl;
-      unique_lock<mutex> lk (readers_mux);
-      readers_cv.wait (lk, [&] { return (readers == 0); });
-
-      cout << "db: no readers left, changing to read-only.." << endl;
-
-      open_db_read_only ();
-      db_ready_cv.notify_all (); // let all readers know the db is ready again.
-
-    } else {
-      cout << "db: other writers left, leaving db in r/w." << endl;
-    }
-
-    writers--;
-
-    writers_mux.unlock ();
-    writers_cv.notify_all ();
-  }
-
-  void Db::read_lock () {
-
-    unique_lock<mutex> lk (db_ready_mut);
-
-    db_ready_cv.wait (lk,
-        [&] {
-          return ((db_state == READ_ONLY) || (db_state == READ_WRITE));
-        });
-
-    lock_guard <mutex> r_lk (readers_mux);
-
-    readers++;
-  }
-
-  void Db::read_release () {
-    lock_guard<mutex> lk (readers_mux);
-    readers--;
-
-    readers_cv.notify_all ();
-  }
-
-
   Db::~Db () {
     cout << "db: closing notmuch database." << endl << flush;
-
-    /* wait for writers or readers */
-    unique_lock<mutex> wlk (writers_mux);
-    writers_cv.wait (wlk, [&] { return (writers == 0); });
-    unique_lock<mutex> rlk (readers_mux);
-    readers_cv.wait (rlk, [&] { return (readers == 0); });
 
     close_db ();
   }
@@ -285,7 +183,6 @@ namespace Astroid {
 
   void Db::add_sent_message (ustring fname) {
     cout << "db: adding sent message: " << fname << endl;
-    write_lock ();
 
     notmuch_message_t * msg;
 
@@ -304,7 +201,86 @@ namespace Astroid {
     }
 
     notmuch_message_destroy (msg);
-    write_release ();
+  }
+
+  template <typename Func>
+  void Db::on_thread (ustring thread_id, Func func) {
+
+    string query_s = "thread:" + thread_id;
+
+    notmuch_query_t * query = notmuch_query_create (nm_db, query_s.c_str());
+    notmuch_threads_t * nm_threads = notmuch_query_search_threads (query);
+    notmuch_thread_t  * nm_thread;
+
+    if (nm_threads == NULL) {
+      /* try to reopen db in case we got an Xapian::DatabaseModifiedError */
+      cout << "db: trying to reopen database.." << endl;
+
+      reopen ();
+
+      query = notmuch_query_create (nm_db, query_s.c_str());
+      nm_threads = notmuch_query_search_threads (query);
+
+      if (nm_threads == NULL) {
+        /* could not do that, failing */
+        cout << "db: to no avail, failure is iminent." << endl;
+
+        throw database_error ("nmt: could not get a valid notmuch_threads_t from query.");
+
+      }
+    }
+
+    int c = 0;
+    for ( ; notmuch_threads_valid (nm_threads);
+         notmuch_threads_move_to_next (nm_threads)) {
+      if (c > 0) {
+        throw invalid_argument ("db: got more than one thread for thread id.");
+      }
+
+      nm_thread = notmuch_threads_get (nm_threads);
+
+      c++;
+    }
+
+    if (c < 1) {
+      throw invalid_argument ("db: could not find thread!");
+    }
+
+    /* call function */
+    func (nm_thread);
+
+    /* free resources */
+    notmuch_query_destroy (query);
+  }
+
+  template <typename Func>
+  void Db::on_message (ustring mid, Func func) {
+
+    notmuch_message_t * msg;
+    notmuch_status_t s = notmuch_database_find_message (nm_db, mid.c_str(), &msg);
+
+    if (s != NOTMUCH_STATUS_SUCCESS) {
+      /* try to reopen db in case we got an Xapian::DatabaseModifiedError */
+      cout << "db: trying to reopen database.." << endl;
+
+      reopen ();
+
+      s = notmuch_database_find_message (nm_db, mid.c_str(), &msg);
+
+      if (s != NOTMUCH_STATUS_SUCCESS) {
+        /* could not do that, failing */
+        cout << "db: to no avail, failure is iminent." << endl;
+
+        throw database_error ("db: could not find message.");
+
+      }
+    }
+
+    /* call function */
+    func (msg);
+
+    /* free resources */
+    notmuch_message_destroy (msg);
   }
 
   void Db::test_query () { // {{{
@@ -335,112 +311,50 @@ namespace Astroid {
    */
   NotmuchThread::NotmuchThread (notmuch_thread_t * t) {
     thread_id = notmuch_thread_get_thread_id (t);
-    db = astroid->db;
+
+    load (t);
   }
 
   NotmuchThread::NotmuchThread (ustring tid) : thread_id (tid) {
-    db = astroid->db;
+
   }
 
   NotmuchThread::~NotmuchThread () {
-    if (ref > 0) {
-      cerr << "nmt: notmuchthread destroyed while ref count on db object > 0" << endl;
-    }
-    ref = 0;
-    deactivate ();
   }
 
-  void NotmuchThread::activate () {
-
-    ref++;
-
-    if (ref > 1) {
-      return; // already set up
-    }
-
-    string query_s = "thread:" + thread_id;
-
-    db->read_lock ();
-    query = notmuch_query_create (astroid->db->nm_db, query_s.c_str());
-    nm_threads = notmuch_query_search_threads (query);
-
-    if (nm_threads == NULL) {
-      /* try to reopen db in case we got an Xapian::DatabaseModifiedError */
-      cout << "nmt: activate: trying to reopen database.." << endl;
-
-      db->read_release ();
-      astroid->db->reopen ();
-
-      db->read_lock ();
-      query = notmuch_query_create (astroid->db->nm_db, query_s.c_str());
-      nm_threads = notmuch_query_search_threads (query);
-
-      if (nm_threads == NULL) {
-        /* could not do that, failing */
-        cout << "nmt: to no avail, failure is iminent." << endl;
-
-        throw database_error ("nmt: could not get a valid notmuch_threads_t from query.");
-
-      }
-    }
-
-    int c = 0;
-    for ( ; notmuch_threads_valid (nm_threads);
-         notmuch_threads_move_to_next (nm_threads)) {
-      if (c > 0) {
-        throw invalid_argument ("nmt: got more than one thread for thread id.");
-      }
-
-      nm_thread = notmuch_threads_get (nm_threads);
-
-      c++;
-    }
-
-    if (c < 1) {
-      throw invalid_argument ("nmt: could not find thread!");
-    }
-
-    db->read_release ();
-  }
-
-  void NotmuchThread::deactivate () {
-    if (--ref <= 0) {
-      notmuch_threads_destroy (nm_threads);
-      notmuch_query_destroy (query);
-    }
-  }
-
-  void NotmuchThread::refresh () {
+  void NotmuchThread::refresh (Db * db) {
     /* do a new db query and update all fields */
-    activate ();
 
+    lock_guard <Db> grd (*db);
+    db->on_thread (thread_id,
+        [&](notmuch_thread_t * nm_thread) {
+
+          load (nm_thread);
+
+        });
+  }
+
+  void NotmuchThread::load (notmuch_thread_t * nm_thread) {
     unread     = false;
     attachment = false;
     flagged    = false;
 
-    db->read_lock ();
     /* update values */
     const char * s = notmuch_thread_get_subject (nm_thread);
     subject     = ustring (s);
     newest_date = notmuch_thread_get_newest_date (nm_thread);
-    total_messages = check_total_messages ();
-    authors     = get_authors ();
-    tags        = get_tags ();
-    db->read_release ();
-
-
-    deactivate ();
+    total_messages = check_total_messages (nm_thread);
+    authors     = get_authors (nm_thread);
+    tags        = get_tags (nm_thread);
   }
 
-  vector<ustring> NotmuchThread::get_tags () {
+  vector<ustring> NotmuchThread::get_tags (notmuch_thread_t * nm_thread) {
 
-    activate ();
     notmuch_tags_t *  tags;
     const char *      tag;
 
     vector<ustring> ttags;
 
-    db->read_lock ();
     for (tags = notmuch_thread_get_tags (nm_thread);
          notmuch_tags_valid (tags);
          notmuch_tags_move_to_next (tags))
@@ -457,39 +371,28 @@ namespace Astroid {
 
       ttags.push_back (ustring(tag));
     }
-    db->read_release ();
 
-
-    deactivate ();
     return ttags;
   }
 
   /* get and split authors */
-  vector<ustring> NotmuchThread::get_authors () {
-    activate ();
-
-    db->read_lock ();
+  vector<ustring> NotmuchThread::get_authors (notmuch_thread_t * nm_thread) {
     ustring astr = ustring (notmuch_thread_get_authors (nm_thread));
-    db->read_release ();
 
     vector<ustring> aths = VectorUtils::split_and_trim (astr, ",");
-
-    deactivate ();
 
     return aths;
   }
 
-  int NotmuchThread::check_total_messages () {
-    activate ();
-    db->read_lock ();
+  int NotmuchThread::check_total_messages (notmuch_thread_t * nm_thread) {
     int c = notmuch_thread_get_total_messages (nm_thread);
-    db->read_release ();
-    deactivate ();
     return c;
   }
 
   /* tag actions */
-  bool NotmuchThread::add_tag (ustring tag) {
+  bool NotmuchThread::add_tag (Db * db, ustring tag) {
+    lock_guard <Db> grd (*db);
+
     cout << "nm (" << thread_id << "): add tag: " << tag << endl;
     tag = sanitize_tag (tag);
     if (!check_tag (tag)) {
@@ -497,56 +400,55 @@ namespace Astroid {
       return false;
     }
 
-    if (find(tags.begin (), tags.end (), tag) == tags.end ()) {
-      activate ();
-      db->write_lock ();
+    bool res = true;
 
-      /* get messages from thread */
-      notmuch_messages_t * qmessages;
-      notmuch_message_t  * message;
+    db->on_thread (thread_id, [&](notmuch_thread_t * nm_thread)
+      {
+        if (find(tags.begin (), tags.end (), tag) == tags.end ()) {
+          /* get messages from thread */
+          notmuch_messages_t * qmessages;
+          notmuch_message_t  * message;
 
-      bool res = true;
 
-      for (qmessages = notmuch_thread_get_messages (nm_thread);
-           notmuch_messages_valid (qmessages);
-           notmuch_messages_move_to_next (qmessages)) {
+          for (qmessages = notmuch_thread_get_messages (nm_thread);
+               notmuch_messages_valid (qmessages);
+               notmuch_messages_move_to_next (qmessages)) {
 
-        message = notmuch_messages_get (qmessages);
+            message = notmuch_messages_get (qmessages);
 
-        notmuch_status_t s = notmuch_message_add_tag (message, tag.c_str ());
+            notmuch_status_t s = notmuch_message_add_tag (message, tag.c_str ());
 
-        if (s == NOTMUCH_STATUS_SUCCESS) {
-          res &= true;
+            if (s == NOTMUCH_STATUS_SUCCESS) {
+              res &= true;
+            } else {
+              cerr << "nm: could not add tag: " << tag << " to thread: " << thread_id << endl;
+              res = false;
+              return;
+            }
+
+          }
+
+          if (res) {
+            tags.push_back (tag);
+
+            // add to global tag list
+            if (find(db->tags.begin (),
+                  db->tags.end (),
+                  tag) == db->tags.end ()) {
+              db->tags.push_back (tag);
+            }
+          }
+
+          res = true;
         } else {
-          cerr << "nm: could not add tag: " << tag << " to thread: " << thread_id << endl;
-          db->write_release ();
-          return false;
+          res = false;
         }
+      });
 
-      }
-
-      if (res) {
-        tags.push_back (tag);
-
-        // add to global tag list
-        if (find(astroid->db->tags.begin (),
-              astroid->db->tags.end (),
-              tag) == astroid->db->tags.end ()) {
-          astroid->db->tags.push_back (tag);
-        }
-      }
-
-      db->write_release ();
-      deactivate ();
-
-
-      return true;
-    } else {
-      return false;
-    }
+    return res;
   }
 
-  bool NotmuchThread::remove_tag (ustring tag) {
+  bool NotmuchThread::remove_tag (Db * db, ustring tag) {
     cout << "nm (" << thread_id << "): remove tag: " << tag << endl;
     tag = sanitize_tag (tag);
     if (!check_tag (tag)) {
@@ -554,48 +456,49 @@ namespace Astroid {
       return false;
     }
 
-    if (find(tags.begin (), tags.end (), tag) != tags.end ()) {
-      activate ();
-      db->write_lock ();
+    bool res = true;
+    db->on_thread (thread_id, [&](notmuch_thread_t * nm_thread)
+      {
 
-      /* get messages from thread */
-      notmuch_messages_t * qmessages;
-      notmuch_message_t  * message;
+        if (find(tags.begin (), tags.end (), tag) != tags.end ()) {
 
-      bool res = true;
+          /* get messages from thread */
+          notmuch_messages_t * qmessages;
+          notmuch_message_t  * message;
 
-      for (qmessages = notmuch_thread_get_messages (nm_thread);
-           notmuch_messages_valid (qmessages);
-           notmuch_messages_move_to_next (qmessages)) {
 
-        message = notmuch_messages_get (qmessages);
+          for (qmessages = notmuch_thread_get_messages (nm_thread);
+               notmuch_messages_valid (qmessages);
+               notmuch_messages_move_to_next (qmessages)) {
 
-        notmuch_status_t s = notmuch_message_remove_tag (message, tag.c_str ());
+            message = notmuch_messages_get (qmessages);
 
-        if (s == NOTMUCH_STATUS_SUCCESS) {
-          res &= true;
+            notmuch_status_t s = notmuch_message_remove_tag (message, tag.c_str ());
+
+            if (s == NOTMUCH_STATUS_SUCCESS) {
+              res &= true;
+            } else {
+              cerr << "nm: could not remove tag: " << tag << " from thread: " << thread_id << endl;
+              res = false;
+              return;
+            }
+
+          }
+
+          if (res) {
+            tags.erase (remove (tags.begin (),
+                                tags.end (),
+                                tag), tags.end ());
+          }
+
+          res = true;
         } else {
-          cerr << "nm: could not remove tag: " << tag << " from thread: " << thread_id << endl;
-          db->write_release ();
-          return false;
+          cout << "nm: thread does not have tag." << endl;
+          res = false;
         }
+      });
 
-      }
-
-      if (res) {
-        tags.erase (remove (tags.begin (),
-                            tags.end (),
-                            tag), tags.end ());
-      }
-
-      db->write_release ();
-      deactivate ();
-
-      return true;
-    } else {
-      cout << "nm: thread does not have tag." << endl;
-      return false;
-    }
+    return res;
   }
 
   ustring NotmuchThread::sanitize_tag (ustring tag) {

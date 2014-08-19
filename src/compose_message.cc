@@ -1,4 +1,5 @@
 # include <iostream>
+# include <thread>
 # include <sys/time.h>
 
 # include <boost/filesystem.hpp>
@@ -204,7 +205,13 @@ namespace Astroid {
           write (save_to.c_str());
 
           /* add to notmuch with sent tag */
-          astroid->db->add_sent_message (save_to.c_str());
+          thread add_sent ([&]()
+              {
+                Db db (Db::DbMode::DATABASE_READ_WRITE);
+                lock_guard<Db> lk (db);
+                db.add_sent_message (save_to.c_str());
+                cout << "cm: sent message added to db." << endl;
+              });
         }
 
         return true;

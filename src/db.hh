@@ -38,54 +38,37 @@ namespace Astroid {
       vector<ustring> authors;
       vector<ustring> tags;
 
-      void refresh ();
+      void refresh (Db *);
+      void load (notmuch_thread_t *);
 
-      bool remove_tag (ustring);
-      bool add_tag (ustring);
+      bool remove_tag (Db *, ustring);
+      bool add_tag (Db *, ustring);
       ustring sanitize_tag (ustring);
       bool check_tag (ustring);
 
     private:
-      int     check_total_messages ();
-      vector<ustring> get_authors ();
-      vector<ustring> get_tags ();
-
-      /* activate valid db objects */
-      Db * db;
-      void activate ();
-      void deactivate ();
-
-      int ref = 0;
-      notmuch_query_t *   query;
-      notmuch_threads_t * nm_threads;
-      notmuch_thread_t *  nm_thread;
+      int     check_total_messages (notmuch_thread_t *);
+      vector<ustring> get_authors (notmuch_thread_t *);
+      vector<ustring> get_tags (notmuch_thread_t *);
   };
 
-  class Db {
+  class Db : public recursive_mutex {
     public:
-      Db ();
+      enum DbMode {
+        DATABASE_READ_ONLY,
+        DATABASE_READ_WRITE,
+      };
+
+      Db (DbMode);
       ~Db ();
-
-      /* the database should only be open in a read-write state
-       * when necessary. all write-operations should be wrapped
-       * in a write_lock which ensures that the database is open
-       * in a read-write state. a lock or condition variable is
-       * required for all db-operations to ensure that a database
-       * re-open (change from read-only to read-write) is not in
-       * progress.
-       *
-       * read and write operations may happen in parallel.
-       *
-       */
-
-      void read_lock ();
-      void read_release ();
-
-      void write_lock ();
-      void write_release ();
 
       void reopen ();
 
+      template <typename Func>
+      void on_thread (ustring, Func);
+
+      template <typename Func>
+      void on_message (ustring, Func);
     private:
       enum DbState {
         READ_ONLY,
@@ -94,32 +77,8 @@ namespace Astroid {
         CLOSED,
       };
 
-      mutex               db_ready_mut;
-      condition_variable  db_ready_cv;
-
       /* internal lock for open and close operations */
       atomic<DbState> db_state;
-
-
-      /* each time a write lock is requested this reference
-       * count is incremented. if it is 0 upon reference
-       * increment, a read-write connection must first be made.
-       *
-       * readers may use db_open_cv on db_state to check whether
-       * the db is ready (READ_ONLY or READ_WRITE).
-       *
-       *
-       */
-      int                writers;
-      mutex              writers_mux;
-      condition_variable writers_cv;
-
-      /* used by open_db methods to wait for all readers
-       * to finish */
-      int                 readers;
-      mutex               readers_mux;
-      condition_variable  readers_cv;
-
 
       bool open_db_write (bool);
       bool open_db_read_only ();
