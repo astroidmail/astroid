@@ -230,8 +230,11 @@ namespace Astroid {
 
     ((Gtk::Label*) tab_widget)->set_text (thread->thread_id);
 
+    Db db (Db::DbMode::DATABASE_READ_ONLY);
+    lock_guard<Db> grd (db);
+
     auto _mthread = refptr<MessageThread>(new MessageThread (thread));
-    _mthread->load_messages ();
+    _mthread->load_messages (&db);
     load_message_thread (_mthread);
   }
 
@@ -240,7 +243,8 @@ namespace Astroid {
 
     /* remove unread status */
     if (mthread->in_notmuch) {
-      main_window->actions.doit (refptr<Action>(new TagAction(mthread->thread, {}, {"unread"})));
+      Db db (Db::DbMode::DATABASE_READ_WRITE);
+      main_window->actions.doit (&db, refptr<Action>(new TagAction(mthread->thread, {}, {"unread"})));
     }
 
     ustring s = mthread->subject;
@@ -339,7 +343,7 @@ namespace Astroid {
     insert_header_address (header, "Subject:", m->subject, true);
 
     if (m->in_notmuch) {
-      ustring tags_s = VectorUtils::concat_tags (m->tags ());
+      ustring tags_s = VectorUtils::concat_tags (m->tags);
       insert_header_address (header, "Tags:", tags_s, true);
     }
 

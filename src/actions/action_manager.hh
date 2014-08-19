@@ -16,7 +16,7 @@ namespace Astroid {
 
       vector<refptr<Action>> actions;
 
-      bool doit (refptr<Action>);
+      bool doit (Db *, refptr<Action>);
       bool undo ();
 
   };

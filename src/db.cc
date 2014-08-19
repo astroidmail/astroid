@@ -313,10 +313,6 @@ namespace Astroid {
     load (t);
   }
 
-  NotmuchThread::NotmuchThread (ustring tid) : thread_id (tid) {
-
-  }
-
   NotmuchThread::~NotmuchThread () {
   }
 

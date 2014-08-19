@@ -54,12 +54,14 @@ namespace Astroid {
    * ----------
    */
   ThreadIndexListStore::ThreadIndexListStoreColumnRecord::ThreadIndexListStoreColumnRecord () {
+    add (newest_date);
     add (thread_id);
     add (thread);
   }
 
   ThreadIndexListStore::ThreadIndexListStore () {
     set_column_types (columns);
+    set_sort_column (0, Gtk::SortType::SORT_ASCENDING);
   }
 
 
@@ -214,7 +216,7 @@ namespace Astroid {
           if (thread) {
 
             MessageThread mthread (thread);
-            mthread.load_messages ();
+            mthread.load_messages (thread_index->db);
 
             /* reply to last message */
             main_window->add_mode (new ReplyMessage (main_window, *(--mthread.messages.end())));
@@ -242,8 +244,8 @@ namespace Astroid {
         {
           auto thread = get_current_thread ();
           if (thread) {
-
-            main_window->actions.doit (refptr<Action>(new ToggleAction(thread, "inbox")));
+            Db db (Db::DbMode::DATABASE_READ_WRITE);
+            main_window->actions.doit (&db, refptr<Action>(new ToggleAction(thread, "inbox")));
 
             /* update row */
             update_current_row ();
@@ -258,7 +260,8 @@ namespace Astroid {
           auto thread = get_current_thread ();
           if (thread) {
 
-            main_window->actions.doit (refptr<Action>(new ToggleAction(thread, "flagged")));
+            Db db (Db::DbMode::DATABASE_READ_WRITE);
+            main_window->actions.doit (&db, refptr<Action>(new ToggleAction(thread, "flagged")));
 
             /* update row */
             update_current_row ();
@@ -273,7 +276,8 @@ namespace Astroid {
           auto thread = get_current_thread ();
           if (thread) {
 
-            main_window->actions.doit (refptr<Action>(new ToggleAction(thread, "unread")));
+            Db db (Db::DbMode::DATABASE_READ_WRITE);
+            main_window->actions.doit (&db, refptr<Action>(new ToggleAction(thread, "unread")));
 
             /* update row */
             update_current_row ();
@@ -288,7 +292,8 @@ namespace Astroid {
           auto thread = get_current_thread ();
           if (thread) {
 
-            main_window->actions.doit (refptr<Action>(new SpamAction(thread)));
+            Db db (Db::DbMode::DATABASE_READ_WRITE);
+            main_window->actions.doit (&db, refptr<Action>(new SpamAction(thread)));
 
             /* update row */
             update_current_row ();
@@ -335,7 +340,8 @@ namespace Astroid {
                       rem.size () == 0) {
                     cout << "ti: nothing to do." << endl;
                   } else {
-                    main_window->actions.doit (
+                    Db db (Db::DbMode::DATABASE_READ_WRITE);
+                    main_window->actions.doit (&db,
                        refptr<Action>(new TagAction (thread, add, rem)));
                   }
                 });

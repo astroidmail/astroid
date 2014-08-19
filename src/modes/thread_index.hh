@@ -34,11 +34,13 @@ namespace Astroid {
       bool thread_view_visible = false;
 
       Glib::RefPtr<ThreadIndexListStore> list_store;
-      ThreadIndexListView  * list_view;
-      ThreadIndexScrolled  * scroll;
+      ThreadIndexListView * list_view;
+      ThreadIndexScrolled * scroll;
 
       ustring query_string;
-      notmuch_query_t * query;
+
+      Db * db;
+      notmuch_query_t   * query;
       notmuch_threads_t * threads;
 
     protected:

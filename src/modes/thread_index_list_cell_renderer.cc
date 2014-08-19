@@ -48,8 +48,6 @@ namespace Astroid {
     left_icons_size  = content_height;
     left_icons_width = content_height;
 
-    thread->refresh ();
-
     if (thread->unread) {
       font_description.set_weight (Pango::WEIGHT_BOLD);
     } else {

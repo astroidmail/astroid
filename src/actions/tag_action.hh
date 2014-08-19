@@ -18,8 +18,8 @@ namespace Astroid {
       vector<ustring> add;
       vector<ustring> remove;
 
-      bool doit () override;
-      bool undo () override;
+      bool doit (Db *) override;
+      bool undo (Db *) override;
       bool undoable () override;
 
   };

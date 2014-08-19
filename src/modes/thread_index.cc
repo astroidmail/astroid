@@ -37,8 +37,10 @@ namespace Astroid {
     show_all ();
 
     /* set up notmuch query */
-    astroid->db->read_lock ();
-    query =  notmuch_query_create (astroid->db->nm_db, query_string.c_str ());
+    db = new Db (Db::DbMode::DATABASE_READ_ONLY);
+    lock_guard<Db> grd (*db);
+
+    query =  notmuch_query_create (db->nm_db, query_string.c_str ());
 
     cout << "ti, query: " << notmuch_query_get_query_string (query) << ", approx: "
          << notmuch_query_count_messages (query) << " messages." << endl;
@@ -47,17 +49,17 @@ namespace Astroid {
 
     /* add threads to model */
     load_more_threads ();
-    astroid->db->read_release ();
 
     /* select first */
     list_view->set_cursor (Gtk::TreePath("0"));
   }
 
+
   void ThreadIndex::load_more_threads (bool all) {
     notmuch_thread_t  * thread;
 
     cout << "ti: load more (all: " << all << ") threads.." << endl;
-    astroid->db->read_lock ();
+    lock_guard<Db> grd (*db);
 
     int i = 0;
 
@@ -72,8 +74,9 @@ namespace Astroid {
       auto iter = list_store->append ();
       Gtk::ListStore::Row row = *iter;
 
-      row[list_store->columns.thread_id] = notmuch_thread_get_thread_id (thread);
-      row[list_store->columns.thread]    = Glib::RefPtr<NotmuchThread>(t);
+      row[list_store->columns.newest_date] = t->newest_date;
+      row[list_store->columns.thread_id]   = t->thread_id;
+      row[list_store->columns.thread]      = Glib::RefPtr<NotmuchThread>(t);
 
       i++;
 
@@ -84,7 +87,6 @@ namespace Astroid {
       }
     }
 
-    astroid->db->read_release ();
     cout << "ti: loaded " << i << " threads." << endl;
   }
 
@@ -158,6 +160,8 @@ namespace Astroid {
     cout << "ti: deconstruct." << endl;
     notmuch_threads_destroy (threads);
     notmuch_query_destroy (query);
+
+    delete db;
 
     if (thread_view_loaded) {
       delete thread_view; // apparently not done by Gtk::manage

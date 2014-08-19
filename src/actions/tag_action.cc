@@ -27,7 +27,7 @@ namespace Astroid {
     return true;
   }
 
-  bool TagAction::doit () {
+  bool TagAction::doit (Db * db) {
     cout << "tag_action: " << thread->thread_id << ", add: ";
     for_each (add.begin(),
               add.end(),
@@ -49,23 +49,23 @@ namespace Astroid {
     for_each (add.begin(),
               add.end(),
               [&](ustring t) {
-                res &= thread->add_tag (t);
+                res &= thread->add_tag (db, t);
               });
 
     for_each (remove.begin(),
               remove.end(),
               [&](ustring t) {
-                res &= thread->remove_tag (t);
+                res &= thread->remove_tag (db, t);
               });
 
     return res;
   }
 
-  bool TagAction::undo () {
+  bool TagAction::undo (Db * db) {
     cout << "tag_action: undo." << endl;
 
     swap (add, remove);
-    return doit ();
+    return doit (db);
   }
 
 }

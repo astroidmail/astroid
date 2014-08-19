@@ -6,6 +6,7 @@
 # include "action_manager.hh"
 # include "main_window.hh"
 # include "action.hh"
+# include "db.hh"
 
 using namespace std;
 
@@ -14,11 +15,11 @@ namespace Astroid {
 
   }
 
-  bool ActionManager::doit (refptr<Action> action) {
+  bool ActionManager::doit (Db * db, refptr<Action> action) {
     if (action->undoable()) {
       actions.push_back (action);
     }
-    return action->doit ();
+    return action->doit (db);
   }
 
   bool ActionManager::undo () {
@@ -26,7 +27,9 @@ namespace Astroid {
     if (!actions.empty ()) {
       refptr<Action> action = actions.back ();
       actions.pop_back ();
-      return action->undo ();
+      Db db (Db::DbMode::DATABASE_READ_WRITE);
+      lock_guard<Db> grd (db);
+      return action->undo (&db);
     } else {
       cout << "actions: no more actions to undo." << endl;
       return true;

@@ -14,8 +14,8 @@ namespace Astroid {
 
       refptr<NotmuchThread> thread;
 
-      virtual bool doit () = 0;
-      virtual bool undo () = 0;
+      virtual bool doit (Db *) = 0;
+      virtual bool undo (Db *) = 0;
       virtual bool undoable ();
 
   };

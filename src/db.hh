@@ -23,7 +23,6 @@ namespace Astroid {
   class NotmuchThread : public Glib::Object {
     public:
       NotmuchThread (notmuch_thread_t *);
-      NotmuchThread (ustring);
       ~NotmuchThread ();
 
       string thread_id;
