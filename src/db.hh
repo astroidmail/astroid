@@ -62,10 +62,11 @@ namespace Astroid {
       ~Db ();
 
       void reopen ();
+      bool check_reopen (bool);
 
-      void on_thread (ustring, function < void(notmuch_thread_t *)>);
+      void on_thread  (ustring, function <void(notmuch_thread_t *)>);
+      void on_message (ustring, function <void(notmuch_message_t *)>);
 
-      void on_message (ustring, function< void(notmuch_message_t *)> );
     private:
       enum DbState {
         READ_ONLY,

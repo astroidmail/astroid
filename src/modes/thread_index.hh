@@ -23,10 +23,14 @@ namespace Astroid {
 
       MainWindow * main_window;
 
-      int initial_max_threads = 20;
-      int current_thread = 0;
+      int thread_load_step    = 50;
+      int current_thread      = 0;
 
-      void load_more_threads (bool all = false);
+      void load_more_threads (bool all = false, int count = -1);
+      void refresh (bool, int);
+      void setup_query ();
+      void close_query ();
+      int reopen_tries = 0;
 
       void open_thread (refptr<NotmuchThread>, bool);
       ThreadView * thread_view;
@@ -39,7 +43,7 @@ namespace Astroid {
 
       ustring query_string;
 
-      Db * db;
+      Db * db = NULL;
       notmuch_query_t   * query;
       notmuch_threads_t * threads;
 

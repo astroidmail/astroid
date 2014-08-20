@@ -53,5 +53,18 @@ namespace Astroid {
       trim_left(str);
       trim_right(str);
   }
+
+  ustring UstringUtils::random_alphanumeric (int length) {
+    ustring str;
+
+    const string _chars = "abcdefghijklmnopqrstuvwxyz1234567890";
+    random_device rd;
+    mt19937 g(rd());
+
+    for (int i = 0; i < length; i++)
+      str += _chars[g() % _chars.size()];
+
+    return str;
+  }
 }
 

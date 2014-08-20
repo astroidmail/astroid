@@ -17,6 +17,7 @@
 # include "db.hh"
 # include "thread_view.hh"
 # include "message_thread.hh"
+# include "utils/ustring_utils.hh"
 
 using namespace std;
 
@@ -52,13 +53,7 @@ namespace Astroid {
     int pid = getpid ();
 
     msg_time = time(0);
-    const string _chars = "abcdefghijklmnopqrstuvwxyz1234567890";
-    random_device rd;
-    mt19937 g(rd());
-
-    int len = 10;
-    for (int i = 0; i < len; i++)
-      vim_server += _chars[g() % _chars.size()];
+    vim_server = UstringUtils::random_alphanumeric (10);
 
     vim_server = ustring::compose ("%2-astroid-%1-%3-%5@%4", id,
         msg_time, vim_server, hostname, pid);

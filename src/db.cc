@@ -40,6 +40,8 @@ namespace Astroid {
 
     cout << "db: opening db: " << path_db << endl;
 
+    time_t start = clock ();
+
     db_state  = CLOSED;
     nm_db     = NULL;
     if (mode == DATABASE_READ_ONLY) {
@@ -50,9 +52,8 @@ namespace Astroid {
       throw invalid_argument ("db: mode must be read-only or read-write");
     }
 
-    //test_query ();
-
-    load_tags ();
+    float diff = (clock () - start) * 1000.0 / CLOCKS_PER_SEC;
+    cout << "db: open time: " << diff << " ms." << endl;
   }
 
   void Db::reopen () {
@@ -69,14 +70,65 @@ namespace Astroid {
     }
   }
 
+  bool Db::check_reopen (bool doreopen) {
+    /* tries to provoke an Xapian::DatabaseModifiedError and
+     * optionally reopens the database.
+     *
+     * returns true if db is invalid. queries will be invalid
+     * afterwards, but might still respond true to notmuch_valid
+     * calls.
+     *
+     */
+
+    time_t start = clock ();
+    const char * query_string = "thread:whoa"; // no matches
+    bool invalid = false;
+
+    notmuch_query_t * query;
+    notmuch_threads_t * threads;
+
+    /* testing */
+    query =  notmuch_query_create (nm_db, query_string);
+
+    if (query == NULL) invalid = true;
+
+    if (!invalid) {
+      cout << "db: test query: " << notmuch_query_get_query_string (query) << ", approx: "
+           << notmuch_query_count_threads (query) << " threads." << endl;
+    }
+
+    /* slow */
+    if (!invalid) {
+      threads = notmuch_query_search_threads (query);
+      if (threads == NULL) invalid = true;
+    }
+
+    if (!invalid) {
+      notmuch_thread_t * thread = notmuch_threads_get (threads);
+
+      if (thread == NULL) invalid = true;
+    }
+
+    float diff = (clock () - start) * 1000.0 / CLOCKS_PER_SEC;
+    cout << "db: test query time: " << diff << " ms." << endl;
+
+    if (!invalid) {
+      cout << "db: no longer valid, reopen required." << endl;
+    }
+
+    if (!invalid && doreopen) {
+      reopen ();
+    }
+
+    return !invalid;
+  }
+
   void Db::close_db () {
     if (nm_db != NULL) {
       cout << "db: closing db." << endl;
       notmuch_database_close (nm_db);
       nm_db = NULL;
       db_state = CLOSED;
-    } else {
-      cout << "db: already closed." << endl;
     }
   }
 

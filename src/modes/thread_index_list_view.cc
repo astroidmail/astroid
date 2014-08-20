@@ -216,7 +216,9 @@ namespace Astroid {
           if (thread) {
 
             MessageThread mthread (thread);
-            mthread.load_messages (thread_index->db);
+            Db db (Db::DbMode::DATABASE_READ_ONLY);
+
+            mthread.load_messages (&db);
 
             /* reply to last message */
             main_window->add_mode (new ReplyMessage (main_window, *(--mthread.messages.end())));

@@ -36,30 +36,75 @@ namespace Astroid {
 
     show_all ();
 
-    /* set up notmuch query */
+    /* load threads */
     db = new Db (Db::DbMode::DATABASE_READ_ONLY);
-    lock_guard<Db> grd (*db);
-
-    query =  notmuch_query_create (db->nm_db, query_string.c_str ());
-
-    cout << "ti, query: " << notmuch_query_get_query_string (query) << ", approx: "
-         << notmuch_query_count_messages (query) << " messages." << endl;
-
-    threads = notmuch_query_search_threads (query);
-
-    /* add threads to model */
+    setup_query ();
     load_more_threads ();
 
     /* select first */
     list_view->set_cursor (Gtk::TreePath("0"));
   }
 
+  void ThreadIndex::setup_query () {
+    lock_guard <Db> grd (*db);
 
-  void ThreadIndex::load_more_threads (bool all) {
-    notmuch_thread_t  * thread;
+    /* set up notmuch query */
+    time_t start = clock ();
+    query =  notmuch_query_create (db->nm_db, query_string.c_str ());
+
+    cout << "ti, query: " << notmuch_query_get_query_string (query) << ", approx: "
+         << notmuch_query_count_threads (query) << " threads." << endl << flush;
+
+    /* slow */
+    threads = notmuch_query_search_threads (query);
+    float diff = (clock () - start) * 1000.0 / CLOCKS_PER_SEC;
+
+    cout << "ti: query time: " << diff << " ms." << endl;
+  }
+
+  void ThreadIndex::close_query () {
+    notmuch_threads_destroy (threads);
+    notmuch_query_destroy (query);
+  }
+
+
+  void ThreadIndex::refresh (bool all, int count) {
+    cout << "ti: refresh." << endl;
+
+    list_store->clear ();
+
+    close_query ();
+    setup_query ();
+
+    current_thread = 0;
+
+    load_more_threads (all, count);
+
+    /* select first */
+    list_view->set_cursor (Gtk::TreePath("0"));
+  }
+
+  void ThreadIndex::load_more_threads (bool all, int count) {
 
     cout << "ti: load more (all: " << all << ") threads.." << endl;
     lock_guard<Db> grd (*db);
+
+    if (count < 0) count = thread_load_step;
+
+    if (reopen_tries > 1) {
+      cerr << "ti: could not reopen db." << endl;
+
+      throw database_error ("ti: could not reopen db.");
+    }
+
+    if (db->check_reopen (true)) {
+      reopen_tries++;
+
+      refresh (all, current_thread + count);
+      return;
+    }
+
+    reopen_tries = 0;
 
     int i = 0;
 
@@ -67,6 +112,7 @@ namespace Astroid {
          notmuch_threads_valid (threads);
          notmuch_threads_move_to_next (threads)) {
 
+      notmuch_thread_t  * thread;
       thread = notmuch_threads_get (threads);
 
       NotmuchThread *t = new NotmuchThread (thread);
@@ -74,14 +120,14 @@ namespace Astroid {
       auto iter = list_store->append ();
       Gtk::ListStore::Row row = *iter;
 
-      row[list_store->columns.newest_date] = t->newest_date;
-      row[list_store->columns.thread_id]   = t->thread_id;
-      row[list_store->columns.thread]      = Glib::RefPtr<NotmuchThread>(t);
+      row[list_store->columns.thread_id] = notmuch_thread_get_thread_id (thread);
+      row[list_store->columns.thread]    = Glib::RefPtr<NotmuchThread>(t);
 
       i++;
+      current_thread++;
 
       if (!all) {
-        if (i >= initial_max_threads) {
+        if (i >= count) {
           break;
         }
       }
@@ -106,6 +152,12 @@ namespace Astroid {
           }
         }
         break;
+
+      case GDK_KEY_dollar:
+        {
+          refresh (false, current_thread);
+          return true;
+        }
 
       /* toggle between panes */
       case GDK_KEY_Tab:
@@ -158,9 +210,7 @@ namespace Astroid {
 
   ThreadIndex::~ThreadIndex () {
     cout << "ti: deconstruct." << endl;
-    notmuch_threads_destroy (threads);
-    notmuch_query_destroy (query);
-
+    close_query ();
     delete db;
 
     if (thread_view_loaded) {
