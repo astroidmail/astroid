@@ -81,46 +81,29 @@ namespace Astroid {
      */
 
     time_t start = clock ();
-    const char * query_string = "thread:whoa"; // no matches
     bool invalid = false;
 
-    notmuch_query_t * query;
-    notmuch_threads_t * threads;
-
     /* testing */
-    query =  notmuch_query_create (nm_db, query_string);
+    notmuch_message_t * msg;
+    notmuch_status_t s = notmuch_database_find_message (nm_db, "asdfasd", &msg);
 
-    if (query == NULL) invalid = true;
+    if (s == NOTMUCH_STATUS_XAPIAN_EXCEPTION) invalid = true;
 
-    if (!invalid) {
-      cout << "db: test query: " << notmuch_query_get_query_string (query) << ", approx: "
-           << notmuch_query_count_threads (query) << " threads." << endl;
-    }
-
-    /* slow */
-    if (!invalid) {
-      threads = notmuch_query_search_threads (query);
-      if (threads == NULL) invalid = true;
-    }
-
-    if (!invalid) {
-      notmuch_thread_t * thread = notmuch_threads_get (threads);
-
-      if (thread == NULL) invalid = true;
-    }
 
     float diff = (clock () - start) * 1000.0 / CLOCKS_PER_SEC;
     cout << "db: test query time: " << diff << " ms." << endl;
 
-    if (!invalid) {
+    if (invalid) {
       cout << "db: no longer valid, reopen required." << endl;
     }
 
-    if (!invalid && doreopen) {
+    if (invalid && doreopen) {
       reopen ();
     }
 
-    return !invalid;
+    notmuch_message_destroy (msg);
+
+    return invalid;
   }
 
   void Db::close_db () {
@@ -360,7 +343,12 @@ namespace Astroid {
    * --------------
    */
   NotmuchThread::NotmuchThread (notmuch_thread_t * t) {
-    thread_id = notmuch_thread_get_thread_id (t);
+    const char * ti = notmuch_thread_get_thread_id (t);
+    if (ti == NULL) {
+      throw database_error ("nmt: NULL thread_id");
+    }
+
+    thread_id = ti;
 
     load (t);
   }
@@ -387,7 +375,10 @@ namespace Astroid {
 
     /* update values */
     const char * s = notmuch_thread_get_subject (nm_thread);
-    subject     = ustring (s);
+
+    if (s != NULL)
+      subject = ustring (s);
+
     newest_date = notmuch_thread_get_newest_date (nm_thread);
     total_messages = check_total_messages (nm_thread);
     authors     = get_authors (nm_thread);
@@ -407,15 +398,17 @@ namespace Astroid {
     {
       tag = notmuch_tags_get (tags);
 
-      if (string(tag) == "unread") {
-        unread = true;
-      } else if (string(tag) == "attachment") {
-        attachment = true;
-      } else if (string(tag) == "flagged") {
-        flagged = true;
-      }
+      if (tag != NULL) {
+        if (string(tag) == "unread") {
+          unread = true;
+        } else if (string(tag) == "attachment") {
+          attachment = true;
+        } else if (string(tag) == "flagged") {
+          flagged = true;
+        }
 
-      ttags.push_back (ustring(tag));
+        ttags.push_back (ustring(tag));
+      }
     }
 
     return ttags;
@@ -423,7 +416,15 @@ namespace Astroid {
 
   /* get and split authors */
   vector<ustring> NotmuchThread::get_authors (notmuch_thread_t * nm_thread) {
-    ustring astr = ustring (notmuch_thread_get_authors (nm_thread));
+    const char * auths = notmuch_thread_get_authors (nm_thread);
+
+    ustring astr;
+
+    if (auths != NULL) {
+      astr = auths;
+    } else {
+      cerr << "nmt: got NULL for authors." << endl;
+    }
 
     vector<ustring> aths = VectorUtils::split_and_trim (astr, ",");
 

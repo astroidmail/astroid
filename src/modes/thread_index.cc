@@ -68,8 +68,16 @@ namespace Astroid {
   }
 
 
-  void ThreadIndex::refresh (bool all, int count) {
+  void ThreadIndex::refresh (bool all, int count, bool checked) {
     cout << "ti: refresh." << endl;
+
+    if (!checked) {
+      if (db->check_reopen (true)) {
+        reopen_tries++;
+        refresh (all, count, true);
+        return;
+      }
+    }
 
     list_store->clear ();
 
@@ -97,13 +105,6 @@ namespace Astroid {
       throw database_error ("ti: could not reopen db.");
     }
 
-    if (db->check_reopen (true)) {
-      reopen_tries++;
-
-      refresh (all, current_thread + count);
-      return;
-    }
-
     reopen_tries = 0;
 
     int i = 0;
@@ -115,16 +116,26 @@ namespace Astroid {
       notmuch_thread_t  * thread;
       thread = notmuch_threads_get (threads);
 
+      if (thread == NULL) {
+        cerr << "ti: error: could not get thread." << endl;
+        throw database_error ("ti: could not get thread (is NULL)");
+      }
+
       NotmuchThread *t = new NotmuchThread (thread);
 
       auto iter = list_store->append ();
       Gtk::ListStore::Row row = *iter;
 
-      row[list_store->columns.thread_id] = notmuch_thread_get_thread_id (thread);
-      row[list_store->columns.thread]    = Glib::RefPtr<NotmuchThread>(t);
+      row[list_store->columns.newest_date] = t->newest_date;
+      row[list_store->columns.thread_id]   = t->thread_id;
+      row[list_store->columns.thread]      = Glib::RefPtr<NotmuchThread>(t);
 
       i++;
       current_thread++;
+
+      if ((i % 100) == 0) {
+        cout << "ti: loaded " << i << " threads." << endl;
+      }
 
       if (!all) {
         if (i >= count) {
@@ -155,7 +166,7 @@ namespace Astroid {
 
       case GDK_KEY_dollar:
         {
-          refresh (false, current_thread);
+          refresh (false, current_thread, false);
           return true;
         }
 

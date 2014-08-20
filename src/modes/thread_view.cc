@@ -226,6 +226,7 @@ namespace Astroid {
    */
 
   void ThreadView::load_thread (refptr<NotmuchThread> _thread) {
+    cout << "tv: load thread." << endl;
     thread = _thread;
 
     ((Gtk::Label*) tab_widget)->set_text (thread->thread_id);

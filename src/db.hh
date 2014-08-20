@@ -25,7 +25,7 @@ namespace Astroid {
       NotmuchThread (notmuch_thread_t *);
       ~NotmuchThread ();
 
-      string thread_id;
+      ustring thread_id;
 
       char * subject_chr;
       ustring subject;

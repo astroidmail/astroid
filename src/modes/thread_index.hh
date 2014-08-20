@@ -27,7 +27,7 @@ namespace Astroid {
       int current_thread      = 0;
 
       void load_more_threads (bool all = false, int count = -1);
-      void refresh (bool, int);
+      void refresh (bool, int, bool);
       void setup_query ();
       void close_query ();
       int reopen_tries = 0;
