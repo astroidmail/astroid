@@ -84,24 +84,31 @@ namespace Astroid {
     bool invalid = false;
 
     /* testing */
-    notmuch_message_t * msg;
-    notmuch_status_t s = notmuch_database_find_message (nm_db, "asdfasd", &msg);
+    notmuch_query_t * q = notmuch_query_create (nm_db, "tag:fail");
 
-    if (s == NOTMUCH_STATUS_XAPIAN_EXCEPTION) invalid = true;
+    /* this will produce an error, but no way to ensure failure */
+    notmuch_query_count_threads (q);
 
+    /* this returns NULL when error */
+    notmuch_threads_t * threads = notmuch_query_search_threads (q);
+
+    if (threads == NULL) invalid = true;
+
+    notmuch_query_destroy (q);
 
     float diff = (clock () - start) * 1000.0 / CLOCKS_PER_SEC;
     cout << "db: test query time: " << diff << " ms." << endl;
 
     if (invalid) {
       cout << "db: no longer valid, reopen required." << endl;
+    } else {
+      cout << "db: valid." << endl;
     }
 
     if (invalid && doreopen) {
       reopen ();
     }
 
-    notmuch_message_destroy (msg);
 
     return invalid;
   }

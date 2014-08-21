@@ -86,13 +86,13 @@ namespace Astroid {
 
     current_thread = 0;
 
-    load_more_threads (all, count);
+    load_more_threads (all, count, true);
 
     /* select first */
     list_view->set_cursor (Gtk::TreePath("0"));
   }
 
-  void ThreadIndex::load_more_threads (bool all, int count) {
+  void ThreadIndex::load_more_threads (bool all, int count, bool checked) {
 
     cout << "ti: load more (all: " << all << ") threads.." << endl;
     lock_guard<Db> grd (*db);
@@ -103,6 +103,14 @@ namespace Astroid {
       cerr << "ti: could not reopen db." << endl;
 
       throw database_error ("ti: could not reopen db.");
+    }
+
+    if (!checked) {
+      if (db->check_reopen (true)) {
+        reopen_tries++;
+        refresh (all, count, true);
+        return;
+      }
     }
 
     reopen_tries = 0;
