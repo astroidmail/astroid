@@ -23,7 +23,7 @@ namespace Astroid {
 
       MainWindow * main_window;
 
-      int thread_load_step    = 50;
+      int thread_load_step    = 10;
       int current_thread      = 0;
 
       void load_more_threads (bool all = false, int count = -1, bool checked = false);

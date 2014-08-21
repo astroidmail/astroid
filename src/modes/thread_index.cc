@@ -71,25 +71,30 @@ namespace Astroid {
   void ThreadIndex::refresh (bool all, int count, bool checked) {
     cout << "ti: refresh." << endl;
 
-    if (!checked) {
-      if (db->check_reopen (true)) {
-        reopen_tries++;
-        refresh (all, count, true);
-        return;
-      }
-    }
+    /* get current path */
+    Gtk::TreePath path;
+    Gtk::TreeViewColumn * c;
+    list_view->get_cursor (path, c);
 
     list_store->clear ();
 
     close_query ();
+    if (!checked) db->reopen ();
     setup_query ();
 
     current_thread = 0;
 
     load_more_threads (all, count, true);
 
-    /* select first */
-    list_view->set_cursor (Gtk::TreePath("0"));
+    /* select old */
+    Gtk::TreeIter iter;
+    while (iter = list_store->get_iter (path), !(iter)) {
+      if (!path.prev ()) {
+        path = Gtk::TreePath ("0");
+        break;
+      }
+    }
+    list_view->set_cursor (path);
   }
 
   void ThreadIndex::load_more_threads (bool all, int count, bool checked) {
@@ -108,7 +113,7 @@ namespace Astroid {
     if (!checked) {
       if (db->check_reopen (true)) {
         reopen_tries++;
-        refresh (all, count, true);
+        refresh (all, current_thread + count, true);
         return;
       }
     }
