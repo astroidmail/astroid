@@ -234,7 +234,8 @@ namespace Astroid {
 
     if (s != NOTMUCH_STATUS_SUCCESS) {
       cout << "db: error adding message: " << s << endl;
-      return;
+
+      throw database_error ("db: could not add sent message to database.");
     }
 
     /* add tags */
