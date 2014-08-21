@@ -84,7 +84,7 @@ namespace Astroid {
     bool invalid = false;
 
     /* testing */
-    notmuch_query_t * q = notmuch_query_create (nm_db, "tag:fail");
+    notmuch_query_t * q = notmuch_query_create (nm_db, "thread:fail");
 
     /* this will produce an error, but no way to ensure failure */
     notmuch_query_count_threads (q);
