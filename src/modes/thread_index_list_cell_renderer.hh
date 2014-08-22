@@ -12,6 +12,7 @@ namespace Astroid {
   class ThreadIndexListCellRenderer : public Gtk::CellRenderer {
     public:
       ThreadIndexListCellRenderer ();
+      ~ThreadIndexListCellRenderer ();
 
       Glib::RefPtr<NotmuchThread> thread; /* thread that should be rendered now */
       bool last;

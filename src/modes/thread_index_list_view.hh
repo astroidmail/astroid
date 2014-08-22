@@ -34,6 +34,7 @@ namespace Astroid {
       };
 
       ThreadIndexListStore ();
+      ~ThreadIndexListStore ();
       const ThreadIndexListStoreColumnRecord columns;
   };
 
@@ -45,6 +46,7 @@ namespace Astroid {
   class ThreadIndexListView : public Gtk::TreeView {
     public:
       ThreadIndexListView (ThreadIndex *, Glib::RefPtr<ThreadIndexListStore>);
+      ~ThreadIndexListView ();
 
       ptree config;
       bool  open_paned_default = true;
@@ -74,6 +76,7 @@ namespace Astroid {
     public:
       ThreadIndexScrolled (Glib::RefPtr<ThreadIndexListStore> list_store,
                            ThreadIndexListView * list_view);
+      ~ThreadIndexScrolled ();
 
       Glib::RefPtr<ThreadIndexListStore>  list_store;
       ThreadIndexListView * list_view;

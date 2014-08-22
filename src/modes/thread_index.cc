@@ -24,13 +24,13 @@ namespace Astroid {
     main_window = mw;
 
     set_orientation (Gtk::Orientation::ORIENTATION_VERTICAL);
-    tab_widget = new Gtk::Label (query_string);
+    tab_widget = Gtk::manage(new Gtk::Label (query_string));
     tab_widget->set_can_focus (false);
 
     /* set up treeview */
     list_store = Glib::RefPtr<ThreadIndexListStore>(new ThreadIndexListStore ());
-    list_view  = new ThreadIndexListView (this, list_store);
-    scroll     = new ThreadIndexScrolled (list_store, list_view);
+    list_view  = Gtk::manage(new ThreadIndexListView (this, list_store));
+    scroll     = Gtk::manage(new ThreadIndexScrolled (list_store, list_view));
 
     add_pane (0, *scroll);
 
@@ -136,6 +136,8 @@ namespace Astroid {
 
       NotmuchThread *t = new NotmuchThread (thread);
 
+      notmuch_thread_destroy (thread);
+
       auto iter = list_store->append ();
       Gtk::ListStore::Row row = *iter;
 
@@ -203,11 +205,11 @@ namespace Astroid {
     ThreadView * tv;
 
     if (new_tab) {
-      tv = new ThreadView (main_window);
+      tv = Gtk::manage(new ThreadView (main_window));
     } else {
       if (!thread_view_loaded) {
         cout << "ti: init paned tv" << endl;
-        thread_view = new ThreadView (main_window);
+        thread_view = Gtk::manage(new ThreadView (main_window));
         thread_view_loaded = true;
       }
 

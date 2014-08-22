@@ -94,6 +94,10 @@ namespace Astroid {
 
   }
 
+  ThreadIndexListCellRenderer::~ThreadIndexListCellRenderer () {
+    cout << "til cr: deconstruct." << endl;
+  }
+
   void ThreadIndexListCellRenderer::render_background ( // {{{
       const ::Cairo::RefPtr< ::Cairo::Context>&cr,
       Gtk::Widget &widget,

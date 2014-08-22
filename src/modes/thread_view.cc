@@ -29,7 +29,7 @@ namespace Astroid {
 
   ThreadView::ThreadView (MainWindow * mw) {
     main_window = mw;
-    tab_widget = new Gtk::Label ("");
+    tab_widget = Gtk::manage(new Gtk::Label (""));
 
     pack_start (scroll, true, true, 5);
 

@@ -31,13 +31,17 @@ namespace Astroid {
       ThreadIndexListView * _list_view) {
 
     list_store = _list_store;
-    list_view  = _list_view;
+    list_view  = Gtk::manage(_list_view);
 
-    tab_widget = new Gtk::Label ("None");
+    tab_widget = Gtk::manage(new Gtk::Label ("None"));
 
     scroll.add (*list_view);
     pack_start (scroll, true, true, 0);
     scroll.show_all ();
+  }
+
+  ThreadIndexScrolled::~ThreadIndexScrolled () {
+    cout << "tis: deconstruct." << endl;
   }
 
   void ThreadIndexScrolled::grab_modal () {
@@ -62,6 +66,10 @@ namespace Astroid {
   ThreadIndexListStore::ThreadIndexListStore () {
     set_column_types (columns);
     set_sort_column (0, Gtk::SortType::SORT_DESCENDING);
+  }
+
+  ThreadIndexListStore::~ThreadIndexListStore () {
+    cout << "tils: deconstuct." << endl;
   }
 
 
@@ -95,6 +103,11 @@ namespace Astroid {
     column->set_cell_data_func (*renderer,
         sigc::mem_fun(*this, &ThreadIndexListView::set_thread_data) );
   }
+
+  ThreadIndexListView::~ThreadIndexListView () {
+    cout << "tilv: deconstruct." << endl;
+  }
+
 
   void ThreadIndexListView::set_thread_data (
       Gtk::CellRenderer * renderer,

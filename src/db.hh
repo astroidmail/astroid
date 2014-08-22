@@ -27,7 +27,6 @@ namespace Astroid {
 
       ustring thread_id;
 
-      char * subject_chr;
       ustring subject;
       time_t  newest_date;
       bool    unread;

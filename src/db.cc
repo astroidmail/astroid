@@ -362,6 +362,7 @@ namespace Astroid {
   }
 
   NotmuchThread::~NotmuchThread () {
+    cout << "nmt: deconstruct." << endl;
   }
 
   void NotmuchThread::refresh (Db * db) {
@@ -382,10 +383,11 @@ namespace Astroid {
     flagged    = false;
 
     /* update values */
-    const char * s = notmuch_thread_get_subject (nm_thread);
+    const char * s = notmuch_thread_get_subject (nm_thread); // belongs to thread
 
-    if (s != NULL)
+    if (s != NULL) {
       subject = ustring (s);
+    }
 
     newest_date = notmuch_thread_get_newest_date (nm_thread);
     total_messages = check_total_messages (nm_thread);
@@ -404,7 +406,7 @@ namespace Astroid {
          notmuch_tags_valid (tags);
          notmuch_tags_move_to_next (tags))
     {
-      tag = notmuch_tags_get (tags);
+      tag = notmuch_tags_get (tags); // tag belongs to tags
 
       if (tag != NULL) {
         if (string(tag) == "unread") {
@@ -416,8 +418,11 @@ namespace Astroid {
         }
 
         ttags.push_back (ustring(tag));
+
       }
     }
+
+    notmuch_tags_destroy (tags);
 
     return ttags;
   }
@@ -473,6 +478,8 @@ namespace Astroid {
 
             notmuch_status_t s = notmuch_message_add_tag (message, tag.c_str ());
 
+            notmuch_message_destroy (message);
+
             if (s == NOTMUCH_STATUS_SUCCESS) {
               res &= true;
             } else {
@@ -480,7 +487,6 @@ namespace Astroid {
               res = false;
               return;
             }
-
           }
 
           if (res) {
@@ -529,6 +535,8 @@ namespace Astroid {
             message = notmuch_messages_get (qmessages);
 
             notmuch_status_t s = notmuch_message_remove_tag (message, tag.c_str ());
+
+            notmuch_message_destroy (message);
 
             if (s == NOTMUCH_STATUS_SUCCESS) {
               res &= true;
