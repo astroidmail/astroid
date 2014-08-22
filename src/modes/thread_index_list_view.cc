@@ -263,7 +263,7 @@ namespace Astroid {
             main_window->actions.doit (&db, refptr<Action>(new ToggleAction(thread, "inbox")));
 
             /* update row */
-            update_current_row ();
+            update_current_row (db);
           }
 
           return true;
@@ -279,7 +279,7 @@ namespace Astroid {
             main_window->actions.doit (&db, refptr<Action>(new ToggleAction(thread, "flagged")));
 
             /* update row */
-            update_current_row ();
+            update_current_row (db);
           }
 
           return true;
@@ -295,7 +295,7 @@ namespace Astroid {
             main_window->actions.doit (&db, refptr<Action>(new ToggleAction(thread, "unread")));
 
             /* update row */
-            update_current_row ();
+            update_current_row (db);
           }
 
           return true;
@@ -311,7 +311,7 @@ namespace Astroid {
             main_window->actions.doit (&db, refptr<Action>(new SpamAction(thread)));
 
             /* update row */
-            update_current_row ();
+            update_current_row (db);
           }
 
           return true;
@@ -368,7 +368,7 @@ namespace Astroid {
     return false;
   }
 
-  void ThreadIndexListView::update_current_row () {
+  void ThreadIndexListView::update_current_row (Db &db) {
     Gtk::TreePath path;
     Gtk::TreeViewColumn *c;
     get_cursor (path, c);
@@ -377,6 +377,11 @@ namespace Astroid {
     iter = list_store->get_iter (path);
 
     if (iter) {
+      Gtk::ListStore::Row row = *iter;
+
+      refptr<NotmuchThread> thread = row[list_store->columns.thread];
+      thread->refresh (&db);
+
       list_store->row_changed (path, iter);
     }
 

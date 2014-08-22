@@ -362,7 +362,7 @@ namespace Astroid {
   }
 
   NotmuchThread::~NotmuchThread () {
-    cout << "nmt: deconstruct." << endl;
+    //cout << "nmt: deconstruct." << endl;
   }
 
   void NotmuchThread::refresh (Db * db) {

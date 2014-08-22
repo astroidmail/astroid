@@ -134,6 +134,16 @@ namespace Astroid {
         throw database_error ("ti: could not get thread (is NULL)");
       }
 
+      /* test for revision discarded */
+      const char * ti = notmuch_thread_get_thread_id (thread);
+      if (ti == NULL) {
+        cerr << "ti: revision discarded, trying to reopen." << endl;
+        reopen_tries++;
+        refresh (all, current_thread + count, false);
+        return;
+      }
+
+
       NotmuchThread *t = new NotmuchThread (thread);
 
       notmuch_thread_destroy (thread);
