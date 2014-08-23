@@ -224,6 +224,7 @@ namespace Astroid {
     Gdk::RGBA color = stylecontext->get_color(Gtk::STATE_FLAG_NORMAL);
     cr->set_source_rgb (color.get_red(), color.get_green(), color.get_blue());
 
+    /* subtract hidden tags */
     vector<ustring> tags;
     set_difference (thread->tags.begin(),
                     thread->tags.end(),

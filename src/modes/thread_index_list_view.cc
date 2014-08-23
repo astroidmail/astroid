@@ -330,6 +330,9 @@ namespace Astroid {
 
                   vector<ustring> tags = VectorUtils::split_and_trim (tgs, ",");
 
+                  /* remove empty */
+                  tags.erase (std::remove (tags.begin (), tags.end (), ""), tags.end ());
+
                   sort (tags.begin (), tags.end ());
                   sort (thread->tags.begin (), thread->tags.end ());
 
