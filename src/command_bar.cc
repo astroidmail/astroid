@@ -101,7 +101,7 @@ namespace Astroid {
     }
 
     callback = f;
-    entry.set_text (cmd + ",");
+    entry.set_text (cmd);
     entry.set_position (-1);
     set_search_mode (true);
   }

@@ -321,7 +321,7 @@ namespace Astroid {
         {
           auto thread = get_current_thread ();
           if (thread) {
-            ustring tag_list = VectorUtils::concat_tags (thread->tags);
+            ustring tag_list = VectorUtils::concat_tags (thread->tags) + ", ";
 
             main_window->enable_command (CommandBar::CommandMode::Tag,
                 tag_list,
