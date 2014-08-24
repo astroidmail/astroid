@@ -238,7 +238,8 @@ namespace Astroid {
       sstr << io_stream.rdbuf();
       return ustring (sstr.str());
     } else {
-      throw runtime_error ("chunk: tried to display non-viewable part.");
+      return ustring ("");
+      //throw runtime_error ("chunk: tried to display non-viewable part.");
     }
   }
 
