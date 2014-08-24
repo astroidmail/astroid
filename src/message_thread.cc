@@ -49,6 +49,7 @@ namespace Astroid {
     cout << "msg: filename: " << fname << endl;
 
     load_message ();
+    load_tags (message);
   }
 
   Message::~Message () {
