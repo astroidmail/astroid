@@ -87,9 +87,10 @@ namespace Astroid {
       WebKitDOMHTMLElement * make_message_div ();
 
       /* message loading setup */
-      void set_message_html (refptr<Message>, WebKitDOMHTMLElement*);
+      void set_message_html (refptr<Message>, WebKitDOMHTMLElement *);
       void insert_header_address (ustring &, ustring, ustring, bool);
       ustring create_header_row (ustring, ustring, bool);
+      void insert_attachments (refptr<Message>, WebKitDOMHTMLElement *);
 
 
       /* webkit dom utils */

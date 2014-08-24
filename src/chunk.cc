@@ -1,5 +1,6 @@
 # include <vector>
 # include <iostream>
+# include <atomic>
 
 # include <glib.h>
 # include <gmime/gmime.h>
@@ -9,7 +10,12 @@
 # include "gmime_iostream.hh"
 
 namespace Astroid {
+
+  atomic<uint> Chunk::nextid (0);
+
   Chunk::Chunk (GMimeObject * mp) : mime_object (mp) {
+    id = nextid++;
+
     content_type = g_mime_object_get_content_type (mime_object);
 
     cout << "chunk: content-type: " << g_mime_content_type_to_string (content_type) << endl;
@@ -234,6 +240,49 @@ namespace Astroid {
     } else {
       throw runtime_error ("chunk: tried to display non-viewable part.");
     }
+  }
+
+  ustring Chunk::get_filename () {
+    if (GMIME_IS_PART (mime_object)) {
+      const char * s = g_mime_part_get_filename (GMIME_PART(mime_object));
+
+      if (s != NULL) {
+        ustring fname (s);
+        delete s;
+        return fname;
+      }
+    }
+    // no filename specified
+    return ustring ("");
+  }
+
+  size_t Chunk::get_file_size () {
+    time_t t0 = clock ();
+
+    // https://github.com/skx/lumail/blob/master/util/attachments.c
+
+    size_t sz = 0;
+
+    if (GMIME_IS_PART (mime_object)) {
+      GMimeStream * mem = g_mime_stream_mem_new ();
+
+      GMimeDataWrapper * content = g_mime_part_get_content_object (GMIME_PART (mime_object));
+
+      g_mime_data_wrapper_write_to_stream (content, mem);
+
+      //g_mime_stream_mem_set_owner (GMIME_STREAM (mem), false);
+
+      GByteArray * res = g_mime_stream_mem_get_byte_array (GMIME_STREAM_MEM (mem));
+
+      sz = res->len;
+
+      g_object_unref (mem);
+
+    }
+
+    cout << "chunk: file size: " << sz << " (time used to calculate: " << ( (clock () - t0) * 1000.0 / CLOCKS_PER_SEC ) << " ms.)" << endl;
+
+    return sz;
   }
 
   Chunk::~Chunk () {

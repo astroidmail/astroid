@@ -305,6 +305,9 @@ namespace Astroid {
 
     set_message_html (m, div_message);
 
+    /* insert attachments */
+    insert_attachments (m, div_message);
+
     g_object_unref (insert_before);
     g_object_unref (div_message);
   }
@@ -370,6 +373,7 @@ namespace Astroid {
         body.c_str(),
         (err = NULL, &err));
 
+    g_object_unref (span_body);
     g_object_unref (table_header);
   }
 
@@ -400,6 +404,127 @@ namespace Astroid {
 
   }
 
+  void ThreadView::insert_attachments (
+      refptr<Message> message,
+      WebKitDOMHTMLElement * div_message)
+
+  {
+    // <div class="attachment_container">
+    //     <div class="top_border"></div>
+    //     <table class="attachment" data-attachment-id="">
+    //         <tr>
+    //             <td class="preview">
+    //                 <img src="" />
+    //             </td>
+    //             <td class="info">
+    //                 <div class="filename"></div>
+    //                 <div class="filesize"></div>
+    //             </td>
+    //         </tr>
+    //     </table>
+    // </div>
+
+    GError *err;
+
+    WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
+    WebKitDOMHTMLElement * attachment_container =
+      clone_select (WEBKIT_DOM_NODE(d), "#attachment_template");
+    WebKitDOMHTMLElement * attachment_template =
+      select (WEBKIT_DOM_NODE(attachment_container), ".attachment");
+
+    webkit_dom_element_remove_attribute (WEBKIT_DOM_ELEMENT (attachment_container),
+        "id");
+    webkit_dom_node_remove_child (WEBKIT_DOM_NODE (attachment_container),
+        WEBKIT_DOM_NODE(attachment_template), (err = NULL, &err));
+
+    /* generate an attachment table for each attachment */
+    for (refptr<Chunk> &c : message->attachments ()) {
+      WebKitDOMHTMLElement * attachment_table =
+        clone_node (WEBKIT_DOM_NODE (attachment_template));
+
+      WebKitDOMHTMLElement * info_fname =
+        select (WEBKIT_DOM_NODE (attachment_table), ".info .filename");
+
+      ustring fname = c->get_filename ();
+      if (fname.size () == 0) {
+        fname = "Unnamed attachment";
+      }
+
+      fname = Glib::Markup::escape_text (fname);
+
+      webkit_dom_html_element_set_inner_text (info_fname, fname.c_str(), (err = NULL, &err));
+
+      WebKitDOMHTMLElement * info_fsize =
+        select (WEBKIT_DOM_NODE (attachment_table), ".info .filesize");
+
+      ustring fsize = ustring::compose ("%1 bytes", c->get_file_size ());
+
+      webkit_dom_html_element_set_inner_text (info_fsize, fsize.c_str(), (err = NULL, &err));
+
+
+      webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (attachment_table),
+        "data-attachment-id", ustring::compose("%1", c->id).c_str(),
+        (err = NULL, &err));
+
+      // TODO: set image
+
+      // add the attachment table
+      webkit_dom_node_append_child (WEBKIT_DOM_NODE (attachment_container),
+          WEBKIT_DOM_NODE (attachment_table), (err = NULL, &err));
+
+      g_object_unref (info_fname);
+      g_object_unref (info_fsize);
+      g_object_unref (attachment_table);
+    }
+
+    webkit_dom_node_append_child (WEBKIT_DOM_NODE (div_message),
+        WEBKIT_DOM_NODE (attachment_container), (err = NULL, &err));
+
+    g_object_unref (attachment_template);
+    g_object_unref (attachment_container);
+    g_object_unref (d);
+
+#if 0
+        try {
+            // Prepare the dom for our attachments.
+            WebKit.DOM.Document document = web_view.get_dom_document();
+            WebKit.DOM.HTMLElement attachment_container =
+                Util.DOM.clone_select(document, "#attachment_template");
+            WebKit.DOM.HTMLElement attachment_template =
+                Util.DOM.select(attachment_container, ".attachment");
+            attachment_container.remove_attribute("id");
+            attachment_container.remove_child(attachment_template);
+
+            // Create an attachment table for each attachment.
+            foreach (Geary.Attachment attachment in attachments) {
+                if (!should_show_attachment(attachment)) {
+                    continue;
+                }
+                // Generate the attachment table.
+                WebKit.DOM.HTMLElement attachment_table = Util.DOM.clone_node(attachment_template);
+                string filename = !attachment.has_supplied_filename ? _("none") : attachment.file.get_basename();
+                Util.DOM.select(attachment_table, ".info .filename")
+                    .set_inner_text(filename);
+                Util.DOM.select(attachment_table, ".info .filesize")
+                    .set_inner_text(Files.get_filesize_as_string(attachment.filesize));
+                attachment_table.set_attribute("data-attachment-id", attachment.id);
+
+                // Set the image preview and insert it into the container.
+                WebKit.DOM.HTMLImageElement img =
+                    Util.DOM.select(attachment_table, ".preview img") as WebKit.DOM.HTMLImageElement;
+                web_view.set_attachment_src(img, attachment.content_type, attachment.file.get_path(),
+                    ATTACHMENT_PREVIEW_SIZE);
+                attachment_container.append_child(attachment_table);
+            }
+
+            // Append the attachments to the email.
+            email_container.append_child(attachment_container);
+        } catch (Error error) {
+            debug("Failed to insert attachments: %s", error.message);
+        }
+
+# endif
+  }
 
   WebKitDOMHTMLElement * ThreadView::make_message_div () {
     /* clone div from template in html file */

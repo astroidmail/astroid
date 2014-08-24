@@ -2,6 +2,7 @@
 
 # include <vector>
 # include <map>
+# include <atomic>
 
 # include <gmime/gmime.h>
 
@@ -12,9 +13,14 @@ using namespace std;
 
 namespace Astroid {
   class Chunk : public Glib::Object {
+    private:
+      static atomic<uint> nextid;
+
     public:
       Chunk (GMimeObject *);
       ~Chunk ();
+
+      int id;
 
       /* Chunk assumes ownership of these */
       GMimeObject *       mime_object;
@@ -36,6 +42,10 @@ namespace Astroid {
       };
 
       GMimeContentType * preferred_type = viewable_types["plain"];
+
+      /* attachment specific stuff */
+      ustring get_filename ();
+      size_t  get_file_size ();
   };
 }
 
