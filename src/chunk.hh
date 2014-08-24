@@ -26,8 +26,9 @@ namespace Astroid {
       vector<refptr<Chunk>> kids;
       vector<refptr<Chunk>> siblings;
 
-      bool viewable  = false;
-      bool preferred = false;
+      bool viewable   = false;
+      bool attachment = false;
+      bool preferred  = false;
 
       map<ustring, GMimeContentType *> viewable_types = {
         { "plain", g_mime_content_type_new ("text", "plain") },

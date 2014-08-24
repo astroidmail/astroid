@@ -25,7 +25,7 @@ namespace Astroid {
 
       void load_message ();
       void load_tags (Db *);
-      void load_tags (notmuch_message_t *); 
+      void load_tags (notmuch_message_t *);
 
       GMimeMessage * message;
       refptr<Chunk>     root;
@@ -44,6 +44,7 @@ namespace Astroid {
       vector<ustring> tags;
 
       ustring viewable_text (bool);
+      vector<refptr<Chunk>> attachments ();
   };
 
   class MessageThread : public Glib::Object {

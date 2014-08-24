@@ -24,7 +24,23 @@ namespace Astroid {
       if (cid != NULL) {
         content_id = ustring(cid);
         cout << "chunk: part, id: " << content_id << endl;
+
+        if (viewable) {
+          /* check if we can show this type */
+          for (auto &m : viewable_types) {
+            if (g_mime_content_type_is_type (content_type,
+                  g_mime_content_type_get_media_type (m.second),
+                  g_mime_content_type_get_media_subtype (m.second))) {
+
+              viewable = true;
+              break;
+
+            }
+          }
+        }
       }
+
+      attachment = !viewable;
 
     } else if GMIME_IS_MESSAGE_PART (mime_object) {
       cout << "chunk: message part" << endl;
@@ -216,8 +232,7 @@ namespace Astroid {
       sstr << io_stream.rdbuf();
       return ustring (sstr.str());
     } else {
-      viewable = false;
-      return ustring ("non-viewable part");
+      throw runtime_error ("chunk: tried to display non-viewable part.");
     }
   }
 

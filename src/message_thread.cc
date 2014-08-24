@@ -179,6 +179,51 @@ namespace Astroid {
     return ustring(body.str());
   }
 
+  vector<refptr<Chunk>> Message::attachments () {
+    /* return a flat vector of attachments */
+
+    vector<refptr<Chunk>> attachments;
+
+    refptr<Chunk> c = root;
+
+    function< void (refptr<Chunk>) > app_attachment =
+      [&] (refptr<Chunk> c)
+    {
+      /* check if we're the preferred sibling */
+      bool use = false;
+
+      if (c->siblings.size() >= 1) {
+        if (c->preferred) {
+          use = true;
+        } else {
+          /* check if there are any other preferred */
+          if (all_of (c->siblings.begin (),
+                      c->siblings.end (),
+                      [](refptr<Chunk> c) { return (!c->preferred); })) {
+            use = true;
+          } else {
+            use = false;
+          }
+        }
+      } else {
+        use = true;
+      }
+
+      if (use) {
+        if (c->attachment)
+          attachments.push_back (c);
+
+        for_each (c->kids.begin(),
+                  c->kids.end (),
+                  app_attachment);
+      }
+    };
+
+    app_attachment (c);
+
+    return attachments;
+  }
+
   ustring Message::date () {
     return ustring (g_mime_message_get_date_as_string (message));
   }
