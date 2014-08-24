@@ -437,10 +437,14 @@ namespace Astroid {
     webkit_dom_node_remove_child (WEBKIT_DOM_NODE (attachment_container),
         WEBKIT_DOM_NODE(attachment_template), (err = NULL, &err));
 
+    int attachments = 0;
+
     /* generate an attachment table for each attachment */
     for (refptr<Chunk> &c : message->attachments ()) {
       WebKitDOMHTMLElement * attachment_table =
         clone_node (WEBKIT_DOM_NODE (attachment_template));
+
+      attachments++;
 
       WebKitDOMHTMLElement * info_fname =
         select (WEBKIT_DOM_NODE (attachment_table), ".info .filename");
@@ -477,8 +481,10 @@ namespace Astroid {
       g_object_unref (attachment_table);
     }
 
-    webkit_dom_node_append_child (WEBKIT_DOM_NODE (div_message),
-        WEBKIT_DOM_NODE (attachment_container), (err = NULL, &err));
+    if (attachments > 0) {
+      webkit_dom_node_append_child (WEBKIT_DOM_NODE (div_message),
+          WEBKIT_DOM_NODE (attachment_container), (err = NULL, &err));
+    }
 
     g_object_unref (attachment_template);
     g_object_unref (attachment_container);
