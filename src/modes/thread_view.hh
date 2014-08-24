@@ -91,6 +91,8 @@ namespace Astroid {
       void insert_header_address (ustring &, ustring, ustring, bool);
       ustring create_header_row (ustring, ustring, bool);
       void insert_attachments (refptr<Message>, WebKitDOMHTMLElement *);
+      void set_attachment_src (refptr<Chunk>, WebKitDOMHTMLImageElement *);
+      string assemble_data_uri (ustring, gchar *&, gsize);
 
 
       /* webkit dom utils */

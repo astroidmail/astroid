@@ -6,6 +6,7 @@
 
 # include <gtkmm.h>
 # include <webkit/webkit.h>
+# include <gio/gio.h>
 
 # include "thread_view.hh"
 # include "main_window.hh"
@@ -41,7 +42,7 @@ namespace Astroid {
         "enable-scripts", FALSE,
         "enable-java-applet", FALSE,
         "enable-plugins", FALSE,
-        "auto-load-images", FALSE,
+        "auto-load-images", TRUE,
         "enable-display-of-insecure-content", FALSE,
         "enable-dns-prefetching", FALSE,
         "enable-fullscreen", FALSE,
@@ -470,12 +471,19 @@ namespace Astroid {
         "data-attachment-id", ustring::compose("%1", c->id).c_str(),
         (err = NULL, &err));
 
-      // TODO: set image
+      // set image
+      WebKitDOMHTMLImageElement * img =
+        WEBKIT_DOM_HTML_IMAGE_ELEMENT(
+        select (WEBKIT_DOM_NODE (attachment_table), ".preview img"));
+
+      cout << "img: " << img << endl;
+      set_attachment_src (c, img);
 
       // add the attachment table
       webkit_dom_node_append_child (WEBKIT_DOM_NODE (attachment_container),
           WEBKIT_DOM_NODE (attachment_table), (err = NULL, &err));
 
+      g_object_unref (img);
       g_object_unref (info_fname);
       g_object_unref (info_fsize);
       g_object_unref (attachment_table);
@@ -489,48 +497,116 @@ namespace Astroid {
     g_object_unref (attachment_template);
     g_object_unref (attachment_container);
     g_object_unref (d);
+  }
 
-#if 0
+  void ThreadView::set_attachment_src (
+      refptr<Chunk> c,
+      WebKitDOMHTMLImageElement *img)
+  {
+    /* set the preview image or icon on the attachment display element */
+
+    const char * _mtype = g_mime_content_type_get_media_type (c->content_type);
+    ustring mime_type;
+    if (_mtype == NULL) {
+      mime_type = "application/octet-stream";
+    } else {
+      mime_type = ustring(g_mime_content_type_to_string (c->content_type));
+    }
+
+
+    gchar * content;
+    gsize   content_size;
+    ustring image_content_type;
+
+    if ((_mtype != NULL) && (ustring(_mtype) == "image")) {
+
+    } else {
+
+      const char * _gio_content_type = g_content_type_from_mime_type (mime_type.c_str());
+      ustring gio_content_type;
+      if (_gio_content_type == NULL) {
+        gio_content_type = "application/octet-stream";
+      } else {
+        gio_content_type = ustring(_gio_content_type);
+      }
+      GIcon * icon = g_content_type_get_icon (gio_content_type.c_str());
+
+      ustring icon_string;
+      if (icon == NULL) {
+        icon_string = "mail-attachment-symbolic";
+      } else {
+        icon_string = g_icon_to_string (icon);
+        g_object_unref (icon);
+      }
+
+      if (icon_string.size() < 1) {
+        icon_string = "mail-attachment-symbolic";
+      }
+
+
+      cout << "icon: " << icon_string << flush << endl;
+
+      // TODO: use guessed icon
+      icon_string = "mail-attachment-symbolic";
+
+      Glib::RefPtr<Gtk::IconTheme> theme = Gtk::IconTheme::get_default();
+      Glib::RefPtr<Gdk::Pixbuf> pixbuf = theme->load_icon (
+          icon_string,
+          35,
+          Gtk::ICON_LOOKUP_USE_BUILTIN );
+
+      pixbuf->save_to_buffer (content, content_size, "png"); // default type is png
+      image_content_type = "image/png";
+
+    }
+
+    GError * err = NULL;
+    webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (img), "src",
+        assemble_data_uri (image_content_type, content, content_size).c_str(), &err);
+
+  }
+
+  string ThreadView::assemble_data_uri (ustring mime_type, gchar * &data, gsize len) {
+    string base64 = "data:" + mime_type + ";base64," + Glib::Base64::encode (string(data, len));
+    return base64;
+  }
+
+# if 0
         try {
-            // Prepare the dom for our attachments.
-            WebKit.DOM.Document document = web_view.get_dom_document();
-            WebKit.DOM.HTMLElement attachment_container =
-                Util.DOM.clone_select(document, "#attachment_template");
-            WebKit.DOM.HTMLElement attachment_template =
-                Util.DOM.select(attachment_container, ".attachment");
-            attachment_container.remove_attribute("id");
-            attachment_container.remove_child(attachment_template);
-
-            // Create an attachment table for each attachment.
-            foreach (Geary.Attachment attachment in attachments) {
-                if (!should_show_attachment(attachment)) {
-                    continue;
-                }
-                // Generate the attachment table.
-                WebKit.DOM.HTMLElement attachment_table = Util.DOM.clone_node(attachment_template);
-                string filename = !attachment.has_supplied_filename ? _("none") : attachment.file.get_basename();
-                Util.DOM.select(attachment_table, ".info .filename")
-                    .set_inner_text(filename);
-                Util.DOM.select(attachment_table, ".info .filesize")
-                    .set_inner_text(Files.get_filesize_as_string(attachment.filesize));
-                attachment_table.set_attribute("data-attachment-id", attachment.id);
-
-                // Set the image preview and insert it into the container.
-                WebKit.DOM.HTMLImageElement img =
-                    Util.DOM.select(attachment_table, ".preview img") as WebKit.DOM.HTMLImageElement;
-                web_view.set_attachment_src(img, attachment.content_type, attachment.file.get_path(),
-                    ATTACHMENT_PREVIEW_SIZE);
-                attachment_container.append_child(attachment_table);
+            // If the file is an image, use it. Otherwise get the icon for this mime_type.
+            uint8[] content;
+            string gio_content_type = ContentType.from_mime_type(content_type.get_mime_type());
+            string icon_mime_type = content_type.get_mime_type();
+            if (content_type.has_media_type("image")) {
+                // Get a thumbnail for the image.
+                // TODO Generate and save the thumbnail when extracting the attachments rather than
+                // when showing them in the viewer.
+                img.get_class_list().add("thumbnail");
+                Gdk.Pixbuf image = new Gdk.Pixbuf.from_file_at_scale(filename, maxwidth, maxheight,
+                    true);
+                image = image.apply_embedded_orientation();
+                image.save_to_buffer(out content, "png");
+                icon_mime_type = "image/png";
+            } else {
+                // Load the icon for this mime type.
+                ThemedIcon icon = ContentType.get_icon(gio_content_type) as ThemedIcon;
+                string icon_filename = IconFactory.instance.lookup_icon(icon.names[0], maxwidth)
+                    .get_filename();
+                FileUtils.get_data(icon_filename, out content);
+                icon_mime_type = ContentType.get_mime_type(ContentType.guess(icon_filename, content,
+                    null));
             }
 
-            // Append the attachments to the email.
-            email_container.append_child(attachment_container);
+            // Then set the source to a data url.
+            // Save length before transferring ownership (which frees the array)
+            int content_length = content.length;
+            Geary.Memory.Buffer buffer = new Geary.Memory.ByteBuffer.take((owned) content,
+                content_length);
+            img.set_attribute("src", assemble_data_uri(icon_mime_type, buffer));
         } catch (Error error) {
-            debug("Failed to insert attachments: %s", error.message);
+            warning("Failed to load image '%s': %s", filename, error.message);
         }
-
 # endif
-  }
 
   WebKitDOMHTMLElement * ThreadView::make_message_div () {
     /* clone div from template in html file */
