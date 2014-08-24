@@ -390,7 +390,7 @@ body.nohide .email .compressed_note > span {
     padding: 2px;
     overflow: hidden;
     /*font-size: 10pt;*/
-    font-size: medium;
+    font-size: small;
     cursor: pointer;
     border: 1px solid transparent;
     border-radius: 4px;
