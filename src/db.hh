@@ -36,6 +36,8 @@ namespace Astroid {
       vector<ustring> authors;
       vector<ustring> tags;
 
+      bool has_tag (ustring);
+
       void refresh (Db *);
       void load (notmuch_thread_t *);
 

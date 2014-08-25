@@ -509,6 +509,10 @@ namespace Astroid {
     return res;
   }
 
+  bool NotmuchThread::has_tag (ustring tag) {
+    return (find(tags.begin (), tags.end (), tag) != tags.end ());
+  }
+
   bool NotmuchThread::remove_tag (Db * db, ustring tag) {
     cout << "nm (" << thread_id << "): remove tag: " << tag << endl;
     tag = sanitize_tag (tag);

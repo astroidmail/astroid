@@ -244,7 +244,7 @@ namespace Astroid {
     mthread = _mthread;
 
     /* remove unread status */
-    if (mthread->in_notmuch) {
+    if (mthread->in_notmuch && mthread->thread->has_tag ("unread")) {
       Db db (Db::DbMode::DATABASE_READ_WRITE);
       main_window->actions.doit (&db, refptr<Action>(new TagAction(mthread->thread, {}, {"unread"})));
     }
