@@ -286,6 +286,35 @@ namespace Astroid {
     return sz;
   }
 
+  refptr<Glib::ByteArray> Chunk::contents () {
+    time_t t0 = clock ();
+
+    // https://github.com/skx/lumail/blob/master/util/attachments.c
+
+    if (GMIME_IS_PART (mime_object)) {
+      GMimeStream * mem = g_mime_stream_mem_new ();
+
+      GMimeDataWrapper * content = g_mime_part_get_content_object (GMIME_PART (mime_object));
+
+      g_mime_data_wrapper_write_to_stream (content, mem);
+
+      GByteArray * res = g_mime_stream_mem_get_byte_array (GMIME_STREAM_MEM (mem));
+
+      auto data = Glib::ByteArray::create ();
+      if (res != NULL) {
+        data->append (res->data, res->len);
+      }
+
+      g_object_unref (mem);
+
+      cout << "chunk: attachment: loaded " << data->size () << " bytes in " << ( (clock () - t0) * 1000.0 / CLOCKS_PER_SEC ) << " ms." << endl;
+
+      return data;
+    } else {
+      throw runtime_error ("Chunk::contents() not supported on non-part.");
+    }
+  }
+
   Chunk::~Chunk () {
     //g_object_unref (mime_object); // TODO: not sure about this one..
     g_object_unref (content_type);

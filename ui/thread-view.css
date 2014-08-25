@@ -427,6 +427,8 @@ body.nohide .email .compressed_note > span {
     box-shadow: 0 0 5px #b8b8b8;
     background-size: 16px 16px;
     background-position:0 0, 8px 0, 8px -8px, 0px 8px;
+    max-width: 150px;
+    max-height: 150px;
 }
 .email > .attachment_container > .attachment:hover .preview .thumbnail {
     background-image:

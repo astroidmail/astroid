@@ -94,6 +94,8 @@ namespace Astroid {
       void set_attachment_src (refptr<Chunk>, WebKitDOMHTMLImageElement *);
       string assemble_data_uri (ustring, gchar *&, gsize);
 
+      static const int THUMBNAIL_WIDTH = 150; // px
+      static const int ATTACHMENT_ICON_WIDTH = 35;
 
       /* webkit dom utils */
       WebKitDOMHTMLElement * clone_select (

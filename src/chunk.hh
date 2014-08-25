@@ -46,6 +46,7 @@ namespace Astroid {
       /* attachment specific stuff */
       ustring get_filename ();
       size_t  get_file_size ();
+      refptr<Glib::ByteArray> contents ();
   };
 }
 

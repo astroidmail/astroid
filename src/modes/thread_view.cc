@@ -519,6 +519,24 @@ namespace Astroid {
     ustring image_content_type;
 
     if ((_mtype != NULL) && (ustring(_mtype) == "image")) {
+      auto data = c->contents ();
+
+      auto mis = Gio::MemoryInputStream::create ();
+      mis->add_data (data->get_data (), data->size ());
+
+      auto pb = Gdk::Pixbuf::create_from_stream_at_scale (mis, THUMBNAIL_WIDTH, -1, true, refptr<Gio::Cancellable>());
+
+      pb = pb->apply_embedded_orientation ();
+
+      pb->save_to_buffer (content, content_size, "png");
+      image_content_type = "image/png";
+
+      GError * gerr;
+      WebKitDOMDOMTokenList * class_list =
+        webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(img));
+      /* set class  */
+      webkit_dom_dom_token_list_add (class_list, "thumbnail",
+          (gerr = NULL, &gerr));
 
     } else {
 
@@ -548,20 +566,19 @@ namespace Astroid {
       cout << "icon: " << icon_string << flush << endl;
       */
 
+      // TODO: use guessed icon
+      ustring icon_string = "mail-attachment-symbolic";
+
+      Glib::RefPtr<Gtk::IconTheme> theme = Gtk::IconTheme::get_default();
+      Glib::RefPtr<Gdk::Pixbuf> pixbuf = theme->load_icon (
+          icon_string,
+          ATTACHMENT_ICON_WIDTH,
+          Gtk::ICON_LOOKUP_USE_BUILTIN );
+
+      pixbuf->save_to_buffer (content, content_size, "png"); // default type is png
+      image_content_type = "image/png";
 
     }
-
-    // TODO: use guessed icon or image thumbnail
-    ustring icon_string = "mail-attachment-symbolic";
-
-    Glib::RefPtr<Gtk::IconTheme> theme = Gtk::IconTheme::get_default();
-    Glib::RefPtr<Gdk::Pixbuf> pixbuf = theme->load_icon (
-        icon_string,
-        35,
-        Gtk::ICON_LOOKUP_USE_BUILTIN );
-
-    pixbuf->save_to_buffer (content, content_size, "png"); // default type is png
-    image_content_type = "image/png";
 
     GError * err = NULL;
     webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (img), "src",
