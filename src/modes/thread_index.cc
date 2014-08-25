@@ -71,6 +71,8 @@ namespace Astroid {
   void ThreadIndex::refresh (bool all, int count, bool checked) {
     cout << "ti: refresh." << endl;
 
+    time_t t0 = clock ();
+
     /* get current path */
     Gtk::TreePath path;
     Gtk::TreeViewColumn * c;
@@ -95,9 +97,12 @@ namespace Astroid {
       }
     }
     list_view->set_cursor (path);
+
+    cout << "ti: refreshed in " << ((clock() - t0) * 1000.0 / CLOCKS_PER_SEC) << " ms." << endl;
   }
 
   void ThreadIndex::load_more_threads (bool all, int count, bool checked) {
+    time_t t0 = clock ();
 
     cout << "ti: load more (all: " << all << ") threads.." << endl;
     lock_guard<Db> grd (*db);
@@ -169,7 +174,7 @@ namespace Astroid {
       }
     }
 
-    cout << "ti: loaded " << i << " threads." << endl;
+    cout << "ti: loaded " << i << " threads in " << ((clock()-t0) * 1000.0 / CLOCKS_PER_SEC) << " ms." << endl;
   }
 
   bool ThreadIndex::on_key_press_event (GdkEventKey *event) {
