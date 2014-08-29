@@ -5,7 +5,6 @@
 
 ## design and user interface goals
 * fully operatable by keyboard only - but accept mouse clicks
-* possibly steal command style from [alot] and hooks from [sup]
 * very lightweight.
 * base interface on sup, but allow buffers to be dragged out
   or separated as windows so that multiple views/buffers can be
@@ -23,7 +22,7 @@
 * Never use deprecated libraries - use as few libraries as possible.
 * Never rewrite something if it exists an active library for it.
 * All database operations / mail handling should be done by notmuch or other
-  tools. E.g. [afew] for automatic tagging and maildir <-> tag sync.
+  tools.
 
 ## acknowledgements
 
@@ -41,7 +40,6 @@
 
 [sup]: http://supmua.org
 [alot]: https://github.com/pazz/alot
-[afew]: https://github.com/teythoon/afew
 [notmuch]: http://notmuchmail.org/
 [Geary]: http://www.yorba.org/projects/geary/
 [gmime]: http://spruce.sourceforge.net/gmime/

@@ -15,6 +15,7 @@
 # include "account_manager.hh"
 # include "contacts.hh"
 # include "utils/date_utils.hh"
+# include "log.hh"
 
 /* UI */
 # include "main_window.hh"
@@ -27,6 +28,7 @@ using namespace std;
 
 /* globally available static instance of the Astroid */
 Astroid::Astroid * (Astroid::astroid);
+Astroid::Log Astroid::log;
 
 int main (int argc, char **argv) {
   Astroid::astroid = new Astroid::Astroid ();
@@ -39,7 +41,10 @@ namespace Astroid {
   }
 
   int Astroid::main (int argc, char **argv) {
-    cout << "welcome to astroid! - " << GIT_DESC << endl;
+    //log = new Log ();
+    log.add_out_stream (&cout);
+
+    log << Log::info << "welcome to astroid! - " << GIT_DESC << endl;
 
     user_agent = ustring::compose ("astroid/v%1 (https://github.com/gauteh/astroid)", GIT_DESC);
 

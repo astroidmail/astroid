@@ -10,6 +10,7 @@
 # include "modes/thread_index.hh"
 # include "modes/help_mode.hh"
 # include "modes/edit_message.hh"
+# include "modes/log_view.hh"
 # include "command_bar.hh"
 # include "actions/action.hh"
 # include "actions/action_manager.hh"
@@ -18,7 +19,7 @@ using namespace std;
 
 namespace Astroid {
   MainWindow::MainWindow () {
-    cout << "mw: init.." << endl;
+    log << Log::debug << "mw: init.." << endl;
 
     set_title ("Astroid - " GIT_DESC);
     set_default_size (1040, 800);
@@ -132,6 +133,11 @@ namespace Astroid {
       /* help */
       case GDK_KEY_question:
         add_mode (new HelpMode ());
+        return true;
+
+      /* log window */
+      case GDK_KEY_z:
+        add_mode (new LogView ());
         return true;
 
       /* undo */

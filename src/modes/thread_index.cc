@@ -8,6 +8,7 @@
 # include <notmuch.h>
 
 # include "astroid.hh"
+# include "log.hh"
 # include "db.hh"
 # include "paned_mode.hh"
 # include "thread_index.hh"
@@ -52,14 +53,15 @@ namespace Astroid {
     time_t start = clock ();
     query =  notmuch_query_create (db->nm_db, query_string.c_str ());
 
-    cout << "ti, query: " << notmuch_query_get_query_string (query) << ", approx: "
-         << notmuch_query_count_threads (query) << " threads." << endl << flush;
+    log  << Log::info;
+    log  << "ti, query: " << notmuch_query_get_query_string (query) << ", approx: "
+         << notmuch_query_count_threads (query) << " threads." << endl;
 
     /* slow */
     threads = notmuch_query_search_threads (query);
     float diff = (clock () - start) * 1000.0 / CLOCKS_PER_SEC;
 
-    cout << "ti: query time: " << diff << " ms." << endl;
+    log  << "ti: query time: " << diff << " ms." << endl;
   }
 
   void ThreadIndex::close_query () {

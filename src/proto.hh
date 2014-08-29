@@ -10,6 +10,7 @@ namespace Astroid {
   class AccountManager;
   class Account;
   class Contacts;
+  class Log;
 
   /* message and thread */
   class Message;
@@ -22,6 +23,7 @@ namespace Astroid {
   /* UI */
   class MainWindow;
   class CommandBar;
+  class LogView;
 
   /* actions */
   class ActionManager;

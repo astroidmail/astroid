@@ -38,10 +38,10 @@ namespace Astroid {
 
       /* contacts */
       Contacts * contacts;
-
   };
 
   /* globally available instance of our main Astroid-class */
   extern Astroid * astroid;
+  extern Log log;
 }
 
