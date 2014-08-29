@@ -72,7 +72,7 @@ namespace Astroid {
     /* gmime settings */
     g_mime_init (0); // utf-8 is default
 
-    /* set up some static classes */
+    /* set up static classes */
     Date::init ();
 
     /* set up accounts */
