@@ -24,10 +24,28 @@ namespace Astroid {
         lv->log_line (_next_line.str());
       }
 
-      _next_line.str ("");
+      _next_line.str (string());
       _next_line.clear ();
 
       return *this;
+  }
+
+  Log& Log::operator<<(endl_type endl);
+
+  // log level
+  Log& Log::operator<<(LogLevel lvl) {
+    _next_level = lvl;
+    return *this;
+  }
+
+  ustring Log::level_string (LogLevel lvl) {
+    switch (lvl) {
+      case debug: return "debug";
+      case info:  return "info";
+      case warn:  return "warn";
+      case error: return "error";
+      default:    return "unknown error level!";
+    }
   }
 
   void Log::add_out_stream (ostream *o) {

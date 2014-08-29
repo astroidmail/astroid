@@ -53,7 +53,7 @@ namespace Astroid {
     time_t start = clock ();
     query =  notmuch_query_create (db->nm_db, query_string.c_str ());
 
-    log  << Log::info;
+    log  << info;
     log  << "ti, query: " << notmuch_query_get_query_string (query) << ", approx: "
          << notmuch_query_count_threads (query) << " threads." << endl;
 

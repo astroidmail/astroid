@@ -44,7 +44,7 @@ namespace Astroid {
     //log = new Log ();
     log.add_out_stream (&cout);
 
-    log << Log::info << "welcome to astroid! - " << GIT_DESC << endl;
+    log << info << "welcome to astroid! - " << GIT_DESC << endl;
 
     user_agent = ustring::compose ("astroid/v%1 (https://github.com/gauteh/astroid)", GIT_DESC);
 
@@ -95,7 +95,7 @@ namespace Astroid {
       ustring name = kv.first;
       ustring query = kv.second.data();
 
-      cout << "astroid: got query: " << name << ": " << query << endl;
+      log << info << "astroid: got query: " << name << ": " << query << endl;
       mw->add_mode (new ThreadIndex (mw, query));
     }
 

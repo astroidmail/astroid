@@ -19,21 +19,21 @@
 using namespace std;
 
 namespace Astroid {
+  enum LogLevel {
+    debug,
+    info,
+    warn,
+    error,
+  };
+
   class Log {
     public:
 
-      enum Level {
-        debug,
-        info,
-        warn,
-        error,
-      };
 
     private:
-      bool         _next_is_begin;
-      enum Level   _next_level;
-
-      stringstream _next_line;
+      bool          _next_is_begin;
+      enum LogLevel _next_level;
+      stringstream  _next_line;
 
       vector <ostream *> out_streams;
       vector <LogView *> log_views;
@@ -48,23 +48,13 @@ namespace Astroid {
       // constructor: User passes a custom log header and output stream, or uses defaults.
       Log();
 
-      Log& operator<<(endl_type endl);
 
-      // log level
-      Log& operator<<(Level lvl) {
-        _next_level = lvl;
-        return *this;
-      }
+      // Overload for std::endl only:
+      Log& operator<< (endl_type endl);
 
-      string level_string (Level lvl) {
-        switch (lvl) {
-          case debug: return "debug";
-          case info:  return "info";
-          case warn:  return "warn";
-          case error: return "error";
-          default:    return "unknown error level!";
-        }
-      }
+      // Overload for level only:
+      Log& operator<< (LogLevel lvl);
+      ustring level_string (LogLevel lvl);
 
       //Overload for anything else:
       template<typename T>
@@ -85,19 +75,6 @@ namespace Astroid {
           return *this;
       }
 
-  /*
-      // Overload for std::endl only:
-      Log& operator<< (endl_type endl);
-
-      // Overload for level only:
-      Log& operator<< (Level lvl);
-      string level_string (Level lvl);
-
-      // Overload for anything else:
-      template<typename T>
-      Log& operator<< (const T& data);
-
-      */
       void add_out_stream (ostream *);
       void del_out_stream (ostream *);
       void add_log_view   (LogView *);

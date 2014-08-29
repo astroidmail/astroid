@@ -19,7 +19,7 @@ using namespace std;
 
 namespace Astroid {
   MainWindow::MainWindow () {
-    log << Log::debug << "mw: init.." << endl;
+    log << debug << "mw: init.." << endl;
 
     set_title ("Astroid - " GIT_DESC);
     set_default_size (1040, 800);

@@ -26,7 +26,7 @@ namespace Astroid {
     show_all_children ();
 
     log.add_log_view (this);
-    log << Log::debug << "log window ready." << endl;
+    log << debug << "log window ready." << endl;
   }
 
   LogView::~LogView () {
