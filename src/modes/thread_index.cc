@@ -71,7 +71,7 @@ namespace Astroid {
 
 
   void ThreadIndex::refresh (bool all, int count, bool checked) {
-    cout << "ti: refresh." << endl;
+    log << debug << "ti: refresh." << endl;
 
     time_t t0 = clock ();
 
@@ -100,19 +100,19 @@ namespace Astroid {
     }
     list_view->set_cursor (path);
 
-    cout << "ti: refreshed in " << ((clock() - t0) * 1000.0 / CLOCKS_PER_SEC) << " ms." << endl;
+    log << debug << "ti: refreshed in " << ((clock() - t0) * 1000.0 / CLOCKS_PER_SEC) << " ms." << endl;
   }
 
   void ThreadIndex::load_more_threads (bool all, int count, bool checked) {
     time_t t0 = clock ();
 
-    cout << "ti: load more (all: " << all << ") threads.." << endl;
+    log << debug << "ti: load more (all: " << all << ") threads.." << endl;
     lock_guard<Db> grd (*db);
 
     if (count < 0) count = thread_load_step;
 
     if (reopen_tries > 1) {
-      cerr << "ti: could not reopen db." << endl;
+      log << error << "ti: could not reopen db." << endl;
 
       throw database_error ("ti: could not reopen db.");
     }
@@ -137,14 +137,14 @@ namespace Astroid {
       thread = notmuch_threads_get (threads);
 
       if (thread == NULL) {
-        cerr << "ti: error: could not get thread." << endl;
+        log << error << "ti: error: could not get thread." << endl;
         throw database_error ("ti: could not get thread (is NULL)");
       }
 
       /* test for revision discarded */
       const char * ti = notmuch_thread_get_thread_id (thread);
       if (ti == NULL) {
-        cerr << "ti: revision discarded, trying to reopen." << endl;
+        log << error << "ti: revision discarded, trying to reopen." << endl;
         reopen_tries++;
         refresh (all, current_thread + count, false);
         return;
@@ -166,7 +166,7 @@ namespace Astroid {
       current_thread++;
 
       if ((i % 100) == 0) {
-        cout << "ti: loaded " << i << " threads." << endl;
+        log << debug << "ti: loaded " << i << " threads." << endl;
       }
 
       if (!all) {
@@ -176,11 +176,11 @@ namespace Astroid {
       }
     }
 
-    cout << "ti: loaded " << i << " threads in " << ((clock()-t0) * 1000.0 / CLOCKS_PER_SEC) << " ms." << endl;
+    log << debug << "ti: loaded " << i << " threads in " << ((clock()-t0) * 1000.0 / CLOCKS_PER_SEC) << " ms." << endl;
   }
 
   bool ThreadIndex::on_key_press_event (GdkEventKey *event) {
-    cout << "ti: key press" << endl;
+    log << debug << "ti: key press" << endl;
     switch (event->keyval) {
       case GDK_KEY_x:
         {
@@ -218,14 +218,14 @@ namespace Astroid {
   }
 
   void ThreadIndex::open_thread (refptr<NotmuchThread> thread, bool new_tab) {
-    cout << "ti: open thread: " << thread->thread_id << " (" << new_tab << ")" << endl;
+    log << debug << "ti: open thread: " << thread->thread_id << " (" << new_tab << ")" << endl;
     ThreadView * tv;
 
     if (new_tab) {
       tv = Gtk::manage(new ThreadView (main_window));
     } else {
       if (!thread_view_loaded) {
-        cout << "ti: init paned tv" << endl;
+        log << debug << "ti: init paned tv" << endl;
         thread_view = Gtk::manage(new ThreadView (main_window));
         thread_view_loaded = true;
       }
@@ -252,7 +252,7 @@ namespace Astroid {
   }
 
   ThreadIndex::~ThreadIndex () {
-    cout << "ti: deconstruct." << endl;
+    log << debug << "ti: deconstruct." << endl;
     close_query ();
     delete db;
 

@@ -41,8 +41,8 @@ namespace Astroid {
   ustring Log::level_string (LogLevel lvl) {
     switch (lvl) {
       case debug: return "debug";
-      case info:  return "info";
-      case warn:  return "warn";
+      case info:  return "info ";
+      case warn:  return "warn ";
       case error: return "error";
       default:    return "unknown error level!";
     }

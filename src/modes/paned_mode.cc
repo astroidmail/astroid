@@ -6,6 +6,7 @@
 # include <gtkmm/widget.h>
 
 # include "mode.hh"
+# include "log.hh"
 # include "paned_mode.hh"
 
 using namespace std;
@@ -21,7 +22,7 @@ namespace Astroid {
   }
 
   void PanedMode::add_pane (int p, Mode &w) {
-    cout << "pm: add pane" << endl;
+    log << debug << "pm: add pane" << endl;
 
     if (packed >= 2) {
       throw out_of_range ("Can only embed two panes.");
@@ -45,7 +46,7 @@ namespace Astroid {
   }
 
   void PanedMode::del_pane (int p) {
-    cout << "pm: del pane" << endl;
+    log << debug << "pm: del pane" << endl;
 
     if (p == current && has_modal) {
       release_modal ();
@@ -74,7 +75,7 @@ namespace Astroid {
   }
 
   void PanedMode::grab_modal () {
-    cout << "pm: grab modal to: " << current << endl;
+    log << debug << "pm: grab modal to: " << current << endl;
     if (current == 0) {
       pw1->grab_modal ();
       has_modal = true;
@@ -85,7 +86,7 @@ namespace Astroid {
   }
 
   void PanedMode::release_modal () {
-    cout << "pm: release modal: " << current << " (" << has_modal << ")" << endl;
+    log << debug << "pm: release modal: " << current << " (" << has_modal << ")" << endl;
     if (current == 0) {
       pw1->release_modal ();
     } else if (current == 1) {

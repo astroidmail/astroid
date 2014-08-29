@@ -41,7 +41,6 @@ namespace Astroid {
   }
 
   int Astroid::main (int argc, char **argv) {
-    //log = new Log ();
     log.add_out_stream (&cout);
 
     log << info << "welcome to astroid! - " << GIT_DESC << endl;
@@ -116,7 +115,7 @@ namespace Astroid {
   }
 
   void Astroid::quit () {
-    cout << "astroid: goodbye!" << endl;
+    log << info << "astroid: goodbye!" << endl;
 
     /* remove modes (TODO: should be done in ~mainwindow) */
     for (auto mw : main_windows) {
