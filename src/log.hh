@@ -6,7 +6,8 @@
 
 # pragma once
 
-# include "modes/log_view.hh"
+# include "astroid.hh"
+# include "proto.hh"
 
 # include <type_traits>
 # include <iostream>

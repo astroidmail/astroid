@@ -21,7 +21,7 @@ namespace Astroid {
       }
 
       for (auto &lv : log_views) {
-        lv->log_line (_next_line.str());
+        lv->log_line (_next_level, _next_line.str());
       }
 
       _next_line.str (string());

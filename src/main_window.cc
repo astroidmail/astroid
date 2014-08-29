@@ -54,7 +54,6 @@ namespace Astroid {
   }
 
   void MainWindow::enable_command (CommandBar::CommandMode m, ustring cmd, function<void(ustring)> f) {
-    cout << "mw: enable command: " << m << ", " << cmd << endl;
     unset_active ();
     command.enable_command (m, cmd, f);
     is_command = true;
@@ -62,7 +61,6 @@ namespace Astroid {
   }
 
   void MainWindow::disable_command () {
-    cout << "mw: disable command" << endl;
     // hides itself
     command.disable_command ();
     command.remove_modal_grab();
@@ -71,7 +69,6 @@ namespace Astroid {
   }
 
   void MainWindow::on_command_mode_changed () {
-    cout << "mw: smode changed" << endl;
     if (!command.get_search_mode()) {
       disable_command ();
     }
@@ -160,7 +157,7 @@ namespace Astroid {
   MainWindow::~MainWindow () {
     modes.clear (); // the modes themselves should be freed upon
                     // widget desctruction
-    cout << "mw: done." << endl;
+    log << debug << "mw: done." << endl;
   }
 
   void MainWindow::add_mode (Mode * m) {
@@ -174,7 +171,7 @@ namespace Astroid {
   }
 
   void MainWindow::del_mode (int c) {
-    cout << "mw: del mode: " << c << endl;
+    log << debug << "mw: del mode: " << c << endl;
     if (c >= 0) {
       if (c == 0) {
         set_active (c + 1);
@@ -191,7 +188,7 @@ namespace Astroid {
         // mode is deleted by Gtk::manage.
       }
     } else {
-      cout << "mw: attempt to remove negative page" << endl;
+      log << warn << "mw: attempt to remove negative page" << endl;
     }
   }
 
@@ -207,7 +204,7 @@ namespace Astroid {
   void MainWindow::unset_active () {
     if (current >= 0) {
       if (static_cast<int>(modes.size()) > current) {
-        cout << "mw: release modal, from: " << current << endl;
+        log << debug << "mw: release modal, from: " << current << endl;
         modes[current]->release_modal ();
         lastcurrent = current;
         current = -1;
@@ -216,7 +213,7 @@ namespace Astroid {
   }
 
   void MainWindow::set_active (int n) {
-    cout << "mw: set active: " << n << ", current: " << current << endl;
+    log << debug << "mw: set active: " << n << ", current: " << current << endl;
 
     if (n >= 0 && n <= notebook.get_n_pages()-1) {
 
@@ -226,11 +223,11 @@ namespace Astroid {
 
       unset_active ();
 
-      cout << "mw: grab modal to: " << n << endl;
+      log << debug << "mw: grab modal to: " << n << endl;
       modes[n]->grab_modal ();
       current = n;
     } else {
-      cout << "mw: set active: page is out of range: " << n << endl;
+      log << debug << "mw: set active: page is out of range: " << n << endl;
     }
   }
 }

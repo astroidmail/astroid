@@ -14,7 +14,7 @@ namespace Astroid {
       LogView ();
       ~LogView ();
 
-      void log_line (ustring);
+      void log_line (LogLevel, ustring);
 
       void grab_modal () override;
       void release_modal () override;

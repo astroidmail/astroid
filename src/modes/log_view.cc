@@ -17,7 +17,13 @@ namespace Astroid {
     store = Gtk::ListStore::create (m_columns);
     tv.set_model (store);
 
-    tv.append_column ("log entry", m_columns.m_col_str);
+    Gtk::CellRendererText * renderer_text = Gtk::manage (new Gtk::CellRendererText);
+    int cols_count = tv.append_column ("log entry", *renderer_text);
+    Gtk::TreeViewColumn * pcolumn = tv.get_column (cols_count -1);
+    if (pcolumn) {
+      pcolumn->add_attribute (renderer_text->property_markup(), m_columns.m_col_str);
+    }
+
     tv.set_headers_visible (false);
     tv.set_sensitive (true);
     set_sensitive (true);
@@ -33,10 +39,17 @@ namespace Astroid {
     log.del_log_view (this);
   }
 
-  void LogView::log_line (ustring s) {
+  void LogView::log_line (LogLevel lvl, ustring s) {
     auto iter = store->append();
     auto row  = *iter;
-    row[m_columns.m_col_str] = s;
+
+    if (lvl >= warn) {
+      row[m_columns.m_col_str] = "<b>" + s + "</b>";
+    } else if (lvl >= info) {
+      row[m_columns.m_col_str] = "<i>" + s + "</i>";
+    } else {
+      row[m_columns.m_col_str] = s;
+    }
 
     auto path = store->get_path (iter);
     tv.scroll_to_row (path);
