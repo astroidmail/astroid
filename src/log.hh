@@ -48,7 +48,6 @@ namespace Astroid {
       // constructor: User passes a custom log header and output stream, or uses defaults.
       Log();
 
-
       // Overload for std::endl only:
       Log& operator<< (endl_type endl);
 
@@ -56,7 +55,9 @@ namespace Astroid {
       Log& operator<< (LogLevel lvl);
       ustring level_string (LogLevel lvl);
 
-      //Overload for anything else:
+      // Overload for anything else, this must be defined
+      // in the header file so that the implementation using it
+      // have access to the definition of the template.
       template<typename T>
       Log& operator<< (const T& data)
       {
