@@ -115,14 +115,14 @@ namespace Astroid {
   }
 
   void Astroid::quit () {
-    log << info << "astroid: goodbye!" << endl;
-
     /* remove modes (TODO: should be done in ~mainwindow) */
     for (auto mw : main_windows) {
       mw->remove_all_modes ();
     }
 
     app->quit ();
+
+    log << info << "astroid: goodbye!" << endl;
   }
 
 }

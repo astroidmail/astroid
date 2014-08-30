@@ -23,9 +23,6 @@ namespace Astroid {
   };
 
   class Log {
-    public:
-
-
     private:
       bool          _next_is_begin;
       enum LogLevel _next_level;
