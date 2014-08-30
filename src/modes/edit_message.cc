@@ -157,7 +157,9 @@ namespace Astroid {
   EditMessage::~EditMessage () {
     log << debug << "em: deconstruct." << endl;
 
-    vim_remote_keys ("<ESC>:quit!<CR>");
+    if (vim_started) {
+      vim_remote_keys ("<ESC>:quit!<CR>");
+    }
 
     if (is_regular_file (tmpfile_path)) {
       boost::filesystem::remove (tmpfile_path);
