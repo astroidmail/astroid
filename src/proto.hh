@@ -1,7 +1,13 @@
 # pragma once
 
+# include <glibmm.h>
+
 /* forward declarations of classes and structs 'n stuff */
 namespace Astroid {
+
+  /* aliases for often used types  */
+  typedef Glib::ustring ustring;
+  # define refptr Glib::RefPtr
 
   class Astroid;
   class Db;

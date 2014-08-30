@@ -1,6 +1,4 @@
-# include "proto.hh"
 # include "astroid.hh"
-
 # include "log.hh"
 
 # include "log_view.hh"

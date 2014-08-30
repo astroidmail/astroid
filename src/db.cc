@@ -15,6 +15,7 @@
 
 # include "db.hh"
 # include "utils/utils.hh"
+# include "log.hh"
 
 using namespace std;
 using namespace boost::filesystem;
@@ -25,7 +26,7 @@ namespace Astroid {
 
     const char * home = getenv ("HOME");
     if (home == NULL) {
-      cerr << "db: error: HOME variable not set." << endl;
+      log << error << "db: error: HOME variable not set." << endl;
       throw invalid_argument ("db: error: HOME environment variable not set.");
     }
 
@@ -38,7 +39,7 @@ namespace Astroid {
       path_db = path(db_path);
     }
 
-    cout << "db: opening db: " << path_db << endl;
+    log << info << "db: opening db: " << path_db << endl;
 
     time_t start = clock ();
 
@@ -53,11 +54,11 @@ namespace Astroid {
     }
 
     float diff = (clock () - start) * 1000.0 / CLOCKS_PER_SEC;
-    cout << "db: open time: " << diff << " ms." << endl;
+    log << info << "db: open time: " << diff << " ms." << endl;
   }
 
   void Db::reopen () {
-    cout << "db: reopening datbase.." << endl;
+    log << info << "db: reopening datbase.." << endl;
 
     /* we now have all locks */
     bool reopen_rw = (db_state == READ_WRITE);
@@ -97,12 +98,12 @@ namespace Astroid {
     notmuch_query_destroy (q);
 
     float diff = (clock () - start) * 1000.0 / CLOCKS_PER_SEC;
-    cout << "db: test query time: " << diff << " ms." << endl;
+    log << debug << "db: test query time: " << diff << " ms." << endl;
 
     if (invalid) {
-      cout << "db: no longer valid, reopen required." << endl;
+      log << warn << "db: no longer valid, reopen required." << endl;
     } else {
-      cout << "db: valid." << endl;
+      log << debug << "db: valid." << endl;
     }
 
     if (invalid && doreopen) {
@@ -115,7 +116,7 @@ namespace Astroid {
 
   void Db::close_db () {
     if (nm_db != NULL) {
-      cout << "db: closing db." << endl;
+      log << info << "db: closing db." << endl;
       notmuch_database_close (nm_db);
       nm_db = NULL;
       db_state = CLOSED;
@@ -123,7 +124,7 @@ namespace Astroid {
   }
 
   bool Db::open_db_write (bool block) {
-    cout << "db: open db read-write." << endl;
+    log << info << "db: open db read-write." << endl;
     close_db ();
     db_state = IN_CHANGE;
 
@@ -142,7 +143,7 @@ namespace Astroid {
         &nm_db);
 
       if (s == NOTMUCH_STATUS_XAPIAN_EXCEPTION) {
-        cout << "db: error: could not open db r/w, waited " <<
+        log << error << "db: error: could not open db r/w, waited " <<
                 time << " of maximum " <<
                 db_write_open_timeout << " seconds." << endl;
 
@@ -156,7 +157,7 @@ namespace Astroid {
     } while ((s == NOTMUCH_STATUS_XAPIAN_EXCEPTION) && (time <= db_write_open_timeout));
 
     if (s != NOTMUCH_STATUS_SUCCESS) {
-      cerr << "db: error: failed opening database for writing." << endl;
+      log << error << "db: error: failed opening database for writing." << endl;
 
       throw database_error ("failed to open database for writing");
 
@@ -166,12 +167,12 @@ namespace Astroid {
     }
 
     db_state = READ_WRITE;
-    cout << "db: open in r/w mode." << endl;
+    log << info << "db: open in r/w mode." << endl;
     return true;
   }
 
   bool Db::open_db_read_only () {
-    cout << "db: open db read-only." << endl;
+    log << info << "db: open db read-only." << endl;
     close_db ();
 
     db_state = IN_CHANGE;
@@ -183,7 +184,7 @@ namespace Astroid {
         &nm_db);
 
     if (s != NOTMUCH_STATUS_SUCCESS) {
-      cerr << "db: error: failed opening database." << endl;
+      log << error << "db: error: failed opening database." << endl;
 
       throw database_error ("failed to open database (read-only)");
 
@@ -193,12 +194,12 @@ namespace Astroid {
     }
 
     db_state = READ_ONLY;
-    cout << "db: open in read-only mode." << endl;
+    log << info << "db: open in read-only mode." << endl;
     return true;
   }
 
   Db::~Db () {
-    cout << "db: closing notmuch database." << endl << flush;
+    log << info << "db: closing notmuch database." << endl << flush;
 
     close_db ();
   }
@@ -220,7 +221,7 @@ namespace Astroid {
 
     notmuch_tags_destroy (nm_tags);
 
-    cout << "db: loaded " << tags.size () << " tags." << endl;
+    log << info << "db: loaded " << tags.size () << " tags." << endl;
   }
 
   void Db::add_sent_message (ustring fname) {

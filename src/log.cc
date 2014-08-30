@@ -1,8 +1,11 @@
-# include "log.hh"
-# include "modes/log_view.hh"
-
 # include <iostream>
 # include <iomanip>
+# include <chrono>
+# include <ctime>
+
+# include "astroid.hh"
+# include "log.hh"
+# include "modes/log_view.hh"
 
 using namespace std;
 

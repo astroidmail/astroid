@@ -1,4 +1,4 @@
-/* based mostly on:
+/* based partly on:
  *
  * https://github.com/Manu343726/Cpp11CustomLogClass/blob/master/Log.h
  * http://stackoverflow.com/questions/17595957/operator-overloading-in-c-for-logging-purposes/17605306#17605306
@@ -6,14 +6,9 @@
 
 # pragma once
 
-# include "astroid.hh"
 # include "proto.hh"
 
-# include <type_traits>
 # include <iostream>
-# include <chrono>
-# include <ctime>
-# include <string>
 # include <sstream>
 # include <vector>
 
@@ -73,5 +68,7 @@ namespace Astroid {
       void del_log_view   (LogView *);
   };
 
+  /* globally available log instance */
+  extern Log log;
 
 }
