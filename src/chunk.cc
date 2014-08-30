@@ -240,6 +240,7 @@ namespace Astroid {
       return ustring (sstr.str());
     } else {
       return ustring ("");
+      log << warn << "chunk: tried to display non-viewable part." << endl;
       //throw runtime_error ("chunk: tried to display non-viewable part.");
     }
   }
@@ -278,8 +279,8 @@ namespace Astroid {
 
       sz = res->len;
 
+      /* mem owns the bytearray */
       g_object_unref (mem);
-
     }
 
     log << info << "chunk: file size: " << sz << " (time used to calculate: " << ( (clock () - t0) * 1000.0 / CLOCKS_PER_SEC ) << " ms.)" << endl;
@@ -312,6 +313,7 @@ namespace Astroid {
 
       return data;
     } else {
+      log << error << "Chunk::contents() not supported on non-part." << endl;
       throw runtime_error ("Chunk::contents() not supported on non-part.");
     }
   }

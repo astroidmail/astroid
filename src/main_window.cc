@@ -171,7 +171,7 @@ namespace Astroid {
   }
 
   void MainWindow::del_mode (int c) {
-    log << debug << "mw: del mode: " << c << endl;
+    // log << debug << "mw: del mode: " << c << endl;
     if (c >= 0) {
       if (c == 0) {
         set_active (c + 1);
@@ -204,7 +204,7 @@ namespace Astroid {
   void MainWindow::unset_active () {
     if (current >= 0) {
       if (static_cast<int>(modes.size()) > current) {
-        log << debug << "mw: release modal, from: " << current << endl;
+        //log << debug << "mw: release modal, from: " << current << endl;
         modes[current]->release_modal ();
         lastcurrent = current;
         current = -1;
@@ -213,7 +213,7 @@ namespace Astroid {
   }
 
   void MainWindow::set_active (int n) {
-    log << debug << "mw: set active: " << n << ", current: " << current << endl;
+    //log << debug << "mw: set active: " << n << ", current: " << current << endl;
 
     if (n >= 0 && n <= notebook.get_n_pages()-1) {
 
@@ -223,11 +223,11 @@ namespace Astroid {
 
       unset_active ();
 
-      log << debug << "mw: grab modal to: " << n << endl;
+      //log << debug << "mw: grab modal to: " << n << endl;
       modes[n]->grab_modal ();
       current = n;
     } else {
-      log << debug << "mw: set active: page is out of range: " << n << endl;
+      // log << debug << "mw: set active: page is out of range: " << n << endl;
     }
   }
 }
