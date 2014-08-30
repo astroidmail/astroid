@@ -1,27 +1,40 @@
 # include "log.hh"
 # include "modes/log_view.hh"
 
+# include <iostream>
+# include <iomanip>
+
 using namespace std;
 
 namespace Astroid {
 
   Log::Log ()
   {
-    _next_is_begin = true;
     _next_level = debug;
   }
 
   //Overload for std::endl only:
   Log& Log::operator<<(endl_type endl)
   {
-      _next_is_begin = true;
+      auto now        = std::chrono::system_clock::now();
+      auto now_time_t = std::chrono::system_clock::to_time_t( now );
+      auto now_tm     = std::localtime( &now_time_t );
+
+      stringstream time_str;
+      time_str << "("
+           << setw(2) << setfill('0') << now_tm->tm_hour << ":"
+           << setw(2) << setfill('0') << now_tm->tm_min << ":"
+           << setw(2) << setfill('0') << now_tm->tm_sec << ")";
+
 
       for (auto &o : out_streams) {
-        *o << _next_line.str() << endl;
+        *o << "[" << level_string (_next_level) << "] "
+           << time_str.str () << ": "
+           << _next_line.str () << endl;
       }
 
       for (auto &lv : log_views) {
-        lv->log_line (_next_level, _next_line.str());
+        lv->log_line (_next_level, time_str.str(),  _next_line.str());
       }
 
       _next_line.str (string());

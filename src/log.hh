@@ -54,7 +54,7 @@ namespace Astroid {
 
       // Overload for level only:
       Log& operator<< (LogLevel lvl);
-      ustring level_string (LogLevel lvl);
+      static ustring level_string (LogLevel lvl);
 
       // Overload for anything else, this must be defined
       // in the header file so that the implementation using it
@@ -62,17 +62,7 @@ namespace Astroid {
       template<typename T>
       Log& operator<< (const T& data)
       {
-          auto now        = std::chrono::system_clock::now();
-          auto now_time_t = std::chrono::system_clock::to_time_t( now );
-          auto now_tm     = std::localtime( &now_time_t );
-
-          if( _next_is_begin ) {
-            _next_line << "[" << level_string (_next_level) << "] " << "(" << now_tm->tm_hour << ":" << now_tm->tm_min << ":" << now_tm->tm_sec << "): " << data;
-          } else {
-            _next_line << data;
-          }
-
-          _next_is_begin = false;
+          _next_line << data;
 
           return *this;
       }

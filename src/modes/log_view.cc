@@ -18,6 +18,7 @@ namespace Astroid {
     tv.set_model (store);
 
     Gtk::CellRendererText * renderer_text = Gtk::manage (new Gtk::CellRendererText);
+    renderer_text->property_family().set_value ("monospace");
     int cols_count = tv.append_column ("log entry", *renderer_text);
     Gtk::TreeViewColumn * pcolumn = tv.get_column (cols_count -1);
     if (pcolumn) {
@@ -39,16 +40,25 @@ namespace Astroid {
     log.del_log_view (this);
   }
 
-  void LogView::log_line (LogLevel lvl, ustring s) {
+  void LogView::log_line (LogLevel lvl, ustring time_str, ustring s) {
     auto iter = store->append();
     auto row  = *iter;
 
-    if (lvl >= warn) {
-      row[m_columns.m_col_str] = "<b>" + s + "</b>";
-    } else if (lvl >= info) {
-      row[m_columns.m_col_str] = "<i>" + s + "</i>";
+    ustring l = ustring::compose (
+        "<i>[%1]</i> %2: %3",
+        Log::level_string (lvl),
+        time_str,
+        s);
+
+    if (lvl == error) {
+      row[m_columns.m_col_str] = "<span color=\"red\">" + l + "</span>";
+    } else if (lvl == warn) {
+      row[m_columns.m_col_str] = "<span color=\"yellow\">" + l + "</span>";
+    } else if (lvl == info) {
+      row[m_columns.m_col_str] = l;
     } else {
-      row[m_columns.m_col_str] = s;
+      /* debug */
+      row[m_columns.m_col_str] = "<span color=\"gray\">" + l + "</span>";
     }
 
     auto path = store->get_path (iter);

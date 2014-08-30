@@ -196,7 +196,7 @@ namespace Astroid {
         }
         break;
 
-      case GDK_KEY_dollar:
+      case GDK_KEY_P:
         {
           refresh (false, current_thread, false);
           return true;
