@@ -92,8 +92,6 @@ namespace Astroid {
 
     thread_view = Gtk::manage(new ThreadView(main_window));
     thread_view->edit_mode = true;
-    //text_view->set_sensitive (false);
-    //text_view->set_editable (false);
     editor_box->pack_start (*thread_view, true, 2);
     thread_view->hide ();
 
@@ -288,12 +286,15 @@ namespace Astroid {
          * programatically set focus to a widget inside an embedded
          * child (except for the user to press Tab).
          *
-         * TODO: ship, as back up, the necessary code from gtk+
-         *       to move focus to do gtk_socket_focus_forward.
+         * Backup: Send the TAB_FORWARD signal, for details, check:
+         * https://mail.gnome.org/archives/gtk-app-devel-list/2014-August/msg00047.html
+         *
          */
         if (vim_started) {
 # ifdef HAVE_GTK_SOCKET_FOCUS_FORWARD
           gtk_socket_focus_forward (editor_socket->gobj ());
+# else
+          editor_socket->child_focus (Gtk::DIR_TAB_FORWARD);
 # endif
 
           editor_active = true;
