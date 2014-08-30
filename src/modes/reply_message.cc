@@ -50,6 +50,8 @@ namespace Astroid {
     references = msg->references + " <" + msg->mid + ">";
     inreplyto  = "<" + msg->mid + ">";
 
+    reply_revealer->set_reveal_child (true);
+
     editor_active = true;
     in_edit       = true;
     editor_toggle (true);

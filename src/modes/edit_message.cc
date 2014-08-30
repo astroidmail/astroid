@@ -39,7 +39,9 @@ namespace Astroid {
 
     builder->get_widget ("from_combo", from_combo);
     builder->get_widget ("encryption_combo", encryption_combo);
+    builder->get_widget ("reply_mode_combo", encryption_combo);
     builder->get_widget ("fields_revealer", fields_revealer);
+    builder->get_widget ("reply_revealer", reply_revealer);
 
     builder->get_widget ("editor_box", editor_box);
 
@@ -261,11 +263,11 @@ namespace Astroid {
   }
 
   void EditMessage::fields_hide () {
-    fields_revealer->set_reveal_child (false); 
+    fields_revealer->set_reveal_child (false);
   }
 
   void EditMessage::fields_show () {
-    fields_revealer->set_reveal_child (true); 
+    fields_revealer->set_reveal_child (true);
   }
 
   void EditMessage::activate_field (Field f) {

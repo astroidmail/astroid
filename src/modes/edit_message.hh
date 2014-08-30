@@ -34,8 +34,10 @@ namespace Astroid {
         no_fields // last
       };
 
-      Gtk::ComboBox *from_combo, *encryption_combo;
+      Gtk::ComboBox *from_combo, *encryption_combo,
+        *reply_mode_combo;
       Gtk::Revealer *fields_revealer;
+      Gtk::Revealer *reply_revealer;
 
       Field current_field = From;
       void activate_field (Field);
