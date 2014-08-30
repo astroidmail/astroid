@@ -50,8 +50,9 @@ namespace Astroid {
     references = msg->references + " <" + msg->mid + ">";
     inreplyto  = "<" + msg->mid + ">";
 
-    reply_revealer->set_reveal_child (true);
     /* reply mode combobox */
+    reply_revealer->set_reveal_child (true);
+
     reply_store = Gtk::ListStore::create (reply_columns);
     reply_mode_combo->set_model (reply_store);
 
