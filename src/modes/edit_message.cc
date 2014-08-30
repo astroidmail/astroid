@@ -39,6 +39,7 @@ namespace Astroid {
 
     builder->get_widget ("from_combo", from_combo);
     builder->get_widget ("encryption_combo", encryption_combo);
+    builder->get_widget ("fields_revealer", fields_revealer);
 
     builder->get_widget ("editor_box", editor_box);
 
@@ -207,6 +208,8 @@ namespace Astroid {
       editor_socket->show ();
       thread_view->hide ();
 
+      fields_hide ();
+
       if (!vim_started) {
         vim_start ();
       }
@@ -220,6 +223,8 @@ namespace Astroid {
       auto msgt = refptr<MessageThread>(new MessageThread());
 
       thread_view->show_all ();
+
+      fields_show ();
 
       /* make message */
       ComposeMessage * c = make_message ();
@@ -253,6 +258,14 @@ namespace Astroid {
 
       unlink (tmpf.c_str());
     }
+  }
+
+  void EditMessage::fields_hide () {
+    fields_revealer->set_reveal_child (false); 
+  }
+
+  void EditMessage::fields_show () {
+    fields_revealer->set_reveal_child (true); 
   }
 
   void EditMessage::activate_field (Field f) {

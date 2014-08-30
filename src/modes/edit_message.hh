@@ -35,6 +35,7 @@ namespace Astroid {
       };
 
       Gtk::ComboBox *from_combo, *encryption_combo;
+      Gtk::Revealer *fields_revealer;
 
       Field current_field = From;
       void activate_field (Field);
@@ -87,6 +88,8 @@ namespace Astroid {
       ustring vim_server;
 
       void editor_toggle (bool);
+      void fields_show ();
+      void fields_hide ();
       void vim_start ();
       void vim_stop ();
       void vim_remote_expr (ustring);
