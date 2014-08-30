@@ -376,6 +376,9 @@ namespace Astroid {
 
   bool EditMessage::on_key_press_event (GdkEventKey * event) {
     log << debug << "em: got key press" << endl;
+
+    if (mode_key_handler (event)) return true;
+
     switch (event->keyval) {
       case GDK_KEY_Return:
         {
@@ -390,7 +393,6 @@ namespace Astroid {
       case GDK_KEY_y:
         {
           ask_yes_no ("Really send message?", [&](bool yes){ if (yes) send_message (); });
-          //send_message ();
           return true;
         }
     }

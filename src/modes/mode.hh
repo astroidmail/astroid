@@ -20,8 +20,13 @@ namespace Astroid {
       Gtk::Revealer * rev_yes_no;
       Gtk::Label    * label_yes_no;
 
+      bool yes_no_waiting = false;
+      function <void (bool)> yes_no_closure = NULL;
+      void answer_yes_no (bool);
+
     protected:
       void ask_yes_no (ustring, function<void(bool)>);
+      bool mode_key_handler (GdkEventKey *);
 
     public:
       virtual void grab_modal () = 0;
