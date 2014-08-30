@@ -50,7 +50,6 @@ namespace Astroid {
     add_events (Gdk::KEY_PRESS_MASK);
     signal_key_press_event ().connect (
         sigc::mem_fun(*this, &MainWindow::on_key_press));
-
   }
 
   void MainWindow::enable_command (CommandBar::CommandMode m, ustring cmd, function<void(ustring)> f) {

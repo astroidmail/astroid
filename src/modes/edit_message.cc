@@ -25,7 +25,7 @@ using namespace std;
 namespace Astroid {
   int EditMessage::edit_id = 0;
 
-  EditMessage::EditMessage (MainWindow * mw) {
+  EditMessage::EditMessage (MainWindow * mw) : Mode (true) {
     main_window   = mw;
     editor_config = astroid->config->config.get_child ("editor");
 
@@ -389,7 +389,8 @@ namespace Astroid {
 
       case GDK_KEY_y:
         {
-          send_message ();
+          ask_yes_no ("Really send message?", [&](bool yes){ if (yes) send_message (); });
+          //send_message ();
           return true;
         }
     }
