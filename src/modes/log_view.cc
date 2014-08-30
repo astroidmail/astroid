@@ -46,7 +46,7 @@ namespace Astroid {
         "<i>[%1]</i> %2: %3",
         Log::level_string (lvl),
         time_str,
-        s);
+        Glib::Markup::escape_text(s));
 
     if (lvl == error) {
       row[m_columns.m_col_str] = "<span color=\"red\">" + l + "</span>";
