@@ -51,6 +51,25 @@ namespace Astroid {
     inreplyto  = "<" + msg->mid + ">";
 
     reply_revealer->set_reveal_child (true);
+    /* reply mode combobox */
+    reply_store = Gtk::ListStore::create (reply_columns);
+    reply_mode_combo->set_model (reply_store);
+
+    auto row = *(reply_store->append());
+    row[reply_columns.reply_string] = "Custom";
+    row[reply_columns.reply] = Rep_Custom;
+    row = *(reply_store->append());
+    row[reply_columns.reply_string] = "Sender";
+    row[reply_columns.reply] = Rep_Sender;
+    row = *(reply_store->append());
+    row[reply_columns.reply_string] = "All";
+    row[reply_columns.reply] = Rep_All;
+    row = *(reply_store->append());
+    row[reply_columns.reply_string] = "Mailinglist";
+    row[reply_columns.reply] = Rep_MailingList;
+
+    reply_mode_combo->set_active (0);
+    reply_mode_combo->pack_start (enc_columns.encryption_string);
 
     editor_active = true;
     in_edit       = true;

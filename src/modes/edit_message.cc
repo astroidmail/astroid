@@ -39,7 +39,7 @@ namespace Astroid {
 
     builder->get_widget ("from_combo", from_combo);
     builder->get_widget ("encryption_combo", encryption_combo);
-    builder->get_widget ("reply_mode_combo", encryption_combo);
+    builder->get_widget ("reply_mode_combo", reply_mode_combo);
     builder->get_widget ("fields_revealer", fields_revealer);
     builder->get_widget ("reply_revealer", reply_revealer);
 
@@ -120,6 +120,26 @@ namespace Astroid {
     }
 
     from_combo->pack_start (from_columns.name_and_address);
+
+    /* encryption combobox */
+    enc_store = Gtk::ListStore::create (enc_columns);
+    encryption_combo->set_model (enc_store);
+
+    auto row = *(enc_store->append());
+    row[enc_columns.encryption_string] = "None";
+    row[enc_columns.encryption] = Enc_None;
+    row = *(enc_store->append());
+    row[enc_columns.encryption_string] = "Sign";
+    row[enc_columns.encryption] = Enc_Sign;
+    row = *(enc_store->append());
+    row[enc_columns.encryption_string] = "Encrypt";
+    row[enc_columns.encryption] = Enc_Encrypt;
+    row = *(enc_store->append());
+    row[enc_columns.encryption_string] = "Sign and encrypt";
+    row[enc_columns.encryption] = Enc_SignAndEncrypt;
+
+    encryption_combo->set_active (0);
+    encryption_combo->pack_start (enc_columns.encryption_string);
 
     prepare_message ();
 

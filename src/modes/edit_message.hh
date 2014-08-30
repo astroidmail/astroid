@@ -65,6 +65,25 @@ namespace Astroid {
       refptr<Gtk::ListStore> from_store;
       int account_no;
 
+      /* encryption settings */
+      enum Encryption {
+        Enc_None,
+        Enc_Sign,
+        Enc_Encrypt,
+        Enc_SignAndEncrypt,
+      };
+
+      class EncryptionColumns : public Gtk::TreeModel::ColumnRecord {
+        public:
+          EncryptionColumns () { add (encryption_string); add (encryption); }
+
+          Gtk::TreeModelColumn<ustring> encryption_string;
+          Gtk::TreeModelColumn<int> encryption;
+      };
+
+      EncryptionColumns enc_columns;
+      refptr<Gtk::ListStore> enc_store;
+
       bool check_fields ();
       bool send_message ();
       ComposeMessage * make_message ();
