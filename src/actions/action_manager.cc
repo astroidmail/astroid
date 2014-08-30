@@ -7,6 +7,7 @@
 # include "main_window.hh"
 # include "action.hh"
 # include "db.hh"
+# include "log.hh"
 
 using namespace std;
 
@@ -23,7 +24,7 @@ namespace Astroid {
   }
 
   bool ActionManager::undo () {
-    cout << "actions: undo" << endl;
+    log << info << "actions: undo" << endl;
     if (!actions.empty ()) {
       refptr<Action> action = actions.back ();
       actions.pop_back ();
@@ -31,7 +32,7 @@ namespace Astroid {
       lock_guard<Db> grd (db);
       return action->undo (&db);
     } else {
-      cout << "actions: no more actions to undo." << endl;
+      log << info << "actions: no more actions to undo." << endl;
       return true;
     }
   }

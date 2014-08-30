@@ -51,7 +51,7 @@ namespace Astroid {
     if (lvl == error) {
       row[m_columns.m_col_str] = "<span color=\"red\">" + l + "</span>";
     } else if (lvl == warn) {
-      row[m_columns.m_col_str] = "<span color=\"yellow\">" + l + "</span>";
+      row[m_columns.m_col_str] = "<span color=\"pink\">" + l + "</span>";
     } else if (lvl == info) {
       row[m_columns.m_col_str] = l;
     } else {

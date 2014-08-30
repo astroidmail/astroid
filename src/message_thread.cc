@@ -6,6 +6,7 @@
 
 # include "astroid.hh"
 # include "db.hh"
+# include "log.hh"
 # include "message_thread.hh"
 # include "chunk.hh"
 # include "utils/date_utils.hh"
@@ -23,7 +24,7 @@ namespace Astroid {
 
   Message::Message (ustring _fname) : fname (_fname) {
 
-    cout << "msg: loading message from file: " << fname << endl;
+    log << info << "msg: loading message from file: " << fname << endl;
     in_notmuch = false;
     load_message ();
   }
@@ -31,7 +32,7 @@ namespace Astroid {
   Message::Message (ustring _mid, ustring _fname) {
     mid = _mid;
     fname = _fname;
-    cout << "msg: loading message from file (mid supplied): " << fname << endl;
+    log << info << "msg: loading message from file (mid supplied): " << fname << endl;
     in_notmuch = false;
     load_message ();
   }
@@ -43,10 +44,10 @@ namespace Astroid {
     mid = notmuch_message_get_message_id (message);
     in_notmuch = true;
 
-    cout << "msg: loading mid: " << mid << endl;
+    log << info << "msg: loading mid: " << mid << endl;
 
     fname = notmuch_message_get_filename (message);
-    cout << "msg: filename: " << fname << endl;
+    log << info << "msg: filename: " << fname << endl;
 
     load_message ();
     load_tags (message);
@@ -59,12 +60,12 @@ namespace Astroid {
 
   void Message::load_tags (Db * db) {
     if (!in_notmuch) {
-      cout << "mt: error: message not in database." << endl;
+      log << error << "mt: error: message not in database." << endl;
       throw invalid_argument ("mt: load_tags on message not in database.");
     }
 
     if (mid == "") {
-      cout << "mt: error: mid not defined, no tags" << endl;
+      log << error << "mt: error: mid not defined, no tags" << endl;
       throw invalid_argument ("mt: load_tags on message without message id.");
     } else {
       /* get tags from nm db */

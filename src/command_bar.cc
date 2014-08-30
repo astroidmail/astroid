@@ -13,6 +13,7 @@
 # include "modes/thread_index.hh"
 # include "modes/help_mode.hh"
 # include "utils/utils.hh"
+# include "log.hh"
 
 using namespace std;
 
@@ -45,7 +46,7 @@ namespace Astroid {
   void CommandBar::on_entry_activated () {
     /* handle input */
     ustring cmd = get_text ();
-    cout << "cb: cmd (in mode: " << mode << "): " << cmd << endl;
+    log << debug << "cb: cmd (in mode: " << mode << "): " << cmd << endl;
     set_search_mode (false); // emits changed -> disables search
 
     switch (mode) {
@@ -107,7 +108,7 @@ namespace Astroid {
   }
 
   void CommandBar::handle_command (ustring cmd) {
-    cout << "cb: command: " << cmd << endl;
+    log << debug << "cb: command: " << cmd << endl;
 
     UstringUtils::utokenizer tok (cmd);
 
@@ -127,11 +128,11 @@ namespace Astroid {
 
         ustring thread_id = *it;
 
-        cout << "cb: toggle archive on thread: " << thread_id << endl;
+        log << info << "cb: toggle archive on thread: " << thread_id << endl;
       }
 
     } else {
-      cout  << "cb: unknown command: " << cmd << endl;
+      log << error  << "cb: unknown command: " << cmd << endl;
     }
   }
 

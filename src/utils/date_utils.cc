@@ -6,6 +6,7 @@
 # include "astroid.hh"
 # include "config.hh"
 # include "date_utils.hh"
+# include "log.hh"
 
 using namespace std;
 using boost::property_tree::ptree;
@@ -121,7 +122,7 @@ namespace Astroid {
   }
 
   void Date::init () {
-    cout << "date: init." << endl;
+    log << info << "date: init." << endl;
 
     ptree config = astroid->config->config.get_child ("general.time");
     string c_f = config.get<string>("clock_format");
@@ -133,7 +134,7 @@ namespace Astroid {
     } else if (c_f == "local") {
       clock_format = ClockFormat::LOCALE_DEFAULT;
     } else {
-      cout << "date: error: unrecognized clock format in config: " << c_f << ", should be either 'local', '24h' or '12h'." << endl;
+      log << error << "date: error: unrecognized clock format in config: " << c_f << ", should be either 'local', '24h' or '12h'." << endl;
       clock_format = ClockFormat::LOCALE_DEFAULT;
     }
 

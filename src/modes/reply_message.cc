@@ -1,6 +1,7 @@
 # include <iostream>
 
 # include "astroid.hh"
+# include "log.hh"
 # include "edit_message.hh"
 # include "reply_message.hh"
 
@@ -12,7 +13,7 @@ namespace Astroid {
   ReplyMessage::ReplyMessage (MainWindow * mw, refptr<Message> _msg) : EditMessage (mw) {
     msg = _msg;
 
-    cout << "re: reply to: " << msg->mid << endl;
+    log << info << "re: reply to: " << msg->mid << endl;
 
     /* set subject */
     if (!(msg->subject.find_first_of ("Re:") == 0)) {

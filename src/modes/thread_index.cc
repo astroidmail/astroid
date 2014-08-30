@@ -176,7 +176,7 @@ namespace Astroid {
       }
     }
 
-    log << debug << "ti: loaded " << i << " threads in " << ((clock()-t0) * 1000.0 / CLOCKS_PER_SEC) << " ms." << endl;
+    log << info << "ti: loaded " << i << " threads in " << ((clock()-t0) * 1000.0 / CLOCKS_PER_SEC) << " ms." << endl;
   }
 
   bool ThreadIndex::on_key_press_event (GdkEventKey *event) {

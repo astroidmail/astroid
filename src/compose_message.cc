@@ -11,13 +11,14 @@
 # include "compose_message.hh"
 # include "message_thread.hh"
 # include "account_manager.hh"
+# include "log.hh"
 
 using namespace std;
 using namespace boost::filesystem;
 
 namespace Astroid {
   ComposeMessage::ComposeMessage () {
-    cout << "cm: initialize.." << endl;
+    log << debug << "cm: initialize.." << endl;
     message = g_mime_message_new (true);
   }
 
@@ -26,7 +27,7 @@ namespace Astroid {
 
     //if (message_file != "") unlink(message_file.c_str());
 
-    cout << "cm: deinitialized." << endl;
+    log << debug << "cm: deinitialized." << endl;
   }
 
   void ComposeMessage::set_from (Account *a) {
@@ -73,7 +74,7 @@ namespace Astroid {
   }
 
   void ComposeMessage::build () {
-    cout << "cm: build.." << endl;
+    log << debug << "cm: build.." << endl;
 
     std::string body_content(body.str());
 
@@ -101,7 +102,7 @@ namespace Astroid {
 
     Account * from = astroid->accounts->get_account_for_address (msg.sender);
     if (from == NULL) {
-      cout << "cm: warning: unknown sending address, using default." << endl;
+      log << warn << "cm: warning: unknown sending address, using default." << endl;
       from = &(astroid->accounts->accounts[astroid->accounts->default_account]);
     }
     set_from (from);
@@ -184,7 +185,7 @@ namespace Astroid {
 
     /* Send the message */
     if (!dryrun) {
-      cout << "cm: sending message from account: " << account->full_address () << endl;
+      log << warn << "cm: sending message from account: " << account->full_address () << endl;
       ustring send_command = account->sendmail ;
       FILE * sendMailPipe = popen(send_command.c_str(), "w");
       GMimeStream * sendMailStream = g_mime_stream_file_new(sendMailPipe);
@@ -196,11 +197,11 @@ namespace Astroid {
 
       if (status == 0)
       {
-        cout << "cm: message sent successfully!" << endl;
+        log << info << "cm: message sent successfully!" << endl;
 
         if (account->save_sent) {
           path save_to = path(account->save_sent_to) / path(id + ":2,");
-          cout << "cm: saving message to: " << save_to << endl;
+          log << info << "cm: saving message to: " << save_to << endl;
 
           write (save_to.c_str());
 
@@ -210,19 +211,19 @@ namespace Astroid {
                 Db db (Db::DbMode::DATABASE_READ_WRITE);
                 lock_guard<Db> lk (db);
                 db.add_sent_message (save_to.c_str());
-                cout << "cm: sent message added to db." << endl;
+                log << info << "cm: sent message added to db." << endl;
               });
         }
 
         return true;
 
       } else {
-        cout << "cm: could not send message!" << endl;
+        log << error << "cm: could not send message!" << endl;
         return false;
       }
     } else {
       ustring fname = "/tmp/" + id;
-      cout << "cm: sending disabled in config, message written to: " << fname << endl;
+      log << warn << "cm: sending disabled in config, message written to: " << fname << endl;
 
       write (fname);
       return false;
@@ -240,7 +241,7 @@ namespace Astroid {
 
     g_object_unref(stream);
 
-    cout << "cm: wrote tmp file: " << message_file << endl;
+    log << info << "cm: wrote tmp file: " << message_file << endl;
 
     return message_file;
   }

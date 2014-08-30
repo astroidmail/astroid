@@ -3,6 +3,7 @@
 # include <vector>
 
 # include "db.hh"
+# include "log.hh"
 # include "paned_mode.hh"
 # include "main_window.hh"
 # include "thread_index.hh"
@@ -41,7 +42,7 @@ namespace Astroid {
   }
 
   ThreadIndexScrolled::~ThreadIndexScrolled () {
-    cout << "tis: deconstruct." << endl;
+    log << debug << "tis: deconstruct." << endl;
   }
 
   void ThreadIndexScrolled::grab_modal () {
@@ -69,7 +70,7 @@ namespace Astroid {
   }
 
   ThreadIndexListStore::~ThreadIndexListStore () {
-    cout << "tils: deconstuct." << endl;
+    log << debug << "tils: deconstuct." << endl;
   }
 
 
@@ -105,7 +106,7 @@ namespace Astroid {
   }
 
   ThreadIndexListView::~ThreadIndexListView () {
-    cout << "tilv: deconstruct." << endl;
+    log << debug << "tilv: deconstruct." << endl;
   }
 
 
@@ -116,7 +117,7 @@ namespace Astroid {
     ThreadIndexListCellRenderer * r =
       (ThreadIndexListCellRenderer*) renderer;
 
-    //cout << "setting thread.." << r <<  endl;
+    //log << debug << "setting thread.." << r <<  endl;
     if (iter) {
 
       Gtk::ListStore::Row row = *iter;
@@ -209,7 +210,7 @@ namespace Astroid {
           auto thread = get_current_thread ();
 
           if (thread) {
-            cout << "ti_list: loading: " << thread->thread_id << endl;
+            log << info << "ti_list: loading: " << thread->thread_id << endl;
 
             if (event->state & GDK_SHIFT_MASK) {
               /* open message in new tab (if so configured) */
@@ -326,7 +327,7 @@ namespace Astroid {
             main_window->enable_command (CommandBar::CommandMode::Tag,
                 tag_list,
                 [&,thread](ustring tgs) {
-                  cout << "ti: got tags: " << tgs << endl;
+                  log << debug << "ti: got tags: " << tgs << endl;
 
                   vector<ustring> tags = VectorUtils::split_and_trim (tgs, ",");
 
@@ -356,7 +357,7 @@ namespace Astroid {
 
                   if (add.size () == 0 &&
                       rem.size () == 0) {
-                    cout << "ti: nothing to do." << endl;
+                    log << debug << "ti: nothing to do." << endl;
                   } else {
                     Db db (Db::DbMode::DATABASE_READ_WRITE);
                     main_window->actions.doit (&db,

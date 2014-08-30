@@ -8,12 +8,13 @@
 # include "config.hh"
 # include "contacts.hh"
 # include "utils/utils.hh"
+# include "log.hh"
 
 using namespace std;
 
 namespace Astroid {
   Contacts::Contacts () {
-    cout << "ct: initializing.." << endl;
+    log << info << "ct: initializing.." << endl;
 
     contacts_config = astroid->config->config.get_child ("contacts");
 
@@ -28,11 +29,11 @@ namespace Astroid {
   }
 
   Contacts::~Contacts () {
-    cout << "ct: deinitializing.." << endl;
+    log << info << "ct: deinitializing.." << endl;
   }
 
   void Contacts::load_recent_contacts (int n) {
-    cout << "ct: loading " << n << " most recent contacts.." << endl;
+    log << info << "ct: loading " << n << " most recent contacts.." << endl;
 
     if (n <= 0) return;
 
@@ -46,7 +47,7 @@ namespace Astroid {
 
     query =  notmuch_query_create (db.nm_db, recent_query.c_str());
 
-    cout << "ct, query: " << notmuch_query_get_query_string (query) << ", approx: "
+    log << info << "ct, query: " << notmuch_query_get_query_string (query) << ", approx: "
          << notmuch_query_count_messages (query) << " messages." << endl;
 
     messages = notmuch_query_search_messages (query);
@@ -79,7 +80,7 @@ namespace Astroid {
 
     if (find(contacts.begin (), contacts.end (), c) == contacts.end ()) {
       contacts.push_back (c);
-      //cout << "ct: adding: " << c << endl;
+      //log << debug << "ct: adding: " << c << endl;
     }
   }
 

@@ -8,6 +8,7 @@
 # include "astroid.hh"
 # include "chunk.hh"
 # include "gmime_iostream.hh"
+# include "log.hh"
 
 namespace Astroid {
 
@@ -18,7 +19,7 @@ namespace Astroid {
 
     content_type = g_mime_object_get_content_type (mime_object);
 
-    cout << "chunk: content-type: " << g_mime_content_type_to_string (content_type) << endl;
+    log << debug << "chunk: content-type: " << g_mime_content_type_to_string (content_type) << endl;
 
     if (GMIME_IS_PART (mime_object)) {
       // has no sub-parts
@@ -29,7 +30,7 @@ namespace Astroid {
       const char * cid = g_mime_part_get_content_id ((GMimePart *) mime_object);
       if (cid != NULL) {
         content_id = ustring(cid);
-        cout << "chunk: part, id: " << content_id << endl;
+        log << debug << "chunk: part, id: " << content_id << endl;
 
         if (viewable) {
           /* check if we can show this type */
@@ -49,14 +50,14 @@ namespace Astroid {
       attachment = !viewable;
 
     } else if GMIME_IS_MESSAGE_PART (mime_object) {
-      cout << "chunk: message part" << endl;
+      log << debug << "chunk: message part" << endl;
 
       /* contains a GMimeMessage with a potential substructure */
       GMimeMessage * msg = g_mime_message_part_get_message ((GMimeMessagePart *) mime_object);
       kids.push_back (refptr<Chunk>(new Chunk((GMimeObject *) msg)));
 
     } else if GMIME_IS_MESSAGE_PARTIAL (mime_object) {
-      cout << "chunk: partial" << endl;
+      log << debug << "chunk: partial" << endl;
 
       GMimeMessage * msg = g_mime_message_partial_reconstruct_message (
           (GMimeMessagePartial **) &mime_object,
@@ -66,11 +67,11 @@ namespace Astroid {
       kids.push_back (refptr<Chunk>(new Chunk((GMimeObject *) msg)));
 
     } else if GMIME_IS_MULTIPART (mime_object) {
-      cout << "chunk: multi part" << endl;
+      log << debug << "chunk: multi part" << endl;
       //  TODO: MultiPartEncrypted, MultiPartSigned
 
       bool alternative = (g_mime_content_type_is_type (content_type, "multipart", "alternative"));
-      cout << "chunk: alternative: " << alternative << endl;
+      log << debug << "chunk: alternative: " << alternative << endl;
 
       int total = g_mime_multipart_get_count ((GMimeMultipart *) mime_object);
 
@@ -92,7 +93,7 @@ namespace Astroid {
                   kids.end(),
                   [&] (refptr<Chunk> cc) {
                     if (c != cc) {
-                      cout << "chunk: multipart: added sibling" << endl;
+                      log << debug << "chunk: multipart: added sibling" << endl;
                       c->siblings.push_back (cc);
                     }
                   }
@@ -102,17 +103,17 @@ namespace Astroid {
                   g_mime_content_type_get_media_type (preferred_type),
                   g_mime_content_type_get_media_subtype (preferred_type)))
               {
-                cout << "chunk: multipart: preferred." << endl;
+                log << debug << "chunk: multipart: preferred." << endl;
                 c->preferred = true;
               }
             }
           );
       }
 
-      cout << "chunk: multi part end" << endl;
+      log << debug << "chunk: multi part end" << endl;
 
     } else if GMIME_IS_MESSAGE (mime_object) {
-      cout << "chunk: mime message" << endl;
+      log << debug << "chunk: mime message" << endl;
 
     }
   }
@@ -122,11 +123,11 @@ namespace Astroid {
     GMimeStream * content_stream = NULL;
 
     if (GMIME_IS_PART(mime_object)) {
-      cout << "chunk: body: part" << endl;
+      log << debug << "chunk: body: part" << endl;
 
 
       if (g_mime_content_type_is_type (content_type, "text", "plain")) {
-        cout << "chunk: plain text (out html: " << html << ")" << endl;
+        log << debug << "chunk: plain text (out html: " << html << ")" << endl;
 
         GMimeDataWrapper * content = g_mime_part_get_content_object (
             (GMimePart *) mime_object);
@@ -153,7 +154,7 @@ namespace Astroid {
         /* convert encoding */
         GMimeContentEncoding enc = g_mime_data_wrapper_get_encoding (content);
         if (enc) {
-          cout << "enc: " << g_mime_content_encoding_to_string(enc) << endl;
+          log << debug << "enc: " << g_mime_content_encoding_to_string(enc) << endl;
         }
 
         GMimeFilter * filter = g_mime_filter_basic_new(enc, false);
@@ -162,7 +163,7 @@ namespace Astroid {
 
         if (charset)
         {
-          cout << "charset: " << charset << endl;
+          log << debug << "charset: " << charset << endl;
           if (string(charset) == "utf-8") {
             charset = "UTF-8";
           }
@@ -171,7 +172,7 @@ namespace Astroid {
           g_mime_stream_filter_add(GMIME_STREAM_FILTER(filter_stream), filter);
           g_object_unref(filter);
         } else {
-          cout << "charset: not defined." << endl;
+          log << warn << "charset: not defined." << endl;
         }
 
         GMimeFilter * html_filter;
@@ -188,7 +189,7 @@ namespace Astroid {
         content_stream = filter_stream;
 
       } else if (g_mime_content_type_is_type (content_type, "text", "html")) {
-        cout << "chunk: html text" << endl;
+        log << debug << "chunk: html text" << endl;
 
         GMimeDataWrapper * content = g_mime_part_get_content_object (
             (GMimePart *) mime_object);
@@ -201,7 +202,7 @@ namespace Astroid {
         /* convert encoding */
         GMimeContentEncoding enc = g_mime_data_wrapper_get_encoding (content);
         if (enc) {
-          cout << "enc: " << g_mime_content_encoding_to_string(enc) << endl;
+          log << debug << "enc: " << g_mime_content_encoding_to_string(enc) << endl;
         }
 
         GMimeFilter * filter = g_mime_filter_basic_new(enc, false);
@@ -210,7 +211,7 @@ namespace Astroid {
 
         if (charset)
         {
-          cout << "charset: " << charset << endl;
+          log << debug << "charset: " << charset << endl;
           if (string(charset) == "utf-8") {
             charset = "UTF-8";
           }
@@ -219,7 +220,7 @@ namespace Astroid {
           g_mime_stream_filter_add(GMIME_STREAM_FILTER(filter_stream), filter);
           g_object_unref(filter);
         } else {
-          cout << "charset: not defined" << endl;
+          log << warn << "charset: not defined" << endl;
         }
 
 
@@ -281,7 +282,7 @@ namespace Astroid {
 
     }
 
-    cout << "chunk: file size: " << sz << " (time used to calculate: " << ( (clock () - t0) * 1000.0 / CLOCKS_PER_SEC ) << " ms.)" << endl;
+    log << info << "chunk: file size: " << sz << " (time used to calculate: " << ( (clock () - t0) * 1000.0 / CLOCKS_PER_SEC ) << " ms.)" << endl;
 
     return sz;
   }
@@ -307,7 +308,7 @@ namespace Astroid {
 
       g_object_unref (mem);
 
-      cout << "chunk: attachment: loaded " << data->size () << " bytes in " << ( (clock () - t0) * 1000.0 / CLOCKS_PER_SEC ) << " ms." << endl;
+      log << info << "chunk: attachment: loaded " << data->size () << " bytes in " << ( (clock () - t0) * 1000.0 / CLOCKS_PER_SEC ) << " ms." << endl;
 
       return data;
     } else {

@@ -7,13 +7,14 @@
 # include "astroid.hh"
 # include "account_manager.hh"
 # include "config.hh"
+# include "log.hh"
 
 using namespace std;
 using boost::property_tree::ptree;
 
 namespace Astroid {
     AccountManager::AccountManager () {
-    cout << "ac: initializing accounts.." << endl;
+    log << info << "ac: initializing accounts.." << endl;
 
     ptree apt = astroid->config->config.get_child ("accounts");
 
@@ -31,14 +32,14 @@ namespace Astroid {
       a->save_sent = kv.second.get<bool> ("save_sent");
       a->save_sent_to = kv.second.get<string> ("save_sent_to");
 
-      cout << "ac: setup account: " << a->id << " for " << a->name << " (default: " << a->isdefault << ")" << endl;
+      log << info << "ac: setup account: " << a->id << " for " << a->name << " (default: " << a->isdefault << ")" << endl;
 
       accounts.push_back (*a);
     }
 
     if (accounts.size () == 0) {
-      cerr << "ac: no accounts defined!" << endl;
-      exit (1);
+      log << error << "ac: no accounts defined!" << endl;
+      throw runtime_error ("ac: no account defined!");
     }
 
     default_account = (find_if(accounts.begin(),
@@ -48,7 +49,7 @@ namespace Astroid {
                                }) - accounts.begin());
 
     if (default_account >= static_cast<int>(accounts.size())) {
-      cout << "ac: no default account set, using first." << endl;
+      log << warn << "ac: no default account set, using first." << endl;
       default_account = 0;
       accounts[0].isdefault = true;
     }
@@ -61,12 +62,12 @@ namespace Astroid {
       }
     }
 
-    cout << "ac: error: could not figure out which account: " << address << " belongs to." << endl;
+    log << error << "ac: error: could not figure out which account: " << address << " belongs to." << endl;
     return NULL;
   }
 
   AccountManager::~AccountManager () {
-    cout << "ac: deinitializing." << endl;
+    log << info << "ac: deinitializing." << endl;
 
   }
 

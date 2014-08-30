@@ -17,6 +17,7 @@
 # include "actions/action.hh"
 # include "actions/tag_action.hh"
 # include "reply_message.hh"
+# include "log.hh"
 
 
 using namespace std;
@@ -105,7 +106,7 @@ namespace Astroid {
   }
 
   ThreadView::~ThreadView () {
-    cout << "tv: deconstruct." << endl;
+    log << debug << "tv: deconstruct." << endl;
     // TODO: possibly still some errors here in paned mode
     //g_object_unref (webview); // probably garbage collected since it has a parent widget
     g_object_unref (websettings);
@@ -137,10 +138,10 @@ namespace Astroid {
       GParamSpec *      p)
   {
     WebKitLoadStatus ev = webkit_web_view_get_load_status (webview);
-    cout << "tv: on_load_changed: " << ev << endl;
+    log << debug << "tv: on_load_changed: " << ev << endl;
     switch (ev) {
       case WEBKIT_LOAD_FINISHED:
-        cout << "tv: load finished." << endl;
+        log << debug << "tv: load finished." << endl;
         {
           /* load css style */
           GError *err = NULL;
@@ -193,7 +194,7 @@ namespace Astroid {
       WebKitWebView          * web_view)
   {
     /* set up inspector window */
-    cout << "tv: starting conversation inspector.." << endl;
+    log << info << "tv: starting conversation inspector.." << endl;
     inspector_window = new Gtk::Window ();
     inspector_window->set_default_size (600, 600);
     inspector_window->set_title (ustring::compose("Conversation inspector: %1", thread->subject));
@@ -213,7 +214,7 @@ namespace Astroid {
   }
 
   bool ThreadView::show_inspector (WebKitWebInspector * wi) {
-    cout << "tv: show inspector.." << endl;
+    log << info << "tv: show inspector.." << endl;
 
     inspector_window->show_all ();
 
@@ -227,7 +228,7 @@ namespace Astroid {
    */
 
   void ThreadView::load_thread (refptr<NotmuchThread> _thread) {
-    cout << "tv: load thread." << endl;
+    log << info << "tv: load thread: " << _thread->thread_id << endl;
     thread = _thread;
 
     ((Gtk::Label*) tab_widget)->set_text (thread->thread_id);
@@ -260,14 +261,14 @@ namespace Astroid {
   }
 
   void ThreadView::render () {
-    cout << "render: loading html.." << endl;
+    log << info << "render: loading html.." << endl;
     webkit_web_view_load_html_string (webview, thread_view_html.c_str (), "/tmp/");
   }
 
   void ThreadView::render_post () {
-    cout << "render: html loaded, building messages.." << endl;
+    log << debug << "render: html loaded, building messages.." << endl;
     if (!container || !wk_loaded) {
-      cerr << "tv: div container and web kit not loaded." << endl;
+      log << error << "tv: div container and web kit not loaded." << endl;
       return;
     }
 
@@ -281,7 +282,7 @@ namespace Astroid {
   }
 
   void ThreadView::add_message (refptr<Message> m) {
-    cout << "tv: adding message: " << m->mid << endl;
+    log << debug << "tv: adding message: " << m->mid << endl;
 
     if (!focused_message) {
       focused_message = m;
@@ -476,7 +477,6 @@ namespace Astroid {
         WEBKIT_DOM_HTML_IMAGE_ELEMENT(
         select (WEBKIT_DOM_NODE (attachment_table), ".preview img"));
 
-      cout << "img: " << img << endl;
       set_attachment_src (c, img);
 
       // add the attachment table
@@ -563,7 +563,7 @@ namespace Astroid {
       }
 
 
-      cout << "icon: " << icon_string << flush << endl;
+      log << debug << "icon: " << icon_string << flush << endl;
       */
 
       // TODO: use guessed icon
@@ -637,13 +637,13 @@ namespace Astroid {
     }
 
     if (gerr != NULL)
-      cout << "tv: clone_s_s_err: " << gerr->message << endl;
+      log << error << "tv: clone_s_s_err: " << gerr->message << endl;
 
     return e;
   }
 
   bool ThreadView::on_key_press_event (GdkEventKey *event) {
-    cout << "tv: key press" << endl;
+    log << debug << "tv: key press" << endl;
     switch (event->keyval) {
 
       case GDK_KEY_j:
@@ -759,8 +759,6 @@ namespace Astroid {
   void ThreadView::update_focus_to_view () {
     /* check if currently focused message has gone out of focus
      * and update focus */
-    cout << "tv: update_focus_to_view" << endl;
-
     if (edit_mode) {
       focused_message = refptr<Message>();
       return;
@@ -777,14 +775,14 @@ namespace Astroid {
     double height   = adj->get_page_size (); // 0 when there is
                                              // no paging.
 
-    cout << "scrolled = " << scrolled << ", height = " << height << endl;
+    log << debug << "scrolled = " << scrolled << ", height = " << height << endl;
 
     /* check currently focused message */
     bool take_next = false;
 
     /* take first */
     if (!focused_message) {
-      cout << "tv: u_f_t_v: none focused, take first initially." << endl;
+      //log << debug << "tv: u_f_t_v: none focused, take first initially." << endl;
       focused_message = mthread->messages[0];
       update_focus_status ();
     }
@@ -799,14 +797,14 @@ namespace Astroid {
 
     g_object_unref (e);
 
-    cout << "y = " << clientY << endl;
-    cout << "h = " << clientH << endl;
+    //log << debug << "y = " << clientY << endl;
+    //log << debug << "h = " << clientH << endl;
 
     // height = 0 if there is no paging: all messages are in view.
     if ((height == 0) || ( (clientY <= (scrolled + height)) && ((clientY + clientH) >= scrolled) )) {
-      cout << "message: " << focused_message->date() << " still in view." << endl;
+      //log << debug << "message: " << focused_message->date() << " still in view." << endl;
     } else {
-      cout << "message: " << focused_message->date() << " out of view." << endl;
+      //log << debug << "message: " << focused_message->date() << " out of view." << endl;
       take_next = true;
     }
 
@@ -831,8 +829,8 @@ namespace Astroid {
         double clientY = webkit_dom_element_get_offset_top (e);
         double clientH = webkit_dom_element_get_client_height (e);
 
-        cout << "y = " << clientY << endl;
-        cout << "h = " << clientH << endl;
+        // log << debug << "y = " << clientY << endl;
+        // log << debug << "h = " << clientH << endl;
 
         WebKitDOMDOMTokenList * class_list =
           webkit_dom_element_get_class_list (e);
@@ -846,7 +844,7 @@ namespace Astroid {
         if ((!found || cur_position < focused_position) &&
             ( (height == 0) || ((clientY <= (scrolled + height)) && ((clientY + clientH) >= scrolled)) ))
         {
-          cout << "message: " << m->date() << " now in view." << endl;
+          // log << debug << "message: " << m->date() << " now in view." << endl;
 
           if (found) redo_focus_tags = true;
           found = true;
@@ -910,7 +908,7 @@ namespace Astroid {
   }
 
   void ThreadView::focus_next () {
-    cout << "tv: focus_next." << endl;
+    log << debug << "tv: focus_next." << endl;
 
     if (edit_mode) return;
 
@@ -926,7 +924,7 @@ namespace Astroid {
   }
 
   void ThreadView::focus_previous () {
-    cout << "tv: focus previous." << endl;
+    log << debug << "tv: focus previous." << endl;
 
     if (edit_mode) return;
 
@@ -947,11 +945,11 @@ namespace Astroid {
     if (edit_mode) return;
 
     if (!focused_message) {
-      cout << "tv: focusing: no message selected for focus." << endl;
+      log << warn << "tv: focusing: no message selected for focus." << endl;
       return;
     }
 
-    cout << "tv: focusing: " << m->date () << endl;
+    log << debug << "tv: focusing: " << m->date () << endl;
 
     WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
 

@@ -18,6 +18,7 @@
 # include "thread_view.hh"
 # include "message_thread.hh"
 # include "utils/ustring_utils.hh"
+# include "log.hh"
 
 using namespace std;
 
@@ -62,8 +63,8 @@ namespace Astroid {
       msg_id = vim_server;
     }
 
-    cout << "em: msg id: " << msg_id << endl;
-    cout << "em: vim server name: " << vim_server << endl;
+    log << info << "em: msg id: " << msg_id << endl;
+    log << debug << "em: vim server name: " << vim_server << endl;
 
     make_tmpfile ();
 
@@ -126,11 +127,11 @@ namespace Astroid {
   }
 
   void EditMessage::prepare_message () {
-    cout << "em: preparing message from fields.." << endl;
+    log << debug << "em: preparing message from fields.." << endl;
 
     auto iter = from_combo->get_active ();
     if (!iter) {
-      cout << "em: error: no from account selected." << endl;
+      log << warn << "em: error: no from account selected." << endl;
       return;
     }
 
@@ -154,7 +155,7 @@ namespace Astroid {
   }
 
   EditMessage::~EditMessage () {
-    cout << "em: deconstruct." << endl;
+    log << debug << "em: deconstruct." << endl;
 
     vim_remote_keys ("<ESC>:quit!<CR>");
 
@@ -165,7 +166,7 @@ namespace Astroid {
 
   void EditMessage::socket_realized ()
   {
-    cout << "em: socket realized." << endl;
+    log << debug << "em: socket realized." << endl;
     socket_ready = true;
 
     if (start_vim_on_socket_ready) {
@@ -176,7 +177,7 @@ namespace Astroid {
   }
 
   void EditMessage::plug_added () {
-    cout << "em: gvim connected" << endl;
+    log << debug << "em: gvim connected" << endl;
     gtk_box_set_child_packing (editor_box->gobj (), GTK_WIDGET(editor_socket->gobj ()), true, true, 5, GTK_PACK_END);
 
     if (current_field == Editor) {
@@ -186,7 +187,7 @@ namespace Astroid {
   }
 
   bool EditMessage::plug_removed () {
-    cout << "em: gvim disconnected" << endl;
+    log << debug << "em: gvim disconnected" << endl;
     vim_started = false;
     editor_toggle (false);
 
@@ -224,7 +225,7 @@ namespace Astroid {
       ComposeMessage * c = make_message ();
 
       if (c == NULL) {
-        cout << "err: could not make message." << endl;
+        log << error << "err: could not make message." << endl;
         return;
       }
 
@@ -255,7 +256,7 @@ namespace Astroid {
   }
 
   void EditMessage::activate_field (Field f) {
-    cout << "em: activate field: " << f << endl;
+    log << debug << "em: activate field: " << f << endl;
     reset_fields ();
 
     current_field = f;
@@ -263,7 +264,7 @@ namespace Astroid {
     if (f == Editor) {
       Gtk::IconSize isize  (Gtk::BuiltinIconSize::ICON_SIZE_BUTTON);
 
-      cout << "em: focus editor." << endl;
+      log << debug << "em: focus editor." << endl;
       if (!socket_ready) return;
 
       prepare_message ();
@@ -336,7 +337,7 @@ namespace Astroid {
   }
 
   bool EditMessage::on_key_press_event (GdkEventKey * event) {
-    cout << "em: got key press" << endl;
+    log << debug << "em: got key press" << endl;
     switch (event->keyval) {
       case GDK_KEY_Return:
         {
@@ -364,10 +365,10 @@ namespace Astroid {
   }
 
   bool EditMessage::send_message () {
-    cout << "em: sending message.." << endl;
+    log << info << "em: sending message.." << endl;
 
     if (!check_fields ()) {
-      cout << "em: error problem with some of the input fields.." << endl;
+      log << error << "em: error problem with some of the input fields.." << endl;
       return false;
     }
 
@@ -387,7 +388,7 @@ namespace Astroid {
   ComposeMessage * EditMessage::make_message () {
 
     if (!check_fields ()) {
-      cout << "em: error, problem with some of the input fields.." << endl;
+      log << error << "em: error, problem with some of the input fields.." << endl;
       return NULL;
     }
 
@@ -396,7 +397,7 @@ namespace Astroid {
     /*
     auto iter = from_combo->get_active ();
     if (!iter) {
-      cout << "em: error: no from account selected." << endl;
+      log << error << "em: error: no from account selected." << endl;
       return NULL;
     }
     c->set_id (msg_id);
@@ -424,9 +425,9 @@ namespace Astroid {
 
   void EditMessage::vim_remote_keys (ustring keys) {
     ustring cmd = ustring::compose ("%1 --servername %2 --remote-send %3", gvim_cmd, vim_server, keys);
-    cout << "em: to vim: " << cmd << endl;
+    log << info << "em: to vim: " << cmd << endl;
     if (!vim_started) {
-      cout << "em: to vim: error, vim not started." << endl;
+      log << error << "em: to vim: error, vim not started." << endl;
     } else {
       Glib::spawn_command_line_async (cmd.c_str());
     }
@@ -434,9 +435,9 @@ namespace Astroid {
 
   void EditMessage::vim_remote_files (ustring files) {
     ustring cmd = ustring::compose ("%1 --servername %2 --remote %3", gvim_cmd, vim_server, files);
-    cout << "em: to vim: " << cmd << endl;
+    log << info << "em: to vim: " << cmd << endl;
     if (!vim_started) {
-      cout << "em: to vim: error, vim not started." << endl;
+      log << error << "em: to vim: error, vim not started." << endl;
     } else {
       Glib::spawn_command_line_async (cmd.c_str());
     }
@@ -444,9 +445,9 @@ namespace Astroid {
 
   void EditMessage::vim_remote_expr (ustring expr) {
     ustring cmd = ustring::compose ("%1 --servername %2 --remote-expr %3", gvim_cmd, vim_server, expr);
-    cout << "em: to vim: " << cmd << endl;
+    log << info << "em: to vim: " << cmd << endl;
     if (!vim_started) {
-      cout << "em: to vim: error, vim not started." << endl;
+      log << error << "em: to vim: error, vim not started." << endl;
     } else {
       Glib::spawn_command_line_async (cmd.c_str());
     }
@@ -458,12 +459,12 @@ namespace Astroid {
       ustring cmd = ustring::compose ("%1 -geom 10x10 --servername %3 --socketid %4 %2 %5",
           gvim_cmd, gvim_args, vim_server, editor_socket->get_id (),
           tmpfile_path.c_str());
-      cout << "em: starting gvim: " << cmd << endl;
+      log << info << "em: starting gvim: " << cmd << endl;
       Glib::spawn_command_line_async (cmd.c_str());
       vim_started = true;
     } else {
       start_vim_on_socket_ready = true; // TODO: not thread-safe
-      cout << "em: gvim, waiting for socket.." << endl;
+      log << debug << "em: gvim, waiting for socket.." << endl;
     }
   }
 
@@ -476,23 +477,23 @@ namespace Astroid {
   void EditMessage::make_tmpfile () {
     tmpfile_path = tmpfile_path / path(msg_id);
 
-    cout << "em: tmpfile: " << tmpfile_path << endl;
+    log << info << "em: tmpfile: " << tmpfile_path << endl;
 
     if (!is_directory(astroid->config->runtime_dir)) {
-      cout << "em: making runtime dir.." << endl;
+      log << warn << "em: making runtime dir.." << endl;
       create_directories (astroid->config->runtime_dir);
     }
 
     if (is_regular_file (tmpfile_path)) {
-      cout << "em: error: tmpfile already exists!" << endl;
-      exit (1);
+      log << error << "em: error: tmpfile already exists!" << endl;
+      throw runtime_error ("em: tmpfile already exists!");
     }
 
     tmpfile.open (tmpfile_path.c_str(), fstream::out);
 
     if (tmpfile.fail()) {
-      cout << "em: error: could not create tmpfile!" << endl;
-      exit (1);
+      log << error << "em: error: could not create tmpfile!" << endl;
+      throw runtime_error ("em: coult not create tmpfile!");
     }
 
     tmpfile.close ();

@@ -7,6 +7,7 @@
 # include <boost/property_tree/json_parser.hpp>
 
 # include "config.hh"
+# include "log.hh"
 
 using namespace std;
 using namespace boost::filesystem;
@@ -31,7 +32,7 @@ namespace Astroid {
     char * home_c      = getenv ("HOME");
 
     if (home_c == NULL) {
-      cerr << "cf: HOME environment variable not set." << endl;
+      log << error << "cf: HOME environment variable not set." << endl;
       exit (1);
     }
 
@@ -116,23 +117,23 @@ namespace Astroid {
   }
 
   void Config::write_back_config () {
-    cout << "cf: writing back config to: " << config_file << endl;
+    log << warn << "cf: writing back config to: " << config_file << endl;
 
     write_json (config_file.c_str (), config);
   }
 
   void Config::load_config () {
-    cout << "cf: loading: " << config_file << endl;
+    log << info << "cf: loading: " << config_file << endl;
 
     config_dir = absolute(config_file.parent_path());
     if (!is_directory(config_dir)) {
-      cout << "cf: making config dir.." << endl;
+      log << warn << "cf: making config dir.." << endl;
       create_directories (config_dir);
     }
 
 
     if (!is_regular_file (config_file)) {
-      cout << "cf: no config, using defaults." << endl;
+      log << warn << "cf: no config, using defaults." << endl;
       setup_default_config (true);
       config = default_config;
       write_back_config ();
@@ -145,7 +146,7 @@ namespace Astroid {
       merge_ptree (new_config);
 
       if (new_config != config) {
-        cout << "cf: missing values in config have been updated with defaults." << endl;
+        log << warn << "cf: missing values in config have been updated with defaults." << endl;
         write_back_config ();
       }
     }

@@ -16,6 +16,7 @@
 # include "thread_index_list_cell_renderer.hh"
 # include "db.hh"
 # include "utils/utils.hh"
+# include "log.hh"
 
 using namespace std;
 
@@ -95,7 +96,7 @@ namespace Astroid {
   }
 
   ThreadIndexListCellRenderer::~ThreadIndexListCellRenderer () {
-    cout << "til cr: deconstruct." << endl;
+    log << debug << "til cr: deconstruct." << endl;
   }
 
   void ThreadIndexListCellRenderer::render_background ( // {{{
@@ -391,9 +392,6 @@ namespace Astroid {
       const Gdk::Rectangle& cell_area,
       Gtk::CellRendererState flags)
   {
-
-    cout << "activate.." << endl;
-
     return false;
   }
   // }}}

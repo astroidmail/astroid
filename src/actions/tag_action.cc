@@ -3,6 +3,7 @@
 
 # include "action.hh"
 # include "db.hh"
+# include "log.hh"
 
 # include "tag_action.hh"
 
@@ -28,21 +29,21 @@ namespace Astroid {
   }
 
   bool TagAction::doit (Db * db) {
-    cout << "tag_action: " << thread->thread_id << ", add: ";
+    log << info << "tag_action: " << thread->thread_id << ", add: ";
     for_each (add.begin(),
               add.end(),
               [&](ustring t) {
-                cout << t << ", ";
+                log << t << ", ";
               });
 
-    cout << "remove: ";
+    log << "remove: ";
     for_each (remove.begin(),
               remove.end(),
               [&](ustring t) {
-                cout << t << ", ";
+                log << t << ", ";
               });
 
-    cout << endl;
+    log << endl;
 
     bool res = true;
 
@@ -62,7 +63,7 @@ namespace Astroid {
   }
 
   bool TagAction::undo (Db * db) {
-    cout << "tag_action: undo." << endl;
+    log << info << "tag_action: undo." << endl;
 
     swap (add, remove);
     return doit (db);

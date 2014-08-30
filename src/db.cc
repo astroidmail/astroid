@@ -199,7 +199,7 @@ namespace Astroid {
   }
 
   Db::~Db () {
-    log << info << "db: closing notmuch database." << endl << flush;
+    log << info << "db: closing notmuch database." << endl;
 
     close_db ();
   }
@@ -225,7 +225,7 @@ namespace Astroid {
   }
 
   void Db::add_sent_message (ustring fname) {
-    cout << "db: adding sent message: " << fname << endl;
+    log << info << "db: adding sent message: " << fname << endl;
 
     notmuch_message_t * msg;
 
@@ -234,7 +234,7 @@ namespace Astroid {
         &msg);
 
     if (s != NOTMUCH_STATUS_SUCCESS) {
-      cout << "db: error adding message: " << s << endl;
+      log << error << "db: error adding message: " << s << endl;
 
       throw database_error ("db: could not add sent message to database.");
     }
@@ -257,7 +257,7 @@ namespace Astroid {
 
     if (nm_threads == NULL) {
       /* try to reopen db in case we got an Xapian::DatabaseModifiedError */
-      cout << "db: trying to reopen database.." << endl;
+      log << warn << "db: trying to reopen database.." << endl;
 
       reopen ();
 
@@ -266,7 +266,7 @@ namespace Astroid {
 
       if (nm_threads == NULL) {
         /* could not do that, failing */
-        cout << "db: to no avail, failure is iminent." << endl;
+        log << error << "db: to no avail, failure is iminent." << endl;
 
         throw database_error ("nmt: could not get a valid notmuch_threads_t from query.");
 
@@ -303,7 +303,7 @@ namespace Astroid {
 
     if (s != NOTMUCH_STATUS_SUCCESS) {
       /* try to reopen db in case we got an Xapian::DatabaseModifiedError */
-      cout << "db: trying to reopen database.." << endl;
+      log << warn << "db: trying to reopen database.." << endl;
 
       reopen ();
 
@@ -311,7 +311,7 @@ namespace Astroid {
 
       if (s != NOTMUCH_STATUS_SUCCESS) {
         /* could not do that, failing */
-        cout << "db: to no avail, failure is iminent." << endl;
+        log << error << "db: to no avail, failure is iminent." << endl;
 
         throw database_error ("db: could not find message.");
 
@@ -326,10 +326,10 @@ namespace Astroid {
   }
 
   void Db::test_query () { // {{{
-    cout << "db: running test query.." << endl;
+    log << info << "db: running test query.." << endl;
     auto q = notmuch_query_create (nm_db, "label:inbox");
 
-    cout << "query: " << notmuch_query_get_query_string (q) << ", approx: "
+    log << info << "query: " << notmuch_query_get_query_string (q) << ", approx: "
          << notmuch_query_count_messages (q) << " messages." << endl;
 
     notmuch_messages_t * messages;
@@ -340,7 +340,7 @@ namespace Astroid {
          notmuch_messages_move_to_next (messages)) {
       message = notmuch_messages_get (messages);
 
-      cout << "thread:" << notmuch_message_get_thread_id (message) << ", message: " << notmuch_message_get_header (message, "Subject") << endl;
+      log << info << "thread:" << notmuch_message_get_thread_id (message) << ", message: " << notmuch_message_get_header (message, "Subject") << endl;
 
       notmuch_message_destroy (message);
     }
@@ -363,7 +363,7 @@ namespace Astroid {
   }
 
   NotmuchThread::~NotmuchThread () {
-    //cout << "nmt: deconstruct." << endl;
+    //log << debug << "nmt: deconstruct." << endl;
   }
 
   void NotmuchThread::refresh (Db * db) {
@@ -437,7 +437,7 @@ namespace Astroid {
     if (auths != NULL) {
       astr = auths;
     } else {
-      cerr << "nmt: got NULL for authors." << endl;
+      log << error << "nmt: got NULL for authors." << endl;
     }
 
     vector<ustring> aths = VectorUtils::split_and_trim (astr, ",");
@@ -454,10 +454,10 @@ namespace Astroid {
   bool NotmuchThread::add_tag (Db * db, ustring tag) {
     lock_guard <Db> grd (*db);
 
-    cout << "nm (" << thread_id << "): add tag: " << tag << endl;
+    log << debug << "nm (" << thread_id << "): add tag: " << tag << endl;
     tag = sanitize_tag (tag);
     if (!check_tag (tag)) {
-      cout << "nm (" << thread_id << "): error, invalid tag: " << tag << endl;
+      log << debug << "nm (" << thread_id << "): error, invalid tag: " << tag << endl;
       return false;
     }
 
@@ -484,7 +484,7 @@ namespace Astroid {
             if (s == NOTMUCH_STATUS_SUCCESS) {
               res &= true;
             } else {
-              cerr << "nm: could not add tag: " << tag << " to thread: " << thread_id << endl;
+              log << error << "nm: could not add tag: " << tag << " to thread: " << thread_id << endl;
               res = false;
               return;
             }
@@ -515,10 +515,10 @@ namespace Astroid {
   }
 
   bool NotmuchThread::remove_tag (Db * db, ustring tag) {
-    cout << "nm (" << thread_id << "): remove tag: " << tag << endl;
+    log << debug << "nm (" << thread_id << "): remove tag: " << tag << endl;
     tag = sanitize_tag (tag);
     if (!check_tag (tag)) {
-      cout << "nm (" << thread_id << "): error, invalid tag: " << tag << endl;
+      log << debug << "nm (" << thread_id << "): error, invalid tag: " << tag << endl;
       return false;
     }
 
@@ -546,7 +546,7 @@ namespace Astroid {
             if (s == NOTMUCH_STATUS_SUCCESS) {
               res &= true;
             } else {
-              cerr << "nm: could not remove tag: " << tag << " from thread: " << thread_id << endl;
+              log << error << "nm: could not remove tag: " << tag << " from thread: " << thread_id << endl;
               res = false;
               return;
             }
@@ -561,7 +561,7 @@ namespace Astroid {
 
           res = true;
         } else {
-          cout << "nm: thread does not have tag." << endl;
+          log << warn << "nm: thread does not have tag." << endl;
           res = false;
         }
       });
@@ -585,7 +585,7 @@ namespace Astroid {
     }
 
     if (tag.size() > NOTMUCH_TAG_MAX) {
-      cout << "nmt: error: maximum tag length is: " << NOTMUCH_TAG_MAX << endl;
+      log << error << "nmt: error: maximum tag length is: " << NOTMUCH_TAG_MAX << endl;
       return false;
     }
 
