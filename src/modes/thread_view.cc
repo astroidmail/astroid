@@ -970,6 +970,11 @@ namespace Astroid {
     update_focus_status ();
   }
 
+  void ThreadView::grab_focus () {
+    log << debug << "tv: grab focus" << endl;
+    gtk_widget_grab_focus (GTK_WIDGET (webview));
+  }
+
   void ThreadView::grab_modal () {
     add_modal_grab ();
     grab_focus ();

@@ -85,6 +85,7 @@ namespace Astroid {
      * https://mail.gnome.org/archives/gtk-list/2011-January/msg00041.html
      */
     editor_socket = Gtk::manage(new Gtk::Socket ());
+    editor_socket->set_can_focus (true);
     editor_socket->signal_plug_added ().connect (
         sigc::mem_fun(*this, &EditMessage::plug_added) );
     editor_socket->signal_plug_removed ().connect (
@@ -206,7 +207,6 @@ namespace Astroid {
     log << debug << "em: gvim connected" << endl;
 
     vim_ready = true;
-    vim_child_focused = false;
 
     if (current_field == Editor) {
       activate_field (Editor);
@@ -217,7 +217,6 @@ namespace Astroid {
     log << debug << "em: gvim disconnected" << endl;
     vim_ready   = false;
     vim_started = false;
-    vim_child_focused = false;
     editor_toggle (false);
 
     activate_field (Thread);
@@ -347,33 +346,15 @@ namespace Astroid {
         return;
       }
 
-
       /*
-       * Also, this requires GTK to be patched as in:
        * https://bugzilla.gnome.org/show_bug.cgi?id=729248
-       * https://mail.gnome.org/archives/gtk-list/2014-May/msg00000.html
-       *
-       * as far as I can see, there are no other way to
-       * programatically set focus to a widget inside an embedded
-       * child (except for the user to press Tab).
-       *
-       * Backup: Send the TAB_FORWARD signal, for details, check:
-       * https://mail.gnome.org/archives/gtk-app-devel-list/2014-August/msg00047.html
-       *
        */
 
       release_modal ();
 
       if (vim_ready) {
-        if (!vim_child_focused) {
 
-          editor_socket->set_can_focus (true);
-          vim_child_focused = true;
-
-          log << debug << "em: activate editor: focus vim widget." << endl;
-
-          editor_socket->child_focus (Gtk::DIR_TAB_FORWARD);
-        }
+        editor_socket->child_focus (Gtk::DIR_TAB_FORWARD);
 
       } else {
 
@@ -382,6 +363,7 @@ namespace Astroid {
       }
 
     } else if (f == Thread) {
+      log << debug << "em: focus thread view" << endl;
 
       grab_modal ();
 

@@ -124,6 +124,8 @@ namespace Astroid {
           WebKitWebView *);
       bool show_inspector (WebKitWebInspector *);
 
+      void grab_focus ();
+
       /* mode */
       virtual void grab_modal () override;
       virtual void release_modal () override;

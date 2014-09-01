@@ -72,8 +72,7 @@ namespace Astroid {
     reply_mode_combo->set_active (0);
     reply_mode_combo->pack_start (enc_columns.encryption_string);
 
-    editor_toggle (true);
-    activate_field (Editor);
+    start_vim_on_socket_ready = true;
   }
 }
 

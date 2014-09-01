@@ -104,7 +104,6 @@ namespace Astroid {
       bool socket_ready = false;
       bool vim_started  = false;
       bool vim_ready    = false;
-      bool vim_child_focused = false;
       bool start_vim_on_socket_ready = false;
 
       static  int edit_id; // must be incremented each time a new editor is started
