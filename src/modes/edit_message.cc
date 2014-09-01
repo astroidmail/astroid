@@ -44,6 +44,10 @@ namespace Astroid {
     builder->get_widget ("reply_revealer", reply_revealer);
 
     builder->get_widget ("editor_box", editor_box);
+    /*
+    builder->get_widget ("editor_rev", editor_rev);
+    builder->get_widget ("thread_rev", thread_rev);
+    */
 
     pack_start (*box_message, true, 5);
 
@@ -89,15 +93,13 @@ namespace Astroid {
     editor_socket->signal_realize ().connect (
         sigc::mem_fun(*this, &EditMessage::socket_realized) );
 
-    show_all ();
+    //editor_rev->add (*editor_socket);
     editor_box->pack_start (*editor_socket, false, false, 2);
-    show_all ();
 
     thread_view = Gtk::manage(new ThreadView(main_window));
     thread_view->edit_mode = true;
-    editor_box->pack_start (*thread_view, true, 2);
-    thread_view->hide ();
-
+    //thread_rev->add (*thread_view);
+    editor_box->pack_start (*thread_view, false, false, 2);
 
     /* defaults */
     accounts = astroid->accounts;
@@ -141,9 +143,10 @@ namespace Astroid {
     encryption_combo->set_active (0);
     encryption_combo->pack_start (enc_columns.encryption_string);
 
+    show_all_children ();
+
     prepare_message ();
 
-    activate_field (From);
     editor_toggle (false);
   }
 
@@ -201,34 +204,96 @@ namespace Astroid {
 
   void EditMessage::plug_added () {
     log << debug << "em: gvim connected" << endl;
-    gtk_box_set_child_packing (editor_box->gobj (), GTK_WIDGET(editor_socket->gobj ()), true, true, 5, GTK_PACK_END);
+
+    vim_ready = true;
+    vim_child_focused = false;
 
     if (current_field == Editor) {
-      /* vim has been started with user input */
-      activate_field (current_field);
+      activate_field (Editor);
     }
   }
 
   bool EditMessage::plug_removed () {
     log << debug << "em: gvim disconnected" << endl;
+    vim_ready   = false;
     vim_started = false;
+    vim_child_focused = false;
     editor_toggle (false);
 
-    /* reset edit state */
-    if (current_field == Editor) {
-      in_edit = false;
-    }
-
-    activate_field (current_field);
+    activate_field (Thread);
 
     return true;
   }
 
+
+  void EditMessage::read_edited_message () {
+    /* make message */
+    ComposeMessage * c = make_message ();
+
+    if (c == NULL) {
+      log << error << "err: could not make message." << endl;
+      return;
+    }
+
+    /* set account selector to from address email */
+    Account * account = c->account;
+    for (Gtk::TreeRow row : from_store->children ()) {
+      //auto row = *iter;
+      if (row[from_columns.account] == account) {
+        from_combo->set_active (row);
+        break;
+      }
+    }
+
+    to = c->to;
+    cc = c->cc;
+    bcc = c->bcc;
+    subject = c->subject;
+    body = ustring(c->body.str());
+
+    ustring tmpf = c->write_tmp ();
+
+    auto msgt = refptr<MessageThread>(new MessageThread());
+    msgt->add_message (tmpf);
+    thread_view->load_message_thread (msgt);
+
+    delete c;
+
+    unlink (tmpf.c_str());
+  }
+
+  void EditMessage::fields_hide () {
+    fields_revealer->set_reveal_child (false);
+  }
+
+  void EditMessage::fields_show () {
+   fields_revealer->set_reveal_child (true);
+  }
+
   /* turn on or off the editor or set up for the editor */
   void EditMessage::editor_toggle (bool on) {
+    log << debug << "em: editor toggle: " << on << endl;
+
     if (on) {
+      prepare_message ();
+
+      current_field = Editor;
+
+      /*
+      editor_rev->set_reveal_child (true);
+      thread_rev->set_reveal_child (false);
+      */
+
       editor_socket->show ();
       thread_view->hide ();
+
+      gtk_box_set_child_packing (editor_box->gobj (), GTK_WIDGET(editor_socket->gobj ()), true, true, 5, GTK_PACK_START);
+      gtk_box_set_child_packing (editor_box->gobj (), GTK_WIDGET(thread_view->gobj ()), false, false, 5, GTK_PACK_START);
+
+      /* future Gtk
+      editor_box->set_child_packing (editor_rev, true, true, 2);
+      editor_box->set_child_packing (thread_rev, false, false, 2);
+      */
 
       fields_hide ();
 
@@ -237,114 +302,95 @@ namespace Astroid {
       }
 
     } else {
+
+      current_field = Thread;
+
       if (vim_started) {
         vim_stop ();
       }
 
+      /*
+      editor_rev->set_reveal_child (false);
+      thread_rev->set_reveal_child (true);
+      */
       editor_socket->hide ();
-      auto msgt = refptr<MessageThread>(new MessageThread());
+      thread_view->show ();
 
-      thread_view->show_all ();
+      gtk_box_set_child_packing (editor_box->gobj (), GTK_WIDGET(editor_socket->gobj ()), false, false, 5, GTK_PACK_START);
+      gtk_box_set_child_packing (editor_box->gobj (), GTK_WIDGET(thread_view->gobj ()), true, true, 5, GTK_PACK_START);
+
+      /* future Gtk
+      editor_box->set_child_packing (editor_rev, false, false, 2);
+      editor_box->set_child_packing (thread_rev, true, true, 2);
+      */
 
       fields_show ();
 
-      /* make message */
-      ComposeMessage * c = make_message ();
-
-      if (c == NULL) {
-        log << error << "err: could not make message." << endl;
-        return;
-      }
-
-      /* set account selector to from address email */
-      Account * account = c->account;
-      for (Gtk::TreeRow row : from_store->children ()) {
-        //auto row = *iter;
-        if (row[from_columns.account] == account) {
-          from_combo->set_active (row);
-          break;
-        }
-      }
-
-      to = c->to;
-      cc = c->cc;
-      bcc = c->bcc;
-      subject = c->subject;
-      body = ustring(c->body.str());
-
-      ustring tmpf = c->write_tmp ();
-      msgt->add_message (tmpf);
-      thread_view->load_message_thread (msgt);
-
-      delete c;
-
-      unlink (tmpf.c_str());
+      read_edited_message ();
     }
-  }
-
-  void EditMessage::fields_hide () {
-    fields_revealer->set_reveal_child (false);
-  }
-
-  void EditMessage::fields_show () {
-    fields_revealer->set_reveal_child (true);
   }
 
   void EditMessage::activate_field (Field f) {
     log << debug << "em: activate field: " << f << endl;
-    reset_fields ();
 
     current_field = f;
 
+    reset_fields ();
+
     if (f == Editor) {
-      Gtk::IconSize isize  (Gtk::BuiltinIconSize::ICON_SIZE_BUTTON);
+      // Gtk::IconSize isize  (Gtk::BuiltinIconSize::ICON_SIZE_BUTTON);
 
-      log << debug << "em: focus editor." << endl;
-      if (!socket_ready) return;
+      log << debug << "em: activate editor." << endl;
 
-      prepare_message ();
-
-      if (in_edit) {
-        editor_socket->set_sensitive (true);
-        editor_socket->set_can_focus (true);
-
-        /* TODO: this should probably only be done the first time,
-         *       in subsequent calls it should be sufficient to
-         *       just do grab_focus(). it probably works because
-         *       gvim only has one widget.
-         *
-         * Also, this requires GTK to be patched as in:
-         * https://bugzilla.gnome.org/show_bug.cgi?id=729248
-         * https://mail.gnome.org/archives/gtk-list/2014-May/msg00000.html
-         *
-         * as far as I can see, there are no other way to
-         * programatically set focus to a widget inside an embedded
-         * child (except for the user to press Tab).
-         *
-         * Backup: Send the TAB_FORWARD signal, for details, check:
-         * https://mail.gnome.org/archives/gtk-app-devel-list/2014-August/msg00047.html
-         *
-         */
-        if (vim_started) {
-# ifdef HAVE_GTK_SOCKET_FOCUS_FORWARD
-          gtk_socket_focus_forward (editor_socket->gobj ());
-# else
-          editor_socket->child_focus (Gtk::DIR_TAB_FORWARD);
-# endif
-
-          editor_active = true;
-
-        } else {
-
-          editor_toggle (true);
-
-        }
+      if (!socket_ready) {
+        log << warn << "em: activate editor: socket not ready." << endl;
+        return;
       }
 
+
+      /*
+       * Also, this requires GTK to be patched as in:
+       * https://bugzilla.gnome.org/show_bug.cgi?id=729248
+       * https://mail.gnome.org/archives/gtk-list/2014-May/msg00000.html
+       *
+       * as far as I can see, there are no other way to
+       * programatically set focus to a widget inside an embedded
+       * child (except for the user to press Tab).
+       *
+       * Backup: Send the TAB_FORWARD signal, for details, check:
+       * https://mail.gnome.org/archives/gtk-app-devel-list/2014-August/msg00047.html
+       *
+       */
+
+      release_modal ();
+
+      if (vim_ready) {
+        if (!vim_child_focused) {
+
+          editor_socket->set_can_focus (true);
+          vim_child_focused = true;
+
+          log << debug << "em: activate editor: focus vim widget." << endl;
+
+          editor_socket->child_focus (Gtk::DIR_TAB_FORWARD);
+        }
+
+      } else {
+
+        log << warn << "em: activate editor, editor not yet started!" << endl;
+
+      }
+
+    } else if (f == Thread) {
+
+      grab_modal ();
+
+      thread_view->grab_focus ();
 
     } else if (f == From) {
       //from_combo->set_sensitive (true);
       from_combo->grab_focus ();
+
     } else if (f == Encryption) {
       encryption_combo->grab_focus ();
     }
@@ -356,21 +402,11 @@ namespace Astroid {
   }
 
   void EditMessage::reset_fields () {
+    if (current_field == Editor) {
 
-    /* reset from combo */
-    from_combo->popdown ();
-    encryption_combo->popdown ();
-    //from_combo->set_sensitive (false);
 
-    /* reset editor */
-    editor_active = false;
-    //editor_socket->set_sensitive (false);
-    editor_socket->set_can_focus (false);
-
-    if (!in_edit) {
-      add_modal_grab ();
     } else {
-      remove_modal_grab ();
+
     }
   }
 
@@ -382,12 +418,9 @@ namespace Astroid {
     switch (event->keyval) {
       case GDK_KEY_Return:
         {
-          if (!editor_active) {
-            editor_active = true;
-            in_edit       = true;
-            activate_field (Editor);
-            return true;
-          }
+          editor_toggle (true);
+          activate_field (Editor);
+          return true;
         }
 
       case GDK_KEY_y:
@@ -496,7 +529,6 @@ namespace Astroid {
 
   void EditMessage::vim_start () {
     if (socket_ready) {
-      gtk_box_set_child_packing (editor_box->gobj (), GTK_WIDGET(editor_socket->gobj ()), false, false, 5, GTK_PACK_END);
       ustring cmd = ustring::compose ("%1 -geom 10x10 --servername %3 --socketid %4 %2 %5",
           gvim_cmd, gvim_args, vim_server, editor_socket->get_id (),
           tmpfile_path.c_str());

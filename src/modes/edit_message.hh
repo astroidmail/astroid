@@ -31,6 +31,7 @@ namespace Astroid {
         From = 0,
         Encryption,
         Editor,
+        Thread,
         no_fields // last
       };
 
@@ -96,11 +97,14 @@ namespace Astroid {
       Gtk::Box *    editor_box;
       Gtk::Socket * editor_socket;
       ThreadView *  thread_view;
+      Gtk::Revealer *editor_rev, *thread_rev;
       void plug_added ();
       bool plug_removed ();
       void socket_realized ();
       bool socket_ready = false;
-      bool vim_started = false;
+      bool vim_started  = false;
+      bool vim_ready    = false;
+      bool vim_child_focused = false;
       bool start_vim_on_socket_ready = false;
 
       static  int edit_id; // must be incremented each time a new editor is started
@@ -108,9 +112,12 @@ namespace Astroid {
       time_t  msg_time;
       ustring vim_server;
 
-      void editor_toggle (bool);
-      void fields_show ();
-      void fields_hide ();
+      void editor_toggle (bool); // enable or disable editor or
+                                 // thread view
+      void fields_show ();       // show fields
+      void fields_hide ();       // hide fields
+      void read_edited_message (); // load data from message after
+                                   // it has been edited.
       void vim_start ();
       void vim_stop ();
       void vim_remote_expr (ustring);
@@ -119,9 +126,6 @@ namespace Astroid {
 
       void reset_fields ();
       void reset_entry (Gtk::Entry *);
-
-      bool in_edit = false;
-      bool editor_active = false;
 
       /* gvim config */
       string gvim_cmd;

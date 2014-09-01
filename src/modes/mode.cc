@@ -47,6 +47,11 @@ namespace Astroid {
 
     log << info << "mode: " << question << endl;
 
+    if (yes_no_waiting) {
+      log << warn << "mode: already waiting for answer to previous question, discarding this one." << endl;
+      return;
+    }
+
     yes_no_waiting = true;
     yes_no_closure = closure;
 
@@ -91,6 +96,9 @@ namespace Astroid {
           answer_yes_no (false);
           return true;
       }
+
+      /* swallow all other keys */
+      return true;
     }
 
     return false;
