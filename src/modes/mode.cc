@@ -62,6 +62,8 @@ namespace Astroid {
   void Mode::answer_yes_no (bool yes) {
     if (!interactive) throw logic_error ("mode is not interactive!");
 
+    rev_yes_no->set_reveal_child (false);
+
     if (yes) {
       log << info << "mode: yes-no: got yes!" << endl;
     } else {
@@ -76,8 +78,6 @@ namespace Astroid {
 
     yes_no_closure = NULL;
     yes_no_waiting = false;
-
-    rev_yes_no->set_reveal_child (false);
   }
 
   bool Mode::mode_key_handler (GdkEventKey * event) {
