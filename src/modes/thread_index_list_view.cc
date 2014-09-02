@@ -103,6 +103,9 @@ namespace Astroid {
 
     column->set_cell_data_func (*renderer,
         sigc::mem_fun(*this, &ThreadIndexListView::set_thread_data) );
+
+    main_window->actions.signal_thread_updated ().connect (
+        sigc::mem_fun (this, &ThreadIndexListView::on_thread_updated));
   }
 
   ThreadIndexListView::~ThreadIndexListView () {
@@ -370,6 +373,20 @@ namespace Astroid {
     }
 
     return false;
+  }
+
+  void ThreadIndexListView::on_thread_updated (Db * db, ustring thread_id) {
+    log << info << "til: got updated thread signal: " << thread_id << endl;
+
+    /* we now have three options:
+     * - a new thread has been added (unlikely)
+     * - a thread has been deleted (kind of likely)
+     * - a thread has been updated (most likely)
+     *
+     * none of them needs to affect the threads that match the query in this
+     * list.
+     *
+     */
   }
 
   void ThreadIndexListView::update_current_row (Db &db) {

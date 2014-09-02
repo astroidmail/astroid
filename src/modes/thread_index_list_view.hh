@@ -65,6 +65,8 @@ namespace Astroid {
 
     protected:
       virtual bool on_key_press_event (GdkEventKey *) override;
+
+      void on_thread_updated (Db *, ustring);
   };
 
 
