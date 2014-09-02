@@ -247,6 +247,32 @@ namespace Astroid {
     notmuch_message_destroy (msg);
   }
 
+  bool Db::thread_in_query (ustring query_in, ustring thread_id) {
+    /* check if thread id is in query */
+    string query_s = "thread:" + thread_id  + " AND " + query_in;
+
+    time_t t0 = clock ();
+
+    log << debug << "db: checking if thread: " << thread_id << " matches query: " << query_in << endl;
+
+    notmuch_query_t * query = notmuch_query_create (nm_db, query_s.c_str());
+
+    int c = notmuch_query_count_threads (query);
+
+    if (c > 1) {
+      throw database_error ("db: got more than one thread for thread id.");
+    }
+
+    /* free resources */
+    notmuch_query_destroy (query);
+
+    log << debug << "db: thread in query check: " << ((clock() - t0) * 1000.0 / CLOCKS_PER_SEC) << " ms." << endl;
+
+    if (c == 1) return true;
+    else        return false;
+
+  }
+
   void Db::on_thread (ustring thread_id, function<void(notmuch_thread_t *)> func) {
 
     string query_s = "thread:" + thread_id;

@@ -265,9 +265,6 @@ namespace Astroid {
           if (thread) {
             Db db (Db::DbMode::DATABASE_READ_WRITE);
             main_window->actions.doit (&db, refptr<Action>(new ToggleAction(thread, "inbox")));
-
-            /* update row */
-            update_current_row (db);
           }
 
           return true;
@@ -281,9 +278,6 @@ namespace Astroid {
 
             Db db (Db::DbMode::DATABASE_READ_WRITE);
             main_window->actions.doit (&db, refptr<Action>(new ToggleAction(thread, "flagged")));
-
-            /* update row */
-            update_current_row (db);
           }
 
           return true;
@@ -297,9 +291,6 @@ namespace Astroid {
 
             Db db (Db::DbMode::DATABASE_READ_WRITE);
             main_window->actions.doit (&db, refptr<Action>(new ToggleAction(thread, "unread")));
-
-            /* update row */
-            update_current_row (db);
           }
 
           return true;
@@ -313,9 +304,6 @@ namespace Astroid {
 
             Db db (Db::DbMode::DATABASE_READ_WRITE);
             main_window->actions.doit (&db, refptr<Action>(new SpamAction(thread)));
-
-            /* update row */
-            update_current_row (db);
           }
 
           return true;
@@ -387,8 +375,82 @@ namespace Astroid {
      * list.
      *
      */
+
+    time_t t0 = clock ();
+
+    Gtk::TreePath path;
+    Gtk::TreeIter fwditer;
+
+    /* forward iterating is much faster than going backwards:
+     * https://developer.gnome.org/gtkmm/3.11/classGtk_1_1TreeIter.html
+     */
+
+    bool found = false;
+    fwditer = list_store->get_iter ("0");
+
+    Gtk::ListStore::Row row;
+
+    while (fwditer) {
+
+      row = *fwditer;
+
+      if (row[list_store->columns.thread_id] == thread_id) {
+        found = true;
+        break;
+      }
+
+      fwditer++;
+    }
+
+    /* test if thread is in the current query */
+    lock_guard<Db> grd (*db);
+    bool in_query = db->thread_in_query (thread_index->query_string, thread_id);
+
+    if (found) {
+      /* thread has either been updated or deleted from current query */
+      log << debug << "til: updated: found thread in: " << ((clock() - t0) * 1000.0 / CLOCKS_PER_SEC) << " ms." << endl;
+
+      if (in_query) {
+        /* updated */
+        log << debug << "til: updated" << endl;
+        refptr<NotmuchThread> thread = row[list_store->columns.thread];
+        thread->refresh (db);
+        row[list_store->columns.newest_date] = thread->newest_date;
+
+        path = list_store->get_path (fwditer);
+        list_store->row_changed (path, fwditer);
+
+      } else {
+        /* deleted */
+        log << debug << "til: deleted" << endl;
+        path = list_store->get_path (fwditer);
+        list_store->erase (fwditer);
+      }
+
+    } else {
+      /* thread has possibly been added to the current query */
+      log << debug << "til: updated: did not find thread, time used: " << ((clock() - t0) * 1000.0 / CLOCKS_PER_SEC) << " ms." << endl;
+      if (in_query) {
+        log << debug << "til: new thread for query, adding.." << endl;
+        auto iter = list_store->prepend ();
+        Gtk::ListStore::Row newrow = *iter;
+
+        NotmuchThread * t;
+
+        db->on_thread (thread_id, [&](notmuch_thread_t *nmt) {
+
+            t = new NotmuchThread (nmt);
+
+          });
+
+        newrow[list_store->columns.newest_date] = t->newest_date;
+        newrow[list_store->columns.thread_id]   = t->thread_id;
+        newrow[list_store->columns.thread]      = Glib::RefPtr<NotmuchThread>(t);
+      }
+    }
   }
 
+  /*
   void ThreadIndexListView::update_current_row (Db &db) {
     Gtk::TreePath path;
     Gtk::TreeViewColumn *c;
@@ -407,6 +469,7 @@ namespace Astroid {
     }
 
   }
+  */
 
   refptr<NotmuchThread> ThreadIndexListView::get_current_thread () {
     if (list_store->children().size() < 1)

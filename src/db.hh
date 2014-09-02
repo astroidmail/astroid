@@ -68,6 +68,8 @@ namespace Astroid {
       void on_thread  (ustring, function <void(notmuch_thread_t *)>);
       void on_message (ustring, function <void(notmuch_message_t *)>);
 
+      bool thread_in_query (ustring, ustring);
+
     private:
       enum DbState {
         READ_ONLY,
