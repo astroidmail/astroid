@@ -30,7 +30,7 @@ namespace Astroid {
     ostringstream quoted;
 
     ustring quoting_a = ustring::compose ("%1 wrote on %2:",
-        msg->sender.raw(), msg->date());
+        msg->sender.raw(), msg->pretty_verbose_date());
 
     quoted  << quoting_a.raw ()
             << endl;

@@ -96,7 +96,7 @@ hr {
     box-shadow: 0 3px 3px rgba(0,0,0,1);
     display: block;
     word-wrap: break-word;
-    width: 50em;
+    max-width: 50em;
     margin-left: auto;
     margin-right: auto;
     /*width: 60em;*/
