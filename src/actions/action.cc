@@ -3,6 +3,7 @@
 # include "astroid.hh"
 # include "db.hh"
 
+# include "action_manager.hh"
 # include "action.hh"
 
 using namespace std;
@@ -18,5 +19,8 @@ namespace Astroid {
     return false;
   }
 
+  void Action::emit (ActionManager * am, Db * db) {
+    am->emit_thread_updated (db, thread->thread_id);
+  }
 }
 

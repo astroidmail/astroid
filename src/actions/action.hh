@@ -18,5 +18,7 @@ namespace Astroid {
       virtual bool undo (Db *) = 0;
       virtual bool undoable ();
 
+      virtual void emit (ActionManager *, Db *);
+
   };
 }

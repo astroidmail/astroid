@@ -2,6 +2,8 @@
 
 # include <vector>
 
+# include <sigc++/sigc++.h>
+
 # include "astroid.hh"
 # include "proto.hh"
 
@@ -18,6 +20,15 @@ namespace Astroid {
 
       bool doit (Db *, refptr<Action>);
       bool undo ();
+
+      /* update signal (something has been done with a thread) */
+      typedef sigc::signal <void, Db *, ustring> type_signal_thread_updated;
+      type_signal_thread_updated signal_thread_updated();
+
+      void emit_thread_updated (Db *, ustring);
+
+    protected:
+      type_signal_thread_updated m_signal_thread_updated;
 
   };
 }

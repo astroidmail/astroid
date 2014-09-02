@@ -20,7 +20,14 @@ namespace Astroid {
     if (action->undoable()) {
       actions.push_back (action);
     }
-    return action->doit (db);
+
+    bool res = action->doit (db);
+
+    if (res) {
+      action->emit (this, db);
+    }
+
+    return res;
   }
 
   bool ActionManager::undo () {
@@ -30,11 +37,30 @@ namespace Astroid {
       actions.pop_back ();
       Db db (Db::DbMode::DATABASE_READ_WRITE);
       lock_guard<Db> grd (db);
-      return action->undo (&db);
+
+      bool res = action->undo (&db);
+
+      if (res) {
+        action->emit (this, &db);
+      }
+
+      return res;
     } else {
       log << info << "actions: no more actions to undo." << endl;
       return true;
     }
+  }
+
+  /* signals */
+  ActionManager::type_signal_thread_updated
+    ActionManager::signal_thread_updated ()
+  {
+    return m_signal_thread_updated;
+  }
+
+  void ActionManager::emit_thread_updated (Db * db, ustring thread_id) {
+    log << info << "actions: emitted updated signal for thread: " << thread_id << endl;
+    m_signal_thread_updated.emit (db, thread_id);
   }
 }
 
