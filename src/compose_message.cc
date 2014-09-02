@@ -87,7 +87,7 @@ namespace Astroid {
     GMimeDataWrapper * contentWrapper = g_mime_data_wrapper_new_with_stream(contentStream, GMIME_CONTENT_ENCODING_DEFAULT);
 
     g_mime_part_set_content_encoding (messagePart, GMIME_CONTENT_ENCODING_QUOTEDPRINTABLE);
-    g_mime_part_set_content_object(messagePart, contentWrapper);
+    g_mime_part_set_content_object (messagePart, contentWrapper);
 
     g_mime_message_set_mime_part(message, GMIME_OBJECT(messagePart));
 

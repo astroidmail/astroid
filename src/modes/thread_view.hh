@@ -90,8 +90,14 @@ namespace Astroid {
       void set_message_html (refptr<Message>, WebKitDOMHTMLElement *);
       void insert_header_address (ustring &, ustring, ustring, bool);
       ustring create_header_row (ustring, ustring, bool);
+
+      /* attachments */
       void insert_attachments (refptr<Message>, WebKitDOMHTMLElement *);
-      void set_attachment_src (refptr<Chunk>, WebKitDOMHTMLImageElement *);
+
+      void set_attachment_src (refptr<Chunk>,
+          refptr<Glib::ByteArray>,
+          WebKitDOMHTMLImageElement *);
+
       string assemble_data_uri (ustring, gchar *&, gsize);
 
       static const int THUMBNAIL_WIDTH = 150; // px

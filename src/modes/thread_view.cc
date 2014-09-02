@@ -463,7 +463,9 @@ namespace Astroid {
       WebKitDOMHTMLElement * info_fsize =
         select (WEBKIT_DOM_NODE (attachment_table), ".info .filesize");
 
-      ustring fsize = ustring::compose ("%1 bytes", c->get_file_size ());
+      refptr<Glib::ByteArray> attachment_data = c->contents ();
+
+      ustring fsize = ustring::compose ("%1 bytes", attachment_data->size());
 
       webkit_dom_html_element_set_inner_text (info_fsize, fsize.c_str(), (err = NULL, &err));
 
@@ -477,7 +479,7 @@ namespace Astroid {
         WEBKIT_DOM_HTML_IMAGE_ELEMENT(
         select (WEBKIT_DOM_NODE (attachment_table), ".preview img"));
 
-      set_attachment_src (c, img);
+      set_attachment_src (c, attachment_data, img);
 
       // add the attachment table
       webkit_dom_node_append_child (WEBKIT_DOM_NODE (attachment_container),
@@ -501,6 +503,7 @@ namespace Astroid {
 
   void ThreadView::set_attachment_src (
       refptr<Chunk> c,
+      refptr<Glib::ByteArray> data,
       WebKitDOMHTMLImageElement *img)
   {
     /* set the preview image or icon on the attachment display element */
@@ -519,8 +522,6 @@ namespace Astroid {
     ustring image_content_type;
 
     if ((_mtype != NULL) && (ustring(_mtype) == "image")) {
-      auto data = c->contents ();
-
       auto mis = Gio::MemoryInputStream::create ();
       mis->add_data (data->get_data (), data->size ());
 
