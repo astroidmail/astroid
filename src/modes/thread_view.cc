@@ -776,7 +776,7 @@ namespace Astroid {
     double height   = adj->get_page_size (); // 0 when there is
                                              // no paging.
 
-    log << debug << "scrolled = " << scrolled << ", height = " << height << endl;
+    //log << debug << "scrolled = " << scrolled << ", height = " << height << endl;
 
     /* check currently focused message */
     bool take_next = false;

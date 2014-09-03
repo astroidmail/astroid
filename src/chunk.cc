@@ -31,9 +31,13 @@ namespace Astroid {
       if (cid != NULL) {
         content_id = ustring(cid);
         log << debug << "chunk: part, id: " << content_id << endl;
+      }
 
+      if (content_type != NULL) {
         if (viewable) {
           /* check if we can show this type */
+          viewable = false;
+
           for (auto &m : viewable_types) {
             if (g_mime_content_type_is_type (content_type,
                   g_mime_content_type_get_media_type (m.second),
@@ -41,13 +45,16 @@ namespace Astroid {
 
               viewable = true;
               break;
-
             }
           }
         }
+      } else {
+        viewable = false;
       }
 
       attachment = !viewable;
+
+      log << debug << "chunk: is part (viewable: " << viewable << ", attachment: " << attachment << ") " << endl;
 
     } else if GMIME_IS_MESSAGE_PART (mime_object) {
       log << debug << "chunk: message part" << endl;

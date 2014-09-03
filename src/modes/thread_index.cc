@@ -198,7 +198,7 @@ namespace Astroid {
 
       case GDK_KEY_P:
         {
-          refresh (false, current_thread, false);
+          refresh (false, max(thread_load_step, current_thread), false);
           return true;
         }
 
