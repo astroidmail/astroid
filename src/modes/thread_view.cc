@@ -516,6 +516,7 @@ namespace Astroid {
       mime_type = ustring(g_mime_content_type_to_string (c->content_type));
     }
 
+    log << debug << "tv: set attachment, mime_type: " << mime_type << endl;
 
     gchar * content;
     gsize   content_size;
