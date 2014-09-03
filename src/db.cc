@@ -307,6 +307,7 @@ namespace Astroid {
     for ( ; notmuch_threads_valid (nm_threads);
          notmuch_threads_move_to_next (nm_threads)) {
       if (c > 0) {
+        log << error << "db: got more than one thread for thread id." << endl;
         throw invalid_argument ("db: got more than one thread for thread id.");
       }
 
@@ -316,6 +317,7 @@ namespace Astroid {
     }
 
     if (c < 1) {
+      log << error << "db: could not find thread." << endl;
       throw invalid_argument ("db: could not find thread!");
     }
 
@@ -384,6 +386,7 @@ namespace Astroid {
   NotmuchThread::NotmuchThread (notmuch_thread_t * t) {
     const char * ti = notmuch_thread_get_thread_id (t);
     if (ti == NULL) {
+      log << error << "nmt: got NULL thread id." << endl;
       throw database_error ("nmt: NULL thread_id");
     }
 
@@ -606,12 +609,18 @@ namespace Astroid {
   }
 
   bool NotmuchThread::check_tag (ustring tag) {
-    if (tag.empty()) return false;
+    if (tag.empty()) {
+      log << error << "nmt: invalid tag, empty." << endl;
+      return false;
+    }
 
     const vector<ustring> invalid_chars = { "\"" };
 
     for (const ustring &c : invalid_chars) {
-      if (tag.find_first_of (c) != ustring::npos) return false;
+      if (tag.find_first_of (c) != ustring::npos) {
+        log << error << "nmt: invalid char in tag: " << c << endl;
+        return false;
+      }
     }
 
     if (tag.size() > NOTMUCH_TAG_MAX) {
