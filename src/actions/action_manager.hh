@@ -20,6 +20,11 @@ namespace Astroid {
 
       bool doit (Db *, refptr<Action>);
       bool undo ();
+  };
+
+  class GlobalActions {
+    public:
+      GlobalActions ();
 
       /* update signal (something has been done with a thread) */
       typedef sigc::signal <void, Db *, ustring> type_signal_thread_updated;

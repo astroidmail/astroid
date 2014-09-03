@@ -104,7 +104,7 @@ namespace Astroid {
     column->set_cell_data_func (*renderer,
         sigc::mem_fun(*this, &ThreadIndexListView::set_thread_data) );
 
-    main_window->actions.signal_thread_updated ().connect (
+    astroid->global_actions->signal_thread_updated ().connect (
         sigc::mem_fun (this, &ThreadIndexListView::on_thread_updated));
   }
 

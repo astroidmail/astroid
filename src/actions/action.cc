@@ -19,8 +19,8 @@ namespace Astroid {
     return false;
   }
 
-  void Action::emit (ActionManager * am, Db * db) {
-    am->emit_thread_updated (db, thread->thread_id);
+  void Action::emit (Db * db) {
+    astroid->global_actions->emit_thread_updated (db, thread->thread_id);
   }
 }
 

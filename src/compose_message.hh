@@ -1,6 +1,7 @@
 # pragma once
 
 # include <iostream>
+# include <vector>
 # include <boost/filesystem.hpp>
 
 # include <gmime/gmime.h>
@@ -35,6 +36,7 @@ namespace Astroid {
       void set_references (ustring);
 
       void add_attachment (path);
+      vector<path> attachments;
 
       void load_message (ustring, ustring); // load draft or message as new
 

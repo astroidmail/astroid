@@ -24,7 +24,7 @@ namespace Astroid {
     bool res = action->doit (db);
 
     if (res) {
-      action->emit (this, db);
+      action->emit (db);
     }
 
     return res;
@@ -41,7 +41,7 @@ namespace Astroid {
       bool res = action->undo (&db);
 
       if (res) {
-        action->emit (this, &db);
+        action->emit (&db);
       }
 
       return res;
@@ -51,14 +51,18 @@ namespace Astroid {
     }
   }
 
+  GlobalActions::GlobalActions () {
+    log << info << "global actions: set up." << endl;
+  }
+
   /* signals */
-  ActionManager::type_signal_thread_updated
-    ActionManager::signal_thread_updated ()
+  GlobalActions::type_signal_thread_updated
+    GlobalActions::signal_thread_updated ()
   {
     return m_signal_thread_updated;
   }
 
-  void ActionManager::emit_thread_updated (Db * db, ustring thread_id) {
+  void GlobalActions::emit_thread_updated (Db * db, ustring thread_id) {
     log << info << "actions: emitted updated signal for thread: " << thread_id << endl;
     m_signal_thread_updated.emit (db, thread_id);
   }

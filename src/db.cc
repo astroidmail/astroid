@@ -16,6 +16,7 @@
 # include "db.hh"
 # include "utils/utils.hh"
 # include "log.hh"
+# include "actions/action_manager.hh"
 
 using namespace std;
 using namespace boost::filesystem;
@@ -243,6 +244,9 @@ namespace Astroid {
     for (ustring &t : sent_tags) {
       s = notmuch_message_add_tag (msg, t.c_str());
     }
+
+    /* emit signal */
+    astroid->global_actions->emit_thread_updated (this, notmuch_message_get_thread_id (msg));
 
     notmuch_message_destroy (msg);
   }

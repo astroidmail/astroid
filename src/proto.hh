@@ -32,6 +32,7 @@ namespace Astroid {
   class LogView;
 
   /* actions */
+  class GlobalActions;
   class ActionManager;
   class Action;
   class TagAction;

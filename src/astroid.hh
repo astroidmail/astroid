@@ -32,6 +32,9 @@ namespace Astroid {
 
       /* contacts */
       Contacts * contacts;
+
+      /* actions */
+      GlobalActions * global_actions;
   };
 
   /* globally available instance of our main Astroid-class */

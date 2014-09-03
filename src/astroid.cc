@@ -13,6 +13,7 @@
 # include "db.hh"
 # include "config.hh"
 # include "account_manager.hh"
+# include "actions/action_manager.hh"
 # include "contacts.hh"
 # include "utils/date_utils.hh"
 # include "log.hh"
@@ -84,6 +85,10 @@ namespace Astroid {
 
     /* set up contacts */
     contacts = new Contacts ();
+
+    /* set up global actions */
+    global_actions = new GlobalActions ();
+
 
     /* start up default window with default buffers */
     MainWindow * mw = new MainWindow (); // is freed / destroyed by application
