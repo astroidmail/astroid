@@ -14,6 +14,7 @@
 # include "chunk.hh"
 # include "db.hh"
 # include "utils/utils.hh"
+# include "utils/mail_quote.hh"
 # include "actions/action.hh"
 # include "actions/tag_action.hh"
 # include "reply_message.hh"
@@ -369,6 +370,7 @@ namespace Astroid {
       select (WEBKIT_DOM_NODE(div_email_container), ".body");
 
     ustring body = m->viewable_text (true);
+    MailQuotes::filter_quotes (body);
 
     webkit_dom_html_element_set_inner_html (
         span_body,
