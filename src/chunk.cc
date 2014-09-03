@@ -182,6 +182,13 @@ namespace Astroid {
           log << warn << "charset: not defined." << endl;
         }
 
+        /* CRLF to LF */
+        GMimeFilter * crlf_filter = g_mime_filter_crlf_new (false, false);
+        g_mime_stream_filter_add (GMIME_STREAM_FILTER (filter_stream),
+            crlf_filter);
+        g_object_unref (crlf_filter);
+
+
         GMimeFilter * html_filter;
         if (html) {
 
@@ -246,8 +253,8 @@ namespace Astroid {
       sstr << io_stream.rdbuf();
       return ustring (sstr.str());
     } else {
-      return ustring ("");
-      log << warn << "chunk: tried to display non-viewable part." << endl;
+      return ustring ("Error: Non-viewable part!");
+      log << error << "chunk: tried to display non-viewable part." << endl;
       //throw runtime_error ("chunk: tried to display non-viewable part.");
     }
   }
