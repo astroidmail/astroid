@@ -1,4 +1,5 @@
 # include <iostream>
+# include <iterator>
 
 # include "log.hh"
 
@@ -13,93 +14,159 @@ namespace Astroid {
     /* run through html body and wrap quoted parts of the body with
      * quote divs */
 
-    ustring quote = "&gt;";
-    ustring newline = "<br>";
+    log << debug << "mq: quote filter." << endl;
+    log << debug << body << endl;
+    time_t t0 = clock ();
+
+    const ustring quote = "&gt;";
+    const ustring newline = "<br>";
+
+    bool delete_quote_markers = true;
+
+    const ustring start_quote = "<blockquote>";
+    const ustring stop_quote  = "</blockquote>";
+
+    ustring::iterator iter;
+    ustring::iterator last_quote_start;
 
     int current_quote_level = 0;
-    int quote_level = 0;
 
-    bool in_newline = false;
+    unsigned int i = 0;
+    while (i <= body.length ()) {
+      log << debug << "mq: iter (" << i << " of " << body.length() << ")" << endl;
 
-    bool in_quote_prefix = false;
-    int last_quote_start = 0;
+      log << body.substr (i, 20) << endl;
 
-    ustring start_quote = "<blockquote>";
-    ustring stop_quote  = "</blockquote>";
+      /* search through all lines (between <br> and <br>) and check
+       * if a line starts with quotes. if it does, insert or decrease
+       * blockquotes depending if the level is different from the previous.
+       *
+       * if two newlines come after earch other, close up the block quotes. */
 
-    for (int i = 0; i < static_cast<int>(body.length()); i++) {
-      if (body[i] == ' ') continue; // skip spaces
-      if (body[i] == '\n') continue; // skip newlines
+      // i is now at the end of the previous line.
 
-      bool new_line_now = false;
-
-      /* look for newlines */
-      if (body.compare (i, 4, newline) == 0) {
-        i += 4;
-        if (in_newline) {
-          /* double newline means end of all quotes */
-
-          for (; current_quote_level > 0; current_quote_level--) {
-            body.insert (i, stop_quote);
-            i += stop_quote.length();
-          }
-
-
-        } else {
-          in_newline = true;
-        }
-
-        new_line_now = true;
+      /* skip spaces so that we can detect double new lines */
+      if (isspace(body[i])) {
+        log << debug << "mq: found space, skipping" << endl;
+        i++;
+        continue;
       }
 
-      if (body.compare (i, 4, quote) == 0) {
-        if (in_quote_prefix) {
+      /* search for the next new line */
+      size_t line_end = body.find (newline.c_str(), i, newline.length ());
+
+      if (line_end == ustring::npos) {
+        log << debug << "mq: no more new lines, closing up!" << endl;
+
+        log << warn << "mq: left over blockquotes: " << current_quote_level << endl;
+        for (; current_quote_level > 0; current_quote_level--) {
+          body.append (stop_quote);
+        }
+
+        break;
+      }
+
+      if (i == line_end) {
+        /* double new lines */
+        log << debug << "mq: double new line" << endl;
+        i += newline.length ();
+
+        log << warn << "mq: left over blockquotes: " << current_quote_level << endl;
+        for (; current_quote_level > 0; current_quote_level--) {
+          body.insert (i, stop_quote);
+          i += stop_quote.length (); // i is now at end of blockquotes after last of double newline
+        }
+
+        continue;
+      }
+
+      line_end += newline.length ();
+
+      /* we can now start searching for quote markers, ignoring spaces */
+      log << debug << "mq: searching between: " << i << " and " << line_end << endl;
+      log << body.substr (i, (line_end-i)) << endl;
+      int quote_level = 0;
+      int line_start = i;
+      int line_left = line_end - i;
+      while (i < line_end) {
+        log << debug << "mq: at " << i << " looking for quotes." << endl;
+        if (isspace(body[i])) {
+          log << debug << "mq: found space, skipping" << endl;
+          i++;
+          line_left--;
+          continue;
+        }
+
+        size_t q_start = body.find (quote.c_str (), i, quote.length());
+        if (q_start == i) {
           quote_level++;
-        } else {
-          if (in_newline) {
-            /* only start if are after a new line */
-            in_quote_prefix = true;
-            quote_level = 1;
-            last_quote_start = i;
-            in_newline = false;
+          log << debug << "mq: found quote, level: " << quote_level << endl;
+          if (delete_quote_markers) {
+            body.erase (i, quote.length());
+            line_left -= quote.length ();
+            line_end  -= quote.length ();
           } else {
-            /* quote not after newline, skipping */
-          }
-        }
-
-        i += 3; // jump past this quote
-
-      } else {
-
-        if (in_quote_prefix) {
-          /* start or close quote */
-          if (quote_level > current_quote_level) {
-            current_quote_level++;
-            body.insert (last_quote_start, start_quote);
-
-            i += start_quote.length() + 4;
-
-          } else if (quote_level < current_quote_level) {
-            current_quote_level--;
-            body.insert (i, stop_quote);
-
+            i += quote.length ();
+            line_left -= quote.length ();
           }
 
-          in_quote_prefix = false;
-          quote_level = 0;
-          in_newline = false;
-
+          continue;
         } else {
-          /* other text */
-          if (!new_line_now) in_newline = false;
-
+          log << debug << "mq: did not find any more quotes, done working on line." << endl;
+          // no more quotes
+          break;
         }
+      }
+
+      log << debug << "mq: quote level: " << quote_level << " (of " << current_quote_level << ")" << endl;
+
+      if (quote_level > current_quote_level) {
+        for (; quote_level > current_quote_level; current_quote_level++) {
+          log << debug << "mq: insert blockquote" << endl;
+          body.insert (line_start, start_quote);
+          i += start_quote.length();
+        }
+
+      } else if (quote_level < current_quote_level) {
+        for (; quote_level < current_quote_level; current_quote_level--) {
+          log << debug << "mq: stop blockquote" << endl;
+          body.insert (line_start, stop_quote);
+          i += stop_quote.length();
+        }
+      }
+
+      i += line_left;
+    }
+
+    if (current_quote_level > 0) {
+      log << warn << "mq: left over blockquotes: " << current_quote_level << endl;
+      for (; current_quote_level > 0; current_quote_level--) {
+        body.append (stop_quote);
       }
     }
 
-    /* close up all remaining quotes */
-    for (; current_quote_level > 0; current_quote_level--) {
-      body.insert (body.length()-1, stop_quote);
+    log << debug << "mq: quote done, time: " << ((clock() - t0) * 1000 / CLOCKS_PER_SEC) << " ms." << endl;
+  }
+
+  bool MailQuotes::compare (ustring::iterator iter, ustring::const_iterator fend, ustring str) {
+    ustring::iterator citer = str.begin();
+
+    unsigned int c = 0;
+
+    while (iter != fend && citer != str.end()) {
+      if (*iter != *citer) {
+        return false;
+      }
+
+      iter++;
+      citer++;
+      c++;
+    }
+
+    if (c == str.length()) {
+      return true;
+    } else {
+      return false;
     }
   }
 
@@ -113,6 +180,7 @@ namespace Astroid {
       to_start = to.insert (to_start, *it);
     }
 
+    advance(to_start, src.length());
     return to_start;
   }
 
