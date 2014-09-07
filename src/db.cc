@@ -253,7 +253,15 @@ namespace Astroid {
 
   bool Db::thread_in_query (ustring query_in, ustring thread_id) {
     /* check if thread id is in query */
-    string query_s = "thread:" + thread_id  + " AND " + query_in;
+    string query_s;
+
+    UstringUtils::trim(query_in);
+
+    if (query_in.length() == 0 || query_in == "*") {
+      query_s = "thread:" + thread_id;
+    } else {
+      query_s = "thread:" + thread_id  + " AND " + query_in;
+    }
 
     time_t t0 = clock ();
 
