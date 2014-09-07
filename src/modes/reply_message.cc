@@ -29,7 +29,7 @@ namespace Astroid {
     /* quote original message */
     ostringstream quoted;
 
-    ustring quoting_a = ustring::compose ("Quoting %1 on %2:",
+    ustring quoting_a = ustring::compose ("%1 wrote on %2:",
         msg->sender.raw(), msg->pretty_verbose_date());
 
     quoted  << quoting_a.raw ()
@@ -40,7 +40,12 @@ namespace Astroid {
     while (sstr.good()) {
       string line;
       getline (sstr, line);
-      quoted << "> " << line << endl;
+      quoted << ">";
+
+      if (line[0] != '>')
+        quoted << " ";
+
+      quoted << line << endl;
     }
 
     body = ustring(quoted.str());
@@ -70,7 +75,7 @@ namespace Astroid {
     row[reply_columns.reply] = Rep_MailingList;
 
     reply_mode_combo->set_active (0);
-    reply_mode_combo->pack_start (enc_columns.encryption_string);
+    reply_mode_combo->pack_start (reply_columns.reply_string);
 
     start_vim_on_socket_ready = true;
   }
