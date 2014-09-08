@@ -161,9 +161,11 @@ namespace Astroid {
 
   void MainWindow::add_mode (Mode * m) {
     m = Gtk::manage (m);
-    modes.push_back (m);
+    auto it = modes.begin ();
+    advance (it, current +1);
+    modes.insert (it, m);
     Gtk::Widget * w = m;
-    int n = notebook.append_page ((*w), *(m->tab_widget));
+    int n = notebook.insert_page ((*w), *(m->tab_widget), current+1);
     notebook.show_all ();
 
     set_active (n);
