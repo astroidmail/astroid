@@ -83,7 +83,8 @@ namespace Astroid {
     switch (event->keyval) {
       case GDK_KEY_q:
       case GDK_KEY_Q:
-        astroid->quit ();
+        astroid->app->remove_window (*this);
+        close ();
         return true;
 
       /* page through notebook */
@@ -108,6 +109,13 @@ namespace Astroid {
           if (modes.size() > 1) {
             int c = notebook.get_current_page ();
             del_mode (c);
+          } else {
+            /* if there are more windows, close this one */
+            if (astroid->app->get_windows().size () > 1) {
+              log << info << "mw: more windows available, closing this one." << endl;
+              astroid->app->remove_window (*this);
+              close ();
+            }
           }
         }
         return true;
@@ -153,6 +161,12 @@ namespace Astroid {
       case GDK_KEY_P:
         {
           astroid->poll->poll ();
+          return true;
+        }
+
+      case GDK_KEY_O:
+        {
+          astroid->open_new_window ();
           return true;
         }
 

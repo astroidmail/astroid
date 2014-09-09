@@ -49,8 +49,28 @@ namespace Astroid {
 
     log << info << "welcome to astroid! - " << GIT_DESC << endl;
 
+    /* set up gtk */
+    int aargc = 1; // TODO: allow GTK to get some options aswell.
+    app = Gtk::Application::create (aargc, argv, "org.astroid");
+
+    app->register_application ();
+
+    if (app->is_remote ()) {
+      log << warn << "astroid: instance already running, opening new window.." << endl;
+
+      app->activate ();
+      return 0;
+    } else {
+      /* we are the main instance */
+      app->signal_activate().connect (sigc::mem_fun (this,
+            &Astroid::on_signal_activate));
+
+    }
+
+    /* user agent */
     user_agent = ustring::compose ("astroid/v%1 (https://github.com/gauteh/astroid)", GIT_DESC);
 
+    /* options */
     namespace po = boost::program_options;
     po::options_description desc ("options");
     desc.add_options ()
@@ -73,10 +93,6 @@ namespace Astroid {
       config = new Config ();
     }
 
-    /* set up gtk */
-    int aargc = 1; // TODO: allow GTK to get some options aswell.
-    app = Gtk::Application::create (aargc, argv, "org.astroid");
-
     /* gmime settings */
     g_mime_init (0); // utf-8 is default
 
@@ -95,6 +111,30 @@ namespace Astroid {
     /* set up poller */
     poll = new Poll ();
 
+    open_new_window ();
+    app->run ();
+
+    /* clean up and exit */
+    delete accounts;
+    delete contacts;
+    delete config;
+
+    log << info << "astroid: goodbye!" << endl;
+
+    return 0;
+  }
+
+  void Astroid::quit () {
+    app->quit ();
+
+    log << info << "astroid: goodbye!" << endl;
+  }
+
+  MainWindow * Astroid::open_new_window () {
+    log << warn << "astroid: starting a new window.." << endl;
+
+    /* set up a new main window */
+
     /* start up default window with default buffers */
     MainWindow * mw = new MainWindow (); // is freed / destroyed by application
 
@@ -110,29 +150,19 @@ namespace Astroid {
 
     mw->set_active (0);
 
-    main_windows.push_back (mw);
-    main_windows.shrink_to_fit ();
+    app->add_window (*mw);
+    mw->show_all ();
 
-    app->run (*mw);
-
-    /* clean up and exit */
-    main_windows.clear ();
-    delete accounts;
-    delete contacts;
-    delete config;
-
-    return 0;
+    return mw;
   }
 
-  void Astroid::quit () {
-    /* remove modes (TODO: should be done in ~mainwindow) */
-    for (auto mw : main_windows) {
-      mw->remove_all_modes ();
+  void Astroid::on_signal_activate () {
+    if (activated) {
+      open_new_window ();
+    } else {
+      /* we'll get one activated signal from ourselves first */
+      activated = true;
     }
-
-    app->quit ();
-
-    log << info << "astroid: goodbye!" << endl;
   }
 
 }

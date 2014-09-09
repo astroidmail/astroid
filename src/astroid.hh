@@ -16,13 +16,11 @@ namespace Astroid {
       Astroid ();
       int main (int, char**);
       void quit ();
+      void close (MainWindow *);
 
       refptr<Gtk::Application> app;
 
       ustring user_agent;
-
-      /* list of main windows */
-      vector<MainWindow*>  main_windows;
 
       /* config */
       Config * config;
@@ -38,6 +36,12 @@ namespace Astroid {
 
       /* poll */
       Poll * poll;
+
+      MainWindow * open_new_window ();
+
+    private:
+      bool activated = false;
+      void on_signal_activate ();
   };
 
   /* globally available instance of our main Astroid-class */
