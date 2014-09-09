@@ -6,6 +6,7 @@
 # include "reply_message.hh"
 
 # include "message_thread.hh"
+# include "utils/address.hh"
 
 using namespace std;
 
@@ -29,8 +30,8 @@ namespace Astroid {
     /* quote original message */
     ostringstream quoted;
 
-    ustring quoting_a = ustring::compose ("%1 wrote on %2:",
-        msg->sender.raw(), msg->pretty_verbose_date());
+    ustring quoting_a = ustring::compose ("Excerpts from %1's message of %2:",
+        Address(msg->sender.raw()).fail_safe_name(), msg->pretty_verbose_date());
 
     quoted  << quoting_a.raw ()
             << endl;
