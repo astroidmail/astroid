@@ -18,18 +18,6 @@ using namespace boost::filesystem;
 namespace Astroid {
   Poll::Poll () {
     log << info << "poll: setting up." << endl;
-
-    signal_log.connect (sigc::mem_fun (this, &Poll::flush_log_lines));
-  }
-
-  void Poll::flush_log_lines () {
-    lock_guard<mutex> grd (m_log_lines);
-
-    for (LogLine &l : log_lines) {
-      log << l.lvl << l.str << endl;
-    }
-
-    log_lines.clear ();
   }
 
   bool Poll::poll () {
@@ -55,21 +43,10 @@ namespace Astroid {
 
     path poll_script_uri = astroid->config->config_dir / path(poll_script);
 
-    stringstream str;
-    str << "poll: polling: " << poll_script_uri.c_str ();
-
-    m_log_lines.lock ();
-    log_lines.push_back (LogLine (info, str.str()));
-    m_log_lines.unlock ();
-    signal_log ();
-
-    str.str("");
+    log << info << "poll: polling: " << poll_script_uri.c_str () << endl;
 
     if (!is_regular_file (poll_script_uri)) {
-      m_log_lines.lock ();
-      log_lines.push_back (LogLine (error, "poll: poll script does not exist or is not a regular file."));
-      m_log_lines.unlock ();
-      signal_log ();
+      log << error << "poll: poll script does not exist or is not a regular file." << endl;
 
       m_dopoll.unlock ();
       return;
@@ -89,52 +66,27 @@ namespace Astroid {
                         &exitcode
                         );
     } catch (Glib::SpawnError &ex) {
-      str.str ("poll: exception while running poll script: ");
-      str << ex.what ();
-
-      m_log_lines.lock ();
-      log_lines.push_back (LogLine (error, str.str()));
-      m_log_lines.unlock ();
-      signal_log ();
+      log << error << "poll: exception while running poll script: " <<  ex.what () << endl;
     }
 
     ustring ustdout = ustring(stdout);
     for (ustring &l : VectorUtils::split_and_trim (ustdout, ustring("\n"))) {
 
-      m_log_lines.lock ();
-      log_lines.push_back (LogLine (debug, l));
-      m_log_lines.unlock ();
-      signal_log ();
-
+      log << debug << l << endl;
     }
 
     ustring ustderr = ustring(stderr);
     for (ustring &l : VectorUtils::split_and_trim (ustderr, ustring("\n"))) {
 
-      m_log_lines.lock ();
-      log_lines.push_back (LogLine (debug, l));
-      m_log_lines.unlock ();
-      signal_log ();
-
+      log << debug << l << endl;
     }
 
     if (exitcode != 0) {
-      str.str ("poll: poll script exited with code: ");
-      str << exitcode;
+      log << error << "poll: poll script exited with code: " << exitcode << endl;
 
-      m_log_lines.lock ();
-      log_lines.push_back (LogLine (error, str.str()));
-      m_log_lines.unlock ();
-      signal_log ();
     }
 
-    str.str ("");
-    str << "poll: done (time: " << ((clock() - lastpoll) * 1000.0 / CLOCKS_PER_SEC) << " ms).";
-
-    m_log_lines.lock ();
-    log_lines.push_back (LogLine (info, str.str()));
-    m_log_lines.unlock ();
-    signal_log ();
+    log << info << "poll: done (time: " << ((clock() - lastpoll) * 1000.0 / CLOCKS_PER_SEC) << " ms)." << endl;
 
     astroid->global_actions->signal_refreshed_dispatcher ();
 

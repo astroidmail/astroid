@@ -206,13 +206,10 @@ namespace Astroid {
           write (save_to.c_str());
 
           /* add to notmuch with sent tag */
-          thread add_sent ([&]()
-              {
-                Db db (Db::DbMode::DATABASE_READ_WRITE);
-                lock_guard<Db> lk (db);
-                db.add_sent_message (save_to.c_str());
-                log << info << "cm: sent message added to db." << endl;
-              });
+          Db db (Db::DbMode::DATABASE_READ_WRITE);
+          lock_guard<Db> lk (db);
+          db.add_sent_message (save_to.c_str());
+          log << info << "cm: sent message added to db." << endl;
         }
 
         return true;

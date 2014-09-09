@@ -246,7 +246,14 @@ namespace Astroid {
     }
 
     /* emit signal */
-    astroid->global_actions->emit_thread_updated (this, notmuch_message_get_thread_id (msg));
+    const char * tidc = notmuch_message_get_thread_id (msg);
+    ustring tid;
+    if (tidc != NULL) {
+      tid = ustring(tidc);
+      astroid->global_actions->emit_thread_updated (this, tid);
+    } else {
+      log << error << "db: got NULL for thread after adding message." << endl;
+    }
 
     notmuch_message_destroy (msg);
   }

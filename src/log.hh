@@ -11,6 +11,10 @@
 # include <iostream>
 # include <sstream>
 # include <vector>
+# include <queue>
+# include <mutex>
+
+# include <glibmm/threads.h>
 
 using namespace std;
 
@@ -22,19 +26,31 @@ namespace Astroid {
     error,
   };
 
+  struct LogLine {
+    LogLine (LogLevel _lvl, ustring _time, ustring _str) :
+      lvl (_lvl), time_str (_time), str(_str) {};
+    LogLevel lvl;
+    ustring  time_str;
+    ustring  str;
+  };
+
   class Log {
     private:
-      bool          _next_is_begin;
       enum LogLevel _next_level;
       stringstream  _next_line;
 
+      mutex m_outstreams;
       vector <ostream *> out_streams;
       vector <LogView *> log_views;
-
 
       // this is the key: std::endl is a template function, and this is the signature of that function (For std::ostream).
       using endl_type = std::ostream&(std::ostream&);
 
+      queue <LogLine> lines;
+      mutex m_lines;
+
+      recursive_mutex m_reading_line;
+      bool flush_log ();
 
     public:
 
@@ -54,9 +70,9 @@ namespace Astroid {
       template<typename T>
       Log& operator<< (const T& data)
       {
-          _next_line << data;
+        _next_line << data;
 
-          return *this;
+        return *this;
       }
 
       void add_out_stream (ostream *);
