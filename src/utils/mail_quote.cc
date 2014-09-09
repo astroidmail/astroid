@@ -67,13 +67,14 @@ namespace Astroid {
       if (i == line_end) {
         /* double new lines */
         if (mq_verbose) log << debug << "mq: double new line" << endl;
-        i += newline.length ();
 
         if (mq_verbose) log << warn << "mq: left over blockquotes: " << current_quote_level << endl;
         for (; current_quote_level > 0; current_quote_level--) {
           body.insert (i, stop_quote);
-          i += stop_quote.length (); // i is now at end of blockquotes after last of double newline
+          i += stop_quote.length ();
         }
+
+        i += newline.length (); // i is now at end of blockquotes after last of double newline
 
         continue;
       }
