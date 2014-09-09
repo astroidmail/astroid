@@ -17,6 +17,7 @@
 # include "contacts.hh"
 # include "utils/date_utils.hh"
 # include "log.hh"
+# include "poll.hh"
 
 /* UI */
 # include "main_window.hh"
@@ -42,6 +43,8 @@ namespace Astroid {
   }
 
   int Astroid::main (int argc, char **argv) {
+    Glib::init ();
+
     log.add_out_stream (&cout);
 
     log << info << "welcome to astroid! - " << GIT_DESC << endl;
@@ -89,6 +92,8 @@ namespace Astroid {
     /* set up global actions */
     global_actions = new GlobalActions ();
 
+    /* set up poller */
+    poll = new Poll ();
 
     /* start up default window with default buffers */
     MainWindow * mw = new MainWindow (); // is freed / destroyed by application

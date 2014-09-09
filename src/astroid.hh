@@ -35,6 +35,9 @@ namespace Astroid {
 
       /* actions */
       GlobalActions * global_actions;
+
+      /* poll */
+      Poll * poll;
   };
 
   /* globally available instance of our main Astroid-class */

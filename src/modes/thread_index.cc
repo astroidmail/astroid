@@ -91,14 +91,20 @@ namespace Astroid {
     load_more_threads (all, count, true);
 
     /* select old */
-    Gtk::TreeIter iter;
-    while (iter = list_store->get_iter (path), !(iter)) {
-      if (!path.prev ()) {
+    if (current_thread > 0) {
+      if (!path) {
         path = Gtk::TreePath ("0");
-        break;
+      } else {
+        Gtk::TreeIter iter;
+        while (iter = list_store->get_iter (path), !(iter)) {
+          if (!path.prev ()) {
+            path = Gtk::TreePath ("0");
+            break;
+          }
+        }
       }
+      list_view->set_cursor (path);
     }
-    list_view->set_cursor (path);
 
     log << debug << "ti: refreshed in " << ((clock() - t0) * 1000.0 / CLOCKS_PER_SEC) << " ms." << endl;
   }
@@ -196,7 +202,7 @@ namespace Astroid {
         }
         break;
 
-      case GDK_KEY_P:
+      case GDK_KEY_dollar:
         {
           refresh (false, max(thread_load_step, current_thread), false);
           return true;

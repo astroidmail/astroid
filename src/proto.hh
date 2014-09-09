@@ -17,6 +17,7 @@ namespace Astroid {
   class Account;
   class Contacts;
   class Log;
+  class Poll;
 
   /* message and thread */
   class Message;

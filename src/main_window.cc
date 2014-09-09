@@ -5,6 +5,7 @@
 
 # include "astroid.hh"
 # include "version.hh"
+# include "poll.hh"
 # include "main_window.hh"
 # include "modes/mode.hh"
 # include "modes/thread_index.hh"
@@ -146,6 +147,12 @@ namespace Astroid {
       case GDK_KEY_m:
         {
           add_mode (new EditMessage (this));
+          return true;
+        }
+
+      case GDK_KEY_P:
+        {
+          astroid->poll->poll ();
           return true;
         }
 

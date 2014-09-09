@@ -53,6 +53,12 @@ namespace Astroid {
 
   GlobalActions::GlobalActions () {
     log << info << "global actions: set up." << endl;
+
+    /* set up GUI thread dispatcher for out-of-thread
+     * signals */
+    signal_refreshed_dispatcher.connect (
+        sigc::mem_fun (this,
+          &GlobalActions::emit_refreshed));
   }
 
   /* signals */
@@ -65,6 +71,17 @@ namespace Astroid {
   void GlobalActions::emit_thread_updated (Db * db, ustring thread_id) {
     log << info << "actions: emitted updated signal for thread: " << thread_id << endl;
     m_signal_thread_updated.emit (db, thread_id);
+  }
+
+  GlobalActions::type_signal_refreshed
+    GlobalActions::signal_refreshed ()
+  {
+    return m_signal_refreshed;
+  }
+
+  void GlobalActions::emit_refreshed () {
+    log << info << "actions: emitted refreshed signal." << endl;
+    m_signal_refreshed.emit ();
   }
 }
 

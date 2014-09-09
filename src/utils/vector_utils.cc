@@ -12,7 +12,7 @@ namespace Astroid {
   const vector<ustring> VectorUtils::stop_ons_tags = {" "};
   const vector<ustring> VectorUtils::stop_ons_auth = {" ", "@"};
 
-  vector<ustring> VectorUtils::split_and_trim (ustring str, ustring delim) {
+  vector<ustring> VectorUtils::split_and_trim (ustring &str, ustring delim) {
 
     vector<ustring> parts = Glib::Regex::split_simple(delim, str);
 
@@ -27,7 +27,7 @@ namespace Astroid {
     return parts;
   }
 
-  ustring VectorUtils::concat (vector<ustring> strs, ustring delim, vector<ustring> stop_on) {
+  ustring VectorUtils::concat (vector<ustring> &strs, ustring delim, vector<ustring> stop_on) {
     /* stop_on is a list of strings which each element be trunctated
      * to if it exists in the element */
 

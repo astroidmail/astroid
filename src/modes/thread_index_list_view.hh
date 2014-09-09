@@ -57,8 +57,6 @@ namespace Astroid {
 
       void set_thread_data (Gtk::CellRenderer *, const Gtk::TreeIter & );
 
-      // void update_current_row (Db &);
-
       ustring get_current_thread_id ();
       refptr<NotmuchThread> get_current_thread ();
 
@@ -67,6 +65,7 @@ namespace Astroid {
       virtual bool on_key_press_event (GdkEventKey *) override;
 
       void on_thread_updated (Db *, ustring);
+      void on_refreshed ();
   };
 
 

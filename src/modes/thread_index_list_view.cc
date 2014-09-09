@@ -106,6 +106,9 @@ namespace Astroid {
 
     astroid->global_actions->signal_thread_updated ().connect (
         sigc::mem_fun (this, &ThreadIndexListView::on_thread_updated));
+
+    astroid->global_actions->signal_refreshed ().connect (
+        sigc::mem_fun (this, &ThreadIndexListView::on_refreshed));
   }
 
   ThreadIndexListView::~ThreadIndexListView () {
@@ -361,6 +364,11 @@ namespace Astroid {
     }
 
     return false;
+  }
+
+  void ThreadIndexListView::on_refreshed () {
+    log << debug << "til: got refreshed signal." << endl;
+    thread_index->refresh (false, max(thread_index->thread_load_step, thread_index->current_thread), false);
   }
 
   void ThreadIndexListView::on_thread_updated (Db * db, ustring thread_id) {
