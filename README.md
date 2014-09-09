@@ -68,9 +68,10 @@ By default astroid looks in `$HOME/.mail` for the notmuch database, but you can 
 
 ` $ ./astroid `
 
-## patches and bugs
+## patches, help, comments and bugs
 
-Report on the [github page](https://github.com/gauteh/astroid) or to the mailinglist whenever it is has been set up..
+Report on the [github page](https://github.com/gauteh/astroid) or to the mailinglist at: [astroidmail@googlegroups.com](https://groups.google.com/forum/#!forum/astroidmail), subscribe [online](https://groups.google.com/forum/#!forum/astroidmail) or by sending an email to:
+[astroidmail+subscribe@googlegroups.com](mailto:astroidmail+subscribe@googlegroups.com).
 
 ## acknowledgements
 
