@@ -42,6 +42,8 @@ body {
     -webkit-user-drag: none;
 }
 
+
+
 a {
     color: #08c;
 }
@@ -258,6 +260,7 @@ body:not(.nohide) .email.hide .header_container .avatar {
     body {
         background-color: #ccc !important;
     }
+
     body:not(.nohide) .email.hide,
     body:not(.nohide) .email .email.hide {
         background-color: #f5f5f5;/* recv-collapsed */
@@ -332,6 +335,14 @@ body:not(.nohide) .email.hide .header_container .avatar {
         display:none;
     }
 
+}
+
+@media (-webkit-min-device-pixel-ratio: 1),
+       (min-resolution: 196dpi)
+{
+  body {
+    font-size: smaller !important;
+  }
 }
 
 .email .compressed_note {
@@ -452,7 +463,7 @@ body.nohide .email .compressed_note > span {
     clear: both;
     overflow: hidden;
     /*font-size: 9pt;*/
-    font-size: normal;
+    /*font-size: normal;*/
 }
 .header .field .title,
 .header .field .value {

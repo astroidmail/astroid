@@ -39,6 +39,35 @@ namespace Astroid {
     /* set up webkit web view (using C api) */
     webview = WEBKIT_WEB_VIEW (webkit_web_view_new ());
 
+    /* dpi */
+    /*
+    WebKitViewportAttributes* attributes = webkit_web_view_get_viewport_attributes (webview);
+
+    gint dpi;
+    gfloat dpr;
+    g_object_get (G_OBJECT (attributes), "device-dpi", &dpi, NULL);
+    g_object_get (G_OBJECT (attributes), "device-pixel-ratio", &dpr, NULL);
+
+    log << debug << "web: dpi: " << dpi << ", dpr: " << dpr << endl;
+    auto win = get_screen ();
+    double gdpi = win->get_resolution ();
+
+    log << debug << "gdk: dpi: " << gdpi << endl;
+
+    g_object_set (G_OBJECT (attributes), "device-dpi", (int)gdpi, NULL);
+
+    webkit_viewport_attributes_recompute (attributes);
+
+    g_object_get (G_OBJECT (attributes), "device-dpi", &dpi, NULL);
+    g_object_get (G_OBJECT (attributes), "device-pixel-ratio", &dpr, NULL);
+
+    log << debug << "web: dpi: " << dpi << ", dpr: " << dpr << endl;
+
+    bool valid;
+    g_object_get (G_OBJECT (attributes), "valid", &valid, NULL);
+    log << debug << "web: valid: " << valid << endl;
+    */
+
     websettings = WEBKIT_WEB_SETTINGS (webkit_web_settings_new ());
     g_object_set (G_OBJECT(websettings),
         "enable-scripts", FALSE,
@@ -64,6 +93,7 @@ namespace Astroid {
         NULL);
 
     webkit_web_view_set_settings (webview, websettings);
+
 
     gtk_container_add (GTK_CONTAINER (scroll.gobj()), GTK_WIDGET(webview));
 
@@ -144,6 +174,7 @@ namespace Astroid {
       case WEBKIT_LOAD_FINISHED:
         log << debug << "tv: load finished." << endl;
         {
+
           /* load css style */
           GError *err = NULL;
           WebKitDOMDocument *d = webkit_web_view_get_dom_document (webview);
