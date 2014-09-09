@@ -251,12 +251,12 @@ namespace Astroid {
   }
 
   bool MainWindow::on_my_focus_in_event (GdkEventFocus *event) {
-    set_active (current);
+    if (active) set_active (current);
     return false;
   }
 
   bool MainWindow::on_my_focus_out_event (GdkEventFocus *event) {
-    unset_active ();
+    ((Mode*) notebook.get_nth_page (current))->release_modal();
     return false;
   }
 }

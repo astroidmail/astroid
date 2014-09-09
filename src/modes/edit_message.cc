@@ -555,7 +555,7 @@ namespace Astroid {
   }
 
   void EditMessage::grab_modal () {
-    add_modal_grab ();
+    if (current_field != Editor) add_modal_grab ();
   }
 
   void EditMessage::release_modal () {
