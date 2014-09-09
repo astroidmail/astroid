@@ -16,7 +16,6 @@ namespace Astroid {
       Astroid ();
       int main (int, char**);
       void quit ();
-      void close (MainWindow *);
 
       refptr<Gtk::Application> app;
 
