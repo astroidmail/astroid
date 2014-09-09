@@ -86,6 +86,10 @@ namespace Astroid {
 
     }
 
+    // TODO:
+    // - this time counter doesn't seem right..
+    // - use lastmod to figure out how many messages have been added or changed
+    //   during poll.
     log << info << "poll: done (time: " << ((clock() - lastpoll) * 1000.0 / CLOCKS_PER_SEC) << " ms)." << endl;
 
     astroid->global_actions->signal_refreshed_dispatcher ();
