@@ -47,6 +47,8 @@ namespace Astroid {
 
     show_all_children ();
 
+    notebook.set_scrollable (true);
+
     /* connect keys */
     add_events (Gdk::KEY_PRESS_MASK);
     signal_key_press_event ().connect (
@@ -70,7 +72,7 @@ namespace Astroid {
     // hides itself
     command.disable_command ();
     command.remove_modal_grab();
-    set_active (lastcurrent);
+    set_active (current);
     is_command = false;
   }
 
@@ -113,7 +115,7 @@ namespace Astroid {
       /* close page */
       case GDK_KEY_x:
         {
-          if (modes.size() > 1) {
+          if (notebook.get_n_pages() > 1) {
             int c = notebook.get_current_page ();
             del_mode (c);
           } else {
@@ -181,19 +183,13 @@ namespace Astroid {
     return false;
   }
 
-  MainWindow::~MainWindow () {
-    modes.clear (); // the modes themselves should be freed upon
-                    // widget desctruction
-    log << debug << "mw: done." << endl;
-  }
-
   void MainWindow::add_mode (Mode * m) {
     m = Gtk::manage (m);
-    auto it = modes.begin ();
-    advance (it, current +1);
-    modes.insert (it, m);
+
     Gtk::Widget * w = m;
+
     int n = notebook.insert_page ((*w), *(m->tab_widget), current+1);
+
     notebook.show_all ();
 
     set_active (n);
@@ -209,13 +205,6 @@ namespace Astroid {
       }
 
       notebook.remove_page (c); // this should free the widget (?)
-
-      if (modes.size() > 0) {
-        auto it = modes.begin () + c;
-        modes.erase (it);
-
-        // mode is deleted by Gtk::manage.
-      }
     } else {
       log << warn << "mw: attempt to remove negative page" << endl;
     }
@@ -225,18 +214,17 @@ namespace Astroid {
     // used by Astroid::quit to deconstruct all modes before
     // exiting.
 
-    for (int n = modes.size ()-1; n >= 0; n--)
+    for (int n = notebook.get_n_pages()-1; n >= 0; n--)
       del_mode (n);
 
   }
 
   void MainWindow::unset_active () {
     if (current >= 0) {
-      if (static_cast<int>(modes.size()) > current) {
+      if (notebook.get_n_pages() > current) {
         //log << debug << "mw: release modal, from: " << current << endl;
-        modes[current]->release_modal ();
-        lastcurrent = current;
-        current = -1;
+        ((Mode*) notebook.get_nth_page (current))->release_modal();
+        active = false;
       }
     }
   }
@@ -253,8 +241,10 @@ namespace Astroid {
       unset_active ();
 
       //log << debug << "mw: grab modal to: " << n << endl;
-      modes[n]->grab_modal ();
+      ((Mode*) notebook.get_nth_page (n))->grab_modal();
       current = n;
+
+      active = true;
     } else {
       // log << debug << "mw: set active: page is out of range: " << n << endl;
     }

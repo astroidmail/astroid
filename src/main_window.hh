@@ -17,7 +17,6 @@ namespace Astroid {
   class MainWindow : public Gtk::Window {
     public:
       MainWindow ();
-      ~MainWindow ();
 
       bool on_key_press (GdkEventKey *);
 
@@ -36,10 +35,8 @@ namespace Astroid {
       /* actions */
       ActionManager actions;
 
-
-      vector<Mode*> modes;
-      int lastcurrent = -1;
       int current = -1;
+      bool active = false;
 
       void add_mode (Mode *);
       void del_mode (int);
