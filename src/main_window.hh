@@ -47,6 +47,10 @@ namespace Astroid {
 
       void unset_active ();
       void set_active (int);
+
+    private:
+      bool on_my_focus_in_event (GdkEventFocus *);
+      bool on_my_focus_out_event (GdkEventFocus *);
   };
 
 }

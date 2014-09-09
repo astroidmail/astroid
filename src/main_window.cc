@@ -51,6 +51,12 @@ namespace Astroid {
     add_events (Gdk::KEY_PRESS_MASK);
     signal_key_press_event ().connect (
         sigc::mem_fun(*this, &MainWindow::on_key_press));
+
+    /* got focus, grab keys */
+    signal_focus_in_event ().connect (
+        sigc::mem_fun (this, &MainWindow::on_my_focus_in_event));
+    signal_focus_out_event ().connect (
+        sigc::mem_fun (this, &MainWindow::on_my_focus_out_event));
   }
 
   void MainWindow::enable_command (CommandBar::CommandMode m, ustring cmd, function<void(ustring)> f) {
@@ -83,6 +89,7 @@ namespace Astroid {
     switch (event->keyval) {
       case GDK_KEY_q:
       case GDK_KEY_Q:
+        log << info << "mw: quit." << endl;
         astroid->app->remove_window (*this);
         close ();
         return true;
@@ -251,6 +258,16 @@ namespace Astroid {
     } else {
       // log << debug << "mw: set active: page is out of range: " << n << endl;
     }
+  }
+
+  bool MainWindow::on_my_focus_in_event (GdkEventFocus *event) {
+    set_active (current);
+    return false;
+  }
+
+  bool MainWindow::on_my_focus_out_event (GdkEventFocus *event) {
+    unset_active ();
+    return false;
   }
 }
 
