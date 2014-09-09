@@ -647,7 +647,6 @@ namespace Astroid {
   }
 
   bool ThreadView::on_key_press_event (GdkEventKey *event) {
-    log << debug << "tv: key press" << endl;
     switch (event->keyval) {
 
       case GDK_KEY_j:
@@ -975,7 +974,7 @@ namespace Astroid {
   }
 
   void ThreadView::grab_focus () {
-    log << debug << "tv: grab focus" << endl;
+    //log << debug << "tv: grab focus" << endl;
     gtk_widget_grab_focus (GTK_WIDGET (webview));
   }
 

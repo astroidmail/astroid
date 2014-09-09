@@ -256,7 +256,8 @@ namespace Astroid {
   }
 
   bool MainWindow::on_my_focus_out_event (GdkEventFocus *event) {
-    ((Mode*) notebook.get_nth_page (current))->release_modal();
+    if ((current < notebook.get_n_pages ()) && (current >= 0))
+      ((Mode*) notebook.get_nth_page (current))->release_modal();
     return false;
   }
 }

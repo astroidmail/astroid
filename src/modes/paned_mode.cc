@@ -75,7 +75,7 @@ namespace Astroid {
   }
 
   void PanedMode::grab_modal () {
-    log << debug << "pm: grab modal to: " << current << endl;
+    //log << debug << "pm: grab modal to: " << current << endl;
     if (current == 0) {
       pw1->grab_modal ();
       has_modal = true;
@@ -86,7 +86,7 @@ namespace Astroid {
   }
 
   void PanedMode::release_modal () {
-    log << debug << "pm: release modal: " << current << " (" << has_modal << ")" << endl;
+    //log << debug << "pm: release modal: " << current << " (" << has_modal << ")" << endl;
     if (current == 0) {
       pw1->release_modal ();
     } else if (current == 1) {

@@ -186,7 +186,6 @@ namespace Astroid {
   }
 
   bool ThreadIndex::on_key_press_event (GdkEventKey *event) {
-    log << debug << "ti: key press" << endl;
     switch (event->keyval) {
       case GDK_KEY_x:
         {
