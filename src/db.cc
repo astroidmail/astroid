@@ -488,7 +488,7 @@ namespace Astroid {
       log << error << "nmt: got NULL for authors." << endl;
     }
 
-    vector<ustring> aths = VectorUtils::split_and_trim (astr, ",");
+    vector<ustring> aths = VectorUtils::split_and_trim (astr, ",|\\|");
 
     return aths;
   }

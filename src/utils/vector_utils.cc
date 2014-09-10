@@ -37,7 +37,6 @@ namespace Astroid {
     for_each (strs.begin (),
               strs.end (),
               [&](ustring a) {
-
                 if (!first) {
                   out += delim;
                 } else {
