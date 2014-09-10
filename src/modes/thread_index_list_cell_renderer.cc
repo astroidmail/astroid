@@ -199,7 +199,7 @@ namespace Astroid {
     Gdk::RGBA color = stylecontext->get_color(Gtk::STATE_FLAG_NORMAL);
     cr->set_source_rgb (color.get_red(), color.get_green(), color.get_blue());
     if ((flags & Gtk::CELL_RENDERER_SELECTED) != 0) {
-      pango_layout->set_markup ("<span color=\"#c7c7c7\">" + Glib::Markup::escape_text(thread->subject) + "</span>");
+      pango_layout->set_markup ("<span color=\"#000000\">" + Glib::Markup::escape_text(thread->subject) + "</span>");
     } else {
       pango_layout->set_markup ("<span color=\"#807d74\">" + Glib::Markup::escape_text(thread->subject) + "</span>");
     }

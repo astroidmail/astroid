@@ -37,7 +37,7 @@ namespace Astroid {
 
     body = ustring(quoted.str());
 
-    /* TODO: add attachments or other non-viewable parts */
+    /* TODO: add attachments and other non-viewable parts */
 
     /* reload message */
     prepare_message ();
