@@ -451,6 +451,7 @@ body.nohide .email .compressed_note > span {
 .email > .attachment_container > .attachment .info {
     vertical-align: middle;
     padding-left: 5px;
+    font-size: smaller;
 }
 .email > .attachment_container > .attachment .info > :not(.filename) {
     color: #666;
