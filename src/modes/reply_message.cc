@@ -78,6 +78,10 @@ namespace Astroid {
     reply_mode_combo->set_active (0);
     reply_mode_combo->pack_start (reply_columns.reply_string);
 
+    /* reload message */
+    prepare_message ();
+    read_edited_message ();
+
     start_vim_on_socket_ready = true;
   }
 }

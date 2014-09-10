@@ -18,6 +18,7 @@
 # include "actions/action.hh"
 # include "actions/tag_action.hh"
 # include "reply_message.hh"
+# include "forward_message.hh"
 # include "log.hh"
 
 
@@ -781,6 +782,16 @@ namespace Astroid {
           /* reply to currently focused message */
           if (!edit_mode) {
             main_window->add_mode (new ReplyMessage (main_window, focused_message));
+
+            return true;
+          }
+        }
+
+      case GDK_KEY_f:
+        {
+          /* forward currently focused message */
+          if (!edit_mode) {
+            main_window->add_mode (new ForwardMessage (main_window, focused_message));
 
             return true;
           }

@@ -10,6 +10,7 @@
 # include "thread_index_list_view.hh"
 # include "thread_index_list_cell_renderer.hh"
 # include "reply_message.hh"
+# include "forward_message.hh"
 # include "message_thread.hh"
 # include "utils/utils.hh"
 
@@ -242,6 +243,24 @@ namespace Astroid {
 
             /* reply to last message */
             main_window->add_mode (new ReplyMessage (main_window, *(--mthread.messages.end())));
+
+          }
+          return true;
+        }
+
+      /* forward */
+      case GDK_KEY_f:
+        {
+          auto thread = get_current_thread ();
+          if (thread) {
+
+            MessageThread mthread (thread);
+            Db db (Db::DbMode::DATABASE_READ_ONLY);
+
+            mthread.load_messages (&db);
+
+            /* reply to last message */
+            main_window->add_mode (new ForwardMessage (main_window, *(--mthread.messages.end())));
 
           }
           return true;

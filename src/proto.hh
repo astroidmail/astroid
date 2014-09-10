@@ -52,6 +52,7 @@ namespace Astroid {
   class HelpMode;
   class EditMessage;
   class ReplyMessage;
+  class ForwardMessage;
 
 }
 
