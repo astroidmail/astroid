@@ -53,6 +53,7 @@ namespace Astroid {
   class EditMessage;
   class ReplyMessage;
   class ForwardMessage;
+  class RawMessage;
 
 }
 

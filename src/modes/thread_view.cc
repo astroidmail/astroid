@@ -19,6 +19,7 @@
 # include "actions/tag_action.hh"
 # include "reply_message.hh"
 # include "forward_message.hh"
+# include "raw_message.hh"
 # include "log.hh"
 
 
@@ -795,6 +796,14 @@ namespace Astroid {
 
             return true;
           }
+        }
+
+      case GDK_KEY_V:
+        {
+          /* view raw source of currently focused message */
+          main_window->add_mode (new RawMessage (focused_message));
+
+          return true;
         }
     }
 
