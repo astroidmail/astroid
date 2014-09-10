@@ -93,7 +93,8 @@ namespace Astroid {
       void render_subject (
           const ::Cairo::RefPtr< ::Cairo::Context>&cr,
           Gtk::Widget &widget,
-          const Gdk::Rectangle &cell_area );
+          const Gdk::Rectangle &cell_area,
+          Gtk::CellRendererState flags);
 
       int render_tags (
           const ::Cairo::RefPtr< ::Cairo::Context>&cr,

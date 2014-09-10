@@ -69,7 +69,7 @@ namespace Astroid {
     height              = content_height + line_spacing;
     height_set          = true;
 
-    render_background (cr, widget, background_area, flags);
+    //render_background (cr, widget, background_area, flags);
     render_date (cr, widget, cell_area); // returns height
 
     if (thread->total_messages > 1)
@@ -80,7 +80,7 @@ namespace Astroid {
     tags_width = render_tags (cr, widget, cell_area); // returns width
     subject_start = tags_start + tags_width / Pango::SCALE + ((tags_width > 0) ? padding : 0);
 
-    render_subject (cr, widget, cell_area);
+    render_subject (cr, widget, cell_area, flags);
 
     /*
     if (!last)
@@ -186,7 +186,8 @@ namespace Astroid {
   void ThreadIndexListCellRenderer::render_subject ( // {{{
       const ::Cairo::RefPtr< ::Cairo::Context>&cr,
       Gtk::Widget &widget,
-      const Gdk::Rectangle &cell_area ) {
+      const Gdk::Rectangle &cell_area,
+      Gtk::CellRendererState flags) {
 
     Glib::RefPtr<Pango::Layout> pango_layout = widget.create_pango_layout ("");
 
@@ -197,7 +198,11 @@ namespace Astroid {
 
     Gdk::RGBA color = stylecontext->get_color(Gtk::STATE_FLAG_NORMAL);
     cr->set_source_rgb (color.get_red(), color.get_green(), color.get_blue());
-    pango_layout->set_markup ("<span color=\"#807d74\">" + Glib::Markup::escape_text(thread->subject) + "</span>");
+    if ((flags & Gtk::CELL_RENDERER_SELECTED) != 0) {
+      pango_layout->set_markup ("<span color=\"#eae8e3\">" + Glib::Markup::escape_text(thread->subject) + "</span>");
+    } else {
+      pango_layout->set_markup ("<span color=\"#807d74\">" + Glib::Markup::escape_text(thread->subject) + "</span>");
+    }
 
 
     /* align in the middle */
