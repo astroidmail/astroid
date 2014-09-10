@@ -39,7 +39,7 @@ namespace Astroid {
   }
 
   void Poll::do_poll () {
-    lastpoll = clock ();
+    clock_t lastpoll = clock ();
 
     path poll_script_uri = astroid->config->config_dir / path(poll_script);
 
@@ -90,7 +90,7 @@ namespace Astroid {
     // - this time counter doesn't seem right..
     // - use lastmod to figure out how many messages have been added or changed
     //   during poll.
-    log << info << "poll: done (time: " << ((clock() - lastpoll) * 1000.0 / CLOCKS_PER_SEC) << " ms)." << endl;
+    log << info << "poll: done (time: " << (((clock() - lastpoll) * 1000.0) / CLOCKS_PER_SEC) << " ms)." << endl;
 
     astroid->global_actions->signal_refreshed_dispatcher ();
 

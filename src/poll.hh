@@ -19,7 +19,6 @@ namespace Astroid {
       const char * poll_script = "poll.sh";
 
     private:
-      time_t lastpoll;
       mutex m_dopoll;
 
       void do_poll ();
