@@ -686,7 +686,7 @@ namespace Astroid {
       case GDK_KEY_J:
       case GDK_KEY_Down:
         {
-          if (event->state & GDK_CONTROL_MASK) {
+          if (event->keyval == GDK_KEY_J || event->state & GDK_CONTROL_MASK) {
             auto adj = scroll.get_vadjustment ();
             adj->set_value (adj->get_value() + adj->get_page_increment ());
             update_focus_to_view ();
@@ -709,7 +709,7 @@ namespace Astroid {
       case GDK_KEY_K:
       case GDK_KEY_Up:
         {
-          if (event->state & GDK_CONTROL_MASK) {
+          if (event->keyval == GDK_KEY_K || event->state & GDK_CONTROL_MASK) {
             auto adj = scroll.get_vadjustment ();
             adj->set_value (adj->get_value() - adj->get_page_increment ());
             update_focus_to_view ();
