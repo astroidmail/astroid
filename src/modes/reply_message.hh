@@ -18,6 +18,7 @@ namespace Astroid {
       /* reply settings */
       enum ReplyMode {
         Rep_Custom,
+        Rep_Default, /* reply-to */
         Rep_Sender,
         Rep_All,
         Rep_MailingList,

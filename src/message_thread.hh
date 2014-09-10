@@ -38,6 +38,7 @@ namespace Astroid {
 
       ustring references;
       ustring inreplyto;
+      ustring reply_to;
 
       ustring date ();
       ustring pretty_verbose_date ();

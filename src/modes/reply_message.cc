@@ -51,7 +51,11 @@ namespace Astroid {
 
     body = ustring(quoted.str());
 
-    to = msg->sender;
+    if (msg->reply_to.length () > 0) {
+      to = msg->reply_to;
+    } else {
+      to = msg->sender;
+    }
 
     references = msg->references + " <" + msg->mid + ">";
     inreplyto  = "<" + msg->mid + ">";
@@ -65,6 +69,9 @@ namespace Astroid {
     auto row = *(reply_store->append());
     row[reply_columns.reply_string] = "Custom";
     row[reply_columns.reply] = Rep_Custom;
+    row = *(reply_store->append());
+    row[reply_columns.reply_string] = "Default (Reply-to address)";
+    row[reply_columns.reply] = Rep_Default;
     row = *(reply_store->append());
     row[reply_columns.reply_string] = "Sender";
     row[reply_columns.reply] = Rep_Sender;
