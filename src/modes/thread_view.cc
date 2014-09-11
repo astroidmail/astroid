@@ -380,7 +380,10 @@ namespace Astroid {
     }
 
     insert_header_address (header, "Date:", m->pretty_verbose_date (), true);
-    insert_header_address (header, "Subject:", m->subject, true);
+
+    if (m->subject.length() > 0) {
+      insert_header_address (header, "Subject:", m->subject, true);
+    }
 
     if (m->in_notmuch) {
       ustring tags_s = VectorUtils::concat_tags (m->tags);
