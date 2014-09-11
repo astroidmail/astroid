@@ -180,20 +180,22 @@ namespace Astroid {
           log << warn << "charset: not defined." << endl;
         }
 
-        /* CRLF to LF */
-        GMimeFilter * crlf_filter = g_mime_filter_crlf_new (false, false);
-        g_mime_stream_filter_add (GMIME_STREAM_FILTER (filter_stream),
-            crlf_filter);
-        g_object_unref (crlf_filter);
-
-
-        GMimeFilter * html_filter;
         if (html) {
 
+          GMimeFilter * html_filter;
           html_filter = g_mime_filter_html_new (html_filter_flags, cite_color);
           g_mime_stream_filter_add (GMIME_STREAM_FILTER(filter_stream),
                                   html_filter);
           g_object_unref (html_filter);
+
+        } else {
+
+          /* CRLF to LF */
+          GMimeFilter * crlf_filter = g_mime_filter_crlf_new (false, false);
+          g_mime_stream_filter_add (GMIME_STREAM_FILTER (filter_stream),
+              crlf_filter);
+          g_object_unref (crlf_filter);
+
         }
 
         g_mime_stream_reset (stream);
