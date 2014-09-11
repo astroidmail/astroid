@@ -472,7 +472,7 @@ body.nohide .email .compressed_note > span {
     padding: 2px 0;
 }
 .header .field .title {
-    width: 5em;
+    width: 5.2em;
     text-align: right;
     padding-right: 7px;
     color: #777;
@@ -480,7 +480,7 @@ body.nohide .email .compressed_note > span {
 }
 .header .field .value {
     color: black;
-    margin-left: 5.25em;
+    margin-left: 5.45em;
     max-height: 5em;
     overflow-y: auto;
 }
