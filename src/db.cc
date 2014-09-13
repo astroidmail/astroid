@@ -632,7 +632,7 @@ namespace Astroid {
     const vector<ustring> invalid_chars = { "\"" };
 
     for (const ustring &c : invalid_chars) {
-      if (tag.find_first_of (c) != ustring::npos) {
+      if (tag.find (c) != ustring::npos) {
         log << error << "nmt: invalid char in tag: " << c << endl;
         return false;
       }

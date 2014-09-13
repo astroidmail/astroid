@@ -41,6 +41,7 @@ namespace Astroid {
       ustring reply_to;
 
       ustring date ();
+      ustring pretty_date ();
       ustring pretty_verbose_date ();
       vector<ustring> tags;
 

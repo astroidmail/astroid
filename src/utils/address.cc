@@ -18,6 +18,8 @@ namespace Astroid {
     InternetAddressList * list =
       internet_address_list_parse_string (full_address.c_str());
 
+    _valid = true;
+
     if (internet_address_list_length (list) > 1) {
       log << error << "address: more than one address in list!" << endl;
       _valid = false;
@@ -55,6 +57,18 @@ namespace Astroid {
     g_object_unref (list);
   }
 
+  Address::Address (InternetAddress * addr) {
+    InternetAddressMailbox * mbox = INTERNET_ADDRESS_MAILBOX (addr);
+    const char * n = internet_address_get_name (addr);
+    if (n != NULL)
+      _name  = ustring (n);
+    n = internet_address_mailbox_get_addr (mbox);
+    if (n != NULL)
+      _email = ustring (n);
+
+    _valid = true;
+  }
+
   Address::Address (ustring __name, ustring __email) :
     _name (__name), _email (__email), _valid (true)
   {}
@@ -87,6 +101,16 @@ namespace Astroid {
     return ustring(faddr);
   }
 
+  AddressList::AddressList () {
+
+  }
+
+  AddressList::AddressList (InternetAddressList * list) {
+    for (int i = 0; i < internet_address_list_length (list); i++) {
+      InternetAddress * a = internet_address_list_get_address (list, i);
+      addresses.push_back (Address (a));
+    }
+  }
 
 }
 

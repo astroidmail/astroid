@@ -233,6 +233,13 @@ namespace Astroid {
     return ustring (g_mime_message_get_date_as_string (message));
   }
 
+  ustring Message::pretty_date () {
+    time_t t;
+    g_mime_message_get_date (message, &t, NULL);
+
+    return Date::pretty_print (t);
+  }
+
   ustring Message::pretty_verbose_date () {
     time_t t;
     g_mime_message_get_date (message, &t, NULL);

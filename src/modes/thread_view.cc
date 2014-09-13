@@ -15,6 +15,8 @@
 # include "db.hh"
 # include "utils/utils.hh"
 # include "utils/mail_quote.hh"
+# include "utils/address.hh"
+# include "utils/vector_utils.hh"
 # include "actions/action.hh"
 # include "actions/tag_action.hh"
 # include "reply_message.hh"
@@ -312,15 +314,21 @@ namespace Astroid {
                 add_message (m);
               });
 
+    if (!focused_message) {
+      if (!candidate_startup) {
+        focused_message = mthread->messages[mthread->messages.size()-1];
+        toggle_hidden (focused_message);
+
+      } else {
+        focused_message = candidate_startup;
+      }
+    }
+
     update_focus_status ();
   }
 
   void ThreadView::add_message (refptr<Message> m) {
     log << debug << "tv: adding message: " << m->mid << endl;
-
-    if (!focused_message) {
-      focused_message = m;
-    }
 
     ustring div_id = "message_" + m->mid;
 
@@ -344,6 +352,27 @@ namespace Astroid {
     /* insert attachments */
     insert_attachments (m, div_message);
 
+    /* optionally hide / collapse the message */
+    if (!(has (m->tags, ustring("unread")) || has(m->tags, ustring("flagged")))) {
+      WebKitDOMDOMTokenList * class_list =
+        webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(div_message));
+
+      webkit_dom_dom_token_list_add (class_list, "hide",
+          (err = NULL, &err));
+
+      g_object_unref (class_list);
+    } else {
+      if (!candidate_startup)
+        candidate_startup = m;
+    }
+
+    /* focus first unread message */
+    if (!focused_message) {
+      if (has (m->tags, ustring("unread"))) {
+        focused_message = m;
+      }
+    }
+
     g_object_unref (insert_before);
     g_object_unref (div_message);
   }
@@ -360,34 +389,88 @@ namespace Astroid {
       select (WEBKIT_DOM_NODE(div_message), "div.email_container");
 
     /* build header */
-    insert_header_address (header, "From:", m->sender, true);
+    Address a (m->sender);
+    ustring from;
+    if (a.valid()) {
+      from = ustring::compose ("<a href=\"mailto:%3\"><b>%1</b> %2</a>",
+          Glib::Markup::escape_text (a.name ()),
+          Glib::Markup::escape_text (a.email ()),
+          Glib::Markup::escape_text (a.full_address())
+          );
+    } else {
+      from = ustring::compose ("<a href=\"mailto:%1\">%1</a>",
+          Glib::Markup::escape_text (m->sender)
+          );
+    }
+    header += create_header_row ("From: ", from, true, false);
+
 
     if (internet_address_list_length (m->to()) > 0) {
-      insert_header_address (header, "To:",
-          internet_address_list_to_string (m->to(), false), true);
+      AddressList tos (m->to());
+      ustring to;
+
+      bool first = true;
+
+      for (Address &a : tos.addresses) {
+        if (!first) {
+          to += ", ";
+        } else {
+          first = false;
+        }
+
+        to += ustring::compose ("<a href=\"mailto:%3\">%1 (%2)</a>",
+          Glib::Markup::escape_text (a.name ()),
+          Glib::Markup::escape_text (a.email ()),
+          Glib::Markup::escape_text (a.full_address())
+          );
+      }
+
+      header += create_header_row ("To: ", to, false, false);
     } else {
-      insert_header_address (header, "To:", "", true);
+      insert_header_address (header, "To:", "", false);
     }
 
     if (internet_address_list_length (m->cc()) > 0) {
       insert_header_address (header, "Cc:",
-          internet_address_list_to_string (m->cc(), false), true);
+          internet_address_list_to_string (m->cc(), false), false);
     }
 
     if (internet_address_list_length (m->bcc()) > 0) {
       insert_header_address (header, "Bcc:",
-          internet_address_list_to_string (m->bcc(), false), true);
+          internet_address_list_to_string (m->bcc(), false), false);
     }
 
-    insert_header_address (header, "Date:", m->pretty_verbose_date (), true);
+    insert_header_date (header, m);
 
     if (m->subject.length() > 0) {
-      insert_header_address (header, "Subject:", m->subject, true);
+      insert_header_address (header, "Subject:", m->subject, false);
+
+      WebKitDOMHTMLElement * subject = select (
+          WEBKIT_DOM_NODE (div_message),
+          ".header_container .subject");
+
+      ustring s = m->subject;
+      if (static_cast<int>(s.size()) > MAX_PREVIEW_LEN)
+        s = s.substr(0, MAX_PREVIEW_LEN - 3) + "...";
+
+      webkit_dom_html_element_set_inner_html (subject, s.c_str(), (err = NULL, &err));
+
+      g_object_unref (subject);
     }
 
     if (m->in_notmuch) {
       ustring tags_s = VectorUtils::concat_tags (m->tags);
-      insert_header_address (header, "Tags:", tags_s, true);
+
+      header += create_header_row ("Tags:", tags_s, false, true);
+
+
+      WebKitDOMHTMLElement * tags = select (
+          WEBKIT_DOM_NODE (div_message),
+          ".header_container .tags");
+
+      webkit_dom_html_element_set_inner_html (tags, Glib::Markup::escape_text(tags_s).c_str(), (err = NULL, &err));
+
+      g_object_unref (tags);
     }
 
 
@@ -406,6 +489,28 @@ namespace Astroid {
       select (WEBKIT_DOM_NODE(div_email_container), ".body");
 
     ustring body = m->viewable_text (true);
+
+    WebKitDOMHTMLElement * preview = select (
+        WEBKIT_DOM_NODE (div_message),
+        ".header_container .preview");
+
+
+    ustring bp = body;
+    if (static_cast<int>(body.size()) > MAX_PREVIEW_LEN)
+      bp = bp.substr(0, MAX_PREVIEW_LEN - 3) + "...";
+
+    while (true) {
+      size_t i = bp.find ("<br>");
+
+      if (i == ustring::npos) break;
+
+      bp.erase (i, 4);
+    }
+
+    webkit_dom_html_element_set_inner_html (preview, bp.c_str(), (err = NULL, &err));
+    g_object_unref (preview);
+
+
     MailQuotes::filter_quotes (body);
 
     webkit_dom_html_element_set_inner_html (
@@ -417,20 +522,33 @@ namespace Astroid {
     g_object_unref (table_header);
   }
 
+  void ThreadView::insert_header_date (ustring & header, refptr<Message> m)
+  {
+
+    ustring value = ustring::compose (
+                "<span class=\"hidden_only\">%1</span>"
+                "<span class=\"not_hidden_only\">%2</span>",
+                m->pretty_date (),
+                m->pretty_verbose_date ());
+
+    header += create_header_row ("Date: ", value, true, false);
+  }
+
   void ThreadView::insert_header_address (
       ustring &header,
       ustring title,
       ustring address,
       bool important) {
 
-    header += create_header_row (title, address, important);
+    header += create_header_row (title, address, important, true);
 
   }
 
   ustring ThreadView::create_header_row (
       ustring title,
       ustring value,
-      bool important) {
+      bool important,
+      bool escape) {
 
     return ustring::compose (
         "<div class=\"field %1\">"
@@ -439,7 +557,7 @@ namespace Astroid {
         "</div>",
         (important ? "important" : ""),
         Glib::Markup::escape_text (title),
-        Glib::Markup::escape_text (value)
+        (escape ? Glib::Markup::escape_text (value) : value)
         );
 
   }
@@ -767,6 +885,13 @@ namespace Astroid {
         }
         return true;
 
+      case GDK_KEY_Return:
+        {
+          if (edit_mode) return false;
+          toggle_hidden ();
+          return true;
+        }
+
       case GDK_KEY_n:
         {
           focus_next ();
@@ -961,6 +1086,36 @@ namespace Astroid {
       g_object_unref (e);
     }
 
+    g_object_unref (d);
+  }
+
+  void ThreadView::toggle_hidden (refptr<Message> m) {
+    if (!m) m = focused_message;
+    ustring mid = "message_" + focused_message->mid;
+
+    WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
+
+    WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
+
+    WebKitDOMDOMTokenList * class_list =
+      webkit_dom_element_get_class_list (e);
+
+    GError * gerr = NULL;
+
+    if (webkit_dom_dom_token_list_contains (class_list, "hide", (gerr = NULL, &gerr)))
+    {
+      /* reset class */
+      webkit_dom_dom_token_list_remove (class_list, "hide",
+          (gerr = NULL, &gerr));
+
+    } else {
+      /* set class  */
+      webkit_dom_dom_token_list_add (class_list, "hide",
+          (gerr = NULL, &gerr));
+    }
+
+    g_object_unref (class_list);
+    g_object_unref (e);
     g_object_unref (d);
   }
 

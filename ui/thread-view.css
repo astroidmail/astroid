@@ -175,6 +175,24 @@ hr {
     overflow: hidden;
 }
 
+.email_container .header_container .tags {
+  /*font-size: 8pt;*/
+    font-size: x-small;
+    color: #31587a;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
+.email_container .header_container .subject {
+  /*font-size: 8pt;*/
+    font-size: x-small;
+    color: #000;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
 .focused {
   box-shadow: 5px 3px 3px rgba(71,71,173,1) !important;
 }
@@ -279,6 +297,24 @@ body:not(.nohide) .email.hide .header_container .avatar {
     }
     .email:not(.hide) .email_warning.show,
     body:not(.nohide) .email.hide .header_container .preview {
+        display: block;
+    }
+    .email:not(.hide) .header_container .tags,
+    body.nohide .email .header_container .tags,
+    body:not(.nohide) .email.hide .email {
+        display: none;
+    }
+    .email:not(.hide) .email_warning.show,
+    body:not(.nohide) .email.hide .header_container .tags {
+        display: block;
+    }
+    .email:not(.hide) .header_container .subject,
+    body.nohide .email .header_container .subject,
+    body:not(.nohide) .email.hide .email {
+        display: none;
+    }
+    .email:not(.hide) .email_warning.show,
+    body:not(.nohide) .email.hide .header_container .subject {
         display: block;
     }
     body:not(.nohide) .email:not(:only-of-type) .header_container,

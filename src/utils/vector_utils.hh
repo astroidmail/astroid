@@ -6,6 +6,10 @@
 using namespace std;
 
 namespace Astroid {
+  template<class T> bool has (vector<T> v, T e) {
+    return (find(v.begin (), v.end (), e) != v.end ());
+  }
+
   class VectorUtils {
     public:
 

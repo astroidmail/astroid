@@ -3,6 +3,10 @@
 # include "astroid.hh"
 # include "proto.hh"
 
+# include <vector>
+
+# include <gmime/gmime.h>
+
 using namespace std;
 
 namespace Astroid {
@@ -12,6 +16,7 @@ namespace Astroid {
       Address ();
       Address (ustring full_address);
       Address (ustring name, ustring email);
+      Address (InternetAddress *);
 
       ustring email();
       ustring name();
@@ -24,6 +29,14 @@ namespace Astroid {
       ustring _name;
       ustring _email;
       bool _valid;
+  };
+
+  class AddressList {
+    public:
+      AddressList ();
+      AddressList (InternetAddressList *);
+
+      vector<Address> addresses;
   };
 
 }

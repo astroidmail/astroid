@@ -9,6 +9,7 @@
 # include "astroid.hh"
 # include "proto.hh"
 # include "mode.hh"
+# include "message_thread.hh"
 
 using namespace std;
 
@@ -49,6 +50,7 @@ namespace Astroid {
       Gtk::ScrolledWindow scroll;
 
       const int MAX_TAB_SUBJECT_LEN = 15;
+      const int MAX_PREVIEW_LEN = 80;
 
       MainWindow  * main_window;
 
@@ -62,7 +64,10 @@ namespace Astroid {
       void focus_next ();
       void focus_previous ();
 
+      void toggle_hidden (refptr<Message> = refptr<Message> ());
+
       /* focused message */
+      refptr<Message> candidate_startup; // startup
       refptr<Message> focused_message;
 
       /* webkit (using C api) */
@@ -89,7 +94,8 @@ namespace Astroid {
       /* message loading setup */
       void set_message_html (refptr<Message>, WebKitDOMHTMLElement *);
       void insert_header_address (ustring &, ustring, ustring, bool);
-      ustring create_header_row (ustring, ustring, bool);
+      void insert_header_date (ustring &, refptr<Message>);
+      ustring create_header_row (ustring, ustring, bool, bool);
 
       /* attachments */
       void insert_attachments (refptr<Message>, WebKitDOMHTMLElement *);
