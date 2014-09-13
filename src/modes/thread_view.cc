@@ -461,7 +461,10 @@ namespace Astroid {
     if (m->in_notmuch) {
       ustring tags_s = VectorUtils::concat_tags (m->tags);
 
-      header += create_header_row ("Tags:", tags_s, false, true);
+      ustring tags_s_c = ustring::compose ("<span style=\"color:#31587a !important\">%1</span>",
+          Glib::Markup::escape_text(tags_s));
+
+      header += create_header_row ("Tags:", tags_s_c, false, false);
 
 
       WebKitDOMHTMLElement * tags = select (
