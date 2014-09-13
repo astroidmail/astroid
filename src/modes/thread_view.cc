@@ -324,7 +324,7 @@ namespace Astroid {
       }
     }
 
-    update_focus_status ();
+    scroll_to_message (focused_message);
   }
 
   void ThreadView::add_message (refptr<Message> m) {
@@ -392,7 +392,7 @@ namespace Astroid {
     Address a (m->sender);
     ustring from;
     if (a.valid()) {
-      from = ustring::compose ("<a href=\"mailto:%3\"><b>%1</b> %2</a>",
+      from = ustring::compose ("<a href=\"mailto:%3\"><b>%1</b> (%2)</a>",
           Glib::Markup::escape_text (a.name ()),
           Glib::Markup::escape_text (a.email ()),
           Glib::Markup::escape_text (a.full_address())
