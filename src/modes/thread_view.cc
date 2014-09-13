@@ -449,7 +449,7 @@ namespace Astroid {
           WEBKIT_DOM_NODE (div_message),
           ".header_container .subject");
 
-      ustring s = m->subject;
+      ustring s = Glib::Markup::escape_text(m->subject);
       if (static_cast<int>(s.size()) > MAX_PREVIEW_LEN)
         s = s.substr(0, MAX_PREVIEW_LEN - 3) + "...";
 
@@ -495,7 +495,7 @@ namespace Astroid {
         ".header_container .preview");
 
 
-    ustring bp = body;
+    ustring bp = m->viewable_text (false);
     if (static_cast<int>(body.size()) > MAX_PREVIEW_LEN)
       bp = bp.substr(0, MAX_PREVIEW_LEN - 3) + "...";
 
@@ -506,6 +506,8 @@ namespace Astroid {
 
       bp.erase (i, 4);
     }
+
+    bp = Glib::Markup::escape_text (bp);
 
     webkit_dom_html_element_set_inner_html (preview, bp.c_str(), (err = NULL, &err));
     g_object_unref (preview);
