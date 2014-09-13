@@ -110,44 +110,10 @@ source = (
           )
 
 conf = Configure(env)
-if not conf.CheckFunc ('gtk_socket_focus_forward'):
-  print "gtk_socket_focus_forward is missing, please see: https://bugzilla.gnome.org/show_bug.cgi?id=729248"
-else:
-  env.Append (CPPFLAGS = ['-DHAVE_GTK_SOCKET_FOCUS_FORWARD'])
-
 
 if not conf.CheckHeader ('notmuch.h'):
   print "notmuch does not seem to be installed."
   exit (1)
-
-nm_db_reopen_test_src = """
-# include <notmuch.h>
-
-int main (int argc, char ** argv)
-{
-  notmuch_database_t * nm_db;
-  notmuch_database_reopen (nm_db);
-
-  return 0;
-}
-
-"""
-
-"""
-# http://www.scons.org/doc/1.2.0/HTML/scons-user/x4076.html
-def check_notmuch_functions (ctx):
-  ctx.Message ("Checking for C++ function notmuch_database_reopen()..")
-  result = ctx.TryCompile (nm_db_reopen_test_src, '.cpp')
-  ctx.Result (result)
-  return result
-
-
-custom_tests = { 'CheckNotmuchReopen' : check_notmuch_functions }
-
-
-if conf.CheckNotmuchReopen ():
-  env.Append (CPPFLAGS = ['-DHAVE_NOTMUCH_DATABASE_REOPEN'])
-"""
 
 env = conf.Finish ()
 
