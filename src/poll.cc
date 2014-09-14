@@ -1,5 +1,6 @@
 # include <mutex>
 # include <thread>
+# include <chrono>
 
 # include <boost/filesystem.hpp>
 # include <glibmm/spawn.h>
@@ -39,7 +40,7 @@ namespace Astroid {
   }
 
   void Poll::do_poll () {
-    clock_t lastpoll = clock ();
+    chrono::time_point<chrono::steady_clock> t0 = chrono::steady_clock::now ();
 
     path poll_script_uri = astroid->config->config_dir / path(poll_script);
 
@@ -86,11 +87,12 @@ namespace Astroid {
 
     }
 
+    chrono::duration<double> elapsed = chrono::steady_clock::now() - t0;
+
     // TODO:
-    // - this time counter doesn't seem right..
     // - use lastmod to figure out how many messages have been added or changed
     //   during poll.
-    log << info << "poll: done (time: " << (((clock() - lastpoll) * 1000.0) / CLOCKS_PER_SEC) << " ms)." << endl;
+    log << info << "poll: done (time: " << elapsed.count() << " s)." << endl;
 
     astroid->global_actions->signal_refreshed_dispatcher ();
 
