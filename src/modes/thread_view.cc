@@ -144,7 +144,7 @@ namespace Astroid {
     log << debug << "tv: deconstruct." << endl;
     // TODO: possibly still some errors here in paned mode
     //g_object_unref (webview); // probably garbage collected since it has a parent widget
-    g_object_unref (websettings);
+    //g_object_unref (websettings);
     if (container) g_object_unref (container);
   }
 
