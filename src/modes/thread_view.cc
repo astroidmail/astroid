@@ -943,6 +943,31 @@ namespace Astroid {
 
           return true;
         }
+
+      case GDK_KEY_E:
+        {
+          /* toggle hidden / shown status on all messages */
+
+          if (all_of (mthread->messages.begin(),
+                      mthread->messages.end (),
+                      [&](refptr<Message> m) {
+                        return !is_hidden (m);
+                      }
+                )) {
+            /* all are shown */
+            for (auto m : mthread->messages) {
+              toggle_hidden (m, ToggleHide);
+            }
+
+          } else {
+            /* some are hidden */
+            for (auto m : mthread->messages) {
+              toggle_hidden (m, ToggleShow);
+            }
+          }
+
+          return true;
+        }
     }
 
     return false;
@@ -1099,12 +1124,33 @@ namespace Astroid {
     g_object_unref (d);
   }
 
+  bool ThreadView::is_hidden (refptr<Message> m) {
+    ustring mid = "message_" + m->mid;
+
+    WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
+
+    WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
+
+    WebKitDOMDOMTokenList * class_list =
+      webkit_dom_element_get_class_list (e);
+
+    GError * gerr = NULL;
+
+    bool r = webkit_dom_dom_token_list_contains (class_list, "hide", (gerr = NULL, &gerr));
+
+    g_object_unref (class_list);
+    g_object_unref (e);
+    g_object_unref (d);
+
+    return r;
+  }
+
   void ThreadView::toggle_hidden (
       refptr<Message> m,
       ToggleState t)
   {
     if (!m) m = focused_message;
-    ustring mid = "message_" + focused_message->mid;
+    ustring mid = "message_" + m->mid;
 
     WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
 

@@ -71,6 +71,7 @@ namespace Astroid {
       };
 
       void toggle_hidden (refptr<Message> = refptr<Message> (), ToggleState = ToggleToggle);
+      bool is_hidden (refptr<Message>);
 
       /* focused message */
       refptr<Message> candidate_startup; // startup
