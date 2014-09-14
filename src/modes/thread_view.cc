@@ -316,8 +316,9 @@ namespace Astroid {
 
     if (!focused_message) {
       if (!candidate_startup) {
+        log << debug << "tv: no message expanded, showing last." << endl;
         focused_message = mthread->messages[mthread->messages.size()-1];
-        toggle_hidden (focused_message);
+        toggle_hidden (focused_message, ToggleShow);
 
       } else {
         focused_message = candidate_startup;
@@ -352,24 +353,28 @@ namespace Astroid {
     /* insert attachments */
     insert_attachments (m, div_message);
 
-    /* optionally hide / collapse the message */
-    if (!(has (m->tags, ustring("unread")) || has(m->tags, ustring("flagged")))) {
-      WebKitDOMDOMTokenList * class_list =
-        webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(div_message));
+    if (!edit_mode) {
+      /* optionally hide / collapse the message */
+      if (!(has (m->tags, ustring("unread")) || has(m->tags, ustring("flagged")))) {
 
-      webkit_dom_dom_token_list_add (class_list, "hide",
-          (err = NULL, &err));
+        /* hide message */
+        WebKitDOMDOMTokenList * class_list =
+          webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(div_message));
 
-      g_object_unref (class_list);
-    } else {
-      if (!candidate_startup)
-        candidate_startup = m;
-    }
+        webkit_dom_dom_token_list_add (class_list, "hide",
+            (err = NULL, &err));
 
-    /* focus first unread message */
-    if (!focused_message) {
-      if (has (m->tags, ustring("unread"))) {
-        focused_message = m;
+        g_object_unref (class_list);
+      } else {
+        if (!candidate_startup)
+          candidate_startup = m;
+      }
+
+      /* focus first unread message */
+      if (!focused_message) {
+        if (has (m->tags, ustring("unread"))) {
+          focused_message = m;
+        }
       }
     }
 
@@ -1094,7 +1099,10 @@ namespace Astroid {
     g_object_unref (d);
   }
 
-  void ThreadView::toggle_hidden (refptr<Message> m) {
+  void ThreadView::toggle_hidden (
+      refptr<Message> m,
+      ToggleState t)
+  {
     if (!m) m = focused_message;
     ustring mid = "message_" + focused_message->mid;
 
@@ -1110,13 +1118,17 @@ namespace Astroid {
     if (webkit_dom_dom_token_list_contains (class_list, "hide", (gerr = NULL, &gerr)))
     {
       /* reset class */
-      webkit_dom_dom_token_list_remove (class_list, "hide",
-          (gerr = NULL, &gerr));
+      if (t == ToggleToggle || t == ToggleShow) {
+        webkit_dom_dom_token_list_remove (class_list, "hide",
+            (gerr = NULL, &gerr));
+      }
 
     } else {
       /* set class  */
-      webkit_dom_dom_token_list_add (class_list, "hide",
-          (gerr = NULL, &gerr));
+      if (t == ToggleToggle || t == ToggleHide) {
+        webkit_dom_dom_token_list_add (class_list, "hide",
+            (gerr = NULL, &gerr));
+      }
     }
 
     g_object_unref (class_list);

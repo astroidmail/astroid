@@ -64,7 +64,13 @@ namespace Astroid {
       void focus_next ();
       void focus_previous ();
 
-      void toggle_hidden (refptr<Message> = refptr<Message> ());
+      enum ToggleState {
+        ToggleToggle,
+        ToggleHide,
+        ToggleShow
+      };
+
+      void toggle_hidden (refptr<Message> = refptr<Message> (), ToggleState = ToggleToggle);
 
       /* focused message */
       refptr<Message> candidate_startup; // startup

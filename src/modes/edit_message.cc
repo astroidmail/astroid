@@ -16,6 +16,8 @@
 # include "compose_message.hh"
 # include "db.hh"
 # include "thread_view.hh"
+# include "raw_message.hh"
+# include "main_window.hh"
 # include "message_thread.hh"
 # include "utils/ustring_utils.hh"
 # include "log.hh"
@@ -408,6 +410,21 @@ namespace Astroid {
       case GDK_KEY_y:
         {
           ask_yes_no ("Really send message?", [&](bool yes){ if (yes) send_message (); });
+          return true;
+        }
+
+      case GDK_KEY_V:
+        {
+          /* view raw source of to be sent message */
+          ComposeMessage * c = make_message ();
+          ustring tmpf = c->write_tmp ();
+
+          main_window->add_mode (new RawMessage (tmpf.c_str()));
+
+          delete c;
+
+          unlink (tmpf.c_str());
+
           return true;
         }
     }

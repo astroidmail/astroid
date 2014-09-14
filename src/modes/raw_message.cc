@@ -9,11 +9,7 @@
 using namespace std;
 
 namespace Astroid {
-  RawMessage::RawMessage (refptr<Message> _msg) {
-    msg = _msg;
-
-    tab_widget = Gtk::manage (new Gtk::Label ("Raw message: " + msg->subject));
-
+  RawMessage::RawMessage () {
     scroll.add (tv);
     pack_start (scroll, true, true, 5);
 
@@ -27,6 +23,29 @@ namespace Astroid {
     fnt.set_family ("monospace");
     tv.override_font (fnt);
 
+    show_all_children ();
+  }
+
+  RawMessage::RawMessage (const char * fname) : RawMessage () {
+    stringstream l ("Raw message: ");
+    l << fname;
+    tab_widget = Gtk::manage (new Gtk::Label (l.str()));
+
+    /* load message source */
+    log << info << "rm: loading message from file: " << fname << endl;
+    ifstream f (fname);
+
+    refptr<Gtk::TextBuffer> buf = tv.get_buffer ();
+    stringstream s;
+    s << f.rdbuf ();
+    buf->set_text (s.str());
+  }
+
+  RawMessage::RawMessage (refptr<Message> _msg) : RawMessage () {
+    msg = _msg;
+
+    tab_widget = Gtk::manage (new Gtk::Label ("Raw message: " + msg->subject));
+
     /* load message source */
     log << info << "rm: loading message from: " << msg->fname << endl;
     ifstream f (msg->fname.c_str());
@@ -35,8 +54,6 @@ namespace Astroid {
     stringstream s;
     s << f.rdbuf ();
     buf->set_text (s.str());
-
-    show_all_children ();
   }
 
   void RawMessage::grab_modal () {
