@@ -197,7 +197,7 @@ namespace Astroid {
 
       if (status == 0)
       {
-        log << info << "cm: message sent successfully!" << endl;
+        log << warn << "cm: message sent successfully!" << endl;
 
         if (account->save_sent) {
           path save_to = path(account->save_sent_to) / path(id + ":2,");
