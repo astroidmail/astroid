@@ -905,6 +905,9 @@ namespace Astroid {
       case GDK_KEY_n:
         {
           focus_next ();
+          if (event->state & GDK_CONTROL_MASK) {
+            toggle_hidden (focused_message, ToggleShow);
+          }
           scroll_to_message (focused_message);
           return true;
         }
@@ -912,6 +915,9 @@ namespace Astroid {
       case GDK_KEY_p:
         {
           focus_previous ();
+          if (event->state & GDK_CONTROL_MASK) {
+            toggle_hidden (focused_message, ToggleShow);
+          }
           scroll_to_message (focused_message);
           return true;
         }
@@ -1214,7 +1220,7 @@ namespace Astroid {
     }
   }
 
-  void ThreadView::scroll_to_message (refptr<Message> m) {
+  void ThreadView::scroll_to_message (refptr<Message> m, bool scroll_when_visible) {
     focused_message = m;
 
     if (edit_mode) return;
@@ -1234,13 +1240,40 @@ namespace Astroid {
 
     WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
 
+    double scrolled = adj->get_value ();
+    double height   = adj->get_page_size (); // 0 when there is
+                                             // no paging.
+
     double clientY = webkit_dom_element_get_offset_top (e);
-    //double clientH = webkit_dom_element_get_client_height (e);
+    double clientH = webkit_dom_element_get_client_height (e);
 
     g_object_unref (e);
     g_object_unref (d);
 
-    adj->set_value (clientY);
+    if (height > 0) {
+      if (scroll_when_visible) {
+        adj->set_value (clientY);
+      } else {
+        /* only scroll if parts of the message are out view */
+        if (clientY < scrolled) {
+          /* top is above view  */
+          adj->set_value (clientY);
+
+        } else if ((clientY + clientH) > (scrolled + height)) {
+          /* bottom is below view */
+
+          // if message is of less height than page, scroll so that
+          // bottom is aligned with bottom
+
+          if (clientH < height) {
+            adj->set_value (clientY + clientH - height);
+          } else {
+            // otherwise align top with top
+            adj->set_value (clientY);
+          }
+        }
+      }
+    }
 
     update_focus_status ();
   }
