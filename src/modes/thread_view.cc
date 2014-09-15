@@ -203,7 +203,7 @@ namespace Astroid {
 
           /* render */
           wk_loaded = true;
-          render_post ();
+          render_messages ();
 
         }
       default:
@@ -301,7 +301,7 @@ namespace Astroid {
     webkit_web_view_load_html_string (webview, thread_view_html.c_str (), "/tmp/");
   }
 
-  void ThreadView::render_post () {
+  void ThreadView::render_messages () {
     log << debug << "render: html loaded, building messages.." << endl;
     if (!container || !wk_loaded) {
       log << error << "tv: div container and web kit not loaded." << endl;

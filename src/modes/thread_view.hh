@@ -94,7 +94,7 @@ namespace Astroid {
 
       /* rendering */
       void render ();
-      void render_post ();
+      void render_messages ();
       void add_message (refptr<Message>);
       WebKitDOMHTMLElement * make_message_div ();
 
