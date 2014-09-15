@@ -2,6 +2,7 @@
 
 # include <iostream>
 # include <atomic>
+# include <map>
 
 # include <gtkmm.h>
 # include <webkit/webkit.h>
@@ -72,6 +73,16 @@ namespace Astroid {
 
       void toggle_hidden (refptr<Message> = refptr<Message> (), ToggleState = ToggleToggle);
       bool is_hidden (refptr<Message>);
+
+      /* message display state */
+      struct MessageState {
+        public:
+          /* the message was expanded as part of an
+           * C-n or C-p command */
+          bool scroll_expanded = false;
+      };
+
+      std::map<refptr<Message>, MessageState> state;
 
       /* focused message */
       refptr<Message> candidate_startup; // startup

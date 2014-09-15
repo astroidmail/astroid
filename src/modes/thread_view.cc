@@ -308,10 +308,14 @@ namespace Astroid {
       return;
     }
 
+    /* set message state vector */
+    state.clear ();
+
     for_each (mthread->messages.begin(),
               mthread->messages.end(),
               [&](refptr<Message> m) {
                 add_message (m);
+                state.insert (std::pair<refptr<Message>, MessageState> (m, MessageState ()));
               });
 
     if (!focused_message) {
@@ -325,7 +329,7 @@ namespace Astroid {
       }
     }
 
-    scroll_to_message (focused_message);
+    scroll_to_message (focused_message, true);
   }
 
   void ThreadView::add_message (refptr<Message> m) {
@@ -904,9 +908,20 @@ namespace Astroid {
 
       case GDK_KEY_n:
         {
-          focus_next ();
           if (event->state & GDK_CONTROL_MASK) {
-            toggle_hidden (focused_message, ToggleShow);
+            if (state[focused_message].scroll_expanded) {
+              toggle_hidden (focused_message, ToggleHide);
+              state[focused_message].scroll_expanded = false;
+            }
+          }
+
+          focus_next ();
+
+          if (event->state & GDK_CONTROL_MASK) {
+            if (is_hidden (focused_message)) {
+              toggle_hidden (focused_message, ToggleShow);
+              state[focused_message].scroll_expanded = true;
+            }
           }
           scroll_to_message (focused_message);
           return true;
@@ -914,9 +929,20 @@ namespace Astroid {
 
       case GDK_KEY_p:
         {
-          focus_previous ();
           if (event->state & GDK_CONTROL_MASK) {
-            toggle_hidden (focused_message, ToggleShow);
+            if (state[focused_message].scroll_expanded) {
+              toggle_hidden (focused_message, ToggleHide);
+              state[focused_message].scroll_expanded = false;
+            }
+          }
+
+          focus_previous ();
+
+          if (event->state & GDK_CONTROL_MASK) {
+            if (is_hidden (focused_message)) {
+              toggle_hidden (focused_message, ToggleShow);
+              state[focused_message].scroll_expanded = true;
+            }
           }
           scroll_to_message (focused_message);
           return true;
@@ -1243,6 +1269,7 @@ namespace Astroid {
     double scrolled = adj->get_value ();
     double height   = adj->get_page_size (); // 0 when there is
                                              // no paging.
+    double upper    = adj->get_upper ();
 
     double clientY = webkit_dom_element_get_offset_top (e);
     double clientH = webkit_dom_element_get_client_height (e);
@@ -1252,7 +1279,12 @@ namespace Astroid {
 
     if (height > 0) {
       if (scroll_when_visible) {
-        adj->set_value (clientY);
+        if ((clientY + clientH - height) > upper) {
+          /* message is last, can't scroll past bottom */
+          adj->set_value (upper);
+        } else {
+          adj->set_value (clientY);
+        }
       } else {
         /* only scroll if parts of the message are out view */
         if (clientY < scrolled) {
@@ -1269,7 +1301,12 @@ namespace Astroid {
             adj->set_value (clientY + clientH - height);
           } else {
             // otherwise align top with top
-            adj->set_value (clientY);
+            if ((clientY + clientH - height) > upper) {
+              /* message is last, can't scroll past bottom */
+              adj->set_value (upper);
+            } else {
+              adj->set_value (clientY);
+            }
           }
         }
       }
