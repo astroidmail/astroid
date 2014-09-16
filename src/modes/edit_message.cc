@@ -483,6 +483,7 @@ namespace Astroid {
     c->message_sent().connect (
         sigc::mem_fun (this, &EditMessage::send_message_finished));
 
+    fields_hide ();
     sending_in_progress.store (true);
     c->send_threaded ();
 
@@ -500,6 +501,7 @@ namespace Astroid {
     } else {
       warning_str = "message could not be sent!";
       info_str = "";
+      fields_show ();
     }
 
     sending_in_progress.store (false);
