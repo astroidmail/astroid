@@ -314,6 +314,10 @@ namespace Astroid {
       in_scroll = false;
       log << debug << "tv: re-doing scroll." << endl;
 
+      if (!scroll_arg) {
+        scroll_arg = focused_message;
+      }
+
       scroll_to_message (scroll_arg, _scroll_when_visible);
       scroll_arg = refptr<Message> ();
       _scroll_when_visible = false;
@@ -1002,6 +1006,7 @@ namespace Astroid {
             if (state[focused_message].scroll_expanded) {
               toggle_hidden (focused_message, ToggleHide);
               state[focused_message].scroll_expanded = false;
+              in_scroll = true;
             }
           }
 
@@ -1011,6 +1016,7 @@ namespace Astroid {
             if (is_hidden (focused_message)) {
               toggle_hidden (focused_message, ToggleShow);
               state[focused_message].scroll_expanded = true;
+              in_scroll = true;
             }
           }
           scroll_to_message (focused_message);
@@ -1023,6 +1029,7 @@ namespace Astroid {
             if (state[focused_message].scroll_expanded) {
               toggle_hidden (focused_message, ToggleHide);
               state[focused_message].scroll_expanded = false;
+              in_scroll = true;
             }
           }
 
@@ -1032,6 +1039,7 @@ namespace Astroid {
             if (is_hidden (focused_message)) {
               toggle_hidden (focused_message, ToggleShow);
               state[focused_message].scroll_expanded = true;
+              in_scroll = true;
             }
           }
           scroll_to_message (focused_message);
