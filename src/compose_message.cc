@@ -20,6 +20,9 @@ namespace Astroid {
   ComposeMessage::ComposeMessage () {
     log << debug << "cm: initialize.." << endl;
     message = g_mime_message_new (true);
+
+    d_message_sent.connect (
+        sigc::mem_fun (this, &ComposeMessage::dispatch_emit_message_sent));
   }
 
   ComposeMessage::~ComposeMessage () {
@@ -180,12 +183,21 @@ namespace Astroid {
     }}} */
   }
 
-  bool ComposeMessage::send () {
+  void ComposeMessage::send_threaded ()
+  {
+    log << info << "cm: sending (threaded).." << endl;
+    thread sendit (&ComposeMessage::send, this, true);
+
+    sendit.detach ();
+  }
+
+  bool ComposeMessage::send (bool output) {
     bool dryrun = astroid->config->config.get<bool>("astroid.debug.dryrun_sending");
 
     /* Send the message */
     if (!dryrun) {
-      log << warn << "cm: sending message from account: " << account->full_address () << endl;
+      if (output)
+        log << warn << "cm: sending message from account: " << account->full_address () << endl;
       ustring send_command = account->sendmail ;
       FILE * sendMailPipe = popen(send_command.c_str(), "w");
       GMimeStream * sendMailStream = g_mime_stream_file_new(sendMailPipe);
@@ -197,11 +209,13 @@ namespace Astroid {
 
       if (status == 0)
       {
-        log << warn << "cm: message sent successfully!" << endl;
+        if (output)
+          log << warn << "cm: message sent successfully!" << endl;
 
         if (account->save_sent) {
           path save_to = path(account->save_sent_to) / path(id + ":2,");
-          log << info << "cm: saving message to: " << save_to << endl;
+          if (output)
+            log << info << "cm: saving message to: " << save_to << endl;
 
           write (save_to.c_str());
 
@@ -209,22 +223,46 @@ namespace Astroid {
           Db db (Db::DbMode::DATABASE_READ_WRITE);
           lock_guard<Db> lk (db);
           db.add_sent_message (save_to.c_str());
-          log << info << "cm: sent message added to db." << endl;
+          if (output)
+            log << info << "cm: sent message added to db." << endl;
         }
 
+        message_sent_result = true;
+        d_message_sent ();
         return true;
 
       } else {
-        log << error << "cm: could not send message!" << endl;
+        if (output)
+          log << error << "cm: could not send message!" << endl;
+        message_sent_result = false;
+        d_message_sent ();
         return false;
       }
     } else {
       ustring fname = "/tmp/" + id;
-      log << warn << "cm: sending disabled in config, message written to: " << fname << endl;
+      if (output)
+        log << warn << "cm: sending disabled in config, message written to: " << fname << endl;
 
       write (fname);
+      message_sent_result = false;
+      d_message_sent ();
       return false;
     }
+  }
+
+  /* signals */
+  ComposeMessage::type_message_sent
+    ComposeMessage::message_sent ()
+  {
+    return m_message_sent;
+  }
+
+  void ComposeMessage::emit_message_sent (bool res) {
+    m_message_sent.emit (res);
+  }
+
+  void ComposeMessage::dispatch_emit_message_sent () {
+    emit_message_sent (message_sent_result);
   }
 
   ustring ComposeMessage::write_tmp () {
@@ -249,5 +287,7 @@ namespace Astroid {
     g_mime_object_write_to_stream(GMIME_OBJECT(message), stream);
     g_object_unref(stream);
   }
+
+
 }
 

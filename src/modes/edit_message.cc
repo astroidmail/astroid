@@ -104,6 +104,9 @@ namespace Astroid {
     //thread_rev->add (*thread_view);
     editor_box->pack_start (*thread_view, false, false, 2);
 
+    thread_view->signal_ready().connect (
+        sigc::mem_fun (this, &EditMessage::on_tv_ready));
+
     /* defaults */
     accounts = astroid->accounts;
 
@@ -149,6 +152,8 @@ namespace Astroid {
     show_all_children ();
 
     prepare_message ();
+
+    sending_in_progress.store (false);
 
     editor_toggle (false);
   }
@@ -261,6 +266,16 @@ namespace Astroid {
     delete c;
 
     unlink (tmpf.c_str());
+  }
+
+  void EditMessage::on_tv_ready () {
+    log << debug << "em: got tv ready." << endl;
+
+    if (warning_str.length() > 0)
+      thread_view->set_warning (thread_view->focused_message, warning_str);
+
+    if (info_str.length () > 0)
+      thread_view->set_info (thread_view->focused_message, info_str);
   }
 
   void EditMessage::fields_hide () {
@@ -402,14 +417,18 @@ namespace Astroid {
     switch (event->keyval) {
       case GDK_KEY_Return:
         {
-          editor_toggle (true);
-          activate_field (Editor);
+          if (!message_sent || sending_in_progress.load()) {
+            editor_toggle (true);
+            activate_field (Editor);
+          }
           return true;
         }
 
       case GDK_KEY_y:
         {
-          ask_yes_no ("Really send message?", [&](bool yes){ if (yes) send_message (); });
+          if (!message_sent || sending_in_progress.load()) {
+            ask_yes_no ("Really send message?", [&](bool yes){ if (yes) send_message (); });
+          }
           return true;
         }
 
@@ -427,6 +446,12 @@ namespace Astroid {
 
           return true;
         }
+
+      case GDK_KEY_x:
+        {
+          /* block closing the window while sending */
+          return sending_in_progress.load ();
+        }
     }
 
     return false;
@@ -440,6 +465,10 @@ namespace Astroid {
   bool EditMessage::send_message () {
     log << info << "em: sending message.." << endl;
 
+    info_str = "sending message..";
+    warning_str = "";
+    on_tv_ready ();
+
     if (!check_fields ()) {
       log << error << "em: error problem with some of the input fields.." << endl;
       return false;
@@ -451,11 +480,39 @@ namespace Astroid {
 
     if (c == NULL) return false;
 
-    bool success = c->send ();
+    c->message_sent().connect (
+        sigc::mem_fun (this, &EditMessage::send_message_finished));
 
-    delete c;
+    sending_in_progress.store (true);
+    c->send_threaded ();
 
-    return success;
+    sending_message = c;
+
+    return true;
+  }
+
+  void EditMessage::send_message_finished (bool result_from_sender) {
+    log << info << "em: message sending done." << endl;
+    if (result_from_sender) {
+      info_str = "message sent successfully!";
+      warning_str = "";
+      lock_message_after_send ();
+    } else {
+      warning_str = "message could not be sent!";
+      info_str = "";
+    }
+
+    sending_in_progress.store (false);
+
+    delete sending_message;
+
+    on_tv_ready ();
+  }
+
+  void EditMessage::lock_message_after_send () {
+    message_sent = true;
+
+    fields_hide ();
   }
 
   ComposeMessage * EditMessage::make_message () {

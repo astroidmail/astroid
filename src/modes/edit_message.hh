@@ -2,6 +2,7 @@
 
 # include <vector>
 # include <ctime>
+# include <atomic>
 
 # include <gtkmm/socket.h>
 # include <glibmm/iochannel.h>
@@ -89,6 +90,11 @@ namespace Astroid {
       bool send_message ();
       ComposeMessage * make_message ();
 
+      ComposeMessage * sending_message;
+      atomic<bool> sending_in_progress;
+      void send_message_finished (bool result);
+
+
       virtual void prepare_message ();
 
     protected:
@@ -117,6 +123,10 @@ namespace Astroid {
       void fields_hide ();       // hide fields
       void read_edited_message (); // load data from message after
                                    // it has been edited.
+      void on_tv_ready ();
+      ustring warning_str;
+      ustring info_str;
+
       void vim_start ();
       void vim_stop ();
       void vim_remote_expr (ustring);
@@ -135,6 +145,9 @@ namespace Astroid {
       path tmpfile_path;
       fstream tmpfile;
       void make_tmpfile ();
+
+      bool message_sent = false;
+      void lock_message_after_send ();
 
     public:
       void grab_modal () override;

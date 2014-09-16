@@ -86,8 +86,16 @@ namespace Astroid {
 
       /* focused message */
       refptr<Message> candidate_startup; // startup
+    public:
       refptr<Message> focused_message;
 
+      /* set the warning header of the message */
+      void set_warning (refptr<Message>, ustring);
+
+      /* set the info header of the message */
+      void set_info (refptr<Message>, ustring);
+
+    private:
       /* webkit (using C api) */
       WebKitWebView     * webview;
       WebKitWebSettings * websettings;
@@ -167,6 +175,16 @@ namespace Astroid {
 
     protected:
       virtual bool on_key_press_event (GdkEventKey *) override;
+
+    public:
+      /* the tv is ready */
+      typedef sigc::signal <void> type_signal_ready;
+      type_signal_ready signal_ready ();
+
+      void emit_ready ();
+
+    protected:
+      type_signal_ready m_signal_ready;
   };
 }
 

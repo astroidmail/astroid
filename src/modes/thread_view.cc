@@ -203,6 +203,10 @@ namespace Astroid {
           /* get container for message divs */
           container = WEBKIT_DOM_HTML_DIV_ELEMENT(webkit_dom_document_get_element_by_id (d, "message_container"));
 
+          if (container == NULL) {
+            log << warn << "render: could not find container!" << endl;
+          }
+
 
           g_object_unref (d);
           g_object_unref (e);
@@ -241,7 +245,8 @@ namespace Astroid {
     log << info << "tv: starting conversation inspector.." << endl;
     inspector_window = new Gtk::Window ();
     inspector_window->set_default_size (600, 600);
-    inspector_window->set_title (ustring::compose("Conversation inspector: %1", thread->subject));
+    if (thread)
+      inspector_window->set_title (ustring::compose("Conversation inspector: %1", thread->subject));
     inspector_window->add (inspector_scroll);
     WebKitWebView * inspector_view = WEBKIT_WEB_VIEW (webkit_web_view_new ());
     gtk_container_add (GTK_CONTAINER (inspector_scroll.gobj()),
@@ -317,6 +322,9 @@ namespace Astroid {
 
   void ThreadView::render () {
     log << info << "render: loading html.." << endl;
+    if (container) g_object_unref (container);
+    container = NULL;
+    wk_loaded = false;
     webkit_web_view_load_html_string (webview, thread_view_html.c_str (), "/tmp/");
   }
 
@@ -349,6 +357,8 @@ namespace Astroid {
     }
 
     scroll_to_message (focused_message, true);
+
+    emit_ready ();
   }
 
   void ThreadView::add_message (refptr<Message> m) {
@@ -553,6 +563,67 @@ namespace Astroid {
 
     g_object_unref (span_body);
     g_object_unref (table_header);
+  }
+
+  void ThreadView::set_warning (refptr<Message> m, ustring txt)
+  {
+    log << debug << "tv: set warning: " << txt << endl;
+    ustring mid = "message_" + m->mid;
+
+    WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
+
+    WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
+
+    WebKitDOMHTMLElement * warning = select (
+        WEBKIT_DOM_NODE (e),
+        ".email_warning");
+
+    GError * err;
+    webkit_dom_html_element_set_inner_html (warning, txt.c_str(), (err = NULL, &err));
+
+    WebKitDOMDOMTokenList * class_list =
+      webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(warning));
+
+    webkit_dom_dom_token_list_add (class_list, "show",
+        (err = NULL, &err));
+
+    g_object_unref (class_list);
+    g_object_unref (warning);
+    g_object_unref (e);
+    g_object_unref (d);
+  }
+
+  void ThreadView::set_info (refptr<Message> m, ustring txt)
+  {
+    log << debug << "tv: set info: " << txt << endl;
+
+    ustring mid = "message_" + m->mid;
+
+    WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
+
+    WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
+
+    if (e == NULL) {
+      log << warn << "tv: could not get email div." << endl;
+    }
+
+    WebKitDOMHTMLElement * info = select (
+        WEBKIT_DOM_NODE (e),
+        ".email_info");
+
+    GError * err;
+    webkit_dom_html_element_set_inner_html (info, txt.c_str(), (err = NULL, &err));
+
+    WebKitDOMDOMTokenList * class_list =
+      webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(info));
+
+    webkit_dom_dom_token_list_add (class_list, "show",
+        (err = NULL, &err));
+
+    g_object_unref (class_list);
+    g_object_unref (info);
+    g_object_unref (e);
+    g_object_unref (d);
   }
 
   void ThreadView::insert_header_date (ustring & header, refptr<Message> m)
@@ -1028,7 +1099,6 @@ namespace Astroid {
     /* check if currently focused message has gone out of focus
      * and update focus */
     if (edit_mode) {
-      focused_message = refptr<Message>();
       return;
     }
 
@@ -1142,7 +1212,7 @@ namespace Astroid {
 
   void ThreadView::update_focus_status () {
     if (edit_mode) {
-      focused_message = refptr<Message>();
+      return;
     }
 
     WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
@@ -1359,6 +1429,18 @@ namespace Astroid {
   void ThreadView::release_modal () {
     remove_modal_grab ();
     //gtk_grab_remove (GTK_WIDGET (webview));
+  }
+
+  /* signals */
+  ThreadView::type_signal_ready
+    ThreadView::signal_ready ()
+  {
+    return m_signal_ready;
+  }
+
+  void ThreadView::emit_ready () {
+    log << info << "tv: ready emitted." << endl;
+    m_signal_ready.emit ();
   }
 
 }

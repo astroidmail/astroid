@@ -138,6 +138,13 @@ hr {
     text-align: center;
 }
 
+.email .email_info {
+    display: none;
+    padding: 1em;
+    background-color: #8CE7FF;
+    text-align: center;
+}
+
 .email_box {
     box-sizing: border-box;
     -webkit-box-sizing: border-box;
@@ -296,6 +303,7 @@ body:not(.nohide) .email.hide .header_container .avatar {
         display: none;
     }
     .email:not(.hide) .email_warning.show,
+    .email:not(.hide) .email_info.show,
     body:not(.nohide) .email.hide .header_container .preview {
         display: block;
     }
@@ -305,6 +313,7 @@ body:not(.nohide) .email.hide .header_container .avatar {
         display: none;
     }
     .email:not(.hide) .email_warning.show,
+    .email:not(.hide) .email_info.show,
     body:not(.nohide) .email.hide .header_container .tags {
         display: block;
     }
@@ -314,6 +323,7 @@ body:not(.nohide) .email.hide .header_container .avatar {
         display: none;
     }
     .email:not(.hide) .email_warning.show,
+    .email:not(.hide) .email_info.show,
     body:not(.nohide) .email.hide .header_container .subject {
         display: block;
     }
