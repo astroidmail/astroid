@@ -147,6 +147,11 @@ namespace Astroid {
           GtkWidget *,
           GParamSpec *);
 
+      void on_scroll_vadjustment_changed();
+      bool in_scroll = false;
+      refptr<Message> scroll_arg;
+      bool            _scroll_when_visible;
+
       Gtk::Window * inspector_window;
       Gtk::ScrolledWindow inspector_scroll;
       WebKitWebView * activate_inspector (

@@ -138,6 +138,14 @@ namespace Astroid {
     g_signal_connect (web_inspector, "show-window",
         G_CALLBACK(ThreadView_show_inspector),
         (gpointer) this);
+
+    /* scrolled window */
+    auto vadj = scroll.get_vadjustment ();
+    vadj->signal_changed().connect (
+        sigc::mem_fun (this, &ThreadView::on_scroll_vadjustment_changed));
+
+
+    show_all_children ();
   }
 
   ThreadView::~ThreadView () {
@@ -294,6 +302,17 @@ namespace Astroid {
 
 
     render ();
+  }
+
+  void ThreadView::on_scroll_vadjustment_changed () {
+    if (in_scroll) {
+      in_scroll = false;
+      log << debug << "tv: re-doing scroll." << endl;
+
+      scroll_to_message (scroll_arg, _scroll_when_visible);
+      scroll_arg = refptr<Message> ();
+      _scroll_when_visible = false;
+    }
   }
 
   void ThreadView::render () {
@@ -1310,6 +1329,15 @@ namespace Astroid {
           }
         }
       }
+    }
+
+    /* the height does not seem to make any sense, but is still more
+     * than empty. we need to re-do the calculation when everything
+     * has been rendered and re-calculated. */
+    if (height == 1) {
+      in_scroll = true;
+      scroll_arg = m;
+      _scroll_when_visible = scroll_when_visible;
     }
 
     update_focus_status ();
