@@ -23,16 +23,21 @@ namespace Astroid {
     connect_entry (entry);
 
     hbox.set_orientation (Gtk::ORIENTATION_HORIZONTAL);
-    hbox.set_size_request (400, -1);
+    hbox.set_size_request (-1, -1);
 
     hbox.pack_start (mode_label, false, false, 5);
     hbox.pack_start (entry, true, true, 5);
+    entry.set_size_request (600, -1);
     add(hbox);
 
     entry.signal_activate ().connect (
         sigc::mem_fun (*this, &CommandBar::on_entry_activated)
         );
 
+  }
+
+  void CommandBar::set_main_window (MainWindow * mw) {
+    main_window = mw;
   }
 
   ustring CommandBar::get_text () {

@@ -37,6 +37,8 @@ namespace Astroid {
       Gtk::Label mode_label;
       Gtk::SearchEntry entry;
 
+      void set_main_window (MainWindow *);
+
       void on_entry_activated ();
       function<void(ustring)> callback;
 

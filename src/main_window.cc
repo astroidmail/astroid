@@ -34,7 +34,7 @@ namespace Astroid {
 
     vbox.set_orientation (Gtk::ORIENTATION_VERTICAL);
 
-    command.main_window = this;
+    command.set_main_window (this);
 
     command.property_search_mode_enabled().signal_changed().connect(
         sigc::mem_fun (*this, &MainWindow::on_command_mode_changed)
