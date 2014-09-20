@@ -19,6 +19,28 @@ using namespace boost::filesystem;
 namespace Astroid {
   Poll::Poll () {
     log << info << "poll: setting up." << endl;
+
+    poll_interval = astroid->config->config.get<int> ("poll.interval");
+    log << debug << "poll: interval: " << poll_interval << endl;
+
+    if (poll_interval > 0) {
+
+      Glib::signal_timeout ().connect (
+          sigc::mem_fun (this, &Poll::periodic_polling), poll_interval * 1000);
+
+    } else {
+      log << info << "poll: periodic polling disabled." << endl;
+    }
+
+    // do initial poll
+    poll ();
+  }
+
+  bool Poll::periodic_polling () {
+    log << info << "poll: periodic poll.." << endl;
+    poll ();
+
+    return true;
   }
 
   bool Poll::poll () {

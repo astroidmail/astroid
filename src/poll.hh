@@ -21,8 +21,10 @@ namespace Astroid {
     private:
       mutex m_dopoll;
 
+      int poll_interval = 0;
+
       void do_poll ();
-      void flush_log_lines ();
+      bool periodic_polling ();
   };
 }
 

@@ -114,6 +114,9 @@ namespace Astroid {
     default_config.put ("contacts.recent.load", 100);
     default_config.put ("contacts.recent.query", "not tag:spam");
 
+    /* polling */
+    default_config.put ("poll.interval", 300); // seconds
+
   }
 
   void Config::write_back_config () {
