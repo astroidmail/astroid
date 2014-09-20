@@ -33,7 +33,7 @@ namespace Astroid {
 
     tmpfile_path = astroid->config->runtime_dir;
 
-    tab_widget = new Gtk::Label ("New message");
+    set_label ("New message");
 
     Glib::RefPtr<Gtk::Builder> builder = Gtk::Builder::create_from_file("ui/edit-message.glade", "box_message");
 
@@ -396,7 +396,7 @@ namespace Astroid {
 
     /* update tab in case something changed */
     if (subject.size () > 0) {
-      ((Gtk::Label*)tab_widget)->set_text ("New message: " + subject);
+      set_label ("New message: " + subject);
     }
   }
 

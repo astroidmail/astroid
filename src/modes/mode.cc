@@ -6,6 +6,7 @@ namespace Astroid {
     Gtk::Box (Gtk::ORIENTATION_VERTICAL),
     interactive (_interactive)
   {
+    tab_label.set_can_focus (false);
 
     /* set up yes-no asker */
     if (interactive)
@@ -38,6 +39,14 @@ namespace Astroid {
       pack_end (*rev_yes_no, false, true, 0);
     }
   }
+
+  void Mode::set_label (ustring s) {
+    if (static_cast<int>(s.size()) > MAX_TAB_LEN)
+      s = s.substr(0, MAX_TAB_LEN - 3) + "...";
+
+    tab_label.set_text (s);
+  }
+
 
   void Mode::ask_yes_no (
       ustring question,

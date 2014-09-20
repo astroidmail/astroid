@@ -35,8 +35,6 @@ namespace Astroid {
     list_store = _list_store;
     list_view  = Gtk::manage(_list_view);
 
-    tab_widget = Gtk::manage(new Gtk::Label ("None"));
-
     scroll.add (*list_view);
     pack_start (scroll, true, true, 0);
     scroll.show_all ();

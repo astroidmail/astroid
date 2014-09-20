@@ -6,8 +6,7 @@ using namespace std;
 
 namespace Astroid {
   HelpMode::HelpMode () {
-    tab_widget = new Gtk::Label ("Help");
-
+    set_label ("Help");
 
     scroll.add (help_text);
     pack_start (scroll, true, true, 5);

@@ -29,7 +29,7 @@ namespace Astroid {
   RawMessage::RawMessage (const char * fname) : RawMessage () {
     stringstream l ("Raw message: ");
     l << fname;
-    tab_widget = Gtk::manage (new Gtk::Label (l.str()));
+    set_label (l.str());
 
     /* load message source */
     log << info << "rm: loading message from file: " << fname << endl;
@@ -44,7 +44,7 @@ namespace Astroid {
   RawMessage::RawMessage (refptr<Message> _msg) : RawMessage () {
     msg = _msg;
 
-    tab_widget = Gtk::manage (new Gtk::Label ("Raw message: " + msg->subject));
+    set_label ("Raw message: " + msg->subject);
 
     /* load message source */
     log << info << "rm: loading message from: " << msg->fname << endl;

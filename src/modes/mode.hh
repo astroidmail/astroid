@@ -11,7 +11,7 @@ namespace Astroid {
     public:
       Mode (bool interactive = false);
       ~Mode ();
-      Gtk::Widget * tab_widget;
+      Gtk::Label tab_label;
 
     private:
       bool interactive;
@@ -27,6 +27,9 @@ namespace Astroid {
     protected:
       void ask_yes_no (ustring, function<void(bool)>);
       bool mode_key_handler (GdkEventKey *);
+
+      const int MAX_TAB_LEN = 35;
+      void set_label (ustring);
 
     public:
       virtual void grab_modal () = 0;

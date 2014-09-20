@@ -36,7 +36,6 @@ namespace Astroid {
 
   ThreadView::ThreadView (MainWindow * mw) {
     main_window = mw;
-    tab_widget = Gtk::manage(new Gtk::Label (""));
 
     pack_start (scroll, true, true, 5);
 
@@ -280,7 +279,7 @@ namespace Astroid {
     log << info << "tv: load thread: " << _thread->thread_id << endl;
     thread = _thread;
 
-    ((Gtk::Label*) tab_widget)->set_text (thread->thread_id);
+    set_label (thread->thread_id);
 
     Db db (Db::DbMode::DATABASE_READ_ONLY);
     lock_guard<Db> grd (db);
@@ -300,11 +299,8 @@ namespace Astroid {
     }
 
     ustring s = mthread->subject;
-    if (static_cast<int>(s.size()) > MAX_TAB_SUBJECT_LEN)
-      s = s.substr(0, MAX_TAB_SUBJECT_LEN - 3) + "...";
 
-    ((Gtk::Label*)tab_widget)->set_text (s);
-
+    set_label (s);
 
     render ();
   }

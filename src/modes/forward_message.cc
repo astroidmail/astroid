@@ -20,7 +20,7 @@ namespace Astroid {
     subject = ustring::compose ("Fwd: %1", msg->subject);
 
     if (subject.size () > 0) {
-      ((Gtk::Label*)tab_widget)->set_text ("New message: " + subject);
+      set_label ("New message: " + subject);
     }
 
     /* quote original message */

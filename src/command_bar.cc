@@ -23,7 +23,6 @@ namespace Astroid {
     connect_entry (entry);
 
     hbox.set_orientation (Gtk::ORIENTATION_HORIZONTAL);
-    hbox.set_size_request (-1, -1);
 
     hbox.pack_start (mode_label, false, false, 5);
     hbox.pack_start (entry, true, true, 5);

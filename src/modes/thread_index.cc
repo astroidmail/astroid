@@ -25,8 +25,7 @@ namespace Astroid {
     main_window = mw;
 
     set_orientation (Gtk::Orientation::ORIENTATION_VERTICAL);
-    tab_widget = Gtk::manage(new Gtk::Label (query_string));
-    tab_widget->set_can_focus (false);
+    set_label (query_string);
 
     /* set up treeview */
     list_store = Glib::RefPtr<ThreadIndexListStore>(new ThreadIndexListStore ());

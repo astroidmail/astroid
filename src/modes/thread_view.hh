@@ -50,7 +50,6 @@ namespace Astroid {
 
       Gtk::ScrolledWindow scroll;
 
-      const int MAX_TAB_SUBJECT_LEN = 15;
       const int MAX_PREVIEW_LEN = 80;
 
       MainWindow  * main_window;

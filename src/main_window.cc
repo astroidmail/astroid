@@ -188,7 +188,7 @@ namespace Astroid {
 
     Gtk::Widget * w = m;
 
-    int n = notebook.insert_page ((*w), *(m->tab_widget), current+1);
+    int n = notebook.insert_page ((*w), m->tab_label, current+1);
 
     notebook.show_all ();
 

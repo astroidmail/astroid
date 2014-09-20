@@ -7,7 +7,7 @@ using namespace std;
 
 namespace Astroid {
   LogView::LogView () {
-    tab_widget = Gtk::manage(new Gtk::Label ("Log"));
+    set_label ("Log");
 
     scroll.add (tv);
     pack_start (scroll);
