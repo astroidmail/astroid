@@ -4,7 +4,6 @@
 # include "log.hh"
 
 # include <mutex>
-# include <vector>
 # include <glibmm/threads.h>
 
 using namespace std;
