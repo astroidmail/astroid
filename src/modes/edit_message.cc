@@ -417,7 +417,7 @@ namespace Astroid {
     switch (event->keyval) {
       case GDK_KEY_Return:
         {
-          if (!message_sent || sending_in_progress.load()) {
+          if (!message_sent && !sending_in_progress.load()) {
             editor_toggle (true);
             activate_field (Editor);
           }
@@ -426,7 +426,7 @@ namespace Astroid {
 
       case GDK_KEY_y:
         {
-          if (!message_sent || sending_in_progress.load()) {
+          if (!message_sent && !sending_in_progress.load()) {
             ask_yes_no ("Really send message?", [&](bool yes){ if (yes) send_message (); });
           }
           return true;
