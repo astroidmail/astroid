@@ -93,6 +93,7 @@ namespace Astroid {
       case GDK_KEY_Q:
         log << info << "mw: quit." << endl;
         astroid->app->remove_window (*this);
+        remove_all_modes ();
         close ();
         return true;
 
@@ -123,6 +124,7 @@ namespace Astroid {
             if (astroid->app->get_windows().size () > 1) {
               log << info << "mw: more windows available, closing this one." << endl;
               astroid->app->remove_window (*this);
+              remove_all_modes ();
               close ();
             }
           }
