@@ -246,6 +246,24 @@ namespace Astroid {
           return true;
         }
 
+      /* reply */
+      case GDK_KEY_G:
+        {
+          auto thread = get_current_thread ();
+          if (thread) {
+
+            MessageThread mthread (thread);
+            Db db (Db::DbMode::DATABASE_READ_ONLY);
+
+            mthread.load_messages (&db);
+
+            /* reply to last message */
+            main_window->add_mode (new ReplyMessage (main_window, *(--mthread.messages.end()), ReplyMessage::ReplyMode::Rep_All));
+
+          }
+          return true;
+        }
+
       /* forward */
       case GDK_KEY_f:
         {

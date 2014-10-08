@@ -4,6 +4,7 @@
 
 # include "astroid.hh"
 # include "proto.hh"
+# include "utils/address.hh"
 
 using namespace std;
 
@@ -21,8 +22,9 @@ namespace Astroid {
       bool save_sent;
       ustring save_sent_to;
 
-
       ustring full_address ();
+
+      bool operator== (Address &a);
   };
 
   class AccountManager {
@@ -33,6 +35,8 @@ namespace Astroid {
       vector<Account> accounts;
       int default_account;
       Account * get_account_for_address (ustring);
+
+      bool is_me (Address &);
   };
 }
 

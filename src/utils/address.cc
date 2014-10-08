@@ -5,6 +5,8 @@
 # include <gmime/gmime.h>
 
 # include "ustring_utils.hh"
+# include "address.hh"
+# include "account_manager.hh"
 
 using namespace std;
 
@@ -101,6 +103,14 @@ namespace Astroid {
     return ustring(faddr);
   }
 
+  InternetAddress * Address::get_iaddr () {
+    InternetAddress * mbox = internet_address_mailbox_new (_name.c_str(), _email.c_str());
+
+    // now owned by caller
+
+    return mbox;
+  }
+
   AddressList::AddressList () {
 
   }
@@ -112,5 +122,54 @@ namespace Astroid {
     }
   }
 
+  ustring AddressList::str () {
+    InternetAddressList * list = internet_address_list_new ();
+    for (Address &a : addresses) {
+      InternetAddress * addr = a.get_iaddr ();
+      internet_address_list_add (list, addr);
+      g_object_unref (addr);
+    }
+
+    const char * addrs = internet_address_list_to_string (list, true);
+
+    ustring r ("");
+
+    if (addrs != NULL) r = ustring (addrs);
+
+    g_object_unref (list);
+
+    return r;
+  }
+
+  AddressList& AddressList::operator+= (Address & a) {
+    addresses.push_back (a);
+
+    return *this;
+  }
+
+  AddressList& AddressList::operator+= (AddressList & al) {
+    for (Address &a : al.addresses) {
+      addresses.push_back (a);
+    }
+
+    return *this;
+  }
+
+  void AddressList::remove_me () {
+
+    vector<Address>::iterator it;
+    while (it = find_if  (addresses.begin (),
+                          addresses.end (),
+                          [&](Address &a) {
+                            return astroid->accounts->is_me (a);
+                          }),
+           it != addresses.end () )
+    {
+
+      addresses.erase (it);
+
+    }
+
+  }
 }
 

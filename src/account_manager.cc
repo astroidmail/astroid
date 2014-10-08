@@ -71,11 +71,23 @@ namespace Astroid {
 
   }
 
+  bool AccountManager::is_me (Address &a) {
+    for (Account &ac : accounts) {
+      if (ac == a) return true;
+    }
+
+    return false;
+  }
+
   /* --------
    * Account
    * -------- */
   ustring Account::full_address () {
     return name + " <" + email + ">";
+  }
+
+  bool Account::operator== (Address &a) {
+    return (Address(name, email).email() == a.email());
   }
 }
 

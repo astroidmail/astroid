@@ -23,7 +23,8 @@ namespace Astroid {
       ustring fail_safe_name ();
       bool    valid ();
 
-      ustring full_address();
+      ustring full_address ();
+      InternetAddress * get_iaddr ();
 
     private:
       ustring _name;
@@ -37,6 +38,12 @@ namespace Astroid {
       AddressList (InternetAddressList *);
 
       vector<Address> addresses;
+      ustring str ();
+
+      AddressList& operator+= (Address &);
+      AddressList& operator+= (AddressList &);
+
+      void remove_me ();
   };
 
 }

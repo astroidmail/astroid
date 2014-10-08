@@ -1052,6 +1052,16 @@ namespace Astroid {
           }
         }
 
+      case GDK_KEY_G:
+        {
+          /* reply to currently focused message */
+          if (!edit_mode) {
+            main_window->add_mode (new ReplyMessage (main_window, focused_message, ReplyMessage::ReplyMode::Rep_All));
+
+            return true;
+          }
+        }
+
       case GDK_KEY_f:
         {
           /* forward currently focused message */

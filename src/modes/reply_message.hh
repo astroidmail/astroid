@@ -11,10 +11,6 @@ using namespace std;
 namespace Astroid {
   class ReplyMessage : public EditMessage {
     public:
-      ReplyMessage (MainWindow *, refptr<Message>);
-
-      refptr<Message> msg;
-
       /* reply settings */
       enum ReplyMode {
         Rep_Custom,
@@ -23,6 +19,10 @@ namespace Astroid {
         Rep_All,
         Rep_MailingList,
       };
+
+      ReplyMessage (MainWindow *, refptr<Message>, ReplyMode rmode = Rep_Default);
+
+      refptr<Message> msg;
 
       class ReplyModeColumns : public Gtk::TreeModel::ColumnRecord {
         public:
@@ -34,6 +34,8 @@ namespace Astroid {
 
       ReplyModeColumns reply_columns;
       refptr<Gtk::ListStore> reply_store;
+
+      void load_receivers ();
   };
 }
 

@@ -11,7 +11,9 @@
 using namespace std;
 
 namespace Astroid {
-  ReplyMessage::ReplyMessage (MainWindow * mw, refptr<Message> _msg) : EditMessage (mw) {
+  ReplyMessage::ReplyMessage (MainWindow * mw, refptr<Message> _msg, ReplyMode rmode)
+    : EditMessage (mw)
+  {
     msg = _msg;
 
     log << info << "re: reply to: " << msg->mid << endl;
@@ -51,12 +53,6 @@ namespace Astroid {
 
     body = ustring(quoted.str());
 
-    if (msg->reply_to.length () > 0) {
-      to = msg->reply_to;
-    } else {
-      to = msg->sender;
-    }
-
     references = msg->references + " <" + msg->mid + ">";
     inreplyto  = "<" + msg->mid + ">";
 
@@ -82,14 +78,65 @@ namespace Astroid {
     row[reply_columns.reply_string] = "Mailinglist";
     row[reply_columns.reply] = Rep_MailingList;
 
-    reply_mode_combo->set_active (0);
+    reply_mode_combo->set_active (rmode); // must match order
     reply_mode_combo->pack_start (reply_columns.reply_string);
+
+    load_receivers ();
 
     /* reload message */
     prepare_message ();
     read_edited_message ();
 
     start_vim_on_socket_ready = true;
+  }
+
+  void ReplyMessage::load_receivers () {
+    auto iter = reply_mode_combo->get_active ();
+    auto row = *iter;
+    ReplyMode rmode = row[reply_columns.reply];
+
+    if (rmode == Rep_Sender || rmode == Rep_Default) {
+
+      if (msg->reply_to.length () > 0) {
+        to = msg->reply_to;
+      } else {
+        to = msg->sender;
+      }
+
+      auto msg_to = Address(to);
+      if (accounts->is_me(msg_to)) {
+        AddressList al (msg->to());
+
+        to = al.str ();
+      }
+
+    } else if (rmode == Rep_All) {
+      AddressList al (msg->to());
+
+      ustring from;
+      if (msg->reply_to.length () > 0) {
+        from = msg->reply_to;
+      } else {
+        from = msg->sender;
+      }
+
+      auto msg_from = Address(from);
+      if (!accounts->is_me(msg_from)) {
+        al += msg_from;
+      }
+
+      al.remove_me ();
+
+      to = al.str ();
+
+      AddressList ac (msg->cc ());
+      ac.remove_me ();
+      cc = ac.str ();
+
+      AddressList acc (msg->bcc ());
+      acc.remove_me ();
+      bcc = acc.str ();
+    }
   }
 }
 
