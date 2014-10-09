@@ -40,6 +40,7 @@ namespace Astroid {
         *reply_mode_combo;
       Gtk::Revealer *fields_revealer;
       Gtk::Revealer *reply_revealer;
+      Gtk::Revealer *encryption_revealer;
 
       Field current_field = From;
       void activate_field (Field);
