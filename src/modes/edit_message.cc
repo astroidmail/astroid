@@ -44,6 +44,7 @@ namespace Astroid {
     builder->get_widget ("reply_mode_combo", reply_mode_combo);
     builder->get_widget ("fields_revealer", fields_revealer);
     builder->get_widget ("reply_revealer", reply_revealer);
+    builder->get_widget ("encryption_revealer", encryption_revealer);
 
     builder->get_widget ("editor_box", editor_box);
     /*
@@ -148,6 +149,9 @@ namespace Astroid {
 
     encryption_combo->set_active (0);
     encryption_combo->pack_start (enc_columns.encryption_string);
+
+    // TODO: encryption is not yet implemented.
+    encryption_revealer->set_reveal_child (false);
 
     show_all_children ();
 
