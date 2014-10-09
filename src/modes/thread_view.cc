@@ -952,7 +952,6 @@ namespace Astroid {
         }
         return true;
 
-
       case GDK_KEY_Page_Up:
         {
           auto adj = scroll.get_vadjustment ();
@@ -995,6 +994,15 @@ namespace Astroid {
           toggle_hidden ();
           return true;
         }
+
+      /* save all attachments */
+      case GDK_KEY_S:
+        {
+          if (edit_mode) return false;
+          save_all_attachments ();
+          return true;
+        }
+
 
       case GDK_KEY_n:
         {
@@ -1425,6 +1433,49 @@ namespace Astroid {
     }
 
     update_focus_status ();
+  }
+
+  void ThreadView::save_all_attachments () {
+    /* save all attachments of current focused message */
+    log << info << "tv: save all attachments.." << endl;
+
+    if (!focused_message) {
+      log << warn << "tv: no message focused!" << endl;
+      return;
+    }
+
+    auto attachments = focused_message->attachments ();
+    if (attachments.empty ()) {
+      log << warn << "tv: this message has no attachments to save." << endl;
+      return;
+    }
+
+    Gtk::FileChooserDialog dialog ("Save attachments to folder..",
+        Gtk::FILE_CHOOSER_ACTION_SELECT_FOLDER);
+
+    dialog.add_button ("_Cancel", Gtk::RESPONSE_CANCEL);
+    dialog.add_button ("_Select", Gtk::RESPONSE_OK);
+
+    int result = dialog.run ();
+
+    switch (result) {
+      case (Gtk::RESPONSE_OK):
+        {
+          string dir = dialog.get_filename ();
+          log << info << "tv: saving attachments to: " << dir << endl;
+
+          for (refptr<Chunk> a : attachments) {
+            a->save_to (dir);
+          }
+
+          break;
+        }
+
+      default:
+        {
+          log << debug << "tv: save: cancelled." << endl;
+        }
+    }
   }
 
   void ThreadView::grab_focus () {

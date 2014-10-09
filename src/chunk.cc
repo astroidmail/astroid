@@ -1,6 +1,9 @@
 # include <vector>
 # include <iostream>
 # include <atomic>
+# include <fstream>
+
+# include <boost/filesystem.hpp>
 
 # include <glib.h>
 # include <gmime/gmime.h>
@@ -9,6 +12,9 @@
 # include "chunk.hh"
 # include "gmime_iostream.hh"
 # include "log.hh"
+# include "utils/ustring_utils.hh"
+
+using namespace boost::filesystem;
 
 namespace Astroid {
 
@@ -260,12 +266,17 @@ namespace Astroid {
   }
 
   ustring Chunk::get_filename () {
+    if (_fname.size () > 0) {
+      return _fname;
+    }
+
     if (GMIME_IS_PART (mime_object)) {
       const char * s = g_mime_part_get_filename (GMIME_PART(mime_object));
 
       if (s != NULL) {
         ustring fname (s);
         delete s;
+        _fname = fname;
         return fname;
       }
     }
@@ -330,6 +341,55 @@ namespace Astroid {
       log << error << "Chunk::contents() not supported on non-part." << endl;
       throw runtime_error ("Chunk::contents() not supported on non-part.");
     }
+  }
+
+  bool Chunk::save_to (string filename) {
+    /* saves chunk to file name, if filename is dir, own name */
+
+    path to (filename.c_str());
+
+    if (is_directory (to)) {
+      ustring fname = get_filename ();
+
+      if (fname.size () == 0) {
+        if (content_id != "") {
+          fname = ustring::compose ("astroid-attachment-%1", content_id);
+        } else {
+          /* make up a name */
+          path new_to;
+
+          do {
+            fname = ustring::compose ("astroid-attachment-%1", UstringUtils::random_alphanumeric (5));
+
+            new_to = to / path(fname.c_str ());
+          } while (exists (new_to));
+
+        }
+      }
+
+      to /= path (fname.c_str ());
+    }
+
+    log << info << "chunk: saving to: " << to << endl;
+
+    if (exists (to)) {
+      log << error << "chunk: save: file already exists!" << endl;
+      return false;
+    }
+
+    if (!exists(to.parent_path ()) || !is_directory (to.parent_path())) {
+      log << error << "chunk: save: parent path does not exist or is not a directory." << endl;
+      return false;
+    }
+
+    ofstream f (to.c_str (), std::ofstream::binary);
+
+    auto data = contents ();
+    f.write (reinterpret_cast<char*>(data->get_data ()), data->size ());
+
+    f.close ();
+
+    return true;
   }
 
   Chunk::~Chunk () {

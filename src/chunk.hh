@@ -47,6 +47,11 @@ namespace Astroid {
       ustring get_filename ();
       size_t  get_file_size ();
       refptr<Glib::ByteArray> contents ();
+
+      bool save_to (string filename);
+
+    private:
+      ustring _fname;
   };
 }
 

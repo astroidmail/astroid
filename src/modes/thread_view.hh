@@ -134,6 +134,8 @@ namespace Astroid {
       static const int THUMBNAIL_WIDTH = 150; // px
       static const int ATTACHMENT_ICON_WIDTH = 35;
 
+      void save_all_attachments ();
+
       /* webkit dom utils */
       WebKitDOMHTMLElement * clone_select (
           WebKitDOMNode * node,
