@@ -187,8 +187,8 @@ namespace Astroid {
           continue;
         }
 
-        GMimeStream * file_stream = g_mime_stream_file_new(fopen(filename.c_str(), "r"));
-        GMimeDataWrapper * data = g_mime_data_wrapper_new_with_stream(file_stream,
+        GMimeStream * file_stream = g_mime_stream_file_new (fopen(filename.c_str(), "r"));
+        GMimeDataWrapper * data = g_mime_data_wrapper_new_with_stream (file_stream,
             GMIME_CONTENT_ENCODING_DEFAULT);
 
         GLibPointer file_stream_pointer(file_stream), data_pointer(data);
@@ -196,16 +196,18 @@ namespace Astroid {
         string content_type_ = g_file_info_get_content_type (file_info);
         GMimeContentType * contentType = g_mime_content_type_new_from_string (content_type_.c_str());
 
-        GMimePart * part = g_mime_part_new_with_type(g_mime_content_type_get_media_type(contentType),
-            g_mime_content_type_get_media_subtype(contentType));
-        g_mime_part_set_content_object(part, data);
-        g_mime_part_set_content_encoding(part, GMIME_CONTENT_ENCODING_BASE64);
-        g_mime_part_set_filename(part, a.filename().c_str());
+        GMimePart * part =
+          g_mime_part_new_with_type(g_mime_content_type_get_media_type (contentType),
+          g_mime_content_type_get_media_subtype (contentType));
+        g_mime_part_set_content_object (part, data);
+        g_mime_part_set_content_encoding (part, GMIME_CONTENT_ENCODING_BASE64);
+        g_mime_part_set_filename (part, a.filename().c_str());
 
-        g_mime_multipart_add(multipart, (GMimeObject*) part);
-        g_object_unref(part);
-        g_object_unref(contentType);
+        g_mime_multipart_add (multipart, (GMimeObject*) part);
+        g_object_unref (part);
+        g_object_unref (contentType);
       }
+
       g_object_unref(multipart);
     }
   }
