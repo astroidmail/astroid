@@ -150,6 +150,9 @@ namespace Astroid {
       bool message_sent = false;
       void lock_message_after_send ();
 
+    private:
+      void on_from_combo_changed ();
+
     public:
       void grab_modal () override;
       void release_modal () override;

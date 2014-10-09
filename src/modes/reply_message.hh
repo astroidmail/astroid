@@ -35,7 +35,9 @@ namespace Astroid {
       ReplyModeColumns reply_columns;
       refptr<Gtk::ListStore> reply_store;
 
+    private:
       void load_receivers ();
+      void on_receiver_combo_changed ();
   };
 }
 

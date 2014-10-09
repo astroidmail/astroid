@@ -83,11 +83,21 @@ namespace Astroid {
 
     load_receivers ();
 
+    reply_mode_combo->signal_changed().connect (
+        sigc::mem_fun (this, &ReplyMessage::on_receiver_combo_changed));
+
     /* reload message */
     prepare_message ();
     read_edited_message ();
 
     start_vim_on_socket_ready = true;
+  }
+
+  void ReplyMessage::on_receiver_combo_changed () {
+    load_receivers ();
+
+    prepare_message ();
+    read_edited_message ();
   }
 
   void ReplyMessage::load_receivers () {
@@ -109,6 +119,9 @@ namespace Astroid {
 
         to = al.str ();
       }
+
+      cc = "";
+      bcc = "";
 
     } else if (rmode == Rep_All) {
       AddressList al (msg->to());

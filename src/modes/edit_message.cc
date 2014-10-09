@@ -160,6 +160,14 @@ namespace Astroid {
     sending_in_progress.store (false);
 
     editor_toggle (false);
+
+    from_combo->signal_changed().connect (
+        sigc::mem_fun (this, &EditMessage::on_from_combo_changed));
+  }
+
+  void EditMessage::on_from_combo_changed () {
+    prepare_message ();
+    read_edited_message ();
   }
 
   void EditMessage::prepare_message () {
