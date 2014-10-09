@@ -459,6 +459,13 @@ namespace Astroid {
           return true;
         }
 
+      case GDK_KEY_a:
+        {
+          /* attach file */
+          attach_file ();
+          return true;
+        }
+
       case GDK_KEY_x:
         {
           /* block closing the window while sending */
@@ -561,6 +568,10 @@ namespace Astroid {
     c->set_references (references);
     c->set_inreplyto (inreplyto);
 
+    for (path &a : attachments) {
+      c->add_attachment (a);
+    }
+
     c->build ();
     c->finalize ();
 
@@ -640,6 +651,46 @@ namespace Astroid {
     }
 
     tmpfile.close ();
+  }
+
+  void EditMessage::attach_file () {
+    log << info << "em: attach file.." << endl;
+
+    Gtk::FileChooserDialog dialog ("Choose file to attach..",
+        Gtk::FILE_CHOOSER_ACTION_OPEN);
+
+    dialog.add_button ("_Cancel", Gtk::RESPONSE_CANCEL);
+    dialog.add_button ("_Select", Gtk::RESPONSE_OK);
+    dialog.set_select_multiple (true);
+
+    int result = dialog.run ();
+
+    switch (result) {
+      case (Gtk::RESPONSE_OK):
+        {
+          vector<string> fnames = dialog.get_filenames ();
+          for (string &fname : fnames) {
+            path p (fname.c_str());
+
+            if (!is_regular (p)) {
+              log << error << "em: attach: file is not regular: " << p.c_str() << endl;
+            } else {
+              log << info << "em: attaching file: " << p.c_str() << endl;
+              attachments.push_back (p);
+            }
+          }
+
+          prepare_message ();
+          read_edited_message ();
+
+          break;
+        }
+
+      default:
+        {
+          log << debug << "em: attach: cancelled." << endl;
+        }
+    }
   }
 
   void EditMessage::grab_modal () {

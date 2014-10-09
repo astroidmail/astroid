@@ -13,6 +13,19 @@ using namespace std;
 using namespace boost::filesystem;
 
 namespace Astroid {
+
+  struct GLibDeleter
+  {
+    constexpr GLibDeleter() = default;
+
+    void operator()(void * object)
+    {
+      g_object_unref(object);
+    }
+  };
+
+  typedef std::unique_ptr<void, GLibDeleter> GLibPointer;
+
   class ComposeMessage {
     public:
       ComposeMessage  ();

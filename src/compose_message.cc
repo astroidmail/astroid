@@ -4,6 +4,8 @@
 
 # include <boost/filesystem.hpp>
 # include <gmime/gmime.h>
+# include <glib.h>
+# include <gio/gio.h>
 
 # include "astroid.hh"
 # include "db.hh"
@@ -152,35 +154,64 @@ namespace Astroid {
     // TODO: leaking astroid PID
     g_mime_message_set_message_id(message, id.c_str());
 
-    /* attachments {{{
-    if (_parts.size() > 1)
+    /* attachments (most of this copied from ner) */
+    if (attachments.size() > 0)
     {
-        GMimeMultipart* multipart = g_mime_multipart_new_with_subtype("mixed");
-        g_mime_multipart_add(multipart, (GMimeObject*)message->mime_part);
-        g_mime_message_set_mime_part(message, (GMimeObject*) multipart);
+      GMimeMultipart * multipart = g_mime_multipart_new_with_subtype("mixed");
+      g_mime_multipart_add (multipart, (GMimeObject*) message->mime_part);
+      g_mime_message_set_mime_part (message, (GMimeObject*) multipart);
 
-        for (auto i = _parts.begin(); i != _parts.end(); ++i)
+      for (path &a : attachments)
+      {
+
+        std::string filename = a.c_str ();
+
+        GError * error = NULL;
+        GFile * file = g_file_new_for_path(filename.c_str());
+        GFileInfo * file_info = g_file_query_info(file,
+            G_FILE_ATTRIBUTE_STANDARD_TYPE "," G_FILE_ATTRIBUTE_STANDARD_CONTENT_TYPE,
+            G_FILE_QUERY_INFO_NONE, NULL, &error);
+
+        /* Obtain unique pointer to file and file_info so they are destroyed when
+         * scope ends. */
+        GLibPointer file_pointer(file), file_info_pointer(file_info);
+
+        if (error)
         {
-            if (not dynamic_cast<Attachment*>(i->get()))
-                continue;
-
-            Attachment& attachment = *dynamic_cast<Attachment*>(i->get());
-
-            GMimeContentType* contentType = g_mime_content_type_new_from_string(attachment.contentType.c_str());
-
-            GMimePart* part = g_mime_part_new_with_type(g_mime_content_type_get_media_type(contentType),
-                                                        g_mime_content_type_get_media_subtype(contentType));
-            g_mime_part_set_content_object(part, attachment.data);
-            g_mime_part_set_content_encoding(part, GMIME_CONTENT_ENCODING_BASE64);
-            g_mime_part_set_filename(part, attachment.filename.c_str());
-
-            g_mime_multipart_add(multipart, (GMimeObject*) part);
-            g_object_unref(part);
-            g_object_unref(contentType);
+          log << error << "cm: could not query file information." << endl;
+          continue;
         }
-        g_object_unref(multipart);
+        if (g_file_info_get_file_type(file_info) != G_FILE_TYPE_REGULAR)
+        {
+          log << error << "cm: attached file is not a regular file." << endl;
+          continue;
+        }
+
+        GMimeStream * file_stream = g_mime_stream_file_new(fopen(filename.c_str(), "r"));
+        GMimeDataWrapper * data = g_mime_data_wrapper_new_with_stream(file_stream,
+            GMIME_CONTENT_ENCODING_DEFAULT);
+
+        GLibPointer file_stream_pointer(file_stream), data_pointer(data);
+
+        string content_type_ = g_file_info_get_content_type (file_info);
+        GMimeContentType * contentType = g_mime_content_type_new_from_string (content_type_.c_str());
+
+        GMimePart * part = g_mime_part_new_with_type(g_mime_content_type_get_media_type(contentType),
+            g_mime_content_type_get_media_subtype(contentType));
+        g_mime_part_set_content_object(part, data);
+        g_mime_part_set_content_encoding(part, GMIME_CONTENT_ENCODING_BASE64);
+        g_mime_part_set_filename(part, a.filename().c_str());
+
+        g_mime_multipart_add(multipart, (GMimeObject*) part);
+        g_object_unref(part);
+        g_object_unref(contentType);
+      }
+      g_object_unref(multipart);
     }
-    }}} */
+  }
+
+  void ComposeMessage::add_attachment (path p) {
+    attachments.push_back (p);
   }
 
   void ComposeMessage::send_threaded ()

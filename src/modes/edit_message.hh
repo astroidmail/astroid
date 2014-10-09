@@ -56,6 +56,9 @@ namespace Astroid {
       ustring references;
       ustring inreplyto;
 
+      vector<path> attachments;
+      void attach_file ();
+
       /* from combobox */
       class FromColumns : public Gtk::TreeModel::ColumnRecord {
         public:
