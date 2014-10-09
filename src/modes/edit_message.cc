@@ -163,6 +163,8 @@ namespace Astroid {
 
     from_combo->signal_changed().connect (
         sigc::mem_fun (this, &EditMessage::on_from_combo_changed));
+
+    start_vim_on_socket_ready = true;
   }
 
   void EditMessage::on_from_combo_changed () {
