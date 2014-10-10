@@ -64,7 +64,7 @@ Not yet set up, run from source root directory.
 
 astroid uses the `$XDG_CONFIG_HOME/astroid` directory (or `$HOME/.config/astroid` if it is not set) for storing its configuration file. When you first run astroid it will set up the default configuration file there. This is a JSON file created by [boost::property_tree]. Options not set here will be set to their default values as specified in `src/config.cc`.
 
-By default astroid looks in `$HOME/.mail` for the notmuch database, but you can change this in the configuration file. You can also set up default queries and accounts for sending mail there.
+By default astroid looks in `$HOME/.mail` for the notmuch database, but you can change this in the configuration file. You can also set up default queries and accounts for sending e-mail there.
 
 ## running
 
@@ -74,6 +74,11 @@ By default astroid looks in `$HOME/.mail` for the notmuch database, but you can 
 
 Report on the [github page](https://github.com/gauteh/astroid) or to the mailinglist at: [astroidmail@googlegroups.com](https://groups.google.com/forum/#!forum/astroidmail), subscribe [online](https://groups.google.com/forum/#!forum/astroidmail) or by sending an email to:
 [astroidmail+subscribe@googlegroups.com](mailto:astroidmail+subscribe@googlegroups.com).
+
+Patches are greatly appreciated, comments and bug reports too - but you may not
+expect the bug to be fixed. Contributors are very welcome.
+
+Also check out #astroid or #notmuch on irc.freenode.net.
 
 ## acknowledgements
 

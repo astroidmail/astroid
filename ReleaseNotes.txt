@@ -1,0 +1,6 @@
+== 0.1 /
+
+First release of Astroid! This is a pre-alpha-beta release. Daily usage should be
+possible, but much is still largely untested.
+
+
