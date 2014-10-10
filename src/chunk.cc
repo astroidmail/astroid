@@ -2,6 +2,7 @@
 # include <iostream>
 # include <atomic>
 # include <fstream>
+# include <thread>
 
 # include <boost/filesystem.hpp>
 
@@ -13,6 +14,8 @@
 # include "gmime_iostream.hh"
 # include "log.hh"
 # include "utils/ustring_utils.hh"
+# include "utils/vector_utils.hh"
+# include "config.hh"
 
 using namespace boost::filesystem;
 
@@ -392,13 +395,15 @@ namespace Astroid {
     return true;
   }
 
-  refptr<Chunk> Chunk::get_by_id (int _id) {
-    for (auto c : siblings) {
-      if (c->id == _id) {
-        return c;
-      } else {
-        auto kc = c->get_by_id (_id);
-        if (kc) return kc;
+  refptr<Chunk> Chunk::get_by_id (int _id, bool check_siblings) {
+    if (check_siblings) {
+      for (auto c : siblings) {
+        if (c->id == _id) {
+          return c;
+        } else {
+          auto kc = c->get_by_id (_id, false);
+          if (kc) return kc;
+        }
       }
     }
 
@@ -406,7 +411,7 @@ namespace Astroid {
       if (c->id == _id) {
         return c;
       } else {
-        auto kc = c->get_by_id (_id);
+        auto kc = c->get_by_id (_id, true);
         if (kc) return kc;
       }
     }
@@ -416,8 +421,64 @@ namespace Astroid {
 
   void Chunk::open () {
     log << info << "chunk: " << get_filename () << ", opening.." << endl;
+
+    path tf = astroid->config->cache_dir;
+
+    ustring tmp_fname = ustring::compose("%1-%2", UstringUtils::random_alphanumeric (10), get_filename ());
+    tf /= path (tmp_fname.c_str());
+
+    log << debug << "chunk: saving to tmp path: " << tf.c_str() << endl;
+    save_to (tf.c_str());
+
+    thread job (&Chunk::do_open, this, tf.c_str());
+    job.detach ();
   }
-  
+
+  void Chunk::do_open (ustring tf) {
+    ustring external_cmd = astroid->config->config.get<string> ("attachment.external_open_cmd");
+
+    vector<string> args = { external_cmd.c_str(), tf.c_str () };
+    log << debug << "chunk: spawning: " << args[0] << ", " << args[1] << endl;
+    string stdout;
+    string stderr;
+    int    exitcode;
+    try {
+      Glib::spawn_sync ("",
+                        args,
+                        Glib::SPAWN_DEFAULT | Glib::SPAWN_SEARCH_PATH,
+                        sigc::slot <void> (),
+                        &stdout,
+                        &stderr,
+                        &exitcode
+                        );
+
+    } catch (Glib::SpawnError &ex) {
+      log << error << "chunk: exception while opening attachment: " <<  ex.what () << endl;
+      log << info << "chunk: deleting tmp file: " << tf << endl;
+      unlink (tf.c_str());
+    }
+
+    ustring ustdout = ustring(stdout);
+    for (ustring &l : VectorUtils::split_and_trim (ustdout, ustring("\n"))) {
+
+      log << debug << l << endl;
+    }
+
+    ustring ustderr = ustring(stderr);
+    for (ustring &l : VectorUtils::split_and_trim (ustderr, ustring("\n"))) {
+
+      log << debug << l << endl;
+    }
+
+    if (exitcode != 0) {
+      log << error << "chunk: chunk script exited with code: " << exitcode << endl;
+    }
+
+    log << info << "chunk: deleting tmp file: " << tf << endl;
+    unlink (tf.c_str());
+  }
+
+
   void Chunk::save () {
     log << info << "chunk: " << get_filename () << ", saving.." << endl;
     Gtk::FileChooserDialog dialog ("Save attachment to folder..",

@@ -117,6 +117,9 @@ namespace Astroid {
     /* polling */
     default_config.put ("poll.interval", 60); // seconds
 
+    /* attachments */
+    default_config.put ("attachment.external_open_cmd", "xdg-open");
+
   }
 
   void Config::write_back_config () {

@@ -1796,7 +1796,11 @@ namespace Astroid {
   }
 
   void ThreadView::emit_element_action (unsigned int element, char action) {
-    log << info << "tv: element action emitted: " << element << ", action: " << action << endl;
+    if (action == '\n') {
+      log << debug << "tv: element action emitted: " << element << ", action: enter" << endl;
+    } else {
+      log << debug << "tv: element action emitted: " << element << ", action: " << action << endl;
+    }
     m_element_action.emit (element, action);
   }
 

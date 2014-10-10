@@ -31,7 +31,7 @@ namespace Astroid {
 
       vector<refptr<Chunk>> kids;
       vector<refptr<Chunk>> siblings;
-      refptr<Chunk> get_by_id (int);
+      refptr<Chunk> get_by_id (int, bool check_siblings = true);
 
       bool viewable   = false;
       bool attachment = false;
@@ -55,6 +55,7 @@ namespace Astroid {
 
     private:
       ustring _fname;
+      void do_open (ustring);
   };
 }
 
