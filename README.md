@@ -13,7 +13,7 @@
 * (done)        display html mail and some attachments inline.
 * (not done)    built-in crypto (gpg,..) support.
 * (not done)    render markdown (and friends) as well as syntax highlighting.
-* (only vim)    editors: embed vim or emacs (possibly ship an simple editor)
+* (only vim)    editors: embed vim or emacs (possibly ship a simple editor)
 * (linux)       Support: Platforms supported by notmuch and other libraries, specifically:
                          Linux, *BSD, Mac, Windows..
 
@@ -83,7 +83,7 @@ Also check out #astroid or #notmuch on irc.freenode.net.
 ## acknowledgements
 
   The main inspiration for astroid is the [sup] mail user agent. [sup]
-  provided inspiration for [notmuch] which is an mail indexer. astroid is
+  provided inspiration for [notmuch] which is a mail indexer. astroid is
   using [notmuch] as a backend.
 
   Some parts of the user interface and layout have been copied from or
