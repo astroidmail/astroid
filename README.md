@@ -4,18 +4,18 @@
   Written in C++ using GTK+, [WebKit] and [gmime].
 
 ## design and user interface goals
-* fully operatable by keyboard only - but accept mouse clicks
-* lightweight.
-* base interface on sup, but allow buffers to be dragged out
-  or separated as windows so that multiple views/buffers can be
-  seen at one time.
-* allow several simultaneous windows.
-* display html mail and some attachments inline.
-* built-in crypto (gpg,..) support.
-* render markdown (and friends) as well as syntax highlighting.
-* editors: embed vim or emacs (possibly ship an simple editor)
-* Support: Platforms supported by notmuch and other libraries, specifically:
-  Linux, *BSD, Mac, Windows..
+* (keyboard)    fully operatable by keyboard only - but accept mouse clicks
+*               lightweight.
+* (partly done) base interface on sup, but allow buffers to be dragged out
+                or separated as windows so that multiple views/buffers can be
+                seen at one time.
+* (done)        allow several simultaneous windows.
+* (done)        display html mail and some attachments inline.
+* (not done)    built-in crypto (gpg,..) support.
+* (not done)    render markdown (and friends) as well as syntax highlighting.
+* (only vim)    editors: embed vim or emacs (possibly ship an simple editor)
+* (linux)       Support: Platforms supported by notmuch and other libraries, specifically:
+                         Linux, *BSD, Mac, Windows..
 
 ### considerations
   * Never use deprecated libraries - use as few libraries as possible.
@@ -23,9 +23,11 @@
   * All database operations / mail handling should be done by notmuch or other
     tools.
 
-## licence
+## licence and attribution
 
   GNU [GPL] v3 or later:
+
+    Copyright (c) 2014  Gaute Hope <eg@gaute.vetsj.com>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
