@@ -409,6 +409,8 @@ namespace Astroid {
           focused_message = m;
         }
       }
+    } else {
+      focused_message = m;
     }
 
     g_object_unref (insert_before);
@@ -1018,6 +1020,14 @@ namespace Astroid {
           return element_action ('s');
         }
 
+      case GDK_KEY_d:
+        {
+          if (edit_mode) {
+            /* del attachment */
+            return element_action ('d');
+          }
+        }
+
       case GDK_KEY_o:
         {
           /* open attachment */
@@ -1466,13 +1476,13 @@ namespace Astroid {
   }
 
   void ThreadView::focus_next_element () {
-    if (!is_hidden (focused_message)) {
+    if (!is_hidden (focused_message) || edit_mode) {
       /* if the message is expanded, check if we should move focus
        * to the next element */
 
       MessageState * s = &(state[focused_message]);
 
-      log << debug << "focus next: current elemenet: " << s->current_element << endl;
+      log << debug << "focus next: current element: " << s->current_element << " of " << s->elements.size() << endl;
       /* are there any more elements */
       if (s->current_element < (s->elements.size()-1)) {
         log << debug << "focus next: check next.." << endl;
@@ -1533,7 +1543,7 @@ namespace Astroid {
   }
 
   void ThreadView::focus_previous_element () {
-    if (!is_hidden (focused_message)) {
+    if (!is_hidden (focused_message) || edit_mode) {
       /* if the message is expanded, check if we should move focus
        * to the next element */
 

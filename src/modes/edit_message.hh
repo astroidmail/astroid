@@ -155,6 +155,7 @@ namespace Astroid {
 
     private:
       void on_from_combo_changed ();
+      void on_element_action (int id, char action);
 
     public:
       void grab_modal () override;

@@ -108,6 +108,9 @@ namespace Astroid {
     thread_view->signal_ready().connect (
         sigc::mem_fun (this, &EditMessage::on_tv_ready));
 
+    thread_view->signal_element_action().connect (
+        sigc::mem_fun (this, &EditMessage::on_element_action));
+
     /* defaults */
     accounts = astroid->accounts;
 
@@ -578,6 +581,19 @@ namespace Astroid {
     c->finalize ();
 
     return c;
+  }
+
+  void EditMessage::on_element_action (int id, char action) {
+    if (action == 'd') {
+      /* delete attachment */
+      log << info << "em: remove attachment: " << id << endl;
+
+      attachments.erase (attachments.begin() + (id-1));
+
+      prepare_message ();
+      read_edited_message ();
+
+    }
   }
 
   void EditMessage::vim_remote_keys (ustring keys) {
