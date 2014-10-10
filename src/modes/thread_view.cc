@@ -1026,6 +1026,7 @@ namespace Astroid {
             /* del attachment */
             return element_action ('d');
           }
+          return false;
         }
 
       case GDK_KEY_o:
