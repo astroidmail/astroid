@@ -1009,6 +1009,17 @@ namespace Astroid {
 
       case GDK_KEY_Return:
         {
+          return element_action ('\n');
+        }
+
+      case GDK_KEY_s:
+        {
+          /* save attachment */
+          return element_action ('s');
+        }
+
+      case GDK_KEY_e:
+        {
           if (edit_mode) return false;
           toggle_hidden ();
           return true;
@@ -1136,6 +1147,39 @@ namespace Astroid {
     return false;
   }
 
+  bool ThreadView::element_action (char a) {
+    log << debug << "tv: activate item." << endl;
+
+    if (!edit_mode) {
+      if (is_hidden (focused_message)) {
+        if (a == '\n') {
+          toggle_hidden ();
+        }
+      } else {
+        if (state[focused_message].current_element == 0) {
+          if (a == '\n') {
+            /* nothing selected, closing message */
+            toggle_hidden ();
+          }
+        } else {
+          if (a == '\n') {
+            /* open attachment */
+          } else if (a == 's') {
+            /* save attachment */
+          }
+        }
+      }
+    }
+
+    if (focused_message) {
+      if (state[focused_message].current_element > 0) {
+        emit_element_action (state[focused_message].current_element, a);
+      }
+    }
+    return true;
+  }
+
+
   void ThreadView::update_focus_to_view () {
     /* check if currently focused message has gone out of focus
      * and update focus */
@@ -1252,10 +1296,6 @@ namespace Astroid {
   }
 
   void ThreadView::update_focus_status () {
-    if (edit_mode) {
-      return;
-    }
-
     WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
     for (auto &m : mthread->messages) {
       ustring mid = "message_" + m->mid;
@@ -1269,9 +1309,11 @@ namespace Astroid {
 
       if (focused_message == m)
       {
-        /* set class  */
-        webkit_dom_dom_token_list_add (class_list, "focused",
-            (gerr = NULL, &gerr));
+        if (!edit_mode) {
+          /* set class  */
+          webkit_dom_dom_token_list_add (class_list, "focused",
+              (gerr = NULL, &gerr));
+        }
 
         /* check elements */
         unsigned int eno = 0;
@@ -1304,8 +1346,10 @@ namespace Astroid {
 
       } else {
         /* reset class */
-        webkit_dom_dom_token_list_remove (class_list, "focused",
-            (gerr = NULL, &gerr));
+        if (!edit_mode) {
+          webkit_dom_dom_token_list_remove (class_list, "focused",
+              (gerr = NULL, &gerr));
+        }
 
         /* check elements */
         unsigned int eno = 0;
@@ -1719,6 +1763,17 @@ namespace Astroid {
   void ThreadView::emit_ready () {
     log << info << "tv: ready emitted." << endl;
     m_signal_ready.emit ();
+  }
+
+  ThreadView::type_element_action
+    ThreadView::signal_element_action ()
+  {
+    return m_element_action;
+  }
+
+  void ThreadView::emit_element_action (unsigned int element, char action) {
+    log << info << "tv: element action emitted: " << element << ", action: " << action << endl;
+    m_element_action.emit (element, action);
   }
 
   /* MessageState */

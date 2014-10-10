@@ -117,6 +117,9 @@ namespace Astroid {
       /* set the info header of the message */
       void set_info (refptr<Message>, ustring);
 
+      /* activate message or selected element */
+      bool element_action (char);
+
     private:
       /* webkit (using C api) */
       WebKitWebView     * webview;
@@ -207,8 +210,15 @@ namespace Astroid {
 
       void emit_ready ();
 
+      /* action on element */
+      typedef sigc::signal <void, unsigned int, char> type_element_action;
+      type_element_action signal_element_action ();
+
+      void emit_element_action (unsigned int element, char action);
+
     protected:
       type_signal_ready m_signal_ready;
+      type_element_action m_element_action;
   };
 }
 
