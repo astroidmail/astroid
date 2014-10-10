@@ -1483,10 +1483,9 @@ namespace Astroid {
 
       MessageState * s = &(state[focused_message]);
 
-      log << debug << "focus next: current element: " << s->current_element << " of " << s->elements.size() << endl;
+      //log << debug << "focus next: current element: " << s->current_element << " of " << s->elements.size() << endl;
       /* are there any more elements */
       if (s->current_element < (s->elements.size()-1)) {
-        log << debug << "focus next: check next.." << endl;
         /* check if the next element is in full view */
 
         MessageState::Element * next_e = &(s->elements[s->current_element + 1]);
@@ -1520,7 +1519,7 @@ namespace Astroid {
           change_focus = true;
         }
 
-        log << debug << "focus_next_element: change: " << change_focus << endl;
+        //log << debug << "focus_next_element: change: " << change_focus << endl;
 
         if (change_focus) {
           s->current_element++;
@@ -1550,10 +1549,9 @@ namespace Astroid {
 
       MessageState * s = &(state[focused_message]);
 
-      log << debug << "focus prev: current elemenet: " << s->current_element << endl;
+      //log << debug << "focus prev: current elemenet: " << s->current_element << endl;
       /* are there any more elements */
       if (s->current_element > 0) {
-        log << debug << "focus next: check prev.." << endl;
         /* check if the prev element is in full view */
 
         MessageState::Element * next_e = &(s->elements[s->current_element - 1]);
@@ -1592,7 +1590,7 @@ namespace Astroid {
           change_focus = true;
         }
 
-        log << debug << "focus_prev_element: change: " << change_focus << endl;
+        //log << debug << "focus_prev_element: change: " << change_focus << endl;
 
         if (change_focus) {
           s->current_element--;
@@ -1616,7 +1614,7 @@ namespace Astroid {
   }
 
   void ThreadView::focus_next () {
-    log << debug << "tv: focus_next." << endl;
+    //log << debug << "tv: focus_next." << endl;
 
     if (edit_mode) return;
 
@@ -1633,7 +1631,7 @@ namespace Astroid {
   }
 
   void ThreadView::focus_previous () {
-    log << debug << "tv: focus previous." << endl;
+    //log << debug << "tv: focus previous." << endl;
 
     if (edit_mode) return;
 
