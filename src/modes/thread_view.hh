@@ -64,6 +64,9 @@ namespace Astroid {
       void focus_next ();
       void focus_previous ();
 
+      void focus_next_element ();
+      void focus_previous_element ();
+
       enum ToggleState {
         ToggleToggle,
         ToggleHide,
@@ -76,15 +79,35 @@ namespace Astroid {
       /* message display state */
       struct MessageState {
         public:
+          MessageState ();
+
           /* the message was expanded as part of an
            * C-n or C-p command */
           bool scroll_expanded = false;
+
+          enum ElementType {
+            Empty,
+            Address,
+            Attachment
+          };
+
+          struct Element {
+            public:
+              Element (ElementType t, ustring i);
+              ElementType type;
+              ustring     id;
+              ustring     element_id ();
+          };
+
+          vector<Element> elements; // first element is always empty
+          unsigned int    current_element;
       };
 
       std::map<refptr<Message>, MessageState> state;
 
       /* focused message */
       refptr<Message> candidate_startup; // startup
+
     public:
       refptr<Message> focused_message;
 

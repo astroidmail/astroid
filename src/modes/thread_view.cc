@@ -730,8 +730,16 @@ namespace Astroid {
       webkit_dom_html_element_set_inner_text (info_fsize, fsize.c_str(), (err = NULL, &err));
 
 
+      // add attachment to message state
+      MessageState::Element e (MessageState::ElementType::Attachment, ustring::compose("%1", c->id));
+      state[message].elements.push_back (e);
+      log << debug << "tv: added attachment: " << state[message].elements.size() << endl;
+
       webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (attachment_table),
-        "data-attachment-id", ustring::compose("%1", c->id).c_str(),
+        "data-attachment-id", e.element_id().c_str(),
+        (err = NULL, &err));
+      webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (attachment_table),
+        "id", e.element_id().c_str(),
         (err = NULL, &err));
 
       // set image
@@ -749,6 +757,7 @@ namespace Astroid {
       g_object_unref (info_fname);
       g_object_unref (info_fsize);
       g_object_unref (attachment_table);
+
     }
 
     if (attachments > 0) {
@@ -908,10 +917,15 @@ namespace Astroid {
     switch (event->keyval) {
 
       case GDK_KEY_j:
+        {
+          focus_next_element ();
+          return true;
+        }
+
       case GDK_KEY_J:
       case GDK_KEY_Down:
         {
-          if (event->keyval == GDK_KEY_J || event->state & GDK_CONTROL_MASK) {
+          if (event->state & GDK_CONTROL_MASK) {
             auto adj = scroll.get_vadjustment ();
             adj->set_value (adj->get_value() + adj->get_page_increment ());
             update_focus_to_view ();
@@ -931,10 +945,15 @@ namespace Astroid {
         return true;
 
       case GDK_KEY_k:
+        {
+          focus_previous_element ();
+          return true;
+        }
+
       case GDK_KEY_K:
       case GDK_KEY_Up:
         {
-          if (event->keyval == GDK_KEY_K || event->state & GDK_CONTROL_MASK) {
+          if (event->state & GDK_CONTROL_MASK) {
             auto adj = scroll.get_vadjustment ();
             adj->set_value (adj->get_value() - adj->get_page_increment ());
             update_focus_to_view ();
@@ -1254,10 +1273,60 @@ namespace Astroid {
         webkit_dom_dom_token_list_add (class_list, "focused",
             (gerr = NULL, &gerr));
 
+        /* check elements */
+        unsigned int eno = 0;
+        for (auto el : state[m].elements) {
+          if (eno > 0) {
+
+            WebKitDOMElement * ee = webkit_dom_document_get_element_by_id (d, el.element_id().c_str());
+
+            WebKitDOMDOMTokenList * e_class_list =
+              webkit_dom_element_get_class_list (ee);
+
+            if (eno == state[m].current_element) {
+              webkit_dom_dom_token_list_add (e_class_list, "focused",
+                  (gerr = NULL, &gerr));
+
+            } else {
+
+              /* reset class */
+              webkit_dom_dom_token_list_remove (e_class_list, "focused",
+                  (gerr = NULL, &gerr));
+
+            }
+
+            g_object_unref (e_class_list);
+            g_object_unref (ee);
+          }
+
+          eno++;
+        }
+
       } else {
         /* reset class */
         webkit_dom_dom_token_list_remove (class_list, "focused",
             (gerr = NULL, &gerr));
+
+        /* check elements */
+        unsigned int eno = 0;
+        for (auto el : state[m].elements) {
+          if (eno > 0) {
+
+            WebKitDOMElement * ee = webkit_dom_document_get_element_by_id (d, el.element_id().c_str());
+
+            WebKitDOMDOMTokenList * e_class_list =
+              webkit_dom_element_get_class_list (ee);
+
+            /* reset class */
+            webkit_dom_dom_token_list_remove (e_class_list, "focused",
+                (gerr = NULL, &gerr));
+
+            g_object_unref (e_class_list);
+            g_object_unref (ee);
+          }
+
+          eno++;
+        }
       }
 
       g_object_unref (class_list);
@@ -1295,6 +1364,9 @@ namespace Astroid {
     if (!m) m = focused_message;
     ustring mid = "message_" + m->mid;
 
+    // reset element focus
+    state[m].current_element = 0; // empty focus
+
     WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
 
     WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
@@ -1325,6 +1397,145 @@ namespace Astroid {
     g_object_unref (d);
   }
 
+  void ThreadView::focus_next_element () {
+    if (!is_hidden (focused_message)) {
+      /* if the message is expanded, check if we should move focus
+       * to the next element */
+
+      MessageState * s = &(state[focused_message]);
+
+      log << debug << "focus next: current elemenet: " << s->current_element << endl;
+      /* are there any more elements */
+      if (s->current_element < (s->elements.size()-1)) {
+        log << debug << "focus next: check next.." << endl;
+        /* check if the next element is in full view */
+
+        MessageState::Element * next_e = &(s->elements[s->current_element + 1]);
+
+        WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
+
+        auto adj = scroll.get_vadjustment ();
+
+        ustring eid = next_e->element_id ();
+
+        WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, eid.c_str());
+
+        double scrolled = adj->get_value ();
+        double height   = adj->get_page_size (); // 0 when there is
+                                                 // no paging.
+
+        double clientY = webkit_dom_element_get_offset_top (e);
+        double clientH = webkit_dom_element_get_client_height (e);
+
+        g_object_unref (e);
+        g_object_unref (d);
+
+        bool change_focus = false;
+        if (height > 0) {
+          if (  (clientY >= scrolled) &&
+              ( (clientY + clientH) <= (scrolled + height) ))
+          {
+            change_focus = true;
+          }
+        } else {
+          change_focus = true;
+        }
+
+        log << debug << "focus_next_element: change: " << change_focus << endl;
+
+        if (change_focus) {
+          s->current_element++;
+          update_focus_status ();
+          return;
+        }
+      }
+    }
+
+    /* no focus change, standard behaviour */
+    auto adj = scroll.get_vadjustment ();
+    double v = adj->get_value ();
+    adj->set_value (adj->get_value() + adj->get_step_increment ());
+
+    if (v == adj->get_value ()) {
+      /* we're at the bottom, just move focus down */
+      focus_next ();
+    } else {
+      update_focus_to_view ();
+    }
+  }
+
+  void ThreadView::focus_previous_element () {
+    if (!is_hidden (focused_message)) {
+      /* if the message is expanded, check if we should move focus
+       * to the next element */
+
+      MessageState * s = &(state[focused_message]);
+
+      log << debug << "focus prev: current elemenet: " << s->current_element << endl;
+      /* are there any more elements */
+      if (s->current_element > 0) {
+        log << debug << "focus next: check prev.." << endl;
+        /* check if the prev element is in full view */
+
+        MessageState::Element * next_e = &(s->elements[s->current_element - 1]);
+
+        bool change_focus = false;
+
+        if (next_e->type != MessageState::ElementType::Empty) {
+          WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
+
+          auto adj = scroll.get_vadjustment ();
+
+          ustring eid = next_e->element_id ();
+
+          WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, eid.c_str());
+
+          double scrolled = adj->get_value ();
+          double height   = adj->get_page_size (); // 0 when there is
+                                                   // no paging.
+
+          double clientY = webkit_dom_element_get_offset_top (e);
+          double clientH = webkit_dom_element_get_client_height (e);
+
+          g_object_unref (e);
+          g_object_unref (d);
+
+          if (height > 0) {
+            if (  (clientY >= scrolled) &&
+                ( (clientY + clientH) <= (scrolled + height) ))
+            {
+              change_focus = true;
+            }
+          } else {
+            change_focus = true;
+          }
+        } else {
+          change_focus = true;
+        }
+
+        log << debug << "focus_prev_element: change: " << change_focus << endl;
+
+        if (change_focus) {
+          s->current_element--;
+          update_focus_status ();
+          return;
+        }
+      }
+    }
+
+    /* standard behaviour */
+    auto adj = scroll.get_vadjustment ();
+    if (adj->get_value () == adj->get_lower ()) {
+      /* we're at the top, move focus up */
+      focus_previous ();
+
+    } else {
+      adj->set_value (adj->get_value() - adj->get_step_increment ());
+      update_focus_to_view ();
+    }
+
+  }
+
   void ThreadView::focus_next () {
     log << debug << "tv: focus_next." << endl;
 
@@ -1337,6 +1548,7 @@ namespace Astroid {
 
     if (focused_position < static_cast<int>((mthread->messages.size ()-1))) {
       focused_message = mthread->messages[focused_position + 1];
+      state[focused_message].current_element = 0; // start at top
       update_focus_status ();
     }
   }
@@ -1353,6 +1565,7 @@ namespace Astroid {
 
     if (focused_position > 0) {
       focused_message = mthread->messages[focused_position - 1];
+      state[focused_message].current_element = state[focused_message].elements.size()-1; // start at bottom
       update_focus_status ();
     }
   }
@@ -1506,6 +1719,26 @@ namespace Astroid {
   void ThreadView::emit_ready () {
     log << info << "tv: ready emitted." << endl;
     m_signal_ready.emit ();
+  }
+
+  /* MessageState */
+  ThreadView::MessageState::MessageState () {
+    elements.push_back (Element (Empty, ""));
+    current_element = 0;
+  }
+
+  ThreadView::MessageState::Element::Element (ThreadView::MessageState::ElementType t, ustring i)
+  {
+    type = t;
+    id   = i;
+  }
+
+  ustring ThreadView::MessageState::Element::element_id () {
+    if (type == Attachment) {
+      return id;
+    }
+
+    return id;
   }
 
 }
