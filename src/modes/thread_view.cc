@@ -1171,12 +1171,19 @@ namespace Astroid {
       if (is_hidden (focused_message)) {
         if (a == '\n') {
           toggle_hidden ();
+        } else if (a == 's') {
+          /* save message to */
+          focused_message->save ();
         }
+
       } else {
         if (state[focused_message].current_element == 0) {
           if (a == '\n') {
             /* nothing selected, closing message */
             toggle_hidden ();
+          } else if (a == 's') {
+            /* save message to */
+            focused_message->save ();
           }
         } else {
           if (a == '\n' || a == 'o') {

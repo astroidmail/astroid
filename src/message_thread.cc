@@ -3,6 +3,7 @@
 
 # include <notmuch.h>
 # include <gmime/gmime.h>
+# include <boost/filesystem.hpp>
 
 # include "astroid.hh"
 # include "db.hh"
@@ -12,6 +13,7 @@
 # include "utils/date_utils.hh"
 
 using namespace std;
+using namespace boost::filesystem;
 
 namespace Astroid {
   /* --------
@@ -274,6 +276,47 @@ namespace Astroid {
 
   InternetAddressList * Message::bcc () {
     return g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_BCC);
+  }
+
+  void Message::save () {
+    Gtk::FileChooserDialog dialog ("Save message..",
+        Gtk::FILE_CHOOSER_ACTION_SAVE);
+
+    dialog.add_button ("_Cancel", Gtk::RESPONSE_CANCEL);
+    dialog.add_button ("_Select", Gtk::RESPONSE_OK);
+
+    dialog.set_do_overwrite_confirmation (true);
+    dialog.set_current_name (subject + ".eml");
+
+    int result = dialog.run ();
+
+    switch (result) {
+      case (Gtk::RESPONSE_OK):
+        {
+          string fname = dialog.get_filename ();
+
+          save_to (fname);
+
+          break;
+        }
+
+      default:
+        {
+          log << debug << "msg: save: cancelled." << endl;
+        }
+    }
+  }
+
+  void Message::save_to (ustring tofname) {
+    log << info << "msg: saving to: " << tofname << endl;
+    // apparently boost needs to be compiled with -std=c++0x
+    // https://svn.boost.org/trac/boost/ticket/6124
+    // copy_file ( path (fname), path (tofname) );
+
+    ifstream src (fname, ios::binary);
+    ofstream dst (tofname, ios::binary);
+
+    dst << src.rdbuf ();
   }
 
   /* --------
