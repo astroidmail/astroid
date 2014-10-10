@@ -47,6 +47,7 @@ namespace Astroid {
 
       ustring viewable_text (bool);
       vector<refptr<Chunk>> attachments ();
+      refptr<Chunk> get_chunk_by_id (int id);
   };
 
   class MessageThread : public Glib::Object {

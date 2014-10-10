@@ -731,7 +731,7 @@ namespace Astroid {
 
 
       // add attachment to message state
-      MessageState::Element e (MessageState::ElementType::Attachment, ustring::compose("%1", c->id));
+      MessageState::Element e (MessageState::ElementType::Attachment, c->id);
       state[message].elements.push_back (e);
       log << debug << "tv: added attachment: " << state[message].elements.size() << endl;
 
@@ -1018,6 +1018,12 @@ namespace Astroid {
           return element_action ('s');
         }
 
+      case GDK_KEY_o:
+        {
+          /* open attachment */
+          return element_action ('o');
+        }
+
       case GDK_KEY_e:
         {
           if (edit_mode) return false;
@@ -1162,10 +1168,28 @@ namespace Astroid {
             toggle_hidden ();
           }
         } else {
-          if (a == '\n') {
+          if (a == '\n' || a == 'o') {
             /* open attachment */
+
+            refptr<Chunk> c = focused_message->get_chunk_by_id (
+                state[focused_message].elements[state[focused_message].current_element].id);
+
+            if (c) {
+              c->open ();
+            } else {
+              log << error << "tv: could not find chunk for element." << endl;
+            }
+
           } else if (a == 's') {
             /* save attachment */
+            refptr<Chunk> c = focused_message->get_chunk_by_id (
+                state[focused_message].elements[state[focused_message].current_element].id);
+
+            if (c) {
+              c->save ();
+            } else {
+              log << error << "tv: could not find chunk for element." << endl;
+            }
           }
         }
       }
@@ -1778,22 +1802,18 @@ namespace Astroid {
 
   /* MessageState */
   ThreadView::MessageState::MessageState () {
-    elements.push_back (Element (Empty, ""));
+    elements.push_back (Element (Empty, -1));
     current_element = 0;
   }
 
-  ThreadView::MessageState::Element::Element (ThreadView::MessageState::ElementType t, ustring i)
+  ThreadView::MessageState::Element::Element (ThreadView::MessageState::ElementType t, int i)
   {
     type = t;
     id   = i;
   }
 
   ustring ThreadView::MessageState::Element::element_id () {
-    if (type == Attachment) {
-      return id;
-    }
-
-    return id;
+    return ustring::compose("%1", id);
   }
 
 }

@@ -31,6 +31,7 @@ namespace Astroid {
 
       vector<refptr<Chunk>> kids;
       vector<refptr<Chunk>> siblings;
+      refptr<Chunk> get_by_id (int);
 
       bool viewable   = false;
       bool attachment = false;
@@ -49,6 +50,8 @@ namespace Astroid {
       refptr<Glib::ByteArray> contents ();
 
       bool save_to (string filename);
+      void open ();
+      void save ();
 
     private:
       ustring _fname;

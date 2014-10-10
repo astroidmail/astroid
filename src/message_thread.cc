@@ -238,6 +238,14 @@ namespace Astroid {
     return attachments;
   }
 
+  refptr<Chunk> Message::get_chunk_by_id (int id) {
+    if (root->id == id) {
+      return root;
+    } else {
+      return root->get_by_id (id);
+    }
+  }
+
   ustring Message::date () {
     return ustring (g_mime_message_get_date_as_string (message));
   }

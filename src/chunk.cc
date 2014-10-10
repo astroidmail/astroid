@@ -392,6 +392,63 @@ namespace Astroid {
     return true;
   }
 
+  refptr<Chunk> Chunk::get_by_id (int _id) {
+    for (auto c : siblings) {
+      if (c->id == _id) {
+        return c;
+      } else {
+        auto kc = c->get_by_id (_id);
+        if (kc) return kc;
+      }
+    }
+
+    for (auto c : kids) {
+      if (c->id == _id) {
+        return c;
+      } else {
+        auto kc = c->get_by_id (_id);
+        if (kc) return kc;
+      }
+    }
+
+    return refptr<Chunk>();
+  }
+
+  void Chunk::open () {
+    log << info << "chunk: " << get_filename () << ", opening.." << endl;
+  }
+  
+  void Chunk::save () {
+    log << info << "chunk: " << get_filename () << ", saving.." << endl;
+    Gtk::FileChooserDialog dialog ("Save attachment to folder..",
+        Gtk::FILE_CHOOSER_ACTION_SAVE);
+
+    dialog.add_button ("_Cancel", Gtk::RESPONSE_CANCEL);
+    dialog.add_button ("_Select", Gtk::RESPONSE_OK);
+
+    dialog.set_do_overwrite_confirmation (true);
+    dialog.set_current_name (get_filename ());
+
+    int result = dialog.run ();
+
+    switch (result) {
+      case (Gtk::RESPONSE_OK):
+        {
+          string fname = dialog.get_filename ();
+          log << info << "chunk: saving attachment to: " << fname << endl;
+
+          save_to (fname);
+
+          break;
+        }
+
+      default:
+        {
+          log << debug << "chunk: save: cancelled." << endl;
+        }
+    }
+  }
+
   Chunk::~Chunk () {
     //g_object_unref (mime_object); // TODO: not sure about this one..
     g_object_unref (content_type);

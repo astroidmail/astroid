@@ -93,9 +93,9 @@ namespace Astroid {
 
           struct Element {
             public:
-              Element (ElementType t, ustring i);
+              Element (ElementType t, int i);
               ElementType type;
-              ustring     id;
+              int         id;
               ustring     element_id ();
           };
 
