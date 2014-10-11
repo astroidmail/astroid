@@ -1,4 +1,5 @@
 test_suite
 test_composed
+test_generic
 *.passed
 

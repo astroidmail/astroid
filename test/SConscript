@@ -17,6 +17,9 @@ testEnv.PrependENVPath('LD_LIBRARY_PATH', env.Dir('.').abspath)
 #testEnv.addUnitTest('test_suite', files)
 # you can also use glob to add all the files in the folder.
 
+composed_files = Glob('test_generic.cc')
+testEnv.addUnitTest ('test_generic', [composed_files, source_objs])
+
 composed_files = Glob('test_composed*.cc')
 testEnv.addUnitTest ('test_composed', [composed_files, source_objs])
 
