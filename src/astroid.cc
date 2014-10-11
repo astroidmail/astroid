@@ -32,23 +32,22 @@ using namespace std;
 Astroid::Astroid * (Astroid::astroid);
 Astroid::Log Astroid::log;
 
-int main (int argc, char **argv) {
-  Astroid::astroid = new Astroid::Astroid ();
-  return Astroid::astroid->main (argc, argv);
-}
-
 namespace Astroid {
-
   Astroid::Astroid () {
-  }
-
-  int Astroid::main (int argc, char **argv) {
     Glib::init ();
 
     log.add_out_stream (&cout);
 
     log << info << "welcome to astroid! - " << GIT_DESC << endl;
 
+    /* user agent */
+    user_agent = ustring::compose ("astroid/v%1 (https://github.com/gauteh/astroid)", GIT_DESC);
+
+    /* gmime settings */
+    g_mime_init (0); // utf-8 is default
+  }
+
+  int Astroid::main (int argc, char **argv) {
     /* set up gtk */
     int aargc = 1; // TODO: allow GTK to get some options aswell.
     app = Gtk::Application::create (aargc, argv, "org.astroid");
@@ -66,9 +65,6 @@ namespace Astroid {
             &Astroid::on_signal_activate));
 
     }
-
-    /* user agent */
-    user_agent = ustring::compose ("astroid/v%1 (https://github.com/gauteh/astroid)", GIT_DESC);
 
     /* options */
     namespace po = boost::program_options;
@@ -92,9 +88,6 @@ namespace Astroid {
     } else {
       config = new Config ();
     }
-
-    /* gmime settings */
-    g_mime_init (0); // utf-8 is default
 
     /* set up static classes */
     Date::init ();
@@ -122,6 +115,34 @@ namespace Astroid {
     log << info << "astroid: goodbye!" << endl;
 
     return 0;
+  }
+
+  void Astroid::main_test () {
+    config = new Config (true);
+
+    /* set up static classes */
+    Date::init ();
+
+    /* set up accounts */
+    accounts = new AccountManager ();
+
+    /* set up contacts */
+    contacts = new Contacts ();
+
+    /* set up global actions */
+    global_actions = new GlobalActions ();
+
+    /* set up poller */
+    poll = new Poll ();
+
+    /* clean up and exit */
+    delete accounts;
+    delete contacts;
+    delete config;
+
+    log << info << "astroid: goodbye!" << endl;
+
+    return;
   }
 
   void Astroid::quit () {

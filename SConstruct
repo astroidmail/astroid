@@ -102,12 +102,18 @@ vfd.close ()
 env.Append (CPPPATH = 'src')
 source = (
 
-          Glob('src/*.cc') +
-          Glob('src/modes/*.cc') +
-          Glob('src/actions/*.cc') +
-          Glob('src/utils/*.cc')
+          Glob('src/*.cc', strings = True) +
+          Glob('src/modes/*.cc', strings = True) +
+          Glob('src/actions/*.cc', strings = True) +
+          Glob('src/utils/*.cc', strings = True)
 
           )
+
+source.remove ('src/main.cc')
+source_objs = [env.Object (s) for s in source]
+
+Export ('source')
+Export ('source_objs')
 
 conf = Configure(env)
 
@@ -117,13 +123,14 @@ if not conf.CheckHeader ('notmuch.h'):
 
 env = conf.Finish ()
 
-env.Program (source = source, target = 'astroid')
+env.Program (source = ['src/main.cc', source_objs], target = 'astroid')
 env.Alias ('build', 'astroid')
 
 Export ('env')
 
 # http://drowcode.blogspot.no/2008/12/few-days-ago-i-decided-i-wanted-to-use.html
 testEnv = env.Clone()
+testEnv.Append (CPPPATH = '../src')
 testEnv.Tool('unittest',
          toolpath=['test/bt/'],
          UTEST_MAIN_SRC=File('test/bt/boostautotestmain.cc'),

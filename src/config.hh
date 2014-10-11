@@ -15,7 +15,7 @@ using boost::property_tree::ptree;
 namespace Astroid {
   class Config {
     public:
-      Config ();
+      Config (bool _test = false);
       Config (const char *);
 
       /* dir env vars from XDG with defaults:
@@ -25,12 +25,14 @@ namespace Astroid {
        * XDG_RUNTIME_HOME : none
        */
 
+      bool test;
+
       path home;
       path config_dir;
       path data_dir;
       path cache_dir;
       path runtime_dir;
-      
+
       path config_file;
 
       void load_config ();

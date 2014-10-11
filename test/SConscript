@@ -2,6 +2,8 @@
 # Unit tests
 Import('testEnv')
 Import('env')
+Import('source')
+Import('source_objs')
 testEnv = testEnv.Clone()
 testEnv.AppendUnique(LIBPATH=[env.Dir('../lib')], LIBS=[])
 testEnv.PrependENVPath('LD_LIBRARY_PATH', env.Dir('.').abspath)
@@ -14,6 +16,8 @@ testEnv.PrependENVPath('LD_LIBRARY_PATH', env.Dir('.').abspath)
 #        ''')
 #testEnv.addUnitTest('test_suite', files)
 # you can also use glob to add all the files in the folder.
+
 composed_files = Glob('test_composed*.cc')
-testEnv.addUnitTest('test_composed', composed_files)
+testEnv.addUnitTest ('test_composed', [composed_files, source_objs])
+
 # all the tests added above are automatically added to the 'test' alias

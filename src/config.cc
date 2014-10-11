@@ -14,8 +14,10 @@ using namespace boost::filesystem;
 using boost::property_tree::ptree;
 
 namespace Astroid {
-  Config::Config () {
+  Config::Config (bool _test) {
     load_dirs ();
+
+    test = _test;
 
     config_file = config_dir / path("config");
 
@@ -129,6 +131,14 @@ namespace Astroid {
   }
 
   void Config::load_config () {
+    if (test) {
+      log << info << "cf: test config, loading defaults." << endl;
+      setup_default_config (true);
+      config = default_config;
+      config.put ("poll.interval", 0);
+      return;
+    }
+
     log << info << "cf: loading: " << config_file << endl;
 
     config_dir = absolute(config_file.parent_path());
