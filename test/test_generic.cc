@@ -11,6 +11,7 @@ BOOST_AUTO_TEST_SUITE(Generic)
   BOOST_AUTO_TEST_CASE(setup_test)
   {
     setup ();
+    teardown ();
   }
 
 BOOST_AUTO_TEST_SUITE_END()

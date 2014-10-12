@@ -28,12 +28,12 @@ namespace Astroid {
       Glib::signal_timeout ().connect (
           sigc::mem_fun (this, &Poll::periodic_polling), poll_interval * 1000);
 
+      // do initial poll
+      poll ();
+
     } else {
       log << info << "poll: periodic polling disabled." << endl;
     }
-
-    // do initial poll
-    poll ();
   }
 
   bool Poll::periodic_polling () {

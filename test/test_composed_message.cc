@@ -14,6 +14,7 @@ BOOST_AUTO_TEST_SUITE(Composing)
 
     ComposeMessage * c = new ComposeMessage ();
 
+    teardown ();
   }
 
 BOOST_AUTO_TEST_SUITE_END()

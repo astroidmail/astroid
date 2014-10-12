@@ -6,3 +6,7 @@ void setup () {
   astroid->main_test ();
 }
 
+void teardown () {
+  delete Astroid::astroid;
+}
+

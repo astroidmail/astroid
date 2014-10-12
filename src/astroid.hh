@@ -14,6 +14,7 @@ namespace Astroid {
   class Astroid {
     public:
       Astroid ();
+      ~Astroid ();
       int main (int, char**);
       void main_test ();
       void quit ();

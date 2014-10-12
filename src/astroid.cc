@@ -107,13 +107,6 @@ namespace Astroid {
     open_new_window ();
     app->run ();
 
-    /* clean up and exit */
-    delete accounts;
-    delete contacts;
-    delete config;
-
-    log << info << "astroid: goodbye!" << endl;
-
     return 0;
   }
 
@@ -134,21 +127,23 @@ namespace Astroid {
 
     /* set up poller */
     poll = new Poll ();
+  }
 
+  Astroid::~Astroid () {
     /* clean up and exit */
-    delete accounts;
-    delete contacts;
-    delete config;
+    if (accounts != NULL) delete accounts;
+    if (contacts != NULL) delete contacts;
+    if (config != NULL) delete config;
+    if (poll != NULL) delete poll;
+    if (global_actions != NULL) delete global_actions;
 
     log << info << "astroid: goodbye!" << endl;
-
-    return;
   }
 
   void Astroid::quit () {
     app->quit ();
 
-    log << info << "astroid: goodbye!" << endl;
+    log << info << "astroid: quitting.." << endl;
   }
 
   MainWindow * Astroid::open_new_window () {
