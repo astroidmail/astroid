@@ -17,6 +17,12 @@ testEnv.PrependENVPath('LD_LIBRARY_PATH', env.Dir('.').abspath)
 #testEnv.addUnitTest('test_suite', files)
 # you can also use glob to add all the files in the folder.
 
+testEnv.Tool ('notmuch_test_db')
+
+test_db = testEnv.NotmuchTestDb ('mail/test_config.template')
+testEnv.Alias ('test_db', test_db)
+testEnv.Alias ('test', 'test_db')
+
 testEnv.addUnitTest ('test_generic', ['test_generic.cc', source_objs])
 
 composed_files = Glob('test_composed*.cc')

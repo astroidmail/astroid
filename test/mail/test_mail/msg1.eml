@@ -1,0 +1,167 @@
+Delivered-To: eg@gaute.vetsj.com
+Received: by 10.90.117.16 with SMTP id p16cs629996agc;
+        Thu, 15 Oct 2009 10:27:10 -0700 (PDT)
+Received: by 10.224.29.136 with SMTP id q8mr319959qac.51.1255627629637;
+        Thu, 15 Oct 2009 10:27:09 -0700 (PDT)
+Return-Path: <sup-talk-bounces@rubyforge.org>
+Received: from rubyforge.org (rubyforge.org [205.234.109.19])
+        by mx.google.com with ESMTP id 6si514021qyk.3.2009.10.15.10.27.09;
+        Thu, 15 Oct 2009 10:27:09 -0700 (PDT)
+Received-SPF: pass (google.com: domain of sup-talk-bounces@rubyforge.org designates 205.234.109.19 as permitted sender) client-ip=205.234.109.19;
+Authentication-Results: mx.google.com; spf=pass (google.com: domain of sup-talk-bounces@rubyforge.org designates 205.234.109.19 as permitted sender) smtp.mail=sup-talk-bounces@rubyforge.org
+Received: from rubyforge.org (rubyforge.org [127.0.0.1])
+	by rubyforge.org (Postfix) with ESMTP id 247A613C896D;
+	Thu, 15 Oct 2009 13:27:09 -0400 (EDT)
+X-Original-To: sup-talk@rubyforge.org
+Delivered-To: sup-talk@rubyforge.org
+Received: from olra.theworths.org (olra.theworths.org [82.165.184.25])
+	by rubyforge.org (Postfix) with ESMTP id 1D7961858283
+	for <sup-talk@rubyforge.org>; Thu, 15 Oct 2009 13:23:42 -0400 (EDT)
+Received: from localhost (localhost [127.0.0.1])
+	by olra.theworths.org (Postfix) with ESMTP id B3D484028BF
+	for <sup-talk@rubyforge.org>; Thu, 15 Oct 2009 10:23:41 -0700 (PDT)
+X-Virus-Scanned: Debian amavisd-new at olra.theworths.org
+Received: from olra.theworths.org ([127.0.0.1])
+	by localhost (olra.theworths.org [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id Pmour5ONn-Ny for <sup-talk@rubyforge.org>;
+	Thu, 15 Oct 2009 10:23:40 -0700 (PDT)
+Received: from cworth.org (localhost [127.0.0.1])
+	by olra.theworths.org (Postfix) with ESMTP id 7E3254041FF
+	for <sup-talk@rubyforge.org>; Thu, 15 Oct 2009 10:23:40 -0700 (PDT)
+From: Carl Worth <cworth@cworth.org>
+To: Sup Talk <sup-talk@rubyforge.org>
+Date: Thu, 15 Oct 2009 10:23:40 -0700
+Message-Id: <1255623468-sup-2284@yoom.home.cworth.org>
+User-Agent: Sup/git
+MIME-Version: 1.0
+Subject: [sup-talk] Indexing messages without ruby
+X-BeenThere: sup-talk@rubyforge.org
+X-Mailman-Version: 2.1.12
+Precedence: list
+List-Id: User & developer discussion of Sup <sup-talk.rubyforge.org>
+List-Unsubscribe: <http://rubyforge.org/mailman/options/sup-talk>,
+	<mailto:sup-talk-request@rubyforge.org?subject=unsubscribe>
+List-Archive: <http://rubyforge.org/pipermail/sup-talk>
+List-Post: <mailto:sup-talk@rubyforge.org>
+List-Help: <mailto:sup-talk-request@rubyforge.org?subject=help>
+List-Subscribe: <http://rubyforge.org/mailman/listinfo/sup-talk>,
+	<mailto:sup-talk-request@rubyforge.org?subject=subscribe>
+Content-Type: multipart/mixed; boundary="===============0662559581=="
+Sender: sup-talk-bounces@rubyforge.org
+Errors-To: sup-talk-bounces@rubyforge.org
+
+
+--===============0662559581==
+Content-Transfer-Encoding: 8bit
+Content-Type: multipart/signed; micalg="pgp-sha1";
+	boundary="=-1255627427-932920-11779-2946-1-=";
+	protocol="application/pgp-signature"
+
+
+--=-1255627427-932920-11779-2946-1-=
+Content-Type: text/plain; charset=UTF-8
+
+I've gone forward with an experiment I had mentioned I might try:
+trying to create a faster sup-sync by using C rather than ruby.
+
+My approach was to use Xapian to create a sup-compatible index, and to
+use libgmime for the mail parsing. That meant that I only had to write
+a tiny bit of code to glue gmime together with xapian. The code is an
+unholy mess of C and C++, (so there are as many as three different
+string types, sometimes all in one function!), but it seems to be
+working at least.
+
+I wrote a little xapian-dump program to make a textual dump of a
+database, (all data, terms, and values for each document), and I
+verified that my program, notmuch, could create identical[*] terms and
+values when indexing about 150 recent messages from the sup-talk
+mailing list.
+
+I've also verified that notmuch can index my own collection of nearly
+600,000 email messages without any problems.
+
+The big difference in notmuch that makes the resulting index
+incompatible with sup is that it doesn't generate a serialized ruby
+data structure for the document data like sup currently
+expects. Instead it just shoves the mail message's filename into the
+data field. So if anyone wanted to use notmuch with sup, this would
+need to be resolved on one side or the other.[**]
+
+As for performance, things look pretty good, but perhaps not as good
+as I had hoped. From a test of importing about 400,000 messages from
+my mail archive, notmuch starts out between 300 - 400 messages/sec.
+but after about 40,000 messages slows down to about 100
+messages/sec. and stabilizes there.
+
+I haven't tested sup recently, but from my recollection indexing the
+same archive on the same computer, sup started out at about 40
+messages/sec. and slowed down to about 20 messages/sec. (for as long
+as I watched it).
+
+So this is preliminary, but it looks like notmuch gives a 5-10x
+performance improvement over sup, (but likely closer to the 5x end of
+that range unless you've got a very small index---at which point who
+cares how fast/slow things are?).
+
+A quick glance with a profiler shows xapian dominating the notmuch
+profile at 62% and gmime hardly appearing at all (near 2%). As
+contrast, ruby dominates the sup-sync profile with xapian down in the
+8% range. (So there's the 10x target there.) One other advantage is
+that with xapian dominating the profile, notmuch stands to benefit
+from future performance improvements to xapian itself.
+
+If that ruby time is dominated by mail parsing, it's possible that
+much of the advantage of notmuch could be gained by simply switching
+from rmail to a non-ruby-based parser like gmime. But that's just a
+guess as I haven't tried to find where the ruby time is being spent.
+
+If anyone is interested in playing along at home, my code is available
+via git with:
+
+	git clone git://git.cworth.org/git/notmuch
+
+Have fun,
+
+-Carl
+
+[*] Some minor differences exist in the heuristics for reognizing
+signatures, and sup sometimes splits numbers into multiple terms (such
+as "1754" indexed as two terms "17" and "54") which I couldn't explain
+nor replicate. Finally notmuch doesn't attempt to index encrypted
+messages.
+
+[**] Beyond this incompatibility, notmuch is not even close to being a
+functional replacement for sup-sync. It currently only knows how to
+shove new documents into the database and doesn't know how to do any
+updating. Similarly it doesn't have any code to examine mtimes to
+identify new or changed messages to be updated. It also doesn't look
+at maildir filename flags to determine labels, nor does it provide any
+means for the user to request custom labels to be attached to certain
+messages.
+
+--=-1255627427-932920-11779-2946-1-=
+Content-Disposition: attachment; filename="signature.asc"
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iD8DBQFK11qc6JDdNq8qSWgRAkPeAKCcNKUO/0LTFQAJTQe/fkOBJLsYrgCfXrlv
+3EocQ6wEdGiWMmwmuaVPp34=
+=7TJz
+-----END PGP SIGNATURE-----
+
+--=-1255627427-932920-11779-2946-1-=--
+
+--===============0662559581==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+_______________________________________________
+sup-talk mailing list
+sup-talk@rubyforge.org
+http://rubyforge.org/mailman/listinfo/sup-talk
+
+--===============0662559581==--

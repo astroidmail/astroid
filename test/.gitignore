@@ -2,4 +2,7 @@ test_suite
 test_composed
 test_generic
 *.passed
+mail/*.setup
+mail/test_config
+mail/test_mail/.notmuch
 

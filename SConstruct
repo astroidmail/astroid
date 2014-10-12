@@ -131,10 +131,10 @@ Export ('env')
 # http://drowcode.blogspot.no/2008/12/few-days-ago-i-decided-i-wanted-to-use.html
 testEnv = env.Clone()
 testEnv.Append (CPPPATH = '../src')
-testEnv.Tool('unittest',
-         toolpath=['test/bt/'],
-         UTEST_MAIN_SRC=File('test/bt/boostautotestmain.cc'),
-         LIBS=['boost_unit_test_framework']
+testEnv.Tool ('unittest',
+              toolpath=['test/bt/'],
+              UTEST_MAIN_SRC=File('test/bt/boostautotestmain.cc'),
+              LIBS=['boost_unit_test_framework']
 )
 
 Export ('testEnv')

@@ -1,0 +1,167 @@
+Delivered-To: eg@gaute.vetsj.com
+Received: by 10.90.117.16 with SMTP id p16cs274637agc;
+        Mon, 19 Oct 2009 21:24:40 -0700 (PDT)
+Received: by 10.224.123.103 with SMTP id o39mr3040284qar.93.1256012679614;
+        Mon, 19 Oct 2009 21:24:39 -0700 (PDT)
+Return-Path: <sup-talk-bounces@rubyforge.org>
+Received: from rubyforge.org (rubyforge.org [205.234.109.19])
+        by mx.google.com with ESMTP id 6si4026935qyk.105.2009.10.19.21.24.39;
+        Mon, 19 Oct 2009 21:24:39 -0700 (PDT)
+Received-SPF: pass (google.com: domain of sup-talk-bounces@rubyforge.org designates 205.234.109.19 as permitted sender) client-ip=205.234.109.19;
+Authentication-Results: mx.google.com; spf=pass (google.com: domain of sup-talk-bounces@rubyforge.org designates 205.234.109.19 as permitted sender) smtp.mail=sup-talk-bounces@rubyforge.org
+Received: from rubyforge.org (rubyforge.org [127.0.0.1])
+	by rubyforge.org (Postfix) with ESMTP id 3FFF21D78853;
+	Tue, 20 Oct 2009 00:24:38 -0400 (EDT)
+X-Original-To: sup-talk@rubyforge.org
+Delivered-To: sup-talk@rubyforge.org
+Received: from olra.theworths.org (olra.theworths.org [82.165.184.25])
+	by rubyforge.org (Postfix) with ESMTP id A1E64197827D
+	for <sup-talk@rubyforge.org>; Tue, 20 Oct 2009 00:24:32 -0400 (EDT)
+Received: from localhost (localhost [127.0.0.1])
+	by olra.theworths.org (Postfix) with ESMTP id E33E04028D1
+	for <sup-talk@rubyforge.org>; Mon, 19 Oct 2009 21:24:31 -0700 (PDT)
+X-Virus-Scanned: Debian amavisd-new at olra.theworths.org
+Received: from olra.theworths.org ([127.0.0.1])
+	by localhost (olra.theworths.org [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id nLJrw9MXJ-nX for <sup-talk@rubyforge.org>;
+	Mon, 19 Oct 2009 21:24:31 -0700 (PDT)
+Received: from cworth.org (localhost [127.0.0.1])
+	by olra.theworths.org (Postfix) with ESMTP id D45D34041FF
+	for <sup-talk@rubyforge.org>; Mon, 19 Oct 2009 21:24:30 -0700 (PDT)
+From: Carl Worth <cworth@cworth.org>
+To: sup-talk <sup-talk@rubyforge.org>
+In-reply-to: <1255623468-sup-2284@yoom.home.cworth.org>
+References: <1255623468-sup-2284@yoom.home.cworth.org>
+Date: Mon, 19 Oct 2009 21:24:21 -0700
+Message-Id: <1256009934-sup-9323@yoom.home.cworth.org>
+User-Agent: Sup/git
+MIME-Version: 1.0
+Subject: Re: [sup-talk] Indexing messages without ruby
+X-BeenThere: sup-talk@rubyforge.org
+X-Mailman-Version: 2.1.12
+Precedence: list
+List-Id: User & developer discussion of Sup <sup-talk.rubyforge.org>
+List-Unsubscribe: <http://rubyforge.org/mailman/options/sup-talk>,
+	<mailto:sup-talk-request@rubyforge.org?subject=unsubscribe>
+List-Archive: <http://rubyforge.org/pipermail/sup-talk>
+List-Post: <mailto:sup-talk@rubyforge.org>
+List-Help: <mailto:sup-talk-request@rubyforge.org?subject=help>
+List-Subscribe: <http://rubyforge.org/mailman/listinfo/sup-talk>,
+	<mailto:sup-talk-request@rubyforge.org?subject=subscribe>
+Content-Type: multipart/mixed; boundary="===============1082503660=="
+Sender: sup-talk-bounces@rubyforge.org
+Errors-To: sup-talk-bounces@rubyforge.org
+
+
+--===============1082503660==
+Content-Transfer-Encoding: 8bit
+Content-Type: multipart/signed; micalg="pgp-sha1";
+	boundary="=-1256012668-242520-27480-903-1-=";
+	protocol="application/pgp-signature"
+
+
+--=-1256012668-242520-27480-903-1-=
+Content-Type: text/plain; charset=UTF-8
+
+Excerpts from Carl Worth's message of Thu Oct 15 10:23:40 -0700 2009:
+> As for performance, things look pretty good, but perhaps not as good
+> as I had hoped.
+
+I know William already said he's not all that concerned with the
+performance of sup-sync since it's not a common operation, but me, I
+can't stop working on the problem.
+
+And I think that's justified, really. For one thing, the giant
+sup-sync is one of the first things a new user has to do. And I think
+that having to wait for an operation that's measured in hours before
+being able to use the program at all can be very off-putting.
+
+I think we could do better to give a good first impression.
+
+> So this is preliminary, but it looks like notmuch gives a 5-10x
+> performance improvement over sup, (but likely closer to the 5x end of
+> that range unless you've got a very small index---at which point who
+> cares how fast/slow things are?).
+
+Those numbers were off. I now believe that my original code gained
+only a 3x improvement by switching from ruby/rmail to C/GMime for mail
+parsing. But I've done a little more coding since. Here are the
+current results:
+
+  For a benchmark of ~ 45000 messages, rate in messages/sec.:
+
+  Rate    Commit ID       Significant change
+  -----   ---------       ------------------
+  41                      sup (with xapian, from next)
+  120     5fbdbeb33       Switch from ruby to C (with GMime)
+  538     9bc4253fa       Index headers only, not body
+  1050    371091139       Use custom header parser, not GMime
+
+  (Before each run the Linux disk cache was cleared with:
+          sync; echo 3 > /proc/sys/vm/drop_caches
+  )
+
+So beyond the original 3x improvement, I gained a further 4x
+improvement by simply doing less work. I'm now starting off by only
+indexing message-id and thread-id data. That's obviously "cheating" in
+terms of comparing performance, but I think it really makes sense to
+do this.
+
+The idea is that by just computing the thread-ids and indexing those
+for a collection of email, that initial sup-sync could be performed
+very quickly. Then, later, (as a background thread while sup is
+running), the full-text indexing could be performed.
+
+Finally, I gained a final 2x improvement by not using GMime at all,
+(which constructs a data structure for the entire message, even if I
+only want a few header), and instead just rolling a simple parser for
+email headers. (Did you know you can hide nested parenthesized
+comments all over the place in email headers? I didn't.)
+
+I'm quite happy with the final result that's 25x faster than sup.  I
+can build a cold-cache index from my half-million message archive in
+less than 10 minutes, (rather than 4 hours). And performance is fairly
+IO-bound at this point, (in the 10-minute run, less than 7 minutes of
+CPU are used).
+
+Anyway, there are some ideas to consider for sup.
+
+If anyone wants to play with my code, it's here:
+
+	git clone git://notmuch.org/notmuch
+
+I won't bore the list with further developments in notmuch, if any,
+unless it's on-topic, (such as someone trying to make sup work on top
+of an index built by notmuch). And I'd be delighted to see that kind
+of thing happen.
+
+Happy hacking,
+
+-Carl
+
+--=-1256012668-242520-27480-903-1-=
+Content-Disposition: attachment; filename="signature.asc"
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iD8DBQFK3Tt16JDdNq8qSWgRAtghAKCUVy7gCLoeuODI9/x1HuTxD+Al0ACfVImM
+gFw31VFGSqNss0h6+73GTSI=
+=QNEw
+-----END PGP SIGNATURE-----
+
+--=-1256012668-242520-27480-903-1-=--
+
+--===============1082503660==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+_______________________________________________
+sup-talk mailing list
+sup-talk@rubyforge.org
+http://rubyforge.org/mailman/listinfo/sup-talk
+
+--===============1082503660==--

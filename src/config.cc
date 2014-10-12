@@ -136,6 +136,7 @@ namespace Astroid {
       setup_default_config (true);
       config = default_config;
       config.put ("poll.interval", 0);
+      config.put ("astroid.notmuch.db", "test/mail/test_mail");
       return;
     }
 
