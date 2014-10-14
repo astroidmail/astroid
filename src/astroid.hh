@@ -30,7 +30,7 @@ namespace Astroid {
       AccountManager * accounts;
 
       /* contacts */
-      Contacts * contacts;
+      //Contacts * contacts;
 
       /* actions */
       GlobalActions * global_actions;

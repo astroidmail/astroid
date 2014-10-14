@@ -14,7 +14,6 @@
 # include "astroid.hh"
 # include "config.hh"
 # include "mode.hh"
-# include "contacts.hh"
 # include "compose_message.hh"
 # include "account_manager.hh"
 

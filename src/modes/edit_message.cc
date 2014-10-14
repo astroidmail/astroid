@@ -13,7 +13,6 @@
 # include "config.hh"
 # include "account_manager.hh"
 # include "edit_message.hh"
-# include "contacts.hh"
 # include "compose_message.hh"
 # include "db.hh"
 # include "thread_view.hh"

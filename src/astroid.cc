@@ -14,7 +14,6 @@
 # include "config.hh"
 # include "account_manager.hh"
 # include "actions/action_manager.hh"
-# include "contacts.hh"
 # include "utils/date_utils.hh"
 # include "log.hh"
 # include "poll.hh"
@@ -96,7 +95,7 @@ namespace Astroid {
     accounts = new AccountManager ();
 
     /* set up contacts */
-    contacts = new Contacts ();
+    //contacts = new Contacts ();
 
     /* set up global actions */
     global_actions = new GlobalActions ();
@@ -120,7 +119,7 @@ namespace Astroid {
     accounts = new AccountManager ();
 
     /* set up contacts */
-    contacts = new Contacts ();
+    //contacts = new Contacts ();
 
     /* set up global actions */
     global_actions = new GlobalActions ();
@@ -132,7 +131,7 @@ namespace Astroid {
   Astroid::~Astroid () {
     /* clean up and exit */
     if (accounts != NULL) delete accounts;
-    if (contacts != NULL) delete contacts;
+    //if (contacts != NULL) delete contacts;
     if (config != NULL) delete config;
     if (poll != NULL) delete poll;
     if (global_actions != NULL) delete global_actions;
