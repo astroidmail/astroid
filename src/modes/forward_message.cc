@@ -32,7 +32,17 @@ namespace Astroid {
         Address(msg->sender.raw()).fail_safe_name(), msg->pretty_verbose_date());
 
     quoted  << quoting_a.raw ()
-            << endl << endl;
+            << endl;
+
+    /* add forward header */
+    quoted << "From: " << msg->sender << endl;
+    quoted << "Date: " << msg->pretty_verbose_date() << endl;
+    quoted << "Subject: " << msg->subject << endl;
+    quoted << "To: " << AddressList(msg->to()).str () << endl;
+    auto cc = AddressList (msg->cc());
+    if (cc.addresses.size () > 0)
+      quoted << "Cc: " << AddressList(msg->cc()).str () << endl;
+    quoted << endl;
 
     string vt = msg->viewable_text(false);
     quoted << vt;
