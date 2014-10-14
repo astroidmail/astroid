@@ -361,10 +361,7 @@ namespace Astroid {
     name = c->get_filename ();
     on_disk = false;
 
-    /* copy byte array */
-    auto cc = c->contents ();
-    contents = Glib::ByteArray::create ();
-    contents->append (cc->get_data (), cc->size ());
+    contents = c->contents ();
 
     const char * ct = g_mime_content_type_to_string (c->content_type);
     if (ct != NULL) {
