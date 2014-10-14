@@ -278,7 +278,6 @@ namespace Astroid {
 
       if (s != NULL) {
         ustring fname (s);
-        delete s;
         _fname = fname;
         return fname;
       }
@@ -511,8 +510,10 @@ namespace Astroid {
   }
 
   Chunk::~Chunk () {
+    // my guess is that these are managed by GObject
+
     //g_object_unref (mime_object); // TODO: not sure about this one..
-    g_object_unref (content_type);
+    //g_object_unref (content_type);
   }
 }
 

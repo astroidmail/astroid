@@ -1,4 +1,5 @@
 # include <iostream>
+# include <memory>
 
 # include "astroid.hh"
 # include "log.hh"
@@ -7,6 +8,7 @@
 
 # include "message_thread.hh"
 # include "utils/address.hh"
+# include "chunk.hh"
 
 using namespace std;
 
@@ -37,7 +39,9 @@ namespace Astroid {
 
     body = ustring(quoted.str());
 
-    /* TODO: add attachments and other non-viewable parts */
+    for (auto &c : msg->attachments ()) {
+      add_attachment (new ComposeMessage::Attachment (c));
+    }
 
     /* reload message */
     prepare_message ();

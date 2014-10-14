@@ -14,6 +14,7 @@
 # include "message_thread.hh"
 # include "account_manager.hh"
 # include "log.hh"
+# include "chunk.hh"
 
 using namespace std;
 using namespace boost::filesystem;
@@ -161,59 +162,56 @@ namespace Astroid {
       g_mime_multipart_add (multipart, (GMimeObject*) message->mime_part);
       g_mime_message_set_mime_part (message, (GMimeObject*) multipart);
 
-      for (path &a : attachments)
+      for (shared_ptr<Attachment> &a : attachments)
       {
-
-        std::string filename = a.c_str ();
-
-        GError * error = NULL;
-        GFile * file = g_file_new_for_path(filename.c_str());
-        GFileInfo * file_info = g_file_query_info(file,
-            G_FILE_ATTRIBUTE_STANDARD_TYPE "," G_FILE_ATTRIBUTE_STANDARD_CONTENT_TYPE,
-            G_FILE_QUERY_INFO_NONE, NULL, &error);
-
-        /* Obtain unique pointer to file and file_info so they are destroyed when
-         * scope ends. */
-        GLibPointer file_pointer(file), file_info_pointer(file_info);
-
-        if (error)
-        {
-          log << error << "cm: could not query file information." << endl;
-          continue;
-        }
-        if (g_file_info_get_file_type(file_info) != G_FILE_TYPE_REGULAR)
-        {
-          log << error << "cm: attached file is not a regular file." << endl;
+        if (!a->valid) {
+          log << error << "cm: invalid attachment: " << a->name << endl;
+          // in practice this cannot happen since EditMessage will
+          // not add an invalid attachment. In the case that it would
+          // be added, there would be no way for the user to delete it
+          // from the draft.
           continue;
         }
 
-        GMimeStream * file_stream = g_mime_stream_file_new (fopen(filename.c_str(), "r"));
+        GMimeStream * file_stream;
+
+        if (a->on_disk) {
+
+          file_stream = g_mime_stream_file_new (fopen(a->fname.c_str(), "r"));
+
+        } else {
+
+          file_stream = g_mime_stream_mem_new_with_byte_array (a->contents->gobj());
+          g_mime_stream_mem_set_owner (GMIME_STREAM_MEM (file_stream), false);
+
+        }
+
+
         GMimeDataWrapper * data = g_mime_data_wrapper_new_with_stream (file_stream,
             GMIME_CONTENT_ENCODING_DEFAULT);
 
-        GLibPointer file_stream_pointer(file_stream), data_pointer(data);
-
-        string content_type_ = g_file_info_get_content_type (file_info);
-        GMimeContentType * contentType = g_mime_content_type_new_from_string (content_type_.c_str());
+        GMimeContentType * contentType = g_mime_content_type_new_from_string (a->content_type.c_str());
 
         GMimePart * part =
           g_mime_part_new_with_type(g_mime_content_type_get_media_type (contentType),
           g_mime_content_type_get_media_subtype (contentType));
         g_mime_part_set_content_object (part, data);
         g_mime_part_set_content_encoding (part, GMIME_CONTENT_ENCODING_BASE64);
-        g_mime_part_set_filename (part, a.filename().c_str());
+        g_mime_part_set_filename (part, a->name.c_str());
 
         g_mime_multipart_add (multipart, (GMimeObject*) part);
         g_object_unref (part);
         g_object_unref (contentType);
+        g_object_unref (file_stream);
+        g_object_unref (data);
       }
 
       g_object_unref(multipart);
     }
   }
 
-  void ComposeMessage::add_attachment (path p) {
-    attachments.push_back (p);
+  void ComposeMessage::add_attachment (shared_ptr<Attachment> a) {
+    attachments.push_back (a);
   }
 
   void ComposeMessage::send_threaded ()
@@ -321,6 +319,66 @@ namespace Astroid {
     g_object_unref(stream);
   }
 
+  ComposeMessage::Attachment::Attachment (path p) {
+    log << debug << "cm: at: construct from file." << endl;
+    fname   = p;
+    on_disk = true;
+
+    std::string filename = fname.c_str ();
+
+    GError * error = NULL;
+    GFile * file = g_file_new_for_path(filename.c_str());
+    GFileInfo * file_info = g_file_query_info(file,
+        G_FILE_ATTRIBUTE_STANDARD_TYPE "," G_FILE_ATTRIBUTE_STANDARD_CONTENT_TYPE,
+        G_FILE_QUERY_INFO_NONE, NULL, &error);
+
+    if (error)
+    {
+      log << error << "cm: could not query file information." << endl;
+      valid = false;
+      g_object_unref (file);
+      g_object_unref (file_info);
+      return;
+    }
+    if (g_file_info_get_file_type(file_info) != G_FILE_TYPE_REGULAR)
+    {
+      log << error << "cm: attached file is not a regular file." << endl;
+      valid = false;
+      g_object_unref (file);
+      g_object_unref (file_info);
+      return;
+    }
+
+    content_type = g_file_info_get_content_type (file_info);
+    name = fname.filename().c_str();
+    valid = true;
+    g_object_unref (file);
+    g_object_unref (file_info);
+  }
+
+  ComposeMessage::Attachment::Attachment (refptr<Chunk> c) {
+    log << debug << "cm: at: construct from chunk." << endl;
+    name = c->get_filename ();
+    on_disk = false;
+
+    /* copy byte array */
+    auto cc = c->contents ();
+    contents = Glib::ByteArray::create ();
+    contents->append (cc->get_data (), cc->size ());
+
+    const char * ct = g_mime_content_type_to_string (c->content_type);
+    if (ct != NULL) {
+      content_type = string (ct);
+    } else {
+      content_type = "application/octet-stream";
+    }
+
+    valid = true;
+  }
+
+  ComposeMessage::Attachment::~Attachment () {
+    log << debug << "cm: at: deconstruct" << endl;
+  }
 
 }
 

@@ -3,6 +3,7 @@
 # include <vector>
 # include <ctime>
 # include <atomic>
+# include <memory>
 
 # include <gtkmm/socket.h>
 # include <glibmm/iochannel.h>
@@ -14,6 +15,7 @@
 # include "config.hh"
 # include "mode.hh"
 # include "contacts.hh"
+# include "compose_message.hh"
 # include "account_manager.hh"
 
 using namespace std;
@@ -56,7 +58,8 @@ namespace Astroid {
       ustring references;
       ustring inreplyto;
 
-      vector<path> attachments;
+      vector<shared_ptr<ComposeMessage::Attachment>> attachments;
+      void add_attachment (ComposeMessage::Attachment *);
       void attach_file ();
 
       /* from combobox */

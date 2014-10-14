@@ -2,6 +2,7 @@
 
 # include <iostream>
 # include <vector>
+# include <functional>
 # include <boost/filesystem.hpp>
 
 # include <gmime/gmime.h>
@@ -48,8 +49,22 @@ namespace Astroid {
       void set_inreplyto (ustring);
       void set_references (ustring);
 
-      void add_attachment (path);
-      vector<path> attachments;
+      struct Attachment {
+        public:
+          Attachment (path);
+          Attachment (refptr<Chunk>);
+          ~Attachment ();
+          ustring name;
+          path    fname;
+          bool    on_disk;
+          bool    valid;
+
+          refptr<Glib::ByteArray> contents;
+          string                  content_type;
+      };
+
+      void add_attachment (shared_ptr<Attachment>);
+      vector<shared_ptr<Attachment>> attachments;
 
       void load_message (ustring, ustring); // load draft or message as new
 

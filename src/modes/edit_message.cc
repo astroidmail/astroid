@@ -3,6 +3,7 @@
 # include <algorithm>
 # include <random>
 # include <ctime>
+# include <memory>
 
 # include <gtkmm.h>
 # include <gdk/gdkx.h>
@@ -573,7 +574,7 @@ namespace Astroid {
     c->set_references (references);
     c->set_inreplyto (inreplyto);
 
-    for (path &a : attachments) {
+    for (shared_ptr<ComposeMessage::Attachment> a : attachments) {
       c->add_attachment (a);
     }
 
@@ -584,6 +585,9 @@ namespace Astroid {
   }
 
   void EditMessage::on_element_action (int id, char action) {
+
+    if (sending_in_progress.load ()) return;
+
     if (action == 'd') {
       /* delete attachment */
       log << info << "em: remove attachment: " << id << endl;
@@ -694,7 +698,7 @@ namespace Astroid {
               log << error << "em: attach: file is not regular: " << p.c_str() << endl;
             } else {
               log << info << "em: attaching file: " << p.c_str() << endl;
-              attachments.push_back (p);
+              add_attachment (new ComposeMessage::Attachment (p));
             }
           }
 
@@ -708,6 +712,15 @@ namespace Astroid {
         {
           log << debug << "em: attach: cancelled." << endl;
         }
+    }
+  }
+
+  void EditMessage::add_attachment (ComposeMessage::Attachment * a) {
+    if (a->valid) {
+      attachments.push_back (shared_ptr<ComposeMessage::Attachment> (a));
+    } else {
+      log << error << "em: invalid attachment, not adding: " << a->name << endl;
+      delete a;
     }
   }
 
