@@ -365,7 +365,6 @@ namespace Astroid {
 
             new_to = to / path(fname.c_str ());
           } while (exists (new_to));
-
         }
       }
 
