@@ -5,6 +5,7 @@
 
 # include "proto.hh"
 # include "command_bar.hh"
+# include "modes/mode.hh"
 # include "actions/action_manager.hh"
 
 using namespace std;
@@ -44,6 +45,8 @@ namespace Astroid {
 
       void unset_active ();
       void set_active (int);
+
+      static ModeHelpInfo * key_help ();
 
     private:
       bool on_my_focus_in_event (GdkEventFocus *);

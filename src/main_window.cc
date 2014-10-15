@@ -148,8 +148,12 @@ namespace Astroid {
 
       /* help */
       case GDK_KEY_question:
-        add_mode (new HelpMode ());
-        return true;
+        {
+          HelpMode * h = new HelpMode ();
+          h->show_help ((Mode*) notebook.get_nth_page (notebook.get_current_page()));
+          add_mode (h);
+          return true;
+        }
 
       /* log window */
       case GDK_KEY_z:
@@ -183,6 +187,29 @@ namespace Astroid {
 
     }
     return false;
+  }
+
+  ModeHelpInfo * MainWindow::key_help () {
+    ModeHelpInfo * m = new ModeHelpInfo ();
+    m->toplevel = true;
+    m->title = "Main window";
+
+    m->keys = {
+      { "m", "Compose new mail" },
+      { "P", "Call poll script manually" },
+      { "F", "Search" },
+      { "L", "Search for tag:" },
+      { "u", "Undo last action" },
+      { "z", "Show log window" },
+      { "?", "Show help" },
+      { "O", "Open new main window" },
+      { ":", "Command" },
+      { "b,B", "Page through modes" },
+      { "x", "Close mode (or window if other windows are open)" },
+      { "q,Q", "Quit astroid" },
+    };
+
+    return m;
   }
 
   void MainWindow::add_mode (Mode * m) {

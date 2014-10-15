@@ -349,6 +349,7 @@ namespace Astroid {
 
       case GDK_KEY_l:
         {
+          /* edit tags */
           auto thread = get_current_thread ();
           if (thread) {
             ustring tag_list = VectorUtils::concat_tags (thread->tags) + ", ";
@@ -399,6 +400,36 @@ namespace Astroid {
     }
 
     return false;
+  }
+
+  ModeHelpInfo * ThreadIndexListView::key_help () {
+    ModeHelpInfo * m = new ModeHelpInfo ();
+
+    m->parent   = NULL; 
+    m->toplevel = false;
+    m->title    = "Thread Index List View";
+
+    m->keys = {
+      { "j,Down", "Next line" },
+      { "k,Up", "Previous line" },
+      { "J,K", "Scroll view" },
+      { "1,Home", "Go to first line" },
+      { "0,End", "Go to last line" },
+      { "Return", "Open thread (default action)" },
+      { "S+Return", "Open thread in pane (default action)" },
+      { "r", "Reply to last message in thread" },
+      { "G", "Reply all to last message in thread" },
+      { "f", "Forward last message in thread" },
+      { "M", "Load more threads in query" },
+      { "!", "Load all threads in query" },
+      { "a", "Toggle 'inbox' tag on thread" },
+      { "*", "Toggle 'flagged' tag on thread" },
+      { "N", "Toggle 'unread' tag on thread" },
+      { "S", "Toggle 'spam' tag on thread" },
+      { "l", "Edit tags for thread" },
+    };
+
+    return m;
   }
 
   void ThreadIndexListView::on_refreshed () {

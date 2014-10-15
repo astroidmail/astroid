@@ -221,6 +221,25 @@ namespace Astroid {
     return false;
   }
 
+  ModeHelpInfo * ThreadIndex::key_help () {
+    ModeHelpInfo * m = new ModeHelpInfo ();
+
+    m->parent   = PanedMode::key_help ();
+    m->toplevel = false;
+    m->title    = "Thread Index";
+
+    m->keys = {
+      { "x", "Close thread view pane if open" },
+      { "Tab", "Swap focus to other pane if open" },
+      { "$", "Refresh query" },
+    };
+
+    ModeHelpInfo * lm = list_view->key_help ();
+    lm->parent = m;
+
+    return lm;
+  }
+
   void ThreadIndex::open_thread (refptr<NotmuchThread> thread, bool new_tab) {
     log << debug << "ti: open thread: " << thread->thread_id << " (" << new_tab << ")" << endl;
     ThreadView * tv;

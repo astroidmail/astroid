@@ -1,5 +1,9 @@
 # include "mode.hh"
+# include "main_window.hh"
 # include "log.hh"
+
+# include <vector>
+# include <tuple>
 
 namespace Astroid {
   Mode::Mode (bool _interactive) :
@@ -111,6 +115,25 @@ namespace Astroid {
     }
 
     return false;
+  }
+
+  ModeHelpInfo * Mode::key_help () {
+    ModeHelpInfo * m = new ModeHelpInfo ();
+
+    m->parent   = MainWindow::key_help();
+    m->toplevel = false;
+    m->title    = "All modes";
+
+    return m;
+  }
+
+  ModeHelpInfo::ModeHelpInfo () {
+    toplevel = false;
+    parent   = NULL;
+  }
+
+  ModeHelpInfo::~ModeHelpInfo () {
+    if (parent != NULL) delete parent;
   }
 
   Mode::~Mode () {

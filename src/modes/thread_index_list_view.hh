@@ -61,6 +61,8 @@ namespace Astroid {
       refptr<NotmuchThread> get_current_thread ();
 
 
+      virtual ModeHelpInfo * key_help ();
+
     protected:
       virtual bool on_key_press_event (GdkEventKey *) override;
 

@@ -47,6 +47,8 @@ namespace Astroid {
       notmuch_query_t   * query;
       notmuch_threads_t * threads;
 
+      virtual ModeHelpInfo * key_help ();
+
     protected:
       virtual bool on_key_press_event (GdkEventKey *) override;
   };
