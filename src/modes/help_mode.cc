@@ -29,7 +29,7 @@ namespace Astroid {
     ustring header =
     "<b>Astroid</b> (v" GIT_DESC ") \n"
     "\n"
-    "Gaute Hope &lt;<a href=\"eg@gaute.vetsj.com\">eg@gaute.vetsj.com</a>&gt; (c) 2014"
+    "Gaute Hope &lt;<a href=\"mailto:eg@gaute.vetsj.com\">eg@gaute.vetsj.com</a>&gt; (c) 2014"
     " (<i>Licenced under the GNU GPL v3</i>)\n"
     "<a href=\"https://github.com/gauteh/astroid\">https://github.com/gauteh/astroid</a>\n"
     "\n";
