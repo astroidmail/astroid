@@ -4,10 +4,17 @@ from subprocess import *
 def getGitDesc():
   return Popen('git describe --abbrev=8 --tags --always', stdout=PIPE, shell=True).stdout.read ().strip ()
 
-
-GIT_DESC = getGitDesc ()
-print "building " + GIT_DESC + ".."
 env = Environment ()
+
+AddOption ("--release", action="store", dest="release", default="git", help="Make a release (default: git describe output)")
+
+release = GetOption("release")
+if release != "git":
+  GIT_DESC = release
+  print "building release: " + release
+else:
+  GIT_DESC = getGitDesc ()
+  print "building version " + GIT_DESC + " (git).."
 
 # Verbose / Non-verbose output{{{
 colors = {}
