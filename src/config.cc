@@ -122,6 +122,9 @@ namespace Astroid {
     /* attachments */
     default_config.put ("attachment.external_open_cmd", "xdg-open");
 
+    /* thread view */
+    default_config.put ("thread_view.open_html_part_external", true);
+
   }
 
   void Config::write_back_config () {

@@ -98,6 +98,8 @@ namespace Astroid {
               ElementType type;
               int         id;
               ustring     element_id ();
+
+              bool operator== ( const Element & other ) const;
           };
 
           vector<Element> elements; // first element is always empty
@@ -151,6 +153,9 @@ namespace Astroid {
       void insert_header_address (ustring &, ustring, ustring, bool);
       void insert_header_date (ustring &, refptr<Message>);
       ustring create_header_row (ustring, ustring, bool, bool);
+
+      bool open_html_part_external;
+      void display_part (refptr<Message>, refptr<Chunk>, MessageState::Element);
 
       /* attachments */
       void insert_attachments (refptr<Message>, WebKitDOMHTMLElement *);

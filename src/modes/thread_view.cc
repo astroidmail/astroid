@@ -37,6 +37,8 @@ namespace Astroid {
   ThreadView::ThreadView (MainWindow * mw) {
     main_window = mw;
 
+    open_html_part_external = astroid->config->config.get<bool> ("thread_view.open_html_part_external");
+
     pack_start (scroll, true, true, 5);
 
     /* set up webkit web view (using C api) */
@@ -631,6 +633,40 @@ namespace Astroid {
     g_object_unref (d);
   }
 
+  void ThreadView::display_part (refptr<Message> message, refptr<Chunk> c, MessageState::Element el) {
+    GError * err;
+
+    WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
+    ustring mid = "message_" + message->mid;
+
+    WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
+
+    WebKitDOMHTMLElement * div_email_container =
+      select (WEBKIT_DOM_NODE(e), "div.email_container");
+
+    WebKitDOMHTMLElement * span_body =
+      select (WEBKIT_DOM_NODE(div_email_container), ".body");
+
+    WebKitDOMElement * sibling =
+      webkit_dom_document_get_element_by_id (d, el.element_id().c_str());
+
+    webkit_dom_node_remove_child (WEBKIT_DOM_NODE (span_body),
+        WEBKIT_DOM_NODE(sibling), (err = NULL, &err));
+
+    state[message].elements.erase (
+        std::remove(
+          state[message].elements.begin(),
+          state[message].elements.end(), el),
+        state[message].elements.end());
+
+    create_body_part (message, c, span_body);
+
+    g_object_unref (span_body);
+    g_object_unref (div_email_container);
+    g_object_unref (e);
+    g_object_unref (d);
+  }
+
   void ThreadView::create_sibling_part (refptr<Message> message, refptr<Chunk> sibling, WebKitDOMHTMLElement * span_body) {
 
     log << debug << "create sibling part: " << sibling->id << endl;
@@ -675,6 +711,7 @@ namespace Astroid {
     webkit_dom_node_append_child (WEBKIT_DOM_NODE (span_body),
         WEBKIT_DOM_NODE (sibling_container), (err = NULL, &err));
 
+    g_object_unref (message_cont);
     g_object_unref (sibling_container);
     g_object_unref (d);
   }
@@ -1298,28 +1335,72 @@ namespace Astroid {
             focused_message->save ();
           }
         } else {
-          if (a == '\n' || a == 'o') {
-            /* open attachment */
+          switch (state[focused_message].elements[state[focused_message].current_element].type) {
+            case MessageState::ElementType::Attachment:
+              {
+                if (a == '\n' || a == 'o') {
+                  /* open attachment */
 
-            refptr<Chunk> c = focused_message->get_chunk_by_id (
-                state[focused_message].elements[state[focused_message].current_element].id);
+                  refptr<Chunk> c = focused_message->get_chunk_by_id (
+                      state[focused_message].elements[state[focused_message].current_element].id);
 
-            if (c) {
-              c->open ();
-            } else {
-              log << error << "tv: could not find chunk for element." << endl;
-            }
+                  if (c) {
+                    c->open ();
+                  } else {
+                    log << error << "tv: could not find chunk for element." << endl;
+                  }
 
-          } else if (a == 's') {
-            /* save attachment */
-            refptr<Chunk> c = focused_message->get_chunk_by_id (
-                state[focused_message].elements[state[focused_message].current_element].id);
+                } else if (a == 's') {
+                  /* save attachment */
+                  refptr<Chunk> c = focused_message->get_chunk_by_id (
+                      state[focused_message].elements[state[focused_message].current_element].id);
 
-            if (c) {
-              c->save ();
-            } else {
-              log << error << "tv: could not find chunk for element." << endl;
-            }
+                  if (c) {
+                    c->save ();
+                  } else {
+                    log << error << "tv: could not find chunk for element." << endl;
+                  }
+                }
+              }
+              break;
+            case MessageState::ElementType::Part:
+              {
+                if (a == '\n' || a == 'o') {
+                  /* open part */
+
+                  refptr<Chunk> c = focused_message->get_chunk_by_id (
+                      state[focused_message].elements[state[focused_message].current_element].id);
+
+                  if (c) {
+                    if (open_html_part_external) {
+                      c->open ();
+                    } else {
+                      /* show part internally */
+
+                      display_part (focused_message, c, state[focused_message].elements[state[focused_message].current_element]);
+
+                    }
+                  } else {
+                    log << error << "tv: could not find chunk for element." << endl;
+                  }
+
+                } else if (a == 's') {
+                  /* save part */
+                  refptr<Chunk> c = focused_message->get_chunk_by_id (
+                      state[focused_message].elements[state[focused_message].current_element].id);
+
+                  if (c) {
+                    c->save ();
+                  } else {
+                    log << error << "tv: could not find chunk for element." << endl;
+                  }
+                }
+
+              }
+              break;
+
+            default:
+              break;
           }
         }
       }
@@ -1942,6 +2023,10 @@ namespace Astroid {
   {
     type = t;
     id   = i;
+  }
+
+  bool ThreadView::MessageState::Element::operator== ( const Element & other ) const {
+    return other.id == id;
   }
 
   ustring ThreadView::MessageState::Element::element_id () {
