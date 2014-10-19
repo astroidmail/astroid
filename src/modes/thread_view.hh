@@ -88,6 +88,7 @@ namespace Astroid {
           enum ElementType {
             Empty,
             Address,
+            Part,
             Attachment
           };
 
@@ -142,8 +143,11 @@ namespace Astroid {
       void add_message (refptr<Message>);
       WebKitDOMHTMLElement * make_message_div ();
 
-      /* message loading setup */
+      /* message loading */
       void set_message_html (refptr<Message>, WebKitDOMHTMLElement *);
+      void create_message_part_html (refptr<Message>, refptr<Chunk>, WebKitDOMHTMLElement *, bool);
+      void create_sibling_part (refptr<Message>, refptr<Chunk>, WebKitDOMHTMLElement *);
+      void create_body_part (refptr<Message>, refptr<Chunk>, WebKitDOMHTMLElement *);
       void insert_header_address (ustring &, ustring, ustring, bool);
       void insert_header_date (ustring &, refptr<Message>);
       ustring create_header_row (ustring, ustring, bool, bool);

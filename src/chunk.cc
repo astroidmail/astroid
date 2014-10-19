@@ -63,6 +63,14 @@ namespace Astroid {
 
       attachment = !viewable;
 
+      if (g_mime_content_type_is_type (content_type,
+          g_mime_content_type_get_media_type (preferred_type),
+          g_mime_content_type_get_media_subtype (preferred_type)))
+      {
+        log << debug << "chunk: preferred." << endl;
+        preferred = true;
+      }
+
       log << debug << "chunk: is part (viewable: " << viewable << ", attachment: " << attachment << ") " << endl;
 
     } else if GMIME_IS_MESSAGE_PART (mime_object) {
@@ -476,6 +484,29 @@ namespace Astroid {
     unlink (tf.c_str());
   }
 
+  bool Chunk::any_kids_viewable () {
+    if (viewable) return true;
+
+    for (auto &k : kids) {
+      if (k->any_kids_viewable ()) return true;
+    }
+
+    return false;
+  }
+
+  bool Chunk::any_kids_viewable_and_preferred () {
+    if (viewable && preferred) return true;
+
+    for (auto &k : kids) {
+      if (k->any_kids_viewable_and_preferred ()) return true;
+    }
+
+    return false;
+  }
+
+  ustring Chunk::get_content_type () {
+    return ustring (g_mime_content_type_to_string (content_type));
+  }
 
   void Chunk::save () {
     log << info << "chunk: " << get_filename () << ", saving.." << endl;

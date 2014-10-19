@@ -27,11 +27,16 @@ namespace Astroid {
       GMimeContentType *  content_type;
       ustring content_id;
 
+      ustring get_content_type ();
+
       ustring viewable_text (bool);
 
       vector<refptr<Chunk>> kids;
       vector<refptr<Chunk>> siblings;
       refptr<Chunk> get_by_id (int, bool check_siblings = true);
+
+      bool any_kids_viewable ();
+      bool any_kids_viewable_and_preferred ();
 
       bool viewable   = false;
       bool attachment = false;

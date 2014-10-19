@@ -531,15 +531,16 @@ namespace Astroid {
     WebKitDOMHTMLElement * span_body =
       select (WEBKIT_DOM_NODE(div_email_container), ".body");
 
-    ustring body = m->viewable_text (true);
+    create_message_part_html (m, m->root, span_body, true);
 
+    /* preview */
+    log << debug << "tv: make preview.." << endl;
     WebKitDOMHTMLElement * preview = select (
         WEBKIT_DOM_NODE (div_message),
         ".header_container .preview");
 
-
     ustring bp = m->viewable_text (false);
-    if (static_cast<int>(body.size()) > MAX_PREVIEW_LEN)
+    if (static_cast<int>(bp.size()) > MAX_PREVIEW_LEN)
       bp = bp.substr(0, MAX_PREVIEW_LEN - 3) + "...";
 
     while (true) {
@@ -553,18 +554,129 @@ namespace Astroid {
     bp = Glib::Markup::escape_text (bp);
 
     webkit_dom_html_element_set_inner_html (preview, bp.c_str(), (err = NULL, &err));
+
     g_object_unref (preview);
+    g_object_unref (span_body);
+    g_object_unref (table_header);
+  }
 
+  void ThreadView::create_message_part_html (
+      refptr<Message> message,
+      refptr<Chunk> c,
+      WebKitDOMHTMLElement * span_body,
+      bool check_siblings)
+  {
 
+    log << debug << "create message part: " << c->id << " (siblings: " << c->siblings.size() << ") (kids: " << c->kids.size() << ")" <<
+      " (attachment: " << c->attachment << ")" << endl;
+
+    if (c->attachment) return;
+
+    /* check if we're the preferred sibling */
+    bool use = false;
+
+    if (c->siblings.size() >= 1) {
+      if (c->preferred) {
+        use = true;
+      } else {
+        use = false;
+      }
+    } else {
+      use = true;
+    }
+
+    if (use) {
+      if (c->viewable) {
+        create_body_part (message, c, span_body);
+      }
+
+      for (auto &k: c->kids) {
+        create_message_part_html (message, k, span_body, true);
+      }
+    } else {
+      create_sibling_part (message, c, span_body);
+    }
+  }
+
+  void ThreadView::create_body_part (
+      refptr<Message> message,
+      refptr<Chunk> c,
+      WebKitDOMHTMLElement * span_body)
+  {
+    // <span id="body_template" class="body_part"></span>
+
+    log << debug << "create body part: " << c->id << endl;
+
+    GError *err;
+
+    WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
+    WebKitDOMHTMLElement * body_container =
+      clone_select (WEBKIT_DOM_NODE(d), "#body_template");
+
+    webkit_dom_element_remove_attribute (WEBKIT_DOM_ELEMENT (body_container),
+        "id");
+
+    ustring body = c->viewable_text (true);
     MailQuotes::filter_quotes (body);
 
     webkit_dom_html_element_set_inner_html (
-        span_body,
+        body_container,
         body.c_str(),
         (err = NULL, &err));
 
-    g_object_unref (span_body);
-    g_object_unref (table_header);
+    webkit_dom_node_append_child (WEBKIT_DOM_NODE (span_body),
+        WEBKIT_DOM_NODE (body_container), (err = NULL, &err));
+
+    g_object_unref (body_container);
+    g_object_unref (d);
+  }
+
+  void ThreadView::create_sibling_part (refptr<Message> message, refptr<Chunk> sibling, WebKitDOMHTMLElement * span_body) {
+
+    log << debug << "create sibling part: " << sibling->id << endl;
+    //
+    //  <div id="sibling_template" class=sibling_container">
+    //      <div class="top_border"></div>
+    //      <div class="message"></div>
+    //  </div>
+
+    GError *err;
+
+    WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
+    WebKitDOMHTMLElement * sibling_container =
+      clone_select (WEBKIT_DOM_NODE(d), "#sibling_template");
+
+    webkit_dom_element_remove_attribute (WEBKIT_DOM_ELEMENT (sibling_container),
+        "id");
+
+    // add attachment to message state
+    MessageState::Element e (MessageState::ElementType::Part, sibling->id);
+    state[message].elements.push_back (e);
+    log << debug << "tv: added sibling: " << state[message].elements.size() << endl;
+
+    webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (sibling_container),
+      "id", e.element_id().c_str(),
+      (err = NULL, &err));
+
+    // TODO: escape
+    ustring content = ustring::compose ("Alternative part (type: %1) (id: %2)",
+        Glib::Markup::escape_text(sibling->get_content_type ()),
+        e.element_id ());
+
+    WebKitDOMHTMLElement * message_cont =
+      select (WEBKIT_DOM_NODE (sibling_container), ".message");
+
+    webkit_dom_html_element_set_inner_html (
+        message_cont,
+        content.c_str(),
+        (err = NULL, &err));
+
+
+    webkit_dom_node_append_child (WEBKIT_DOM_NODE (span_body),
+        WEBKIT_DOM_NODE (sibling_container), (err = NULL, &err));
+
+    g_object_unref (sibling_container);
+    g_object_unref (d);
   }
 
   void ThreadView::set_warning (refptr<Message> m, ustring txt)

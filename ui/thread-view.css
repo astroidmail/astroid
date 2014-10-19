@@ -503,6 +503,20 @@ body.nohide .email .compressed_note > span {
     color: #666;
 }
 
+#sibling_container {
+  display: none;
+}
+
+.email > .email_container > .body > .sibling_container {
+  display: block;
+  vertical-align: middle;
+  text-align: center;
+  margin-bottom: 10px;
+  padding: 5px;
+  background-color: #8CE7FF;
+  border: 1px solid black;
+}
+
 .header {
     overflow: hidden;
 }
