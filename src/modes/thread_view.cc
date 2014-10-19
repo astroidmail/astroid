@@ -661,6 +661,7 @@ namespace Astroid {
 
     create_body_part (message, c, span_body);
 
+    g_object_unref (sibling);
     g_object_unref (span_body);
     g_object_unref (div_email_container);
     g_object_unref (e);
