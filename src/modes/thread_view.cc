@@ -574,6 +574,8 @@ namespace Astroid {
 
     if (c->attachment) return;
 
+    // TODO: redundant sibling checking
+
     /* check if we're the preferred sibling */
     bool use = false;
 
