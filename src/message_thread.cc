@@ -182,7 +182,9 @@ namespace Astroid {
       }
 
       if (use) {
-        if (c->viewable) body << c->viewable_text(html);
+        if (c->viewable && (c->preferred || html)) {
+          body << c->viewable_text(html);
+        }
 
         for_each (c->kids.begin(),
                   c->kids.end (),
