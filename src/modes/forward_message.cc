@@ -53,6 +53,8 @@ namespace Astroid {
       add_attachment (new ComposeMessage::Attachment (c));
     }
 
+    /* TODO: add non-text parts */
+
     /* reload message */
     prepare_message ();
     read_edited_message ();
