@@ -716,8 +716,7 @@ namespace Astroid {
       "id", e.element_id().c_str(),
       (err = NULL, &err));
 
-    // TODO: escape
-    ustring content = ustring::compose ("Alternative part (type: %1) (id: %2)",
+    ustring content = ustring::compose ("Alternative part (type: %1) - potentially sketchy.",
         Glib::Markup::escape_text(sibling->get_content_type ()),
         e.element_id ());
 
