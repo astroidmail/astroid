@@ -513,6 +513,7 @@ body.nohide .email .compressed_note > span {
   text-align: center;
   padding-bottom: 5px;
   padding-top: 5px;
+  margin-bottom: 5px;
   background-color: #8CE7FF;
   border: 1px solid black;
 }

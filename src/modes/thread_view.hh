@@ -102,7 +102,13 @@ namespace Astroid {
               bool operator== ( const Element & other ) const;
           };
 
-          vector<Element> elements; // first element is always empty
+          /* ordered list of elements, must be listed in order of
+           * appearance.
+           *
+           * first element is always empty and represents the message
+           * itself.
+           */
+          vector<Element> elements;
           unsigned int    current_element;
       };
 
