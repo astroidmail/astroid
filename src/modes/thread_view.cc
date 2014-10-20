@@ -578,13 +578,18 @@ namespace Astroid {
     bool use = false;
 
     if (c->siblings.size() >= 1) {
+      /* todo: use last preferred sibling */
       if (c->preferred) {
         use = true;
       } else {
         use = false;
       }
     } else {
-      use = true;
+      if (c->preferred) {
+        use = true;
+      } else {
+        use = false;
+      }
     }
 
     if (use) {
@@ -661,7 +666,21 @@ namespace Astroid {
 
     state[message].current_element = 0;
 
-    create_body_part (message, c, span_body);
+    if (c->viewable) {
+      create_body_part (message, c, span_body);
+    }
+
+    /* this shows parts that are nested directly below the part
+     * as well. otherwise multipart/mixed with html's would
+     * require two enters. */
+
+    for (auto &k: c->kids) {
+      if (k->viewable) {
+        create_body_part (message, k, span_body);
+      } else {
+        create_message_part_html (message, k, span_body, true);
+      }
+    }
 
     g_object_unref (sibling);
     g_object_unref (span_body);
