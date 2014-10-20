@@ -585,16 +585,14 @@ namespace Astroid {
         use = false;
       }
     } else {
-      if (c->preferred) {
-        use = true;
-      } else {
-        use = false;
-      }
+      use = true;
     }
 
     if (use) {
-      if (c->viewable) {
+      if (c->viewable && c->preferred) {
         create_body_part (message, c, span_body);
+      } else if (c->viewable) {
+        create_sibling_part (message, c, span_body);
       }
 
       for (auto &k: c->kids) {
