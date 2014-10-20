@@ -591,6 +591,7 @@ namespace Astroid {
       /* delete attachment */
       log << info << "em: remove attachment: " << id << endl;
 
+      /* TODO: this will not always correspond to the attachment number! */
       attachments.erase (attachments.begin() + (id-1));
 
       prepare_message ();

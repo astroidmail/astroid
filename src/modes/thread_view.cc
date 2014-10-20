@@ -659,6 +659,8 @@ namespace Astroid {
           state[message].elements.end(), el),
         state[message].elements.end());
 
+    state[message].current_element = 0;
+
     create_body_part (message, c, span_body);
 
     g_object_unref (sibling);
