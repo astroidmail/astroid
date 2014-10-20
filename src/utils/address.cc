@@ -51,10 +51,10 @@ namespace Astroid {
     InternetAddressMailbox * mbox = INTERNET_ADDRESS_MAILBOX (address);
     const char * n = internet_address_get_name (address);
     if (n != NULL)
-      _name  = ustring (n);
+      _name  = ustring (g_mime_utils_header_decode_text(n));
     n = internet_address_mailbox_get_addr (mbox);
     if (n != NULL)
-      _email = ustring (n);
+      _email = ustring (g_mime_utils_header_decode_text(n));
 
     g_object_unref (list);
   }
@@ -63,10 +63,10 @@ namespace Astroid {
     InternetAddressMailbox * mbox = INTERNET_ADDRESS_MAILBOX (addr);
     const char * n = internet_address_get_name (addr);
     if (n != NULL)
-      _name  = ustring (n);
+      _name  = ustring (g_mime_utils_header_decode_text(n));
     n = internet_address_mailbox_get_addr (mbox);
     if (n != NULL)
-      _email = ustring (n);
+      _email = ustring (g_mime_utils_header_decode_text(n));
 
     _valid = true;
   }
@@ -134,7 +134,7 @@ namespace Astroid {
 
     ustring r ("");
 
-    if (addrs != NULL) r = ustring (addrs);
+    if (addrs != NULL) r = ustring (g_mime_utils_header_decode_text(addrs));
 
     g_object_unref (list);
 
