@@ -1090,8 +1090,10 @@ namespace Astroid {
 
       case GDK_KEY_j:
         {
-          focus_next_element ();
-          return true;
+          if (!(event->state & GDK_CONTROL_MASK)) {
+            focus_next_element ();
+            return true;
+          } // otherwise treat as J
         }
 
       case GDK_KEY_J:
@@ -1118,8 +1120,10 @@ namespace Astroid {
 
       case GDK_KEY_k:
         {
-          focus_previous_element ();
-          return true;
+          if (!(event->state & GDK_CONTROL_MASK)) {
+            focus_previous_element ();
+            return true;
+          } // otherwise tread as K
         }
 
       case GDK_KEY_K:

@@ -288,7 +288,10 @@ namespace Astroid {
     dialog.add_button ("_Select", Gtk::RESPONSE_OK);
 
     dialog.set_do_overwrite_confirmation (true);
-    dialog.set_current_name (subject + ".eml");
+    ustring _f = root->get_filename ();
+    if (_f.size () == 0)
+      _f = subject + ".eml";
+    dialog.set_current_name (_f);
 
     int result = dialog.run ();
 
