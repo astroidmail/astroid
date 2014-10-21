@@ -56,7 +56,6 @@ namespace Astroid {
   }
 
   Message::~Message () {
-    // message is freed by the root chunk.
     g_object_unref (message);
   }
 
@@ -286,11 +285,12 @@ namespace Astroid {
 
     dialog.add_button ("_Cancel", Gtk::RESPONSE_CANCEL);
     dialog.add_button ("_Select", Gtk::RESPONSE_OK);
-
     dialog.set_do_overwrite_confirmation (true);
+
     ustring _f = root->get_filename ();
     if (_f.size () == 0)
       _f = subject + ".eml";
+
     dialog.set_current_name (_f);
 
     int result = dialog.run ();

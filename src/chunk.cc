@@ -540,10 +540,9 @@ namespace Astroid {
   }
 
   Chunk::~Chunk () {
-    // my guess is that these are managed by GObject
-
-    //g_object_unref (mime_object); // TODO: not sure about this one..
-    //g_object_unref (content_type);
+    // these should not be unreffed.
+    // g_object_unref (mime_object);
+    // g_object_unref (content_type);
   }
 }
 
