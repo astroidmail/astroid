@@ -1338,6 +1338,36 @@ namespace Astroid {
     return false;
   }
 
+  ModeHelpInfo * ThreadView::key_help () {
+    ModeHelpInfo * m = new ModeHelpInfo ();
+
+    m->parent   = Mode::key_help ();
+    m->toplevel = false;
+    m->title    = "Thread View";
+
+    m->keys = {
+      { "k,j", "Scroll up/down or move focus up/down" },
+      { "K,J", "Scroll up/down" },
+      { "C-k,C-j,S-K,S-J", "Page up/down" },
+      { "n,p", "Focus next or previous message" },
+      { "1,Home", "Scroll to top" },
+      { "0,End" , "Scroll to bottom" },
+      { "Return", "Open/expand/activate focused element" },
+      { "s", "Save attachment or message" },
+      { "S", "Save all attachments" },
+      { "o", "Open attachment or message" },
+      { "e", "Toggle expand" },
+      { "E", "Toggle expand on all messages" },
+      { "r", "Reply to current message" },
+      { "G", "Reply all to current message" },
+      { "f", "Forward current message" },
+      { "V", "View raw source for current message" },
+
+    };
+
+    return m;
+  }
+
   bool ThreadView::element_action (char a) {
     log << debug << "tv: activate item." << endl;
 

@@ -481,6 +481,26 @@ namespace Astroid {
     return false;
   }
 
+  ModeHelpInfo * EditMessage::key_help () {
+    ModeHelpInfo * m = new ModeHelpInfo ();
+
+    m->parent   = Mode::key_help ();
+    m->toplevel = false;
+    m->title    = "Edit message";
+
+    m->keys = {
+      { "Return", "Edit message in editor" },
+      { "y", "Send message" },
+      { "a", "Attach file" },
+      { "d", "Remove attached file" },
+    };
+
+    ModeHelpInfo * tv = thread_view->key_help ();
+    tv->parent = m;
+
+    return tv;
+  }
+
   bool EditMessage::check_fields () {
     /* TODO: check fields.. */
     return true;
