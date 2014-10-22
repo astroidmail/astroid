@@ -91,6 +91,45 @@ if os.environ.has_key('CPPFLAGS'):
 if os.environ.has_key('LDFLAGS'):
   env['LINKFLAGS'] += SCons.Util.CLVar(os.environ['LDFLAGS'])
 
+def CheckPKGConfig(context, version):
+  context.Message( 'checking for pkg-config... ' )
+  ret = context.TryAction('pkg-config --atleast-pkgconfig-version=%s' % version)[0]
+  context.Result( ret )
+  return ret
+
+def CheckPKG(context, name):
+  context.Message( 'checking for %s... ' % name )
+  ret = context.TryAction('pkg-config --exists \'%s\'' % name)[0]
+  context.Result( ret )
+  return ret
+
+
+conf = Configure(env, custom_tests = { 'CheckPKGConfig' : CheckPKGConfig,
+                                       'CheckPKG' : CheckPKG })
+
+if not conf.CheckPKGConfig('0.15.0'):
+  print 'pkg-config >= 0.15.0 not found.'
+  Exit(1)
+
+if not conf.CheckPKG('gtkmm-3.0 >= 3.10'):
+  print 'gtkmm-3.0 >= 3.10 not found.'
+  Exit(1)
+
+if not conf.CheckPKG('glibmm-2.4'):
+  print "glibmm-2.4 not found."
+  Exit (1)
+
+if not conf.CheckPKG('gmime-2.6'):
+  print "gmime-2.6 not found."
+  Exit (1)
+
+if not conf.CheckPKG('webkitgtk-3.0'):
+  print "webkitgtk-3.0 not found."
+  Exit (1)
+
+if not conf.CheckHeader ('notmuch.h'):
+  print "notmuch does not seem to be installed."
+  Exit (1)
 
 # external libraries
 env.ParseConfig ('pkg-config --libs --cflags glibmm-2.4')
@@ -131,12 +170,6 @@ source_objs = [env.Object (s) for s in source]
 
 Export ('source')
 Export ('source_objs')
-
-conf = Configure(env)
-
-if not conf.CheckHeader ('notmuch.h'):
-  print "notmuch does not seem to be installed."
-  exit (1)
 
 env = conf.Finish ()
 
