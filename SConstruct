@@ -7,6 +7,7 @@ def getGitDesc():
 env = Environment ()
 
 AddOption ("--release", action="store", dest="release", default="git", help="Make a release (default: git describe output)")
+AddOption ("--enable-debug", action="store_true", dest="debug", default=None, help="Enable the -g flag for debugging (default: true when release is git)")
 
 release = GetOption("release")
 if release != "git":
@@ -15,6 +16,12 @@ if release != "git":
 else:
   GIT_DESC = getGitDesc ()
   print "building version " + GIT_DESC + " (git).."
+
+debug = GetOption("debug")
+if debug == None:
+  debug = (release == "git")
+
+print "debug flag enabled: " + str(debug)
 
 # Verbose / Non-verbose output{{{
 colors = {}
@@ -96,8 +103,11 @@ libs   = ['notmuch',
           'boost_system',
           'boost_program_options',]
 
-env.Append (LIBS = libs)
-env.Append (CPPFLAGS = ['-g', '-Wall', '-std=c++11', '-pthread'] )
+env.AppendUnique (LIBS = libs)
+env.AppendUnique (CPPFLAGS = ['-Wall', '-std=c++11', '-pthread'] )
+
+if debug:
+  env.AppendUnique (CPPFLAGS = ['-g'])
 
 # write version file
 print ("writing src/version.hh..")
