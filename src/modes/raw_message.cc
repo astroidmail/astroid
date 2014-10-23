@@ -35,6 +35,7 @@ namespace Astroid {
     log << info << "rm: loading message from file: " << fname << endl;
     ifstream f (fname);
 
+    /* TODO: convert to valid utf-8 */
     refptr<Gtk::TextBuffer> buf = tv.get_buffer ();
     stringstream s;
     s << f.rdbuf ();
