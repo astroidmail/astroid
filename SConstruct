@@ -127,7 +127,7 @@ if not conf.CheckPKG('webkitgtk-3.0'):
   print "webkitgtk-3.0 not found."
   Exit (1)
 
-if not conf.CheckHeader ('notmuch.h'):
+if not conf.CheckLibWithHeader ('notmuch', 'notmuch.h', 'c'):
   print "notmuch does not seem to be installed."
   Exit (1)
 
