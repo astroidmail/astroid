@@ -92,13 +92,13 @@ if os.environ.has_key('LDFLAGS'):
   env['LINKFLAGS'] += SCons.Util.CLVar(os.environ['LDFLAGS'])
 
 def CheckPKGConfig(context, version):
-  context.Message( 'checking for pkg-config... ' )
+  context.Message( 'Checking for pkg-config... ' )
   ret = context.TryAction('pkg-config --atleast-pkgconfig-version=%s' % version)[0]
   context.Result( ret )
   return ret
 
 def CheckPKG(context, name):
-  context.Message( 'checking for %s... ' % name )
+  context.Message( 'Checking for %s... ' % name )
   ret = context.TryAction('pkg-config --exists \'%s\'' % name)[0]
   context.Result( ret )
   return ret
