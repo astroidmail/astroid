@@ -124,7 +124,7 @@ if not conf.CheckPKG('gmime-2.6'):
   Exit (1)
 
 if not conf.CheckPKG('webkitgtk-3.0'):
-  print "webkitgtk-3.0 not found."
+  print "webkitgtk not found."
   Exit (1)
 
 if not conf.CheckLibWithHeader ('notmuch', 'notmuch.h', 'c'):
