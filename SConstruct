@@ -137,6 +137,18 @@ env.ParseConfig ('pkg-config --libs --cflags gtkmm-3.0')
 env.ParseConfig ('pkg-config --libs --cflags gmime-2.6')
 env.ParseConfig ('pkg-config --libs --cflags webkitgtk-3.0')
 
+if not conf.CheckLib ('boost_filesystem', language = 'c++'):
+  print "boost_filesystem does not seem to be installed."
+  Exit (1)
+
+if not conf.CheckLib ('boost_system', language = 'c++'):
+  print "boost_system does not seem to be installed."
+  Exit (1)
+
+if not conf.CheckLib ('boost_program_options', language = 'c++'):
+  print "boost_program_options does not seem to be installed."
+  Exit (1)
+
 libs   = ['notmuch',
           'boost_filesystem',
           'boost_system',
