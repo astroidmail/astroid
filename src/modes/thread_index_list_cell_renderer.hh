@@ -17,7 +17,7 @@ namespace Astroid {
       Glib::RefPtr<NotmuchThread> thread; /* thread that should be rendered now */
       bool last;
 
-      /* these tags are displayed otherwise, so they are not
+      /* these tags are displayed otherwisely, so they are not
        * shown explicitly: MUST BE SORTED */
       const vector<ustring> hidden_tags =
               { "attachment", "flagged", "unread"
@@ -47,6 +47,19 @@ namespace Astroid {
           Gtk::Widget& widget,
           int& minimum_height,
           int& natural_height) const override;
+
+      virtual void get_preferred_height_for_width_vfunc (
+          Gtk::Widget& widget,
+          int width,
+          int& minimum_height,
+          int& natural_height) const override;
+
+      virtual void get_preferred_width_vfunc (
+          Gtk::Widget& widget,
+          int& minimum_width,
+          int& natural_width) const override;
+
+      virtual Gtk::SizeRequestMode get_request_mode_vfunc () const override;
 
     private:
       int content_height;
