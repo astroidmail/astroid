@@ -371,9 +371,13 @@ namespace Astroid {
     pango_layout->set_font_description (font_description);
 
     int w, h;
-    pango_layout->get_size (w, h);
-    int content_height = h / Pango::SCALE;
+    pango_layout->get_pixel_size (w, h);
+    int content_height = h;
     return content_height;
+  }
+
+  Gtk::SizeRequestMode ThreadIndexListCellRenderer::get_request_mode_vfunc () const {
+    return Gtk::SIZE_REQUEST_CONSTANT_SIZE;
   }
 
   /* cellrenderer overloads {{{ */
@@ -387,6 +391,26 @@ namespace Astroid {
     minimum_height = height;
     natural_height = height;
   }
+
+  void ThreadIndexListCellRenderer::get_preferred_height_for_width_vfunc (
+      Gtk::Widget& widget,
+      int width,
+      int& minimum_height,
+      int& natural_height) const {
+
+    get_preferred_height_vfunc (widget, minimum_height, natural_height);
+
+  }
+
+  void ThreadIndexListCellRenderer::get_preferred_width_vfunc (
+      Gtk::Widget& widget,
+      int& minimum_width,
+      int& natural_width) const {
+
+    minimum_width = widget.get_width();
+    natural_width = minimum_width;
+  }
+
 
 
   bool ThreadIndexListCellRenderer::activate_vfunc(
