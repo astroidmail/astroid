@@ -398,6 +398,7 @@ namespace Astroid {
       int& minimum_height,
       int& natural_height) const {
 
+    /* wrap non-width dependent */
     get_preferred_height_vfunc (widget, minimum_height, natural_height);
 
   }
@@ -410,8 +411,6 @@ namespace Astroid {
     minimum_width = widget.get_width();
     natural_width = minimum_width;
   }
-
-
 
   bool ThreadIndexListCellRenderer::activate_vfunc(
       GdkEvent* event,
