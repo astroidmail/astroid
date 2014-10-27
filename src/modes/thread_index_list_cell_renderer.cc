@@ -45,9 +45,10 @@ namespace Astroid {
     padding = char_width;
 
     content_height  = calculate_height (widget);
+    height_set = true;
 
-    left_icons_size  = content_height;
-    left_icons_width = content_height;
+    left_icons_size  = content_height - (2 * left_icons_padding);
+    left_icons_width = left_icons_size;
 
     if (thread->unread) {
       font_description.set_weight (Pango::WEIGHT_BOLD);
@@ -67,7 +68,6 @@ namespace Astroid {
     subject_start       = tags_start + tags_width + padding;
 
     height              = content_height + line_spacing;
-    height_set          = true;
 
     //render_background (cr, widget, background_area, flags);
     render_date (cr, widget, cell_area); // returns height
@@ -131,16 +131,21 @@ namespace Astroid {
       const Gdk::Rectangle &cell_area ) {
 
 
-    Glib::RefPtr<Gtk::IconTheme> theme = Gtk::IconTheme::get_default();
-    Glib::RefPtr<Gdk::Pixbuf> pixbuf = theme->load_icon (
-        "starred-symbolic",
-        left_icons_size,
-        Gtk::ICON_LOOKUP_USE_BUILTIN );
+    if (!flagged_icon) {
+      Glib::RefPtr<Gtk::IconTheme> theme = Gtk::IconTheme::get_default();
+      Glib::RefPtr<Gdk::Pixbuf> pixbuf = theme->load_icon (
+          "starred-symbolic",
+          left_icons_size,
+          Gtk::ICON_LOOKUP_USE_BUILTIN );
+
+      flagged_icon = pixbuf->scale_simple (left_icons_size, left_icons_size,
+          Gdk::INTERP_BILINEAR);
+    }
 
     int y = cell_area.get_y() + left_icons_padding;
     int x = cell_area.get_x();
 
-    Gdk::Cairo::set_source_pixbuf (cr, pixbuf, x, y);
+    Gdk::Cairo::set_source_pixbuf (cr, flagged_icon, x, y);
 
     cr->rectangle (x, y, left_icons_size,left_icons_size);
     cr->fill ();
@@ -152,16 +157,22 @@ namespace Astroid {
       const Gdk::Rectangle &cell_area ) {
 
 
-    Glib::RefPtr<Gtk::IconTheme> theme = Gtk::IconTheme::get_default();
-    Glib::RefPtr<Gdk::Pixbuf> pixbuf = theme->load_icon (
-        "mail-attachment-symbolic",
-        left_icons_size,
-        Gtk::ICON_LOOKUP_USE_BUILTIN );
+    if (!attachment_icon) {
+      Glib::RefPtr<Gtk::IconTheme> theme = Gtk::IconTheme::get_default();
+      Glib::RefPtr<Gdk::Pixbuf> pixbuf = theme->load_icon (
+          "mail-attachment-symbolic",
+          left_icons_size,
+          Gtk::ICON_LOOKUP_USE_BUILTIN );
+
+
+      attachment_icon = pixbuf->scale_simple (left_icons_size, left_icons_size,
+          Gdk::INTERP_BILINEAR);
+    }
 
     int y = cell_area.get_y() + left_icons_padding;
     int x = cell_area.get_x() + left_icons_width + left_icons_padding;
 
-    Gdk::Cairo::set_source_pixbuf (cr, pixbuf, x, y);
+    Gdk::Cairo::set_source_pixbuf (cr, attachment_icon, x, y);
 
     cr->rectangle (x, y, left_icons_size, left_icons_size);
     cr->fill ();
@@ -362,6 +373,7 @@ namespace Astroid {
 
   } // }}}
 
+  /* cellrenderer overloads {{{ */
   int ThreadIndexListCellRenderer::calculate_height (Gtk::Widget &widget) const {
     if (height_set) return content_height;
 
@@ -372,7 +384,9 @@ namespace Astroid {
 
     int w, h;
     pango_layout->get_pixel_size (w, h);
+
     int content_height = h;
+
     return content_height;
   }
 
@@ -380,7 +394,6 @@ namespace Astroid {
     return Gtk::SIZE_REQUEST_CONSTANT_SIZE;
   }
 
-  /* cellrenderer overloads {{{ */
   void ThreadIndexListCellRenderer::get_preferred_height_vfunc (
       Gtk::Widget& widget,
       int& minimum_height,
@@ -408,7 +421,7 @@ namespace Astroid {
       int& minimum_width,
       int& natural_width) const {
 
-    minimum_width = widget.get_width();
+    minimum_width = 100;
     natural_width = minimum_width;
   }
 

@@ -70,7 +70,7 @@ namespace Astroid {
       int left_icons_size = 15;
       int left_icons_width  = 15;
       int left_icons_width_n = 2;
-      int left_icons_padding = 2;
+      int left_icons_padding = 1;
       int padding = 5;
 
       float font_size = 8.5; // TODO: get from settings
@@ -134,11 +134,13 @@ namespace Astroid {
           Gtk::Widget &widget,
           const Gdk::Rectangle &cell_area );
 
+      refptr<Gdk::Pixbuf> flagged_icon;
       void render_flagged (
           const ::Cairo::RefPtr< ::Cairo::Context>&cr,
           Gtk::Widget &widget,
           const Gdk::Rectangle &cell_area );
 
+      refptr<Gdk::Pixbuf> attachment_icon;
       void render_attachment (
           const ::Cairo::RefPtr< ::Cairo::Context>&cr,
           Gtk::Widget &widget,
