@@ -8,6 +8,7 @@ env = Environment ()
 
 AddOption ("--release", action="store", dest="release", default="git", help="Make a release (default: git describe output)")
 AddOption ("--enable-debug", action="store_true", dest="debug", default=None, help="Enable the -g flag for debugging (default: true when release is git)")
+AddOption ("--prefix", action="store", dest="prefix", default="/usr", help="Directory to install astroid under")
 
 release = GetOption("release")
 if release != "git":
@@ -185,7 +186,7 @@ Export ('source_objs')
 
 env = conf.Finish ()
 
-env.Program (source = ['src/main.cc', source_objs], target = 'astroid')
+astroid = env.Program (source = ['src/main.cc', source_objs], target = 'astroid')
 env.Alias ('build', 'astroid')
 
 Export ('env')
@@ -202,4 +203,17 @@ testEnv.Tool ('unittest',
 Export ('testEnv')
 # grab stuff from sub-directories.
 env.SConscript(dirs = ['test'])
+
+## Install target
+prefix = GetOption ("prefix")
+idir_prefix     = prefix
+idir_bin        = os.path.join (prefix, 'bin')
+idir_shr        = os.path.join (prefix, 'share/astroid')
+idir_ui         = os.path.join (idir_shr, 'ui')
+
+env.Install (idir_bin, astroid)
+env.Install (idir_ui, Glob ('ui/*.glade') +
+                      Glob ('ui/*.css') +
+                      Glob ('ui/*.html'))
+env.Alias ('install', idir_prefix)
 
