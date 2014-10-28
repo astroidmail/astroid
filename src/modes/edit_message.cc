@@ -27,6 +27,16 @@ using namespace std;
 namespace Astroid {
   int EditMessage::edit_id = 0;
 
+  EditMessage::EditMessage (MainWindow * mw, ustring _to) :
+    EditMessage (mw) {
+
+    to = _to;
+
+    /* reload message */
+    prepare_message ();
+    read_edited_message ();
+  }
+
   EditMessage::EditMessage (MainWindow * mw) : Mode (true) {
     main_window   = mw;
     editor_config = astroid->config->config.get_child ("editor");

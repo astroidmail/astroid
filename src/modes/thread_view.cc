@@ -3,6 +3,7 @@
 # include <atomic>
 # include <vector>
 # include <algorithm>
+# include <thread>
 
 # include <gtkmm.h>
 # include <webkit/webkit.h>
@@ -22,6 +23,7 @@
 # include "reply_message.hh"
 # include "forward_message.hh"
 # include "raw_message.hh"
+# include "thread_index.hh"
 # include "log.hh"
 
 
@@ -38,6 +40,7 @@ namespace Astroid {
     main_window = mw;
 
     open_html_part_external = astroid->config->config.get<bool> ("thread_view.open_html_part_external");
+    open_external_link = astroid->config->config.get<string> ("thread_view.open_external_link");
 
     pack_start (scroll, true, true, 5);
 
@@ -140,6 +143,14 @@ namespace Astroid {
         G_CALLBACK(ThreadView_show_inspector),
         (gpointer) this);
 
+    g_signal_connect (webview, "navigation-policy-decision-requested",
+        G_CALLBACK(ThreadView_navigation_request),
+        (gpointer) this);
+
+    g_signal_connect (webview, "new-window-policy-decision-requested",
+        G_CALLBACK(ThreadView_navigation_request),
+        (gpointer) this);
+
     /* scrolled window */
     auto vadj = scroll.get_vadjustment ();
     vadj->signal_changed().connect (
@@ -224,6 +235,112 @@ namespace Astroid {
     }
 
     return true;
+  }
+
+  /* navigation request */
+  extern "C" gboolean ThreadView_navigation_request (
+      WebKitWebView * w,
+      WebKitWebFrame * frame,
+      WebKitNetworkRequest * request,
+      WebKitWebNavigationAction * navigation_action,
+      WebKitWebPolicyDecision * policy_decision,
+      gpointer user_data) {
+
+    return ((ThreadView*)user_data)->navigation_request (
+        w,
+        frame,
+        request,
+        navigation_action,
+        policy_decision);
+  }
+
+  gboolean ThreadView::navigation_request (
+      WebKitWebView * w,
+      WebKitWebFrame * frame,
+      WebKitNetworkRequest * request,
+      WebKitWebNavigationAction * navigation_action,
+      WebKitWebPolicyDecision * policy_decision) {
+
+    if (webkit_web_navigation_action_get_reason (navigation_action)
+        == WEBKIT_WEB_NAVIGATION_REASON_LINK_CLICKED) {
+
+      webkit_web_policy_decision_ignore (policy_decision);
+
+      const gchar * uri_c = webkit_network_request_get_uri (
+          request );
+
+      ustring uri (uri_c);
+      log << info << "tv: navigating to: " << uri << endl;
+
+      ustring scheme = Glib::uri_parse_scheme (uri);
+
+      if (scheme == "mailto") {
+
+        uri = uri.substr (scheme.length ()+1, uri.length () - scheme.length()-1);
+        UstringUtils::trim(uri);
+
+        main_window->add_mode (new EditMessage (main_window, uri));
+
+      } else if (scheme == "id") {
+        /* TODO: open thread (doesnt work yet) */
+        main_window->add_mode (new ThreadIndex (main_window, uri));
+
+      } else if (scheme == "http" || scheme == "https" || scheme == "ftp")
+      {
+        open_link (uri);
+      } else {
+
+        log << error << "tv: unknown uri scheme. not opening." << endl;
+      }
+
+      return true;
+    }
+
+    return false;
+  }
+
+  void ThreadView::open_link (ustring uri) {
+    log << debug << "tv: opening: " << uri << endl;
+
+    std::thread job (&ThreadView::do_open_link, this, uri.c_str());
+    job.detach ();
+  }
+
+  void ThreadView::do_open_link (ustring uri) {
+    vector<string> args = { open_external_link.c_str(), uri.c_str () };
+    log << debug << "tv: spawning: " << args[0] << ", " << args[1] << endl;
+    string stdout;
+    string stderr;
+    int    exitcode;
+    try {
+      Glib::spawn_sync ("",
+                        args,
+                        Glib::SPAWN_DEFAULT | Glib::SPAWN_SEARCH_PATH,
+                        sigc::slot <void> (),
+                        &stdout,
+                        &stderr,
+                        &exitcode
+                        );
+
+    } catch (Glib::SpawnError &ex) {
+      log << error << "tv: exception while opening uri: " <<  ex.what () << endl;
+    }
+
+    ustring ustdout = ustring(stdout);
+    for (ustring &l : VectorUtils::split_and_trim (ustdout, ustring("\n"))) {
+
+      log << debug << l << endl;
+    }
+
+    ustring ustderr = ustring(stderr);
+    for (ustring &l : VectorUtils::split_and_trim (ustderr, ustring("\n"))) {
+
+      log << debug << l << endl;
+    }
+
+    if (exitcode != 0) {
+      log << error << "tv: open link exited with code: " << exitcode << endl;
+    }
   }
 
   /*

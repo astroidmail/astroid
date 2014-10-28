@@ -124,6 +124,7 @@ namespace Astroid {
 
     /* thread view */
     default_config.put ("thread_view.open_html_part_external", true);
+    default_config.put ("thread_view.open_external_link", "xdg-open");
 
   }
 

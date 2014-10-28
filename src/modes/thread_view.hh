@@ -29,6 +29,14 @@ namespace Astroid {
       WebKitWebInspector *,
       gpointer);
 
+  extern "C" gboolean ThreadView_navigation_request (
+      WebKitWebView * w,
+      WebKitWebFrame * frame,
+      WebKitNetworkRequest * request,
+      WebKitWebNavigationAction * navigation_action,
+      WebKitWebPolicyDecision * policy_decision,
+      gpointer user_data);
+
 
   class ThreadView : public Mode {
     /*
@@ -208,6 +216,17 @@ namespace Astroid {
           WebKitWebInspector *,
           WebKitWebView *);
       bool show_inspector (WebKitWebInspector *);
+
+      gboolean navigation_request (
+        WebKitWebView * w,
+        WebKitWebFrame * frame,
+        WebKitNetworkRequest * request,
+        WebKitWebNavigationAction * navigation_action,
+        WebKitWebPolicyDecision * policy_decision);
+
+      ustring open_external_link;
+      void open_link (ustring);
+      void do_open_link (ustring);
 
       void grab_focus ();
 

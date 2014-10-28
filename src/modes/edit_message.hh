@@ -24,6 +24,7 @@ namespace Astroid {
   class EditMessage : public Mode {
     public:
       EditMessage (MainWindow *);
+      EditMessage (MainWindow *, ustring to);
       ~EditMessage ();
 
       MainWindow * main_window;
