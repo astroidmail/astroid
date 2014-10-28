@@ -223,9 +223,14 @@ idir_bin        = os.path.join (prefix, 'bin')
 idir_shr        = os.path.join (prefix, 'share/astroid')
 idir_ui         = os.path.join (idir_shr, 'ui')
 
-env.Install (idir_bin, astroid)
-env.Install (idir_ui, Glob ('ui/*.glade') +
+inst_bin = env.Install (idir_bin, astroid)
+inst_shr = env.Install (idir_ui, Glob ('ui/*.glade') +
                       Glob ('ui/*.css') +
                       Glob ('ui/*.html'))
-env.Alias ('install', idir_prefix)
+env.Alias ('install', inst_bin)
+env.Alias ('install', inst_shr)
+env.Depends (inst_bin, astroid)
+env.Depends (inst_shr, astroid)
+Ignore ('.', inst_bin)
+Ignore ('.', inst_shr)
 
