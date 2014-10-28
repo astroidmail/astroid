@@ -1,4 +1,5 @@
 import os, sys
+import SCons
 from subprocess import *
 
 def getGitDesc():
