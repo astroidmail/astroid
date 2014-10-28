@@ -58,7 +58,13 @@ A fairly recent version of [gtk+] and [glib] with their
 
 ## installing
 
-Not yet set up, run from source root directory.
+Configure with a prefix and install:
+```
+$ scons --prefix=/usr build
+$ scons --prefix=/usr install
+```
+
+this will install the `astroid` binary into `/usr/bin/` and data files into `/usr/share/astroid/`.
 
 ## configuration
 

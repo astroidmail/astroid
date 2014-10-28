@@ -10,7 +10,7 @@
 # include <boost/filesystem.hpp>
 
 # include "astroid.hh"
-# include "version.hh"
+# include "build_config.hh"
 # include "db.hh"
 # include "config.hh"
 # include "account_manager.hh"

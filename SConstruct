@@ -8,15 +8,21 @@ env = Environment ()
 
 AddOption ("--release", action="store", dest="release", default="git", help="Make a release (default: git describe output)")
 AddOption ("--enable-debug", action="store_true", dest="debug", default=None, help="Enable the -g flag for debugging (default: true when release is git)")
-AddOption ("--prefix", action="store", dest="prefix", default="/usr", help="Directory to install astroid under")
+AddOption ("--prefix", action="store", dest="prefix", default=None, help="Directory to install astroid under")
+
+prefix = GetOption ("prefix")
+default_prefix = (prefix == None)
+prefix = prefix if prefix else '/usr'
 
 release = GetOption("release")
 if release != "git":
   GIT_DESC = release
   print "building release: " + release
+  in_release = True
 else:
   GIT_DESC = getGitDesc ()
   print "building version " + GIT_DESC + " (git).."
+  in_release = False
 
 debug = GetOption("debug")
 if debug == None:
@@ -162,10 +168,16 @@ if debug:
   env.AppendUnique (CPPFLAGS = ['-g'])
 
 # write version file
-print ("writing src/version.hh..")
-vfd = open ('src/version.hh', 'w')
+print ("writing src/build_config.hh..")
+vfd = open ('src/build_config.hh', 'w')
 vfd.write ("# pragma once\n")
-vfd.write ("# define GIT_DESC \"%s\"\n\n" % GIT_DESC)
+vfd.write ("# define GIT_DESC \"%s\"\n" % GIT_DESC)
+
+# write a prefix only if it is specified or
+# we are in release.
+if (in_release or not default_prefix):
+  vfd.write ("# define PREFIX \"%s\"\n\n" % prefix)
+
 vfd.close ()
 
 env.Append (CPPPATH = 'src')
@@ -205,7 +217,6 @@ Export ('testEnv')
 env.SConscript(dirs = ['test'])
 
 ## Install target
-prefix = GetOption ("prefix")
 idir_prefix     = prefix
 idir_bin        = os.path.join (prefix, 'bin')
 idir_shr        = os.path.join (prefix, 'share/astroid')

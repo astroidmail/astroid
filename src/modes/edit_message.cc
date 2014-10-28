@@ -9,6 +9,8 @@
 # include <gdk/gdkx.h>
 # include <gtkmm/socket.h>
 
+# include <boost/filesystem.hpp>
+
 # include "astroid.hh"
 # include "config.hh"
 # include "account_manager.hh"
@@ -20,9 +22,11 @@
 # include "main_window.hh"
 # include "message_thread.hh"
 # include "utils/ustring_utils.hh"
+# include "build_config.hh"
 # include "log.hh"
 
 using namespace std;
+using namespace boost::filesystem;
 
 namespace Astroid {
   int EditMessage::edit_id = 0;
@@ -45,7 +49,27 @@ namespace Astroid {
 
     set_label ("New message");
 
-    Glib::RefPtr<Gtk::Builder> builder = Gtk::Builder::create_from_file("ui/edit-message.glade", "box_message");
+    path default_ui ("ui/edit-message.glade");
+
+# ifdef PREFIX
+
+    path ui = path(PREFIX) / default_ui;
+
+# else
+    path ui (default_ui);
+# endif
+
+    if (!exists (ui)) {
+      if (!exists (default_ui)) {
+        log << error << "em: cannot find ui file." << endl;
+        exit (1);
+      } else {
+        log << error << "em: cannot find ui in installed path (" << ui.c_str() << "), using local.." << endl;
+        ui = default_ui;
+      }
+    }
+
+    Glib::RefPtr<Gtk::Builder> builder = Gtk::Builder::create_from_file(ui.c_str(), "box_message");
 
     builder->get_widget ("box_message", box_message);
 

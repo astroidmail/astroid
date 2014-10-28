@@ -6,7 +6,7 @@
 
 astroid
 *.o
-src/version.hh
+src/build_config.hh
 
 .sconsign.dblite
 config.log

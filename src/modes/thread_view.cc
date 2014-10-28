@@ -25,6 +25,7 @@
 # include "raw_message.hh"
 # include "thread_index.hh"
 # include "log.hh"
+# include "build_config.hh"
 
 
 using namespace std;
@@ -109,14 +110,44 @@ namespace Astroid {
 
     /* load css, html and DOM objects */
     if (!theme_loaded) {
-      ifstream tv_html_f (thread_view_html_f);
+      path def_tv_html = path(thread_view_html_f);
+      path def_tv_css  = path(thread_view_css_f);
+# ifdef PREFIX
+      path tv_html = path(PREFIX) / def_tv_html;
+      path tv_css  = path(PREFIX) / def_tv_css;
+# else
+      path tv_html = def_tv_html;
+      path tv_css  = def_tv_css;
+# endif
+
+      if (!exists(tv_html)) {
+        log << error << "tv: cannot find html theme file: " << tv_html.c_str() << ", using default.." << endl;
+        if (!exists(def_tv_html)) {
+          log << error << "tv: cannot find default html theme file." << endl;
+          exit (1);
+        }
+
+        tv_html = def_tv_html;
+      }
+
+      if (!exists(tv_css)) {
+        log << error << "tv: cannot find css theme file: " << tv_css.c_str() << ", using default.." << endl;
+        if (!exists(def_tv_css)) {
+          log << error << "tv: cannot find default css theme file." << endl;
+          exit (1);
+        }
+
+        tv_css = def_tv_css;
+      }
+
+      ifstream tv_html_f (tv_html.c_str());
       istreambuf_iterator<char> eos; // default is eos
       istreambuf_iterator<char> tv_iit (tv_html_f);
 
       thread_view_html.append (tv_iit, eos);
       tv_html_f.close ();
 
-      ifstream tv_css_f (thread_view_css_f);
+      ifstream tv_css_f (tv_css.c_str());
       istreambuf_iterator<char> tv_css_iit (tv_css_f);
       thread_view_css.append (tv_css_iit, eos);
       tv_css_f.close ();

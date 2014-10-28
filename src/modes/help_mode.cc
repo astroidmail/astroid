@@ -2,7 +2,7 @@
 
 # include "mode.hh"
 # include "help_mode.hh"
-# include "version.hh"
+# include "build_config.hh"
 
 # include <vector>
 # include <tuple>
