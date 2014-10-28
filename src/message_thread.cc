@@ -56,7 +56,7 @@ namespace Astroid {
   }
 
   Message::~Message () {
-    g_object_unref (message);
+    //g_object_unref (message);
   }
 
   void Message::load_tags (Db * db) {

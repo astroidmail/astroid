@@ -14,20 +14,22 @@ using namespace boost::filesystem;
 using boost::property_tree::ptree;
 
 namespace Astroid {
-  Config::Config (bool _test) {
+  Config::Config (bool _test, bool no_load) {
     load_dirs ();
 
     test = _test;
 
     config_file = config_dir / path("config");
 
-    load_config (); // re-sets config_dir to parent of fname
+    if (!no_load)
+      load_config (); // re-sets config_dir to parent of fname
   }
 
-  Config::Config (const char * fname) {
+  Config::Config (const char * fname, bool no_load) {
     load_dirs ();
     config_file = path(fname);
-    load_config (); // re-sets config_dir to parent of fname
+    if (!no_load)
+      load_config (); // re-sets config_dir to parent of fname
   }
 
   void Config::load_dirs () {
@@ -134,7 +136,7 @@ namespace Astroid {
     write_json (config_file.c_str (), config);
   }
 
-  void Config::load_config () {
+  void Config::load_config (bool initial) {
     if (test) {
       log << info << "cf: test config, loading defaults." << endl;
       setup_default_config (true);
@@ -154,7 +156,9 @@ namespace Astroid {
 
 
     if (!is_regular_file (config_file)) {
-      log << warn << "cf: no config, using defaults." << endl;
+      if (!initial) {
+        log << warn << "cf: no config, using defaults." << endl;
+      }
       setup_default_config (true);
       config = default_config;
       write_back_config ();
