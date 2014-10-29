@@ -78,9 +78,11 @@ you can run:
 
 to create a new configuration file in the default location, you can also specify a location of the new config file with the `-c` argument.
 
-## running
+## running and usage
 
 ` $ ./astroid `
+
+press '?' to get a list of available key bindings in the current mode. The list is updated depending on the mode you are in.
 
 ## patches, help, comments and bugs
 
