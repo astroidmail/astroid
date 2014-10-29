@@ -82,7 +82,7 @@ to create a new configuration file in the default location, you can also specify
 
 ` $ ./astroid `
 
-press '?' to get a list of available key bindings in the current mode. The list is updated depending on the mode you are in.
+press `?` to get a list of available key bindings in the current mode, navigate up and down using `j` and `k`. The list is updated depending on the mode you are in.
 
 ## patches, help, comments and bugs
 
