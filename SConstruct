@@ -168,7 +168,7 @@ env.AppendUnique (CPPFLAGS = ['-Wall', '-std=c++11', '-pthread'] )
 if debug:
   env.AppendUnique (CPPFLAGS = ['-g'])
 
-# write version file
+## write config file
 print ("writing src/build_config.hh..")
 vfd = open ('src/build_config.hh', 'w')
 vfd.write ("# pragma once\n")
@@ -204,6 +204,7 @@ env.Alias ('build', 'astroid')
 
 Export ('env')
 
+## tests
 # http://drowcode.blogspot.no/2008/12/few-days-ago-i-decided-i-wanted-to-use.html
 testEnv = env.Clone()
 testEnv.Append (CPPPATH = '../src')
@@ -224,9 +225,9 @@ idir_shr        = os.path.join (prefix, 'share/astroid')
 idir_ui         = os.path.join (idir_shr, 'ui')
 
 inst_bin = env.Install (idir_bin, astroid)
-inst_shr = env.Install (idir_ui, Glob ('ui/*.glade') +
-                      Glob ('ui/*.css') +
-                      Glob ('ui/*.html'))
+inst_shr = env.Install (idir_ui,  Glob ('ui/*.glade') +
+                                  Glob ('ui/*.css') +
+                                  Glob ('ui/*.html'))
 env.Alias ('install', inst_bin)
 env.Alias ('install', inst_shr)
 env.Depends (inst_bin, astroid)
