@@ -23,9 +23,12 @@ using namespace std;
 namespace Astroid {
 
   ThreadIndexListCellRenderer::ThreadIndexListCellRenderer () {
+    /* load font settings */
+    auto settings = Gio::Settings::create ("org.gnome.desktop.interface");
+    font_desc_string = settings->get_string ("monospace-font-name");
 
+    font_description = Pango::FontDescription (font_desc_string);
   }
-
 
   void ThreadIndexListCellRenderer::render_vfunc (
       const ::Cairo::RefPtr< ::Cairo::Context>&cr,
@@ -37,8 +40,6 @@ namespace Astroid {
     // calculate text width, we don't need to do this every time,
     // but we need access to the context.
     refptr<Pango::Context> pango_cr = widget.create_pango_context ();
-    font_description.set_size (Pango::SCALE * subject_font_size);
-    font_description.set_family (font_family);
     font_metrics = pango_cr->get_metrics (font_description);
 
     int char_width = font_metrics.get_approximate_char_width () / Pango::SCALE;

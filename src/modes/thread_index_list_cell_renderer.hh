@@ -73,8 +73,7 @@ namespace Astroid {
       int left_icons_padding = 1;
       int padding;
 
-      float font_size = 8.5; // TODO: get from settings
-      ustring font_family = "monospace";
+      ustring font_desc_string;
       Pango::FontDescription font_description;
       Pango::FontMetrics     font_metrics;
 
@@ -95,7 +94,6 @@ namespace Astroid {
       int tags_len = 80; // chars
 
       int subject_start;
-      int subject_font_size = font_size;
 
       void render_background (
           const ::Cairo::RefPtr< ::Cairo::Context>&cr,
