@@ -52,11 +52,11 @@ A fairly recent version of [gtk+] and [glib] with their
 [boost], [gmime] and a compiler that supports [C++11]. Of course, the
 [notmuch] libraries are also required.
 
-## compiling
+### compiling
 
 ` $ scons `
 
-## installing
+### installing
 
 Configure with a prefix and install:
 ```
@@ -66,7 +66,7 @@ $ scons --prefix=/usr install
 
 this will install the `astroid` binary into `/usr/bin/` and data files into `/usr/share/astroid/`.
 
-## configuration
+### configuration
 
 astroid uses the `$XDG_CONFIG_HOME/astroid` directory (or `$HOME/.config/astroid` if it is not set) for storing its configuration file. When you first run astroid it will set up the default configuration file there. This is a JSON file created by [boost::property_tree]. Options not set here will be set to their default values as specified in [`src/config.cc`](https://github.com/gauteh/astroid/blob/master/src/config.cc#L78).
 
@@ -78,7 +78,7 @@ you can run:
 
 to create a new configuration file in the default location, you can also specify a location of the new config file with the `-c` argument.
 
-## running and usage
+### running and usage
 
 ` $ ./astroid `
 
