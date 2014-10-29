@@ -92,8 +92,8 @@ namespace Astroid {
     id = edit_id++;
 
     char hostname[1024];
-    hostname[1024] = 0;
-    gethostname (hostname, 1023);
+    hostname[1023] = 0;
+    gethostname (hostname, 1022);
 
     int pid = getpid ();
 
