@@ -53,7 +53,7 @@ namespace Astroid {
 
 # ifdef PREFIX
 
-    path ui = path(PREFIX) / default_ui;
+    path ui = path(PREFIX) / prefix("share/astroid") / default_ui;
 
 # else
     path ui (default_ui);

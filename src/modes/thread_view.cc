@@ -113,8 +113,8 @@ namespace Astroid {
       path def_tv_html = path(thread_view_html_f);
       path def_tv_css  = path(thread_view_css_f);
 # ifdef PREFIX
-      path tv_html = path(PREFIX) / def_tv_html;
-      path tv_css  = path(PREFIX) / def_tv_css;
+      path tv_html = path(PREFIX) / path("share/astroid") / def_tv_html;
+      path tv_css  = path(PREFIX) / path("share/astroid") / def_tv_css;
 # else
       path tv_html = def_tv_html;
       path tv_css  = def_tv_css;
