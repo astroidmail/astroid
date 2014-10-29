@@ -39,36 +39,38 @@ namespace Astroid {
   {
     // calculate text width, we don't need to do this every time,
     // but we need access to the context.
-    refptr<Pango::Context> pango_cr = widget.create_pango_context ();
-    font_metrics = pango_cr->get_metrics (font_description);
+    if (!height_set) {
+      refptr<Pango::Context> pango_cr = widget.create_pango_context ();
+      font_metrics = pango_cr->get_metrics (font_description);
 
-    int char_width = font_metrics.get_approximate_char_width () / Pango::SCALE;
-    padding = char_width;
+      int char_width = font_metrics.get_approximate_char_width () / Pango::SCALE;
+      padding = char_width;
 
-    content_height  = calculate_height (widget);
-    height_set = true;
+      content_height  = calculate_height (widget);
+      height_set = true;
 
-    left_icons_size  = content_height - (2 * left_icons_padding);
-    left_icons_width = left_icons_size;
+      left_icons_size  = content_height - (2 * left_icons_padding);
+      left_icons_width = left_icons_size;
+
+      date_start          = left_icons_width_n * left_icons_width +
+          (left_icons_width_n-1) * left_icons_padding + padding;
+      date_width          = char_width * date_len;
+      message_count_width = char_width * message_count_len;
+      message_count_start = date_start + date_width + padding;
+      authors_width       = char_width * authors_len;
+      authors_start       = message_count_start + message_count_width + padding;
+      tags_width          = char_width * tags_len;
+      tags_start          = authors_start + authors_width + padding;
+      subject_start       = tags_start + tags_width + padding;
+
+      height              = content_height + line_spacing;
+    }
 
     if (thread->unread) {
       font_description.set_weight (Pango::WEIGHT_BOLD);
     } else {
       font_description.set_weight (Pango::WEIGHT_NORMAL);
     }
-
-    date_start          = left_icons_width_n * left_icons_width +
-        (left_icons_width_n-1) * left_icons_padding + padding;
-    date_width          = char_width * date_len;
-    message_count_width = char_width * message_count_len;
-    message_count_start = date_start + date_width + padding;
-    authors_width       = char_width * authors_len;
-    authors_start       = message_count_start + message_count_width + padding;
-    tags_width          = char_width * tags_len;
-    tags_start          = authors_start + authors_width + padding;
-    subject_start       = tags_start + tags_width + padding;
-
-    height              = content_height + line_spacing;
 
     //render_background (cr, widget, background_area, flags);
     render_date (cr, widget, cell_area); // returns height
