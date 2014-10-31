@@ -178,6 +178,8 @@ namespace Astroid {
           refptr<Glib::ByteArray>,
           WebKitDOMHTMLImageElement *);
 
+      refptr<Gdk::Pixbuf> attachment_icon;
+
       string assemble_data_uri (ustring, gchar *&, gsize);
 
       static const int THUMBNAIL_WIDTH = 150; // px
