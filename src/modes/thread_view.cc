@@ -1138,10 +1138,13 @@ namespace Astroid {
         webkit_dom_dom_token_list_add (class_list, "thumbnail",
             (gerr = NULL, &gerr));
 
+        g_object_unref (class_list);
+
         attachment_icon->save_to_buffer (content, content_size, "png"); // default type is png
         image_content_type = "image/png";
 
       } catch (Gdk::PixbufError &ex) {
+
         log << error << "tv: could not create icon from attachmed image." << endl;
 
         attachment_icon->save_to_buffer (content, content_size, "png"); // default type is png
