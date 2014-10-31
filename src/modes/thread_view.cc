@@ -37,7 +37,7 @@ namespace Astroid {
   ustring ThreadView::thread_view_html;
   ustring ThreadView::thread_view_css;
 
-  ThreadView::ThreadView (MainWindow * mw) {
+  ThreadView::ThreadView (MainWindow * mw) { // {{{
     main_window = mw;
 
     open_html_part_external = astroid->config->config.get<bool> ("thread_view.open_html_part_external");
@@ -197,86 +197,17 @@ namespace Astroid {
         Gtk::ICON_LOOKUP_USE_BUILTIN );
 
     show_all_children ();
-  }
+  } // }}}
 
-  ThreadView::~ThreadView () {
+  ThreadView::~ThreadView () { // {{{
     log << debug << "tv: deconstruct." << endl;
     // TODO: possibly still some errors here in paned mode
     //g_object_unref (webview); // probably garbage collected since it has a parent widget
     //g_object_unref (websettings);
     if (container) g_object_unref (container);
-  }
+  } // }}}
 
-  /* is this callback setup safe?
-   *
-   * http://stackoverflow.com/questions/2068022/in-c-is-it-safe-portable-to-use-static-member-function-pointer-for-c-api-call
-   *
-   * http://gtk.10911.n7.nabble.com/Using-g-signal-connect-in-class-td57137.html
-   *
-   * to be portable we have to use a free function declared extern "C". a
-   * static member function is likely to work at least on gcc/g++, but not
-   * necessarily elsewhere.
-   *
-   */
-
-  extern "C" bool ThreadView_on_load_changed (
-      GtkWidget *       w,
-      GParamSpec *      p,
-      gpointer          data )
-  {
-    return ((ThreadView *) data)->on_load_changed (w, p);
-  }
-
-  bool ThreadView::on_load_changed (
-      GtkWidget *       w,
-      GParamSpec *      p)
-  {
-    WebKitLoadStatus ev = webkit_web_view_get_load_status (webview);
-    log << debug << "tv: on_load_changed: " << ev << endl;
-    switch (ev) {
-      case WEBKIT_LOAD_FINISHED:
-        log << debug << "tv: load finished." << endl;
-        {
-
-          /* load css style */
-          GError *err = NULL;
-          WebKitDOMDocument *d = webkit_web_view_get_dom_document (webview);
-          WebKitDOMElement  *e = webkit_dom_document_create_element (d, STYLE_NAME, &err);
-
-          WebKitDOMText *t = webkit_dom_document_create_text_node
-            (d, thread_view_css.c_str());
-
-          webkit_dom_node_append_child (WEBKIT_DOM_NODE(e), WEBKIT_DOM_NODE(t), (err = NULL, &err));
-
-          WebKitDOMHTMLHeadElement * head = webkit_dom_document_get_head (d);
-          webkit_dom_node_append_child (WEBKIT_DOM_NODE(head), WEBKIT_DOM_NODE(e), (err = NULL, &err));
-
-          /* get container for message divs */
-          container = WEBKIT_DOM_HTML_DIV_ELEMENT(webkit_dom_document_get_element_by_id (d, "message_container"));
-
-          if (container == NULL) {
-            log << warn << "render: could not find container!" << endl;
-          }
-
-
-          g_object_unref (d);
-          g_object_unref (e);
-          g_object_unref (t);
-          g_object_unref (head);
-
-          /* render */
-          wk_loaded = true;
-          render_messages ();
-
-        }
-      default:
-        break;
-    }
-
-    return true;
-  }
-
-  /* navigation request */
+  /* navigation requests {{{ */
   extern "C" gboolean ThreadView_navigation_request (
       WebKitWebView * w,
       WebKitWebFrame * frame,
@@ -382,9 +313,9 @@ namespace Astroid {
     }
   }
 
-  /*
-   * Web inspector
-   */
+  /* end navigation requests }}} */
+
+  /*  Web inspector {{{ */
   extern "C" WebKitWebView * ThreadView_activate_inspector (
       WebKitWebInspector * wi,
       WebKitWebView *          w,
@@ -429,9 +360,77 @@ namespace Astroid {
     return true;
   }
 
-  /*
-   * Inspector end
+  /* Inspector end }}} */
+
+  /* message loading {{{ */
+  /* is this callback setup safe?
+   *
+   * http://stackoverflow.com/questions/2068022/in-c-is-it-safe-portable-to-use-static-member-function-pointer-for-c-api-call
+   *
+   * http://gtk.10911.n7.nabble.com/Using-g-signal-connect-in-class-td57137.html
+   *
+   * to be portable we have to use a free function declared extern "C". a
+   * static member function is likely to work at least on gcc/g++, but not
+   * necessarily elsewhere.
+   *
    */
+
+  extern "C" bool ThreadView_on_load_changed (
+      GtkWidget *       w,
+      GParamSpec *      p,
+      gpointer          data )
+  {
+    return ((ThreadView *) data)->on_load_changed (w, p);
+  }
+
+  bool ThreadView::on_load_changed (
+      GtkWidget *       w,
+      GParamSpec *      p)
+  {
+    WebKitLoadStatus ev = webkit_web_view_get_load_status (webview);
+    log << debug << "tv: on_load_changed: " << ev << endl;
+    switch (ev) {
+      case WEBKIT_LOAD_FINISHED:
+        log << debug << "tv: load finished." << endl;
+        {
+
+          /* load css style */
+          GError *err = NULL;
+          WebKitDOMDocument *d = webkit_web_view_get_dom_document (webview);
+          WebKitDOMElement  *e = webkit_dom_document_create_element (d, STYLE_NAME, &err);
+
+          WebKitDOMText *t = webkit_dom_document_create_text_node
+            (d, thread_view_css.c_str());
+
+          webkit_dom_node_append_child (WEBKIT_DOM_NODE(e), WEBKIT_DOM_NODE(t), (err = NULL, &err));
+
+          WebKitDOMHTMLHeadElement * head = webkit_dom_document_get_head (d);
+          webkit_dom_node_append_child (WEBKIT_DOM_NODE(head), WEBKIT_DOM_NODE(e), (err = NULL, &err));
+
+          /* get container for message divs */
+          container = WEBKIT_DOM_HTML_DIV_ELEMENT(webkit_dom_document_get_element_by_id (d, "message_container"));
+
+          if (container == NULL) {
+            log << warn << "render: could not find container!" << endl;
+          }
+
+
+          g_object_unref (d);
+          g_object_unref (e);
+          g_object_unref (t);
+          g_object_unref (head);
+
+          /* render */
+          wk_loaded = true;
+          render_messages ();
+
+        }
+      default:
+        break;
+    }
+
+    return true;
+  }
 
   void ThreadView::load_thread (refptr<NotmuchThread> _thread) {
     log << info << "tv: load thread: " << _thread->thread_id << endl;
@@ -463,20 +462,9 @@ namespace Astroid {
     render ();
   }
 
-  void ThreadView::on_scroll_vadjustment_changed () {
-    if (in_scroll) {
-      in_scroll = false;
-      log << debug << "tv: re-doing scroll." << endl;
+  /* end message loading }}} */
 
-      if (!scroll_arg) {
-        scroll_arg = focused_message;
-      }
-
-      scroll_to_message (scroll_arg, _scroll_when_visible);
-      scroll_arg = refptr<Message> ();
-      _scroll_when_visible = false;
-    }
-  }
+  /* rendering {{{ */
 
   void ThreadView::render () {
     log << info << "render: loading html.." << endl;
@@ -1192,6 +1180,9 @@ namespace Astroid {
 
   }
 
+  /* end rendering }}} */
+
+  /* clone and create html elements {{{ */
   string ThreadView::assemble_data_uri (ustring mime_type, gchar * &data, gsize len) {
     string base64 = "data:" + mime_type + ";base64," + Glib::Base64::encode (string(data, len));
     return base64;
@@ -1206,7 +1197,6 @@ namespace Astroid {
     return e;
   }
 
-  /* clone html elements */
   WebKitDOMHTMLElement * ThreadView::clone_select (
       WebKitDOMNode * node,
       ustring         selector,
@@ -1248,7 +1238,9 @@ namespace Astroid {
     return e;
   }
 
-  bool ThreadView::on_key_press_event (GdkEventKey *event) {
+  /* clone and create end }}} */
+
+  bool ThreadView::on_key_press_event (GdkEventKey *event) { // {{{
     switch (event->keyval) {
 
       case GDK_KEY_j:
@@ -1529,9 +1521,9 @@ namespace Astroid {
     };
 
     return m;
-  }
+  } // }}}
 
-  bool ThreadView::element_action (char a) {
+  bool ThreadView::element_action (char a) { // {{{
     log << debug << "tv: activate item." << endl;
 
     if (!edit_mode) {
@@ -1630,8 +1622,24 @@ namespace Astroid {
       }
     }
     return true;
-  }
+  } // }}}
 
+  /* focus handeling {{{ */
+
+  void ThreadView::on_scroll_vadjustment_changed () {
+    if (in_scroll) {
+      in_scroll = false;
+      log << debug << "tv: re-doing scroll." << endl;
+
+      if (!scroll_arg) {
+        scroll_arg = focused_message;
+      }
+
+      scroll_to_message (scroll_arg, _scroll_when_visible);
+      scroll_arg = refptr<Message> ();
+      _scroll_when_visible = false;
+    }
+  }
 
   void ThreadView::update_focus_to_view () {
     /* check if currently focused message has gone out of focus
@@ -1830,67 +1838,6 @@ namespace Astroid {
       g_object_unref (e);
     }
 
-    g_object_unref (d);
-  }
-
-  bool ThreadView::is_hidden (refptr<Message> m) {
-    ustring mid = "message_" + m->mid;
-
-    WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
-
-    WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
-
-    WebKitDOMDOMTokenList * class_list =
-      webkit_dom_element_get_class_list (e);
-
-    GError * gerr = NULL;
-
-    bool r = webkit_dom_dom_token_list_contains (class_list, "hide", (gerr = NULL, &gerr));
-
-    g_object_unref (class_list);
-    g_object_unref (e);
-    g_object_unref (d);
-
-    return r;
-  }
-
-  void ThreadView::toggle_hidden (
-      refptr<Message> m,
-      ToggleState t)
-  {
-    if (!m) m = focused_message;
-    ustring mid = "message_" + m->mid;
-
-    // reset element focus
-    state[m].current_element = 0; // empty focus
-
-    WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
-
-    WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
-
-    WebKitDOMDOMTokenList * class_list =
-      webkit_dom_element_get_class_list (e);
-
-    GError * gerr = NULL;
-
-    if (webkit_dom_dom_token_list_contains (class_list, "hide", (gerr = NULL, &gerr)))
-    {
-      /* reset class */
-      if (t == ToggleToggle || t == ToggleShow) {
-        webkit_dom_dom_token_list_remove (class_list, "hide",
-            (gerr = NULL, &gerr));
-      }
-
-    } else {
-      /* set class  */
-      if (t == ToggleToggle || t == ToggleHide) {
-        webkit_dom_dom_token_list_add (class_list, "hide",
-            (gerr = NULL, &gerr));
-      }
-    }
-
-    g_object_unref (class_list);
-    g_object_unref (e);
     g_object_unref (d);
   }
 
@@ -2143,7 +2090,73 @@ namespace Astroid {
     update_focus_status ();
   }
 
-  void ThreadView::save_all_attachments () {
+  /* end focus handeling  }}} */
+
+  /* message hiding {{{ */
+  bool ThreadView::is_hidden (refptr<Message> m) {
+    ustring mid = "message_" + m->mid;
+
+    WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
+
+    WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
+
+    WebKitDOMDOMTokenList * class_list =
+      webkit_dom_element_get_class_list (e);
+
+    GError * gerr = NULL;
+
+    bool r = webkit_dom_dom_token_list_contains (class_list, "hide", (gerr = NULL, &gerr));
+
+    g_object_unref (class_list);
+    g_object_unref (e);
+    g_object_unref (d);
+
+    return r;
+  }
+
+  void ThreadView::toggle_hidden (
+      refptr<Message> m,
+      ToggleState t)
+  {
+    if (!m) m = focused_message;
+    ustring mid = "message_" + m->mid;
+
+    // reset element focus
+    state[m].current_element = 0; // empty focus
+
+    WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
+
+    WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
+
+    WebKitDOMDOMTokenList * class_list =
+      webkit_dom_element_get_class_list (e);
+
+    GError * gerr = NULL;
+
+    if (webkit_dom_dom_token_list_contains (class_list, "hide", (gerr = NULL, &gerr)))
+    {
+      /* reset class */
+      if (t == ToggleToggle || t == ToggleShow) {
+        webkit_dom_dom_token_list_remove (class_list, "hide",
+            (gerr = NULL, &gerr));
+      }
+
+    } else {
+      /* set class  */
+      if (t == ToggleToggle || t == ToggleHide) {
+        webkit_dom_dom_token_list_add (class_list, "hide",
+            (gerr = NULL, &gerr));
+      }
+    }
+
+    g_object_unref (class_list);
+    g_object_unref (e);
+    g_object_unref (d);
+  }
+
+  /* end message hinding }}} */
+
+  void ThreadView::save_all_attachments () { // {{{
     /* save all attachments of current focused message */
     log << info << "tv: save all attachments.." << endl;
 
@@ -2184,8 +2197,9 @@ namespace Astroid {
           log << debug << "tv: save: cancelled." << endl;
         }
     }
-  }
+  } // }}}
 
+  /* general mode stuff {{{ */
   void ThreadView::grab_focus () {
     //log << debug << "tv: grab focus" << endl;
     gtk_widget_grab_focus (GTK_WIDGET (webview));
@@ -2204,7 +2218,9 @@ namespace Astroid {
     //gtk_grab_remove (GTK_WIDGET (webview));
   }
 
-  /* signals */
+  /* end general mode stuff }}} */
+
+  /* signals {{{ */
   ThreadView::type_signal_ready
     ThreadView::signal_ready ()
   {
@@ -2231,7 +2247,9 @@ namespace Astroid {
     m_element_action.emit (element, action);
   }
 
-  /* MessageState */
+  /* end signals }}} */
+
+  /* MessageState  {{{ */
   ThreadView::MessageState::MessageState () {
     elements.push_back (Element (Empty, -1));
     current_element = 0;
@@ -2251,5 +2269,6 @@ namespace Astroid {
     return ustring::compose("%1", id);
   }
 
+  /* end MessageState }}} */
 }
 
