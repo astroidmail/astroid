@@ -37,16 +37,7 @@ namespace Astroid {
       WebKitWebPolicyDecision * policy_decision,
       gpointer user_data);
 
-
   class ThreadView : public Mode {
-    /*
-    friend bool ThreadView_on_load_changed (
-          GObject *,
-          WebKitLoadEvent,
-          gchar *,
-          gpointer,
-          gpointer );
-    */
     public:
       ThreadView (MainWindow *);
       ~ThreadView ();
