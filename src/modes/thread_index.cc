@@ -54,7 +54,7 @@ namespace Astroid {
 
     log  << info;
     log  << "ti, query: " << notmuch_query_get_query_string (query) << ", approx: "
-         << notmuch_query_count_threads (query) << " threads." << endl;
+         << notmuch_query_count_threads (query) << " threads and " << notmuch_query_count_messages (query) << " messages matching."  << endl;
 
     /* slow */
     threads = notmuch_query_search_threads (query);
