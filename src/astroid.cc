@@ -35,11 +35,16 @@ Astroid::Log Astroid::log;
 
 namespace Astroid {
   Astroid::Astroid () {
+    setlocale (LC_ALL, "");
     Glib::init ();
 
     log.add_out_stream (&cout);
 
     log << info << "welcome to astroid! - " << GIT_DESC << endl;
+
+    string charset;
+    Glib::get_charset(charset);
+    log << info << "utf8: " << Glib::get_charset () << ", " << charset << endl;
 
     /* user agent */
     user_agent = ustring::compose ("astroid/v%1 (https://github.com/gauteh/astroid)", GIT_DESC);
