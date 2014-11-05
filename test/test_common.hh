@@ -1,4 +1,7 @@
+# pragma once
+
 # include "astroid.hh"
+
 using namespace Astroid;
 
 void setup () {
