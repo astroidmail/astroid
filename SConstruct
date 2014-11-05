@@ -196,6 +196,7 @@ source_objs = [env.Object (s) for s in source]
 
 Export ('source')
 Export ('source_objs')
+Export ('debug')
 
 env = conf.Finish ()
 

@@ -12,7 +12,7 @@ def unitTestAction(target, source, env):
   '''
 
   app = str(source[0].abspath)
-  process = subprocess.Popen (app, shell = True)
+  process = subprocess.Popen (app, shell = True, env = env['ENV'])
   process.wait ()
   ret = process.returncode
   if ret == 0:

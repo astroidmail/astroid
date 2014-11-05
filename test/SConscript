@@ -4,9 +4,16 @@ Import('testEnv')
 Import('env')
 Import('source')
 Import('source_objs')
+Import('debug')
 testEnv = testEnv.Clone()
 testEnv.AppendUnique(LIBPATH=[env.Dir('../lib')], LIBS=[])
 testEnv.PrependENVPath('LD_LIBRARY_PATH', env.Dir('.').abspath)
+
+# set output level of tests
+# http://www.boost.org/doc/libs/1_34_1/libs/test/doc/components/utf/parameters/log_level.html
+if debug:
+  testEnv['ENV']['BOOST_TEST_LOG_LEVEL'] = 'all'
+
 # We can add single file unit tests very easily.
 #testEnv.addUnitTest('test.cpp')
 # also, multiple files can be compiled into a single test suite.
