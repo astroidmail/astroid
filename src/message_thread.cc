@@ -167,7 +167,7 @@ namespace Astroid {
      * html:      output html (using gmimes html filter)
      */
     refptr<Chunk> c = root;
-    stringstream body;
+    ustring body;
 
     function< void (refptr<Chunk>) > app_body =
       [&] (refptr<Chunk> c)
@@ -194,7 +194,7 @@ namespace Astroid {
 
       if (use) {
         if (c->viewable && (c->preferred || html)) {
-          body << c->viewable_text(html);
+          body += c->viewable_text (html);
         }
 
         for_each (c->kids.begin(),
@@ -205,7 +205,7 @@ namespace Astroid {
 
     app_body (c);
 
-    return ustring(body.str());
+    return body;
   }
 
   vector<refptr<Chunk>> Message::attachments () {

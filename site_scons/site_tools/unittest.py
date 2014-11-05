@@ -11,8 +11,13 @@ def unitTestAction(target, source, env):
   change.
   '''
 
+  # merge in os environ to get utf-8 or users settings
+  myenv = os.environ.copy ()
+  for k,v in env['ENV'].items():
+    myenv[k] = v
+
   app = str(source[0].abspath)
-  process = subprocess.Popen (app, shell = True, env = env['ENV'])
+  process = subprocess.Popen (app, shell = True, env = myenv)
   process.wait ()
   ret = process.returncode
   if ret == 0:

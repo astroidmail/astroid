@@ -268,7 +268,15 @@ namespace Astroid {
 
       stringstream sstr;
       sstr << io_stream.rdbuf();
-      return ustring (sstr.str());
+      ustring b;
+      try {
+        b = sstr.str();
+      } catch (Glib::ConvertError &ex) {
+        log << error << "could not convert chunk to utf-8, contents: " << sstr.str() << endl;
+        throw ex;
+      }
+
+      return b;
     } else {
       return ustring ("Error: Non-viewable part!");
       log << error << "chunk: tried to display non-viewable part." << endl;
