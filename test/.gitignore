@@ -1,9 +1,11 @@
-test_suite
-test_composed
-test_generic
 *.passed
 mail/*.setup
 mail/test_config
 mail/test_mail/.notmuch
 
+test_suite
+test_composed
+test_generic
 test_convert_error
+test_non_existant_file
+

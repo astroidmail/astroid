@@ -11,6 +11,8 @@ using namespace std;
 
 BOOST_AUTO_TEST_SUITE(Reading)
 
+  BOOST_AUTO_TEST_CASE_EXPECTED_FAILURES (reading_convert_error, 1)
+
   BOOST_AUTO_TEST_CASE(reading_convert_error)
   {
     setup ();

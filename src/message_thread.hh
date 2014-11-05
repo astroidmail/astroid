@@ -53,6 +53,13 @@ namespace Astroid {
       void save_to (ustring);
   };
 
+  /* exceptions */
+  class message_error : public runtime_error {
+    public:
+      message_error (const char *);
+
+  };
+
   class MessageThread : public Glib::Object {
     public:
       MessageThread ();

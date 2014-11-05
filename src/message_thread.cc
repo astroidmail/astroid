@@ -110,6 +110,18 @@ namespace Astroid {
 
 
     GMimeStream   * stream  = g_mime_stream_file_new_for_path (fname.c_str(), "r");
+    if (stream == NULL) {
+      if (!exists (fname.c_str())) {
+        log << error << "failed to open file: " << fname << ", it does not exist!" << endl;
+      } else {
+        log << error << "failed to open file: " << fname << " (unspecified error)" << endl;
+      }
+
+      string error_s = "failed to open file: " + fname;
+      throw message_error (error_s.c_str());
+
+    }
+
     GMimeParser   * parser  = g_mime_parser_new_with_stream (stream);
     message = g_mime_parser_construct_message (parser);
 
@@ -322,6 +334,15 @@ namespace Astroid {
     ofstream dst (tofname, ios::binary);
 
     dst << src.rdbuf ();
+  }
+
+  /************
+   * exceptions
+   * **********
+   */
+
+  message_error::message_error (const char * w) : runtime_error (w)
+  {
   }
 
   /* --------
