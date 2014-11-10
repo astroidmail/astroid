@@ -1624,7 +1624,7 @@ namespace Astroid {
     return true;
   } // }}}
 
-  /* focus handeling {{{ */
+  /* focus handling {{{ */
 
   void ThreadView::on_scroll_vadjustment_changed () {
     if (in_scroll) {
@@ -1910,7 +1910,7 @@ namespace Astroid {
   void ThreadView::focus_previous_element () {
     if (!is_hidden (focused_message) || edit_mode) {
       /* if the message is expanded, check if we should move focus
-       * to the next element */
+       * to the previous element */
 
       MessageState * s = &(state[focused_message]);
 
@@ -2007,7 +2007,11 @@ namespace Astroid {
 
     if (focused_position > 0) {
       focused_message = mthread->messages[focused_position - 1];
-      state[focused_message].current_element = state[focused_message].elements.size()-1; // start at bottom
+      if (!is_hidden (focused_message)) {
+        state[focused_message].current_element = state[focused_message].elements.size()-1; // start at bottom
+      } else {
+        state[focused_message].current_element = 0; // start at top
+      }
       update_focus_status ();
     }
   }
