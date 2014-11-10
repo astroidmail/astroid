@@ -79,6 +79,9 @@ namespace Astroid {
     Gtk::TreeViewColumn * c;
     list_view->get_cursor (path, c);
 
+    auto adj          = list_view->get_vadjustment ();
+    double scroll_val = adj->get_value();
+
     list_store->clear ();
 
     close_query ();
@@ -103,6 +106,8 @@ namespace Astroid {
         }
       }
       list_view->set_cursor (path);
+
+      adj->set_value (scroll_val); // probably need to do this after everything has been drawn
     }
 
     log << debug << "ti: refreshed in " << ((clock() - t0) * 1000.0 / CLOCKS_PER_SEC) << " ms." << endl;
