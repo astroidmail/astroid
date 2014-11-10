@@ -179,8 +179,8 @@ namespace Astroid {
         return CoarseDate::YESTERDAY;
       }
 
-      // add another six days
-      t_t += 6 * 24 * 60 * 60;
+      // add another five days
+      t_t += 5 * 24 * 60 * 60;
       ttemp_t = localtime (&t_t);
       ttemp = *ttemp_t;
       time_t ndiff = mktime(&ttemp) - mktime(&now);
