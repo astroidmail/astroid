@@ -14,6 +14,7 @@
 # include "modes/help_mode.hh"
 # include "utils/utils.hh"
 # include "log.hh"
+# include "db.hh"
 
 using namespace std;
 
@@ -33,6 +34,12 @@ namespace Astroid {
         sigc::mem_fun (*this, &CommandBar::on_entry_activated)
         );
 
+    /* set up tags */
+    Db db (Db::DbMode::DATABASE_READ_ONLY);
+    db.load_tags ();
+    existing_tags = db.tags;
+
+    tag_completion = refptr<TagCompletion>(new TagCompletion());
   }
 
   void CommandBar::set_main_window (MainWindow * mw) {
@@ -85,15 +92,19 @@ namespace Astroid {
 
       case CommandMode::Search:
         {
+          reset_bar ();
           mode_label.set_text ("");
           entry.set_icon_from_icon_name ("edit-find-symbolic");
+          entry.set_text (cmd);
         }
         break;
 
       case CommandMode::Generic:
         {
+          reset_bar ();
           mode_label.set_text ("");
           entry.set_icon_from_icon_name ("system-run-symbolic");
+          entry.set_text (cmd);
         }
         break;
 
@@ -101,14 +112,28 @@ namespace Astroid {
         {
           mode_label.set_text ("Tags for thread:");
           entry.set_icon_from_icon_name ("system-run-symbolic");
+
+          start_tagging (cmd);
         }
         break;
     }
 
     callback = f;
-    entry.set_text (cmd);
     entry.set_position (-1);
     set_search_mode (true);
+  }
+
+  void CommandBar::reset_bar () {
+    entry.set_completion (refptr<Gtk::EntryCompletion>());
+  }
+
+  void CommandBar::start_tagging (ustring tagstring) {
+    /* TODO: set up text tags */
+    entry.set_text (tagstring);
+
+    /* set up completion */
+    tag_completion->load_tags (existing_tags);
+    entry.set_completion (tag_completion);
   }
 
   void CommandBar::handle_command (ustring cmd) {
@@ -145,6 +170,98 @@ namespace Astroid {
 
   bool CommandBar::command_handle_event (GdkEventKey * event) {
     return handle_event (event);
+  }
+
+  /********************
+   * Tag Completion
+   ********************/
+
+  CommandBar::TagCompletion::TagCompletion ()
+  {
+    completion_model = Gtk::ListStore::create (m_columns);
+    set_model (completion_model);
+    set_text_column (m_columns.m_tag);
+    set_match_func (sigc::mem_fun (*this,
+          &CommandBar::TagCompletion::match));
+
+    set_inline_completion (true);
+    set_popup_completion (true);
+    set_popup_single_match (false);
+  }
+
+  void CommandBar::TagCompletion::load_tags (vector<ustring> _tags) {
+    tags = _tags;
+
+    completion_model->clear ();
+
+    /* fill model with tags */
+    for (ustring t : tags) {
+      auto row = *(completion_model->append ());
+      row[m_columns.m_tag] = t;
+    }
+  }
+
+  /* searches backwards to the previous ',' and extracts the
+   * part of the partially entered tag to be matched on.
+   */
+  ustring CommandBar::TagCompletion::get_partial_tag (ustring c) {
+    // TODO: handle completions when not editing the last contact
+    uint n = c.find_last_of (",");
+    if (n == ustring::npos) return c;
+
+    c = c.substr (n+1, c.size());
+    UstringUtils::trim_left (c);
+    return c;
+  }
+
+  bool CommandBar::TagCompletion::match (
+      const ustring& raw_key, const
+      Gtk::TreeModel::const_iterator& iter)
+  {
+    if (iter)
+    {
+      ustring key = get_partial_tag (raw_key);
+
+      Gtk::TreeModel::Row row = *iter;
+
+      Glib::ustring::size_type key_length = key.size();
+      Glib::ustring filter_string = row[m_columns.m_tag];
+
+      Glib::ustring filter_string_start = filter_string.substr(0, key_length);
+
+      // the key is lower-case, even if the user input is not.
+      filter_string_start = filter_string_start.lowercase();
+
+      if(key == filter_string_start)
+        return true; // a match was found.
+    }
+
+    return false; // no match.
+  }
+
+
+  bool CommandBar::TagCompletion::on_match_selected (
+      const Gtk::TreeModel::iterator& iter) {
+    if (iter)
+    {
+      Gtk::Entry * entry = get_entry();
+
+      Gtk::TreeModel::Row row = *iter;
+      ustring completion = row[m_columns.m_tag];
+
+      ustring t = entry->get_text ();
+      uint n = t.find_last_of (",");
+      if (n == ustring::npos) n = 0;
+
+      t = t.substr (0, n);
+      if (n == 0) t += completion;
+      else        t += ", " + completion;
+
+      entry->set_text (t);
+      entry->set_position (-1);
+    }
+
+    return true;
   }
 }
 

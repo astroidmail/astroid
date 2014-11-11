@@ -53,6 +53,44 @@ namespace Astroid {
       /* relay to search bar event handler */
       bool command_handle_event (GdkEventKey *);
 
+    private:
+      void reset_bar ();
 
+      /* tag editing */
+      vector<ustring> existing_tags; // a sorted list of existing tags
+      void start_tagging (ustring);
+
+      class TagCompletion : public Gtk::EntryCompletion {
+        public:
+          TagCompletion ();
+          void load_tags (vector<ustring>);
+
+          vector<ustring> tags;
+
+          // tree model columns, for the EntryCompletion's filter model
+          class ModelColumns : public Gtk::TreeModel::ColumnRecord
+          {
+            public:
+
+              ModelColumns ()
+              { add(m_tag); }
+
+              Gtk::TreeModelColumn<Glib::ustring> m_tag;
+          };
+
+          ModelColumns m_columns;
+          refptr<Gtk::ListStore> completion_model;
+
+          ustring get_partial_tag (ustring);
+
+          bool match (const ustring&, const
+              Gtk::TreeModel::const_iterator&);
+
+          bool on_match_selected(const Gtk::TreeModel::iterator& iter);
+      };
+
+      refptr<TagCompletion> tag_completion;
+
+      /* TODO: search completion for tags */
   };
 }
