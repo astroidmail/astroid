@@ -40,6 +40,7 @@ namespace Astroid {
     existing_tags = db.tags;
 
     tag_completion = refptr<TagCompletion>(new TagCompletion());
+    search_completion = refptr<SearchCompletion>(new SearchCompletion());
   }
 
   void CommandBar::set_main_window (MainWindow * mw) {
@@ -95,7 +96,8 @@ namespace Astroid {
           reset_bar ();
           mode_label.set_text ("");
           entry.set_icon_from_icon_name ("edit-find-symbolic");
-          entry.set_text (cmd);
+
+          start_searching (cmd);
         }
         break;
 
@@ -125,6 +127,14 @@ namespace Astroid {
 
   void CommandBar::reset_bar () {
     entry.set_completion (refptr<Gtk::EntryCompletion>());
+  }
+
+  void CommandBar::start_searching (ustring searchstring) {
+    entry.set_text (searchstring);
+
+    /* set up completion */
+    search_completion->load_tags (existing_tags);
+    entry.set_completion (search_completion);
   }
 
   void CommandBar::start_tagging (ustring tagstring) {
@@ -241,6 +251,103 @@ namespace Astroid {
 
 
   bool CommandBar::TagCompletion::on_match_selected (
+      const Gtk::TreeModel::iterator& iter) {
+    if (iter)
+    {
+      Gtk::Entry * entry = get_entry();
+
+      Gtk::TreeModel::Row row = *iter;
+      ustring completion = row[m_columns.m_tag];
+
+      ustring t = entry->get_text ();
+      uint n = t.find_last_of (",");
+      if (n == ustring::npos) n = 0;
+
+      t = t.substr (0, n);
+      if (n == 0) t += completion;
+      else        t += ", " + completion;
+
+      entry->set_text (t);
+      entry->set_position (-1);
+    }
+
+    return true;
+  }
+
+  /********************
+   * Search Completion
+   ********************/
+
+  CommandBar::SearchCompletion::SearchCompletion ()
+  {
+    completion_model = Gtk::ListStore::create (m_columns);
+    set_model (completion_model);
+    set_text_column (m_columns.m_tag);
+    set_match_func (sigc::mem_fun (*this,
+          &CommandBar::SearchCompletion::match));
+
+    set_inline_completion (true);
+    set_popup_completion (true);
+    set_popup_single_match (false);
+  }
+
+  void CommandBar::SearchCompletion::load_tags (vector<ustring> _tags) {
+    tags = _tags;
+
+    completion_model->clear ();
+
+    /* fill model with tags */
+    for (ustring t : tags) {
+      auto row = *(completion_model->append ());
+      row[m_columns.m_tag] = t;
+    }
+  }
+
+  /* searches backwards to the previous ',' and extracts the
+   * part of the partially entered tag to be matched on.
+   */
+  bool CommandBar::SearchCompletion::get_partial_tag (ustring c, ustring &out) {
+    // TODO: handle completions when not editing the last contact
+    uint n = c.find_last_of ("tag:");
+    if (n == ustring::npos) return false;
+
+    c = c.substr (n+1, c.size());
+    UstringUtils::trim_left (c);
+
+    out = c;
+
+    return true;
+  }
+
+  bool CommandBar::SearchCompletion::match (
+      const ustring& raw_key, const
+      Gtk::TreeModel::const_iterator& iter)
+  {
+    ustring key;
+    bool in_tag_search = get_partial_tag (raw_key, key);
+
+    if (in_tag_search && iter)
+    {
+
+      Gtk::TreeModel::Row row = *iter;
+
+      Glib::ustring::size_type key_length = key.size();
+      Glib::ustring filter_string = row[m_columns.m_tag];
+
+      Glib::ustring filter_string_start = filter_string.substr(0, key_length);
+
+      // the key is lower-case, even if the user input is not.
+      filter_string_start = filter_string_start.lowercase();
+
+      if(key == filter_string_start)
+        return true; // a match was found.
+    }
+
+    return false; // no match.
+  }
+
+
+  bool CommandBar::SearchCompletion::on_match_selected (
       const Gtk::TreeModel::iterator& iter) {
     if (iter)
     {

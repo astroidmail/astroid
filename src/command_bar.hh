@@ -56,7 +56,9 @@ namespace Astroid {
     private:
       void reset_bar ();
 
-      /* tag editing */
+      /********************
+       * Tag editing 
+       ********************/
       vector<ustring> existing_tags; // a sorted list of existing tags
       void start_tagging (ustring);
 
@@ -91,6 +93,40 @@ namespace Astroid {
 
       refptr<TagCompletion> tag_completion;
 
-      /* TODO: search completion for tags */
+      /********************
+       * Search completion 
+       ********************/
+      void start_searching (ustring);
+
+      class SearchCompletion : public Gtk::EntryCompletion {
+        public:
+          SearchCompletion ();
+          void load_tags (vector<ustring>);
+
+          vector<ustring> tags;
+
+          // tree model columns, for the EntryCompletion's filter model
+          class ModelColumns : public Gtk::TreeModel::ColumnRecord
+          {
+            public:
+
+              ModelColumns ()
+              { add(m_tag); }
+
+              Gtk::TreeModelColumn<Glib::ustring> m_tag;
+          };
+
+          ModelColumns m_columns;
+          refptr<Gtk::ListStore> completion_model;
+
+          bool get_partial_tag (ustring, ustring&);
+
+          bool match (const ustring&, const
+              Gtk::TreeModel::const_iterator&);
+
+          bool on_match_selected(const Gtk::TreeModel::iterator& iter);
+      };
+
+      refptr<SearchCompletion> search_completion;
   };
 }
