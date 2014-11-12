@@ -308,9 +308,9 @@ namespace Astroid {
     set_match_func (sigc::mem_fun (*this,
           &CommandBar::SearchCompletion::match));
 
-    set_inline_completion (true);
+    //set_inline_completion (true);
     set_popup_completion (true);
-    set_popup_single_match (false);
+    set_popup_single_match (true);
   }
 
   void CommandBar::SearchCompletion::load_tags (vector<ustring> _tags) {
@@ -334,6 +334,7 @@ namespace Astroid {
     //
 
     Gtk::Entry * e = get_entry ();
+    if (e == NULL) return false;
     int cursor     = e->get_position ();
 
     ustring in = e->get_text ();
@@ -341,22 +342,27 @@ namespace Astroid {
 
     if (cursor == -1) cursor = c.size();
 
-    outpos = c.rfind ("tag:", cursor-1);
+    outpos = c.rfind ("tag:", cursor);
     if (outpos == ustring::npos) return false;
 
     /* check if we find any breaks between tag and current position */
     ustring_sz endpos = c.find_first_of (") ", outpos); // break completion on these chars
     if (endpos != ustring::npos) {
-      if (endpos <= static_cast<ustring_sz>(cursor)) return false;
+      if (endpos < static_cast<ustring_sz>(cursor)) {
+        //log << debug << "break between tag and cursor" << endl;
+        return false;
+      }
     } else {
       /* if we're at end, use remainder of string */
       endpos = c.size();
     }
 
     c = c.substr (outpos+4, endpos-outpos-4);
-    UstringUtils::trim_left (c);
+    UstringUtils::trim (c);
 
     out = c;
+
+    //log << debug << "cursor: " << cursor << ", outpos: " << outpos << ", in: " << in << ", o: " << c <<  endl;
 
     return true;
   }
@@ -404,6 +410,8 @@ namespace Astroid {
       ustring_sz    pos;
       bool in_tag_search = get_partial_tag (t, key, pos);
 
+      //log << debug << "match selected: " << t << ", in_tag: " << in_tag_search << ", key: " << key << ", pos: " << pos << endl;
+
       if (in_tag_search) {
 
         pos += 4; // now positioned after tag:
@@ -413,7 +421,7 @@ namespace Astroid {
 
         ustring newt = t.substr(0, pos);
         newt += completion;
-        newt += t.substr (n, t.size());
+        newt += t.substr (pos+key.size(), t.size());
 
         entry->set_text (newt);
         entry->set_position (pos + completion.size());
