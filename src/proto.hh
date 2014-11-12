@@ -7,6 +7,7 @@ namespace Astroid {
 
   /* aliases for often used types  */
   typedef Glib::ustring ustring;
+  typedef Glib::ustring::size_type ustring_sz;
   # define refptr Glib::RefPtr
 
   class Astroid;

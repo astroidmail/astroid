@@ -83,7 +83,7 @@ namespace Astroid {
           ModelColumns m_columns;
           refptr<Gtk::ListStore> completion_model;
 
-          ustring get_partial_tag (ustring, uint&);
+          ustring get_partial_tag (ustring, ustring_sz&);
 
           bool match (const ustring&, const
               Gtk::TreeModel::const_iterator&);
@@ -119,7 +119,7 @@ namespace Astroid {
           ModelColumns m_columns;
           refptr<Gtk::ListStore> completion_model;
 
-          bool get_partial_tag (ustring, ustring&, uint&);
+          bool get_partial_tag (ustring, ustring&, ustring_sz&);
 
           bool match (const ustring&, const
               Gtk::TreeModel::const_iterator&);

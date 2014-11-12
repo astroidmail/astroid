@@ -214,9 +214,9 @@ namespace Astroid {
   /* searches backwards to the previous ',' and extracts the
    * part of the partially entered tag to be matched on.
    */
-  ustring CommandBar::TagCompletion::get_partial_tag (ustring c, uint &outpos) {
+  ustring CommandBar::TagCompletion::get_partial_tag (ustring c, ustring_sz &outpos) {
     Gtk::Entry * e = get_entry ();
-    ustring in = e->get_text();
+    ustring in = e->get_text ();
     c = in;
     int cursor     = e->get_position ();
     if (cursor == -1) cursor = c.size();
@@ -225,7 +225,7 @@ namespace Astroid {
     if (outpos == ustring::npos) outpos = 0;
 
 
-    uint endpos = c.find_first_of (", ", outpos+2);
+    ustring_sz endpos = c.find_first_of (", ", outpos+2);
     if (endpos == ustring::npos) endpos = c.size();
 
     c = c.substr (outpos+1, endpos-outpos-1);
@@ -239,7 +239,7 @@ namespace Astroid {
       const ustring& raw_key, const
       Gtk::TreeModel::const_iterator& iter)
   {
-    uint    pos;
+    ustring_sz pos;
     ustring key = get_partial_tag (raw_key, pos);
 
     if (iter)
@@ -273,7 +273,7 @@ namespace Astroid {
       ustring completion = row[m_columns.m_tag];
 
       ustring t = entry->get_text ();
-      uint    pos;
+      ustring_sz pos;
       ustring key = get_partial_tag (t, pos);
 
       //log << debug << "match selected: " << t << ", key: " << key << ", pos: " << pos << endl;
@@ -281,7 +281,7 @@ namespace Astroid {
       if (pos == ustring::npos) pos = 0;
       else pos += 1; // now positioned after ','
 
-      uint n = t.find_first_of (", ", pos); // break on these
+      ustring_sz n = t.find_first_of (", ", pos); // break on these
       if (n == ustring::npos) n = t.size();
 
       ustring newt;
@@ -328,21 +328,32 @@ namespace Astroid {
   /* searches backwards to the previous ',' and extracts the
    * part of the partially entered tag to be matched on.
    */
-  bool CommandBar::SearchCompletion::get_partial_tag (ustring c, ustring &out, uint &outpos) {
+  bool CommandBar::SearchCompletion::get_partial_tag (ustring c, ustring &out, ustring_sz &outpos) {
     // example input
     // (tag:asdf) and tag:asdfb and asdf
     //
 
     Gtk::Entry * e = get_entry ();
-    uint cursor    = e->get_position ();
+    int cursor     = e->get_position ();
 
-    outpos = c.rfind ("tag:");
+    ustring in = e->get_text ();
+    c = in;
+
+    if (cursor == -1) cursor = c.size();
+
+    outpos = c.rfind ("tag:", cursor-1);
     if (outpos == ustring::npos) return false;
 
-    uint n = c.find_first_of (") ", outpos); // break completion on these chars
-    if ((cursor >= n) || (cursor <= outpos)) return false;
+    /* check if we find any breaks between tag and current position */
+    ustring_sz endpos = c.find_first_of (") ", outpos); // break completion on these chars
+    if (endpos != ustring::npos) {
+      if (endpos <= static_cast<ustring_sz>(cursor)) return false;
+    } else {
+      /* if we're at end, use remainder of string */
+      endpos = c.size();
+    }
 
-    c = c.substr (outpos+4, c.size());
+    c = c.substr (outpos+4, endpos-outpos-4);
     UstringUtils::trim_left (c);
 
     out = c;
@@ -355,7 +366,7 @@ namespace Astroid {
       const Gtk::TreeModel::const_iterator& iter)
   {
     ustring key;
-    uint    pos;
+    ustring_sz pos;
     bool in_tag_search = get_partial_tag (raw_key, key, pos);
 
     if (in_tag_search && iter)
@@ -390,13 +401,13 @@ namespace Astroid {
 
       ustring t = entry->get_text ();
       ustring key;
-      uint    pos;
+      ustring_sz    pos;
       bool in_tag_search = get_partial_tag (t, key, pos);
 
       if (in_tag_search) {
 
         pos += 4; // now positioned after tag:
-        uint n = t.find_first_of (") "); // break on these
+        ustring_sz n = t.find_first_of (") "); // break on these
 
         if (n == ustring::npos) n = t.size();
 
