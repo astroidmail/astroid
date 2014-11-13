@@ -194,9 +194,9 @@ namespace Astroid {
     set_match_func (sigc::mem_fun (*this,
           &CommandBar::TagCompletion::match));
 
-    set_inline_completion (true);
+    //set_inline_completion (true);
     set_popup_completion (true);
-    set_popup_single_match (false);
+    set_popup_single_match (true);
   }
 
   void CommandBar::TagCompletion::load_tags (vector<ustring> _tags) {
