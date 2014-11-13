@@ -1101,7 +1101,7 @@ namespace Astroid {
       mime_type = ustring(g_mime_content_type_to_string (c->content_type));
     }
 
-    log << debug << "tv: set attachment, mime_type: " << mime_type << endl;
+    log << debug << "tv: set attachment, mime_type: " << mime_type << ", mtype: " << _mtype << endl;
 
     gchar * content;
     gsize   content_size;
@@ -1127,9 +1127,6 @@ namespace Astroid {
             (gerr = NULL, &gerr));
 
         g_object_unref (class_list);
-
-        attachment_icon->save_to_buffer (content, content_size, "png"); // default type is png
-        image_content_type = "image/png";
 
       } catch (Gdk::PixbufError &ex) {
 
