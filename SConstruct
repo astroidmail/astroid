@@ -201,7 +201,7 @@ Export ('debug')
 env = conf.Finish ()
 
 astroid = env.Program (source = ['src/main.cc', source_objs], target = 'astroid')
-env.Alias ('build', 'astroid')
+build = env.Alias ('build', 'astroid')
 
 Export ('env')
 
@@ -235,4 +235,7 @@ env.Depends (inst_bin, astroid)
 env.Depends (inst_shr, astroid)
 Ignore ('.', inst_bin)
 Ignore ('.', inst_shr)
+
+## Default target
+Default (astroid)
 
