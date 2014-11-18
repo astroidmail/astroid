@@ -34,6 +34,10 @@ namespace Astroid {
         sigc::mem_fun (*this, &CommandBar::on_entry_activated)
         );
 
+    entry.signal_key_press_event ().connect (
+        sigc::mem_fun (this, &CommandBar::entry_key_press)
+        );
+
     /* set up tags */
     Db db (Db::DbMode::DATABASE_READ_ONLY);
     db.load_tags ();
@@ -178,6 +182,25 @@ namespace Astroid {
   void CommandBar::disable_command () {
   }
 
+  bool CommandBar::entry_key_press (GdkEventKey * event) {
+    log << debug << "got event" << endl;
+    switch (event->keyval) {
+      case GDK_KEY_Tab:
+        {
+          log << debug << "got tab" << endl;
+          auto completion = entry.get_completion ();
+          if (completion) {
+            completion->complete ();
+          }
+
+          return true;
+        }
+
+    }
+
+    return false;
+  }
+
   bool CommandBar::command_handle_event (GdkEventKey * event) {
     return handle_event (event);
   }
@@ -195,8 +218,10 @@ namespace Astroid {
           &CommandBar::TagCompletion::match));
 
     //set_inline_completion (true);
+    //set_inline_selection (true);
     set_popup_completion (true);
     set_popup_single_match (true);
+    set_minimum_key_length (1);
   }
 
   void CommandBar::TagCompletion::load_tags (vector<ustring> _tags) {
@@ -319,6 +344,7 @@ namespace Astroid {
     //set_inline_completion (true);
     set_popup_completion (true);
     set_popup_single_match (true);
+    set_minimum_key_length (1);
   }
 
   void CommandBar::SearchCompletion::load_tags (vector<ustring> _tags) {

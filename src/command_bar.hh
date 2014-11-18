@@ -52,6 +52,7 @@ namespace Astroid {
 
       /* relay to search bar event handler */
       bool command_handle_event (GdkEventKey *);
+      bool entry_key_press (GdkEventKey *);
 
     private:
       void reset_bar ();
