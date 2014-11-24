@@ -78,7 +78,7 @@ namespace Astroid {
       Pango::FontMetrics     font_metrics;
 
       int date_start;
-      int date_len   = 14; // chars
+      int date_len   = 10; // chars
       int date_width;
 
       int message_count_start;
