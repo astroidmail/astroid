@@ -11,6 +11,7 @@
 # include "message_thread.hh"
 # include "chunk.hh"
 # include "utils/date_utils.hh"
+# include "utils/address.hh"
 
 using namespace std;
 using namespace boost::filesystem;
@@ -289,6 +290,10 @@ namespace Astroid {
 
   InternetAddressList * Message::bcc () {
     return g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_BCC);
+  }
+
+  AddressList Message::all_to_from () {
+    return ( AddressList(to()) + AddressList(cc()) + AddressList(bcc()) + Address(sender) );
   }
 
   void Message::save () {

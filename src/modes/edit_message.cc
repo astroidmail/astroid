@@ -283,6 +283,23 @@ namespace Astroid {
   }
 
 
+  void EditMessage::set_from_to (Address a) {
+    if (!accounts->is_me (a)) {
+      cerr << "em: from address is not a defined account." << endl;
+    }
+
+    set_from_to (accounts->get_account_for_address (a));
+  }
+
+  void EditMessage::set_from_to (Account * a) {
+    for (Gtk::TreeRow row : from_store->children ()) {
+      if (row[from_columns.account] == a) {
+        from_combo->set_active (row);
+        break;
+      }
+    }
+  }
+
   void EditMessage::read_edited_message () {
     /* make message */
     ComposeMessage * c = make_message ();
@@ -294,13 +311,7 @@ namespace Astroid {
 
     /* set account selector to from address email */
     Account * account = c->account;
-    for (Gtk::TreeRow row : from_store->children ()) {
-      //auto row = *iter;
-      if (row[from_columns.account] == account) {
-        from_combo->set_active (row);
-        break;
-      }
-    }
+    set_from_to (account);
 
     to = c->to;
     cc = c->cc;

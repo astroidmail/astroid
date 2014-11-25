@@ -40,8 +40,10 @@ namespace Astroid {
       vector<Address> addresses;
       ustring str ();
 
-      AddressList& operator+= (Address &);
-      AddressList& operator+= (AddressList &);
+      AddressList& operator+= (const Address &);
+      AddressList& operator+= (const AddressList &);
+      AddressList  operator+ (const Address &) const;
+      AddressList  operator+ (const AddressList &) const;
 
       void remove_me ();
   };

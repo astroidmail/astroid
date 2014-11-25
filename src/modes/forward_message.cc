@@ -55,6 +55,16 @@ namespace Astroid {
 
     /* TODO: add non-text parts */
 
+
+    /* try to figure which account the message was sent to, using
+     * first match. */
+    for (Address &a : msg->all_to_from().addresses) {
+      if (accounts->is_me (a)) {
+        set_from_to (a);
+        break;
+      }
+    }
+
     /* reload message */
     prepare_message ();
     read_edited_message ();

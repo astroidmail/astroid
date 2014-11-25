@@ -141,18 +141,34 @@ namespace Astroid {
     return r;
   }
 
-  AddressList& AddressList::operator+= (Address & a) {
+  AddressList& AddressList::operator+= (const Address & a) {
     addresses.push_back (a);
 
     return *this;
   }
 
-  AddressList& AddressList::operator+= (AddressList & al) {
-    for (Address &a : al.addresses) {
+  AddressList& AddressList::operator+= (const AddressList & al) {
+    for (const Address &a : al.addresses) {
       addresses.push_back (a);
     }
 
     return *this;
+  }
+
+  AddressList AddressList::operator+ (const Address &b) const {
+    AddressList a;
+    a += *this;
+    a.addresses.push_back (b);
+
+    return a;
+  }
+
+  AddressList AddressList::operator+ (const AddressList &b) const {
+    AddressList a;
+    a += *this;
+    a += b;
+
+    return a;
   }
 
   void AddressList::remove_me () {

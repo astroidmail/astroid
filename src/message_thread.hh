@@ -7,6 +7,7 @@
 
 # include "proto.hh"
 # include "astroid.hh"
+# include "utils/address.hh"
 
 using namespace std;
 
@@ -35,6 +36,10 @@ namespace Astroid {
       InternetAddressList * to ();
       InternetAddressList * cc ();
       InternetAddressList * bcc ();
+
+      /* address list with all addresses in all headers beginning with to
+       * and ending with from */
+      AddressList all_to_from ();
 
       ustring references;
       ustring inreplyto;
