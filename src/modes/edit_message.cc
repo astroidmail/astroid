@@ -523,9 +523,12 @@ namespace Astroid {
           if (sending_in_progress.load ()) {
             /* block closing the window while sending */
             return true;
-          } else {
+          } else if (!message_sent) {
             ask_yes_no ("Do you want to close this message? (any changes will be lost)", [&](bool yes){ if (yes) { main_window->close_page(); } });
             return true;
+          } else {
+            // message has been sent successfully, no need to complain.
+            return false;
           }
         }
     }
