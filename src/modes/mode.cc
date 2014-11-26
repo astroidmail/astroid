@@ -58,6 +58,7 @@ namespace Astroid {
       s = s.substr(0, MAX_TAB_LEN - 3) + "...";
 
     tab_label.set_text (s);
+    label = s;
   }
 
   void Mode::on_yes () {
@@ -141,6 +142,10 @@ namespace Astroid {
     m->title    = "All modes";
 
     return m;
+  }
+
+  ustring Mode::get_label () {
+    return label;
   }
 
   ModeHelpInfo::ModeHelpInfo () {

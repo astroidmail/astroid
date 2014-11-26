@@ -22,7 +22,7 @@ namespace Astroid {
   MainWindow::MainWindow () {
     log << debug << "mw: init.." << endl;
 
-    set_title ("Astroid - " GIT_DESC);
+    set_title ("");
     set_default_size (1040, 800);
 
     actions.main_window = this;
@@ -59,6 +59,17 @@ namespace Astroid {
         sigc::mem_fun (this, &MainWindow::on_my_focus_in_event));
     signal_focus_out_event ().connect (
         sigc::mem_fun (this, &MainWindow::on_my_focus_out_event));
+  }
+
+  void MainWindow::set_title (ustring t) {
+
+    ustring tt = "Astroid - " GIT_DESC;
+
+    if (t.size() > 0) {
+      tt += " - " + t;
+    }
+
+    Gtk::Window::set_title (tt);
   }
 
   void MainWindow::enable_command (CommandBar::CommandMode m, ustring cmd, function<void(ustring)> f) {
@@ -277,8 +288,11 @@ namespace Astroid {
       current = n;
 
       active = true;
+
+      set_title (((Mode*) notebook.get_nth_page(n))->get_label());
     } else {
       // log << debug << "mw: set active: page is out of range: " << n << endl;
+      set_title ("");
     }
   }
 

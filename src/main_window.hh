@@ -46,6 +46,7 @@ namespace Astroid {
 
       void unset_active ();
       void set_active (int);
+      void set_title (ustring);
 
       static ModeHelpInfo * key_help ();
 

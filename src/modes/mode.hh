@@ -33,6 +33,7 @@ namespace Astroid {
 
     private:
       bool interactive;
+      ustring label;
 
       /* yes no questions */
       Gtk::Revealer * rev_yes_no;
@@ -55,5 +56,6 @@ namespace Astroid {
       virtual void grab_modal () = 0;
       virtual void release_modal () = 0;
       virtual ModeHelpInfo * key_help ();
+      virtual ustring get_label ();
   };
 }
