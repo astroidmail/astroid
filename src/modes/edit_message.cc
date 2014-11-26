@@ -335,9 +335,13 @@ namespace Astroid {
 
     if (warning_str.length() > 0)
       thread_view->set_warning (thread_view->focused_message, warning_str);
+    else
+      thread_view->hide_warning (thread_view->focused_message);
 
     if (info_str.length () > 0)
       thread_view->set_info (thread_view->focused_message, info_str);
+    else
+      thread_view->hide_info (thread_view->focused_message);
   }
 
   void EditMessage::fields_hide () {

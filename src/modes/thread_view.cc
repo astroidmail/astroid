@@ -881,13 +881,13 @@ namespace Astroid {
     g_object_unref (d);
   }
 
+  /* info and warning {{{ */
   void ThreadView::set_warning (refptr<Message> m, ustring txt)
   {
     log << debug << "tv: set warning: " << txt << endl;
     ustring mid = "message_" + m->mid;
 
     WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
-
     WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
 
     WebKitDOMHTMLElement * warning = select (
@@ -909,6 +909,32 @@ namespace Astroid {
     g_object_unref (d);
   }
 
+  void ThreadView::hide_warning (refptr<Message> m)
+  {
+    ustring mid = "message_" + m->mid;
+
+    WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
+    WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
+
+    WebKitDOMHTMLElement * warning = select (
+        WEBKIT_DOM_NODE (e),
+        ".email_warning");
+
+    GError * err;
+    webkit_dom_html_element_set_inner_html (warning, "", (err = NULL, &err));
+
+    WebKitDOMDOMTokenList * class_list =
+      webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(warning));
+
+    webkit_dom_dom_token_list_remove (class_list, "show",
+        (err = NULL, &err));
+
+    g_object_unref (class_list);
+    g_object_unref (warning);
+    g_object_unref (e);
+    g_object_unref (d);
+  }
+
   void ThreadView::set_info (refptr<Message> m, ustring txt)
   {
     log << debug << "tv: set info: " << txt << endl;
@@ -916,7 +942,6 @@ namespace Astroid {
     ustring mid = "message_" + m->mid;
 
     WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
-
     WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
 
     if (e == NULL) {
@@ -941,6 +966,36 @@ namespace Astroid {
     g_object_unref (e);
     g_object_unref (d);
   }
+
+  void ThreadView::hide_info (refptr<Message> m) {
+    ustring mid = "message_" + m->mid;
+
+    WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
+    WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
+
+    if (e == NULL) {
+      log << warn << "tv: could not get email div." << endl;
+    }
+
+    WebKitDOMHTMLElement * info = select (
+        WEBKIT_DOM_NODE (e),
+        ".email_info");
+
+    GError * err;
+    webkit_dom_html_element_set_inner_html (info, "", (err = NULL, &err));
+
+    WebKitDOMDOMTokenList * class_list =
+      webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(info));
+
+    webkit_dom_dom_token_list_remove (class_list, "show",
+        (err = NULL, &err));
+
+    g_object_unref (class_list);
+    g_object_unref (info);
+    g_object_unref (e);
+    g_object_unref (d);
+  }
+  /* end info and warning }}} */
 
   void ThreadView::insert_header_date (ustring & header, refptr<Message> m)
   {

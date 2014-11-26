@@ -121,9 +121,11 @@ namespace Astroid {
 
       /* set the warning header of the message */
       void set_warning (refptr<Message>, ustring);
+      void hide_warning (refptr<Message>);
 
       /* set the info header of the message */
       void set_info (refptr<Message>, ustring);
+      void hide_info (refptr<Message>);
 
       /* activate message or selected element */
       bool element_action (char);
