@@ -11,7 +11,7 @@ using namespace std;
 namespace Astroid {
   class LogView : public Mode {
     public:
-      LogView ();
+      LogView (MainWindow *);
       ~LogView ();
 
       void log_line (LogLevel, ustring, ustring);

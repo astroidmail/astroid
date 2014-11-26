@@ -37,9 +37,7 @@ namespace Astroid {
   ustring ThreadView::thread_view_html;
   ustring ThreadView::thread_view_css;
 
-  ThreadView::ThreadView (MainWindow * mw) { // {{{
-    main_window = mw;
-
+  ThreadView::ThreadView (MainWindow * mw) : Mode (mw) { // {{{
     open_html_part_external = astroid->config->config.get<bool> ("thread_view.open_html_part_external");
     open_external_link = astroid->config->config.get<string> ("thread_view.open_external_link");
 
@@ -1522,7 +1520,7 @@ namespace Astroid {
       case GDK_KEY_V:
         {
           /* view raw source of currently focused message */
-          main_window->add_mode (new RawMessage (focused_message));
+          main_window->add_mode (new RawMessage (main_window, focused_message));
 
           return true;
         }

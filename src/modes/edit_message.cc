@@ -41,8 +41,7 @@ namespace Astroid {
     read_edited_message ();
   }
 
-  EditMessage::EditMessage (MainWindow * mw) : Mode (true) {
-    main_window   = mw;
+  EditMessage::EditMessage (MainWindow * mw) : Mode (mw, true) {
     editor_config = astroid->config->config.get_child ("editor");
 
     tmpfile_path = astroid->config->runtime_dir;
@@ -503,7 +502,7 @@ namespace Astroid {
           ComposeMessage * c = make_message ();
           ustring tmpf = c->write_tmp ();
 
-          main_window->add_mode (new RawMessage (tmpf.c_str()));
+          main_window->add_mode (new RawMessage (main_window, tmpf.c_str()));
 
           delete c;
 

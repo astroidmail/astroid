@@ -24,9 +24,12 @@ namespace Astroid {
 
   class Mode : public Gtk::Box {
     public:
-      Mode (bool interactive = false);
+      Mode (MainWindow *, bool interactive = false);
       ~Mode ();
       Gtk::Label tab_label;
+
+      void set_main_window (MainWindow *);
+      MainWindow * main_window;
 
     private:
       bool interactive;

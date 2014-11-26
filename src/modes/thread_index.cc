@@ -20,9 +20,7 @@
 using namespace std;
 
 namespace Astroid {
-  ThreadIndex::ThreadIndex (MainWindow *mw, ustring _query) : query_string(_query){
-
-    main_window = mw;
+  ThreadIndex::ThreadIndex (MainWindow *mw, ustring _query) : PanedMode(mw), query_string(_query) {
 
     set_orientation (Gtk::Orientation::ORIENTATION_VERTICAL);
     set_label (query_string);
@@ -30,7 +28,7 @@ namespace Astroid {
     /* set up treeview */
     list_store = Glib::RefPtr<ThreadIndexListStore>(new ThreadIndexListStore ());
     list_view  = Gtk::manage(new ThreadIndexListView (this, list_store));
-    scroll     = Gtk::manage(new ThreadIndexScrolled (list_store, list_view));
+    scroll     = Gtk::manage(new ThreadIndexScrolled (main_window, list_store, list_view));
 
     add_pane (0, *scroll);
 

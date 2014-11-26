@@ -10,7 +10,7 @@
 using namespace std;
 
 namespace Astroid {
-  HelpMode::HelpMode () {
+  HelpMode::HelpMode (MainWindow * mw) : Mode (mw) {
     set_label ("Help");
 
     scroll.add (help_text);
@@ -19,7 +19,7 @@ namespace Astroid {
     scroll.show_all ();
   }
 
-  HelpMode::HelpMode (Mode * m) : HelpMode () {
+  HelpMode::HelpMode (MainWindow *mw, Mode * m) : HelpMode (mw) {
     show_help (m);
   }
 

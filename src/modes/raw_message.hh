@@ -8,9 +8,9 @@ using namespace std;
 namespace Astroid {
   class RawMessage : public Mode {
     public:
-      RawMessage ();
-      RawMessage (refptr<Message>);
-      RawMessage (const char *);
+      RawMessage (MainWindow *);
+      RawMessage (MainWindow *, refptr<Message>);
+      RawMessage (MainWindow *, const char *);
 
       refptr<Message> msg;
 

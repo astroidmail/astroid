@@ -51,8 +51,6 @@ namespace Astroid {
 
       const int MAX_PREVIEW_LEN = 80;
 
-      MainWindow  * main_window;
-
       bool edit_mode = false;
 
     private:

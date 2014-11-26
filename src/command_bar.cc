@@ -161,7 +161,7 @@ namespace Astroid {
     if (it == tok.end ()) return;
 
     if (*it == "help") {
-      main_window->add_mode (new HelpMode ());
+      main_window->add_mode (new HelpMode (main_window));
 
     } else if (*it == "archive") {
       adv_or_return;

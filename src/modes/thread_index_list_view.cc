@@ -29,8 +29,9 @@ namespace Astroid {
    */
 
   ThreadIndexScrolled::ThreadIndexScrolled (
+      MainWindow *mw,
       Glib::RefPtr<ThreadIndexListStore> _list_store,
-      ThreadIndexListView * _list_view) {
+      ThreadIndexListView * _list_view) : Mode (mw) {
 
     list_store = _list_store;
     list_view  = Gtk::manage(_list_view);

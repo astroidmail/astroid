@@ -136,7 +136,7 @@ namespace Astroid {
       /* help */
       case GDK_KEY_question:
         {
-          HelpMode * h = new HelpMode ();
+          HelpMode * h = new HelpMode (this);
           h->show_help ((Mode*) notebook.get_nth_page (notebook.get_current_page()));
           add_mode (h);
           return true;
@@ -144,7 +144,7 @@ namespace Astroid {
 
       /* log window */
       case GDK_KEY_z:
-        add_mode (new LogView ());
+        add_mode (new LogView (this));
         return true;
 
       /* undo */

@@ -9,7 +9,7 @@
 using namespace std;
 
 namespace Astroid {
-  RawMessage::RawMessage () {
+  RawMessage::RawMessage (MainWindow * mw) : Mode (mw) {
     scroll.add (tv);
     pack_start (scroll, true, true, 5);
 
@@ -26,7 +26,7 @@ namespace Astroid {
     show_all_children ();
   }
 
-  RawMessage::RawMessage (const char * fname) : RawMessage () {
+  RawMessage::RawMessage (MainWindow * mw, const char * fname) : RawMessage (mw) {
     stringstream l ("Raw message: ");
     l << fname;
     set_label (l.str());
@@ -42,7 +42,7 @@ namespace Astroid {
     buf->set_text (s.str());
   }
 
-  RawMessage::RawMessage (refptr<Message> _msg) : RawMessage () {
+  RawMessage::RawMessage (MainWindow *mw, refptr<Message> _msg) : RawMessage (mw) {
     msg = _msg;
 
     set_label ("Raw message: " + msg->subject);

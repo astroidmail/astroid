@@ -77,7 +77,8 @@ namespace Astroid {
    */
   class ThreadIndexScrolled : public Mode {
     public:
-      ThreadIndexScrolled (Glib::RefPtr<ThreadIndexListStore> list_store,
+      ThreadIndexScrolled (MainWindow *,
+                           Glib::RefPtr<ThreadIndexListStore> list_store,
                            ThreadIndexListView * list_view);
       ~ThreadIndexScrolled ();
 

@@ -15,8 +15,8 @@ using namespace std;
 namespace Astroid {
   class HelpMode : public Mode {
     public:
-      HelpMode ();
-      HelpMode (Mode *);
+      HelpMode (MainWindow *);
+      HelpMode (MainWindow *, Mode *);
 
       /* show help */
       void show_help (Mode * m);

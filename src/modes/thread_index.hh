@@ -21,8 +21,6 @@ namespace Astroid {
       ThreadIndex (MainWindow *, ustring);
       ~ThreadIndex ();
 
-      MainWindow * main_window;
-
       int thread_load_step    = 150;
       int current_thread      = 0;
 

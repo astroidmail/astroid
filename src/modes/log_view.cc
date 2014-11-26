@@ -6,7 +6,7 @@
 using namespace std;
 
 namespace Astroid {
-  LogView::LogView () {
+  LogView::LogView (MainWindow * mw) : Mode (mw) {
     set_label ("Log");
 
     scroll.add (tv);

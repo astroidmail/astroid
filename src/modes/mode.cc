@@ -6,10 +6,12 @@
 # include <tuple>
 
 namespace Astroid {
-  Mode::Mode (bool _interactive) :
+  Mode::Mode (MainWindow * mw, bool _interactive) :
     Gtk::Box (Gtk::ORIENTATION_VERTICAL),
     interactive (_interactive)
   {
+    set_main_window (mw);
+
     tab_label.set_can_focus (false);
 
     /* set up yes-no asker */
@@ -45,6 +47,10 @@ namespace Astroid {
       yes->signal_clicked().connect (sigc::mem_fun (this, &Mode::on_yes));
       no->signal_clicked().connect (sigc::mem_fun (this, &Mode::on_no));
     }
+  }
+
+  void Mode::set_main_window (MainWindow *mw) {
+    main_window = mw;
   }
 
   void Mode::set_label (ustring s) {

@@ -13,7 +13,7 @@ using namespace std;
 
 namespace Astroid {
 
-  PanedMode::PanedMode () {
+  PanedMode::PanedMode (MainWindow * mw) : Mode (mw) {
     set_can_focus (true);
     add_events (Gdk::KEY_PRESS_MASK);
 

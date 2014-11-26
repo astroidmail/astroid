@@ -27,7 +27,6 @@ namespace Astroid {
       EditMessage (MainWindow *, ustring to);
       ~EditMessage ();
 
-      MainWindow * main_window;
       Gtk::Box * box_message;
 
       enum Field {
