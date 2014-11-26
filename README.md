@@ -3,6 +3,8 @@
   A graphical threads-with-tags mail user agent based on [sup] and [notmuch].
   Written in C++ using GTK+, [WebKit] and [gmime].
 
+  Screenshots can be found on [this project page](http://gaute.vetsj.com/pages/astroid.html).
+
 ## design and user interface goals
 * (keyboard)    fully operatable by keyboard only - but accept mouse clicks
 *               lightweight.
@@ -104,7 +106,6 @@ Also check out #astroid or #notmuch on irc.freenode.net.
   been inspired by the [Geary] mail client.
 
 [sup]: http://supmua.org
-[alot]: https://github.com/pazz/alot
 [notmuch]: http://notmuchmail.org/
 [Geary]: http://www.yorba.org/projects/geary/
 [gmime]: http://spruce.sourceforge.net/gmime/
