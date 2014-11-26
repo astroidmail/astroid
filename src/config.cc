@@ -83,10 +83,13 @@ namespace Astroid {
     default_config.put ("astroid.debug.dryrun_sending", true);
 
     if (initial) {
-      /* account - only set if no other accounts, we accomplish that
-       * by only defining the default if there is no config file present.
+      /* initial default options - these are only set when a new
+       * configuration file is created. */
+
+      /* default example account:
        *
-       * AccountManager will complain if there are no accounts defined.
+       * note: AccountManager will complain if there are no accounts defined.
+       *
        */
       default_config.put ("accounts.charlie.name", "Charlie Root");
       default_config.put ("accounts.charlie.email", "root@localhost");
@@ -96,6 +99,7 @@ namespace Astroid {
       default_config.put ("accounts.charlie.save_sent", false);
       default_config.put ("accounts.charlie.save_sent_to",
           "/home/root/Mail/sent/cur/");
+
 
       /* default searches, also only set if initial */
       default_config.put("startup.queries.inbox", "tag:inbox");
@@ -112,20 +116,30 @@ namespace Astroid {
     default_config.put ("editor.gvim.args", "-f -c 'set ft=mail' '+set fileencoding=utf-8' '+set ff=unix' '+set enc=utf-8'"); //  '+/^\\s*\\n/' '+nohl'
     default_config.put ("editor.charset", "utf-8");
 
-    /* contacts */
+    /* contacts (not in use)
     default_config.put ("contacts.lbdb.cmd", "lbdb");
     default_config.put ("contacts.lbdb.enable", false);
     default_config.put ("contacts.recent.load", 100);
     default_config.put ("contacts.recent.query", "not tag:spam");
+    */
 
     /* polling */
     default_config.put ("poll.interval", 60); // seconds
 
-    /* attachments */
+    /* attachments
+     *
+     *   a chunk is saved and opened with the this command */
     default_config.put ("attachment.external_open_cmd", "xdg-open");
 
-    /* thread view */
+    /* thread view
+     *
+     *   if true; chunks (parts) that are not viewed initially are opened
+     *            externally when this is set. the part is opened with
+     *            'attachment.external_open_cmd'. */
     default_config.put ("thread_view.open_html_part_external", true);
+
+    /*   if a link is clicked (html, ftp, etc..) it is executed with this
+     *   command. */
     default_config.put ("thread_view.open_external_link", "xdg-open");
 
   }
