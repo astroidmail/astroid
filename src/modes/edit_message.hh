@@ -104,7 +104,7 @@ namespace Astroid {
       void send_message_finished (bool result);
 
 
-      virtual void prepare_message ();
+      void prepare_message ();
 
     protected:
       ptree editor_config;
