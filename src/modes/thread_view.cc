@@ -466,6 +466,7 @@ namespace Astroid {
 
   /* rendering {{{ */
 
+  /* general message adding and rendering {{{ */
   void ThreadView::render () {
     log << info << "render: loading html.." << endl;
     if (container) g_object_unref (container);
@@ -561,8 +562,9 @@ namespace Astroid {
 
     g_object_unref (insert_before);
     g_object_unref (div_message);
-  }
+  } // }}}
 
+  /* main message generation {{{ */
   void ThreadView::set_message_html (
       refptr<Message> m,
       WebKitDOMHTMLElement * div_message)
@@ -575,61 +577,22 @@ namespace Astroid {
       select (WEBKIT_DOM_NODE(div_message), "div.email_container");
 
     /* build header */
-    Address a (m->sender);
-    ustring from;
-    if (a.valid()) {
-      from = ustring::compose ("<a href=\"mailto:%3\"><b>%1</b> (%2)</a>",
-          Glib::Markup::escape_text (a.name ()),
-          Glib::Markup::escape_text (a.email ()),
-          Glib::Markup::escape_text (a.full_address())
-          );
-    } else {
-      from = ustring::compose ("<a href=\"mailto:%1\">%1</a>",
-          Glib::Markup::escape_text (m->sender)
-          );
-    }
-    header += create_header_row ("From: ", from, true, false);
+    insert_header_address (header, "From", Address(m->sender), true);
 
-
-    if (internet_address_list_length (m->to()) > 0) {
-      AddressList tos (m->to());
-      ustring to;
-
-      bool first = true;
-
-      for (Address &a : tos.addresses) {
-        if (!first) {
-          to += ", ";
-        } else {
-          first = false;
-        }
-
-        to += ustring::compose ("<a href=\"mailto:%3\">%1 (%2)</a>",
-          Glib::Markup::escape_text (a.name ()),
-          Glib::Markup::escape_text (a.email ()),
-          Glib::Markup::escape_text (a.full_address())
-          );
-      }
-
-      header += create_header_row ("To: ", to, false, false);
-    } else {
-      insert_header_address (header, "To:", "", false);
-    }
+    insert_header_address_list (header, "To", AddressList(m->to()), false);
 
     if (internet_address_list_length (m->cc()) > 0) {
-      insert_header_address (header, "Cc:",
-          internet_address_list_to_string (m->cc(), false), false);
+      insert_header_address_list (header, "Cc", AddressList(m->cc()), false);
     }
 
     if (internet_address_list_length (m->bcc()) > 0) {
-      insert_header_address (header, "Bcc:",
-          internet_address_list_to_string (m->bcc(), false), false);
+      insert_header_address_list (header, "Bcc", AddressList(m->bcc()), false);
     }
 
     insert_header_date (header, m);
 
     if (m->subject.length() > 0) {
-      insert_header_address (header, "Subject:", m->subject, false);
+      insert_header_row (header, "Subject", m->subject, false);
 
       WebKitDOMHTMLElement * subject = select (
           WEBKIT_DOM_NODE (div_message),
@@ -650,7 +613,7 @@ namespace Astroid {
       ustring tags_s_c = ustring::compose ("<span style=\"color:#31587a !important\">%1</span>",
           Glib::Markup::escape_text(tags_s));
 
-      header += create_header_row ("Tags:", tags_s_c, false, false);
+      header += create_header_row ("Tags", tags_s_c, false, false);
 
 
       WebKitDOMHTMLElement * tags = select (
@@ -661,7 +624,6 @@ namespace Astroid {
 
       g_object_unref (tags);
     }
-
 
     /* insert header html*/
     WebKitDOMHTMLElement * table_header =
@@ -704,8 +666,9 @@ namespace Astroid {
     g_object_unref (preview);
     g_object_unref (span_body);
     g_object_unref (table_header);
-  }
+  } // }}}
 
+  /* generating message parts {{{ */
   void ThreadView::create_message_part_html (
       refptr<Message> message,
       refptr<Chunk> c,
@@ -879,7 +842,7 @@ namespace Astroid {
     g_object_unref (message_cont);
     g_object_unref (sibling_container);
     g_object_unref (d);
-  }
+  } // }}}
 
   /* info and warning {{{ */
   void ThreadView::set_warning (refptr<Message> m, ustring txt)
@@ -997,6 +960,7 @@ namespace Astroid {
   }
   /* end info and warning }}} */
 
+  /* headers {{{ */
   void ThreadView::insert_header_date (ustring & header, refptr<Message> m)
   {
 
@@ -1006,18 +970,61 @@ namespace Astroid {
                 m->pretty_date (),
                 m->pretty_verbose_date ());
 
-    header += create_header_row ("Date: ", value, true, false);
+    header += create_header_row ("Date", value, true, false);
   }
 
   void ThreadView::insert_header_address (
       ustring &header,
       ustring title,
-      ustring address,
+      Address address,
       bool important) {
 
-    header += create_header_row (title, address, important, true);
+    AddressList al (address);
+
+    insert_header_address_list (header, title, al, important);
+  }
+
+  void ThreadView::insert_header_address_list (
+      ustring &header,
+      ustring title,
+      AddressList addresses,
+      bool important) {
+
+    ustring value;
+    bool first = true;
+
+    for (Address &address : addresses.addresses) {
+      if (address.full_address().size() > 0) {
+        if (!first) {
+          value += ", ";
+        } else {
+          first = false;
+        }
+
+        value +=
+          ustring::compose ("<a href=\"mailto:%3\">%4%1%5 (%2)</a>",
+            Glib::Markup::escape_text (address.fail_safe_name ()),
+            Glib::Markup::escape_text (address.email ()),
+            Glib::Markup::escape_text (address.full_address()),
+            (important ? "<b>" : ""),
+            (important ? "</b>" : "")
+            );
+      }
+    }
+
+    header += create_header_row (title, value, important, false);
+  }
+
+  void ThreadView::insert_header_row (
+      ustring &header,
+      ustring title,
+      ustring value,
+      bool important) {
+
+    header += create_header_row (title, value, important, true);
 
   }
+
 
   ustring ThreadView::create_header_row (
       ustring title,
@@ -1027,7 +1034,7 @@ namespace Astroid {
 
     return ustring::compose (
         "<div class=\"field %1\">"
-        "  <div class=\"title\">%2</div>"
+        "  <div class=\"title\">%2:</div>"
         "  <div class=\"value\">%3</div>"
         "</div>",
         (important ? "important" : ""),
@@ -1037,6 +1044,9 @@ namespace Astroid {
 
   }
 
+  /* headers end }}} */
+
+  /* attachments {{{ */
   void ThreadView::insert_attachments (
       refptr<Message> message,
       WebKitDOMHTMLElement * div_message)
@@ -1231,6 +1241,7 @@ namespace Astroid {
         assemble_data_uri (image_content_type, content, content_size).c_str(), &err);
 
   }
+  /* attachments end }}} */
 
   /* end rendering }}} */
 

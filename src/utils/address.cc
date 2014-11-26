@@ -122,6 +122,10 @@ namespace Astroid {
     }
   }
 
+  AddressList::AddressList (Address a) {
+    addresses.push_back (a);
+  }
+
   ustring AddressList::str () {
     InternetAddressList * list = internet_address_list_new ();
     for (Address &a : addresses) {

@@ -157,7 +157,9 @@ namespace Astroid {
       void create_message_part_html (refptr<Message>, refptr<Chunk>, WebKitDOMHTMLElement *, bool);
       void create_sibling_part (refptr<Message>, refptr<Chunk>, WebKitDOMHTMLElement *);
       void create_body_part (refptr<Message>, refptr<Chunk>, WebKitDOMHTMLElement *);
-      void insert_header_address (ustring &, ustring, ustring, bool);
+      void insert_header_address (ustring &, ustring, Address, bool);
+      void insert_header_address_list (ustring &, ustring, AddressList, bool);
+      void insert_header_row (ustring &, ustring, ustring, bool);
       void insert_header_date (ustring &, refptr<Message>);
       ustring create_header_row (ustring, ustring, bool, bool);
 
