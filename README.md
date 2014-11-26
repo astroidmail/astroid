@@ -103,7 +103,7 @@ Also check out #astroid or #notmuch on irc.freenode.net.
   using [notmuch] as a backend.
 
   Some parts of the user interface and layout have been copied from or
-  been inspired by the [Geary] mail client.
+  has been inspired by the [Geary] mail client.
 
 [sup]: http://supmua.org
 [notmuch]: http://notmuchmail.org/
