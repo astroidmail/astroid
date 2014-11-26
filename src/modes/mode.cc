@@ -41,6 +41,9 @@ namespace Astroid {
       rev_yes_no->add (*rh);
       rev_yes_no->set_reveal_child (false);
       pack_end (*rev_yes_no, false, true, 0);
+
+      yes->signal_clicked().connect (sigc::mem_fun (this, &Mode::on_yes));
+      no->signal_clicked().connect (sigc::mem_fun (this, &Mode::on_no));
     }
   }
 
@@ -51,6 +54,13 @@ namespace Astroid {
     tab_label.set_text (s);
   }
 
+  void Mode::on_yes () {
+    answer_yes_no (true);
+  }
+
+  void Mode::on_no () {
+    answer_yes_no (false);
+  }
 
   void Mode::ask_yes_no (
       ustring question,

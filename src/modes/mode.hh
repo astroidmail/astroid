@@ -38,6 +38,8 @@ namespace Astroid {
       bool yes_no_waiting = false;
       function <void (bool)> yes_no_closure = NULL;
       void answer_yes_no (bool);
+      void on_yes ();
+      void on_no ();
 
     protected:
       void ask_yes_no (ustring, function<void(bool)>);
