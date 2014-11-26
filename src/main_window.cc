@@ -115,20 +115,7 @@ namespace Astroid {
 
       /* close page */
       case GDK_KEY_x:
-        {
-          if (notebook.get_n_pages() > 1) {
-            int c = notebook.get_current_page ();
-            del_mode (c);
-          } else {
-            /* if there are more windows, close this one */
-            if (astroid->app->get_windows().size () > 1) {
-              log << info << "mw: more windows available, closing this one." << endl;
-              astroid->app->remove_window (*this);
-              remove_all_modes ();
-              close ();
-            }
-          }
-        }
+        close_page ();
         return true;
 
       /* search */
@@ -246,6 +233,22 @@ namespace Astroid {
     for (int n = notebook.get_n_pages()-1; n >= 0; n--)
       del_mode (n);
 
+  }
+
+  void MainWindow::close_page () {
+    /* close current page */
+    if (notebook.get_n_pages() > 1) {
+      int c = notebook.get_current_page ();
+      del_mode (c);
+    } else {
+      /* if there are more windows, close this one */
+      if (astroid->app->get_windows().size () > 1) {
+        log << info << "mw: more windows available, closing this one." << endl;
+        astroid->app->remove_window (*this);
+        remove_all_modes ();
+        close ();
+      }
+    }
   }
 
   void MainWindow::unset_active () {

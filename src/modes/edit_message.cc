@@ -521,8 +521,13 @@ namespace Astroid {
 
       case GDK_KEY_x:
         {
-          /* block closing the window while sending */
-          return sending_in_progress.load ();
+          if (sending_in_progress.load ()) {
+            /* block closing the window while sending */
+            return true;
+          } else {
+            ask_yes_no ("Do you want to close this message? (any changes will be lost)", [&](bool yes){ if (yes) { main_window->close_page(); } });
+            return true;
+          }
         }
     }
 
