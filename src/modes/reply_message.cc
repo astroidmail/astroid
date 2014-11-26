@@ -90,7 +90,7 @@ namespace Astroid {
      * first match. */
     for (Address &a : msg->all_to_from().addresses) {
       if (accounts->is_me (a)) {
-        set_from_to (a);
+        set_from (a);
         break;
       }
     }

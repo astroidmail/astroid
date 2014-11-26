@@ -74,8 +74,8 @@ namespace Astroid {
       refptr<Gtk::ListStore> from_store;
       int account_no;
 
-      void set_from_to (Account *);
-      void set_from_to (Address);
+      void set_from (Account *);
+      void set_from (Address);
 
       /* encryption settings */
       enum Encryption {

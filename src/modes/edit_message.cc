@@ -283,15 +283,15 @@ namespace Astroid {
   }
 
 
-  void EditMessage::set_from_to (Address a) {
+  void EditMessage::set_from (Address a) {
     if (!accounts->is_me (a)) {
       cerr << "em: from address is not a defined account." << endl;
     }
 
-    set_from_to (accounts->get_account_for_address (a));
+    set_from (accounts->get_account_for_address (a));
   }
 
-  void EditMessage::set_from_to (Account * a) {
+  void EditMessage::set_from (Account * a) {
     for (Gtk::TreeRow row : from_store->children ()) {
       if (row[from_columns.account] == a) {
         from_combo->set_active (row);
@@ -310,8 +310,7 @@ namespace Astroid {
     }
 
     /* set account selector to from address email */
-    Account * account = c->account;
-    set_from_to (account);
+    set_from (c->account);
 
     to = c->to;
     cc = c->cc;
