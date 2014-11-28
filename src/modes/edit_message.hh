@@ -162,6 +162,7 @@ namespace Astroid {
 
     private:
       void on_from_combo_changed ();
+      //bool on_from_combo_key_press (GdkEventKey *);
       void on_element_action (int id, char action);
 
     public:

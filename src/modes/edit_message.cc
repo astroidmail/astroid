@@ -165,6 +165,10 @@ namespace Astroid {
     }
 
     from_combo->pack_start (from_columns.name_and_address);
+    /*
+    from_combo->signal_key_press_event ().connect (
+        sigc::mem_fun (this, &EditMessage::on_from_combo_key_press));
+        */
 
     /* encryption combobox */
     enc_store = Gtk::ListStore::create (enc_columns);
@@ -511,6 +515,28 @@ namespace Astroid {
           return true;
         }
 
+      case GDK_KEY_f:
+        {
+          /* cycle through from combo box */
+          if (!message_sent && !sending_in_progress.load()) {
+            int i = from_combo->get_active_row_number ();
+            if (i >= (static_cast<int>(from_store->children().size())-1)) i = 0;
+            else i++;
+            from_combo->set_active (i);
+          }
+
+          return true;
+        }
+      case GDK_KEY_F:
+        {
+          /* bring up from combo box */
+          if (!message_sent && !sending_in_progress.load()) {
+            from_combo->popup ();
+          }
+
+          return true;
+        }
+
       case GDK_KEY_a:
         {
           /* attach file */
@@ -548,6 +574,8 @@ namespace Astroid {
       { "y", "Send message" },
       { "a", "Attach file" },
       { "d", "Remove attached file" },
+      { "f", "Cycle through From selector" },
+      { "F", "Open From selecetor" }
     };
 
     ModeHelpInfo * tv = thread_view->key_help ();
@@ -806,6 +834,24 @@ namespace Astroid {
   void EditMessage::release_modal () {
     remove_modal_grab ();
   }
+
+  /* from combo box {{{ */
+  /*
+  bool EditMessage::on_from_combo_key_press (GdkEventKey * event) {
+
+    switch (event->keyval) {
+      case GDK_KEY_j:
+        {
+          from_combo->set_active (from_combo->get_active_row_number()+1);
+          return true;
+        }
+    }
+
+    return false;
+  }
+  */
+
+  // }}}
 
 }
 
