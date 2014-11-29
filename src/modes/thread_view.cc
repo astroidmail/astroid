@@ -270,7 +270,7 @@ namespace Astroid {
   void ThreadView::open_link (ustring uri) {
     log << debug << "tv: opening: " << uri << endl;
 
-    std::thread job (&ThreadView::do_open_link, this, uri.c_str());
+    std::thread job (&ThreadView::do_open_link, this, uri);
     job.detach ();
   }
 

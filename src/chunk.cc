@@ -444,7 +444,9 @@ namespace Astroid {
     log << debug << "chunk: saving to tmp path: " << tf.c_str() << endl;
     save_to (tf.c_str());
 
-    std::thread job (&Chunk::do_open, this, tf.c_str());
+    ustring tf_p (tf.c_str());
+
+    std::thread job (&Chunk::do_open, this, tf_p);
     job.detach ();
   }
 
