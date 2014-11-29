@@ -192,5 +192,20 @@ namespace Astroid {
 
     return EditMessage::on_key_press_event (event);
   }
+
+  ModeHelpInfo * ReplyMessage::key_help () {
+    ModeHelpInfo * m = new ModeHelpInfo ();
+
+    m->parent   = EditMessage::key_help ();
+    m->toplevel = false;
+    m->title    = "Reply message";
+
+    m->keys = {
+      { "r", "Cycle through Reply selector" },
+      { "R", "Open Reply selecetor" }
+    };
+
+    return m;
+  }
 }
 
