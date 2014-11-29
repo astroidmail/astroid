@@ -38,6 +38,9 @@ namespace Astroid {
     private:
       void load_receivers ();
       void on_receiver_combo_changed ();
+
+    protected:
+      virtual bool on_key_press_event (GdkEventKey *) override;
   };
 }
 

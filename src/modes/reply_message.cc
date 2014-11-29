@@ -160,5 +160,37 @@ namespace Astroid {
       bcc = acc.str ();
     }
   }
+
+  bool ReplyMessage::on_key_press_event (GdkEventKey * event) {
+    log << debug << "re: got key press" << endl;
+
+    if (mode_key_handler (event)) return true;
+
+    switch (event->keyval) {
+      case GDK_KEY_r:
+        {
+          /* cycle through reply combo box */
+          if (!message_sent && !sending_in_progress.load()) {
+            int i = reply_mode_combo->get_active_row_number ();
+            if (i >= (static_cast<int>(reply_store->children().size())-1)) i = 0;
+            else i++;
+            reply_mode_combo->set_active (i);
+          }
+
+          return true;
+        }
+      case GDK_KEY_R:
+        {
+          /* bring up reply combo box */
+          if (!message_sent && !sending_in_progress.load()) {
+            reply_mode_combo->popup ();
+          }
+
+          return true;
+        }
+    }
+
+    return EditMessage::on_key_press_event (event);
+  }
 }
 
