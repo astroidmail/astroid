@@ -58,6 +58,10 @@ A fairly recent version of [gtk+] and [glib] with their
 
 ` $ scons `
 
+to run the tests do:
+
+` $ scons test `
+
 ### installing
 
 Configure with a prefix and install:
