@@ -22,6 +22,11 @@ namespace Astroid {
         sigc::mem_fun (this, &Log::flush_log), 50);
   }
 
+  Log::~Log ()
+  {
+    out_streams.clear ();
+  }
+
   bool Log::flush_log () {
 
     lock_guard<mutex> grd (m_lines);

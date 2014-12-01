@@ -56,6 +56,7 @@ namespace Astroid {
 
       // constructor: User passes a custom log header and output stream, or uses defaults.
       Log();
+      ~Log();
 
       // Overload for std::endl only:
       Log& operator<< (endl_type endl);

@@ -177,6 +177,7 @@ namespace Astroid {
     if (global_actions != NULL) delete global_actions;
 
     log << info << "astroid: goodbye!" << endl;
+    log.del_out_stream (&cout);
   }
 
   void Astroid::quit () {
