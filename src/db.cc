@@ -185,7 +185,7 @@ namespace Astroid {
         &nm_db);
 
     if (s != NOTMUCH_STATUS_SUCCESS) {
-      log << error << "db: error: failed opening database for writing, have you configured the notmuch database path correctly?" << endl;
+      log << error << "db: error: failed opening database for reading, have you configured the notmuch database path correctly?" << endl;
 
       throw database_error ("failed to open database (read-only)");
 
