@@ -158,7 +158,7 @@ namespace Astroid {
     } while ((s == NOTMUCH_STATUS_XAPIAN_EXCEPTION) && (time <= db_write_open_timeout));
 
     if (s != NOTMUCH_STATUS_SUCCESS) {
-      log << error << "db: error: failed opening database for writing." << endl;
+      log << error << "db: error: failed opening database for writing, have you configured the notmuch database path correctly?" << endl;
 
       throw database_error ("failed to open database for writing");
 
@@ -185,7 +185,7 @@ namespace Astroid {
         &nm_db);
 
     if (s != NOTMUCH_STATUS_SUCCESS) {
-      log << error << "db: error: failed opening database." << endl;
+      log << error << "db: error: failed opening database for writing, have you configured the notmuch database path correctly?" << endl;
 
       throw database_error ("failed to open database (read-only)");
 
