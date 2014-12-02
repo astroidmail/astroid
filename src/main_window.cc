@@ -288,9 +288,15 @@ namespace Astroid {
       unset_active ();
 
       //log << debug << "mw: grab modal to: " << n << endl;
-      ((Mode*) notebook.get_nth_page (n))->grab_modal();
-      current = n;
 
+      if (has_focus() || (get_focus() && get_focus()->has_focus())) {
+        /* we have focus */
+        ((Mode*) notebook.get_nth_page (n))->grab_modal();
+      } else {
+        log << debug << "mw: does not have focus, will not grab modal." << endl;
+      }
+
+      current = n;
       active = true;
 
       set_title (((Mode*) notebook.get_nth_page(n))->get_label());
@@ -302,12 +308,12 @@ namespace Astroid {
 
   bool MainWindow::on_my_focus_in_event (GdkEventFocus *event) {
     if (active) set_active (current);
-    log << debug << "mw: focus-in: " << id << endl;
+    //log << debug << "mw: focus-in: " << id << endl;
     return false;
   }
 
   bool MainWindow::on_my_focus_out_event (GdkEventFocus *event) {
-    log << debug << "mw: focus-out: " << id << endl;
+    //log << debug << "mw: focus-out: " << id << endl;
     if ((current < notebook.get_n_pages ()) && (current >= 0))
       ((Mode*) notebook.get_nth_page (current))->release_modal();
     return false;
