@@ -1,5 +1,7 @@
 # pragma once
 
+# include <atomic>
+
 # include <gtkmm.h>
 # include <gtkmm/window.h>
 
@@ -18,6 +20,7 @@ namespace Astroid {
   class MainWindow : public Gtk::Window {
     public:
       MainWindow ();
+      int id;
 
       bool on_key_press (GdkEventKey *);
 
@@ -53,6 +56,8 @@ namespace Astroid {
     private:
       bool on_my_focus_in_event (GdkEventFocus *);
       bool on_my_focus_out_event (GdkEventFocus *);
+
+      static atomic<uint> nextid;
   };
 
 }
