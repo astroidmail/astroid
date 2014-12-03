@@ -133,8 +133,6 @@ namespace Astroid {
       bcc = "";
 
     } else if (rmode == Rep_All) {
-      AddressList al (msg->to());
-
       ustring from;
       if (msg->reply_to.length () > 0) {
         from = msg->reply_to;
@@ -142,10 +140,14 @@ namespace Astroid {
         from = msg->sender;
       }
 
+      AddressList al;
+
       auto msg_from = Address(from);
       if (!accounts->is_me(msg_from)) {
         al += msg_from;
       }
+
+      al += AddressList (msg->to());
 
       al.remove_me ();
 
