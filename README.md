@@ -106,8 +106,9 @@ Also check out #astroid or #notmuch on irc.freenode.net.
   provided inspiration for [notmuch] which is a mail indexer. astroid is
   using [notmuch] as a backend.
 
-  Some parts of the user interface and layout have been copied from or
-  has been inspired by the [Geary] mail client.
+  Some parts of the user interface and layout have been copied from or has been
+  inspired by the [Geary] mail client. One of the other notmuch email clients,
+  [ner], has also been used for inspiration and direct code copy some times.
 
 [sup]: http://supmua.org
 [notmuch]: http://notmuchmail.org/
@@ -122,4 +123,5 @@ Also check out #astroid or #notmuch on irc.freenode.net.
 [gtk+]: http://www.gtk.org/
 [glib]: https://developer.gnome.org/glib/
 [boost::property_tree]: http://www.boost.org/doc/libs/1_56_0/doc/html/property_tree.html
+[ner]: http://the-ner.org/
 
