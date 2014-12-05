@@ -127,7 +127,7 @@ if not conf.CheckPKG('glibmm-2.4'):
   print "glibmm-2.4 not found."
   Exit (1)
 
-if not conf.CheckPKG('gmime-2.6'):
+if not conf.CheckPKG('gmime-2.6 >= 2.6.18'):
   print "gmime-2.6 not found."
   Exit (1)
 
