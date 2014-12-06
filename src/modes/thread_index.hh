@@ -49,5 +49,6 @@ namespace Astroid {
 
     protected:
       virtual bool on_key_press_event (GdkEventKey *) override;
+
   };
 }

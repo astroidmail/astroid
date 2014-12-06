@@ -101,6 +101,8 @@ namespace Astroid {
 
       vector<ustring> sent_tags = { "sent" };
       void add_sent_message (ustring);
+
+      const ustring muted = "muted";
   };
 
   /* exceptions */

@@ -348,6 +348,23 @@ namespace Astroid {
           return true;
         }
 
+      /* toggle muted: C-m */
+      case GDK_KEY_m:
+        {
+          if ((event->state & GDK_CONTROL_MASK)) {
+            auto thread = get_current_thread ();
+            if (thread) {
+
+              Db db (Db::DbMode::DATABASE_READ_WRITE);
+              main_window->actions.doit (&db, refptr<Action>(new MuteAction(thread)));
+            }
+
+            return true;
+          } else {
+            return false;
+          }
+        }
+
       case GDK_KEY_l:
         {
           /* edit tags */
@@ -406,7 +423,7 @@ namespace Astroid {
   ModeHelpInfo * ThreadIndexListView::key_help () {
     ModeHelpInfo * m = new ModeHelpInfo ();
 
-    m->parent   = NULL; 
+    m->parent   = NULL;
     m->toplevel = false;
     m->title    = "Thread Index List View";
 
@@ -427,6 +444,7 @@ namespace Astroid {
       { "*", "Toggle 'flagged' tag on thread" },
       { "N", "Toggle 'unread' tag on thread" },
       { "S", "Toggle 'spam' tag on thread" },
+      { "C-m", "Toggle 'muted' tag on thread, it will be excluded from searches." },
       { "l", "Edit tags for thread" },
     };
 

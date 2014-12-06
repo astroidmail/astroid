@@ -24,9 +24,6 @@ namespace Astroid {
 
   SpamAction::SpamAction (refptr<NotmuchThread> nmt)
     : TagAction (nmt) {
-      ustring spam = "spam";
-      ustring inbox = "inbox";
-
       if (find (nmt->tags.begin(), nmt->tags.end(), spam) != nmt->tags.end())
       {
         remove.push_back (spam);
@@ -36,6 +33,16 @@ namespace Astroid {
         {
           remove.push_back (inbox);
         }
+      }
+    }
+
+  MuteAction::MuteAction (refptr<NotmuchThread> nmt)
+    : TagAction (nmt) {
+      if (find (nmt->tags.begin(), nmt->tags.end(), muted) != nmt->tags.end())
+      {
+        remove.push_back (muted);
+      } else {
+        add.push_back (muted);
       }
     }
 }

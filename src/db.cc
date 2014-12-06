@@ -275,6 +275,8 @@ namespace Astroid {
     log << debug << "db: checking if thread: " << thread_id << " matches query: " << query_in << endl;
 
     notmuch_query_t * query = notmuch_query_create (nm_db, query_s.c_str());
+    notmuch_query_add_tag_exclude (query, muted.c_str());
+    notmuch_query_set_omit_excluded (query, NOTMUCH_EXCLUDE_TRUE);
 
     int c = notmuch_query_count_threads (query);
 
