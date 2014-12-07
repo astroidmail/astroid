@@ -53,9 +53,13 @@ namespace Astroid {
     notmuch_query_add_tag_exclude (query, db->muted.c_str());
     notmuch_query_set_omit_excluded (query, NOTMUCH_EXCLUDE_TRUE);
 
+    /* notmuch_query_count_threads is destructive.
+     *
     log  << info;
     log  << "ti, query: " << notmuch_query_get_query_string (query) << ", approx: "
          << notmuch_query_count_threads (query) << " threads and " << notmuch_query_count_messages (query) << " messages matching."  << endl;
+
+    */
 
     /* slow */
     threads = notmuch_query_search_threads (query);
