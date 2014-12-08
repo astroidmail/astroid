@@ -510,9 +510,6 @@ namespace Astroid {
         thread->refresh (db);
         row[list_store->columns.newest_date] = thread->newest_date;
 
-        path = list_store->get_path (fwditer);
-        list_store->row_changed (path, fwditer);
-
       } else {
         /* deleted */
         log << debug << "til: deleted" << endl;
