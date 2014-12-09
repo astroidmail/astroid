@@ -225,6 +225,26 @@ namespace Astroid {
         }
         return true;
 
+      case GDK_KEY_v:
+        {
+          main_window->enable_command (CommandBar::CommandMode::Search,
+              query_string,
+              [&](ustring new_query) {
+
+                query_string = new_query;
+                set_label (query_string);
+                list_store->clear ();
+                close_query ();
+                setup_query ();
+                load_more_threads ();
+
+                /* select first */
+                list_view->set_cursor (Gtk::TreePath("0"));
+
+              });
+
+          return true;
+        }
 
     }
 
@@ -242,6 +262,7 @@ namespace Astroid {
       { "x", "Close thread view pane if open" },
       { "Tab", "Swap focus to other pane if open" },
       { "$", "Refresh query" },
+      { "v", "Refine query" }
     };
 
     ModeHelpInfo * lm = list_view->key_help ();

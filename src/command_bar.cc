@@ -67,7 +67,7 @@ namespace Astroid {
 
     switch (mode) {
       case CommandMode::Search:
-        if (cmd.size() > 0) {
+        if (callback == NULL && (cmd.size() > 0)) {
           Mode * m = new ThreadIndex (main_window, cmd);
 
           main_window->add_mode (m);

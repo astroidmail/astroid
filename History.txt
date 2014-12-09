@@ -2,6 +2,7 @@
 
 * C-m: adds 'muted' tag, 'muted' messages are excluded from non-explicit
        searches.
+*   v: refine query.
 
 == v0.1 / 2014-11-30
 
