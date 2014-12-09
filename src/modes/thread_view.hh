@@ -261,6 +261,7 @@ namespace Astroid {
       type_signal_ready signal_ready ();
 
       void emit_ready ();
+      atomic<bool> ready; // all messages and elements rendered
 
       /* action on element */
       typedef sigc::signal <void, unsigned int, char> type_element_action;

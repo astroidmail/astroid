@@ -48,6 +48,7 @@ namespace Astroid {
     if (mj_only_tags.length() > 0) {
       mathjax_only_tags = VectorUtils::split_and_trim (mj_only_tags, ";");
     }
+    ready = false;
 
     pack_start (scroll, true, true, 5);
 
@@ -585,6 +586,7 @@ namespace Astroid {
     wk_loaded = false;
     home_uri = astroid->config->config_dir.c_str() + UstringUtils::random_alphanumeric (5);
     webkit_web_view_load_html_string (webview, thread_view_html.c_str (), home_uri.c_str());
+    ready     = false;
   }
 
   void ThreadView::render_messages () {
@@ -1416,6 +1418,11 @@ namespace Astroid {
   /* clone and create end }}} */
 
   bool ThreadView::on_key_press_event (GdkEventKey *event) { // {{{
+
+    if (!ready) {
+      log << warn << "tv: not ready yet." << endl;
+    }
+
     switch (event->keyval) {
 
       case GDK_KEY_j:
@@ -2409,6 +2416,7 @@ namespace Astroid {
   void ThreadView::emit_ready () {
     log << info << "tv: ready emitted." << endl;
     m_signal_ready.emit ();
+    ready = true;
   }
 
   ThreadView::type_element_action
