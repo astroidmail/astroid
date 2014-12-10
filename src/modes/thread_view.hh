@@ -37,6 +37,14 @@ namespace Astroid {
       WebKitWebPolicyDecision * policy_decision,
       gpointer user_data);
 
+  extern "C" void ThreadView_resource_request_starting (
+      WebKitWebView         *web_view,
+      WebKitWebFrame        *web_frame,
+      WebKitWebResource     *web_resource,
+      WebKitNetworkRequest  *request,
+      WebKitNetworkResponse *response,
+      gpointer               user_data);
+
   class ThreadView : public Mode {
     public:
       ThreadView (MainWindow *);
@@ -52,6 +60,12 @@ namespace Astroid {
       const int MAX_PREVIEW_LEN = 80;
 
       bool edit_mode = false;
+
+      /* resources */
+      bool    enable_mathjax;
+      ustring mathjax_uri_prefix;
+      vector<ustring> mathjax_only_tags;
+      ustring home_uri;
 
     private:
       /* message manipulation and location */
@@ -222,6 +236,14 @@ namespace Astroid {
       ustring open_external_link;
       void open_link (ustring);
       void do_open_link (ustring);
+
+      void resource_request_starting (
+        WebKitWebView         *web_view,
+        WebKitWebFrame        *web_frame,
+        WebKitWebResource     *web_resource,
+        WebKitNetworkRequest  *request,
+        WebKitNetworkResponse *response);
+
 
       void grab_focus ();
 

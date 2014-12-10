@@ -142,6 +142,16 @@ namespace Astroid {
      *   command. */
     default_config.put ("thread_view.open_external_link", "xdg-open");
 
+    /* mathjax */
+    default_config.put ("thread_view.mathjax.enable", true);
+
+    // MathJax.js will be added to this uri when the script is loaded
+    default_config.put ("thread_view.mathjax.uri_prefix", "https://cdn.mathjax.org/mathjax/latest/");
+
+    // a ; delimited list of tags which mathjax is enabled for, if empty,
+    // allow for all messages.
+    default_config.put ("thread_view.mathjax.for_tags", "");
+
   }
 
   void Config::write_back_config () {

@@ -13,6 +13,7 @@
                 seen at one time.
 * (done)        allow several simultaneous windows.
 * (done)        display html mail and some attachments inline.
+* (done)        render math using MathJax
 * (not done)    built-in crypto (gpg,..) support.
 * (not done)    render markdown (and friends) as well as syntax highlighting.
 * (only vim)    editors: embed vim or emacs (possibly ship a simple editor)

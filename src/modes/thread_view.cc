@@ -41,6 +41,14 @@ namespace Astroid {
     open_html_part_external = astroid->config->config.get<bool> ("thread_view.open_html_part_external");
     open_external_link = astroid->config->config.get<string> ("thread_view.open_external_link");
 
+    enable_mathjax = astroid->config->config.get<bool> ("thread_view.mathjax.enable");
+    mathjax_uri_prefix = astroid->config->config.get<string> ("thread_view.mathjax.uri_prefix");
+
+    ustring mj_only_tags = astroid->config->config.get<string> ("thread_view.mathjax.for_tags");
+    if (mj_only_tags.length() > 0) {
+      mathjax_only_tags = VectorUtils::split_and_trim (mj_only_tags, ";");
+    }
+
     pack_start (scroll, true, true, 5);
 
     /* set up webkit web view (using C api) */
@@ -77,7 +85,7 @@ namespace Astroid {
 
     websettings = WEBKIT_WEB_SETTINGS (webkit_web_settings_new ());
     g_object_set (G_OBJECT(websettings),
-        "enable-scripts", FALSE,
+        "enable-scripts", TRUE,
         "enable-java-applet", FALSE,
         "enable-plugins", FALSE,
         "auto-load-images", TRUE,
@@ -180,6 +188,10 @@ namespace Astroid {
         G_CALLBACK(ThreadView_navigation_request),
         (gpointer) this);
 
+    g_signal_connect (webview, "resource-request-starting",
+        G_CALLBACK(ThreadView_resource_request_starting),
+        (gpointer) this);
+
     /* scrolled window */
     auto vadj = scroll.get_vadjustment ();
     vadj->signal_changed().connect (
@@ -206,6 +218,60 @@ namespace Astroid {
   } // }}}
 
   /* navigation requests {{{ */
+  extern "C" void ThreadView_resource_request_starting (
+      WebKitWebView         *web_view,
+      WebKitWebFrame        *web_frame,
+      WebKitWebResource     *web_resource,
+      WebKitNetworkRequest  *request,
+      WebKitNetworkResponse *response,
+      gpointer               user_data) {
+
+    ((ThreadView*) user_data)->resource_request_starting (
+      web_view,
+      web_frame,
+      web_resource,
+      request,
+      response);
+  }
+
+  void ThreadView::resource_request_starting (
+      WebKitWebView         *web_view,
+      WebKitWebFrame        *web_frame,
+      WebKitWebResource     *web_resource,
+      WebKitNetworkRequest  *request,
+      WebKitNetworkResponse *response) {
+
+    if (response != NULL) {
+      /* a previously handled request */
+      return;
+    }
+
+    const gchar * uri_c = webkit_network_request_get_uri (request);
+    ustring uri (uri_c);
+
+    // prefix of local uris for loading image thumbnails
+    ustring image_data_uri = "data:image/png;base64";
+
+    /* is this request allowed */
+    if (uri == home_uri) {
+      return; // yes
+
+    } else if (uri.substr(0, image_data_uri.length()) == image_data_uri) {
+      log << debug << "tv: thumbnail request: approved" << endl;
+      return; // yes
+
+    } else if (enable_mathjax &&
+        uri.substr(0, mathjax_uri_prefix.length()) == mathjax_uri_prefix) {
+
+      log << debug << "tv: mathjax request: approved" << endl;
+      return; // yes
+
+    } else {
+      log << debug << "tv: request: denied: " << uri << endl;
+      webkit_network_request_set_uri (request, "about:blank"); // no
+    }
+  }
+
   extern "C" gboolean ThreadView_navigation_request (
       WebKitWebView * w,
       WebKitWebFrame * frame,
@@ -262,6 +328,17 @@ namespace Astroid {
       }
 
       return true;
+
+    } else {
+      log << info << "tv: navigation action: " <<
+        webkit_web_navigation_action_get_reason (navigation_action) << endl;
+
+
+      const gchar * uri_c = webkit_network_request_get_uri (
+          request );
+
+      ustring uri (uri_c);
+      log << info << "tv: navigating to: " << uri << endl;
     }
 
     return false;
@@ -405,6 +482,42 @@ namespace Astroid {
           WebKitDOMHTMLHeadElement * head = webkit_dom_document_get_head (d);
           webkit_dom_node_append_child (WEBKIT_DOM_NODE(head), WEBKIT_DOM_NODE(e), (err = NULL, &err));
 
+          /* load mathjax if enabled */
+          if (enable_mathjax) {
+            bool only_tags_ok = false;
+            if (mathjax_only_tags.size () > 0) {
+              if (mthread->in_notmuch) {
+                for (auto &t : mathjax_only_tags) {
+                  if (mthread->thread->has_tag (t)) {
+                    only_tags_ok = true;
+                    break;
+                  }
+                }
+              } else {
+                /* enable for messages not in db */
+                only_tags_ok = true;
+              }
+            } else {
+              only_tags_ok = true;
+            }
+
+            if (only_tags_ok) {
+              WebKitDOMElement * me = webkit_dom_document_create_element (d, "SCRIPT", (err = NULL, &err));
+
+              ustring mathjax_uri = mathjax_uri_prefix + "MathJax.js";
+
+              webkit_dom_element_set_attribute (me, "type", "text/javascript",
+                  (err = NULL, &err));
+              webkit_dom_element_set_attribute (me, "src", mathjax_uri.c_str(),
+                  (err = NULL, &err));
+
+              webkit_dom_node_append_child (WEBKIT_DOM_NODE(head), WEBKIT_DOM_NODE(me), (err = NULL, &err));
+
+
+              g_object_unref (me);
+            }
+          }
+
           /* get container for message divs */
           container = WEBKIT_DOM_HTML_DIV_ELEMENT(webkit_dom_document_get_element_by_id (d, "message_container"));
 
@@ -470,7 +583,8 @@ namespace Astroid {
     if (container) g_object_unref (container);
     container = NULL;
     wk_loaded = false;
-    webkit_web_view_load_html_string (webview, thread_view_html.c_str (), "/tmp/");
+    home_uri = astroid->config->config_dir.c_str() + UstringUtils::random_alphanumeric (5);
+    webkit_web_view_load_html_string (webview, thread_view_html.c_str (), home_uri.c_str());
   }
 
   void ThreadView::render_messages () {

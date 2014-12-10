@@ -1,5 +1,21 @@
 <html>
-<head><title>Geary</title></head>
+<head>
+  <title>Astroid</title>
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      extensions: ["tex2jax.js"],
+      jax: ["input/TeX", "output/HTML-CSS"],
+      tex2jax: {
+        inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+        displayMath: [ ['$$','$$'], ["\\[","\\]"] ],
+        processEscapes: true
+      },
+      "HTML-CSS": { availableFonts: ["TeX"] },
+      showProcessingMessages: false,
+      messageStyle: "none"
+    });
+  </script>
+</head>
 <body>
 <div id="message_container"><span id="placeholder"></span></div>
 <div id="multiple_messages"><div id="selection_counter" class="email"></div></div>
