@@ -1708,6 +1708,11 @@ namespace Astroid {
   bool ThreadView::element_action (char a) { // {{{
     log << debug << "tv: activate item." << endl;
 
+    if (!(focused_message)) {
+      log << error << "tv: no message has focus yet." << endl;
+      return true;
+    }
+
     if (!edit_mode) {
       if (is_hidden (focused_message)) {
         if (a == '\n') {
@@ -1798,10 +1803,8 @@ namespace Astroid {
       }
     }
 
-    if (focused_message) {
-      if (state[focused_message].current_element > 0) {
-        emit_element_action (state[focused_message].current_element, a);
-      }
+    if (state[focused_message].current_element > 0) {
+      emit_element_action (state[focused_message].current_element, a);
     }
     return true;
   } // }}}
