@@ -180,12 +180,6 @@ namespace Astroid {
     log.del_out_stream (&cout);
   }
 
-  void Astroid::quit () {
-    app->quit ();
-
-    log << info << "astroid: quitting.." << endl;
-  }
-
   MainWindow * Astroid::open_new_window () {
     log << warn << "astroid: starting a new window.." << endl;
 
