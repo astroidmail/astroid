@@ -47,7 +47,8 @@ namespace Astroid {
       void remove_all_modes ();
       void close_page ();
 
-      void unset_active ();
+      void ungrab_active ();
+      void grab_active (int);
       void set_active (int);
       void set_title (ustring);
 
@@ -56,6 +57,7 @@ namespace Astroid {
     private:
       bool on_my_focus_in_event (GdkEventFocus *);
       bool on_my_focus_out_event (GdkEventFocus *);
+      void on_my_switch_page (Gtk::Widget *, guint);
 
       static atomic<uint> nextid;
   };

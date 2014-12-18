@@ -63,6 +63,10 @@ namespace Astroid {
         sigc::mem_fun (this, &MainWindow::on_my_focus_in_event));
     signal_focus_out_event ().connect (
         sigc::mem_fun (this, &MainWindow::on_my_focus_out_event));
+
+    /* change page */
+    notebook.signal_switch_page ().connect (
+        sigc::mem_fun (this, &MainWindow::on_my_switch_page));
   }
 
   void MainWindow::set_title (ustring t) {
@@ -77,7 +81,7 @@ namespace Astroid {
   }
 
   void MainWindow::enable_command (CommandBar::CommandMode m, ustring cmd, function<void(ustring)> f) {
-    unset_active ();
+    ungrab_active ();
     command.enable_command (m, cmd, f);
     is_command = true;
     command.add_modal_grab ();
@@ -266,7 +270,7 @@ namespace Astroid {
     }
   }
 
-  void MainWindow::unset_active () {
+  void MainWindow::ungrab_active () {
     if (current >= 0) {
       if (notebook.get_n_pages() > current) {
         //log << debug << "mw: release modal, from: " << current << endl;
@@ -274,6 +278,30 @@ namespace Astroid {
         active = false;
       }
     }
+  }
+
+  void MainWindow::on_my_switch_page (Gtk::Widget * w, guint no) {
+    grab_active (no);
+  }
+
+  void MainWindow::grab_active (int n) {
+    //log << debug << "mw: set active: " << n << ", current: " << current << endl;
+
+    ungrab_active ();
+
+    //log << debug << "mw: grab modal to: " << n << endl;
+
+    if (has_focus() || (get_focus() && get_focus()->has_focus())) {
+      /* we have focus */
+      ((Mode*) notebook.get_nth_page (n))->grab_modal();
+    } else {
+      log << debug << "mw: does not have focus, will not grab modal." << endl;
+    }
+
+    current = n;
+    active = true;
+
+    set_title (((Mode*) notebook.get_nth_page(n))->get_label());
   }
 
   void MainWindow::set_active (int n) {
@@ -285,21 +313,8 @@ namespace Astroid {
         notebook.set_current_page (n);
       }
 
-      unset_active ();
+      grab_active (n);
 
-      //log << debug << "mw: grab modal to: " << n << endl;
-
-      if (has_focus() || (get_focus() && get_focus()->has_focus())) {
-        /* we have focus */
-        ((Mode*) notebook.get_nth_page (n))->grab_modal();
-      } else {
-        log << debug << "mw: does not have focus, will not grab modal." << endl;
-      }
-
-      current = n;
-      active = true;
-
-      set_title (((Mode*) notebook.get_nth_page(n))->get_label());
     } else {
       // log << debug << "mw: set active: page is out of range: " << n << endl;
       set_title ("");
