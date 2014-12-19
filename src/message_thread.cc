@@ -307,7 +307,20 @@ namespace Astroid {
     ustring _f = root->get_filename ();
     if (_f.size () == 0) {
       if (is_patch ()) {
-        _f = subject + ".patch";
+        _f = subject;
+
+        auto pattern = Glib::Regex::create ("[^0-9A-Za-z.\\-]");
+        _f = pattern->replace (_f, 0, "_", static_cast<Glib::RegexMatchFlags>(0));
+
+        auto pattern2 = Glib::Regex::create ("^_+");
+        _f = pattern2->replace (_f, 0, "", static_cast<Glib::RegexMatchFlags>(0));
+
+        if (_f.substr(0,5).uppercase() == "PATCH")
+          _f.erase (0, 5);
+
+        _f = pattern2->replace (_f, 0, "", static_cast<Glib::RegexMatchFlags>(0));
+
+        _f += ".patch";
       } else {
         _f = subject + ".eml";
       }
