@@ -66,6 +66,17 @@ namespace Astroid {
       ustring mathjax_uri_prefix;
       vector<ustring> mathjax_only_tags;
       ustring home_uri;
+      bool    math_is_on = false; // for this thread
+
+      bool    enable_code_prettify;
+      vector<ustring> code_prettify_only_tags;
+      ustring code_prettify_prefix; // add run_prettify.js to this
+      ustring code_prettify_code_tag;
+      //bool    enable_code_prettify_for_patches;
+
+      bool    code_is_on = false; // for this thread
+      void    filter_code_tags (ustring &); // look for code tags
+
 
     private:
       /* message manipulation and location */

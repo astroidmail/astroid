@@ -14,8 +14,8 @@
 * (done)        allow several simultaneous windows.
 * (done)        display html mail and some attachments inline.
 * (done)        render math using MathJax
+* (partly done) syntax highlighting between triple-backtick tags (markdown style)
 * (not done)    built-in crypto (gpg,..) support.
-* (not done)    render markdown (and friends) as well as syntax highlighting.
 * (only vim)    editors: embed vim or emacs (possibly ship a simple editor)
 * (linux)       Support: Platforms supported by notmuch and other libraries, specifically:
                          Linux, *BSD, Mac, Windows..

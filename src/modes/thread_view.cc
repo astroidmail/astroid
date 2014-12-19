@@ -48,6 +48,18 @@ namespace Astroid {
     if (mj_only_tags.length() > 0) {
       mathjax_only_tags = VectorUtils::split_and_trim (mj_only_tags, ";");
     }
+
+    enable_code_prettify = astroid->config->config.get<bool> ("thread_view.code_prettify.enable");
+    //enable_code_prettify_for_patches = astroid->config->config.get<bool> ("thread_view.code_prettify.enable_for_patches");
+    code_prettify_prefix = astroid->config->config.get<string> ("thread_view.code_prettify.uri_prefix");
+
+    ustring cp_only_tags = astroid->config->config.get<string> ("thread_view.code_prettify.for_tags");
+    if (cp_only_tags.length() > 0) {
+      code_prettify_only_tags = VectorUtils::split_and_trim (cp_only_tags, ";");
+    }
+
+    code_prettify_code_tag = astroid->config->config.get<string> ("thread_view.code_prettify.code_tag");
+
     ready = false;
 
     pack_start (scroll, true, true, 5);
@@ -265,6 +277,12 @@ namespace Astroid {
         uri.substr(0, mathjax_uri_prefix.length()) == mathjax_uri_prefix) {
 
       log << debug << "tv: mathjax request: approved" << endl;
+      return; // yes
+
+    } else if (enable_code_prettify &&
+        uri.substr(0, code_prettify_prefix.length()) == code_prettify_prefix) {
+
+      log << debug << "tv: code prettify request: approved" << endl;
       return; // yes
 
     } else {
@@ -503,6 +521,8 @@ namespace Astroid {
             }
 
             if (only_tags_ok) {
+              math_is_on = true;
+
               WebKitDOMElement * me = webkit_dom_document_create_element (d, "SCRIPT", (err = NULL, &err));
 
               ustring mathjax_uri = mathjax_uri_prefix + "MathJax.js";
@@ -510,6 +530,44 @@ namespace Astroid {
               webkit_dom_element_set_attribute (me, "type", "text/javascript",
                   (err = NULL, &err));
               webkit_dom_element_set_attribute (me, "src", mathjax_uri.c_str(),
+                  (err = NULL, &err));
+
+              webkit_dom_node_append_child (WEBKIT_DOM_NODE(head), WEBKIT_DOM_NODE(me), (err = NULL, &err));
+
+
+              g_object_unref (me);
+            }
+          }
+
+          /* load code_prettify if enabled */
+          if (enable_code_prettify) {
+            bool only_tags_ok = false;
+            if (code_prettify_only_tags.size () > 0) {
+              if (mthread->in_notmuch) {
+                for (auto &t : code_prettify_only_tags) {
+                  if (mthread->thread->has_tag (t)) {
+                    only_tags_ok = true;
+                    break;
+                  }
+                }
+              } else {
+                /* enable for messages not in db */
+                only_tags_ok = true;
+              }
+            } else {
+              only_tags_ok = true;
+            }
+
+            if (only_tags_ok) {
+              code_is_on = true;
+
+              WebKitDOMElement * me = webkit_dom_document_create_element (d, "SCRIPT", (err = NULL, &err));
+
+              ustring code_prettify_uri = code_prettify_prefix + "run_prettify.js";
+
+              webkit_dom_element_set_attribute (me, "type", "text/javascript",
+                  (err = NULL, &err));
+              webkit_dom_element_set_attribute (me, "src", code_prettify_uri.c_str(),
                   (err = NULL, &err));
 
               webkit_dom_node_append_child (WEBKIT_DOM_NODE(head), WEBKIT_DOM_NODE(me), (err = NULL, &err));
@@ -847,6 +905,9 @@ namespace Astroid {
     ustring body = c->viewable_text (true);
     MailQuotes::filter_quotes (body);
 
+    if (code_is_on)
+      filter_code_tags (body);
+
     webkit_dom_html_element_set_inner_html (
         body_container,
         body.c_str(),
@@ -857,6 +918,54 @@ namespace Astroid {
 
     g_object_unref (body_container);
     g_object_unref (d);
+  }
+
+  void ThreadView::filter_code_tags (ustring &body) {
+    time_t t0 = clock ();
+    ustring code_tag = code_prettify_code_tag;
+
+    if (code_tag.length() < 1) {
+      throw runtime_error ("tv: cannot have a code tag with length 0");
+    }
+
+    /* search for matching code tags */
+    ustring::size_type pos = 0;
+
+    ustring start_tag = "<code class=\"prettyprint\">";
+    ustring stop_tag  = "</code>";
+
+    while (true) {
+      /* find first */
+      ustring::size_type first = body.find (code_tag, pos);
+
+      if (first != ustring::npos) {
+        /* find second */
+        ustring::size_type second = body.find (code_tag, first + code_tag.length ());
+        if (second != ustring::npos) {
+          /* found matching tags */
+          body.erase  (first, code_tag.length());
+          body.insert (first, start_tag);
+
+          second += start_tag.length () - code_tag.length ();
+
+          body.erase  (second, code_tag.length ());
+          body.insert (second, stop_tag);
+          second += stop_tag.length () - code_tag.length ();
+
+          pos = second;
+        } else {
+          /* could not find matching, done */
+          break;
+        }
+
+      } else {
+        /* done */
+        break;
+      }
+    }
+
+    log << debug << "tv: code filter done, time: " << ((clock() - t0) * 1000 / CLOCKS_PER_SEC) << " ms." << endl;
+
   }
 
   void ThreadView::display_part (refptr<Message> message, refptr<Chunk> c, MessageState::Element el) {
