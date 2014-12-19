@@ -110,6 +110,10 @@ namespace Astroid {
 
     astroid->global_actions->signal_refreshed ().connect (
         sigc::mem_fun (this, &ThreadIndexListView::on_refreshed));
+
+    /* mouse click */
+    signal_row_activated ().connect (
+        sigc::mem_fun (this, &ThreadIndexListView::on_my_row_activated));
   }
 
   ThreadIndexListView::~ThreadIndexListView () {
@@ -497,6 +501,20 @@ namespace Astroid {
     };
 
     return m;
+  }
+
+  void ThreadIndexListView::on_my_row_activated (
+      const Gtk::TreeModel::Path & path,
+      Gtk::TreeViewColumn * column) {
+
+    auto thread = get_current_thread ();
+
+    if (thread) {
+      log << info << "ti_list: loading: " << thread->thread_id << endl;
+
+      /* open message in new tab (if so configured) */
+      thread_index->open_thread (thread, !open_paned_default);
+    }
   }
 
   void ThreadIndexListView::on_refreshed () {
