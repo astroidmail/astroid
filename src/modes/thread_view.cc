@@ -50,7 +50,7 @@ namespace Astroid {
     }
 
     enable_code_prettify = astroid->config->config.get<bool> ("thread_view.code_prettify.enable");
-    //enable_code_prettify_for_patches = astroid->config->config.get<bool> ("thread_view.code_prettify.enable_for_patches");
+    enable_code_prettify_for_patches = astroid->config->config.get<bool> ("thread_view.code_prettify.enable_for_patches");
     code_prettify_prefix = astroid->config->config.get<string> ("thread_view.code_prettify.uri_prefix");
 
     ustring cp_only_tags = astroid->config->config.get<string> ("thread_view.code_prettify.for_tags");
@@ -905,8 +905,16 @@ namespace Astroid {
     ustring body = c->viewable_text (true);
     MailQuotes::filter_quotes (body);
 
-    if (code_is_on)
-      filter_code_tags (body);
+    if (code_is_on) {
+      if (message->is_patch ()) {
+        log << debug << "tv: message is patch, syntax highlighting." << endl;
+        body.insert (0, code_start_tag);
+        body.insert (body.length()-1, code_stop_tag);
+
+      } else {
+        filter_code_tags (body);
+      }
+    }
 
     webkit_dom_html_element_set_inner_html (
         body_container,
@@ -923,6 +931,8 @@ namespace Astroid {
   void ThreadView::filter_code_tags (ustring &body) {
     time_t t0 = clock ();
     ustring code_tag = code_prettify_code_tag;
+    ustring start_tag = code_start_tag;
+    ustring stop_tag  = code_stop_tag;
 
     if (code_tag.length() < 1) {
       throw runtime_error ("tv: cannot have a code tag with length 0");
@@ -930,9 +940,6 @@ namespace Astroid {
 
     /* search for matching code tags */
     ustring::size_type pos = 0;
-
-    ustring start_tag = "<code class=\"prettyprint\">";
-    ustring stop_tag  = "</code>";
 
     while (true) {
       /* find first */

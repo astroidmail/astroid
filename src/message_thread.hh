@@ -54,6 +54,8 @@ namespace Astroid {
       vector<refptr<Chunk>> attachments ();
       refptr<Chunk> get_chunk_by_id (int id);
 
+      bool is_patch ();
+
       void save ();
       void save_to (ustring);
   };

@@ -305,8 +305,13 @@ namespace Astroid {
     dialog.set_do_overwrite_confirmation (true);
 
     ustring _f = root->get_filename ();
-    if (_f.size () == 0)
-      _f = subject + ".eml";
+    if (_f.size () == 0) {
+      if (is_patch ()) {
+        _f = subject + ".patch";
+      } else {
+        _f = subject + ".eml";
+      }
+    }
 
     dialog.set_current_name (_f);
 
@@ -339,6 +344,12 @@ namespace Astroid {
     ofstream dst (tofname, ios::binary);
 
     dst << src.rdbuf ();
+  }
+
+  bool Message::is_patch () {
+    return (
+        (subject.substr(0,3).uppercase() != "RE:") &&
+         Glib::Regex::match_simple ("\\[PATCH.*\\]", subject));
   }
 
   /************

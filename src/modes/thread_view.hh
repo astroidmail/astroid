@@ -72,7 +72,9 @@ namespace Astroid {
       vector<ustring> code_prettify_only_tags;
       ustring code_prettify_prefix; // add run_prettify.js to this
       ustring code_prettify_code_tag;
-      //bool    enable_code_prettify_for_patches;
+      bool    enable_code_prettify_for_patches;
+      ustring code_start_tag = "<code class=\"prettyprint\">";
+      ustring code_stop_tag  = "</code>";
 
       bool    code_is_on = false; // for this thread
       void    filter_code_tags (ustring &); // look for code tags
