@@ -237,7 +237,12 @@ namespace Astroid {
     if (s != NOTMUCH_STATUS_SUCCESS) {
       log << error << "db: error adding message: " << s << endl;
 
-      throw database_error ("db: could not add sent message to database.");
+      if (s == NOTMUCH_STATUS_FILE_ERROR) {
+        log << error << "db: file seems to have been moved, ignoring - probably a race condition with some syncing program." << endl;
+        return;
+      } else {
+        throw database_error ("db: could not add sent message to database.");
+      }
     }
 
     /* add tags */

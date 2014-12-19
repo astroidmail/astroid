@@ -64,7 +64,6 @@ namespace Astroid {
       ustring get_current_thread_id ();
       refptr<NotmuchThread> get_current_thread ();
 
-
       virtual ModeHelpInfo * key_help ();
 
     protected:
