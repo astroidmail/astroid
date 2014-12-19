@@ -23,6 +23,8 @@ namespace Astroid {
               { "attachment", "flagged", "unread"
               };
 
+      int get_height ();
+
     protected:
       /* best documentation so far from here:
        * https://git.gnome.org/browse/gtkmm/tree/gtk/src/cellrenderer.hg

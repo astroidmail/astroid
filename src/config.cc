@@ -107,6 +107,7 @@ namespace Astroid {
 
     /* ui behaviour */
     default_config.put ("thread_index.open_default_paned", false);
+    default_config.put ("thread_index.page_jump_rows", 6);
     default_config.put ("general.time.clock_format", "local"); // or 24h, 12h
     default_config.put ("general.time.same_year", "%b %-e");
     default_config.put ("general.time.diff_year", "%x");

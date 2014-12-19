@@ -85,6 +85,7 @@ namespace Astroid {
 
     config = astroid->config->config.get_child ("thread_index");
     open_paned_default = config.get<bool>("open_default_paned");
+    page_jump_rows     = config.get<int>("page_jump_rows");
 
     set_model (list_store);
     set_enable_search (false);
@@ -96,7 +97,7 @@ namespace Astroid {
     //append_column ("Thread IDs", list_store->columns.thread_id);
 
     /* add thread column */
-    ThreadIndexListCellRenderer * renderer =
+    renderer =
       Gtk::manage ( new ThreadIndexListCellRenderer () );
     int cols_count = append_column ("Thread", *renderer);
     Gtk::TreeViewColumn * column = get_column (cols_count - 1);
@@ -179,15 +180,60 @@ namespace Astroid {
 
       case GDK_KEY_J:
         {
-          auto adj = get_vadjustment ();
-          adj->set_value (adj->get_value() + adj->get_step_increment ());
+          if (list_store->children().size() >= 2) {
+
+            Gtk::TreePath path;
+            Gtk::TreeViewColumn *c;
+            get_cursor (path, c);
+
+            for (int i = 0; i < page_jump_rows; i++) {
+              if (!path) break;
+              path.next ();
+            }
+
+            Gtk::TreeIter it = list_store->get_iter (path);
+
+            if (it) {
+              set_cursor (path);
+            } else {
+              /* try to load more threads */
+              // TODO: async and lock
+              thread_index->load_more_threads ();
+
+              // retry to move down
+              it = list_store->get_iter (path);
+              if (it) {
+                set_cursor (path);
+              } else {
+                /* move to last */
+                auto it = list_store->children().end ();
+                auto p  = list_store->get_path (--it);
+                if (p) set_cursor (p);
+              }
+            }
+          }
+
           return true;
         }
 
       case GDK_KEY_K:
         {
-          auto adj = get_vadjustment ();
-          adj->set_value (adj->get_value() - adj->get_step_increment ());
+          Gtk::TreePath path;
+          Gtk::TreeViewColumn *c;
+          get_cursor (path, c);
+          for (int i = 0; i < page_jump_rows; i++) {
+            if (!path) break;
+            path.prev ();
+          }
+
+          if (path) {
+            set_cursor (path);
+          } else {
+            /* move to first */
+            auto p = Gtk::TreePath("0");
+            if (p) set_cursor (p);
+          }
+
           return true;
         }
 
@@ -203,9 +249,11 @@ namespace Astroid {
       case GDK_KEY_0:
         {
           /* select last */
-          auto it = list_store->children().end ();
-          auto p  = list_store->get_path (--it);
-          set_cursor (p);
+          if (list_store->children().size() >= 1) {
+            auto it = list_store->children().end ();
+            auto p  = list_store->get_path (--it);
+            if (p) set_cursor (p);
+          }
 
           return true;
         }

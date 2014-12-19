@@ -4,9 +4,10 @@
 # include <gtkmm/liststore.h>
 # include <gtkmm/treeview.h>
 
+# include "proto.hh"
 # include "config.hh"
 
-# include "proto.hh"
+# include "thread_index_list_cell_renderer.hh"
 
 using namespace std;
 
@@ -54,6 +55,9 @@ namespace Astroid {
       ThreadIndex * thread_index;
       MainWindow  * main_window;
       Glib::RefPtr<ThreadIndexListStore> list_store;
+
+      ThreadIndexListCellRenderer * renderer;
+      int page_jump_rows; // rows to jump
 
       void set_thread_data (Gtk::CellRenderer *, const Gtk::TreeIter & );
 

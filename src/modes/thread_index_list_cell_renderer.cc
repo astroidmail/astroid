@@ -377,6 +377,11 @@ namespace Astroid {
   } // }}}
 
   /* cellrenderer overloads {{{ */
+  int ThreadIndexListCellRenderer::get_height () {
+    if (height_set) return (content_height + line_spacing);
+    else return 0;
+  }
+
   int ThreadIndexListCellRenderer::calculate_height (Gtk::Widget &widget) const {
     if (height_set) return content_height;
 
