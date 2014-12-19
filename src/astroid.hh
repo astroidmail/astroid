@@ -37,11 +37,14 @@ namespace Astroid {
       /* poll */
       Poll * poll;
 
-      MainWindow * open_new_window ();
+      MainWindow * open_new_window (bool open_defaults = true);
 
     private:
       bool activated = false;
       void on_signal_activate ();
+      void on_mailto_activate (const Glib::VariantBase &);
+      refptr<Gio::SimpleAction> mailto;
+      void send_mailto (MainWindow * mw, ustring);
   };
 
   /* globally available instance of our main Astroid-class */

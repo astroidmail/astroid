@@ -22,6 +22,7 @@
 /* UI */
 # include "main_window.hh"
 # include "modes/thread_index.hh"
+# include "modes/edit_message.hh"
 
 /* gmime */
 # include <gmime/gmime.h>
@@ -60,7 +61,8 @@ namespace Astroid {
     desc.add_options ()
       ( "help,h", "print this help message")
       ( "config,c", po::value<ustring>(), "config file, default: $XDG_CONFIG_HOME/astroid/config")
-      ( "new-config,n", "make new default config, then exit");
+      ( "new-config,n", "make new default config, then exit")
+      ( "mailto,m", po::value<ustring>(), "compose mail with mailto url");
 
     po::variables_map vm;
     po::store ( po::command_line_parser (argc, argv).options(desc).run(), vm );
@@ -102,6 +104,16 @@ namespace Astroid {
       exit (0);
     } // }}}
 
+    bool domailto = false;
+    ustring mailtourl;
+
+    if (vm.count("mailto")) {
+      domailto = true;
+      mailtourl = vm["mailto"].as<ustring>();
+
+      log << debug << "astroid: composing mail to: " << mailtourl << endl;
+    }
+
     /* set up gtk */
     log << debug << "loading gtk.." << endl;
     int aargc = 1; // TODO: allow GTK to get some options aswell.
@@ -112,13 +124,30 @@ namespace Astroid {
     if (app->is_remote ()) {
       log << warn << "astroid: instance already running, opening new window.." << endl;
 
-      app->activate ();
+      if (domailto) {
+        Glib::Variant<ustring> param = Glib::Variant<ustring>::create (mailtourl);
+        app->activate_action ("mailto",
+            param
+            );
+
+      } else {
+        app->activate ();
+
+      }
+
       return 0;
     } else {
       /* we are the main instance */
       app->signal_activate().connect (sigc::mem_fun (this,
             &Astroid::on_signal_activate));
 
+      mailto = Gio::SimpleAction::create ("mailto", Glib::VariantType ("s"));
+
+      app->add_action (mailto);
+
+      mailto->set_enabled (true);
+      mailto->signal_activate ().connect (
+          sigc::mem_fun (this, &Astroid::on_mailto_activate));
     }
 
     /* load config */
@@ -143,7 +172,12 @@ namespace Astroid {
     /* set up poller */
     poll = new Poll ();
 
-    open_new_window ();
+    if (domailto) {
+      MainWindow * mw = open_new_window (false);
+      send_mailto (mw, mailtourl);
+    } else {
+      open_new_window ();
+    }
     app->run ();
 
     return 0;
@@ -180,7 +214,7 @@ namespace Astroid {
     log.del_out_stream (&cout);
   }
 
-  MainWindow * Astroid::open_new_window () {
+  MainWindow * Astroid::open_new_window (bool open_defaults) {
     log << warn << "astroid: starting a new window.." << endl;
 
     /* set up a new main window */
@@ -188,17 +222,19 @@ namespace Astroid {
     /* start up default window with default buffers */
     MainWindow * mw = new MainWindow (); // is freed / destroyed by application
 
-    ptree qpt = config->config.get_child ("startup.queries");
+    if (open_defaults) {
+      ptree qpt = config->config.get_child ("startup.queries");
 
-    for (const auto &kv : qpt) {
-      ustring name = kv.first;
-      ustring query = kv.second.data();
+      for (const auto &kv : qpt) {
+        ustring name = kv.first;
+        ustring query = kv.second.data();
 
-      log << info << "astroid: got query: " << name << ": " << query << endl;
-      mw->add_mode (new ThreadIndex (mw, query));
+        log << info << "astroid: got query: " << name << ": " << query << endl;
+        mw->add_mode (new ThreadIndex (mw, query));
+      }
+
+      mw->set_active (0);
     }
-
-    mw->set_active (0);
 
     app->add_window (*mw);
     mw->show_all ();
@@ -212,6 +248,36 @@ namespace Astroid {
     } else {
       /* we'll get one activated signal from ourselves first */
       activated = true;
+    }
+  }
+
+  void Astroid::on_mailto_activate (const Glib::VariantBase & parameter) {
+    Glib::Variant<ustring> url = Glib::VariantBase::cast_dynamic<Glib::Variant<ustring>> (parameter);
+
+    send_mailto (open_new_window (false), url.get());
+  }
+
+  void Astroid::send_mailto (MainWindow * mw, ustring url) {
+    log << info << "astorid: mailto: " << url << endl;
+
+    ustring scheme = Glib::uri_parse_scheme (url);
+    if (scheme.length () > 0) {
+      /* we got an mailto url */
+      url = url.substr(scheme.length(), url.length () - scheme.length());
+
+      ustring to, cc, bcc, subject, body;
+
+      ustring::size_type pos = url.find ("?");
+      ustring::size_type next;
+      if (pos == ustring::npos) pos = url.length ();
+      to = url.substr (0, pos);
+
+      /* TODO: need to finish the rest of the fields */
+      mw->add_mode (new editmessage (mw, to));
+
+    } else {
+      /* we probably just got the address on the cmd line */
+      mw->add_mode (new editmessage (mw, url));
     }
   }
 
