@@ -273,11 +273,11 @@ namespace Astroid {
       to = url.substr (0, pos);
 
       /* TODO: need to finish the rest of the fields */
-      mw->add_mode (new editmessage (mw, to));
+      mw->add_mode (new EditMessage (mw, to));
 
     } else {
       /* we probably just got the address on the cmd line */
-      mw->add_mode (new editmessage (mw, url));
+      mw->add_mode (new EditMessage (mw, url));
     }
   }
 
