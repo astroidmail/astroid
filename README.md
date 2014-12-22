@@ -98,7 +98,7 @@ Report on the [github page](https://github.com/gauteh/astroid) or to the mailing
 
 Contributions to Astroid in the form of patches, documentation and testing are
 very welcome. Information on how to work on astroid ([hacking]) and on how to
-[contribute], can be found in the wiki.
+[contribute](https://github.com/gauteh/astroid/wiki/Contributing), can be found in the wiki.
 
 Also check out #astroid or #notmuch on irc.freenode.net.
 
