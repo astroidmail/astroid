@@ -96,8 +96,9 @@ press `?` to get a list of available key bindings in the current mode, navigate 
 Report on the [github page](https://github.com/gauteh/astroid) or to the mailinglist at: [astroidmail@googlegroups.com](https://groups.google.com/forum/#!forum/astroidmail), subscribe [online](https://groups.google.com/forum/#!forum/astroidmail) or by sending an email to:
 [astroidmail+subscribe@googlegroups.com](mailto:astroidmail+subscribe@googlegroups.com).
 
-Patches are greatly appreciated, comments and bug reports too - but you may not
-expect the bug to be fixed. Contributors are very welcome.
+Contributions to Astroid in the form of patches, documentation and testing are
+very welcome. Information on how to work on astroid ([hacking]) and on how to
+[contribute], can be found in the wiki.
 
 Also check out #astroid or #notmuch on irc.freenode.net.
 
@@ -125,4 +126,5 @@ Also check out #astroid or #notmuch on irc.freenode.net.
 [glib]: https://developer.gnome.org/glib/
 [boost::property_tree]: http://www.boost.org/doc/libs/1_56_0/doc/html/property_tree.html
 [ner]: http://the-ner.org/
+[hacking]: https://github.com/gauteh/astroid/wiki/Hacking
 
