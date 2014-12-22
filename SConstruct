@@ -166,7 +166,7 @@ env.AppendUnique (LIBS = libs)
 env.AppendUnique (CPPFLAGS = ['-Wall', '-std=c++11', '-pthread'] )
 
 if debug:
-  env.AppendUnique (CPPFLAGS = ['-g'])
+  env.AppendUnique (CPPFLAGS = ['-g', '-Wextra'])
 
 ## write config file
 print ("writing src/build_config.hh..")
