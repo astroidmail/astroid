@@ -17,3 +17,5 @@ core*
 
 \#*\#
 
+compile_commands.json
+
