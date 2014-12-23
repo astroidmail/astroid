@@ -314,16 +314,19 @@ namespace Astroid {
       if (pos == ustring::npos) pos = 0;
       else if (pos > 0) pos += 1; // now positioned after ','
 
+      /* find end of key in input string */
       ustring_sz n = t.find_first_of (", ", pos); // break on these
       if (n == ustring::npos) n = t.size();
 
       ustring newt;
       newt = t.substr (0, pos);
-      newt += " " + completion;
-      newt += t.substr (pos+key.size()+1, t.size());
+      if (pos > 0) newt += " "; // add space between ',' and tag if this is
+                                // not the first
+      newt += completion;
+      newt += t.substr (pos+key.size()+((pos > 0) ? 1 : 0), t.size());
 
       entry->set_text (newt);
-      entry->set_position (pos + completion.size()+1);
+      entry->set_position (pos + completion.size()+((pos > 0) ? 1 : 0));
     }
 
     return true;
