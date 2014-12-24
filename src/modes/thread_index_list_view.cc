@@ -602,6 +602,12 @@ namespace Astroid {
         newrow[list_store->columns.newest_date] = t->newest_date;
         newrow[list_store->columns.thread_id]   = t->thread_id;
         newrow[list_store->columns.thread]      = Glib::RefPtr<NotmuchThread>(t);
+
+        /* check if we should select it (if this is the only item) */
+        if (list_store->children().size() == 1) {
+          auto p = Gtk::TreePath("0");
+          if (p) set_cursor (p);
+        }
       }
     }
   }
