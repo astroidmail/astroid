@@ -7,8 +7,6 @@
 # include "proto.hh"
 # include "config.hh"
 
-# include "thread_index_list_cell_renderer.hh"
-
 using namespace std;
 
 namespace Astroid {
