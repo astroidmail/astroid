@@ -188,6 +188,7 @@ namespace Astroid {
       case GDK_KEY_Tab:
         {
           log << debug << "got tab" << endl;
+          /* grab the first entry */
           auto completion = entry.get_completion ();
           if (completion) {
             completion->complete ();
@@ -206,9 +207,22 @@ namespace Astroid {
   }
 
   /********************
-   * Tag Completion
+   * Generic Completion
    ********************/
 
+  ustring CommandBar::GenericCompletion::get_next_match (unsigned int) {
+    return "";
+  };
+
+  /* take the next match in the list and return its index */
+  unsigned int CommandBar::GenericCompletion::roll_completion (ustring_sz pos) {
+    return 0;
+  }
+
+
+  /********************
+   * Tag Completion
+   ********************/
   CommandBar::TagCompletion::TagCompletion ()
   {
     completion_model = Gtk::ListStore::create (m_columns);
@@ -226,6 +240,7 @@ namespace Astroid {
 
   void CommandBar::TagCompletion::load_tags (vector<ustring> _tags) {
     tags = _tags;
+    sort (tags.begin(), tags.end());
 
     completion_model->clear ();
 
@@ -352,6 +367,7 @@ namespace Astroid {
 
   void CommandBar::SearchCompletion::load_tags (vector<ustring> _tags) {
     tags = _tags;
+    sort (tags.begin(), tags.end());
 
     completion_model->clear ();
 

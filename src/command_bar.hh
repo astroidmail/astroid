@@ -57,18 +57,34 @@ namespace Astroid {
     private:
       void reset_bar ();
 
+      class GenericCompletion : public Gtk::EntryCompletion {
+        public:
+          refptr<Gtk::ListStore> completion_model;
+
+          virtual bool match (const ustring&, const
+              Gtk::TreeModel::const_iterator&) = 0;
+
+          virtual bool on_match_selected(const Gtk::TreeModel::iterator& iter) = 0;
+
+          /* get the next match in the list */
+          virtual ustring get_next_match (unsigned int i = 0);
+
+          /* take the next match in the list and return its index */
+          virtual unsigned int roll_completion (ustring_sz pos);
+      };
+
       /********************
-       * Tag editing 
+       * Tag editing
        ********************/
       vector<ustring> existing_tags; // a sorted list of existing tags
       void start_tagging (ustring);
 
-      class TagCompletion : public Gtk::EntryCompletion {
+      class TagCompletion : public GenericCompletion {
         public:
           TagCompletion ();
-          void load_tags (vector<ustring>);
 
-          vector<ustring> tags;
+          void load_tags (vector<ustring>);
+          vector<ustring> tags; // must be sorted
 
           // tree model columns, for the EntryCompletion's filter model
           class ModelColumns : public Gtk::TreeModel::ColumnRecord
@@ -82,29 +98,28 @@ namespace Astroid {
           };
 
           ModelColumns m_columns;
-          refptr<Gtk::ListStore> completion_model;
 
           ustring get_partial_tag (ustring, ustring_sz&);
 
           bool match (const ustring&, const
-              Gtk::TreeModel::const_iterator&);
+              Gtk::TreeModel::const_iterator&) override;
 
-          bool on_match_selected(const Gtk::TreeModel::iterator& iter);
+          bool on_match_selected(const Gtk::TreeModel::iterator& iter) override;
       };
 
       refptr<TagCompletion> tag_completion;
 
       /********************
-       * Search completion 
+       * Search completion
        ********************/
       void start_searching (ustring);
 
-      class SearchCompletion : public Gtk::EntryCompletion {
+      class SearchCompletion : public GenericCompletion {
         public:
           SearchCompletion ();
-          void load_tags (vector<ustring>);
 
-          vector<ustring> tags;
+          void load_tags (vector<ustring>);
+          vector<ustring> tags; // must be sorted
 
           // tree model columns, for the EntryCompletion's filter model
           class ModelColumns : public Gtk::TreeModel::ColumnRecord
@@ -118,14 +133,13 @@ namespace Astroid {
           };
 
           ModelColumns m_columns;
-          refptr<Gtk::ListStore> completion_model;
 
           bool get_partial_tag (ustring, ustring&, ustring_sz&);
 
           bool match (const ustring&, const
-              Gtk::TreeModel::const_iterator&);
+              Gtk::TreeModel::const_iterator&) override;
 
-          bool on_match_selected(const Gtk::TreeModel::iterator& iter);
+          bool on_match_selected(const Gtk::TreeModel::iterator& iter) override;
       };
 
       refptr<SearchCompletion> search_completion;
