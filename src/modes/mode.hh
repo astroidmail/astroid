@@ -2,7 +2,6 @@
 
 # include <gtkmm.h>
 
-# include <vector>
 # include <list>
 
 # include "proto.hh"
