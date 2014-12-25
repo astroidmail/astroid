@@ -38,8 +38,9 @@ namespace Astroid {
   class ActionManager;
   class Action;
   class TagAction;
-  class ArchiveAction;
-  class StarAction;
+  class ToggleAction;
+  class SpamAction;
+  class MuteAction;
 
   /* modes */
   class Mode;
