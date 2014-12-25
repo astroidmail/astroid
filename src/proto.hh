@@ -10,6 +10,7 @@ namespace Astroid {
   typedef Glib::ustring::size_type ustring_sz;
   # define refptr Glib::RefPtr
 
+  /* core and database */
   class Astroid;
   class Db;
   class NotmuchThread;
@@ -28,11 +29,6 @@ namespace Astroid {
   /* composing */
   class ComposeMessage;
 
-  /* UI */
-  class MainWindow;
-  class CommandBar;
-  class LogView;
-
   /* actions */
   class GlobalActions;
   class ActionManager;
@@ -41,6 +37,11 @@ namespace Astroid {
   class ToggleAction;
   class SpamAction;
   class MuteAction;
+
+  /* user interface */
+  class MainWindow;
+  class CommandBar;
+  class LogView;
 
   /* modes */
   class Mode;
