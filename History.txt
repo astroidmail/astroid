@@ -1,4 +1,5 @@
-==
+== v0.2 / 2015-01-18
+
 * Allow math to be rendered with MathJax! Enclose math with $ or $$,
   by default we are using MathJax online, but you can set this to
   your local installation as well. MathJax is enabled by default,
