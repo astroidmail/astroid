@@ -139,6 +139,7 @@ namespace Astroid {
     /* set up completion */
     search_completion->load_tags (existing_tags);
     entry.set_completion (search_completion);
+    current_completion = search_completion;
   }
 
   void CommandBar::start_tagging (ustring tagstring) {
@@ -148,6 +149,7 @@ namespace Astroid {
     /* set up completion */
     tag_completion->load_tags (existing_tags);
     entry.set_completion (tag_completion);
+    current_completion = tag_completion;
   }
 
   void CommandBar::handle_command (ustring cmd) {
@@ -183,20 +185,18 @@ namespace Astroid {
   }
 
   bool CommandBar::entry_key_press (GdkEventKey * event) {
-    log << debug << "got event" << endl;
     switch (event->keyval) {
       case GDK_KEY_Tab:
         {
-          log << debug << "got tab" << endl;
-          /* grab the first entry */
-          auto completion = entry.get_completion ();
-          if (completion) {
-            completion->complete ();
+          /* grab the next completion */
+          if (entry.get_completion()) {
+
+            /* if completion is set, then current_completion should be set */
+            current_completion->match_next ();
           }
 
           return true;
         }
-
     }
 
     return false;
@@ -209,15 +209,44 @@ namespace Astroid {
   /********************
    * Generic Completion
    ********************/
+  bool CommandBar::GenericCompletion::match (const ustring&, const Gtk::TreeModel::const_iterator&) {
+    // do not call directly
+    throw bad_function_call ();
+  }
 
-  ustring CommandBar::GenericCompletion::get_next_match (unsigned int) {
-    return "";
-  };
+  bool CommandBar::GenericCompletion::on_match_selected(const Gtk::TreeModel::iterator&) {
+    // do not call directly
+    throw bad_function_call ();
+  }
+
+  /* get the next match in the list and use it to complete */
+  void CommandBar::GenericCompletion::match_next () {
+    log << debug << "cb: completion: taking next match" << endl;
+
+    Gtk::TreeIter fwditer = completion_model->get_iter ("0");
+
+    Gtk::Entry * e = get_entry ();
+    if (e == NULL) throw logic_error ("no entry associated with completion");
+
+    ustring key = e->get_text ();
+
+    while (fwditer) {
+      if (match (key, fwditer)) {
+        on_match_selected (fwditer);
+
+        break;
+      }
+
+      fwditer++;
+    }
+  }
 
   /* take the next match in the list and return its index */
+  /*
   unsigned int CommandBar::GenericCompletion::roll_completion (ustring_sz pos) {
     return 0;
   }
+  */
 
 
   /********************

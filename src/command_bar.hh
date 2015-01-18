@@ -62,16 +62,15 @@ namespace Astroid {
           refptr<Gtk::ListStore> completion_model;
 
           virtual bool match (const ustring&, const
-              Gtk::TreeModel::const_iterator&) = 0;
+              Gtk::TreeModel::const_iterator&);
 
-          virtual bool on_match_selected(const Gtk::TreeModel::iterator& iter) = 0;
+          virtual bool on_match_selected(const Gtk::TreeModel::iterator& iter);
 
           /* get the next match in the list */
-          virtual ustring get_next_match (unsigned int i = 0);
-
-          /* take the next match in the list and return its index */
-          virtual unsigned int roll_completion (ustring_sz pos);
+          virtual void match_next ();
       };
+
+      refptr<GenericCompletion> current_completion;
 
       /********************
        * Tag editing
