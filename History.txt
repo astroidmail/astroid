@@ -1,5 +1,4 @@
 ==
-
 * Allow math to be rendered with MathJax! Enclose math with $ or $$,
   by default we are using MathJax online, but you can set this to
   your local installation as well. MathJax is enabled by default,
@@ -7,6 +6,8 @@
 
 * Highlight code syntax between ``` markdown-style tags as well as
   patches sent as email.
+
+* Partial mailto: support, check out --help.
 
 * Switch tabs/pages using mouse.
 

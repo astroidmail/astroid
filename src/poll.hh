@@ -11,7 +11,7 @@ using namespace std;
 namespace Astroid {
   class Poll {
     public:
-      Poll ();
+      Poll (bool auto_polling_enabled);
 
       bool poll ();
 

@@ -62,7 +62,8 @@ namespace Astroid {
       ( "help,h", "print this help message")
       ( "config,c", po::value<ustring>(), "config file, default: $XDG_CONFIG_HOME/astroid/config")
       ( "new-config,n", "make new default config, then exit")
-      ( "mailto,m", po::value<ustring>(), "compose mail with mailto url");
+      ( "mailto,m", po::value<ustring>(), "compose mail with mailto url or address")
+      ( "no-auto-poll", "do not poll automatically");
 
     po::variables_map vm;
     po::store ( po::command_line_parser (argc, argv).options(desc).run(), vm );
@@ -104,6 +105,14 @@ namespace Astroid {
       exit (0);
     } // }}}
 
+    bool no_auto_poll = false;
+
+    if (vm.count ("no-auto-poll")) {
+      log << info << "astroid: automatic polling is off." << endl;
+
+      no_auto_poll = true;
+    }
+
     bool domailto = false;
     ustring mailtourl;
 
@@ -123,6 +132,10 @@ namespace Astroid {
 
     if (app->is_remote ()) {
       log << warn << "astroid: instance already running, opening new window.." << endl;
+
+      if (no_auto_poll) {
+        log << warn << "astroid: specifying no-auto-poll only makes sense when starting a new astroid instance, ignoring." << endl;
+      }
 
       if (domailto) {
         Glib::Variant<ustring> param = Glib::Variant<ustring>::create (mailtourl);
@@ -170,7 +183,7 @@ namespace Astroid {
     global_actions = new GlobalActions ();
 
     /* set up poller */
-    poll = new Poll ();
+    poll = new Poll (!no_auto_poll);
 
     if (domailto) {
       MainWindow * mw = open_new_window (false);
@@ -199,7 +212,7 @@ namespace Astroid {
     global_actions = new GlobalActions ();
 
     /* set up poller */
-    poll = new Poll ();
+    poll = new Poll (false);
   }
 
   Astroid::~Astroid () {

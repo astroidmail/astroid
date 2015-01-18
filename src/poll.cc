@@ -17,13 +17,13 @@ using namespace std;
 using namespace boost::filesystem;
 
 namespace Astroid {
-  Poll::Poll () {
+  Poll::Poll (bool auto_polling_enabled) {
     log << info << "poll: setting up." << endl;
 
     poll_interval = astroid->config->config.get<int> ("poll.interval");
     log << debug << "poll: interval: " << poll_interval << endl;
 
-    if (poll_interval > 0) {
+    if (auto_polling_enabled && poll_interval > 0) {
 
       Glib::signal_timeout ().connect (
           sigc::mem_fun (this, &Poll::periodic_polling), poll_interval * 1000);
