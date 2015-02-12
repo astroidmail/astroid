@@ -95,8 +95,8 @@ namespace Astroid {
     }
 
     /* connect channels */
-    Glib::signal_io().connect (sigc::mem_fun (this, &Poll::log_out), stdout, Glib::IO_IN);
-    Glib::signal_io().connect (sigc::mem_fun (this, &Poll::log_err), stderr, Glib::IO_IN);
+    Glib::signal_io().connect (sigc::mem_fun (this, &Poll::log_out), stdout, Glib::IO_IN | Glib::IO_HUP);
+    Glib::signal_io().connect (sigc::mem_fun (this, &Poll::log_err), stderr, Glib::IO_IN | Glib::IO_HUP);
     Glib::signal_child_watch().connect (sigc::mem_fun (this, &Poll::child_watch), pid);
 
     ch_stdout = Glib::IOChannel::create_from_fd (stdout);
@@ -104,10 +104,14 @@ namespace Astroid {
   }
 
   bool Poll::log_out (Glib::IOCondition cond) {
-    if ((cond & Glib::IO_IN) == 0) {
-      log << error << "Invalid fifo response" << endl;
+    if (cond == Glib::IO_HUP) {
+      ch_stdout.clear();
+      return false;
     }
-    else {
+
+    if ((cond & Glib::IO_IN) == 0) {
+      log << error << "poll: invalid fifo response" << endl;
+    } else {
       Glib::ustring buf;
 
       ch_stdout->read_line(buf);
@@ -120,16 +124,20 @@ namespace Astroid {
   }
 
   bool Poll::log_err (Glib::IOCondition cond) {
-    if ((cond & Glib::IO_IN) == 0) {
-      log << error << "Invalid fifo response" << endl;
+    if (cond == Glib::IO_HUP) {
+      ch_stderr.clear();
+      return false;
     }
-    else {
+
+    if ((cond & Glib::IO_IN) == 0) {
+      log << error << "poll: invalid fifo response" << endl;
+    } else {
       Glib::ustring buf;
 
       ch_stderr->read_line(buf);
       buf.erase (--buf.end());
 
-      log << error << buf << endl;
+      log << warn << buf << endl;
     }
     return true;
   }
@@ -146,6 +154,9 @@ namespace Astroid {
     // - use lastmod to figure out how many messages have been added or changed
     //   during poll.
     log << info << "poll: done (time: " << elapsed.count() << " s) (child status: " << child_status << ")" << endl;
+
+    /* close process */
+    Glib::spawn_close_pid (pid);
 
     astroid->global_actions->signal_refreshed_dispatcher ();
 
