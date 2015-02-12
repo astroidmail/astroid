@@ -62,7 +62,7 @@ namespace Astroid {
   }
 
   void Poll::do_poll () {
-    chrono::time_point<chrono::steady_clock> t0 = chrono::steady_clock::now ();
+    t0 = chrono::steady_clock::now ();
 
     path poll_script_uri = astroid->config->config_dir / path(poll_script);
 
@@ -76,50 +76,78 @@ namespace Astroid {
     }
 
     vector<string> args = {poll_script_uri.c_str()};
-    string stdout;
-    string stderr;
-    int    exitcode;
     try {
-      Glib::spawn_sync ("",
+      Glib::spawn_async_with_pipes ("",
                         args,
-                        Glib::SPAWN_DEFAULT,
+                        Glib::SPAWN_DO_NOT_REAP_CHILD,
                         sigc::slot <void> (),
+                        &pid,
+                        &stdin,
                         &stdout,
-                        &stderr,
-                        &exitcode
+                        &stderr
                         );
     } catch (Glib::SpawnError &ex) {
       log << error << "poll: exception while running poll script: " <<  ex.what () << endl;
     }
 
-    ustring ustdout = ustring(stdout);
-    for (ustring &l : VectorUtils::split_and_trim (ustdout, ustring("\n"))) {
+    /* connect channels */
+    Glib::signal_io().connect (sigc::mem_fun (this, &Poll::log_out), stdout, Glib::IO_IN);
+    Glib::signal_io().connect (sigc::mem_fun (this, &Poll::log_err), stderr, Glib::IO_IN);
+    Glib::signal_child_watch().connect (sigc::mem_fun (this, &Poll::child_watch), pid);
 
-      log << debug << l << endl;
+    ch_stdout = Glib::IOChannel::create_from_fd (stdout);
+    ch_stderr = Glib::IOChannel::create_from_fd (stderr);
+  }
+
+  bool Poll::log_out (Glib::IOCondition cond) {
+    if ((cond & Glib::IO_IN) == 0) {
+      log << error << "Invalid fifo response" << endl;
     }
+    else {
+      Glib::ustring buf;
 
-    ustring ustderr = ustring(stderr);
-    for (ustring &l : VectorUtils::split_and_trim (ustderr, ustring("\n"))) {
+      ch_stdout->read_line(buf);
+      buf.erase (--buf.end());
 
-      log << debug << l << endl;
-    }
-
-    if (exitcode != 0) {
-      log << error << "poll: poll script exited with code: " << exitcode << endl;
+      log << debug << buf << endl;
 
     }
+    return true;
+  }
 
+  bool Poll::log_err (Glib::IOCondition cond) {
+    if ((cond & Glib::IO_IN) == 0) {
+      log << error << "Invalid fifo response" << endl;
+    }
+    else {
+      Glib::ustring buf;
+
+      ch_stderr->read_line(buf);
+      buf.erase (--buf.end());
+
+      log << error << buf << endl;
+    }
+    return true;
+  }
+
+  void Poll::child_watch (GPid pid, int child_status) {
     chrono::duration<double> elapsed = chrono::steady_clock::now() - t0;
+
+    /* close process */
+    Glib::spawn_close_pid (pid);
+
+    if (child_status != 0) {
+      log << error << "poll: poll script did not exit successfully." << endl;
+    }
 
     // TODO:
     // - use lastmod to figure out how many messages have been added or changed
     //   during poll.
-    log << info << "poll: done (time: " << elapsed.count() << " s)." << endl;
+    log << info << "poll: done (time: " << elapsed.count() << " s) (child status: " << child_status << ")" << endl;
 
     astroid->global_actions->signal_refreshed_dispatcher ();
 
     m_dopoll.unlock ();
   }
-
 }
 
