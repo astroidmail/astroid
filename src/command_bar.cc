@@ -367,7 +367,9 @@ namespace Astroid {
       if (pos > 0) newt += " "; // add space between ',' and tag if this is
                                 // not the first
       newt += completion;
-      newt += t.substr (pos+key.size()+((pos > 0) ? 1 : 0), t.size());
+
+      // add remainder of text field
+      newt += t.substr (pos+key.size() + ((pos > 0) ? 1 : 0), t.size());
 
       entry->set_text (newt);
       entry->set_position (pos + completion.size()+((pos > 0) ? 1 : 0));
@@ -444,7 +446,7 @@ namespace Astroid {
 
     out = c;
 
-    //log << debug << "cursor: " << cursor << ", outpos: " << outpos << ", in: " << in << ", o: " << c <<  endl;
+    // log << debug << "cursor: " << cursor << ", outpos: " << outpos << ", in: " << in << ", o: " << c <<  endl;
 
     return true;
   }
