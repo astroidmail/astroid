@@ -37,8 +37,12 @@ namespace Astroid {
   }
 
   bool Poll::periodic_polling () {
-    log << info << "poll: periodic poll.." << endl;
-    poll ();
+    chrono::duration<double> elapsed = chrono::steady_clock::now() - last_poll;
+
+    if (elapsed.count () >= poll_interval) {
+      log << info << "poll: periodic poll.." << endl;
+      poll ();
+    }
 
     return true;
   }
@@ -132,9 +136,7 @@ namespace Astroid {
 
   void Poll::child_watch (GPid pid, int child_status) {
     chrono::duration<double> elapsed = chrono::steady_clock::now() - t0;
-
-    /* close process */
-    Glib::spawn_close_pid (pid);
+    last_poll = chrono::steady_clock::now ();
 
     if (child_status != 0) {
       log << error << "poll: poll script did not exit successfully." << endl;

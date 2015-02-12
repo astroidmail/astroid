@@ -27,6 +27,7 @@ namespace Astroid {
       bool periodic_polling ();
 
       chrono::time_point<chrono::steady_clock> t0; // start time of poll
+      chrono::time_point<chrono::steady_clock> last_poll;
 
       int pid;
       int stdin;
