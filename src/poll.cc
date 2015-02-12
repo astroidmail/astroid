@@ -115,7 +115,7 @@ namespace Astroid {
       Glib::ustring buf;
 
       ch_stdout->read_line(buf);
-      buf.erase (--buf.end());
+      if (*(--buf.end()) == '\n') buf.erase (--buf.end());
 
       log << debug << "poll script: " << buf << endl;
 
@@ -135,7 +135,7 @@ namespace Astroid {
       Glib::ustring buf;
 
       ch_stderr->read_line(buf);
-      buf.erase (--buf.end());
+      if (*(--buf.end()) == '\n') buf.erase (--buf.end());
 
       log << warn << "poll script: " << buf << endl;
     }
