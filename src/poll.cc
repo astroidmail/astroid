@@ -117,7 +117,7 @@ namespace Astroid {
       ch_stdout->read_line(buf);
       buf.erase (--buf.end());
 
-      log << debug << buf << endl;
+      log << debug << "poll script: " << buf << endl;
 
     }
     return true;
@@ -137,7 +137,7 @@ namespace Astroid {
       ch_stderr->read_line(buf);
       buf.erase (--buf.end());
 
-      log << warn << buf << endl;
+      log << warn << "poll script: " << buf << endl;
     }
     return true;
   }
