@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=astroid
+Comment=Notmuch email client
+Exec=astroid %u
+Icon=mail-send-symbolic
+Terminal=false
+Type=Application
+Keywords=Email;E-mail;
+Categories=Network;Email;
+MimeType=x-scheme-handler/mailto;
