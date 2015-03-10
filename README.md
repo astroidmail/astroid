@@ -97,8 +97,9 @@ Report on the [github page](https://github.com/gauteh/astroid) or to the mailing
 [astroidmail+subscribe@googlegroups.com](mailto:astroidmail+subscribe@googlegroups.com).
 
 Contributions to Astroid in the form of patches, documentation and testing are
-very welcome. Information on how to work on astroid ([hacking]) and on how to
-[contribute](https://github.com/gauteh/astroid/wiki/Contributing), can be found in the wiki.
+very welcome. Information on how to
+[contribute](https://github.com/gauteh/astroid/wiki/Contributing) to astroid
+can be found in the wiki.
 
 Also check out #astroid or #notmuch on irc.freenode.net.
 
@@ -126,5 +127,4 @@ Also check out #astroid or #notmuch on irc.freenode.net.
 [glib]: https://developer.gnome.org/glib/
 [boost::property_tree]: http://www.boost.org/doc/libs/1_56_0/doc/html/property_tree.html
 [ner]: http://the-ner.org/
-[hacking]: https://github.com/gauteh/astroid/wiki/Hacking
 
