@@ -121,6 +121,7 @@ namespace Astroid {
           answer_yes_no (true);
           return true;
 
+        case GDK_KEY_Escape:
         case GDK_KEY_N:
         case GDK_KEY_n:
           answer_yes_no (false);
