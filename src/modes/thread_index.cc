@@ -65,7 +65,31 @@ namespace Astroid {
     threads = notmuch_query_search_threads (query);
     float diff = (clock () - start) * 1000.0 / CLOCKS_PER_SEC;
 
-    log  << "ti: query time: " << diff << " ms." << endl;
+    refresh_stats (db);
+    float diffstat = (clock () - start) * 1000.0 / CLOCKS_PER_SEC;
+
+    log << debug << "ti: query, total: " << total_messages << ", unread: " << unread_messages << endl;
+    log << debug << "ti: query time: " << diff << " ms (with stat: " << diffstat << " ms." << endl;
+
+  }
+
+  void ThreadIndex::refresh_stats (Db * dbs) {
+    /* stats */
+    log << debug << "ti: refresh stats." << endl;
+    notmuch_query_t * query_t =  notmuch_query_create (dbs->nm_db, query_string.c_str ());
+    notmuch_query_add_tag_exclude (query_t, dbs->muted.c_str());
+    notmuch_query_set_omit_excluded (query_t, NOTMUCH_EXCLUDE_TRUE);
+    total_messages = notmuch_query_count_messages (query_t); // destructive
+    notmuch_query_destroy (query_t);
+
+    ustring unread_q_s = "(" + query_string + ") AND tag:unread";
+    notmuch_query_t * unread_q = notmuch_query_create (dbs->nm_db, unread_q_s.c_str());
+    notmuch_query_add_tag_exclude (unread_q, dbs->muted.c_str());
+    notmuch_query_set_omit_excluded (unread_q, NOTMUCH_EXCLUDE_TRUE);
+    unread_messages = notmuch_query_count_messages (unread_q); // destructive
+    notmuch_query_destroy (unread_q);
+
+    set_label (ustring::compose ("%1 (%2/%3)", query_string, unread_messages, total_messages));
   }
 
   void ThreadIndex::close_query () {

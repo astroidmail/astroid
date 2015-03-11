@@ -21,6 +21,9 @@ namespace Astroid {
       ThreadIndex (MainWindow *, ustring);
       ~ThreadIndex ();
 
+      int total_messages;
+      int unread_messages;
+
       int thread_load_step    = 150;
       int current_thread      = 0;
 
@@ -28,6 +31,7 @@ namespace Astroid {
       void refresh (bool, int, bool);
       void setup_query ();
       void close_query ();
+      void refresh_stats (Db *);
       int reopen_tries = 0;
 
       void open_thread (refptr<NotmuchThread>, bool);

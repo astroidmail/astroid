@@ -610,6 +610,8 @@ namespace Astroid {
         }
       }
     }
+
+    thread_index->refresh_stats (db);
   }
 
   /*
