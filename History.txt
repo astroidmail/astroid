@@ -1,3 +1,10 @@
+==
+
+* Show number of messages in tab title
+* Escape means no
+* Poll-script output is logged incrementally
+* Got a desktop file!
+
 == v0.2 / 2015-01-18
 
 * Allow math to be rendered with MathJax! Enclose math with $ or $$,
