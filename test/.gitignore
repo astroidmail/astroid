@@ -7,6 +7,7 @@ test_suite
 test_composed
 test_generic
 test_convert_error
+test_no_newline_msg
 test_non_existant_file
 test_open_db
 

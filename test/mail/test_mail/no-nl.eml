@@ -1,0 +1,32 @@
+Delivery-date: Mon, 27 Oct 2014 06:15:16 +0100
+From: tst@asfdasas.sdf 
+To: test@gadsdfa.sdf 
+Message-Id: <asdfasdf@sas.asdf.asd>
+Date: Mon, 27 Oct 2014 06:15:13 +0100
+Mime-Version: 1.0
+Content-Type: multipart/alternative;
+ boundary="--==_mimepart_540ffd23a9176_53cd3ffb4d3fb2bc2852c3";
+ charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Precedence: list
+
+
+----==_mimepart_540ffd23a9176_53cd3ffb4d3fb2bc2852c3
+Content-Type: text/plain;
+ charset=UTF-8
+Content-Transfer-Encoding: 7bit
+
+messagecontent.
+
+---
+Reply to this email directly or view it on GitHub:
+line-ignored
+----==_mimepart_540ffd23a9176_53cd3ffb4d3fb2bc2852c3
+Content-Type: text/html;
+ charset=UTF-8
+Content-Transfer-Encoding: 7bit
+
+<p>messagecontent</p>
+
+<p style="font-size:small;-webkit-text-size-adjust:none;color:#666;">&mdash;<br>Reply to this email directly or <a href="https://github.com/sup-heliotrope/sup/issues/326#issuecomment-55080027">view it on GitHub</a>.<img alt="" height="1" src="https://github.com/notifications/beacon/56827__eyJzY29wZSI6Ik5ld3NpZXM6QmVhY29uIiwiZXhwaXJlcyI6MTcyNTk1MzE4NywiZGF0YSI6eyJpZCI6NDIwNDY3OTZ9fQ==--81335445e04e60c40309a26418c095a0a3c8c1e8.gif" width="1" /></p>
+----==_mimepart_540ffd23a9176_53cd3ffb4d3fb2bc2852c3--

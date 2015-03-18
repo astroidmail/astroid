@@ -41,4 +41,7 @@ testEnv.addUnitTest ('test_open_db', ['test_open_db.cc', source_objs])
 
 testEnv.addUnitTest ('test_convert_error', ['test_convert_error.cc', source_objs])
 
+testEnv.addUnitTest ('test_no_newline_msg', ['test_no_newline_msg.cc', source_objs])
+
+
 # all the tests added above are automatically added to the 'test' alias
