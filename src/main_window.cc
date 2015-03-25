@@ -71,10 +71,10 @@ namespace Astroid {
 
   void MainWindow::set_title (ustring t) {
 
-    ustring tt = "Astroid - " GIT_DESC;
+    ustring tt = "Astroid (" GIT_DESC ")";
 
     if (t.size() > 0) {
-      tt += " - " + t;
+      tt = t + " - " + tt;
     }
 
     Gtk::Window::set_title (tt);
