@@ -280,7 +280,7 @@ namespace Astroid {
     }
   }
 
-  void MainWindow::on_my_switch_page (Gtk::Widget * /* w */ , guint no) {
+  void MainWindow::on_my_switch_page (Gtk::Widget * /* w */, guint no) {
     grab_active (no);
   }
 
