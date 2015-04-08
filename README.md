@@ -3,7 +3,9 @@
   A graphical threads-with-tags mail user agent based on [sup] and [notmuch].
   Written in C++ using GTK+, [WebKit] and [gmime].
 
-  Screenshots can be found on [this project page](http://gaute.vetsj.com/pages/astroid.html).
+  <a href="http://gaute.vetsj.com/pages/astroid.html">
+    <img src="https://raw.githubusercontent.com/gauteh/astroid/master/doc/astroid-full-window.png">
+  </a>
 
 ## design and user interface goals
 * (keyboard)    fully operatable by keyboard only - but accept mouse clicks
