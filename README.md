@@ -1,7 +1,7 @@
 # astroid mua
 
   A graphical threads-with-tags mail user agent based on [sup] and [notmuch].
-  Written in C++ using GTK+, [WebKit] and [gmime].
+  Written in C++ using [GTK+], [WebKit] and [gmime].
 
   <a href="http://gaute.vetsj.com/pages/astroid.html">
     <img src="https://raw.githubusercontent.com/gauteh/astroid/master/doc/astroid-full-window.png">
@@ -52,7 +52,7 @@
 astroid uses [scons] for building, also you might need [git] for the build
 process to work properly. Both should be available in most distributions.
 
-A fairly recent version of [gtk+] and [glib] with their
+A fairly recent version of [GTK+] and [glib] with their
 [C++ bindings](http://www.gtkmm.org/en/) are also required, along with
 [boost], [gmime] and a compiler that supports [C++11]. Of course, the
 [notmuch] libraries are also required.
@@ -125,7 +125,7 @@ Also check out #astroid or #notmuch on irc.freenode.net.
 [git]: http://git-scm.com/
 [C++11]: http://en.wikipedia.org/wiki/C%2B%2B11
 [boost]: http://www.boost.org/
-[gtk+]: http://www.gtk.org/
+[GTK+]: http://www.gtk.org/
 [glib]: https://developer.gnome.org/glib/
 [boost::property_tree]: http://www.boost.org/doc/libs/1_56_0/doc/html/property_tree.html
 [ner]: http://the-ner.org/
