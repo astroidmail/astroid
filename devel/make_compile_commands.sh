@@ -7,5 +7,5 @@
 # run from root source directory.
 
 scons -c
-bear -- scons --verbose
+bear scons --verbose
 
