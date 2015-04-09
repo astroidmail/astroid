@@ -31,6 +31,15 @@ if debug == None:
 
 print "debug flag enabled: " + str(debug)
 
+if 'clean_test' in COMMAND_LINE_TARGETS:
+  print "cleaning out tests.."
+  for fn in os.listdir('./test/'):
+    if '.passed' in fn:
+      print "delting: " + fn
+      os.remove (os.path.join ('./test', fn))
+
+  exit ()
+
 # Verbose / Non-verbose output{{{
 colors = {}
 colors['cyan']   = '\033[96m'
