@@ -4,6 +4,7 @@
 * Escape means no
 * Poll-script output is logged incrementally
 * Got a desktop file!
+* Different color of font and border of the first levels of quotes
 
 == v0.2 / 2015-01-18
 
