@@ -148,7 +148,7 @@ namespace Astroid {
   Date::CoarseDate Date::coarse_date (struct tm t, struct tm now, time_t diff) {
 
     if (same_day (t, now)) {
-      if (diff < 60) {
+      if ((diff >= 0) && (diff < 60)) {
         return CoarseDate::NOW;
       }
 
