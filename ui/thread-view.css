@@ -657,10 +657,64 @@ blockquote > blockquote > blockquote {
 }
 
 blockquote > blockquote > blockquote > blockquote {
+    border-left: #5555EE solid 0.2em;
+    color: #5555ee;
+}
+
+blockquote > blockquote > blockquote > blockquote > blockquote {
     border-left: #425c78 solid 0.2em;
     color: #425c78;
 }
 
+blockquote > blockquote > blockquote > blockquote > blockquote > blockquote {
+    border-left: #729fcf solid 0.2em;
+    color: #729fcf;
+}
+
+blockquote > blockquote > blockquote > blockquote > blockquote > blockquote > blockquote {
+    border-left: #5555EE solid 0.2em;
+    color: #5555ee;
+}
+
+blockquote > blockquote > blockquote > blockquote > blockquote > blockquote > blockquote > blockquote {
+    border-left: #425c78 solid 0.2em;
+    color: #425c78;
+}
+
+blockquote > blockquote > blockquote > blockquote > blockquote > blockquote > blockquote > blockquote > blockquote {
+    border-left: #729fcf solid 0.2em;
+    color: #729fcf;
+}
+
+blockquote > blockquote > blockquote > blockquote > blockquote > blockquote > blockquote > blockquote > blockquote > blockquote {
+    border-left: #5555EE solid 0.2em;
+    color: #5555ee;
+}
+
+blockquote > blockquote > blockquote > blockquote > blockquote > blockquote > blockquote > blockquote > blockquote > blockquote > blockquote {
+    border-left: #425c78 solid 0.2em;
+    color: #425c78;
+}
+
+blockquote > blockquote > blockquote > blockquote > blockquote > blockquote > blockquote > blockquote > blockquote > blockquote > blockquote > blockquote {
+    border-left: #729fcf solid 0.2em;
+    color: #729fcf;
+}
+
+blockquote > blockquote > blockquote > blockquote > blockquote > blockquote > blockquote > blockquote > blockquote > blockquote > blockquote > blockquote > blockquote {
+    border-left: #5555EE solid 0.2em;
+    color: #5555ee;
+}
+
+blockquote > blockquote > blockquote > blockquote > blockquote > blockquote > blockquote > blockquote > blockquote > blockquote > blockquote > blockquote > blockquote > blockquote {
+    border-left: #425c78 solid 0.2em;
+    color: #425c78;
+}
+
+blockquote > blockquote > blockquote > blockquote > blockquote > blockquote > blockquote > blockquote > blockquote > blockquote > blockquote > blockquote > blockquote > blockquote > blockquote {
+    border-left: #729fcf solid 0.2em;
+    color: #729fcf;
+}
 
 .search_coloring *::selection {
     background-color: #00ddff;
