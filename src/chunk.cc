@@ -11,7 +11,6 @@
 
 # include "astroid.hh"
 # include "chunk.hh"
-# include "gmime_iostream.hh"
 # include "log.hh"
 # include "utils/ustring_utils.hh"
 # include "utils/vector_utils.hh"
@@ -263,11 +262,18 @@ namespace Astroid {
     }
 
     if (content_stream != NULL) {
-      GMimeIOStream io_stream (content_stream);
+      char buffer[4097];
+      ssize_t n;
+      stringstream sstr;
+
+      while ((n = g_mime_stream_read (content_stream, buffer, 4096), n) > 0)
+      {
+        buffer[n] = 0;
+        sstr << buffer;
+      }
+
       g_object_unref (content_stream);
 
-      stringstream sstr;
-      sstr << io_stream.rdbuf();
       ustring b;
       try {
         b = sstr.str();
