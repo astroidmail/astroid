@@ -24,6 +24,7 @@ namespace Astroid {
     info,
     warn,
     error,
+    test,
   };
 
   struct LogLine {

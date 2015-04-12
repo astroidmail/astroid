@@ -92,6 +92,7 @@ namespace Astroid {
       case info:  return "info ";
       case warn:  return "warn ";
       case error: return "error";
+      case test:  return "TEST ";
       default:    return "unknown error level!";
     }
   }
