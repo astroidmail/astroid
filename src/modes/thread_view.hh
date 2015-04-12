@@ -65,7 +65,7 @@ namespace Astroid {
       bool    enable_mathjax;
       ustring mathjax_uri_prefix;
       vector<ustring> mathjax_only_tags;
-      ustring home_uri;
+      ustring home_uri;           // relative url for requests
       bool    math_is_on = false; // for this thread
 
       bool    enable_code_prettify;

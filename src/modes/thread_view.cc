@@ -642,7 +642,13 @@ namespace Astroid {
     if (container) g_object_unref (container);
     container = NULL;
     wk_loaded = false;
-    home_uri = astroid->config->config_dir.c_str() + UstringUtils::random_alphanumeric (5);
+
+    /* home uri used for thread view - request will be relative this
+     * non-existant (hopefully) directory. */
+    home_uri = ustring::compose ("%1/%2",
+        astroid->config->config_dir.c_str(),
+        UstringUtils::random_alphanumeric (120));
+
     webkit_web_view_load_html_string (webview, thread_view_html.c_str (), home_uri.c_str());
     ready     = false;
   }
