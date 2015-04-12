@@ -1,6 +1,7 @@
 # pragma once
 
 # include "astroid.hh"
+# include "log.hh"
 
 using namespace Astroid;
 

@@ -235,9 +235,10 @@ namespace Astroid {
     }
     tmpfile << "Subject: " << subject << endl;
     tmpfile << endl;
-    tmpfile << body;
+    tmpfile << body.raw();
 
     tmpfile.close ();
+    log << debug << "em: prepare message done." << endl;
   }
 
   EditMessage::~EditMessage () {

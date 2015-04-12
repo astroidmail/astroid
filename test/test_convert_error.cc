@@ -56,5 +56,56 @@ BOOST_AUTO_TEST_SUITE(Reading)
     teardown ();
   }
 
+  BOOST_AUTO_TEST_CASE(reply_convert_error)
+  {
+    setup ();
+
+    ustring fname = "test/mail/test_mail/bad-convert-error.eml";
+
+    Message msg (fname);
+    /* quote original message */
+    ostringstream quoted;
+
+    ustring quoting_a = ustring::compose ("Excerpts from %1's message of %2:",
+        Address(msg.sender.raw()).fail_safe_name(), msg.pretty_verbose_date());
+
+    quoted  << quoting_a.raw ()
+            << endl;
+
+    string vt = msg.viewable_text(false);
+    stringstream sstr (vt);
+    while (sstr.good()) {
+      string line;
+      getline (sstr, line);
+      quoted << ">";
+
+      if (line[0] != '>')
+        quoted << " ";
+
+      quoted << line << endl;
+    }
+
+    ustring body = ustring(quoted.str());
+
+
+    /* test writing out */
+    string name = tmpnam (NULL);
+    Astroid::log << test << "writing to tmp file " << name << endl;
+    fstream tmpfile (name, fstream::out);
+
+    tmpfile << "From: test@test.no" << endl;
+
+    //BOOST_CHECK_THROW ( (tmpfile << body) , std::exception);
+    BOOST_CHECK_NO_THROW ( tmpfile << body.raw() );
+
+    tmpfile << endl;
+    tmpfile.close ();
+
+    Astroid::log << test << "removing tmp file" << endl;
+    remove (name);
+
+    teardown ();
+  }
+
 BOOST_AUTO_TEST_SUITE_END()
 
