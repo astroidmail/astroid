@@ -32,7 +32,7 @@ namespace Astroid {
   int EditMessage::edit_id = 0;
 
   EditMessage::EditMessage (MainWindow * mw, ustring _to) :
-    EditMessage (mw) {
+    EditMessage (mw) { // {{{
 
     to = _to;
 
@@ -205,8 +205,21 @@ namespace Astroid {
         sigc::mem_fun (this, &EditMessage::on_from_combo_changed));
 
     start_vim_on_socket_ready = true;
+  } // }}}
+
+  EditMessage::~EditMessage () {
+    log << debug << "em: deconstruct." << endl;
+
+    if (vim_started) {
+      vim_remote_keys ("<ESC>:quit!<CR>");
+    }
+
+    if (is_regular_file (tmpfile_path)) {
+      boost::filesystem::remove (tmpfile_path);
+    }
   }
 
+  /* edit / read message cycling {{{ */
   void EditMessage::on_from_combo_changed () {
     prepare_message ();
     read_edited_message ();
@@ -240,52 +253,6 @@ namespace Astroid {
     tmpfile.close ();
     log << debug << "em: prepare message done." << endl;
   }
-
-  EditMessage::~EditMessage () {
-    log << debug << "em: deconstruct." << endl;
-
-    if (vim_started) {
-      vim_remote_keys ("<ESC>:quit!<CR>");
-    }
-
-    if (is_regular_file (tmpfile_path)) {
-      boost::filesystem::remove (tmpfile_path);
-    }
-  }
-
-  void EditMessage::socket_realized ()
-  {
-    log << debug << "em: socket realized." << endl;
-    socket_ready = true;
-
-    if (start_vim_on_socket_ready) {
-      editor_toggle (true);
-      activate_field (Editor);
-      start_vim_on_socket_ready = false;
-    }
-  }
-
-  void EditMessage::plug_added () {
-    log << debug << "em: gvim connected" << endl;
-
-    vim_ready = true;
-
-    if (current_field == Editor) {
-      activate_field (Editor);
-    }
-  }
-
-  bool EditMessage::plug_removed () {
-    log << debug << "em: gvim disconnected" << endl;
-    vim_ready   = false;
-    vim_started = false;
-    editor_toggle (false);
-
-    activate_field (Thread);
-
-    return true;
-  }
-
 
   void EditMessage::set_from (Address a) {
     if (!accounts->is_me (a)) {
@@ -333,6 +300,44 @@ namespace Astroid {
     unlink (tmpf.c_str());
   }
 
+  /* }}} */
+
+  /* VIM plugin {{{ */
+  void EditMessage::socket_realized ()
+  {
+    log << debug << "em: socket realized." << endl;
+    socket_ready = true;
+
+    if (start_vim_on_socket_ready) {
+      editor_toggle (true);
+      activate_field (Editor);
+      start_vim_on_socket_ready = false;
+    }
+  }
+
+  void EditMessage::plug_added () {
+    log << debug << "em: gvim connected" << endl;
+
+    vim_ready = true;
+
+    if (current_field == Editor) {
+      activate_field (Editor);
+    }
+  }
+
+  bool EditMessage::plug_removed () {
+    log << debug << "em: gvim disconnected" << endl;
+    vim_ready   = false;
+    vim_started = false;
+    editor_toggle (false);
+
+    activate_field (Thread);
+
+    return true;
+  }
+
+  /* }}} */
+
   void EditMessage::on_tv_ready () {
     log << debug << "em: got tv ready." << endl;
 
@@ -347,6 +352,7 @@ namespace Astroid {
       thread_view->hide_info (thread_view->focused_message);
   }
 
+  /* swapping between edit and read mode {{{ */
   void EditMessage::fields_hide () {
     fields_revealer->set_reveal_child (false);
   }
@@ -420,8 +426,6 @@ namespace Astroid {
 
     current_field = f;
 
-    reset_fields ();
-
     if (f == Editor) {
       // Gtk::IconSize isize  (Gtk::BuiltinIconSize::ICON_SIZE_BUTTON);
 
@@ -469,15 +473,9 @@ namespace Astroid {
     }
   }
 
-  void EditMessage::reset_fields () {
-    if (current_field == Editor) {
+  /* }}} */
 
-
-    } else {
-
-    }
-  }
-
+  /* keybindings {{{ */
   bool EditMessage::on_key_press_event (GdkEventKey * event) {
     log << debug << "em: got key press" << endl;
 
@@ -585,6 +583,26 @@ namespace Astroid {
     return tv;
   }
 
+  void EditMessage::on_element_action (int id, char action) {
+
+    if (sending_in_progress.load ()) return;
+
+    if (action == 'd') {
+      /* delete attachment */
+      log << info << "em: remove attachment: " << id << endl;
+
+      /* TODO: this will not always correspond to the attachment number! */
+      attachments.erase (attachments.begin() + (id-1));
+
+      prepare_message ();
+      read_edited_message ();
+
+    }
+  }
+
+  /* }}} */
+
+  /* send message {{{ */
   bool EditMessage::check_fields () {
     /* TODO: check fields.. */
     return true;
@@ -687,22 +705,9 @@ namespace Astroid {
     return c;
   }
 
-  void EditMessage::on_element_action (int id, char action) {
+  /* }}} */
 
-    if (sending_in_progress.load ()) return;
-
-    if (action == 'd') {
-      /* delete attachment */
-      log << info << "em: remove attachment: " << id << endl;
-
-      /* TODO: this will not always correspond to the attachment number! */
-      attachments.erase (attachments.begin() + (id-1));
-
-      prepare_message ();
-      read_edited_message ();
-
-    }
-  }
+  /* VIM control {{{ */
 
   void EditMessage::vim_remote_keys (ustring keys) {
     ustring cmd = ustring::compose ("%1 --servername %2 --remote-send %3", gvim_cmd, vim_server, keys);
@@ -778,6 +783,8 @@ namespace Astroid {
 
     tmpfile.close ();
   }
+
+  /* }}} */
 
   void EditMessage::attach_file () {
     log << info << "em: attach file.." << endl;

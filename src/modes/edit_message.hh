@@ -142,7 +142,6 @@ namespace Astroid {
       void vim_remote_keys (ustring);
       void vim_remote_files (ustring);
 
-      void reset_fields ();
       void reset_entry (Gtk::Entry *);
 
       /* gvim config */
