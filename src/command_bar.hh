@@ -24,7 +24,7 @@ namespace Astroid {
     public:
       enum CommandMode {
         Search = 0,
-        Generic,
+        //Generic,
         Tag,        /* apply or remove tags */
       };
 
@@ -45,7 +45,7 @@ namespace Astroid {
       void enable_command (CommandMode, ustring, function<void(ustring)>);
       void disable_command ();
 
-      void handle_command (ustring);
+      //void handle_command (ustring);
 
       ustring get_text ();
       void set_text (ustring);

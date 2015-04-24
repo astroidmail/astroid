@@ -148,9 +148,11 @@ namespace Astroid {
         return true;
 
       /* command */
+      /*
       case GDK_KEY_colon:
         enable_command (CommandBar::CommandMode::Generic, "", NULL);
         return true;
+      */
 
       /* help */
       case GDK_KEY_question:

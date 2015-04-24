@@ -74,11 +74,13 @@ namespace Astroid {
         }
         break;
 
+      /*
       case CommandMode::Generic:
         {
           handle_command (cmd);
         }
         break;
+      */
 
       case CommandMode::Tag:
         {
@@ -106,6 +108,7 @@ namespace Astroid {
         }
         break;
 
+      /*
       case CommandMode::Generic:
         {
           mode_label.set_text ("");
@@ -113,6 +116,7 @@ namespace Astroid {
           entry.set_text (cmd);
         }
         break;
+      */
 
       case CommandMode::Tag:
         {
@@ -152,6 +156,7 @@ namespace Astroid {
     current_completion = tag_completion;
   }
 
+  /*
   void CommandBar::handle_command (ustring cmd) {
     log << debug << "cb: command: " << cmd << endl;
 
@@ -180,6 +185,7 @@ namespace Astroid {
       log << error  << "cb: unknown command: " << cmd << endl;
     }
   }
+  */
 
   void CommandBar::disable_command () {
   }
