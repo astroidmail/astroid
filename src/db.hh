@@ -95,14 +95,13 @@ namespace Astroid {
       ptree config;
 
       vector<ustring> tags;
+      static vector<ustring> excluded_tags;
 
       void load_tags ();
       void test_query ();
 
       vector<ustring> sent_tags = { "sent" };
       void add_sent_message (ustring);
-
-      const ustring muted = "muted";
   };
 
   /* exceptions */

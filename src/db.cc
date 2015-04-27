@@ -22,6 +22,9 @@ using namespace std;
 using namespace boost::filesystem;
 
 namespace Astroid {
+
+  vector<ustring> Db::excluded_tags;
+
   Db::Db (DbMode mode) {
     config = astroid->config->config.get_child ("astroid.notmuch");
 
@@ -56,6 +59,11 @@ namespace Astroid {
 
     float diff = (clock () - start) * 1000.0 / CLOCKS_PER_SEC;
     log << info << "db: open time: " << diff << " ms." << endl;
+
+
+    ustring excluded_tags_s = config.get<string> ("excluded_tags");
+    excluded_tags = VectorUtils::split_and_trim (excluded_tags_s, ",");
+
   }
 
   void Db::reopen () {
@@ -280,7 +288,9 @@ namespace Astroid {
     log << debug << "db: checking if thread: " << thread_id << " matches query: " << query_in << endl;
 
     notmuch_query_t * query = notmuch_query_create (nm_db, query_s.c_str());
-    notmuch_query_add_tag_exclude (query, muted.c_str());
+    for (ustring &t : excluded_tags) {
+      notmuch_query_add_tag_exclude (query, t.c_str());
+    }
     notmuch_query_set_omit_excluded (query, NOTMUCH_EXCLUDE_TRUE);
 
     int c = notmuch_query_count_threads (query);

@@ -78,6 +78,7 @@ namespace Astroid {
   void Config::setup_default_config (bool initial) {
     default_config.put ("astroid.config.version", CONFIG_VERSION);
     default_config.put ("astroid.notmuch.db", "~/.mail");
+    default_config.put ("astroid.notmuch.excluded_tags", "muted,spam,deleted");
 
     /* TODO: eventually these should be removed */
     default_config.put ("astroid.debug.dryrun_sending", true);
