@@ -28,6 +28,16 @@
   * All database operations / mail handling should be done by notmuch or other
     tools.
 
+## acquiring astroid
+
+get astroid from:
+
+` $ git clone https://github.com/gauteh/astroid.git `
+
+[Instructions](#installation-and-usage) on how to [build](#compiling), [configure](#configuration) and [run astroid](#running-and-usage) can be found in this README. Once you get astroid running, press '?' to get a list of key bindings.
+
+  [Distribution specific instructions](https://github.com/gauteh/astroid/wiki) can be found in the wiki.
+
 ## licence and attribution
 
   GNU [GPL] v3 or later:
