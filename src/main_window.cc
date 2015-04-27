@@ -211,7 +211,7 @@ namespace Astroid {
       { "z", "Show log window" },
       { "?", "Show help" },
       { "O", "Open new main window" },
-      { ":", "Command" },
+      /* { ":", "Command" }, */
       { "b,B", "Page through modes" },
       { "x", "Close mode (or window if other windows are open)" },
       { "q,Q", "Quit astroid" },
