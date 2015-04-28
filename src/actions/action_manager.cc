@@ -4,7 +4,6 @@
 
 # include "astroid.hh"
 # include "action_manager.hh"
-# include "main_window.hh"
 # include "action.hh"
 # include "db.hh"
 # include "log.hh"

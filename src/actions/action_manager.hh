@@ -15,8 +15,6 @@ namespace Astroid {
     public:
       ActionManager ();
 
-      MainWindow * main_window;
-
       vector<refptr<Action>> actions;
 
       bool doit (Db *, refptr<Action>);
