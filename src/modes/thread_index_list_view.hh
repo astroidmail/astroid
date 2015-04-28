@@ -6,6 +6,7 @@
 
 # include "proto.hh"
 # include "config.hh"
+# include "mode.hh"
 
 using namespace std;
 

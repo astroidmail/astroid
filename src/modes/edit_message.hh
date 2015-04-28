@@ -157,7 +157,7 @@ namespace Astroid {
       bool message_sent = false;
       void lock_message_after_send ();
 
-      virtual ModeHelpInfo * key_help ();
+      virtual ModeHelpInfo * key_help () override;
 
     private:
       void on_from_combo_changed ();

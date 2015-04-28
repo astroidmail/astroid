@@ -35,7 +35,7 @@ namespace Astroid {
       ReplyModeColumns reply_columns;
       refptr<Gtk::ListStore> reply_store;
 
-      virtual ModeHelpInfo * key_help ();
+      virtual ModeHelpInfo * key_help () override;
 
     private:
       void load_receivers ();
