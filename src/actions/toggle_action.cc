@@ -23,26 +23,10 @@ namespace Astroid {
   }
 
   SpamAction::SpamAction (refptr<NotmuchThread> nmt)
-    : TagAction (nmt) {
-      if (find (nmt->tags.begin(), nmt->tags.end(), spam) != nmt->tags.end())
-      {
-        remove.push_back (spam);
-      } else {
-        add.push_back (spam);
-        if (find (nmt->tags.begin(), nmt->tags.end(), inbox) != nmt->tags.end())
-        {
-          remove.push_back (inbox);
-        }
-      }
+    : ToggleAction (nmt, "spam") {
     }
 
   MuteAction::MuteAction (refptr<NotmuchThread> nmt)
-    : TagAction (nmt) {
-      if (find (nmt->tags.begin(), nmt->tags.end(), muted) != nmt->tags.end())
-      {
-        remove.push_back (muted);
-      } else {
-        add.push_back (muted);
-      }
+    : ToggleAction (nmt, "muted") {
     }
 }

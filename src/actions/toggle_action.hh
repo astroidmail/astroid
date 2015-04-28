@@ -11,16 +11,13 @@ namespace Astroid {
       ToggleAction (refptr<NotmuchThread>, ustring);
   };
 
-  class SpamAction : public TagAction {
+  class SpamAction : public ToggleAction {
     public:
-      const ustring spam  = "spam";
-      const ustring inbox = "inbox";
       SpamAction (refptr<NotmuchThread>);
   };
 
-  class MuteAction : public TagAction {
+  class MuteAction : public ToggleAction {
     public:
-      const ustring muted = "muted";
       MuteAction (refptr<NotmuchThread>);
   };
 
