@@ -169,7 +169,8 @@ if not conf.CheckLib ('boost_program_options', language = 'c++'):
 libs   = ['notmuch',
           'boost_filesystem',
           'boost_system',
-          'boost_program_options',]
+          'boost_program_options',
+          'stdc++']
 
 env.AppendUnique (LIBS = libs)
 env.AppendUnique (CPPFLAGS = ['-Wall', '-std=c++11', '-pthread'] )
