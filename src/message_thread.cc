@@ -166,8 +166,9 @@ namespace Astroid {
   ustring Message::viewable_text (bool html) {
     /* build message body:
      * html:      output html (using gmimes html filter)
+     *
+     * TODO: we're still returning html from html-only emails when bool html = false.
      */
-    refptr<Chunk> c = root;
     ustring body;
 
     function< void (refptr<Chunk>) > app_body =
@@ -204,7 +205,7 @@ namespace Astroid {
       }
     };
 
-    app_body (c);
+    app_body (root);
 
     return body;
   }
@@ -214,42 +215,18 @@ namespace Astroid {
 
     vector<refptr<Chunk>> attachments;
 
-    refptr<Chunk> c = root;
-
     function< void (refptr<Chunk>) > app_attachment =
       [&] (refptr<Chunk> c)
     {
-      /* check if we're the preferred sibling */
-      bool use = false;
+      if (c->attachment)
+        attachments.push_back (c);
 
-      if (c->siblings.size() >= 1) {
-        if (c->preferred) {
-          use = true;
-        } else {
-          /* check if there are any other preferred */
-          if (all_of (c->siblings.begin (),
-                      c->siblings.end (),
-                      [](refptr<Chunk> c) { return (!c->preferred); })) {
-            use = true;
-          } else {
-            use = false;
-          }
-        }
-      } else {
-        use = true;
-      }
-
-      if (use) {
-        if (c->attachment)
-          attachments.push_back (c);
-
-        for_each (c->kids.begin(),
-                  c->kids.end (),
-                  app_attachment);
-      }
+      for_each (c->kids.begin(),
+                c->kids.end (),
+                app_attachment);
     };
 
-    app_attachment (c);
+    app_attachment (root);
 
     return attachments;
   }
