@@ -8,6 +8,7 @@
 # include "account_manager.hh"
 # include "config.hh"
 # include "log.hh"
+# include "utils/ustring_utils.hh"
 
 using namespace std;
 using boost::property_tree::ptree;
@@ -56,19 +57,13 @@ namespace Astroid {
   }
 
   Account * AccountManager::get_account_for_address (ustring address) {
-    for (auto &a : accounts) {
-      if (a.full_address() == address) {
-        return &a;
-      }
-    }
-
-    log << error << "ac: error: could not figure out which account: " << address << " belongs to." << endl;
-    return NULL;
+    Address a = Address (address);
+    return get_account_for_address (a);
   }
 
   Account * AccountManager::get_account_for_address (Address address) {
     for (auto &a : accounts) {
-      if (a.full_address() == address.full_address()) {
+      if (a == address) {
         return &a;
       }
     }
@@ -79,7 +74,6 @@ namespace Astroid {
 
   AccountManager::~AccountManager () {
     log << info << "ac: deinitializing." << endl;
-
   }
 
   bool AccountManager::is_me (Address &a) {
@@ -98,7 +92,12 @@ namespace Astroid {
   }
 
   bool Account::operator== (Address &a) {
-    return (Address(name, email).email() == a.email());
+    ustring aa = Address (name, email).email ().lowercase ();
+    ustring bb = a.email ().lowercase ();
+    UstringUtils::trim (aa);
+    UstringUtils::trim (bb);
+
+    return (aa == bb);
   }
 }
 
