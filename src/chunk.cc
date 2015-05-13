@@ -138,6 +138,8 @@ namespace Astroid {
     } else if GMIME_IS_MESSAGE (mime_object) {
       log << debug << "chunk: mime message" << endl;
 
+      log << error << "chunk: mime message: not supported!" << endl;
+
     }
   }
 
