@@ -1,5 +1,7 @@
 ==
 
+* Poll script only updates changed threads when notmuch_get_rev.. is
+  available.
 * Show number of messages in tab title
 * Escape means no
 * Poll-script output is logged incrementally

@@ -120,9 +120,30 @@ def CheckPKG(context, name):
   context.Result( ret )
   return ret
 
+nm_db_get_revision_test_src = """
+# include <notmuch.h>
+
+int main (int argc, char ** argv)
+{
+  notmuch_database_t * nm_db;
+  const char * uuid;
+  notmuch_database_get_revision (nm_db, &uuid);
+
+  return 0;
+}
+"""
+
+# http://www.scons.org/doc/1.2.0/HTML/scons-user/x4076.html
+def check_notmuch_get_revision (ctx):
+  ctx.Message ("Checking for C function notmuch_database_get_revision()..")
+  result = ctx.TryCompile (nm_db_get_revision_test_src, '.cpp')
+  ctx.Result (result)
+  return result
 
 conf = Configure(env, custom_tests = { 'CheckPKGConfig' : CheckPKGConfig,
-                                       'CheckPKG' : CheckPKG })
+                                       'CheckPKG' : CheckPKG,
+                                       'CheckNotmuchGetRev' : check_notmuch_get_revision})
+
 
 if not conf.CheckPKGConfig('0.15.0'):
   print 'pkg-config >= 0.15.0 not found.'
@@ -147,6 +168,13 @@ if not conf.CheckPKG('webkitgtk-3.0'):
 if not conf.CheckLibWithHeader ('notmuch', 'notmuch.h', 'c'):
   print "notmuch does not seem to be installed."
   Exit (1)
+
+if conf.CheckNotmuchGetRev ():
+  have_get_rev = True
+  env.AppendUnique (CPPFLAGS = [ '-DHAVE_NOTMUCH_GET_REV' ])
+else:
+  have_get_rev = False
+  print "notmuch_database_get_revision() not available. notmuch with lastmod capabilities will result in smoother polls."
 
 # external libraries
 env.ParseConfig ('pkg-config --libs --cflags glibmm-2.4')

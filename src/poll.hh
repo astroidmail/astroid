@@ -29,6 +29,11 @@ namespace Astroid {
       chrono::time_point<chrono::steady_clock> t0; // start time of poll
       chrono::time_point<chrono::steady_clock> last_poll;
 
+# ifdef HAVE_NOTMUCH_GET_REV
+      unsigned long last_good_before_poll_revision = 0;
+      unsigned long before_poll_revision = 0;
+# endif
+
       int pid;
       int stdin;
       int stdout;

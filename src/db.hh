@@ -70,6 +70,10 @@ namespace Astroid {
 
       bool thread_in_query (ustring, ustring);
 
+# ifdef HAVE_NOTMUCH_GET_REV
+      unsigned long get_revision ();
+# endif
+
     private:
       enum DbState {
         READ_ONLY,

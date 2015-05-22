@@ -7,6 +7,7 @@
 
 # include "astroid.hh"
 # include "poll.hh"
+# include "db.hh"
 # include "log.hh"
 # include "config.hh"
 # include "actions/action_manager.hh"
@@ -71,6 +72,12 @@ namespace Astroid {
     path poll_script_uri = astroid->config->config_dir / path(poll_script);
 
     log << info << "poll: polling: " << poll_script_uri.c_str () << endl;
+
+# ifdef HAVE_NOTMUCH_GET_REV
+    Db db (Db::DbMode::DATABASE_READ_ONLY);
+    before_poll_revision = db.get_revision ();
+    log << debug << "poll: revision before poll: " << before_poll_revision << endl;
+# endif
 
     if (!is_regular_file (poll_script_uri)) {
       log << error << "poll: poll script does not exist or is not a regular file." << endl;
@@ -159,7 +166,47 @@ namespace Astroid {
     Glib::spawn_close_pid (pid);
 
     if (child_status == 0) {
+
+# ifdef HAVE_NOTMUCH_GET_REV
+      last_good_before_poll_revision = before_poll_revision;
+
+      /* update all threads that have been changed */
+      Db db (Db::DbMode::DATABASE_READ_ONLY);
+
+      unsigned long revnow = db.get_revision ();
+      log << debug << "poll: revision after poll: " << revnow << endl;
+
+      ustring query = ustring::compose ("lastmod:%1..%2",
+          before_poll_revision,
+          revnow);
+
+      notmuch_query_t * qry = notmuch_query_create (db.nm_db, query.c_str ());
+
+      int total_threads = notmuch_query_count_threads (qry);
+
+      log << info << "poll: " << total_threads << " threads changed, updating.." << endl;
+
+      if (total_threads > 0) {
+        notmuch_threads_t * threads = notmuch_query_search_threads (qry);
+        notmuch_thread_t  * thread;
+
+        for (;
+             notmuch_threads_valid (threads);
+             notmuch_threads_move_to_next (threads)) {
+
+          thread = notmuch_threads_get (threads);
+
+          const char * t = notmuch_thread_get_thread_id (thread);
+
+          ustring tt (t);
+          astroid->global_actions->emit_thread_updated (&db, tt);
+        }
+      }
+
+      notmuch_query_destroy (qry);
+# else
       astroid->global_actions->signal_refreshed_dispatcher ();
+# endif
     }
 
     m_dopoll.unlock ();

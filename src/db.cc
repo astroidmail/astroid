@@ -213,6 +213,16 @@ namespace Astroid {
     close_db ();
   }
 
+# ifdef HAVE_NOTMUCH_GET_REV
+  unsigned long Db::get_revision () {
+    const char *uuid;
+    unsigned long revision = notmuch_database_get_revision (nm_db, &uuid);
+
+    return revision;
+  }
+
+# endif
+
   void Db::load_tags () {
     notmuch_tags_t * nm_tags = notmuch_database_get_all_tags (nm_db);
     const char * tag;
