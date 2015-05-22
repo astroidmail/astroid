@@ -1520,7 +1520,9 @@ namespace Astroid {
         "id", e.element_id().c_str(),
         (err = NULL, &err));
 
-      ustring content = ustring::compose ("MIME message (id: %1) - potentially sketchy.",
+      ustring content = ustring::compose ("MIME message (subject: %1, size: %2 B) - potentially sketchy.",
+          Glib::Markup::escape_text(c->get_filename ()),
+          c->get_file_size (),
           e.element_id ());
 
       WebKitDOMHTMLElement * message_cont =

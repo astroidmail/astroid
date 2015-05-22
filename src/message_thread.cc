@@ -385,6 +385,10 @@ namespace Astroid {
     }
   }
 
+  refptr<Glib::ByteArray> Message::contents () {
+    return root->contents ();
+  }
+
   bool Message::is_patch () {
     return (
         (subject.substr(0,3).uppercase() != "RE:") &&

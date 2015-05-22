@@ -48,12 +48,11 @@ namespace Astroid {
     set_label ("Raw message: " + msg->subject);
 
     /* load message source */
-    log << info << "rm: loading message from: " << msg->fname << endl;
-    ifstream f (msg->fname.c_str());
+    log << info << "rm: loading message.. " << endl;
 
     refptr<Gtk::TextBuffer> buf = tv.get_buffer ();
     stringstream s;
-    s << f.rdbuf ();
+    s << msg->contents ()->get_data ();
     buf->set_text (s.str());
   }
 

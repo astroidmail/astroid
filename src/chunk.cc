@@ -305,6 +305,14 @@ namespace Astroid {
         _fname = fname;
         return fname;
       }
+    } else if (GMIME_IS_MESSAGE (mime_object)) {
+      const char * s = g_mime_message_get_subject (GMIME_MESSAGE (mime_object));
+
+      if (s != NULL) {
+        ustring fname (s);
+        _fname = fname + ".eml";
+        return fname;
+      }
     }
     // no filename specified
     return ustring ("");

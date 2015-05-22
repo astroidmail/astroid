@@ -59,6 +59,8 @@ namespace Astroid {
 
       vector<refptr<Chunk>> mime_messages ();
 
+      refptr<Glib::ByteArray> contents ();
+
       bool is_patch ();
 
       void save ();
