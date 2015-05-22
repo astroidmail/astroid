@@ -43,6 +43,8 @@ namespace Astroid {
       bool preferred  = false;
       bool mime_message = false;
 
+      refptr<Message> get_mime_message ();
+
       map<ustring, GMimeContentType *> viewable_types = {
         { "plain", g_mime_content_type_new ("text", "plain") },
         { "html" , g_mime_content_type_new ("text", "html") }

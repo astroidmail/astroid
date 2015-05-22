@@ -6,6 +6,7 @@
 * Got a desktop file!
 * Different color of font and border of the first levels of quotes
 * Configurable exclude tags
+* Open attached MIME messages
 
 == v0.2 / 2015-01-18
 

@@ -519,6 +519,22 @@ body.nohide .email .compressed_note > span {
   border: 1px solid black;
 }
 
+#mime_container {
+  display: none;
+}
+
+.email > .email_container > .body > .mime_container {
+  display: block;
+  vertical-align: middle;
+  text-align: center;
+  padding-bottom: 5px;
+  padding-top: 5px;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  background-color: gray;
+  border: 1px solid black;
+}
+
 .header {
     overflow: hidden;
 }

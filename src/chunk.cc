@@ -10,6 +10,7 @@
 # include <gmime/gmime.h>
 
 # include "astroid.hh"
+# include "message_thread.hh"
 # include "chunk.hh"
 # include "log.hh"
 # include "utils/ustring_utils.hh"
@@ -139,9 +140,6 @@ namespace Astroid {
       log << debug << "chunk: mime message" << endl;
 
       mime_message = true;
-
-      log << error << "chunk: mime message: not supported!" << endl;
-
     }
   }
 
@@ -557,6 +555,17 @@ namespace Astroid {
           log << debug << "chunk: save: cancelled." << endl;
         }
     }
+  }
+
+  refptr<Message> Chunk::get_mime_message () {
+    if (!mime_message) {
+      log << error << "chunk: this is not a mime message." << endl;
+      throw runtime_error ("chunk: not a mime message");
+    }
+
+    refptr<Message> m = refptr<Message> ( new Message (GMIME_MESSAGE(mime_object)) );
+
+    return m;
   }
 
   Chunk::~Chunk () {

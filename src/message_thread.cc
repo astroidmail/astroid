@@ -441,7 +441,11 @@ namespace Astroid {
       throw runtime_error ("mt: can only add message chunks that are GMimeMessages");
     }
 
-    messages.push_back (refptr<Message>(new Message ()));
+    messages.push_back (c->get_mime_message ());
+
+    if (subject == "") {
+      subject = (*(--messages.end()))->subject;
+    }
   }
 
 

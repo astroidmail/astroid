@@ -1488,9 +1488,62 @@ namespace Astroid {
       WebKitDOMHTMLElement * div_message)
 
   {
+    WebKitDOMHTMLElement * div_email_container =
+      select (WEBKIT_DOM_NODE(div_message), "div.email_container");
+
+    WebKitDOMHTMLElement * span_body =
+      select (WEBKIT_DOM_NODE(div_email_container), ".body");
+
     for (refptr<Chunk> &c : message->mime_messages ()) {
+      log << debug << "create mime message part: " << c->id << endl;
+      //
+      //  <div id="mime_template" class=mime_container">
+      //      <div class="top_border"></div>
+      //      <div class="message"></div>
+      //  </div>
+
+      GError *err;
+
+      WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
+      WebKitDOMHTMLElement * mime_container =
+        clone_select (WEBKIT_DOM_NODE(d), "#mime_template");
+
+      webkit_dom_element_remove_attribute (WEBKIT_DOM_ELEMENT (mime_container),
+          "id");
+
+      // add attachment to message state
+      MessageState::Element e (MessageState::ElementType::MimeMessage, c->id);
+      state[message].elements.push_back (e);
+      log << debug << "tv: added mime message: " << state[message].elements.size() << endl;
+
+      webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (mime_container),
+        "id", e.element_id().c_str(),
+        (err = NULL, &err));
+
+      ustring content = ustring::compose ("MIME message (id: %1) - potentially sketchy.",
+          e.element_id ());
+
+      WebKitDOMHTMLElement * message_cont =
+        select (WEBKIT_DOM_NODE (mime_container), ".message");
+
+      webkit_dom_html_element_set_inner_html (
+          message_cont,
+          content.c_str(),
+          (err = NULL, &err));
+
+
+      webkit_dom_node_append_child (WEBKIT_DOM_NODE (span_body),
+          WEBKIT_DOM_NODE (mime_container), (err = NULL, &err));
+
+      g_object_unref (message_cont);
+      g_object_unref (mime_container);
+      g_object_unref (d);
 
     }
+
+    g_object_unref (span_body);
+    g_object_unref (div_email_container);
+
   }
 
 
@@ -1933,6 +1986,24 @@ namespace Astroid {
                   }
                 }
 
+              }
+              break;
+
+            case MessageState::ElementType::MimeMessage:
+              {
+                if (a == '\n' || a == 'o') {
+                  /* open part */
+                  refptr<Chunk> c = focused_message->get_chunk_by_id (
+                      state[focused_message].elements[state[focused_message].current_element].id);
+
+                  refptr<MessageThread> mt = refptr<MessageThread> (new MessageThread ());
+                  mt->add_message (c);
+
+                  ThreadView * tv = new ThreadView (main_window);
+                  tv->load_message_thread (mt);
+
+                  main_window->add_mode (tv);
+                }
               }
               break;
 
