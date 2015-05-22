@@ -176,34 +176,38 @@ namespace Astroid {
       unsigned long revnow = db.get_revision ();
       log << debug << "poll: revision after poll: " << revnow << endl;
 
-      ustring query = ustring::compose ("lastmod:%1..%2",
-          before_poll_revision,
-          revnow);
+      if (revnow > before_poll_revision) {
 
-      notmuch_query_t * qry = notmuch_query_create (db.nm_db, query.c_str ());
+        ustring query = ustring::compose ("lastmod:%1..%2",
+            before_poll_revision,
+            revnow);
 
-      int total_threads = notmuch_query_count_threads (qry);
+        notmuch_query_t * qry = notmuch_query_create (db.nm_db, query.c_str ());
 
-      log << info << "poll: " << total_threads << " threads changed, updating.." << endl;
+        int total_threads = notmuch_query_count_threads (qry);
 
-      if (total_threads > 0) {
-        notmuch_threads_t * threads = notmuch_query_search_threads (qry);
-        notmuch_thread_t  * thread;
+        log << info << "poll: " << total_threads << " threads changed, updating.." << endl;
 
-        for (;
-             notmuch_threads_valid (threads);
-             notmuch_threads_move_to_next (threads)) {
+        if (total_threads > 0) {
+          notmuch_threads_t * threads = notmuch_query_search_threads (qry);
+          notmuch_thread_t  * thread;
 
-          thread = notmuch_threads_get (threads);
+          for (;
+               notmuch_threads_valid (threads);
+               notmuch_threads_move_to_next (threads)) {
 
-          const char * t = notmuch_thread_get_thread_id (thread);
+            thread = notmuch_threads_get (threads);
 
-          ustring tt (t);
-          astroid->global_actions->emit_thread_updated (&db, tt);
+            const char * t = notmuch_thread_get_thread_id (thread);
+
+            ustring tt (t);
+            astroid->global_actions->emit_thread_updated (&db, tt);
+          }
         }
-      }
 
-      notmuch_query_destroy (qry);
+        notmuch_query_destroy (qry);
+
+      }
 # else
       astroid->global_actions->signal_refreshed_dispatcher ();
 # endif
