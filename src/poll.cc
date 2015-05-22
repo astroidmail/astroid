@@ -158,7 +158,9 @@ namespace Astroid {
     /* close process */
     Glib::spawn_close_pid (pid);
 
-    astroid->global_actions->signal_refreshed_dispatcher ();
+    if (child_status == 0) {
+      astroid->global_actions->signal_refreshed_dispatcher ();
+    }
 
     m_dopoll.unlock ();
   }
