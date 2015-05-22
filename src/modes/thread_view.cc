@@ -2003,6 +2003,17 @@ namespace Astroid {
                   tv->load_message_thread (mt);
 
                   main_window->add_mode (tv);
+
+                } else if (a == 's') {
+                  /* save part */
+                  refptr<Chunk> c = focused_message->get_chunk_by_id (
+                      state[focused_message].elements[state[focused_message].current_element].id);
+
+                  if (c) {
+                    c->save ();
+                  } else {
+                    log << error << "tv: could not find chunk for element." << endl;
+                  }
                 }
               }
               break;

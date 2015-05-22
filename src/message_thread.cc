@@ -368,10 +368,21 @@ namespace Astroid {
     // https://svn.boost.org/trac/boost/ticket/6124
     // copy_file ( path (fname), path (tofname) );
 
-    ifstream src (fname, ios::binary);
-    ofstream dst (tofname, ios::binary);
+    if (has_file)
+    {
+      ifstream src (fname, ios::binary);
+      ofstream dst (tofname, ios::binary);
 
-    dst << src.rdbuf ();
+      dst << src.rdbuf ();
+    } else {
+      /* write GMimeMessage */
+
+      FILE * MessageFile = fopen(tofname.c_str(), "w");
+      GMimeStream * stream = g_mime_stream_file_new(MessageFile);
+      g_mime_object_write_to_stream(GMIME_OBJECT(message), stream);
+      g_object_unref(stream);
+
+    }
   }
 
   bool Message::is_patch () {
