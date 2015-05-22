@@ -23,12 +23,14 @@ namespace Astroid {
    */
   Message::Message () {
     in_notmuch = false;
+    has_file   = false;
   }
 
   Message::Message (ustring _fname) : fname (_fname) {
 
     log << info << "msg: loading message from file: " << fname << endl;
     in_notmuch = false;
+    has_file   = true;
     load_message_from_file (fname);
   }
 
@@ -37,6 +39,7 @@ namespace Astroid {
     fname = _fname;
     log << info << "msg: loading message from file (mid supplied): " << fname << endl;
     in_notmuch = false;
+    has_file   = true;
     load_message_from_file (fname);
   }
 
@@ -46,6 +49,7 @@ namespace Astroid {
 
     mid = notmuch_message_get_message_id (message);
     in_notmuch = true;
+    has_file   = true;
 
     log << info << "msg: loading mid: " << mid << endl;
 
@@ -54,6 +58,14 @@ namespace Astroid {
 
     load_message_from_file (fname);
     load_tags (message);
+  }
+
+  Message::Message (GMimeMessage * _msg) {
+    log << info << "msg: loading message from GMimeMessage." << endl;
+    in_notmuch = false;
+    has_file   = false;
+
+    load_message (_msg);
   }
 
   Message::~Message () {
@@ -422,6 +434,16 @@ namespace Astroid {
   void MessageThread::add_message (ustring fname) {
     messages.push_back (refptr<Message>(new Message (fname)));
   }
+
+  void MessageThread::add_message (refptr<Chunk> c) {
+    if (!c->mime_message) {
+      log << error << "mt: can only add message chunks that are GMimeMessages." << endl;
+      throw runtime_error ("mt: can only add message chunks that are GMimeMessages");
+    }
+
+    messages.push_back (refptr<Message>(new Message ()));
+  }
+
 
   void MessageThread::reload_messages () {
   }

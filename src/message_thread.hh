@@ -18,11 +18,13 @@ namespace Astroid {
       Message (ustring _fname);
       Message (ustring _mid, ustring _fname);
       Message (notmuch_message_t *);
+      Message (GMimeMessage *);
       ~Message ();
 
       ustring fname;
       ustring mid;
       bool    in_notmuch;
+      bool    has_file;
 
       void load_message_from_file (ustring);
       void load_message (GMimeMessage *);
@@ -82,6 +84,7 @@ namespace Astroid {
 
       void load_messages (Db *);
       void add_message (ustring);
+      void add_message (refptr<Chunk>);
       void reload_messages ();
   };
 }
