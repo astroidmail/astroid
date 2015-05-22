@@ -29,7 +29,7 @@ namespace Astroid {
 
     log << info << "msg: loading message from file: " << fname << endl;
     in_notmuch = false;
-    load_message ();
+    load_message_from_file (fname);
   }
 
   Message::Message (ustring _mid, ustring _fname) {
@@ -37,7 +37,7 @@ namespace Astroid {
     fname = _fname;
     log << info << "msg: loading message from file (mid supplied): " << fname << endl;
     in_notmuch = false;
-    load_message ();
+    load_message_from_file (fname);
   }
 
   Message::Message (notmuch_message_t *message) {
@@ -52,7 +52,7 @@ namespace Astroid {
     fname = notmuch_message_get_filename (message);
     log << info << "msg: filename: " << fname << endl;
 
-    load_message ();
+    load_message_from_file (fname);
     load_tags (message);
   }
 
@@ -94,22 +94,7 @@ namespace Astroid {
 
   }
 
-  void Message::load_message () {
-
-    /* Load message with parts.
-     *
-     * example:
-     * https://git.gnome.org/browse/gmime/tree/examples/basic-example.c
-     *
-     *
-     * Do this a bit like sup:
-     * - build up a tree/list of chunks that are viewable, except siblings.
-     * - show text and html parts
-     * - show a gallery of attachments at the bottom
-     *
-     */
-
-
+  void Message::load_message_from_file (ustring fname) {
     GMimeStream   * stream  = g_mime_stream_file_new_for_path (fname.c_str(), "r");
     if (stream == NULL) {
       if (!exists (fname.c_str())) {
@@ -124,7 +109,31 @@ namespace Astroid {
     }
 
     GMimeParser   * parser  = g_mime_parser_new_with_stream (stream);
-    message = g_mime_parser_construct_message (parser);
+
+    GMimeMessage * _message = g_mime_parser_construct_message (parser);
+
+    load_message (_message);
+
+    g_object_unref (stream); // reffed from parser
+    g_object_unref (parser); // reffed from message
+  }
+
+  void Message::load_message (GMimeMessage * _msg) {
+
+    /* Load message with parts.
+     *
+     * example:
+     * https://git.gnome.org/browse/gmime/tree/examples/basic-example.c
+     *
+     *
+     * Do this a bit like sup:
+     * - build up a tree/list of chunks that are viewable, except siblings.
+     * - show text and html parts
+     * - show a gallery of attachments at the bottom
+     *
+     */
+
+    message = _msg;
 
     if (mid == "") {
       mid = g_mime_message_get_message_id (message);
@@ -154,10 +163,6 @@ namespace Astroid {
 
 
     root = refptr<Chunk>(new Chunk (g_mime_message_get_mime_part (message)));
-
-
-    g_object_unref (stream); // reffed from parser
-    g_object_unref (parser); // reffed from message
 
     g_object_ref (message);  // TODO: a little bit at loss here -> change to
                              //       std::something.
@@ -237,6 +242,27 @@ namespace Astroid {
     } else {
       return root->get_by_id (id);
     }
+  }
+
+  vector<refptr<Chunk>> Message::mime_messages () {
+    /* return a flat vector of mime messages */
+
+    vector<refptr<Chunk>> mime_messages;
+
+    function< void (refptr<Chunk>) > app_mm =
+      [&] (refptr<Chunk> c)
+    {
+      if (c->mime_message)
+        mime_messages.push_back (c);
+
+      for_each (c->kids.begin(),
+                c->kids.end (),
+                app_mm);
+    };
+
+    app_mm (root);
+
+    return mime_messages;
   }
 
   ustring Message::date () {

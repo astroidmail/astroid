@@ -41,6 +41,7 @@ namespace Astroid {
       bool viewable   = false;
       bool attachment = false;
       bool preferred  = false;
+      bool mime_message = false;
 
       map<ustring, GMimeContentType *> viewable_types = {
         { "plain", g_mime_content_type_new ("text", "plain") },

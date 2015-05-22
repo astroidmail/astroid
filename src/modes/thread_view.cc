@@ -711,6 +711,9 @@ namespace Astroid {
     /* insert attachments */
     insert_attachments (m, div_message);
 
+    /* insert mime messages */
+    insert_mime_messages (m, div_message);
+
     if (!edit_mode) {
       /* optionally hide / collapse the message */
       if (!(has (m->tags, ustring("unread")) || has(m->tags, ustring("flagged")))) {
@@ -1478,6 +1481,21 @@ namespace Astroid {
 
   }
   /* attachments end }}} */
+
+  /* mime messages {{{ */
+  void ThreadView::insert_mime_messages (
+      refptr<Message> message,
+      WebKitDOMHTMLElement * div_message)
+
+  {
+    for (refptr<Chunk> &c : message->mime_messages ()) {
+
+    }
+  }
+
+
+  /* }}} */
+
 
   /* end rendering }}} */
 

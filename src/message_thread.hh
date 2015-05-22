@@ -24,7 +24,8 @@ namespace Astroid {
       ustring mid;
       bool    in_notmuch;
 
-      void load_message ();
+      void load_message_from_file (ustring);
+      void load_message (GMimeMessage *);
       void load_tags (Db *);
       void load_tags (notmuch_message_t *);
 
@@ -53,6 +54,8 @@ namespace Astroid {
       ustring viewable_text (bool);
       vector<refptr<Chunk>> attachments ();
       refptr<Chunk> get_chunk_by_id (int id);
+
+      vector<refptr<Chunk>> mime_messages ();
 
       bool is_patch ();
 

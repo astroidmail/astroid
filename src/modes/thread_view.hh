@@ -113,7 +113,8 @@ namespace Astroid {
             Empty,
             Address,
             Part,
-            Attachment
+            Attachment,
+            MimeMessage
           };
 
           struct Element {
@@ -193,6 +194,9 @@ namespace Astroid {
 
       /* attachments */
       void insert_attachments (refptr<Message>, WebKitDOMHTMLElement *);
+
+      /* mime messages */
+      void insert_mime_messages (refptr<Message>, WebKitDOMHTMLElement *);
 
       void set_attachment_src (refptr<Chunk>,
           refptr<Glib::ByteArray>,
