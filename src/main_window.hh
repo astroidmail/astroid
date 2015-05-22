@@ -14,6 +14,10 @@ using namespace std;
 
 namespace Astroid {
   class Notebook : public Gtk::Notebook {
+    public:
+      Notebook ();
+
+      Gtk::HBox icons;
 
   };
 

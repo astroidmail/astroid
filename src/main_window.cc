@@ -21,8 +21,14 @@ using namespace std;
 namespace Astroid {
   atomic<uint> MainWindow::nextid (0);
 
+  Notebook::Notebook () {
+    set_scrollable (true);
+
+    set_action_widget (&icons, Gtk::PACK_END);
+  }
+
   MainWindow::MainWindow () {
-    id = nextid++;
+    id = ++nextid;
 
     log << debug << "mw: init, id: " << id << endl;
 
@@ -48,8 +54,6 @@ namespace Astroid {
     add (vbox);
 
     show_all_children ();
-
-    notebook.set_scrollable (true);
 
     /* connect keys */
     add_events (Gdk::KEY_PRESS_MASK);
