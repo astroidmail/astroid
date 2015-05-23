@@ -168,7 +168,8 @@ namespace Astroid {
     if (child_status == 0) {
 
 # ifdef HAVE_NOTMUCH_GET_REV
-      last_good_before_poll_revision = before_poll_revision;
+      if (last_good_before_poll_revision == 0)
+        last_good_before_poll_revision = before_poll_revision;
 
       /* update all threads that have been changed */
       Db db (Db::DbMode::DATABASE_READ_ONLY);
@@ -176,7 +177,7 @@ namespace Astroid {
       unsigned long revnow = db.get_revision ();
       log << debug << "poll: revision after poll: " << revnow << endl;
 
-      if (revnow > before_poll_revision) {
+      if (revnow > last_good_before_poll_revision) {
 
         ustring query = ustring::compose ("lastmod:%1..%2",
             before_poll_revision,
@@ -208,6 +209,8 @@ namespace Astroid {
         notmuch_query_destroy (qry);
 
       }
+
+      last_good_before_poll_revision = revnow;
 # else
       astroid->global_actions->signal_refreshed_dispatcher ();
 # endif
