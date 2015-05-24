@@ -168,6 +168,8 @@ namespace Astroid {
     if (child_status == 0) {
 
 # ifdef HAVE_NOTMUCH_GET_REV
+
+      /* first poll */
       if (last_good_before_poll_revision == 0)
         last_good_before_poll_revision = before_poll_revision;
 
