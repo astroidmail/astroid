@@ -103,7 +103,7 @@ namespace Astroid {
     Gtk::TreeViewColumn * column = get_column (cols_count - 1);
 
     column->set_cell_data_func (*renderer,
-        sigc::mem_fun(*this, &ThreadIndexListView::set_thread_data) );
+        sigc::mem_fun(this, &ThreadIndexListView::set_thread_data) );
 
     astroid->global_actions->signal_thread_updated ().connect (
         sigc::mem_fun (this, &ThreadIndexListView::on_thread_updated));
@@ -128,11 +128,10 @@ namespace Astroid {
     chrono::duration<double> elapsed = chrono::steady_clock::now() - last_redraw;
 
     if (elapsed.count () >= 60) {
-      log << debug << "tilv: redraw." << endl;
 
       queue_draw ();
-
       last_redraw = chrono::steady_clock::now();
+
     }
 
     return true;
