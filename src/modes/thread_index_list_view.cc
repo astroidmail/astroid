@@ -115,9 +115,9 @@ namespace Astroid {
     signal_row_activated ().connect (
         sigc::mem_fun (this, &ThreadIndexListView::on_my_row_activated));
 
-    /* re-draw every minute */
+    /* re-draw every minute (check every second) */
     Glib::signal_timeout ().connect (
-        sigc::mem_fun (this, &ThreadIndexListView::redraw), 60 * 1000);
+        sigc::mem_fun (this, &ThreadIndexListView::redraw), 1000);
   }
 
   ThreadIndexListView::~ThreadIndexListView () {
