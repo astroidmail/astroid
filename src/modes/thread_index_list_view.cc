@@ -114,10 +114,28 @@ namespace Astroid {
     /* mouse click */
     signal_row_activated ().connect (
         sigc::mem_fun (this, &ThreadIndexListView::on_my_row_activated));
+
+    /* re-draw every minute */
+    Glib::signal_timeout ().connect (
+        sigc::mem_fun (this, &ThreadIndexListView::redraw), 60 * 1000);
   }
 
   ThreadIndexListView::~ThreadIndexListView () {
     log << debug << "tilv: deconstruct." << endl;
+  }
+
+  bool ThreadIndexListView::redraw () {
+    chrono::duration<double> elapsed = chrono::steady_clock::now() - last_redraw;
+
+    if (elapsed.count () >= 60) {
+      log << debug << "tilv: redraw." << endl;
+
+      queue_draw ();
+
+      last_redraw = chrono::steady_clock::now();
+    }
+
+    return true;
   }
 
 

@@ -1,5 +1,7 @@
 # pragma once
 
+# include <chrono>
+
 # include <gtkmm.h>
 # include <gtkmm/liststore.h>
 # include <gtkmm/treeview.h>
@@ -71,6 +73,10 @@ namespace Astroid {
 
       void on_thread_updated (Db *, ustring);
       void on_refreshed ();
+
+    private:
+      chrono::time_point<chrono::steady_clock> last_redraw;
+      bool redraw ();
   };
 
 

@@ -9,6 +9,7 @@
 * Different color of font and border of the first levels of quotes
 * Configurable exclude tags
 * Open attached MIME messages
+* Auto-redraw thread-index every minute
 
 == v0.2 / 2015-01-18
 
