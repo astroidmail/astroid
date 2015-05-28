@@ -69,6 +69,11 @@ namespace Astroid {
     /* change page */
     notebook.signal_switch_page ().connect (
         sigc::mem_fun (this, &MainWindow::on_my_switch_page));
+
+    /* catch update title events */
+    update_title_dispatcher.connect (
+        sigc::mem_fun (this, &MainWindow::on_update_title));
+
   }
 
   void MainWindow::set_title (ustring t) {
@@ -80,6 +85,16 @@ namespace Astroid {
     }
 
     Gtk::Window::set_title (tt);
+  }
+
+  void MainWindow::on_update_title () {
+    int n = notebook.get_current_page();
+
+    if (n >= 0 && n <= notebook.get_n_pages()-1) {
+      set_title (((Mode*) notebook.get_nth_page(n))->get_label());
+    } else {
+      set_title ("");
+    }
   }
 
   void MainWindow::enable_command (CommandBar::CommandMode m, ustring cmd, function<void(ustring)> f) {
@@ -305,7 +320,7 @@ namespace Astroid {
     current = n;
     active = true;
 
-    set_title (((Mode*) notebook.get_nth_page(n))->get_label());
+    on_update_title ();
   }
 
   void MainWindow::set_active (int n) {
@@ -321,7 +336,7 @@ namespace Astroid {
 
     } else {
       // log << debug << "mw: set active: page is out of range: " << n << endl;
-      set_title ("");
+      on_update_title ();
     }
   }
 

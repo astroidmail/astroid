@@ -58,10 +58,14 @@ namespace Astroid {
 
       static ModeHelpInfo * key_help ();
 
+      Glib::Dispatcher update_title_dispatcher;
+
     private:
       bool on_my_focus_in_event (GdkEventFocus *);
       bool on_my_focus_out_event (GdkEventFocus *);
       void on_my_switch_page (Gtk::Widget *, guint);
+
+      void on_update_title ();
 
       static atomic<uint> nextid;
   };

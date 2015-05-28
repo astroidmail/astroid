@@ -59,6 +59,8 @@ namespace Astroid {
 
     tab_label.set_text (s);
     label = s;
+
+    main_window->update_title_dispatcher.emit ();
   }
 
   void Mode::on_yes () {
