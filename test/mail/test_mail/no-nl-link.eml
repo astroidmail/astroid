@@ -1,0 +1,27 @@
+Delivery-date: Mon, 27 Oct 2014 06:15:16 +0100
+From: tst@asfdasas.sdf 
+To: test@gadsdfa.sdf 
+Message-Id: <asdfasdf@sas.asdf.asd>
+Date: Mon, 27 Oct 2014 06:15:13 +0100
+Mime-Version: 1.0
+Content-Type: multipart/alternative;
+ boundary="--==_mimepart_540ffd23a9176_53cd3ffb4d3fb2bc2852c3";
+ charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Precedence: list
+
+
+----==_mimepart_540ffd23a9176_53cd3ffb4d3fb2bc2852c3
+Content-Type: text/plain;
+ charset=UTF-8
+Content-Transfer-Encoding: 7bit
+
+http://line-ignored.com
+----==_mimepart_540ffd23a9176_53cd3ffb4d3fb2bc2852c3
+Content-Type: text/html;
+ charset=UTF-8
+Content-Transfer-Encoding: 7bit
+
+<p>messagecontent</p>
+
+----==_mimepart_540ffd23a9176_53cd3ffb4d3fb2bc2852c3--
