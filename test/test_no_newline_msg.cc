@@ -44,11 +44,9 @@ BOOST_AUTO_TEST_SUITE(Reading)
     Message m (fname);
 
     ustring text =  m.viewable_text(false);
-    cout << "text: " << text << endl;
     BOOST_CHECK (text.find ("line-ignored.com") != ustring::npos);
 
     ustring html = m.viewable_text(true);
-    cout << "html: " << html << endl;
     BOOST_CHECK (html.find ("line-ignored.com") != ustring::npos);
 
 
@@ -69,7 +67,6 @@ BOOST_AUTO_TEST_SUITE(Reading)
     BOOST_CHECK (text.find ("line-ignored.com") != ustring::npos);
 
     ustring html = m.viewable_text(true);
-    cout << "html: " << html << endl;
     BOOST_CHECK (html.find ("line-ignored.com") != ustring::npos);
 
 
@@ -87,7 +84,6 @@ BOOST_AUTO_TEST_SUITE(Reading)
     Message m (fname);
 
     ustring text =  m.viewable_text(false, true);
-    cout << "text: " << text << endl;
     BOOST_CHECK (text.find ("line-ignored.com") != ustring::npos);
 
 
