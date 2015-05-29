@@ -180,12 +180,16 @@ namespace Astroid {
                              //       std::something.
   }
 
-  ustring Message::viewable_text (bool html) {
+  ustring Message::viewable_text (bool html, bool fallback_html) {
     /* build message body:
      * html:      output html (using gmimes html filter)
      *
-     * TODO: we're still returning html from html-only emails when bool html = false.
      */
+
+    if (html && fallback_html) {
+      throw runtime_error ("message: html implies fallback_html");
+    }
+
     ustring body;
 
     function< void (refptr<Chunk>) > app_body =
@@ -212,7 +216,7 @@ namespace Astroid {
       }
 
       if (use) {
-        if (c->viewable && (c->preferred || html)) {
+        if (c->viewable && (c->preferred || html || fallback_html)) {
           body += c->viewable_text (html);
         }
 

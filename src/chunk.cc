@@ -268,7 +268,7 @@ namespace Astroid {
       ssize_t n;
       stringstream sstr;
 
-      while ((n = g_mime_stream_read (content_stream, buffer, 4096), n) > 0)
+      while ((n = g_mime_stream_read (content_stream, buffer, 4096), n) >= 0)
       {
         buffer[n] = 0;
         sstr << buffer;

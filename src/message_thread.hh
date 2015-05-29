@@ -53,7 +53,7 @@ namespace Astroid {
       ustring pretty_verbose_date ();
       vector<ustring> tags;
 
-      ustring viewable_text (bool);
+      ustring viewable_text (bool, bool fallback_html = false);
       vector<refptr<Chunk>> attachments ();
       refptr<Chunk> get_chunk_by_id (int id);
 
