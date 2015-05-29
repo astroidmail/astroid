@@ -187,7 +187,7 @@ namespace Astroid {
      */
 
     if (html && fallback_html) {
-      throw runtime_error ("message: html implies fallback_html");
+      throw logic_error ("message: html implies fallback_html");
     }
 
     ustring body;
