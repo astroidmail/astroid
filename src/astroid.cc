@@ -45,7 +45,7 @@ namespace Astroid {
 
     string charset;
     Glib::get_charset(charset);
-    log << info << "utf8: " << Glib::get_charset () << ", " << charset << endl;
+    log << debug << "utf8: " << Glib::get_charset () << ", " << charset << endl;
 
     /* user agent */
     user_agent = ustring::compose ("astroid/v%1 (https://github.com/gauteh/astroid)", GIT_DESC);
@@ -169,6 +169,10 @@ namespace Astroid {
     } else {
       config = new Config ();
     }
+
+    /* output db location */
+    ustring db_path = ustring (config->config.get<string> ("astroid.notmuch.db"));
+    log << info << "notmuch db: " << db_path << endl;
 
     /* set up static classes */
     Date::init ();

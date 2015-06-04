@@ -43,8 +43,6 @@ namespace Astroid {
       path_db = path(db_path);
     }
 
-    log << info << "db: opening db: " << path_db << endl;
-
     time_t start = clock ();
 
     db_state  = CLOSED;
@@ -58,7 +56,7 @@ namespace Astroid {
     }
 
     float diff = (clock () - start) * 1000.0 / CLOCKS_PER_SEC;
-    log << info << "db: open time: " << diff << " ms." << endl;
+    log << debug << "db: open time: " << diff << " ms." << endl;
 
 
     ustring excluded_tags_s = config.get<string> ("excluded_tags");
@@ -176,7 +174,6 @@ namespace Astroid {
     }
 
     db_state = READ_WRITE;
-    log << info << "db: open in r/w mode." << endl;
     return true;
   }
 
@@ -203,13 +200,10 @@ namespace Astroid {
     }
 
     db_state = READ_ONLY;
-    log << info << "db: open in read-only mode." << endl;
     return true;
   }
 
   Db::~Db () {
-    log << info << "db: closing notmuch database." << endl;
-
     close_db ();
   }
 
