@@ -31,6 +31,7 @@ namespace Astroid {
           Gtk::TreeModelColumn<time_t> newest_date;
           Gtk::TreeModelColumn<Glib::ustring> thread_id;
           Gtk::TreeModelColumn<Glib::RefPtr<NotmuchThread>> thread;
+          Gtk::TreeModelColumn<bool> marked;
 
           ThreadIndexListStoreColumnRecord ();
       };

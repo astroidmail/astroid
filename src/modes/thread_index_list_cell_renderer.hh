@@ -16,6 +16,7 @@ namespace Astroid {
 
       Glib::RefPtr<NotmuchThread> thread; /* thread that should be rendered now */
       bool last;
+      bool marked;
 
       /* these tags are displayed otherwisely, so they are not
        * shown explicitly: MUST BE SORTED */
@@ -71,7 +72,7 @@ namespace Astroid {
 
       int left_icons_size;
       int left_icons_width;
-      int left_icons_width_n = 2;
+      int left_icons_width_n = 3;
       int left_icons_padding = 1;
       int padding;
 
@@ -142,6 +143,12 @@ namespace Astroid {
 
       refptr<Gdk::Pixbuf> attachment_icon;
       void render_attachment (
+          const ::Cairo::RefPtr< ::Cairo::Context>&cr,
+          Gtk::Widget &widget,
+          const Gdk::Rectangle &cell_area );
+
+      refptr<Gdk::Pixbuf> marked_icon;
+      void render_marked (
           const ::Cairo::RefPtr< ::Cairo::Context>&cr,
           Gtk::Widget &widget,
           const Gdk::Rectangle &cell_area );

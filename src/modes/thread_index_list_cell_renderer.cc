@@ -96,6 +96,9 @@ namespace Astroid {
     if (thread->attachment)
       render_attachment (cr, widget, cell_area);
 
+    if (marked)
+      render_marked (cr, widget, cell_area);
+
   }
 
   ThreadIndexListCellRenderer::~ThreadIndexListCellRenderer () {
@@ -128,6 +131,33 @@ namespace Astroid {
   } // }}}
 
   /* render icons {{{ */
+  void ThreadIndexListCellRenderer::render_marked (
+      const ::Cairo::RefPtr< ::Cairo::Context>&cr,
+      Gtk::Widget &widget,
+      const Gdk::Rectangle &cell_area ) {
+
+
+    if (!marked_icon) {
+      Glib::RefPtr<Gtk::IconTheme> theme = Gtk::IconTheme::get_default();
+      Glib::RefPtr<Gdk::Pixbuf> pixbuf = theme->load_icon (
+          "object-select-symbolic",
+          left_icons_size,
+          Gtk::ICON_LOOKUP_USE_BUILTIN );
+
+
+      marked_icon = pixbuf->scale_simple (left_icons_size, left_icons_size,
+          Gdk::INTERP_BILINEAR);
+    }
+
+    int y = cell_area.get_y() + left_icons_padding;
+    int x = cell_area.get_x();
+
+    Gdk::Cairo::set_source_pixbuf (cr, marked_icon, x, y);
+
+    cr->rectangle (x, y, left_icons_size, left_icons_size);
+    cr->fill ();
+  }
+
   void ThreadIndexListCellRenderer::render_flagged (
       const ::Cairo::RefPtr< ::Cairo::Context>&cr,
       Gtk::Widget &widget,
@@ -146,13 +176,14 @@ namespace Astroid {
     }
 
     int y = cell_area.get_y() + left_icons_padding;
-    int x = cell_area.get_x();
+    int x = cell_area.get_x() + left_icons_width + left_icons_padding;
 
     Gdk::Cairo::set_source_pixbuf (cr, flagged_icon, x, y);
 
     cr->rectangle (x, y, left_icons_size,left_icons_size);
     cr->fill ();
   }
+
 
   void ThreadIndexListCellRenderer::render_attachment (
       const ::Cairo::RefPtr< ::Cairo::Context>&cr,
@@ -173,7 +204,7 @@ namespace Astroid {
     }
 
     int y = cell_area.get_y() + left_icons_padding;
-    int x = cell_area.get_x() + left_icons_width + left_icons_padding;
+    int x = cell_area.get_x() + (2 * (left_icons_width + left_icons_padding));
 
     Gdk::Cairo::set_source_pixbuf (cr, attachment_icon, x, y);
 

@@ -62,6 +62,7 @@ namespace Astroid {
     add (newest_date);
     add (thread_id);
     add (thread);
+    add (marked);
   }
 
   ThreadIndexListStore::ThreadIndexListStore () {
@@ -150,6 +151,7 @@ namespace Astroid {
 
       Gtk::ListStore::Row row = *iter;
       r->thread = row[list_store->columns.thread];
+      r->marked = row[list_store->columns.marked];
 
     }
   }
@@ -349,6 +351,26 @@ namespace Astroid {
             main_window->add_mode (new ForwardMessage (main_window, *(--mthread.messages.end())));
 
           }
+          return true;
+        }
+
+      case GDK_KEY_t:
+        {
+          if (list_store->children().size() < 1)
+            return true;
+
+          Gtk::TreePath path;
+          Gtk::TreeViewColumn *c;
+          get_cursor (path, c);
+          Gtk::TreeIter iter;
+
+          iter = list_store->get_iter (path);
+
+          if (iter) {
+            Gtk::ListStore::Row row = *iter;
+            row[list_store->columns.marked] = !row[list_store->columns.marked];
+          }
+
           return true;
         }
 
