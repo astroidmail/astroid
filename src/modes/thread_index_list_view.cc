@@ -380,7 +380,7 @@ namespace Astroid {
       /* group actions */
       case GDK_KEY_plus:
         {
-          thread_index->multi_key ("a: archive", bind(&ThreadIndexListView::multi_key_handler, this, _1));
+          thread_index->multi_key ("t: toggle, a: archive", bind(&ThreadIndexListView::multi_key_handler, this, _1));
 
           return true;
         }
@@ -525,6 +525,58 @@ namespace Astroid {
   void ThreadIndexListView::multi_key_handler (GdkEventKey * event) {
     log << debug << "tl: m k h" << endl;
 
+    Gtk::TreePath path;
+    Gtk::TreeIter fwditer;
+
+    /* forward iterating is much faster than going backwards:
+     * https://developer.gnome.org/gtkmm/3.11/classGtk_1_1TreeIter.html
+     */
+    fwditer = list_store->get_iter ("0");
+    Gtk::ListStore::Row row;
+
+
+    switch (event->keyval) {
+      case GDK_KEY_a:
+        {
+          vector<refptr<Action>> actions;
+
+          while (fwditer) {
+            row = *fwditer;
+            if (row[list_store->columns.marked]) {
+
+              row[list_store->columns.marked] = false;
+              auto thread = row[list_store->columns.thread];
+
+              actions.push_back (refptr<Action>(new ToggleAction(thread, "inbox")));
+            }
+
+            fwditer++;
+          }
+
+          Db db (Db::DbMode::DATABASE_READ_WRITE);
+          for (auto &a : actions) {
+            main_window->actions.doit (&db, a);
+          }
+
+          return;
+        }
+
+      case GDK_KEY_t:
+        {
+          while (fwditer) {
+            row = *fwditer;
+            if (row[list_store->columns.marked]) {
+
+              row[list_store->columns.marked] = false;
+
+            }
+
+            fwditer++;
+          }
+
+          return;
+        }
+    }
   }
 
   ModeHelpInfo * ThreadIndexListView::key_help () {
