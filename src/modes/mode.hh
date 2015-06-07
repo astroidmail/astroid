@@ -44,14 +44,24 @@ namespace Astroid {
       void on_yes ();
       void on_no ();
 
-    protected:
-      void ask_yes_no (ustring, function<void(bool)>);
-      bool mode_key_handler (GdkEventKey *);
+      /* multi key */
+      Gtk::Revealer * rev_multi;
+      Gtk::Label    * label_multi;
 
+      bool multi_waiting  = false;
+      function <void (GdkEventKey *)> multi_closure = NULL;
+
+    protected:
       const int MAX_TAB_LEN = 35;
       void set_label (ustring);
 
     public:
+      void ask_yes_no (ustring, function<void(bool)>);
+      void multi_key (ustring, function<void(GdkEventKey *)>);
+
+      bool mode_key_handler (GdkEventKey *);
+
+
       virtual void grab_modal () = 0;
       virtual void release_modal () = 0;
       virtual ModeHelpInfo * key_help ();

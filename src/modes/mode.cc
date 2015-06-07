@@ -14,10 +14,10 @@ namespace Astroid {
 
     tab_label.set_can_focus (false);
 
-    /* set up yes-no asker */
     if (interactive)
     {
       log << debug << "mode: setting up yes-no question." << endl;
+      /* set up yes-no asker */
       rev_yes_no = Gtk::manage (new Gtk::Revealer ());
       rev_yes_no->set_transition_type (Gtk::REVEALER_TRANSITION_TYPE_SLIDE_UP);
 
@@ -46,6 +46,23 @@ namespace Astroid {
 
       yes->signal_clicked().connect (sigc::mem_fun (this, &Mode::on_yes));
       no->signal_clicked().connect (sigc::mem_fun (this, &Mode::on_no));
+
+      /* multi key handler */
+      rev_multi = Gtk::manage (new Gtk::Revealer ());
+      rev_multi->set_transition_type (Gtk::REVEALER_TRANSITION_TYPE_SLIDE_UP);
+
+      Gtk::Box * rh_ = Gtk::manage(new Gtk::Box(Gtk::ORIENTATION_HORIZONTAL));
+
+      label_multi = Gtk::manage (new Gtk::Label ());
+      rh_->pack_start (*label_multi, true, true, 5);
+      label_multi->set_halign (Gtk::ALIGN_START);
+
+      rev_multi->set_margin_top (0);
+      rh->set_margin_bottom (5);
+
+      rev_multi->add (*rh_);
+      rev_multi->set_reveal_child (false);
+      pack_end (*rev_multi, false, true, 0);
     }
   }
 
@@ -79,7 +96,7 @@ namespace Astroid {
 
     log << info << "mode: " << question << endl;
 
-    if (yes_no_waiting) {
+    if (yes_no_waiting || multi_waiting) {
       log << warn << "mode: already waiting for answer to previous question, discarding this one." << endl;
       return;
     }
@@ -112,6 +129,25 @@ namespace Astroid {
     yes_no_waiting = false;
   }
 
+  void Mode::multi_key (ustring str,
+      function<void(GdkEventKey *)> closure)
+  {
+    if (!interactive) throw logic_error ("mode is not interactive!");
+
+    log << info << "mode: " << str << endl;
+
+    if (yes_no_waiting || multi_waiting) {
+      log << warn << "mode: already waiting for answer to previous question, discarding this one." << endl;
+      return;
+    }
+
+    multi_waiting = true;
+    multi_closure = closure;
+
+    rev_multi->set_reveal_child (true);
+    label_multi->set_text (str);
+  }
+
   bool Mode::mode_key_handler (GdkEventKey * event) {
     log << debug << "mode: got key press" << endl;
     if (!interactive) throw logic_error ("mode is not interactive!");
@@ -131,6 +167,26 @@ namespace Astroid {
       }
 
       /* swallow all other keys */
+      return true;
+
+    } else if (multi_waiting) {
+      /* close rev */
+      multi_waiting = false;
+
+      switch (event->keyval) {
+        case GDK_KEY_Escape:
+          {
+            break;
+          }
+
+        default:
+          {
+            multi_closure (event);
+          }
+      }
+
+      rev_multi->set_reveal_child (false);
+      multi_closure = NULL;
       return true;
     }
 

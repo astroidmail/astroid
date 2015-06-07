@@ -1,6 +1,7 @@
 # include <iostream>
 # include <algorithm>
 # include <vector>
+# include <functional>
 
 # include "db.hh"
 # include "log.hh"
@@ -157,6 +158,8 @@ namespace Astroid {
   }
 
   bool ThreadIndexListView::on_key_press_event (GdkEventKey *event) {
+    if (thread_index->mode_key_handler (event)) return true;
+
     switch (event->keyval) {
       case GDK_KEY_j:
       case GDK_KEY_Down:
@@ -374,6 +377,14 @@ namespace Astroid {
           return true;
         }
 
+      /* group actions */
+      case GDK_KEY_plus:
+        {
+          thread_index->multi_key ("a: archive", bind(&ThreadIndexListView::multi_key_handler, this, _1));
+
+          return true;
+        }
+
       /* load more threads */
       case GDK_KEY_M:
         {
@@ -511,6 +522,11 @@ namespace Astroid {
     return false;
   }
 
+  void ThreadIndexListView::multi_key_handler (GdkEventKey * event) {
+    log << debug << "tl: m k h" << endl;
+
+  }
+
   ModeHelpInfo * ThreadIndexListView::key_help () {
     ModeHelpInfo * m = new ModeHelpInfo ();
 
@@ -537,6 +553,8 @@ namespace Astroid {
       { "S", "Toggle 'spam' tag on thread" },
       { "C-m", "Toggle 'muted' tag on thread, it will be excluded from searches." },
       { "l", "Edit tags for thread" },
+      { "t", "Mark thread" },
+      { "+", "Apply action to marked thread" },
     };
 
     return m;

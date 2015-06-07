@@ -20,7 +20,7 @@
 using namespace std;
 
 namespace Astroid {
-  ThreadIndex::ThreadIndex (MainWindow *mw, ustring _query) : PanedMode(mw), query_string(_query) {
+  ThreadIndex::ThreadIndex (MainWindow *mw, ustring _query) : PanedMode(mw, true), query_string(_query) {
 
     set_orientation (Gtk::Orientation::ORIENTATION_VERTICAL);
     set_label (query_string);
