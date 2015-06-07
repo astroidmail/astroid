@@ -354,7 +354,8 @@ namespace Astroid {
       authors += ".";
     }
 
-    Glib::RefPtr<Pango::Layout> pango_layout = widget.create_pango_layout (Glib::Markup::escape_text(authors));
+    Glib::RefPtr<Pango::Layout> pango_layout = widget.create_pango_layout ("");
+    pango_layout->set_markup (Glib::Markup::escape_text(authors));
 
     pango_layout->set_font_description (font_description);
 
