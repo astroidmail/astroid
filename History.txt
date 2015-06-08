@@ -1,3 +1,9 @@
+==
+
+* Mark threads with 't' or 'T' and apply actions to all marked threads
+  with '+'.
+* #18: Fix display of &amp; and friends.
+
 == v0.3 / 2015-05-27
 
 * Poll script only updates changed threads (if notmuch_get_rev.. is

@@ -385,6 +385,21 @@ namespace Astroid {
           return true;
         }
 
+      case GDK_KEY_T:
+        {
+          /* toggle all */
+          Gtk::TreePath path;
+          Gtk::TreeIter fwditer;
+          fwditer = list_store->get_iter ("0");
+          Gtk::ListStore::Row row;
+          while (fwditer) {
+            row = *fwditer;
+            row[list_store->columns.marked] = !row[list_store->columns.marked];
+            fwditer++;
+          }
+          return true;
+        }
+
       /* load more threads */
       case GDK_KEY_M:
         {
@@ -544,7 +559,7 @@ namespace Astroid {
             row = *fwditer;
             if (row[list_store->columns.marked]) {
 
-              row[list_store->columns.marked] = false;
+              // row[list_store->columns.marked] = false;
               auto thread = row[list_store->columns.thread];
 
               actions.push_back (refptr<Action>(new ToggleAction(thread, "inbox")));
@@ -607,6 +622,7 @@ namespace Astroid {
       { "l", "Edit tags for thread" },
       { "t", "Mark thread" },
       { "+", "Apply action to marked thread" },
+      { "T", "Toggle marked on all loaded threads" },
     };
 
     return m;
