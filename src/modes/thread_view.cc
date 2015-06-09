@@ -219,6 +219,12 @@ namespace Astroid {
         ATTACHMENT_ICON_WIDTH,
         Gtk::ICON_LOOKUP_USE_BUILTIN );
 
+    /* load marked icon */
+    marked_icon = theme->load_icon (
+        "object-select-symbolic",
+        ATTACHMENT_ICON_WIDTH,
+        Gtk::ICON_LOOKUP_USE_BUILTIN );
+
     show_all_children ();
   } // }}}
 
@@ -709,7 +715,15 @@ namespace Astroid {
     set_message_html (m, div_message);
 
     /* insert attachments */
-    insert_attachments (m, div_message);
+    bool has_attachment = insert_attachments (m, div_message);
+
+    /* add attachment icon */
+    if (has_attachment) {
+      set_attachment_icon (m, div_message);
+    }
+
+    /* marked */
+    load_marked_icon (m, div_message);
 
     /* insert mime messages */
     insert_mime_messages (m, div_message);
@@ -1286,7 +1300,43 @@ namespace Astroid {
   /* headers end }}} */
 
   /* attachments {{{ */
-  void ThreadView::insert_attachments (
+  void ThreadView::set_attachment_icon (
+      refptr<Message> message,
+      WebKitDOMHTMLElement * div_message)
+
+  {
+    log << debug << "tv: adding attachment icon." << endl;
+
+    GError *err;
+
+    WebKitDOMHTMLElement * attachment_icon_img = select (
+        WEBKIT_DOM_NODE (div_message),
+        ".attachment.icon");
+
+    gchar * content;
+    gsize   content_size;
+    attachment_icon->save_to_buffer (content, content_size, "png");
+    ustring image_content_type = "image/png";
+
+    WebKitDOMHTMLImageElement *img = WEBKIT_DOM_HTML_IMAGE_ELEMENT (attachment_icon_img);
+
+    err = NULL;
+    webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (img), "src",
+        assemble_data_uri (image_content_type, content, content_size).c_str(), &err);
+
+    WebKitDOMDOMTokenList * class_list =
+      webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(div_message));
+
+    /* set class  */
+    webkit_dom_dom_token_list_add (class_list, "attachment",
+        (err = NULL, &err));
+
+    g_object_unref (class_list);
+    g_object_unref (attachment_icon_img);
+  }
+
+
+  bool ThreadView::insert_attachments (
       refptr<Message> message,
       WebKitDOMHTMLElement * div_message)
 
@@ -1388,6 +1438,8 @@ namespace Astroid {
     g_object_unref (attachment_template);
     g_object_unref (attachment_container);
     g_object_unref (d);
+
+    return (attachments > 0);
   }
 
   void ThreadView::set_attachment_src (
@@ -1481,6 +1533,44 @@ namespace Astroid {
 
   }
   /* attachments end }}} */
+
+  /* marked {{{ */
+  void ThreadView::load_marked_icon (
+      refptr<Message> message,
+      WebKitDOMHTMLElement * div_message)
+  {
+    log << debug << "tv: adding marked icon." << endl;
+
+    GError *err;
+
+    WebKitDOMHTMLElement * marked_icon_img = select (
+        WEBKIT_DOM_NODE (div_message),
+        ".marked.icon");
+
+    gchar * content;
+    gsize   content_size;
+    marked_icon->save_to_buffer (content, content_size, "png");
+    ustring image_content_type = "image/png";
+
+    WebKitDOMHTMLImageElement *img = WEBKIT_DOM_HTML_IMAGE_ELEMENT (marked_icon_img);
+
+    err = NULL;
+    webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (img), "src",
+        assemble_data_uri (image_content_type, content, content_size).c_str(), &err);
+
+    WebKitDOMDOMTokenList * class_list =
+      webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(div_message));
+
+    /* set class  */
+    webkit_dom_dom_token_list_add (class_list, "marked",
+        (err = NULL, &err));
+
+    g_object_unref (class_list);
+    g_object_unref (marked_icon_img);
+  }
+
+
+  // }}}
 
   /* mime messages {{{ */
   void ThreadView::insert_mime_messages (

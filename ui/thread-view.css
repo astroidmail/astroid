@@ -425,12 +425,21 @@ body.nohide .email .compressed_note > span {
     display: none;
 }
 
+.email:not(.marked) .marked.icon {
+    display: none;
+}
+.email .header_container .marked.icon {
+    float: right;
+    margin-top: 5px;
+}
+
 .email:not(.attachment) .attachment.icon {
     display: none;
 }
 .email .header_container .attachment.icon {
     float: right;
-    margin-top: 5px;
+    margin-top: 10px;
+    height: 20px;
 }
 .email > .attachment_container {
     padding-bottom: 10px;

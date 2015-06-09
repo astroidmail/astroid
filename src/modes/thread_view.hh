@@ -108,6 +108,7 @@ namespace Astroid {
           /* the message was expanded as part of an
            * C-n or C-p command */
           bool scroll_expanded = false;
+          bool marked;
 
           enum ElementType {
             Empty,
@@ -192,8 +193,13 @@ namespace Astroid {
       bool open_html_part_external;
       void display_part (refptr<Message>, refptr<Chunk>, MessageState::Element);
 
+      /* marked */
+      refptr<Gdk::Pixbuf> marked_icon;
+      void load_marked_icon (refptr<Message>, WebKitDOMHTMLElement *);
+
       /* attachments */
-      void insert_attachments (refptr<Message>, WebKitDOMHTMLElement *);
+      bool insert_attachments (refptr<Message>, WebKitDOMHTMLElement *);
+      void set_attachment_icon (refptr<Message>, WebKitDOMHTMLElement *);
 
       /* mime messages */
       void insert_mime_messages (refptr<Message>, WebKitDOMHTMLElement *);

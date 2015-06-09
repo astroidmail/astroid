@@ -101,7 +101,8 @@ namespace Astroid {
          notmuch_tags_valid (ntags);
          notmuch_tags_move_to_next (ntags)) {
 
-      tags.push_back (ustring(notmuch_tags_get (ntags)));
+      ustring t = ustring(notmuch_tags_get (ntags));
+      tags.push_back (t);
     }
 
   }
