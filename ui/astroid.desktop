@@ -1,6 +1,6 @@
 [Desktop Entry]
 Name=astroid
-Comment=Notmuch email client
+Comment=Graphical notmuch email client
 Exec=astroid %u
 Icon=mail-send-symbolic
 Terminal=false
