@@ -66,12 +66,25 @@ namespace Astroid {
       ( "no-auto-poll", "do not poll automatically");
 
     po::variables_map vm;
-    po::store ( po::command_line_parser (argc, argv).options(desc).run(), vm );
 
-    if (vm.count ("help")) {
+    bool show_help = false;
+
+    try {
+      po::store ( po::parse_command_line (argc, argv, desc), vm );
+    } catch (po::unknown_option &ex) {
+      cout << "unknown option" << endl;
+      cout << ex.what() << endl;
+      show_help = true;
+
+    }
+
+    show_help |= vm.count("help");
+
+    if (show_help) {
+
       cout << desc << endl;
-
       exit (0);
+
     }
 
     /* make new config {{{ */
