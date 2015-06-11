@@ -1309,7 +1309,7 @@ namespace Astroid {
 
     WebKitDOMHTMLElement * attachment_icon_img = select (
         WEBKIT_DOM_NODE (div_message),
-        ".attachment.icon");
+        ".attachment.icon.first");
 
     gchar * content;
     gsize   content_size;
@@ -1317,6 +1317,17 @@ namespace Astroid {
     ustring image_content_type = "image/png";
 
     WebKitDOMHTMLImageElement *img = WEBKIT_DOM_HTML_IMAGE_ELEMENT (attachment_icon_img);
+
+    err = NULL;
+    webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (img), "src",
+        assemble_data_uri (image_content_type, content, content_size).c_str(), &err);
+
+    g_object_unref (attachment_icon_img);
+
+    attachment_icon_img = select (
+        WEBKIT_DOM_NODE (div_message),
+        ".attachment.icon.sec");
+    img = WEBKIT_DOM_HTML_IMAGE_ELEMENT (attachment_icon_img);
 
     err = NULL;
     webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (img), "src",
@@ -1541,7 +1552,7 @@ namespace Astroid {
 
     WebKitDOMHTMLElement * marked_icon_img = select (
         WEBKIT_DOM_NODE (div_message),
-        ".marked.icon");
+        ".marked.icon.first");
 
     gchar * content;
     gsize   content_size;
@@ -1550,6 +1561,15 @@ namespace Astroid {
 
     WebKitDOMHTMLImageElement *img = WEBKIT_DOM_HTML_IMAGE_ELEMENT (marked_icon_img);
 
+    err = NULL;
+    webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (img), "src",
+        assemble_data_uri (image_content_type, content, content_size).c_str(), &err);
+
+    g_object_unref (marked_icon_img);
+    marked_icon_img = select (
+        WEBKIT_DOM_NODE (div_message),
+        ".marked.icon.sec");
+    img = WEBKIT_DOM_HTML_IMAGE_ELEMENT (marked_icon_img);
     err = NULL;
     webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (img), "src",
         assemble_data_uri (image_content_type, content, content_size).c_str(), &err);

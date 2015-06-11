@@ -425,22 +425,34 @@ body.nohide .email .compressed_note > span {
     display: none;
 }
 
+.email.hide .marked.icon.first {
+    display: none;
+}
+.email:not(.hide) .marked.icon.sec {
+    display: none;
+}
 .email:not(.marked) .marked.icon {
     display: none;
 }
 .email .header_container .marked.icon {
     float: right;
-    margin-top: 5px;
+    height: 20px;
 }
 
+.email.hide .attachment.icon.first {
+    display: none;
+}
+.email:not(.hide) .attachment.icon.sec {
+    display: none;
+}
 .email:not(.attachment) .attachment.icon {
     display: none;
 }
 .email .header_container .attachment.icon {
     float: right;
-    margin-top: 10px;
     height: 20px;
 }
+
 .email > .attachment_container {
     padding-bottom: 10px;
 }
