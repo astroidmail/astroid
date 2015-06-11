@@ -1305,8 +1305,6 @@ namespace Astroid {
       WebKitDOMHTMLElement * div_message)
 
   {
-    log << debug << "tv: adding attachment icon." << endl;
-
     GError *err;
 
     WebKitDOMHTMLElement * attachment_icon_img = select (
@@ -1539,8 +1537,6 @@ namespace Astroid {
       refptr<Message> message,
       WebKitDOMHTMLElement * div_message)
   {
-    log << debug << "tv: adding marked icon." << endl;
-
     GError *err;
 
     WebKitDOMHTMLElement * marked_icon_img = select (
@@ -1558,15 +1554,33 @@ namespace Astroid {
     webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (img), "src",
         assemble_data_uri (image_content_type, content, content_size).c_str(), &err);
 
+    g_object_unref (marked_icon_img);
+  }
+
+  void ThreadView::update_marked_state (refptr<Message> m) {
+    GError *err;
+    ustring mid = "message_" + m->mid;
+
+    WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
+
+    WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
+
     WebKitDOMDOMTokenList * class_list =
-      webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(div_message));
+      webkit_dom_element_get_class_list (e);
 
     /* set class  */
-    webkit_dom_dom_token_list_add (class_list, "marked",
-        (err = NULL, &err));
+    if (state[m].marked) {
+      webkit_dom_dom_token_list_add (class_list, "marked",
+          (err = NULL, &err));
+    } else {
+      webkit_dom_dom_token_list_remove (class_list, "marked",
+          (err = NULL, &err));
+    }
 
     g_object_unref (class_list);
-    g_object_unref (marked_icon_img);
+    g_object_unref (e);
+    g_object_unref (d);
+
   }
 
 
@@ -1837,6 +1851,25 @@ namespace Astroid {
           toggle_hidden ();
           return true;
         }
+
+      /* marked */
+      case GDK_KEY_t:
+        {
+          state[focused_message].marked = !(state[focused_message].marked);
+          update_marked_state (focused_message);
+          return true;
+        }
+
+      case GDK_KEY_T:
+        {
+          for (auto &s : state) {
+            s.second.marked = !s.second.marked;
+            update_marked_state (s.first);
+          }
+
+          return true;
+        }
+
 
       /* save all attachments */
       case GDK_KEY_S:

@@ -108,7 +108,7 @@ namespace Astroid {
           /* the message was expanded as part of an
            * C-n or C-p command */
           bool scroll_expanded = false;
-          bool marked;
+          bool marked = false;
 
           enum ElementType {
             Empty,
@@ -196,6 +196,7 @@ namespace Astroid {
       /* marked */
       refptr<Gdk::Pixbuf> marked_icon;
       void load_marked_icon (refptr<Message>, WebKitDOMHTMLElement *);
+      void update_marked_state (refptr<Message>);
 
       /* attachments */
       bool insert_attachments (refptr<Message>, WebKitDOMHTMLElement *);
