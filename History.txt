@@ -2,6 +2,8 @@
 
 * Mark threads with 't' or 'T' and apply actions to all marked threads
   with '+'.
+* Mark messages with 't' or 'T' in thread-view and apply actions to all
+  marked threads with '+'.
 * #18: Fix display of &amp; and friends.
 
 == v0.3 / 2015-05-27
