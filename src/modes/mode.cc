@@ -149,7 +149,6 @@ namespace Astroid {
   }
 
   bool Mode::mode_key_handler (GdkEventKey * event) {
-    log << debug << "mode: got key press" << endl;
     if (!interactive) throw logic_error ("mode is not interactive!");
 
     if (yes_no_waiting) {
