@@ -28,7 +28,7 @@ namespace Astroid {
     /* quote original message */
     ostringstream quoted;
 
-    ustring quoting_a = ustring::compose ("Forwarding %1's message of %2:",
+    ustring quoting_a = ustring::compose (astroid->config->config.get<string> ("mail.forward.quote_line"),
         Address(msg->sender.raw()).fail_safe_name(), msg->pretty_verbose_date());
 
     quoted  << quoting_a.raw ()
