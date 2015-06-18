@@ -14,6 +14,9 @@ namespace Astroid {
       ForwardMessage (MainWindow *, refptr<Message>);
 
       refptr<Message> msg;
+
+    private:
+      void on_message_sent_attempt_received (bool);
   };
 }
 

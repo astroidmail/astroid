@@ -72,6 +72,31 @@ namespace Astroid {
     m_signal_thread_updated.emit (db, thread_id);
   }
 
+  /* message */
+  GlobalActions::type_signal_message_updated
+    GlobalActions::signal_message_updated ()
+  {
+    return m_signal_message_updated;
+  }
+
+  void GlobalActions::emit_message_updated (Db * db, ustring message_id) {
+    log << info << "actions: emitted updated signal for message: " << message_id << endl;
+    m_signal_message_updated.emit (db, message_id);
+
+    db->on_message (message_id,
+        [&] (notmuch_message_t * nm_msg) {
+          const char * tidc = notmuch_message_get_thread_id (nm_msg);
+          ustring tid;
+          if (tidc != NULL) {
+            tid = ustring(tidc);
+
+            emit_thread_updated (db, tid);
+
+          }
+      });
+  }
+
+  /* refreshed */
   GlobalActions::type_signal_refreshed
     GlobalActions::signal_refreshed ()
   {

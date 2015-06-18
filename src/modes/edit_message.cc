@@ -655,6 +655,8 @@ namespace Astroid {
     delete sending_message;
 
     on_tv_ready ();
+
+    emit_message_sent_attempt (result_from_sender);
   }
 
   void EditMessage::lock_message_after_send () {
@@ -841,6 +843,17 @@ namespace Astroid {
 
   void EditMessage::release_modal () {
     remove_modal_grab ();
+  }
+
+  /* message sent attempt signal */
+  EditMessage::type_message_sent_attempt
+    EditMessage::message_sent_attempt ()
+  {
+    return m_message_sent_attempt;
+  }
+
+  void EditMessage::emit_message_sent_attempt (bool res) {
+    m_message_sent_attempt.emit (res);
   }
 
   /* from combo box {{{ */

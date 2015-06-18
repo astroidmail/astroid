@@ -2,9 +2,12 @@
 # include <memory>
 
 # include "astroid.hh"
+# include "db.hh"
 # include "log.hh"
 # include "edit_message.hh"
 # include "forward_message.hh"
+
+# include "actions/action_manager.hh"
 
 # include "message_thread.hh"
 # include "utils/address.hh"
@@ -70,6 +73,33 @@ namespace Astroid {
     read_edited_message ();
 
     activate_field (Thread);
+
+    /* sent signal */
+    message_sent_attempt().connect (
+        sigc::mem_fun (this, &ForwardMessage::on_message_sent_attempt_received));
+  }
+
+  void ForwardMessage::on_message_sent_attempt_received (bool res) {
+    if (res) {
+      log << info << "fwd: message successfully sent, adding passed tag to original." << endl;
+
+      if (!msg->in_notmuch) {
+        log << warn << "fwd: message not in notmuch." << endl;
+        return;
+      }
+
+      Db db(Db::DATABASE_READ_WRITE);
+
+      db.on_message (msg->mid,
+          [&] (notmuch_message_t * nm_msg) {
+
+            notmuch_message_add_tag (nm_msg, "passed");
+
+          });
+
+
+      astroid->global_actions->emit_message_updated (&db, msg->mid);
+    }
   }
 }
 

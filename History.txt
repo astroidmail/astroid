@@ -7,6 +7,9 @@
 * Show attached icon in thread-view.
 * #18: Fix display of &amp; and friends.
 * Configurable quote string for replying and forwarding.
+* Replying adds 'replied' tag to original.
+* Forwarding adds 'passed' tag to original.
+* Message is updated thread-index after being sent.
 
 == v0.3 / 2015-05-27
 

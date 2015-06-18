@@ -31,6 +31,12 @@ namespace Astroid {
 
       void emit_thread_updated (Db *, ustring);
 
+      /* message update signal */
+      typedef sigc::signal <void, Db *, ustring> type_signal_message_updated;
+      type_signal_message_updated signal_message_updated ();
+
+      void emit_message_updated (Db *, ustring);
+
       /* refresh signal (after polling) */
       typedef sigc::signal <void> type_signal_refreshed;
       type_signal_refreshed signal_refreshed ();
@@ -41,6 +47,7 @@ namespace Astroid {
 
     protected:
       type_signal_thread_updated m_signal_thread_updated;
+      type_signal_thread_updated m_signal_message_updated;
       type_signal_refreshed m_signal_refreshed;
 
   };

@@ -84,6 +84,7 @@ namespace Astroid {
       type_message_sent message_sent ();
 
       void emit_message_sent (bool);
+
       bool message_sent_result;
       void dispatch_emit_message_sent();
       Glib::Dispatcher d_message_sent;

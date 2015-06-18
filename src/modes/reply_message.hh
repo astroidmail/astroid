@@ -41,6 +41,8 @@ namespace Astroid {
       void load_receivers ();
       void on_receiver_combo_changed ();
 
+      void on_message_sent_attempt_received (bool);
+
     protected:
       virtual bool on_key_press_event (GdkEventKey *) override;
   };
