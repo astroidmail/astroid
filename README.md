@@ -3,8 +3,19 @@
   A graphical threads-with-tags mail user agent based on [sup] and [notmuch].
   Written in C++ using [GTK+], [WebKit] and [gmime].
 
-  <a href="http://gaute.vetsj.com/pages/astroid.html">
+  <a href="https://raw.githubusercontent.com/gauteh/astroid/master/doc/astroid-full-window.png">
     <img src="https://raw.githubusercontent.com/gauteh/astroid/master/doc/astroid-full-window.png">
+  </a>
+
+  <a href="https://raw.githubusercontent.com/gauteh/astroid/master/doc/astroid-thread-view.png">
+    <img src="https://raw.githubusercontent.com/gauteh/astroid/master/doc/astroid-thread-view.png" width="49%">
+  </a> <a href="https://raw.githubusercontent.com/gauteh/astroid/master/doc/astroid-searching.png">
+    <img src="https://raw.githubusercontent.com/gauteh/astroid/master/doc/astroid-searching.png" width="49%" style="float: right;">
+  </a>
+  <a href="https://raw.githubusercontent.com/gauteh/astroid/master/doc/astroid-editor-vim.png">
+    <img src="https://raw.githubusercontent.com/gauteh/astroid/master/doc/astroid-editor-vim.png" width="49%">
+  </a> <a href="https://raw.githubusercontent.com/gauteh/astroid/master/doc/astroid-compose-code-highlight.png">
+    <img src="https://raw.githubusercontent.com/gauteh/astroid/master/doc/astroid-compose-code-highlight.png" width="49%" style="float: right;">
   </a>
 
 ## design and user interface goals
