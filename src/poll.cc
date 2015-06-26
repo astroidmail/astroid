@@ -21,6 +21,8 @@ namespace Astroid {
   Poll::Poll (bool auto_polling_enabled) {
     log << info << "poll: setting up." << endl;
 
+    poll_state = false;
+
     poll_interval = astroid->config->config.get<int> ("poll.interval");
     log << debug << "poll: interval: " << poll_interval << endl;
 
@@ -67,6 +69,8 @@ namespace Astroid {
   }
 
   void Poll::do_poll () {
+    set_poll_state (true);
+
     t0 = chrono::steady_clock::now ();
 
     path poll_script_uri = astroid->config->config_dir / path(poll_script);
@@ -83,6 +87,7 @@ namespace Astroid {
       log << error << "poll: poll script does not exist or is not a regular file." << endl;
 
       m_dopoll.unlock ();
+      set_poll_state (false);
       return;
     }
 
@@ -99,6 +104,9 @@ namespace Astroid {
                         );
     } catch (Glib::SpawnError &ex) {
       log << error << "poll: exception while running poll script: " <<  ex.what () << endl;
+      set_poll_state (false);
+      m_dopoll.unlock ();
+      return;
     }
 
     /* connect channels */
@@ -161,6 +169,7 @@ namespace Astroid {
     // - use lastmod to figure out how many messages have been added or changed
     //   during poll.
     log << info << "poll: done (time: " << elapsed.count() << " s) (child status: " << child_status << ")" << endl;
+    set_poll_state (false);
 
     /* close process */
     Glib::spawn_close_pid (pid);
@@ -219,6 +228,25 @@ namespace Astroid {
     }
 
     m_dopoll.unlock ();
+  }
+
+  Poll::type_signal_poll_state
+    Poll::signal_poll_state ()
+  {
+    return m_signal_poll_state;
+  }
+
+  void Poll::emit_poll_state (bool state) {
+    log << info << "poll: emitted poll state: " << state << endl;
+
+    m_signal_poll_state.emit (state);
+  }
+
+  void Poll::set_poll_state (bool state) {
+    if (state != poll_state) {
+      poll_state = state;
+      emit_poll_state (state);
+    }
   }
 }
 

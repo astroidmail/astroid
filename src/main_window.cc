@@ -2,6 +2,7 @@
 
 # include <gtkmm.h>
 # include <gtkmm/widget.h>
+# include <gtkmm/notebook.h>
 
 # include "astroid.hh"
 # include "build_config.hh"
@@ -24,7 +25,24 @@ namespace Astroid {
   Notebook::Notebook () {
     set_scrollable (true);
 
+    /* set up spinner for poll */
+    icons.pack_end (poll_spinner, true, true, 5);
+
     set_action_widget (&icons, Gtk::PACK_END);
+    icons.show_all ();
+
+    poll_spinner.stop ();
+
+    astroid->poll->signal_poll_state ().connect (
+        sigc::mem_fun (this, &Notebook::poll_state_changed));
+  }
+
+  void Notebook::poll_state_changed (bool state) {
+    if (state) {
+      poll_spinner.start ();
+    } else {
+      poll_spinner.stop ();
+    }
   }
 
   MainWindow::MainWindow () {

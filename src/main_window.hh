@@ -4,6 +4,7 @@
 
 # include <gtkmm.h>
 # include <gtkmm/window.h>
+# include <gtkmm/notebook.h>
 
 # include "proto.hh"
 # include "command_bar.hh"
@@ -18,7 +19,9 @@ namespace Astroid {
       Notebook ();
 
       Gtk::HBox icons;
+      Gtk::Spinner poll_spinner;
 
+      void poll_state_changed (bool);
   };
 
   class MainWindow : public Gtk::Window {

@@ -44,6 +44,20 @@ namespace Astroid {
       bool log_out (Glib::IOCondition);
       bool log_err (Glib::IOCondition);
       void child_watch (GPid, int);
+
+      bool poll_state;
+      void set_poll_state (bool);
+
+    public:
+      bool get_poll_state ();
+
+      /* poll state change signal */
+      typedef sigc::signal <void, bool> type_signal_poll_state;
+      type_signal_poll_state signal_poll_state ();
+
+      void emit_poll_state (bool);
+    protected:
+      type_signal_poll_state m_signal_poll_state;
   };
 }
 

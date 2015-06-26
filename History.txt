@@ -10,6 +10,7 @@
 * Replying adds 'replied' tag to original.
 * Forwarding adds 'passed' tag to original.
 * Message is updated thread-index after being sent.
+* Show spinner in main window when polling.
 
 == v0.3 / 2015-05-27
 
