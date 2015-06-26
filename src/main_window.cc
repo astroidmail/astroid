@@ -31,10 +31,11 @@ namespace Astroid {
     set_action_widget (&icons, Gtk::PACK_END);
     icons.show_all ();
 
-    poll_spinner.stop ();
-
     astroid->poll->signal_poll_state ().connect (
         sigc::mem_fun (this, &Notebook::poll_state_changed));
+
+    if (astroid->poll->get_poll_state())
+      poll_spinner.start ();
   }
 
   void Notebook::poll_state_changed (bool state) {

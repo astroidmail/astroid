@@ -248,5 +248,9 @@ namespace Astroid {
       emit_poll_state (state);
     }
   }
+
+  bool Poll::get_poll_state () {
+    return poll_state;
+  }
 }
 
