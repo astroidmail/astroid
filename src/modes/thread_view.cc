@@ -1875,21 +1875,24 @@ namespace Astroid {
       /* marked */
       case GDK_KEY_t:
         {
-          state[focused_message].marked = !(state[focused_message].marked);
-          update_marked_state (focused_message);
-          return true;
+          if (!edit_mode) {
+            state[focused_message].marked = !(state[focused_message].marked);
+            update_marked_state (focused_message);
+            return true;
+          }
         }
 
       case GDK_KEY_T:
         {
-          for (auto &s : state) {
-            s.second.marked = !s.second.marked;
-            update_marked_state (s.first);
+          if (!edit_mode) {
+            for (auto &s : state) {
+              s.second.marked = !s.second.marked;
+              update_marked_state (s.first);
+            }
+
+            return true;
           }
-
-          return true;
         }
-
 
       /* save all attachments */
       case GDK_KEY_S:
