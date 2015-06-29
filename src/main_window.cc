@@ -41,9 +41,9 @@ namespace Astroid {
       icons.pack_end (poll_spinner, true, true, 5);
       icons.show_all ();
       poll_spinner.start ();
-    } else if (spinner_on) {
-      icons.remove (poll_spinner);
+    } else if (!state && spinner_on) {
       poll_spinner.stop ();
+      icons.remove (poll_spinner);
       spinner_on = false;
     }
   }

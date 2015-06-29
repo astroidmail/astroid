@@ -47,6 +47,8 @@ namespace Astroid {
 
       bool poll_state;
       void set_poll_state (bool);
+      Glib::Dispatcher d_poll_state;
+      void poll_state_dispatch ();
 
     public:
       bool get_poll_state ();

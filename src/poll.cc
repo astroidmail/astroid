@@ -37,6 +37,8 @@ namespace Astroid {
     } else {
       log << info << "poll: periodic polling disabled." << endl;
     }
+
+    d_poll_state.connect (sigc::mem_fun (this, &Poll::poll_state_dispatch));
   }
 
   bool Poll::periodic_polling () {
@@ -230,6 +232,10 @@ namespace Astroid {
     m_dopoll.unlock ();
   }
 
+  void Poll::poll_state_dispatch () {
+    emit_poll_state (poll_state);
+  }
+
   Poll::type_signal_poll_state
     Poll::signal_poll_state ()
   {
@@ -245,7 +251,7 @@ namespace Astroid {
   void Poll::set_poll_state (bool state) {
     if (state != poll_state) {
       poll_state = state;
-      emit_poll_state (state);
+      d_poll_state.emit ();
     }
   }
 
