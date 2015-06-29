@@ -11,6 +11,7 @@
 * Forwarding adds 'passed' tag to original.
 * Message is updated thread-index after being sent.
 * Show spinner in main window when polling.
+* Show status icon for message sending.
 
 == v0.3 / 2015-05-27
 

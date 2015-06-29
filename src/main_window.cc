@@ -25,25 +25,35 @@ namespace Astroid {
   Notebook::Notebook () {
     set_scrollable (true);
 
-    /* set up spinner for poll */
-    icons.pack_end (poll_spinner, true, true, 5);
-
     set_action_widget (&icons, Gtk::PACK_END);
     icons.show_all ();
 
     astroid->poll->signal_poll_state ().connect (
         sigc::mem_fun (this, &Notebook::poll_state_changed));
 
-    if (astroid->poll->get_poll_state())
-      poll_spinner.start ();
+    poll_state_changed (astroid->poll->get_poll_state());
   }
 
   void Notebook::poll_state_changed (bool state) {
     if (state) {
+      /* set up spinner for poll */
+      icons.pack_end (poll_spinner, true, true, 5);
+      icons.show_all ();
       poll_spinner.start ();
     } else {
+      icons.remove (poll_spinner);
       poll_spinner.stop ();
     }
+  }
+
+  void Notebook::add_widget (Gtk::Widget * w) {
+    icons.pack_start (*w, true, true, 5);
+    w->show ();
+    icons.show_all ();
+  }
+
+  void Notebook::remove_widget (Gtk::Widget * w) {
+    icons.remove (*w);
   }
 
   MainWindow::MainWindow () {

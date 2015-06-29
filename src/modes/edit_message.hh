@@ -154,6 +154,10 @@ namespace Astroid {
       fstream tmpfile;
       void make_tmpfile ();
 
+      Gtk::Image message_sending_status_icon;
+      bool status_icon_visible = false;
+
+
       bool message_sent = false;
       void lock_message_after_send ();
 

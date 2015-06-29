@@ -22,6 +22,9 @@ namespace Astroid {
       Gtk::Spinner poll_spinner;
 
       void poll_state_changed (bool);
+
+      void add_widget (Gtk::Widget *);
+      void remove_widget (Gtk::Widget *);
   };
 
   class MainWindow : public Gtk::Window {

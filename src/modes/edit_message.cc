@@ -210,6 +210,10 @@ namespace Astroid {
   EditMessage::~EditMessage () {
     log << debug << "em: deconstruct." << endl;
 
+    if (status_icon_visible) {
+      main_window->notebook.remove_widget (&message_sending_status_icon);
+    }
+
     if (vim_started) {
       vim_remote_keys ("<ESC>:quit!<CR>");
     }
@@ -631,6 +635,18 @@ namespace Astroid {
 
     fields_hide ();
     sending_in_progress.store (true);
+
+    /* set message sending icon */
+    status_icon_visible = true;
+    Glib::RefPtr<Gtk::IconTheme> theme = Gtk::IconTheme::get_default();
+    Glib::RefPtr<Gdk::Pixbuf> pixbuf = theme->load_icon (
+        "mail-send",
+        42,
+        Gtk::ICON_LOOKUP_USE_BUILTIN );
+    message_sending_status_icon.set (pixbuf);
+
+    main_window->notebook.add_widget (&message_sending_status_icon);
+
     c->send_threaded ();
 
     sending_message = c;
@@ -640,16 +656,33 @@ namespace Astroid {
 
   void EditMessage::send_message_finished (bool result_from_sender) {
     log << info << "em: message sending done." << endl;
+    status_icon_visible = true;
+
+    Glib::RefPtr<Gtk::IconTheme> theme = Gtk::IconTheme::get_default();
+    Glib::RefPtr<Gdk::Pixbuf> pixbuf;
+
     if (result_from_sender) {
       info_str = "message sent successfully!";
       warning_str = "";
       lock_message_after_send ();
+
+      pixbuf = theme->load_icon (
+          "gtk-apply",
+          42,
+          Gtk::ICON_LOOKUP_USE_BUILTIN );
+
     } else {
       warning_str = "message could not be sent!";
       info_str = "";
       fields_show ();
+
+      pixbuf = theme->load_icon (
+         "error",
+          42,
+          Gtk::ICON_LOOKUP_USE_BUILTIN );
     }
 
+    message_sending_status_icon.set (pixbuf);
     sending_in_progress.store (false);
 
     delete sending_message;
