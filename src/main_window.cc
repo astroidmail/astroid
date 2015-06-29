@@ -35,14 +35,16 @@ namespace Astroid {
   }
 
   void Notebook::poll_state_changed (bool state) {
-    if (state) {
+    if (state && !spinner_on) {
       /* set up spinner for poll */
+      spinner_on = true;
       icons.pack_end (poll_spinner, true, true, 5);
       icons.show_all ();
       poll_spinner.start ();
-    } else {
+    } else if (spinner_on) {
       icons.remove (poll_spinner);
       poll_spinner.stop ();
+      spinner_on = false;
     }
   }
 

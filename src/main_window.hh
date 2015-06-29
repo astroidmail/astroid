@@ -18,13 +18,15 @@ namespace Astroid {
     public:
       Notebook ();
 
-      Gtk::HBox icons;
-      Gtk::Spinner poll_spinner;
-
-      void poll_state_changed (bool);
-
       void add_widget (Gtk::Widget *);
       void remove_widget (Gtk::Widget *);
+
+    private:
+      Gtk::HBox icons;
+      Gtk::Spinner poll_spinner;
+      bool spinner_on = false;
+
+      void poll_state_changed (bool);
   };
 
   class MainWindow : public Gtk::Window {
