@@ -553,7 +553,7 @@ namespace Astroid {
     switch (event->keyval) {
       case GDK_KEY_a:
         {
-          vector<refptr<Action>> actions;
+          vector<refptr<NotmuchThread>> threads;
 
           while (fwditer) {
             row = *fwditer;
@@ -562,16 +562,17 @@ namespace Astroid {
               // row[list_store->columns.marked] = false;
               auto thread = row[list_store->columns.thread];
 
-              actions.push_back (refptr<Action>(new ToggleAction(thread, "inbox")));
+              threads.push_back (thread);
+              //actions.push_back (refptr<Action>(new ToggleAction(thread, "inbox")));
             }
 
             fwditer++;
           }
 
+          refptr<Action> ta = refptr<Action>(new ToggleAction(threads, "inbox"));
+
           Db db (Db::DbMode::DATABASE_READ_WRITE);
-          for (auto &a : actions) {
-            main_window->actions.doit (&db, a);
-          }
+          main_window->actions.doit (&db, ta);
 
           return;
         }

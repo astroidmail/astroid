@@ -15,12 +15,19 @@ namespace Astroid {
           const vector<ustring>,
           const vector<ustring>);
 
+      TagAction (vector<refptr<NotmuchThread>>);
+
+      TagAction (
+          vector<refptr<NotmuchThread>>,
+          const vector<ustring>,
+          const vector<ustring>);
+
       vector<ustring> add;
       vector<ustring> remove;
 
-      bool doit (Db *) override;
-      bool undo (Db *) override;
-      bool undoable () override;
+      virtual bool doit (Db *) override;
+      virtual bool undo (Db *) override;
+      virtual bool undoable () override;
 
   };
 

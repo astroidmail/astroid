@@ -24,41 +24,56 @@ namespace Astroid {
   {
   }
 
+  TagAction::TagAction ( vector<refptr<NotmuchThread>> nmts)
+  : Action(nmts)
+  {
+  }
+
+  TagAction::TagAction (
+      vector<refptr<NotmuchThread>> nmts,
+      vector<ustring> _add,
+      vector<ustring> _remove)
+  : Action(nmts), add (_add), remove (_remove)
+  {
+  }
+
   bool TagAction::undoable () {
     return true;
   }
 
   bool TagAction::doit (Db * db) {
-    log << info << "tag_action: " << thread->thread_id << ", add: ";
-    for_each (add.begin(),
-              add.end(),
-              [&](ustring t) {
-                log << t << ", ";
-              });
-
-    log << "remove: ";
-    for_each (remove.begin(),
-              remove.end(),
-              [&](ustring t) {
-                log << t << ", ";
-              });
-
-    log << endl;
-
     bool res = true;
+    for (auto &thread : threads) {
+      log << info << "tag_action: " << thread->thread_id << ", add: ";
+      for_each (add.begin(),
+                add.end(),
+                [&](ustring t) {
+                  log << t << ", ";
+                });
 
-    for_each (add.begin(),
-              add.end(),
-              [&](ustring t) {
-                res &= thread->add_tag (db, t);
-              });
+      log << "remove: ";
+      for_each (remove.begin(),
+                remove.end(),
+                [&](ustring t) {
+                  log << t << ", ";
+                });
 
-    for_each (remove.begin(),
-              remove.end(),
-              [&](ustring t) {
-                res &= thread->remove_tag (db, t);
-              });
+      log << endl;
 
+
+      for_each (add.begin(),
+                add.end(),
+                [&](ustring t) {
+                  res &= thread->add_tag (db, t);
+                });
+
+      for_each (remove.begin(),
+                remove.end(),
+                [&](ustring t) {
+                  res &= thread->remove_tag (db, t);
+                });
+
+    }
     return res;
   }
 

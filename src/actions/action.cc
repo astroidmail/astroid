@@ -11,16 +11,21 @@ using namespace std;
 namespace Astroid {
   Action::Action (refptr<NotmuchThread> nmt) {
 
-    thread = nmt;
+    threads.push_back (nmt);
 
   }
+
+  Action::Action (vector<refptr<NotmuchThread>> nmts) :
+    threads (nmts) { }
 
   bool Action::undoable () {
     return false;
   }
 
   void Action::emit (Db * db) {
-    astroid->global_actions->emit_thread_updated (db, thread->thread_id);
+    for (auto &t : threads) {
+      astroid->global_actions->emit_thread_updated (db, t->thread_id);
+    }
   }
 }
 

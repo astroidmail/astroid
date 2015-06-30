@@ -70,6 +70,7 @@ namespace Astroid {
 
     protected:
       virtual bool on_key_press_event (GdkEventKey *) override;
+      ustring multi_key_help = "t: toggle, a: archive, l: label";
       void multi_key_handler (GdkEventKey *);
       void on_my_row_activated  (const Gtk::TreeModel::Path &, Gtk::TreeViewColumn *);
 

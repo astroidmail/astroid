@@ -22,9 +22,7 @@ namespace Astroid {
 
     bool res = action->doit (db);
 
-    if (res) {
-      action->emit (db);
-    }
+    action->emit (db);
 
     return res;
   }
@@ -39,9 +37,7 @@ namespace Astroid {
 
       bool res = action->undo (&db);
 
-      if (res) {
-        action->emit (&db);
-      }
+      action->emit (&db);
 
       return res;
     } else {
