@@ -380,7 +380,7 @@ namespace Astroid {
       /* group actions */
       case GDK_KEY_plus:
         {
-          thread_index->multi_key ("t: toggle, a: archive", bind(&ThreadIndexListView::multi_key_handler, this, _1));
+          thread_index->multi_key (multi_key_help, bind(&ThreadIndexListView::multi_key_handler, this, _1));
 
           return true;
         }
@@ -537,7 +537,7 @@ namespace Astroid {
     return false;
   }
 
-  void ThreadIndexListView::multi_key_handler (GdkEventKey * event) {
+  bool ThreadIndexListView::multi_key_handler (GdkEventKey * event) {
     log << debug << "tl: m k h" << endl;
 
     Gtk::TreePath path;
@@ -551,6 +551,11 @@ namespace Astroid {
 
 
     switch (event->keyval) {
+      case GDK_KEY_asterisk:
+      case GDK_KEY_N:
+      case GDK_KEY_S:
+      case GDK_KEY_l:
+      case GDK_KEY_m:
       case GDK_KEY_a:
         {
           vector<refptr<NotmuchThread>> threads;
@@ -563,19 +568,47 @@ namespace Astroid {
               auto thread = row[list_store->columns.thread];
 
               threads.push_back (thread);
-              //actions.push_back (refptr<Action>(new ToggleAction(thread, "inbox")));
             }
 
             fwditer++;
           }
 
-          refptr<Action> ta = refptr<Action>(new ToggleAction(threads, "inbox"));
+          refptr<Action> a;
+          switch (event->keyval) {
+            case GDK_KEY_a:
+              a = refptr<Action>(new ToggleAction(threads, "inbox"));
+              break;
 
-          Db db (Db::DbMode::DATABASE_READ_WRITE);
-          main_window->actions.doit (&db, ta);
+            case GDK_KEY_asterisk:
+              a = refptr<Action>(new ToggleAction(threads, "flagged"));
+              break;
 
-          return;
+            case GDK_KEY_N:
+              a = refptr<Action>(new ToggleAction(threads, "unread"));
+              break;
+
+            case GDK_KEY_S:
+              a = refptr<Action>(new SpamAction(threads));
+              break;
+
+            case GDK_KEY_m:
+              if ((event->state & GDK_CONTROL_MASK)) {
+                a = refptr<Action>(new MuteAction(threads));
+              }
+              break;
+
+            default:
+              return false;
+          }
+
+          if (a) {
+            Db db (Db::DbMode::DATABASE_READ_WRITE);
+            main_window->actions.doit (&db, a);
+          }
+
+          return true;
         }
+
 
       case GDK_KEY_t:
         {
@@ -590,9 +623,11 @@ namespace Astroid {
             fwditer++;
           }
 
-          return;
+          return true;
         }
     }
+
+    return false;
   }
 
   ModeHelpInfo * ThreadIndexListView::key_help () {

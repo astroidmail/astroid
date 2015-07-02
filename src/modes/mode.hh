@@ -49,7 +49,7 @@ namespace Astroid {
       Gtk::Label    * label_multi;
 
       bool multi_waiting  = false;
-      function <void (GdkEventKey *)> multi_closure = NULL;
+      function <bool (GdkEventKey *)> multi_closure = NULL;
 
     protected:
       const int MAX_TAB_LEN = 35;
@@ -57,7 +57,7 @@ namespace Astroid {
 
     public:
       void ask_yes_no (ustring, function<void(bool)>);
-      void multi_key (ustring, function<void(GdkEventKey *)>);
+      void multi_key (ustring, function<bool(GdkEventKey *)>);
 
       bool mode_key_handler (GdkEventKey *);
 

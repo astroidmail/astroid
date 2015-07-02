@@ -130,7 +130,7 @@ namespace Astroid {
   }
 
   void Mode::multi_key (ustring str,
-      function<void(GdkEventKey *)> closure)
+      function<bool(GdkEventKey *)> closure)
   {
     if (!interactive) throw logic_error ("mode is not interactive!");
 
@@ -169,8 +169,7 @@ namespace Astroid {
       return true;
 
     } else if (multi_waiting) {
-      /* close rev */
-      multi_waiting = false;
+      bool res = false;
 
       switch (event->keyval) {
         case GDK_KEY_Escape:
@@ -180,13 +179,19 @@ namespace Astroid {
 
         default:
           {
-            multi_closure (event);
+            res = multi_closure (event);
           }
+
+        /* close rev */
+        multi_waiting = !res;
       }
 
-      rev_multi->set_reveal_child (false);
-      multi_closure = NULL;
-      return true;
+      if (res) {
+        rev_multi->set_reveal_child (false);
+        multi_closure = NULL;
+      }
+
+      return res;
     }
 
     return false;
