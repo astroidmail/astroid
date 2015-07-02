@@ -50,8 +50,8 @@ namespace Astroid {
       queue <LogLine> lines;
       mutex m_lines;
 
-      recursive_mutex m_reading_line;
-      bool flush_log ();
+      void flush_log ();
+      Glib::Dispatcher d_flush;
 
     public:
 

@@ -18,8 +18,8 @@ namespace Astroid {
   {
     _next_level = debug;
 
-    Glib::signal_timeout ().connect (
-        sigc::mem_fun (this, &Log::flush_log), 50);
+    d_flush.connect (
+        sigc::mem_fun (this, &Log::flush_log));
   }
 
   Log::~Log ()
@@ -27,7 +27,7 @@ namespace Astroid {
     out_streams.clear ();
   }
 
-  bool Log::flush_log () {
+  void Log::flush_log () {
 
     lock_guard<mutex> grd (m_lines);
 
@@ -41,8 +41,6 @@ namespace Astroid {
       lines.pop ();
 
     }
-
-    return true;
   }
 
   //Overload for std::endl only:
@@ -72,15 +70,14 @@ namespace Astroid {
     _next_line.str (string());
     _next_line.clear ();
 
-    m_reading_line.unlock ();
+
+    d_flush (); // flush lines to log views
 
     return *this;
   }
 
   // log level
   Log& Log::operator<<(LogLevel lvl) {
-
-    m_reading_line.lock ();
 
     _next_level = lvl;
     return *this;
