@@ -3,7 +3,6 @@
 # include <atomic>
 # include <vector>
 # include <algorithm>
-# include <thread>
 
 # include <gtkmm.h>
 # include <webkit/webkit.h>
@@ -372,8 +371,9 @@ namespace Astroid {
   void ThreadView::open_link (ustring uri) {
     log << debug << "tv: opening: " << uri << endl;
 
-    std::thread job (&ThreadView::do_open_link, this, uri);
-    job.detach ();
+    Glib::Threads::Thread::create (
+        sigc::bind (
+          sigc::mem_fun (this, &ThreadView::do_open_link), uri));
   }
 
   void ThreadView::do_open_link (ustring uri) {

@@ -2,7 +2,6 @@
 # include <iostream>
 # include <atomic>
 # include <fstream>
-# include <thread>
 
 # include <boost/filesystem.hpp>
 
@@ -450,8 +449,10 @@ namespace Astroid {
 
     ustring tf_p (tf.c_str());
 
-    std::thread job (&Chunk::do_open, this, tf_p);
-    job.detach ();
+    Glib::Threads::Thread::create (
+        sigc::bind (
+          sigc::mem_fun (this, &Chunk::do_open),
+          tf_p ));
   }
 
   void Chunk::do_open (ustring tf) {

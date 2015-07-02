@@ -1,5 +1,4 @@
 # include <mutex>
-# include <thread>
 # include <chrono>
 
 # include <boost/filesystem.hpp>
@@ -57,8 +56,8 @@ namespace Astroid {
 
     if (m_dopoll.try_lock ()) {
 
-      thread job (&Poll::do_poll, this);
-      job.detach ();
+      Glib::Threads::Thread::create (
+          sigc::mem_fun (this, &Poll::do_poll));
 
       return true;
 

@@ -1,5 +1,4 @@
 # include <iostream>
-# include <thread>
 # include <sys/time.h>
 
 # include <boost/filesystem.hpp>
@@ -217,9 +216,10 @@ namespace Astroid {
   void ComposeMessage::send_threaded ()
   {
     log << info << "cm: sending (threaded).." << endl;
-    thread sendit (&ComposeMessage::send, this, true);
-
-    sendit.detach ();
+    Glib::Threads::Thread::create (
+        [&] () {
+          this->send (true);
+        });
   }
 
   bool ComposeMessage::send (bool output) {
