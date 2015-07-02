@@ -3,7 +3,7 @@
 * Mark threads with 't' or 'T' and apply actions to all marked threads
   with '+'.
 * Mark messages with 't' or 'T' in thread-view and apply actions to all
-  marked threads with '+'.
+  marked messages with '+'.
 * Show attached icon in thread-view.
 * #18: Fix display of &amp; and friends.
 * Configurable quote string for replying and forwarding.
