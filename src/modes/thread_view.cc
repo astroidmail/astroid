@@ -1404,7 +1404,7 @@ namespace Astroid {
 
       refptr<Glib::ByteArray> attachment_data = c->contents ();
 
-      ustring fsize = ustring::compose ("%1 bytes", attachment_data->size());
+      ustring fsize = Utils::format_size (attachment_data->size ());
 
       webkit_dom_html_element_set_inner_text (info_fsize, fsize.c_str(), (err = NULL, &err));
 

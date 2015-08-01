@@ -6,6 +6,12 @@
 
 namespace Astroid {
 
+  class Utils {
+    public:
 
+      /* return human readable file size */
+      static ustring format_size (int sz);
+
+  };
 }
 
