@@ -174,17 +174,19 @@ namespace Astroid {
       switch (event->keyval) {
         case GDK_KEY_Escape:
           {
-            break;
+            res = true;
           }
+          break;
 
         default:
           {
             res = multi_closure (event);
           }
-
-        /* close rev */
-        multi_waiting = !res;
+          break;
       }
+
+      /* close rev */
+      multi_waiting = !res;
 
       if (res) {
         rev_multi->set_reveal_child (false);
