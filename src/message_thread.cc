@@ -10,8 +10,10 @@
 # include "log.hh"
 # include "message_thread.hh"
 # include "chunk.hh"
+# include "utils/utils.hh"
 # include "utils/date_utils.hh"
 # include "utils/address.hh"
+# include "utils/ustring_utils.hh"
 
 using namespace std;
 using namespace boost::filesystem;
@@ -316,6 +318,39 @@ namespace Astroid {
     return ( AddressList(to()) + AddressList(cc()) + AddressList(bcc()) + Address(sender) );
   }
 
+  ustring Message::get_filename (ustring appendix) {
+    ustring _f = root->get_filename ();
+
+    if (_f.size () == 0) {
+      _f = Utils::safe_fname (subject);
+
+      if (is_patch ()) {
+
+        if (_f.substr(0,5).uppercase() == "PATCH") _f.erase (0, 5);
+
+        // safe_fname will catch any double _
+
+        if (appendix.size ()) {
+          _f += "-" + appendix;
+        }
+
+        _f += ".patch";
+
+      } else {
+
+        if (appendix.size ()) {
+          _f += "-" + appendix;
+        }
+
+        _f += ".eml";
+      }
+    }
+
+    _f = Utils::safe_fname (_f);
+
+    return _f;
+  }
+
   void Message::save () {
     Gtk::FileChooserDialog dialog ("Save message..",
         Gtk::FILE_CHOOSER_ACTION_SAVE);
@@ -324,27 +359,7 @@ namespace Astroid {
     dialog.add_button ("_Select", Gtk::RESPONSE_OK);
     dialog.set_do_overwrite_confirmation (true);
 
-    ustring _f = root->get_filename ();
-    if (_f.size () == 0) {
-      if (is_patch ()) {
-        _f = subject;
-
-        auto pattern = Glib::Regex::create ("[^0-9A-Za-z.\\-]");
-        _f = pattern->replace (_f, 0, "_", static_cast<Glib::RegexMatchFlags>(0));
-
-        auto pattern2 = Glib::Regex::create ("^_+");
-        _f = pattern2->replace (_f, 0, "", static_cast<Glib::RegexMatchFlags>(0));
-
-        if (_f.substr(0,5).uppercase() == "PATCH")
-          _f.erase (0, 5);
-
-        _f = pattern2->replace (_f, 0, "", static_cast<Glib::RegexMatchFlags>(0));
-
-        _f += ".patch";
-      } else {
-        _f = subject + ".eml";
-      }
-    }
+    ustring _f = get_filename ();
 
     dialog.set_current_name (_f);
 
@@ -368,15 +383,36 @@ namespace Astroid {
   }
 
   void Message::save_to (ustring tofname) {
-    log << info << "msg: saving to: " << tofname << endl;
     // apparently boost needs to be compiled with -std=c++0x
     // https://svn.boost.org/trac/boost/ticket/6124
     // copy_file ( path (fname), path (tofname) );
+
+    path to (tofname.c_str());
+    if (is_directory (to)) {
+      ustring nfname = get_filename ();
+      path newto = to / path (nfname.c_str());
+
+      while (exists (newto)) {
+        nfname = get_filename (UstringUtils::random_alphanumeric (5));
+
+        newto = to / path(nfname.c_str ());
+      }
+
+      to = newto;
+    }
+
+    tofname = ustring (to.c_str());
+    log << info << "msg: saving to: " << tofname << endl;
 
     if (has_file)
     {
       ifstream src (fname, ios::binary);
       ofstream dst (tofname, ios::binary);
+
+      if (!src.good () || !dst.good ()) {
+        log << error << "msg: failed writing to: " << tofname << endl;
+        return;
+      }
 
       dst << src.rdbuf ();
     } else {

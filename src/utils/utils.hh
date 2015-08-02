@@ -12,6 +12,9 @@ namespace Astroid {
       /* return human readable file size */
       static ustring format_size (int sz);
 
+      /* make filename safe */
+      static ustring safe_fname (ustring fname);
+
   };
 }
 

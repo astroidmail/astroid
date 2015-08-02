@@ -1740,7 +1740,10 @@ namespace Astroid {
 
     if (!ready) {
       log << warn << "tv: not ready yet." << endl;
+      return true;
     }
+
+    if (mode_key_handler (event)) return true;
 
     switch (event->keyval) {
 
@@ -1857,6 +1860,20 @@ namespace Astroid {
             return element_action ('d');
           }
           return false;
+        }
+
+      case GDK_KEY_plus:
+        {
+          if (any_of (state.begin(), state.end(),
+                [](std::pair<refptr<Message>, ThreadView::MessageState> ms)
+                { return ms.second.marked; })
+              )
+          {
+
+            multi_key (multi_key_help, bind(&ThreadView::multi_key_handler, this, _1));
+          }
+
+          return true;
         }
 
       case GDK_KEY_o:
@@ -2040,11 +2057,82 @@ namespace Astroid {
       { "G", "Reply all to current message" },
       { "f", "Forward current message" },
       { "V", "View raw source for current message" },
+      { "t", "Mark or unmark message" },
+      { "+", "Apply action to marked messages" },
 
     };
 
     return m;
-  } // }}}
+  }
+
+  bool ThreadView::multi_key_handler (GdkEventKey * event) {
+    log << debug << "tv: m k h" << endl;
+
+    vector<refptr<Message>> tosave;
+
+    for (auto &ms : state) {
+      refptr<Message> m = ms.first;
+      MessageState    s = ms.second;
+
+      switch (event->keyval) {
+        case GDK_KEY_t:
+          {
+            if (s.marked) {
+              state[m].marked = false;
+              update_marked_state (m);
+            }
+          }
+          break;
+
+        case GDK_KEY_s:
+          {
+            if (s.marked) {
+              tosave.push_back (m);
+            }
+          }
+          break;
+
+        default:
+          break;
+
+      }
+    }
+
+    if (!tosave.empty()) {
+      log << debug << "tv: saving messages: " << tosave.size() << endl;
+
+      Gtk::FileChooserDialog dialog ("Save messages to folder..",
+          Gtk::FILE_CHOOSER_ACTION_SELECT_FOLDER);
+
+      dialog.add_button ("_Cancel", Gtk::RESPONSE_CANCEL);
+      dialog.add_button ("_Select", Gtk::RESPONSE_OK);
+
+      int result = dialog.run ();
+
+      switch (result) {
+        case (Gtk::RESPONSE_OK):
+          {
+            string dir = dialog.get_filename ();
+            log << info << "tv: saving messages to: " << dir << endl;
+
+            for (refptr<Message> m : tosave) {
+              m->save_to (dir);
+            }
+
+            break;
+          }
+
+        default:
+          {
+            log << debug << "tv: save: cancelled." << endl;
+          }
+      }
+    }
+
+    return true;
+  }
+
+  // }}}
 
   bool ThreadView::element_action (char a) { // {{{
     log << debug << "tv: activate item." << endl;

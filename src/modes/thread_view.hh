@@ -279,6 +279,10 @@ namespace Astroid {
     protected:
       virtual bool on_key_press_event (GdkEventKey *) override;
 
+      /* multi key */
+      ustring multi_key_help = "t: toggle, s: save";
+      bool multi_key_handler (GdkEventKey *);
+
     public:
       /* the tv is ready */
       typedef sigc::signal <void> type_signal_ready;

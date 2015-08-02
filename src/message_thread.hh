@@ -25,6 +25,7 @@ namespace Astroid {
       ustring mid;
       bool    in_notmuch;
       bool    has_file;
+      ustring get_filename (ustring appendix = "");
 
       void load_message_from_file (ustring);
       void load_message (GMimeMessage *);

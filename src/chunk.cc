@@ -12,6 +12,7 @@
 # include "message_thread.hh"
 # include "chunk.hh"
 # include "log.hh"
+# include "utils/utils.hh"
 # include "utils/ustring_utils.hh"
 # include "utils/vector_utils.hh"
 # include "config.hh"
@@ -370,7 +371,7 @@ namespace Astroid {
     path to (filename.c_str());
 
     if (is_directory (to)) {
-      ustring fname = get_filename ();
+      ustring fname = Utils::safe_fname (get_filename ());
 
       if (fname.size () == 0) {
         if (content_id != "") {
@@ -532,7 +533,7 @@ namespace Astroid {
     dialog.add_button ("_Select", Gtk::RESPONSE_OK);
 
     dialog.set_do_overwrite_confirmation (true);
-    dialog.set_current_name (get_filename ());
+    dialog.set_current_name (Utils::safe_fname (get_filename ()));
 
     int result = dialog.run ();
 
