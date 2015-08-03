@@ -58,8 +58,9 @@ namespace Astroid {
       Gtk::ScrolledWindow scroll;
 
       const int MAX_PREVIEW_LEN = 80;
-      const int INDENT_PX = 30;
-      bool indent_messages;
+
+      const int INDENT_PX       = 20;
+      bool      indent_messages;
 
       bool edit_mode = false;
 
