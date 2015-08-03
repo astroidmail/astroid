@@ -64,7 +64,7 @@ namespace Astroid {
     log << debug << "mw: init, id: " << id << endl;
 
     set_title ("");
-    set_default_size (1040, 800);
+    set_default_size (1200, 800);
 
     Glib::RefPtr<Gtk::IconTheme> theme = Gtk::IconTheme::get_default();
     Glib::RefPtr<Gdk::Pixbuf> pixbuf = theme->load_icon (
