@@ -45,13 +45,14 @@ namespace Astroid {
     load_message_from_file (fname);
   }
 
-  Message::Message (notmuch_message_t *message) {
+  Message::Message (notmuch_message_t *message, int _level) {
     /* The caller must make sure the message pointer
      * is valid and not destroyed while initializing */
 
     mid = notmuch_message_get_message_id (message);
     in_notmuch = true;
     has_file   = true;
+    level      = _level;
 
     log << info << "msg: loading mid: " << mid << endl;
 
@@ -476,13 +477,38 @@ namespace Astroid {
         notmuch_messages_t * qmessages;
         notmuch_message_t  * message;
 
-        for (qmessages = notmuch_thread_get_messages (nm_thread);
+        int level = 0;
+
+        function<void(notmuch_message_t *, int)> add_replies =
+          [&] (notmuch_message_t * root, int lvl) {
+
+          notmuch_messages_t * replies;
+          notmuch_message_t  * reply;
+
+          for (replies = notmuch_message_get_replies (root);
+               notmuch_messages_valid (replies);
+               notmuch_messages_move_to_next (replies)) {
+
+
+              reply = notmuch_messages_get (replies);
+              messages.push_back (refptr<Message> (new Message (reply, lvl)));
+
+              add_replies (reply, lvl + 1);
+
+            }
+
+          };
+
+        for (qmessages = notmuch_thread_get_toplevel_messages (nm_thread);
              notmuch_messages_valid (qmessages);
              notmuch_messages_move_to_next (qmessages)) {
 
           message = notmuch_messages_get (qmessages);
 
-          messages.push_back (refptr<Message>(new Message (message)));
+          messages.push_back (refptr<Message>(new Message (message, level)));
+
+          add_replies (message, level + 1);
+
         }
       });
   }

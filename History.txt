@@ -12,6 +12,7 @@
 * Message is updated thread-index after being sent.
 * Show spinner in main window when polling.
 * Show status icon for message sending.
+* Indent messages according to reply-level in thread (configurable).
 
 == v0.3 / 2015-05-27
 

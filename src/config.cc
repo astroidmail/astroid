@@ -148,6 +148,8 @@ namespace Astroid {
      *   command. */
     default_config.put ("thread_view.open_external_link", "xdg-open");
 
+    default_config.put ("thread_view.indent_messages", true);
+
     /* mathjax */
     default_config.put ("thread_view.mathjax.enable", true);
 

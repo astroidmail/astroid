@@ -17,7 +17,7 @@ namespace Astroid {
       Message ();
       Message (ustring _fname);
       Message (ustring _mid, ustring _fname);
-      Message (notmuch_message_t *);
+      Message (notmuch_message_t *, int _level);
       Message (GMimeMessage *);
       ~Message ();
 
@@ -34,6 +34,7 @@ namespace Astroid {
 
       GMimeMessage * message;
       refptr<Chunk>     root;
+      int level = 0;
 
       ustring sender;
       ustring subject;

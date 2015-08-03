@@ -37,6 +37,7 @@ namespace Astroid {
   ustring ThreadView::thread_view_css;
 
   ThreadView::ThreadView (MainWindow * mw) : Mode (mw, true) { // {{{
+    indent_messages = astroid->config->config.get<bool> ("thread_view.indent_messages");
     open_html_part_external = astroid->config->config.get<bool> ("thread_view.open_html_part_external");
     open_external_link = astroid->config->config.get<string> ("thread_view.open_external_link");
 
@@ -705,6 +706,12 @@ namespace Astroid {
     GError * err = NULL;
     webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT(div_message),
         "id", div_id.c_str(), &err);
+
+    /* set indentation based on level */
+    if (indent_messages && m->level > 0) {
+      webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (div_message),
+          "style", ustring::compose ("margin-left: %1px", int(m->level * INDENT_PX)).c_str(), (err = NULL, &err));
+    }
 
     /* insert message div */
     webkit_dom_node_insert_before (WEBKIT_DOM_NODE(container),
