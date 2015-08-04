@@ -2065,6 +2065,7 @@ namespace Astroid {
       { "f", "Forward current message" },
       { "V", "View raw source for current message" },
       { "t", "Mark or unmark message" },
+      { "T", "Toggle mark on all messages" },
       { "+", "Apply action to marked messages" },
 
     };
