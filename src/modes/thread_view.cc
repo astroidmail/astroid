@@ -679,8 +679,16 @@ namespace Astroid {
 
     if (!focused_message) {
       if (!candidate_startup) {
-        log << debug << "tv: no message expanded, showing last." << endl;
-        focused_message = mthread->messages[mthread->messages.size()-1];
+        log << debug << "tv: no message expanded, showing newest message." << endl;
+
+        focused_message = *max_element (
+            mthread->messages.begin (),
+            mthread->messages.end (),
+            [](refptr<Message> &a, refptr<Message> &b)
+              {
+                return ( a->received_time < b->received_time );
+              });
+
         toggle_hidden (focused_message, ToggleShow);
 
       } else {

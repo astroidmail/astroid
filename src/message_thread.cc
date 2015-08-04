@@ -177,6 +177,7 @@ namespace Astroid {
     if (c != NULL) reply_to = ustring (c);
     else reply_to = "";
 
+    g_mime_message_get_date (message, &received_time, NULL);
 
     root = refptr<Chunk>(new Chunk (g_mime_message_get_mime_part (message)));
 
@@ -290,17 +291,11 @@ namespace Astroid {
   }
 
   ustring Message::pretty_date () {
-    time_t t;
-    g_mime_message_get_date (message, &t, NULL);
-
-    return Date::pretty_print (t);
+    return Date::pretty_print (received_time);
   }
 
   ustring Message::pretty_verbose_date () {
-    time_t t;
-    g_mime_message_get_date (message, &t, NULL);
-
-    return Date::pretty_print_verbose (t);
+    return Date::pretty_print_verbose (received_time);
   }
 
   InternetAddressList * Message::to () {
