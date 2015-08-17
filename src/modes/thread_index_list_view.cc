@@ -285,6 +285,7 @@ namespace Astroid {
         }
 
 
+      case GDK_KEY_KP_Enter:
       case GDK_KEY_Return:
         {
           auto thread = get_current_thread ();

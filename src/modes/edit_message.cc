@@ -486,6 +486,7 @@ namespace Astroid {
     if (mode_key_handler (event)) return true;
 
     switch (event->keyval) {
+      case GDK_KEY_KP_Enter:
       case GDK_KEY_Return:
         {
           if (!message_sent && !sending_in_progress.load()) {

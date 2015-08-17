@@ -1857,6 +1857,7 @@ namespace Astroid {
         }
         return true;
 
+      case GDK_KEY_KP_Enter:
       case GDK_KEY_Return:
         {
           return element_action ('\n');
