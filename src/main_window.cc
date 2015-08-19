@@ -308,7 +308,12 @@ namespace Astroid {
     /* close current page */
     if (notebook.get_n_pages() > 1) {
       int c = notebook.get_current_page ();
-      del_mode (c);
+
+      if (!((Mode*) notebook.get_nth_page (c))->invincible) {
+        del_mode (c);
+      } else {
+        log << debug << "mw: mode invincible, not closing." << endl;
+      }
     } else {
       /* if there are more windows, close this one */
       if (astroid->app->get_windows().size () > 1) {

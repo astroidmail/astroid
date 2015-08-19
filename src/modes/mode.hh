@@ -30,6 +30,8 @@ namespace Astroid {
       void set_main_window (MainWindow *);
       MainWindow * main_window;
 
+      bool invincible = false;
+
     private:
       bool interactive;
       ustring label;
