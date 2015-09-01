@@ -149,6 +149,13 @@ namespace Astroid {
     }
   }
 
+  void MainWindow::quit () {
+    log << info << "mw: quit." << endl;
+    astroid->app->remove_window (*this);
+    remove_all_modes ();
+    close ();
+  }
+
   bool MainWindow::on_key_press (GdkEventKey * event) {
     if (is_command) {
       command.command_handle_event (event);
@@ -157,11 +164,14 @@ namespace Astroid {
 
     switch (event->keyval) {
       case GDK_KEY_q:
+        {
+          Mode * m = (Mode *) notebook.get_children()[notebook.get_current_page ()];
+          m->ask_yes_no ("Really quit?", [&](bool yes){ if (yes) quit(); });
+        }
+        return true;
+
       case GDK_KEY_Q:
-        log << info << "mw: quit." << endl;
-        astroid->app->remove_window (*this);
-        remove_all_modes ();
-        close ();
+        quit ();
         return true;
 
       /* page through notebook */

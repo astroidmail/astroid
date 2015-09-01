@@ -41,7 +41,7 @@ namespace Astroid {
     read_edited_message ();
   }
 
-  EditMessage::EditMessage (MainWindow * mw) : Mode (mw, true) {
+  EditMessage::EditMessage (MainWindow * mw) : Mode (mw) {
     editor_config = astroid->config->config.get_child ("editor");
 
     tmpfile_path = astroid->config->runtime_dir;

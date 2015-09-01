@@ -23,7 +23,7 @@ namespace Astroid {
 
   class Mode : public Gtk::Box {
     public:
-      Mode (MainWindow *, bool interactive = false);
+      Mode (MainWindow *);
       ~Mode ();
       Gtk::Label tab_label;
 
@@ -33,7 +33,6 @@ namespace Astroid {
       bool invincible = false;
 
     private:
-      bool interactive;
       ustring label;
 
       /* yes no questions */

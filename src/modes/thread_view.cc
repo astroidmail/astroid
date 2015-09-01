@@ -36,7 +36,7 @@ namespace Astroid {
   ustring ThreadView::thread_view_html;
   ustring ThreadView::thread_view_css;
 
-  ThreadView::ThreadView (MainWindow * mw) : Mode (mw, true) { // {{{
+  ThreadView::ThreadView (MainWindow * mw) : Mode (mw) { // {{{
     indent_messages = astroid->config->config.get<bool> ("thread_view.indent_messages");
     open_html_part_external = astroid->config->config.get<bool> ("thread_view.open_html_part_external");
     open_external_link = astroid->config->config.get<string> ("thread_view.open_external_link");

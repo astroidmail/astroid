@@ -6,64 +6,59 @@
 # include <tuple>
 
 namespace Astroid {
-  Mode::Mode (MainWindow * mw, bool _interactive) :
-    Gtk::Box (Gtk::ORIENTATION_VERTICAL),
-    interactive (_interactive)
+  Mode::Mode (MainWindow * mw) :
+    Gtk::Box (Gtk::ORIENTATION_VERTICAL)
   {
     set_main_window (mw);
 
     tab_label.set_can_focus (false);
 
-    if (interactive)
-    {
-      log << debug << "mode: setting up yes-no question." << endl;
-      /* set up yes-no asker */
-      rev_yes_no = Gtk::manage (new Gtk::Revealer ());
-      rev_yes_no->set_transition_type (Gtk::REVEALER_TRANSITION_TYPE_SLIDE_UP);
+    /* set up yes-no asker */
+    rev_yes_no = Gtk::manage (new Gtk::Revealer ());
+    rev_yes_no->set_transition_type (Gtk::REVEALER_TRANSITION_TYPE_SLIDE_UP);
 
-      Gtk::Box * rh = Gtk::manage(new Gtk::Box(Gtk::ORIENTATION_HORIZONTAL));
+    Gtk::Box * rh = Gtk::manage(new Gtk::Box(Gtk::ORIENTATION_HORIZONTAL));
 
-      label_yes_no = Gtk::manage (new Gtk::Label ());
-      rh->pack_start (*label_yes_no, true, true, 5);
-      label_yes_no->set_halign (Gtk::ALIGN_START);
+    label_yes_no = Gtk::manage (new Gtk::Label ());
+    rh->pack_start (*label_yes_no, true, true, 5);
+    label_yes_no->set_halign (Gtk::ALIGN_START);
 
-      /* buttons */
-      Gtk::Button * yes = Gtk::manage (new Gtk::Button("_Yes"));
-      Gtk::Button * no  = Gtk::manage (new Gtk::Button("_No"));
+    /* buttons */
+    Gtk::Button * yes = Gtk::manage (new Gtk::Button("_Yes"));
+    Gtk::Button * no  = Gtk::manage (new Gtk::Button("_No"));
 
-      yes->set_use_underline (true);
-      no->set_use_underline (true);
+    yes->set_use_underline (true);
+    no->set_use_underline (true);
 
-      rh->pack_start (*yes, false, true, 5);
-      rh->pack_start (*no, false, true, 5);
+    rh->pack_start (*yes, false, true, 5);
+    rh->pack_start (*no, false, true, 5);
 
-      rev_yes_no->set_margin_top (0);
-      rh->set_margin_bottom (5);
+    rev_yes_no->set_margin_top (0);
+    rh->set_margin_bottom (5);
 
-      rev_yes_no->add (*rh);
-      rev_yes_no->set_reveal_child (false);
-      pack_end (*rev_yes_no, false, true, 0);
+    rev_yes_no->add (*rh);
+    rev_yes_no->set_reveal_child (false);
+    pack_end (*rev_yes_no, false, true, 0);
 
-      yes->signal_clicked().connect (sigc::mem_fun (this, &Mode::on_yes));
-      no->signal_clicked().connect (sigc::mem_fun (this, &Mode::on_no));
+    yes->signal_clicked().connect (sigc::mem_fun (this, &Mode::on_yes));
+    no->signal_clicked().connect (sigc::mem_fun (this, &Mode::on_no));
 
-      /* multi key handler */
-      rev_multi = Gtk::manage (new Gtk::Revealer ());
-      rev_multi->set_transition_type (Gtk::REVEALER_TRANSITION_TYPE_SLIDE_UP);
+    /* multi key handler */
+    rev_multi = Gtk::manage (new Gtk::Revealer ());
+    rev_multi->set_transition_type (Gtk::REVEALER_TRANSITION_TYPE_SLIDE_UP);
 
-      Gtk::Box * rh_ = Gtk::manage(new Gtk::Box(Gtk::ORIENTATION_HORIZONTAL));
+    Gtk::Box * rh_ = Gtk::manage(new Gtk::Box(Gtk::ORIENTATION_HORIZONTAL));
 
-      label_multi = Gtk::manage (new Gtk::Label ());
-      rh_->pack_start (*label_multi, true, true, 5);
-      label_multi->set_halign (Gtk::ALIGN_START);
+    label_multi = Gtk::manage (new Gtk::Label ());
+    rh_->pack_start (*label_multi, true, true, 5);
+    label_multi->set_halign (Gtk::ALIGN_START);
 
-      rev_multi->set_margin_top (0);
-      rh->set_margin_bottom (5);
+    rev_multi->set_margin_top (0);
+    rh->set_margin_bottom (5);
 
-      rev_multi->add (*rh_);
-      rev_multi->set_reveal_child (false);
-      pack_end (*rev_multi, false, true, 0);
-    }
+    rev_multi->add (*rh_);
+    rev_multi->set_reveal_child (false);
+    pack_end (*rev_multi, false, true, 0);
   }
 
   void Mode::set_main_window (MainWindow *mw) {
@@ -92,8 +87,6 @@ namespace Astroid {
       ustring question,
       function <void (bool)> closure)
   {
-    if (!interactive) throw logic_error ("mode is not interactive!");
-
     log << info << "mode: " << question << endl;
 
     if (yes_no_waiting || multi_waiting) {
@@ -109,8 +102,6 @@ namespace Astroid {
   }
 
   void Mode::answer_yes_no (bool yes) {
-    if (!interactive) throw logic_error ("mode is not interactive!");
-
     rev_yes_no->set_reveal_child (false);
 
     if (yes) {
@@ -132,8 +123,6 @@ namespace Astroid {
   void Mode::multi_key (ustring str,
       function<bool(GdkEventKey *)> closure)
   {
-    if (!interactive) throw logic_error ("mode is not interactive!");
-
     log << info << "mode: " << str << endl;
 
     if (yes_no_waiting || multi_waiting) {
@@ -149,8 +138,6 @@ namespace Astroid {
   }
 
   bool Mode::mode_key_handler (GdkEventKey * event) {
-    if (!interactive) throw logic_error ("mode is not interactive!");
-
     if (yes_no_waiting) {
       switch (event->keyval) {
         case GDK_KEY_Y:

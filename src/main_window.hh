@@ -64,6 +64,8 @@ namespace Astroid {
       void set_active (int);
       void set_title (ustring);
 
+      void quit ();
+
       static ModeHelpInfo * key_help ();
 
       Glib::Dispatcher update_title_dispatcher;

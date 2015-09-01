@@ -14,7 +14,7 @@ namespace Astroid {
   /* a virtual mode class with two panes */
   class PanedMode : public Mode {
     public:
-      PanedMode (MainWindow *, bool = false);
+      PanedMode (MainWindow *);
 
       /* hpane: can be split into two horizontal panes */
       Gtk::Paned paned;
