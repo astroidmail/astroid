@@ -81,7 +81,7 @@ namespace Astroid {
     default_config.put ("astroid.notmuch.excluded_tags", "muted,spam,deleted");
 
     /* TODO: eventually these should be removed */
-    default_config.put ("astroid.debug.dryrun_sending", true);
+    default_config.put ("astroid.debug.dryrun_sending", false);
 
     if (initial) {
       /* initial default options - these are only set when a new
