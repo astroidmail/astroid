@@ -165,8 +165,13 @@ namespace Astroid {
     switch (event->keyval) {
       case GDK_KEY_q:
         {
-          Mode * m = (Mode *) notebook.get_children()[notebook.get_current_page ()];
-          m->ask_yes_no ("Really quit?", [&](bool yes){ if (yes) quit(); });
+          if (astroid->app->get_windows().size () > 1) {
+            Mode * m = (Mode *) notebook.get_children()[notebook.get_current_page ()];
+            m->ask_yes_no ("Really quit?", [&](bool yes){ if (yes) quit (); });
+          } else {
+            /* other windows, just close this one */
+            quit ();
+          }
         }
         return true;
 
@@ -327,10 +332,8 @@ namespace Astroid {
     } else {
       /* if there are more windows, close this one */
       if (astroid->app->get_windows().size () > 1) {
-        log << info << "mw: more windows available, closing this one." << endl;
-        astroid->app->remove_window (*this);
-        remove_all_modes ();
-        close ();
+        log << debug << "mw: other windows available, closing this one." << endl;
+        quit ();
       }
     }
   }
