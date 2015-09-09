@@ -2057,7 +2057,7 @@ namespace Astroid {
     m->title    = "Thread View";
 
     m->keys = {
-      { "k,j", "Scroll up/down or move focus up/down" },
+      { "k,j", "Scroll up/down or move focus up/down between the elements in a thread or email" },
       { "K,J", "Scroll up/down" },
       { "C-k,C-j,S-K,S-J", "Page up/down" },
       { "n,p", "Focus next or previous message" },
