@@ -196,6 +196,9 @@ namespace Astroid {
       bool open_html_part_external;
       void display_part (refptr<Message>, refptr<Chunk>, MessageState::Element);
 
+      void update_all_indent_states ();
+      void update_indent_state (refptr<Message>);
+
       /* marked */
       refptr<Gdk::Pixbuf> marked_icon;
       void load_marked_icon (refptr<Message>, WebKitDOMHTMLElement *);

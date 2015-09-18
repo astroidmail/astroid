@@ -2,6 +2,7 @@
 
 * Startup queries are invincible.
 * q: ask to quit, Q: quit right away.
+* C-f: Toggle flat or indented view of messages.
 
 == v0.4 / 2015-08-15
 

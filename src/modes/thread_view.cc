@@ -677,6 +677,8 @@ namespace Astroid {
                 state.insert (std::pair<refptr<Message>, MessageState> (m, MessageState ()));
               });
 
+    update_all_indent_states ();
+
     if (!focused_message) {
       if (!candidate_startup) {
         log << debug << "tv: no message expanded, showing newest message." << endl;
@@ -701,6 +703,33 @@ namespace Astroid {
     emit_ready ();
   }
 
+  void ThreadView::update_all_indent_states () {
+    for (auto &m : mthread->messages) {
+      update_indent_state (m);
+    }
+  }
+
+  void ThreadView::update_indent_state (refptr<Message> m) {
+
+    ustring mid = "message_" + m->mid;
+    GError * err = NULL;
+
+    WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
+    WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
+
+    /* set indentation based on level */
+    if (indent_messages && m->level > 0) {
+      webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (e),
+          "style", ustring::compose ("margin-left: %1px", int(m->level * INDENT_PX)).c_str(), (err = NULL, &err));
+    } else {
+      webkit_dom_element_remove_attribute (WEBKIT_DOM_ELEMENT (e), "style");
+    }
+
+    g_object_unref (e);
+    g_object_unref (d);
+
+  }
+
   void ThreadView::add_message (refptr<Message> m) {
     log << debug << "tv: adding message: " << m->mid << endl;
 
@@ -714,12 +743,6 @@ namespace Astroid {
     GError * err = NULL;
     webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT(div_message),
         "id", div_id.c_str(), &err);
-
-    /* set indentation based on level */
-    if (indent_messages && m->level > 0) {
-      webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (div_message),
-          "style", ustring::compose ("margin-left: %1px", int(m->level * INDENT_PX)).c_str(), (err = NULL, &err));
-    }
 
     /* insert message div */
     webkit_dom_node_insert_before (WEBKIT_DOM_NODE(container),
@@ -2004,11 +2027,17 @@ namespace Astroid {
 
       case GDK_KEY_f:
         {
-          /* forward currently focused message */
-          if (!edit_mode) {
-            main_window->add_mode (new ForwardMessage (main_window, focused_message));
-
+          if (event->state & GDK_CONTROL_MASK) {
+            indent_messages = !indent_messages;
+            update_all_indent_states ();
             return true;
+          } else {
+            /* forward currently focused message */
+            if (!edit_mode) {
+              main_window->add_mode (new ForwardMessage (main_window, focused_message));
+
+              return true;
+            }
           }
         }
 
@@ -2069,6 +2098,7 @@ namespace Astroid {
       { "o", "Open attachment or message" },
       { "e", "Toggle expand" },
       { "E", "Toggle expand on all messages" },
+      { "C-f", "Toggle flat or indented view of messages" },
       { "r", "Reply to current message" },
       { "G", "Reply all to current message" },
       { "f", "Forward current message" },
