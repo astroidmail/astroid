@@ -1,0 +1,3 @@
+[submodule "dist/archlinux"]
+	path = dist/archlinux
+	url = ssh://aur@aur.archlinux.org/astroid.git
