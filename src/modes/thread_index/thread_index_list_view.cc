@@ -10,6 +10,7 @@
 # include "thread_index.hh"
 # include "thread_index_list_view.hh"
 # include "thread_index_list_cell_renderer.hh"
+# include "modes/keybindings.hh"
 # include "modes/thread_view/thread_view.hh"
 # include "modes/reply_message.hh"
 # include "modes/forward_message.hh"
@@ -258,8 +259,15 @@ namespace Astroid {
     }
   }
 
+  void ThreadIndexListView::generic_key (Key k) {
+
+  }
+
   bool ThreadIndexListView::on_key_press_event (GdkEventKey *event) {
     if (thread_index->mode_key_handler (event)) return true;
+
+    keys.register_key (Key(true, true, 'k'), 
+        bind(&ThreadIndexListView::generic_key, this, _1));
 
     switch (event->keyval) {
       case GDK_KEY_j:

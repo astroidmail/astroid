@@ -9,6 +9,7 @@
 # include "proto.hh"
 # include "config.hh"
 # include "modes/mode.hh"
+# include "modes/keybindings.hh"
 
 using namespace std;
 
@@ -68,6 +69,9 @@ namespace Astroid {
 
       virtual ModeHelpInfo * key_help ();
       void update_bg_image ();
+
+      Keybindings keys;
+      void generic_key (Key);
 
     protected:
       virtual bool on_key_press_event (GdkEventKey *) override;
