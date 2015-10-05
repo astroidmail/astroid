@@ -442,7 +442,7 @@ namespace Astroid {
 
     path tf = astroid->config->cache_dir;
 
-    ustring tmp_fname = ustring::compose("%1-%2", UstringUtils::random_alphanumeric (10), get_filename ());
+    ustring tmp_fname = ustring::compose("%1-%2", UstringUtils::random_alphanumeric (10), Utils::safe_fname(get_filename ()));
     tf /= path (tmp_fname.c_str());
 
     log << debug << "chunk: saving to tmp path: " << tf.c_str() << endl;
