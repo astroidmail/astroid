@@ -2879,6 +2879,9 @@ namespace Astroid {
           string dir = dialog.get_filename ();
           log << info << "tv: saving attachments to: " << dir << endl;
 
+          /* TODO: check if the file exists and ask to overwrite. currently
+           *       we are failing silently (except an error message in the log)
+           */
           for (refptr<Chunk> a : attachments) {
             a->save_to (dir);
           }

@@ -365,7 +365,7 @@ namespace Astroid {
     return data;
   }
 
-  bool Chunk::save_to (string filename) {
+  bool Chunk::save_to (string filename, bool overwrite) {
     /* saves chunk to file name, if filename is dir, own name */
 
     path to (filename.c_str());
@@ -394,8 +394,12 @@ namespace Astroid {
     log << info << "chunk: saving to: " << to << endl;
 
     if (exists (to)) {
-      log << error << "chunk: save: file already exists!" << endl;
-      return false;
+      if (!overwrite) {
+        log << error << "chunk: save: file already exists! not writing." << endl;
+        return false;
+      } else {
+        log << warn << "chunk: save: file already exists: overwriting." << endl;
+      }
     }
 
     if (!exists(to.parent_path ()) || !is_directory (to.parent_path())) {
@@ -543,7 +547,8 @@ namespace Astroid {
           string fname = dialog.get_filename ();
           log << info << "chunk: saving attachment to: " << fname << endl;
 
-          save_to (fname);
+          /* the dialog asks whether to overwrite or not */
+          save_to (fname, true);
 
           break;
         }

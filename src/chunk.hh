@@ -57,7 +57,7 @@ namespace Astroid {
       size_t  get_file_size ();
       refptr<Glib::ByteArray> contents ();
 
-      bool save_to (string filename);
+      bool save_to (string filename, bool overwrite = false);
       void open ();
       void save ();
 
