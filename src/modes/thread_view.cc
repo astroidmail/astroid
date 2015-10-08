@@ -292,9 +292,52 @@ namespace Astroid {
       return; // yes
 
     } else {
-      log << debug << "tv: request: denied: " << uri << endl;
-      webkit_network_request_set_uri (request, "about:blank"); // no
+      if (show_remote_images) {
+        log << debug << "tv: remote images allowed: approved: " << uri << endl;
+        return; // yes
+      } else {
+        log << debug << "tv: request: denied: " << uri << endl;
+        webkit_network_request_set_uri (request, "about:blank"); // no
+      }
     }
+  }
+
+  void ThreadView::reload_images () {
+
+    GError * err = NULL;
+    WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
+
+    for (auto &m : mthread->messages) {
+
+      ustring div_id = "message_" + m->mid;
+      WebKitDOMElement * me = webkit_dom_document_get_element_by_id (d, div_id.c_str());
+
+      WebKitDOMNodeList * imgs = webkit_dom_element_query_selector_all (me, "img", (err = NULL, &err));
+
+      gulong l = webkit_dom_node_list_get_length (imgs);
+      for (gulong i = 0; i < l; i++) {
+
+        WebKitDOMNode * in = webkit_dom_node_list_item (imgs, i);
+        WebKitDOMElement * ine = WEBKIT_DOM_ELEMENT (in);
+
+        if (ine != NULL) {
+          gchar * src = webkit_dom_element_get_attribute (ine, "src");
+          if (src != NULL) {
+            webkit_dom_element_set_attribute (ine, "src", "", (err = NULL, &err));
+            webkit_dom_element_set_attribute (ine, "src", src, (err = NULL, &err));
+          }
+
+          //g_object_unref (ine);
+        }
+
+        g_object_unref (in);
+      }
+
+      g_object_unref (imgs);
+      g_object_unref (me);
+    }
+
+    g_object_unref (d);
   }
 
   extern "C" gboolean ThreadView_navigation_request (
@@ -1950,6 +1993,16 @@ namespace Astroid {
           }
         }
 
+      case GDK_KEY_i:
+        {
+          if (event->state & GDK_CONTROL_MASK) {
+            show_remote_images = !show_remote_images;
+            log << debug << "tv: show remote images: " << show_remote_images << endl;
+            reload_images ();
+            return true;
+          }
+        }
+
       /* save all attachments */
       case GDK_KEY_S:
         {
@@ -2099,6 +2152,7 @@ namespace Astroid {
       { "e", "Toggle expand" },
       { "E", "Toggle expand on all messages" },
       { "C-f", "Toggle flat or indented view of messages" },
+      { "C-i", "Toggle show remote images" },
       { "r", "Reply to current message" },
       { "G", "Reply all to current message" },
       { "f", "Forward current message" },

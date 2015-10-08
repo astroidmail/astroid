@@ -63,6 +63,7 @@ namespace Astroid {
       bool      indent_messages;
 
       bool edit_mode = false;
+      bool show_remote_images = false;
 
       /* resources */
       bool    enable_mathjax;
@@ -180,6 +181,7 @@ namespace Astroid {
       void render ();
       void render_messages ();
       void add_message (refptr<Message>);
+      void reload_images ();
       WebKitDOMHTMLElement * make_message_div ();
 
       /* message loading */

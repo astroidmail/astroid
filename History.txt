@@ -3,6 +3,8 @@
 * Startup queries are invincible.
 * q: ask to quit, Q: quit right away.
 * C-f: Toggle flat or indented view of messages.
+* C-i: Toggle show remote images (cid-type images are not supported
+    yet).
 
 == v0.4 / 2015-08-15
 
