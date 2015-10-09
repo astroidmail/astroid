@@ -271,6 +271,8 @@ namespace Astroid {
     // prefix of local uris for loading image thumbnails
     ustring image_data_uri = "data:image/png;base64";
 
+    // TODO: show cid type images and inline-attachments
+
     /* is this request allowed */
     if (uri == home_uri) {
       return; // yes
@@ -293,6 +295,8 @@ namespace Astroid {
 
     } else {
       if (show_remote_images) {
+        // TODO: use an approved-url (like geary) to only allow imgs, not JS
+        //       or other content.
         log << debug << "tv: remote images allowed: approved: " << uri << endl;
         return; // yes
       } else {
@@ -326,6 +330,8 @@ namespace Astroid {
             webkit_dom_element_set_attribute (ine, "src", "", (err = NULL, &err));
             webkit_dom_element_set_attribute (ine, "src", src, (err = NULL, &err));
           }
+
+          // TODO: cid type images or attachment references are not loaded
 
           //g_object_unref (ine);
         }
@@ -1996,7 +2002,7 @@ namespace Astroid {
       case GDK_KEY_i:
         {
           if (event->state & GDK_CONTROL_MASK) {
-            show_remote_images = !show_remote_images;
+            show_remote_images = true;
             log << debug << "tv: show remote images: " << show_remote_images << endl;
             reload_images ();
             return true;
@@ -2152,7 +2158,7 @@ namespace Astroid {
       { "e", "Toggle expand" },
       { "E", "Toggle expand on all messages" },
       { "C-f", "Toggle flat or indented view of messages" },
-      { "C-i", "Toggle show remote images" },
+      { "C-i", "Show remote images" },
       { "r", "Reply to current message" },
       { "G", "Reply all to current message" },
       { "f", "Forward current message" },
