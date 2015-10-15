@@ -401,22 +401,75 @@ namespace Astroid {
 
     if (thread->authors.size () == 1) {
       /* if only one, show full name */
-      authors = thread->authors[0];
+      ustring an = get<0>(thread->authors[0]);
+
+      if (static_cast<int>(an.size()) >= authors_len) {
+        an = an.substr (0, authors_len);
+        UstringUtils::trim_right(an);
+        an += ".";
+      }
+
+      if (get<1>(thread->authors[0])) {
+        authors = ustring::compose ("<b>%1</b>",
+          Glib::Markup::escape_text (an));
+      } else {
+        authors = Glib::Markup::escape_text (an);
+      }
+
     } else {
       /* show first names separated by comma */
-      authors = VectorUtils::concat_authors (thread->authors);
+      bool first = true;
+
+      int len = 0;
+      for (auto &a : thread->authors) {
+        if (!first) len += 1; // comma
+
+        ustring an = get<0>(a);
+
+        an = an.substr (0, an.find_first_of (" @"));
+
+        int tlen = static_cast<int>(an.size());
+        if ((len + tlen) >= authors_len) {
+          an = an.substr (0, authors_len - len);
+          UstringUtils::trim_right (an);
+          an += ".";
+          tlen = authors_len - len;
+        }
+
+        len += tlen;
+
+        if (!first) {
+          authors += ",";
+        } else {
+          first = false;
+        }
+
+        if (get<1>(a)) {
+          authors += ustring::compose ("<b>%1</b>", Glib::Markup::escape_text (an));
+        } else {
+          authors += Glib::Markup::escape_text (an);
+        }
+
+
+        if (len >= authors_len) {
+          break;
+        }
+      }
     }
 
-    if (static_cast<int>(authors.size()) >= authors_len) {
-      authors = authors.substr (0, authors_len);
-      UstringUtils::trim_right(authors);
-      authors += ".";
-    }
 
     Glib::RefPtr<Pango::Layout> pango_layout = widget.create_pango_layout ("");
-    pango_layout->set_markup (Glib::Markup::escape_text(authors));
+    pango_layout->set_markup (authors);
+
+    if (thread->unread) {
+      font_description.set_weight (Pango::WEIGHT_NORMAL);
+    }
 
     pango_layout->set_font_description (font_description);
+
+    if (thread->unread) {
+      font_description.set_weight (Pango::WEIGHT_BOLD);
+    }
 
     /* set color */
     Glib::RefPtr<Gtk::StyleContext> stylecontext = widget.get_style_context();

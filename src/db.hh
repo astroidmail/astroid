@@ -31,7 +31,7 @@ namespace Astroid {
       bool    attachment;
       bool    flagged;
       int     total_messages;
-      std::vector<ustring> authors;
+      std::vector<std::tuple<ustring,bool>> authors;
       std::vector<ustring> tags;
 
       bool has_tag (ustring);
@@ -46,7 +46,7 @@ namespace Astroid {
 
     private:
       int     check_total_messages (notmuch_thread_t *);
-      std::vector<ustring> get_authors (notmuch_thread_t *);
+      std::vector<std::tuple<ustring,bool>> get_authors (notmuch_thread_t *);
       std::vector<ustring> get_tags (notmuch_thread_t *);
   };
 

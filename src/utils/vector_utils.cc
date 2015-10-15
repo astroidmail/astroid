@@ -10,7 +10,6 @@ using namespace std;
 namespace Astroid {
 
   const vector<ustring> VectorUtils::stop_ons_tags = {" "};
-  const vector<ustring> VectorUtils::stop_ons_auth = {" ", "@"};
 
   vector<ustring> VectorUtils::split_and_trim (const ustring &str, const ustring delim) {
 
@@ -56,10 +55,6 @@ namespace Astroid {
 
   ustring VectorUtils::concat_tags (vector<ustring> tags) {
     return concat (tags, ", ", stop_ons_tags);
-  }
-
-  ustring VectorUtils::concat_authors (vector<ustring> auths) {
-    return concat (auths, ",", stop_ons_auth);
   }
 }
 

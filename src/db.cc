@@ -15,6 +15,7 @@
 
 # include "db.hh"
 # include "utils/utils.hh"
+# include "utils/address.hh"
 # include "log.hh"
 # include "actions/action_manager.hh"
 
@@ -502,8 +503,8 @@ namespace Astroid {
     newest_date = notmuch_thread_get_newest_date (nm_thread);
     oldest_date = notmuch_thread_get_oldest_date (nm_thread);
     total_messages = check_total_messages (nm_thread);
-    authors     = get_authors (nm_thread);
     tags        = get_tags (nm_thread);
+    authors     = get_authors (nm_thread);
   }
 
   vector<ustring> NotmuchThread::get_tags (notmuch_thread_t * nm_thread) {
@@ -538,19 +539,86 @@ namespace Astroid {
     return ttags;
   }
 
-  /* get and split authors */
-  vector<ustring> NotmuchThread::get_authors (notmuch_thread_t * nm_thread) {
-    const char * auths = notmuch_thread_get_authors (nm_thread);
+  vector<tuple<ustring,bool>> NotmuchThread::get_authors (notmuch_thread_t * nm_thread) {
+    /* returns a vector of authors and whether they are authors of
+     * the an unread message in the thread */
+    vector<tuple<ustring,bool>> aths;
 
-    ustring astr;
+    /* first check if any messages are unread, if not just fetch the authors for
+     * the thread without checking.
+     *
+     * get_tags () have already been run, so we can safely use `has_tags (..)` */
 
-    if (auths != NULL) {
-      astr = auths;
-    } else {
-      log << error << "nmt: got NULL for authors." << endl;
+    if (!has_tag ("unread")) {
+      const char * auths = notmuch_thread_get_authors (nm_thread);
+
+      ustring astr;
+
+      if (auths != NULL) {
+        astr = auths;
+      } else {
+        log << error << "nmt: got NULL for authors!" << endl;
+      }
+
+      std::vector<ustring> maths = VectorUtils::split_and_trim (astr, ",|\\|");
+
+      for (auto & a : maths) {
+        aths.push_back (make_tuple (a, false));
+      }
+
+      return aths;
     }
 
-    vector<ustring> aths = VectorUtils::split_and_trim (astr, ",|\\|");
+    /* get messages from thread */
+    notmuch_messages_t * qmessages;
+    notmuch_message_t  * message;
+
+    for (qmessages = notmuch_thread_get_messages (nm_thread);
+         notmuch_messages_valid (qmessages);
+         notmuch_messages_move_to_next (qmessages)) {
+
+      message = notmuch_messages_get (qmessages);
+
+      ustring a;
+      const char * ac = notmuch_message_get_header (message, "From");
+      if (ac != NULL) {
+        a = Address(ustring (ac)).fail_safe_name ();
+      }
+
+      unread = false;
+
+      /* get tags */
+      notmuch_tags_t *tags;
+      const char *tag;
+
+      for (tags = notmuch_message_get_tags (message);
+           notmuch_tags_valid (tags);
+           notmuch_tags_move_to_next (tags))
+      {
+          tag = notmuch_tags_get (tags);
+          if (ustring (tag) == "unread")
+          {
+            unread = true;
+            break;
+          }
+      }
+
+      auto fnd = find_if (aths.begin (), aths.end (),
+          [&] (tuple<ustring, bool> &p) {
+            return get<0>(p) == a;
+          });
+
+      if (fnd == aths.end ()) {
+        aths.push_back (make_tuple (a, unread));
+      } else {
+        /* check if it is marked unread */
+        if (unread && !(get<1> (*fnd))) {
+          get<1> (*fnd) = true;
+        }
+      }
+
+      notmuch_message_destroy (message);
+    }
 
     return aths;
   }

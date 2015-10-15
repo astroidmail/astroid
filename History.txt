@@ -38,6 +38,7 @@
 * Franz Fellner: Integrate with notmuch config, read available options
   from there. You might have to update some of the affected
   configuration options.
+* Thread index: only use bold face on authors of unread messages.
 
 == v0.4 / 2015-08-15
 

@@ -14,10 +14,8 @@ namespace Astroid {
       static std::vector<ustring> split_and_trim (const ustring & str, const ustring delim);
       static ustring concat (std::vector<ustring> &, ustring, std::vector<ustring>);
       static ustring concat_tags (std::vector<ustring>);
-      static ustring concat_authors (std::vector<ustring>);
 
       static const std::vector<ustring> stop_ons_tags;
-      static const std::vector<ustring> stop_ons_auth;
 
   };
 }
