@@ -1912,22 +1912,28 @@ namespace Astroid {
       case GDK_KEY_1:
       case GDK_KEY_Home:
         {
-          auto adj = scroll.get_vadjustment ();
-          adj->set_value (adj->get_lower ());
-          focused_message = mthread->messages[0];
-          update_focus_status ();
+          if (!(event->state & GDK_MOD1_MASK)) {
+            auto adj = scroll.get_vadjustment ();
+            adj->set_value (adj->get_lower ());
+            focused_message = mthread->messages[0];
+            update_focus_status ();
+            return true;
+          }
         }
-        return true;
+        break;
 
       case GDK_KEY_0:
       case GDK_KEY_End:
         {
-          auto adj = scroll.get_vadjustment ();
-          adj->set_value (adj->get_upper ());
-          focused_message = mthread->messages[mthread->messages.size()-1];
-          update_focus_status ();
+          if (!(event->state & GDK_MOD1_MASK)) {
+            auto adj = scroll.get_vadjustment ();
+            adj->set_value (adj->get_upper ());
+            focused_message = mthread->messages[mthread->messages.size()-1];
+            update_focus_status ();
+            return true;
+          }
         }
-        return true;
+        break;
 
       case GDK_KEY_KP_Enter:
       case GDK_KEY_Return:

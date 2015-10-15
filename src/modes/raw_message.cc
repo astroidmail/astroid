@@ -99,19 +99,25 @@ namespace Astroid {
       case GDK_KEY_1:
         {
           /* select top */
-          auto adj = tv.get_vadjustment ();
-          adj->set_value (adj->get_lower());
-          return true;
+          if (!(event->state & GDK_MOD1_MASK)) {
+            auto adj = tv.get_vadjustment ();
+            adj->set_value (adj->get_lower());
+            return true;
+          }
         }
+        break;
 
       case GDK_KEY_End:
       case GDK_KEY_0:
         {
           /* select end */
-          auto adj = tv.get_vadjustment ();
-          adj->set_value (adj->get_upper());
-          return true;
+          if (!(event->state & GDK_MOD1_MASK)) {
+            auto adj = tv.get_vadjustment ();
+            adj->set_value (adj->get_upper());
+            return true;
+          }
         }
+        break;
 
     }
     return false;

@@ -4,6 +4,7 @@
 * q: ask to quit, Q: quit right away.
 * C-f: Toggle flat or indented view of messages.
 * C-i: Show remote images (cid-type images are not supported yet).
+* A-#: Page to # page.
 
 == v0.4 / 2015-08-15
 

@@ -105,18 +105,24 @@ namespace Astroid {
       case GDK_KEY_1:
       case GDK_KEY_Home:
         {
-          auto adj = scroll.get_vadjustment ();
-          adj->set_value (adj->get_lower ());
+          if (!(event->state & GDK_MOD1_MASK)) {
+            auto adj = scroll.get_vadjustment ();
+            adj->set_value (adj->get_lower ());
+            return true;
+          }
         }
-        return true;
+        break;
 
       case GDK_KEY_0:
       case GDK_KEY_End:
         {
-          auto adj = scroll.get_vadjustment ();
-          adj->set_value (adj->get_upper ());
+          if (!(event->state & GDK_MOD1_MASK)) {
+            auto adj = scroll.get_vadjustment ();
+            adj->set_value (adj->get_upper ());
+            return true;
+          }
         }
-        return true;
+        break;
     }
 
     return false;

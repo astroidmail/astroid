@@ -267,23 +267,28 @@ namespace Astroid {
       case GDK_KEY_1:
         {
           /* select first */
-          set_cursor (Gtk::TreePath("0"));
-          return true;
+          if (!(event->state & GDK_MOD1_MASK)) {
+            set_cursor (Gtk::TreePath("0"));
+            return true;
+          }
         }
+        break;
 
       case GDK_KEY_End:
       case GDK_KEY_0:
         {
           /* select last */
-          if (list_store->children().size() >= 1) {
-            auto it = list_store->children().end ();
-            auto p  = list_store->get_path (--it);
-            if (p) set_cursor (p);
+          if (!(event->state & GDK_MOD1_MASK)) {
+            if (list_store->children().size() >= 1) {
+              auto it = list_store->children().end ();
+              auto p  = list_store->get_path (--it);
+              if (p) set_cursor (p);
+            }
+
+            return true;
           }
-
-          return true;
         }
-
+        break;
 
       case GDK_KEY_KP_Enter:
       case GDK_KEY_Return:

@@ -195,6 +195,38 @@ namespace Astroid {
 
         return true;
 
+      case GDK_KEY_1:
+      case GDK_KEY_2:
+      case GDK_KEY_3:
+      case GDK_KEY_4:
+      case GDK_KEY_5:
+      case GDK_KEY_6:
+      case GDK_KEY_7:
+      case GDK_KEY_8:
+      case GDK_KEY_9:
+      case GDK_KEY_0:
+        {
+          if (event->state & GDK_MOD1_MASK) {
+            int pg = event->keyval - GDK_KEY_0;
+
+            if (pg == 0) {
+              pg = notebook.get_n_pages () - 1;
+            } else {
+              pg--;
+            }
+
+            log << debug << "mw: swapping to page: " << pg << endl;
+
+            if (notebook.get_current_page () != pg) {
+              set_active (pg);
+            }
+
+            return true;
+          }
+        }
+        break;
+
+
       /* close page */
       case GDK_KEY_x:
         close_page ();
@@ -276,6 +308,7 @@ namespace Astroid {
       { "O", "Open new main window" },
       /* { ":", "Command" }, */
       { "b,B", "Page through modes" },
+      { "A-#", "Page to # page" },
       { "x", "Close mode (or window if other windows are open)" },
       { "q,Q", "Quit astroid" },
     };
