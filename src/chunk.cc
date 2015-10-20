@@ -175,13 +175,8 @@ namespace Astroid {
       mime_message = true;
     }
 
-    /* check if this is an encrypted message */
-    if (viewable) {
-    }
-
-    /* check if this is a signed message */
-
-    /* check if this is a signature part */
+    // TODO: check for inline PGP encryption, also its unsafe:
+    //       https://dkg.fifthhorseman.net/notes/inline-pgp-harmful/
   }
 
   ustring Chunk::viewable_text (bool html = true) {
