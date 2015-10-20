@@ -5,12 +5,17 @@
 
 # include "astroid.hh"
 # include "log.hh"
+# include "config.hh"
 # include "crypto.hh"
 
 /* interface to cryto, based on libnotmuch interface */
 
 namespace Astroid {
   Crypto::Crypto (ustring _protocol) {
+    ptree config = astroid->config->config.get_child ("crypto");
+    gpgpath = ustring (config.get<string> ("gpg.path"));
+
+    log << debug << "crypto: gpg: " << gpgpath << endl;
 
     protocol = _protocol.lowercase ();
 
@@ -48,16 +53,18 @@ namespace Astroid {
     GMimeDecryptResult * res = NULL;
 
     GMimeMultipartEncrypted * ep = GMIME_MULTIPART_ENCRYPTED (part);
-    GMimeObject * decrypted = g_mime_multipart_encrypted_decrypt
+    GMimeObject * dp = g_mime_multipart_encrypted_decrypt
 	(ep, gpgctx, &res, &err);
 
-    if (decrypted == NULL) {
+    if (dp == NULL) {
       log << error << "crypto: failed to decrypt message." << endl;
+    } else {
+      decrypted = true;
     }
 
 
     log << error << "crypto: successfully decrypted message." << endl;
-    return decrypted;
+    return dp;
   }
 
 
@@ -72,14 +79,6 @@ namespace Astroid {
     g_mime_gpg_context_set_always_trust ((GMimeGpgContext *) gpgctx, FALSE);
 
     return true;
-  }
-
-  bool Crypto::get_ready () {
-    return ready;
-  }
-
-  bool Crypto::is_gpg () {
-    return isgpg;
   }
 }
 

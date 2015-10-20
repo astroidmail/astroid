@@ -195,6 +195,9 @@ namespace Astroid {
     // the tag enclosing code
     default_config.put ("thread_view.code_prettify.code_tag", "```");
     default_config.put ("thread_view.code_prettify.enable_for_patches", true);
+
+    /* crypto */
+    default_config.put ("crypto.gpg.path", "gpg");
   }
 
   void Config::write_back_config () {
