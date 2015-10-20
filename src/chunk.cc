@@ -16,6 +16,7 @@
 # include "utils/ustring_utils.hh"
 # include "utils/vector_utils.hh"
 # include "config.hh"
+# include "crypto.hh"
 
 using namespace boost::filesystem;
 
@@ -25,6 +26,11 @@ namespace Astroid {
 
   Chunk::Chunk (GMimeObject * mp) : mime_object (mp) {
     id = nextid++;
+
+    if (mp == NULL) {
+      log << error << "chunk: got NULL mime_object." << endl;
+      throw logic_error ("chunk: got NULL mime_object");
+    }
 
     content_type = g_mime_object_get_content_type (mime_object);
 
@@ -90,48 +96,75 @@ namespace Astroid {
 
       kids.push_back (refptr<Chunk>(new Chunk((GMimeObject *) msg)));
 
+
     } else if GMIME_IS_MULTIPART (mime_object) {
       log << debug << "chunk: multi part" << endl;
-      //  TODO: MultiPartEncrypted, MultiPartSigned
-
-      bool alternative = (g_mime_content_type_is_type (content_type, "multipart", "alternative"));
-      log << debug << "chunk: alternative: " << alternative << endl;
 
       int total = g_mime_multipart_get_count ((GMimeMultipart *) mime_object);
 
-      for (int i = 0; i < total; i++) {
-        GMimeObject * mo = g_mime_multipart_get_part (
-            (GMimeMultipart *) mime_object,
-            i);
+      if (GMIME_IS_MULTIPART_ENCRYPTED (mime_object)) {
+          log << warn << "chunk: is encrypted." << endl;
+          isencrypted = true;
 
-        kids.push_back (refptr<Chunk>(new Chunk(mo)));
-      }
+          if (total != 2) {
+            log << error << "chunk: encrypted message with not exactly 2 parts." << endl;
+            return;
+          }
 
-      if (alternative) {
-        for_each (
-            kids.begin(),
-            kids.end(),
-            [&] (refptr<Chunk> c) {
-              for_each (
-                  kids.begin(),
-                  kids.end(),
-                  [&] (refptr<Chunk> cc) {
-                    if (c != cc) {
-                      log << debug << "chunk: multipart: added sibling" << endl;
-                      c->siblings.push_back (cc);
+          const char *protocol = g_mime_content_type_get_parameter (content_type, "protocol");
+          Crypto cr (protocol);
+          GMimeObject * k = cr.decrypt_and_verify (mime_object);
+
+          if (k != NULL) {
+            auto c = refptr<Chunk>(new Chunk(k));
+            c->isencrypted = true;
+            kids.push_back (c);
+          }
+
+      } else if (GMIME_IS_MULTIPART_SIGNED (mime_object)) {
+          log << warn << "chunk: is signed." << endl;
+          issigned = true;
+
+      } else {
+
+        bool alternative = (g_mime_content_type_is_type (content_type, "multipart", "alternative"));
+        log << debug << "chunk: alternative: " << alternative << endl;
+
+
+        for (int i = 0; i < total; i++) {
+          GMimeObject * mo = g_mime_multipart_get_part (
+              (GMimeMultipart *) mime_object,
+              i);
+
+          kids.push_back (refptr<Chunk>(new Chunk(mo)));
+        }
+
+        if (alternative) {
+          for_each (
+              kids.begin(),
+              kids.end(),
+              [&] (refptr<Chunk> c) {
+                for_each (
+                    kids.begin(),
+                    kids.end(),
+                    [&] (refptr<Chunk> cc) {
+                      if (c != cc) {
+                        log << debug << "chunk: multipart: added sibling" << endl;
+                        c->siblings.push_back (cc);
+                      }
                     }
-                  }
-                );
+                  );
 
-              if (g_mime_content_type_is_type (c->content_type,
-                  g_mime_content_type_get_media_type (preferred_type),
-                  g_mime_content_type_get_media_subtype (preferred_type)))
-              {
-                log << debug << "chunk: multipart: preferred." << endl;
-                c->preferred = true;
+                if (g_mime_content_type_is_type (c->content_type,
+                    g_mime_content_type_get_media_type (preferred_type),
+                    g_mime_content_type_get_media_subtype (preferred_type)))
+                {
+                  log << debug << "chunk: multipart: preferred." << endl;
+                  c->preferred = true;
+                }
               }
-            }
-          );
+            );
+        }
       }
 
       log << debug << "chunk: multi part end" << endl;
@@ -141,6 +174,14 @@ namespace Astroid {
 
       mime_message = true;
     }
+
+    /* check if this is an encrypted message */
+    if (viewable) {
+    }
+
+    /* check if this is a signed message */
+
+    /* check if this is a signature part */
   }
 
   ustring Chunk::viewable_text (bool html = true) {
