@@ -42,6 +42,9 @@ namespace Astroid {
       bool attachment = false;
       bool preferred  = false;
       bool mime_message = false;
+      bool isencrypted  = false;
+      bool issigned     = false;
+      bool signature  = false;
 
       refptr<Message> get_mime_message ();
 
