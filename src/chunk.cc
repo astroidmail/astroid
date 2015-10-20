@@ -265,6 +265,7 @@ namespace Astroid {
 
     if (content_stream != NULL) {
       char buffer[4097];
+      ssize_t prevn = 1;
       ssize_t n;
       stringstream sstr;
 
@@ -272,6 +273,12 @@ namespace Astroid {
       {
         buffer[n] = 0;
         sstr << buffer;
+
+        if (n == 0 && prevn == 0) {
+          break;
+        }
+
+        prevn = n;
       }
 
       g_object_unref (content_stream);
