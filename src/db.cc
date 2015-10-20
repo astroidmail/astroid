@@ -43,6 +43,8 @@ namespace Astroid {
       path_db = path(db_path);
     }
 
+    path_db = absolute (path_db);
+
     time_t start = clock ();
 
     db_state  = CLOSED;
