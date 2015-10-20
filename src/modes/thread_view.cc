@@ -958,8 +958,10 @@ namespace Astroid {
       bool check_siblings)
   {
 
+    ustring mime_type = ustring(g_mime_content_type_to_string (c->content_type));
+
     log << debug << "create message part: " << c->id << " (siblings: " << c->siblings.size() << ") (kids: " << c->kids.size() << ")" <<
-      " (attachment: " << c->attachment << ")" << endl;
+      " (attachment: " << c->attachment << ")" << " (viewable: " << c->viewable << ")" << " (mimetype: " << mime_type << ")" << endl;
 
     if (c->attachment) return;
 
