@@ -17,8 +17,8 @@ namespace Astroid {
       Crypto (ustring protocol);
       ~Crypto ();
 
-      bool get_ready ();
-      bool is_gpg ();
+      bool ready = false;
+      bool isgpg = false;
 
       GMimeObject * decrypt_and_verify (GMimeObject * mo);
       bool verify_signature (GMimeObject * mo);
@@ -31,13 +31,10 @@ namespace Astroid {
       bool decrypt_tried = false;
 
     private:
-      bool ready = false;
-      bool isgpg = false;
-
       bool create_gpg_context ();
       GMimeCryptoContext * gpgctx;
       ustring protocol;
-      ustring gpgpath = "/usr/bin/gpg";
+      ustring gpgpath;
   };
 }
 
