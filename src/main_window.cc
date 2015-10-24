@@ -166,11 +166,11 @@ namespace Astroid {
       case GDK_KEY_q:
         {
           if (astroid->app->get_windows().size () > 1) {
-            Mode * m = (Mode *) notebook.get_children()[notebook.get_current_page ()];
-            m->ask_yes_no ("Really quit?", [&](bool yes){ if (yes) quit (); });
-          } else {
             /* other windows, just close this one */
             quit ();
+          } else {
+            Mode * m = (Mode *) notebook.get_children()[notebook.get_current_page ()];
+            m->ask_yes_no ("Really quit?", [&](bool yes){ if (yes) quit (); });
           }
         }
         return true;
