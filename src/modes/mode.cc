@@ -2,9 +2,6 @@
 # include "main_window.hh"
 # include "log.hh"
 
-# include <vector>
-# include <tuple>
-
 namespace Astroid {
   Mode::Mode (MainWindow * mw) :
     Gtk::Box (Gtk::ORIENTATION_VERTICAL)
