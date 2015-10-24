@@ -26,6 +26,8 @@ namespace Astroid {
   void HelpMode::show_help (Mode * m) {
     ModeHelpInfo * mhelp = m->key_help ();
 
+    set_label ("Help: " + mhelp->title);
+
     ustring header =
     "<b>Astroid</b> (" GIT_DESC ") \n"
     "\n"
