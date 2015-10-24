@@ -121,9 +121,11 @@ namespace Astroid {
             kids.push_back (c);
           }
 
+          /*
       } else if (GMIME_IS_MULTIPART_SIGNED (mime_object)) {
           log << warn << "chunk: is signed." << endl;
           issigned = true;
+          */
 
       } else {
 
