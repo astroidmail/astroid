@@ -5,6 +5,7 @@
 * C-f: Toggle flat or indented view of messages.
 * C-i: Show remote images (cid-type images are not supported yet).
 * A-#: Page to # page.
+* Add gravatar support
 
 == v0.4 / 2015-08-15
 

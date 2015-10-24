@@ -182,6 +182,7 @@ hr {
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
+    margin-left: 48px;
 }
 
 .email_container .header_container .tags {
@@ -191,6 +192,7 @@ hr {
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
+    margin-left: 48px;
 }
 
 .email_container .header_container .subject {
@@ -200,6 +202,7 @@ hr {
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
+    margin-left: 48px;
 }
 
 .focused {

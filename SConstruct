@@ -194,10 +194,20 @@ if not conf.CheckLib ('boost_program_options', language = 'c++'):
   print "boost_program_options does not seem to be installed."
   Exit (1)
 
+if not conf.CheckLib ('ssl', language = 'c++'):
+  print "OpenSSL does not seem to be installed."
+  Exit (1)
+
+if not conf.CheckLib ('crypto', language = 'c++'):
+  print "OpenSSL (libcrypto) does not seem to be installed."
+  Exit (1)
+
 libs   = ['notmuch',
           'boost_filesystem',
           'boost_system',
           'boost_program_options',
+          'ssl',
+          'crypto',
           'stdc++']
 
 env.AppendUnique (LIBS = libs)

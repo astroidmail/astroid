@@ -17,6 +17,7 @@
 # include "utils/mail_quote.hh"
 # include "utils/address.hh"
 # include "utils/vector_utils.hh"
+# include "utils/gravatar.hh"
 # include "actions/action.hh"
 # include "actions/tag_action.hh"
 # include "reply_message.hh"
@@ -269,18 +270,22 @@ namespace Astroid {
     ustring uri (uri_c);
 
     // prefix of local uris for loading image thumbnails
-    ustring image_data_uri = "data:image/png;base64";
+    vector<ustring> allowed_uris =
+      {
+        home_uri,
+        "data:image/png;base64",
+        "http://www.gravatar.com/avatar/",
+      };
 
     // TODO: show cid type images and inline-attachments
 
     /* is this request allowed */
-    if (uri == home_uri) {
+    if (find_if (allowed_uris.begin (), allowed_uris.end (),
+          [&](ustring &a) {
+            return (uri.substr (0, a.length ()) == a);
+          }) != allowed_uris.end ())
+    {
       return; // yes
-
-    } else if (uri.substr(0, image_data_uri.length()) == image_data_uri) {
-      log << debug << "tv: thumbnail request: approved" << endl;
-      return; // yes
-
     } else if (enable_mathjax &&
         uri.substr(0, mathjax_uri_prefix.length()) == mathjax_uri_prefix) {
 
@@ -906,6 +911,18 @@ namespace Astroid {
 
       g_object_unref (tags);
     }
+
+    /* avatar */
+    auto se = Address(m->sender);
+
+    WebKitDOMHTMLImageElement * av = WEBKIT_DOM_HTML_IMAGE_ELEMENT (
+        select (
+        WEBKIT_DOM_NODE (div_message),
+        ".avatar"));
+
+    webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (av), "src",
+        Gravatar::get_image_uri (se.email (), Gravatar::Default::RETRO, 48).c_str()
+        , &err);
 
     /* insert header html*/
     WebKitDOMHTMLElement * table_header =
