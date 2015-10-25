@@ -53,7 +53,7 @@ namespace Astroid {
       time_t  received_time;
       ustring date ();
       ustring pretty_date ();
-      ustring pretty_verbose_date ();
+      ustring pretty_verbose_date (bool = false);
       vector<ustring> tags;
 
       ustring viewable_text (bool, bool fallback_html = false);

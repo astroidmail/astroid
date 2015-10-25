@@ -43,8 +43,9 @@ namespace Astroid {
 
       static bool same_day (struct tm, struct tm);
       static CoarseDate coarse_date (struct tm, struct tm, time_t );
+      static CoarseDate coarse_date (time_t t);
       static ustring pretty_print (time_t );
-      static ustring pretty_print_verbose (time_t);
+      static ustring pretty_print_verbose (time_t, bool = false);
 
       static void init ();
   };

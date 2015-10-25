@@ -1322,12 +1322,11 @@ namespace Astroid {
   /* headers {{{ */
   void ThreadView::insert_header_date (ustring & header, refptr<Message> m)
   {
-
     ustring value = ustring::compose (
                 "<span class=\"hidden_only\">%1</span>"
                 "<span class=\"not_hidden_only\">%2</span>",
                 m->pretty_date (),
-                m->pretty_verbose_date ());
+                m->pretty_verbose_date (true));
 
     header += create_header_row ("Date", value, true, false);
   }

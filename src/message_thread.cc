@@ -294,8 +294,8 @@ namespace Astroid {
     return Date::pretty_print (received_time);
   }
 
-  ustring Message::pretty_verbose_date () {
-    return Date::pretty_print_verbose (received_time);
+  ustring Message::pretty_verbose_date (bool include_short) {
+    return Date::pretty_print_verbose (received_time, include_short);
   }
 
   InternetAddressList * Message::to () {

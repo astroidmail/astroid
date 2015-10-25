@@ -53,11 +53,7 @@ namespace Astroid {
     time_t now  = time (NULL);
     time_t diff = now - t;
 
-    struct tm now_time;
-    temp_t = localtime (&now);
-    now_time = *temp_t;
-
-    CoarseDate cd = coarse_date (local_time, now_time, diff);
+    CoarseDate cd = coarse_date (t);
 
     ustring fmt;
     switch (cd) {
@@ -105,7 +101,7 @@ namespace Astroid {
     return dt.format (fmt);
   }
 
-  ustring Date::pretty_print_verbose (time_t t) {
+  ustring Date::pretty_print_verbose (time_t t, bool include_short) {
 
     struct tm * temp_t = localtime (&t);
     struct tm local_time = *temp_t;
@@ -118,7 +114,14 @@ namespace Astroid {
         local_time.tm_min,
         local_time.tm_sec);
 
-    return dt.format (pretty_verbose_dates[clock_format]);
+    ustring v = dt.format (pretty_verbose_dates[clock_format]);
+
+    CoarseDate cd = coarse_date (t);
+    if (include_short && (cd < CoarseDate::THIS_YEAR)) {
+      v = v + " (" + pretty_print (t) + ")";
+    }
+
+    return v;
   }
 
   void Date::init () {
@@ -143,6 +146,20 @@ namespace Astroid {
 
     /* diff year */
     diff_year = config.get<string>("diff_year");
+  }
+
+  Date::CoarseDate Date::coarse_date (time_t t) {
+    struct tm * temp_t = localtime (&t);
+    struct tm local_time = *temp_t;
+
+    time_t now  = time (NULL);
+    time_t diff = now - t;
+
+    struct tm now_time;
+    temp_t = localtime (&now);
+    now_time = *temp_t;
+
+    return coarse_date (local_time, now_time, diff);
   }
 
   Date::CoarseDate Date::coarse_date (struct tm t, struct tm now, time_t diff) {
