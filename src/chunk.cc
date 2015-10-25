@@ -113,12 +113,15 @@ namespace Astroid {
 
           const char *protocol = g_mime_content_type_get_parameter (content_type, "protocol");
           Crypto cr (protocol);
-          GMimeObject * k = cr.decrypt_and_verify (mime_object);
 
-          if (k != NULL) {
-            auto c = refptr<Chunk>(new Chunk(k));
-            c->isencrypted = true;
-            kids.push_back (c);
+          if (cr.ready) {
+            GMimeObject * k = cr.decrypt_and_verify (mime_object);
+
+            if (k != NULL) {
+              auto c = refptr<Chunk>(new Chunk(k));
+              c->isencrypted = true;
+              kids.push_back (c);
+            }
           }
 
           /*
