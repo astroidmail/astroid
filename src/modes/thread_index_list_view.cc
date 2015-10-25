@@ -386,7 +386,28 @@ namespace Astroid {
       /* group actions */
       case GDK_KEY_plus:
         {
-          thread_index->multi_key (multi_key_help, bind(&ThreadIndexListView::multi_key_handler, this, _1));
+          /* check if anything is marked */
+          Gtk::TreePath path;
+          Gtk::TreeIter fwditer;
+
+          fwditer = list_store->get_iter ("0");
+          Gtk::ListStore::Row row;
+
+          bool found = false;
+
+          while (fwditer) {
+            row = *fwditer;
+            if (row[list_store->columns.marked]) {
+              found = true;
+              break;
+            }
+
+            fwditer++;
+          }
+
+          if (found) {
+            thread_index->multi_key (multi_key_help, bind(&ThreadIndexListView::multi_key_handler, this, _1));
+          }
 
           return true;
         }
