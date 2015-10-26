@@ -6,6 +6,7 @@
 * C-i: Show remote images (cid-type images are not supported yet).
 * A-#: Page to # page.
 * Add gravatar support
+* C-p: Toggle auto poll.
 
 == v0.4 / 2015-08-15
 

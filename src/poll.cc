@@ -17,19 +17,25 @@ using namespace std;
 using namespace boost::filesystem;
 
 namespace Astroid {
-  Poll::Poll (bool auto_polling_enabled) {
+  const int Poll::DEFAULT_POLL_INTERVAL = 60;
+
+  Poll::Poll (bool _auto_polling_enabled) {
     log << info << "poll: setting up." << endl;
+
+    auto_polling_enabled = _auto_polling_enabled;
 
     poll_state = false;
 
     poll_interval = astroid->config->config.get<int> ("poll.interval");
     log << debug << "poll: interval: " << poll_interval << endl;
 
-    if (auto_polling_enabled && poll_interval > 0) {
+    // check every 1 seconds if periodic poll has changed
+    Glib::signal_timeout ().connect (
+        sigc::mem_fun (this, &Poll::periodic_polling), 1000);
 
-      Glib::signal_timeout ().connect (
-          sigc::mem_fun (this, &Poll::periodic_polling), poll_interval * 1000);
+    if (poll_interval <= 0) auto_polling_enabled = false;
 
+    if (auto_polling_enabled) {
       // do initial poll
       poll ();
 
@@ -41,18 +47,34 @@ namespace Astroid {
   }
 
   bool Poll::periodic_polling () {
-    chrono::duration<double> elapsed = chrono::steady_clock::now() - last_poll;
+    if (auto_polling_enabled) {
+      chrono::duration<double> elapsed = chrono::steady_clock::now() - last_poll;
 
-    if (elapsed.count () >= poll_interval) {
-      log << info << "poll: periodic poll.." << endl;
-      poll ();
+      if (elapsed.count () >= poll_interval) {
+        log << info << "poll: periodic poll.." << endl;
+        poll ();
+      }
     }
 
     return true;
   }
 
+  void Poll::toggle_auto_poll () {
+    log << info << "poll: toggle auto poll: " << !auto_polling_enabled << endl;
+
+    if (poll_interval <= 0) {
+      log << warn << "poll: poll_interval = 0, setting to default: " << DEFAULT_POLL_INTERVAL << endl;
+      poll_interval = DEFAULT_POLL_INTERVAL;
+    }
+
+    auto_polling_enabled = !auto_polling_enabled;
+  }
+
   bool Poll::poll () {
     log << debug << "poll: requested.." << endl;
+
+    // set this here as well to avoid lots of checks
+    last_poll = chrono::steady_clock::now ();
 
     if (m_dopoll.try_lock ()) {
 

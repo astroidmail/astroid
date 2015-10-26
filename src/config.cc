@@ -8,6 +8,7 @@
 
 # include "config.hh"
 # include "log.hh"
+# include "poll.hh"
 
 using namespace std;
 using namespace boost::filesystem;
@@ -130,7 +131,7 @@ namespace Astroid {
     */
 
     /* polling */
-    default_config.put ("poll.interval", 60); // seconds
+    default_config.put ("poll.interval", Poll::DEFAULT_POLL_INTERVAL); // seconds
 
     /* attachments
      *

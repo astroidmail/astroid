@@ -282,6 +282,14 @@ namespace Astroid {
           return true;
         }
 
+      case GDK_KEY_p:
+        {
+          if (event->state & GDK_CONTROL_MASK) {
+            astroid->poll->toggle_auto_poll ();
+            return true;
+          }
+        }
+
       case GDK_KEY_O:
         {
           astroid->open_new_window ();
@@ -300,6 +308,7 @@ namespace Astroid {
     m->keys = {
       { "m", "Compose new mail" },
       { "P", "Call poll script manually" },
+      { "C-p", "Toggle auto poll" },
       { "F", "Search" },
       { "L", "Search for tag:" },
       { "u", "Undo last action" },

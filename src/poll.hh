@@ -15,13 +15,16 @@ namespace Astroid {
       Poll (bool auto_polling_enabled);
 
       bool poll ();
+      void toggle_auto_poll ();
 
       const char * poll_script = "poll.sh";
+      static const int DEFAULT_POLL_INTERVAL; // 60
 
     private:
       mutex m_dopoll;
 
       int poll_interval = 0;
+      bool auto_polling_enabled = true;
 
       void do_poll ();
       bool periodic_polling ();
