@@ -288,6 +288,7 @@ namespace Astroid {
             astroid->poll->toggle_auto_poll ();
             return true;
           }
+          return false;
         }
 
       case GDK_KEY_O:
