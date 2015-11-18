@@ -1857,7 +1857,14 @@ namespace Astroid {
           if (!(event->state & GDK_CONTROL_MASK)) {
             focus_next_element ();
             return true;
-          } // otherwise treat as J
+          } else {
+            /* move focus to next element and optionally scroll to it */
+            ustring eid = focus_next_element (true);
+            if (eid != "") {
+              scroll_to_element (eid, false);
+            }
+            return true;
+          }
         }
 
       case GDK_KEY_J:
@@ -1872,10 +1879,7 @@ namespace Astroid {
             double v = adj->get_value ();
             adj->set_value (adj->get_value() + adj->get_step_increment ());
 
-            if (v == adj->get_value ()) {
-              /* we're at the bottom, just move focus down */
-              focus_next ();
-            } else {
+            if (v < adj->get_value ()) {
               update_focus_to_view ();
             }
           }
@@ -1887,7 +1891,14 @@ namespace Astroid {
           if (!(event->state & GDK_CONTROL_MASK)) {
             focus_previous_element ();
             return true;
-          } // otherwise tread as K
+          } else {
+            /* move focus to previous element and optionally scroll to it */
+            ustring eid = focus_previous_element (true);
+            if (eid != "") {
+              scroll_to_element (eid, false);
+            }
+            return true;
+          }
         }
 
       case GDK_KEY_K:
@@ -1899,11 +1910,7 @@ namespace Astroid {
             update_focus_to_view ();
           } else {
             auto adj = scroll.get_vadjustment ();
-            if (adj->get_value () == adj->get_lower ()) {
-              /* we're at the top, move focus up */
-              focus_previous ();
-
-            } else {
+            if (!(adj->get_value () == adj->get_lower ())) {
               adj->set_value (adj->get_value() - adj->get_step_increment ());
               update_focus_to_view ();
             }
@@ -2170,8 +2177,9 @@ namespace Astroid {
 
     m->keys = {
       { "k,j", "Scroll up/down or move focus up/down between the elements in a thread or email" },
+      { "C-k,C-j", "Move focus to previous/next element" },
       { "K,J", "Scroll up/down" },
-      { "C-k,C-j,S-K,S-J", "Page up/down" },
+      { "S-K,S-J", "Page up/down" },
       { "n,p", "Focus next or previous message" },
       { "1,Home", "Scroll to top" },
       { "0,End" , "Scroll to bottom" },
@@ -2405,13 +2413,12 @@ namespace Astroid {
       in_scroll = false;
       log << debug << "tv: re-doing scroll." << endl;
 
-      if (!scroll_arg) {
-        scroll_arg = focused_message;
+      if (scroll_arg != "") {
+        if (scroll_to_element (scroll_arg, _scroll_when_visible)) {
+          scroll_arg = "";
+          _scroll_when_visible = false;
+        }
       }
-
-      scroll_to_message (scroll_arg, _scroll_when_visible);
-      scroll_arg = refptr<Message> ();
-      _scroll_when_visible = false;
     }
   }
 
@@ -2615,7 +2622,9 @@ namespace Astroid {
     g_object_unref (d);
   }
 
-  void ThreadView::focus_next_element () {
+  ustring ThreadView::focus_next_element (bool force_change) {
+    ustring eid;
+
     if (!is_hidden (focused_message) || edit_mode) {
       /* if the message is expanded, check if we should move focus
        * to the next element */
@@ -2633,77 +2642,11 @@ namespace Astroid {
 
         auto adj = scroll.get_vadjustment ();
 
-        ustring eid = next_e->element_id ();
+        eid = next_e->element_id ();
 
-        WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, eid.c_str());
+        bool change_focus = force_change;
 
-        double scrolled = adj->get_value ();
-        double height   = adj->get_page_size (); // 0 when there is
-                                                 // no paging.
-
-        double clientY = webkit_dom_element_get_offset_top (e);
-        double clientH = webkit_dom_element_get_client_height (e);
-
-        g_object_unref (e);
-        g_object_unref (d);
-
-        bool change_focus = false;
-        if (height > 0) {
-          if (  (clientY >= scrolled) &&
-              ( (clientY + clientH) <= (scrolled + height) ))
-          {
-            change_focus = true;
-          }
-        } else {
-          change_focus = true;
-        }
-
-        //log << debug << "focus_next_element: change: " << change_focus << endl;
-
-        if (change_focus) {
-          s->current_element++;
-          update_focus_status ();
-          return;
-        }
-      }
-    }
-
-    /* no focus change, standard behaviour */
-    auto adj = scroll.get_vadjustment ();
-    double v = adj->get_value ();
-    adj->set_value (adj->get_value() + adj->get_step_increment ());
-
-    if (v == adj->get_value ()) {
-      /* we're at the bottom, just move focus down */
-      focus_next ();
-    } else {
-      update_focus_to_view ();
-    }
-  }
-
-  void ThreadView::focus_previous_element () {
-    if (!is_hidden (focused_message) || edit_mode) {
-      /* if the message is expanded, check if we should move focus
-       * to the previous element */
-
-      MessageState * s = &(state[focused_message]);
-
-      //log << debug << "focus prev: current elemenet: " << s->current_element << endl;
-      /* are there any more elements */
-      if (s->current_element > 0) {
-        /* check if the prev element is in full view */
-
-        MessageState::Element * next_e = &(s->elements[s->current_element - 1]);
-
-        bool change_focus = false;
-
-        if (next_e->type != MessageState::ElementType::Empty) {
-          WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
-
-          auto adj = scroll.get_vadjustment ();
-
-          ustring eid = next_e->element_id ();
-
+        if (!force_change) {
           WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, eid.c_str());
 
           double scrolled = adj->get_value ();
@@ -2725,8 +2668,83 @@ namespace Astroid {
           } else {
             change_focus = true;
           }
-        } else {
-          change_focus = true;
+        }
+
+        //log << debug << "focus_next_element: change: " << change_focus << endl;
+
+        if (change_focus) {
+          s->current_element++;
+          update_focus_status ();
+          return eid;
+        }
+      }
+    }
+
+    /* no focus change, standard behaviour */
+    auto adj = scroll.get_vadjustment ();
+    double v = adj->get_value ();
+    adj->set_value (adj->get_value() + adj->get_step_increment ());
+
+    if (force_change  || (v == adj->get_value ())) {
+      /* we're at the bottom, just move focus down */
+      eid = focus_next ();
+    } else {
+      update_focus_to_view ();
+    }
+
+    return eid;
+  }
+
+  ustring ThreadView::focus_previous_element (bool force_change) {
+    ustring eid;
+
+    if (!is_hidden (focused_message) || edit_mode) {
+      /* if the message is expanded, check if we should move focus
+       * to the previous element */
+
+      MessageState * s = &(state[focused_message]);
+
+      //log << debug << "focus prev: current elemenet: " << s->current_element << endl;
+      /* are there any more elements */
+      if (s->current_element > 0) {
+        /* check if the prev element is in full view */
+
+        MessageState::Element * next_e = &(s->elements[s->current_element - 1]);
+
+        bool change_focus = force_change;
+
+        if (!force_change) {
+          if (next_e->type != MessageState::ElementType::Empty) {
+            WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
+
+            auto adj = scroll.get_vadjustment ();
+
+            eid = next_e->element_id ();
+
+            WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, eid.c_str());
+
+            double scrolled = adj->get_value ();
+            double height   = adj->get_page_size (); // 0 when there is
+                                                     // no paging.
+
+            double clientY = webkit_dom_element_get_offset_top (e);
+            double clientH = webkit_dom_element_get_client_height (e);
+
+            g_object_unref (e);
+            g_object_unref (d);
+
+            if (height > 0) {
+              if (  (clientY >= scrolled) &&
+                  ( (clientY + clientH) <= (scrolled + height) ))
+              {
+                change_focus = true;
+              }
+            } else {
+              change_focus = true;
+            }
+          } else {
+            change_focus = true;
+          }
         }
 
         //log << debug << "focus_prev_element: change: " << change_focus << endl;
@@ -2734,28 +2752,29 @@ namespace Astroid {
         if (change_focus) {
           s->current_element--;
           update_focus_status ();
-          return;
+          return eid;
         }
       }
     }
 
     /* standard behaviour */
     auto adj = scroll.get_vadjustment ();
-    if (adj->get_value () == adj->get_lower ()) {
+    if (force_change || (adj->get_value () == adj->get_lower ())) {
       /* we're at the top, move focus up */
-      focus_previous ();
+      eid = focus_previous ();
 
     } else {
       adj->set_value (adj->get_value() - adj->get_step_increment ());
       update_focus_to_view ();
     }
 
+    return eid;
   }
 
-  void ThreadView::focus_next () {
+  ustring ThreadView::focus_next () {
     //log << debug << "tv: focus_next." << endl;
 
-    if (edit_mode) return;
+    if (edit_mode) return "";
 
     int focused_position = find (
         mthread->messages.begin (),
@@ -2767,12 +2786,14 @@ namespace Astroid {
       state[focused_message].current_element = 0; // start at top
       update_focus_status ();
     }
+
+    return "message_" + focused_message->mid;
   }
 
-  void ThreadView::focus_previous () {
+  ustring ThreadView::focus_previous () {
     //log << debug << "tv: focus previous." << endl;
 
-    if (edit_mode) return;
+    if (edit_mode) return "";
 
     int focused_position = find (
         mthread->messages.begin (),
@@ -2788,6 +2809,8 @@ namespace Astroid {
       }
       update_focus_status ();
     }
+
+    return "message_" + focused_message->mid;
   }
 
   void ThreadView::scroll_to_message (refptr<Message> m, bool scroll_when_visible) {
@@ -2804,12 +2827,33 @@ namespace Astroid {
 
     WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
 
-    auto adj = scroll.get_vadjustment ();
-
     ustring mid = "message_" + m->mid;
 
     WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
 
+    g_object_unref (e);
+    g_object_unref (d);
+
+    scroll_to_element (mid, scroll_when_visible);
+  }
+
+  bool ThreadView::scroll_to_element (
+      ustring eid,
+      bool scroll_when_visible)
+  {
+    /* returns false when rendering is incomplete and scrolling
+     * doesn't work */
+
+    if (eid == "") {
+      log << error << "tv: attempted to scroll to unspecified id." << endl;
+      return false;
+
+    }
+
+    WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
+    WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, eid.c_str());
+
+    auto adj = scroll.get_vadjustment ();
     double scrolled = adj->get_value ();
     double height   = adj->get_page_size (); // 0 when there is
                                              // no paging.
@@ -2817,9 +2861,6 @@ namespace Astroid {
 
     double clientY = webkit_dom_element_get_offset_top (e);
     double clientH = webkit_dom_element_get_client_height (e);
-
-    g_object_unref (e);
-    g_object_unref (d);
 
     if (height > 0) {
       if (scroll_when_visible) {
@@ -2856,16 +2897,25 @@ namespace Astroid {
       }
     }
 
+    update_focus_status ();
+
+    g_object_unref (e);
+    g_object_unref (d);
+
     /* the height does not seem to make any sense, but is still more
      * than empty. we need to re-do the calculation when everything
      * has been rendered and re-calculated. */
     if (height == 1) {
       in_scroll = true;
-      scroll_arg = m;
+      scroll_arg = eid;
       _scroll_when_visible = scroll_when_visible;
-    }
+      return false;
 
-    update_focus_status ();
+    } else {
+
+      return true;
+
+    }
   }
 
   /* end focus handeling  }}} */

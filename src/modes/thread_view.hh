@@ -87,13 +87,19 @@ namespace Astroid {
     private:
       /* message manipulation and location */
       void scroll_to_message (refptr<Message>, bool = false);
+      bool scroll_to_element (ustring, bool = false);
+
+      bool in_scroll = false;
+      ustring         scroll_arg;
+      bool            _scroll_when_visible;
+
       void update_focus_to_view ();
       void update_focus_status ();
-      void focus_next ();
-      void focus_previous ();
+      ustring focus_next ();
+      ustring focus_previous ();
 
-      void focus_next_element ();
-      void focus_previous_element ();
+      ustring focus_next_element (bool = false);
+      ustring focus_previous_element (bool = false);
 
       enum ToggleState {
         ToggleToggle,
@@ -247,9 +253,6 @@ namespace Astroid {
           GParamSpec *);
 
       void on_scroll_vadjustment_changed();
-      bool in_scroll = false;
-      refptr<Message> scroll_arg;
-      bool            _scroll_when_visible;
 
       Gtk::Window * inspector_window;
       Gtk::ScrolledWindow inspector_scroll;
