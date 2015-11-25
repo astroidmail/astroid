@@ -15,8 +15,11 @@ namespace Astroid {
   }
 
   ustring Utils::safe_fname (ustring fname) {
-    auto pattern = Glib::Regex::create ("[^0-9A-Za-z.\\- :]"); // chars allowed
-    auto pattern2 = Glib::Regex::create ("__+"); // double _
+    // allowed chars in file names
+    auto pattern = Glib::Regex::create ("[^0-9A-Za-z.\\- :\\(\\)]");
+
+    // double _
+    auto pattern2 = Glib::Regex::create ("__+");
 
     ustring _f = fname;
     _f = pattern->replace (_f, 0, "_", static_cast<Glib::RegexMatchFlags>(0));
