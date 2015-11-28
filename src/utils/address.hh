@@ -37,6 +37,7 @@ namespace Astroid {
       AddressList ();
       AddressList (InternetAddressList *);
       AddressList (Address);
+      AddressList (ustring);
 
       vector<Address> addresses;
       ustring str ();
