@@ -807,18 +807,22 @@ namespace Astroid {
     set_message_html (m, div_message);
 
     /* insert attachments */
-    bool has_attachment = insert_attachments (m, div_message);
+    if (!m->missing_content) {
+      bool has_attachment = insert_attachments (m, div_message);
 
-    /* add attachment icon */
-    if (has_attachment) {
-      set_attachment_icon (m, div_message);
+      /* add attachment icon */
+      if (has_attachment) {
+        set_attachment_icon (m, div_message);
+      }
     }
 
     /* marked */
     load_marked_icon (m, div_message);
 
     /* insert mime messages */
-    insert_mime_messages (m, div_message);
+    if (!m->missing_content) {
+      insert_mime_messages (m, div_message);
+    }
 
     if (!edit_mode) {
       /* optionally hide / collapse the message */
@@ -934,33 +938,46 @@ namespace Astroid {
         header.c_str(),
         (err = NULL, &err));
 
-    /* build message body */
+    /* if message is missing body, set warning and don't add any content */
+
     WebKitDOMHTMLElement * span_body =
       select (WEBKIT_DOM_NODE(div_email_container), ".body");
 
-    create_message_part_html (m, m->root, span_body, true);
-
-    /* preview */
-    log << debug << "tv: make preview.." << endl;
     WebKitDOMHTMLElement * preview = select (
         WEBKIT_DOM_NODE (div_message),
         ".header_container .preview");
 
-    ustring bp = m->viewable_text (false);
-    if (static_cast<int>(bp.size()) > MAX_PREVIEW_LEN)
-      bp = bp.substr(0, MAX_PREVIEW_LEN - 3) + "...";
+    if (m->missing_content) {
+      /* set preview */
+      webkit_dom_html_element_set_inner_html (preview, "Message file is missing.", (err = NULL, &err));
 
-    while (true) {
-      size_t i = bp.find ("<br>");
+      /* set warning */
+      set_warning (m, "The message file is missing, only fields cached in the notmuch database are shown. Most likely your database is out of sync.");
 
-      if (i == ustring::npos) break;
+    } else {
 
-      bp.erase (i, 4);
+      /* build message body */
+      create_message_part_html (m, m->root, span_body, true);
+
+      /* preview */
+      log << debug << "tv: make preview.." << endl;
+
+      ustring bp = m->viewable_text (false);
+      if (static_cast<int>(bp.size()) > MAX_PREVIEW_LEN)
+        bp = bp.substr(0, MAX_PREVIEW_LEN - 3) + "...";
+
+      while (true) {
+        size_t i = bp.find ("<br>");
+
+        if (i == ustring::npos) break;
+
+        bp.erase (i, 4);
+      }
+
+      bp = Glib::Markup::escape_text (bp);
+
+      webkit_dom_html_element_set_inner_html (preview, bp.c_str(), (err = NULL, &err));
     }
-
-    bp = Glib::Markup::escape_text (bp);
-
-    webkit_dom_html_element_set_inner_html (preview, bp.c_str(), (err = NULL, &err));
 
     g_object_unref (preview);
     g_object_unref (span_body);

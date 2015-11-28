@@ -8,6 +8,7 @@
 * Add gravatar support
 * C-p: Toggle auto poll.
 * C-j / C-k: Jump and scroll to next or previous element.
+* Fix #23: Don't crash when message file is missing.
 
 == v0.4 / 2015-08-15
 
