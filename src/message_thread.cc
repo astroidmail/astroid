@@ -26,6 +26,7 @@ namespace Astroid {
   Message::Message () {
     in_notmuch = false;
     has_file   = false;
+    missing_content = false;
   }
 
   Message::Message (ustring _fname) : fname (_fname) {
@@ -33,6 +34,7 @@ namespace Astroid {
     log << info << "msg: loading message from file: " << fname << endl;
     in_notmuch = false;
     has_file   = true;
+    missing_content = false;
     load_message_from_file (fname);
   }
 
@@ -42,6 +44,7 @@ namespace Astroid {
     log << info << "msg: loading message from file (mid supplied): " << fname << endl;
     in_notmuch = false;
     has_file   = true;
+    missing_content = false;
     load_message_from_file (fname);
   }
 
@@ -52,6 +55,7 @@ namespace Astroid {
     mid = notmuch_message_get_message_id (message);
     in_notmuch = true;
     has_file   = true;
+    missing_content = false;
     level      = _level;
 
     log << info << "msg: loading mid: " << mid << endl;
@@ -67,6 +71,7 @@ namespace Astroid {
     log << info << "msg: loading message from GMimeMessage." << endl;
     in_notmuch = false;
     has_file   = false;
+    missing_content = false;
 
     load_message (_msg);
   }
@@ -111,27 +116,74 @@ namespace Astroid {
   }
 
   void Message::load_message_from_file (ustring fname) {
-    GMimeStream   * stream  = g_mime_stream_file_new_for_path (fname.c_str(), "r");
-    if (stream == NULL) {
-      if (!exists (fname.c_str())) {
-        log << error << "failed to open file: " << fname << ", it does not exist!" << endl;
+    if (!exists (fname.c_str())) {
+      log << error << "failed to open file: " << fname << ", it does not exist!" << endl;
+
+      has_file = false;
+      missing_content = true;
+
+      if (in_notmuch) {
+        log << warn << "loading cache for missing file from notmuch" << endl;
+
+        load_notmuch_cache ();
+
       } else {
-        log << error << "failed to open file: " << fname << " (unspecified error)" << endl;
+        log << error << "message is not in database and not on disk." << endl;
+
+        string error_s = "failed to open file: " + fname;
+        throw message_error (error_s.c_str());
       }
 
-      string error_s = "failed to open file: " + fname;
-      throw message_error (error_s.c_str());
+    } else {
+      GMimeStream   * stream  = g_mime_stream_file_new_for_path (fname.c_str(), "r");
+      if (stream == NULL) {
+        log << error << "failed to open file: " << fname << " (unspecified error)" << endl;
+        string error_s = "failed to open file: " + fname;
+        throw message_error (error_s.c_str());
+      }
 
+      GMimeParser   * parser  = g_mime_parser_new_with_stream (stream);
+
+      GMimeMessage * _message = g_mime_parser_construct_message (parser);
+
+      load_message (_message);
+
+      g_object_unref (stream); // reffed from parser
+      g_object_unref (parser); // reffed from message
     }
+  }
 
-    GMimeParser   * parser  = g_mime_parser_new_with_stream (stream);
+  void Message::load_notmuch_cache () {
+    Db db (Db::DATABASE_READ_ONLY);
+    db.on_message (mid, [&](notmuch_message_t * msg)
+      {
 
-    GMimeMessage * _message = g_mime_parser_construct_message (parser);
+        /* read header fields */
+        const char *c;
+        c = notmuch_message_get_header (msg, "From");
+        if (c != NULL) sender = ustring (c);
+        else sender = "";
 
-    load_message (_message);
+        c = notmuch_message_get_header (msg, "Subject");
+        if (c != NULL) subject = ustring (c);
+        else subject = "";
 
-    g_object_unref (stream); // reffed from parser
-    g_object_unref (parser); // reffed from message
+        c = notmuch_message_get_header (msg, "In-Reply-To");
+        if (c != NULL) inreplyto = ustring (c);
+        else inreplyto = "";
+
+        c = notmuch_message_get_header (msg, "References");
+        if (c != NULL) references = ustring (c);
+        else references = "";
+
+        c = notmuch_message_get_header (msg, "Reply-To");
+        if (c != NULL) reply_to = ustring (c);
+        else reply_to = "";
+
+
+        received_time = notmuch_message_get_date (msg);
+
+      });
   }
 
   void Message::load_message (GMimeMessage * _msg) {
@@ -190,6 +242,11 @@ namespace Astroid {
      * html:      output html (using gmimes html filter)
      *
      */
+
+    if (missing_content) {
+      log << warn << "message: missing content, no text." << endl;
+      return "";
+    }
 
     if (html && fallback_html) {
       throw logic_error ("message: html implies fallback_html");
@@ -252,7 +309,8 @@ namespace Astroid {
                 app_attachment);
     };
 
-    app_attachment (root);
+    if (root)
+      app_attachment (root);
 
     return attachments;
   }
@@ -281,13 +339,31 @@ namespace Astroid {
                 app_mm);
     };
 
-    app_mm (root);
+    if (root) app_mm (root);
 
     return mime_messages;
   }
 
   ustring Message::date () {
-    return ustring (g_mime_message_get_date_as_string (message));
+    if (missing_content) {
+      ustring s;
+
+      Db db (Db::DATABASE_READ_ONLY);
+      db.on_message (mid, [&](notmuch_message_t * msg)
+        {
+          /* read header field */
+          const char *c;
+
+          c = notmuch_message_get_header (msg, "Date");
+
+          if (c != NULL) s = ustring (c);
+          else s = "";
+        });
+
+      return s;
+    } else {
+      return ustring (g_mime_message_get_date_as_string (message));
+    }
   }
 
   ustring Message::pretty_date () {
@@ -299,15 +375,84 @@ namespace Astroid {
   }
 
   InternetAddressList * Message::to () {
-    return g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_TO);
+    if (missing_content) {
+      ustring s;
+
+      Db db (Db::DATABASE_READ_ONLY);
+      db.on_message (mid, [&](notmuch_message_t * msg)
+        {
+          /* read header field */
+          const char *c;
+
+          c = notmuch_message_get_header (msg, "To");
+
+          if (c != NULL) s = ustring (c);
+          else s = "";
+        });
+
+      log << debug << "message: cached value: " << s << endl;
+      if (s.empty ()) {
+        return internet_address_list_new ();
+      } else {
+        return internet_address_list_parse_string (s.c_str());
+      }
+    } else {
+      return g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_TO);
+    }
   }
 
   InternetAddressList * Message::cc () {
-    return g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_CC);
+    if (missing_content) {
+      ustring s;
+
+      Db db (Db::DATABASE_READ_ONLY);
+      db.on_message (mid, [&](notmuch_message_t * msg)
+        {
+          /* read header field */
+          const char *c;
+
+          c = notmuch_message_get_header (msg, "Cc");
+
+          if (c != NULL) s = ustring (c);
+          else s = "";
+        });
+
+      log << debug << "message: cached value: " << s << endl;
+      if (s.empty ()) {
+        return internet_address_list_new ();
+      } else {
+        return internet_address_list_parse_string (s.c_str());
+      }
+    } else {
+      return g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_CC);
+    }
   }
 
   InternetAddressList * Message::bcc () {
-    return g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_BCC);
+    if (missing_content) {
+      ustring s;
+
+      Db db (Db::DATABASE_READ_ONLY);
+      db.on_message (mid, [&](notmuch_message_t * msg)
+        {
+          /* read header field */
+          const char *c;
+
+          c = notmuch_message_get_header (msg, "Bcc");
+
+          if (c != NULL) s = ustring (c);
+          else s = "";
+        });
+
+      log << debug << "message: cached value: " << s << endl;
+      if (s.empty ()) {
+        return internet_address_list_new ();
+      } else {
+        return internet_address_list_parse_string (s.c_str());
+      }
+    } else {
+      return g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_BCC);
+    }
   }
 
   AddressList Message::all_to_from () {
@@ -315,7 +460,12 @@ namespace Astroid {
   }
 
   ustring Message::get_filename (ustring appendix) {
-    ustring _f = root->get_filename ();
+    ustring _f;
+    if (!missing_content) {
+      _f = root->get_filename ();
+    } else {
+      _f = "";
+    }
 
     if (_f.size () == 0) {
       _f = Utils::safe_fname (subject);
@@ -348,6 +498,11 @@ namespace Astroid {
   }
 
   void Message::save () {
+    if (missing_content) {
+      log << error << "message: missing content, can't save." << endl;
+      return;
+    }
+
     Gtk::FileChooserDialog dialog ("Save message..",
         Gtk::FILE_CHOOSER_ACTION_SAVE);
 
@@ -382,6 +537,11 @@ namespace Astroid {
     // apparently boost needs to be compiled with -std=c++0x
     // https://svn.boost.org/trac/boost/ticket/6124
     // copy_file ( path (fname), path (tofname) );
+
+    if (missing_content) {
+      log << error << "message: missing content, can't save." << endl;
+      return;
+    }
 
     path to (tofname.c_str());
     if (is_directory (to)) {
@@ -423,7 +583,11 @@ namespace Astroid {
   }
 
   refptr<Glib::ByteArray> Message::contents () {
-    return root->contents ();
+    if (missing_content) {
+      return Glib::ByteArray::create ();
+    } else {
+      return root->contents ();
+    }
   }
 
   bool Message::is_patch () {

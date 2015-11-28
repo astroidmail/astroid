@@ -25,10 +25,14 @@ namespace Astroid {
       ustring mid;
       bool    in_notmuch;
       bool    has_file;
+      bool    missing_content; // file does not have a gmimeobject nor a file, use
+                               // notmuch cache. essentially means that the
+                               // db is out of sync.
       ustring get_filename (ustring appendix = "");
 
       void load_message_from_file (ustring);
       void load_message (GMimeMessage *);
+      void load_notmuch_cache ();
       void load_tags (Db *);
       void load_tags (notmuch_message_t *);
 
