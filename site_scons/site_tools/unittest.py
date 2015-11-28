@@ -16,6 +16,9 @@ def unitTestAction(target, source, env):
   for k,v in env['ENV'].items():
     myenv[k] = v
 
+  # add notmuch path
+  myenv['NOTMUCH_CONFIG'] = 'test/mail/test_config'
+
   app = str(source[0].abspath)
   process = subprocess.Popen (app, shell = True, env = myenv)
   process.wait ()
