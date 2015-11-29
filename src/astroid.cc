@@ -21,7 +21,7 @@
 
 /* UI */
 # include "main_window.hh"
-# include "modes/thread_index.hh"
+# include "modes/thread_index/thread_index.hh"
 # include "modes/edit_message.hh"
 
 /* gmime */

@@ -23,7 +23,7 @@
 # include "reply_message.hh"
 # include "forward_message.hh"
 # include "raw_message.hh"
-# include "thread_index.hh"
+# include "thread_index/thread_index.hh"
 # include "log.hh"
 # include "build_config.hh"
 

@@ -5,13 +5,13 @@
 
 # include "db.hh"
 # include "log.hh"
-# include "paned_mode.hh"
+# include "modes/paned_mode.hh"
 # include "main_window.hh"
 # include "thread_index.hh"
 # include "thread_index_list_view.hh"
 # include "thread_index_list_cell_renderer.hh"
-# include "reply_message.hh"
-# include "forward_message.hh"
+# include "modes/reply_message.hh"
+# include "modes/forward_message.hh"
 # include "message_thread.hh"
 # include "utils/utils.hh"
 
@@ -116,6 +116,9 @@ namespace Astroid {
     /* mouse click */
     signal_row_activated ().connect (
         sigc::mem_fun (this, &ThreadIndexListView::on_my_row_activated));
+
+    signal_button_press_event ().connect (
+        sigc::mem_fun (this, &ThreadIndexListView::on_button_press));
 
     /* re-draw every minute (check every second) */
     Glib::signal_timeout ().connect (
@@ -689,6 +692,11 @@ namespace Astroid {
     };
 
     return m;
+  }
+
+  bool ThreadIndexListView::on_button_press (GdkEventButton *ev) {
+    /* Open context menu. */
+
   }
 
   void ThreadIndexListView::on_my_row_activated (

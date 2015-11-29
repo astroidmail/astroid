@@ -8,7 +8,7 @@
 
 # include "proto.hh"
 # include "config.hh"
-# include "mode.hh"
+# include "modes/mode.hh"
 
 using namespace std;
 
@@ -73,6 +73,7 @@ namespace Astroid {
       ustring multi_key_help = "t: toggle, a: archive, *: flag, N: toggle unread, S: toggle spam, C-m: mute";
       bool multi_key_handler (GdkEventKey *);
       void on_my_row_activated  (const Gtk::TreeModel::Path &, Gtk::TreeViewColumn *);
+      bool on_button_press (GdkEventButton *);
 
       void on_thread_updated (Db *, ustring);
       void on_refreshed ();

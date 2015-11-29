@@ -234,6 +234,7 @@ source = (
 
           Glob('src/*.cc', strings = True) +
           Glob('src/modes/*.cc', strings = True) +
+          Glob('src/modes/thread_index/*.cc', strings = True) +
           Glob('src/actions/*.cc', strings = True) +
           Glob('src/utils/*.cc', strings = True)
 

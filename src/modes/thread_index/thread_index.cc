@@ -10,11 +10,11 @@
 # include "astroid.hh"
 # include "log.hh"
 # include "db.hh"
-# include "paned_mode.hh"
+# include "modes/paned_mode.hh"
 # include "thread_index.hh"
 # include "thread_index_list_view.hh"
 # include "thread_index_list_cell_renderer.hh"
-# include "thread_view.hh"
+# include "modes/thread_view.hh"
 # include "main_window.hh"
 
 using namespace std;

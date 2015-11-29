@@ -10,7 +10,7 @@
 # include "astroid.hh"
 # include "main_window.hh"
 # include "modes/mode.hh"
-# include "modes/thread_index.hh"
+# include "modes/thread_index/thread_index.hh"
 # include "modes/help_mode.hh"
 # include "utils/utils.hh"
 # include "log.hh"

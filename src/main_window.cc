@@ -9,7 +9,7 @@
 # include "poll.hh"
 # include "main_window.hh"
 # include "modes/mode.hh"
-# include "modes/thread_index.hh"
+# include "modes/thread_index/thread_index.hh"
 # include "modes/help_mode.hh"
 # include "modes/edit_message.hh"
 # include "modes/log_view.hh"

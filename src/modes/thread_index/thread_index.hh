@@ -9,7 +9,7 @@
 
 # include <notmuch.h>
 
-# include "paned_mode.hh"
+# include "modes/paned_mode.hh"
 
 
 using namespace std;
