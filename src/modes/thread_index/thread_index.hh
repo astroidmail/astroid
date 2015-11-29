@@ -34,7 +34,7 @@ namespace Astroid {
       void refresh_stats (Db *);
       int reopen_tries = 0;
 
-      void open_thread (refptr<NotmuchThread>, bool);
+      void open_thread (refptr<NotmuchThread>, bool new_tab, bool new_window = false);
       ThreadView * thread_view;
       bool thread_view_loaded  = false;
       bool thread_view_visible = false;

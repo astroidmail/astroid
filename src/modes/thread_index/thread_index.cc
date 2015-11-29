@@ -301,12 +301,19 @@ namespace Astroid {
     return lm;
   }
 
-  void ThreadIndex::open_thread (refptr<NotmuchThread> thread, bool new_tab) {
+  void ThreadIndex::open_thread (refptr<NotmuchThread> thread, bool new_tab, bool new_window) {
     log << debug << "ti: open thread: " << thread->thread_id << " (" << new_tab << ")" << endl;
     ThreadView * tv;
 
-    if (new_tab) {
+    new_tab = new_tab & !new_window; // only open new tab if not opening new window
+
+    if (new_window) {
+      MainWindow * nmw = astroid->open_new_window (false);
+      tv = Gtk::manage(new ThreadView (nmw));
+      nmw->add_mode (tv);
+    } else if (new_tab) {
       tv = Gtk::manage(new ThreadView (main_window));
+      main_window->add_mode (tv);
     } else {
       if (!thread_view_loaded) {
         log << debug << "ti: init paned tv" << endl;
@@ -320,15 +327,13 @@ namespace Astroid {
     tv->load_thread (thread);
     tv->show ();
 
-    if (!new_tab && !thread_view_visible) {
+    if (!new_tab && !thread_view_visible && !new_window) {
       add_pane (1, *tv);
       thread_view_visible = true;
-    } else if (new_tab) {
-      main_window->add_mode (tv);
     }
 
     // grab modal
-    if (!new_tab) {
+    if (!new_tab && !new_window) {
       current = 1;
       grab_modal ();
     }
