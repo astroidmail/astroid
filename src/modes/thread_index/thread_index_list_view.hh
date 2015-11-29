@@ -73,7 +73,19 @@ namespace Astroid {
       ustring multi_key_help = "t: toggle, a: archive, *: flag, N: toggle unread, S: toggle spam, C-m: mute";
       bool multi_key_handler (GdkEventKey *);
       void on_my_row_activated  (const Gtk::TreeModel::Path &, Gtk::TreeViewColumn *);
-      bool on_button_press (GdkEventButton *);
+
+      virtual bool on_button_press_event (GdkEventButton *) override;
+      Gtk::Menu item_popup;
+
+      enum PopupItem {
+        Reply,
+        Forward,
+        Archive,
+        Open,
+        OpenNewWindow,
+      };
+
+      void popup_activate_generic (enum PopupItem);
 
       void on_thread_updated (Db *, ustring);
       void on_refreshed ();

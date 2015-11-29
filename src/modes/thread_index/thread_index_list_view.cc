@@ -113,16 +113,65 @@ namespace Astroid {
     astroid->global_actions->signal_refreshed ().connect (
         sigc::mem_fun (this, &ThreadIndexListView::on_refreshed));
 
+    /* re-draw every minute (check every second) */
+    Glib::signal_timeout ().connect (
+        sigc::mem_fun (this, &ThreadIndexListView::redraw), 1000);
+
     /* mouse click */
     signal_row_activated ().connect (
         sigc::mem_fun (this, &ThreadIndexListView::on_my_row_activated));
 
-    signal_button_press_event ().connect (
-        sigc::mem_fun (this, &ThreadIndexListView::on_button_press));
+    /* set up popup menu */
 
-    /* re-draw every minute (check every second) */
-    Glib::signal_timeout ().connect (
-        sigc::mem_fun (this, &ThreadIndexListView::redraw), 1000);
+    /* icon list */
+    Gtk::Image * reply = Gtk::manage (new Gtk::Image ());
+    reply->set_from_icon_name ("gtk-undo", Gtk::ICON_SIZE_LARGE_TOOLBAR);
+    Gtk::MenuItem * reply_i = Gtk::manage (new Gtk::MenuItem (*reply));
+    reply_i->signal_activate ().connect (
+        sigc::bind (
+          sigc::mem_fun (*this, &ThreadIndexListView::popup_activate_generic)
+          , PopupItem::Reply));
+
+    Gtk::Image * forward = Gtk::manage (new Gtk::Image ());
+    forward->set_from_icon_name ("gtk-go-forward", Gtk::ICON_SIZE_LARGE_TOOLBAR);
+    Gtk::MenuItem * forward_i = Gtk::manage (new Gtk::MenuItem (*forward));
+    forward_i->signal_activate ().connect (
+        sigc::bind (
+          sigc::mem_fun (*this, &ThreadIndexListView::popup_activate_generic)
+          , PopupItem::Forward));
+
+    Gtk::Image * archive = Gtk::manage (new Gtk::Image ());
+    archive->set_from_icon_name ("gtk-apply", Gtk::ICON_SIZE_LARGE_TOOLBAR);
+    Gtk::MenuItem * archive_i = Gtk::manage (new Gtk::MenuItem (*archive));
+    archive_i->signal_activate ().connect (
+        sigc::bind (
+          sigc::mem_fun (*this, &ThreadIndexListView::popup_activate_generic)
+          , PopupItem::Archive));
+
+    item_popup.attach (*reply_i, 0, 1, 0, 1);
+    item_popup.attach (*forward_i, 1, 2, 0, 1);
+    item_popup.attach (*archive_i, 2, 3, 0, 1);
+
+    Gtk::MenuItem * sep = Gtk::manage (new Gtk::SeparatorMenuItem ());
+    item_popup.append (*sep);
+
+    Gtk::MenuItem * item = Gtk::manage (new Gtk::MenuItem ("Open"));
+    item->signal_activate ().connect (
+        sigc::bind (
+          sigc::mem_fun (*this, &ThreadIndexListView::popup_activate_generic)
+          , PopupItem::Open));
+    item_popup.append (*item);
+
+    item = Gtk::manage (new Gtk::MenuItem ("Open in new window"));
+    item->signal_activate ().connect (
+        sigc::bind (
+          sigc::mem_fun (*this, &ThreadIndexListView::popup_activate_generic)
+          , PopupItem::OpenNewWindow));
+    item_popup.append (*item);
+
+    item_popup.accelerate (*this);
+    item_popup.show_all ();
+
   }
 
   ThreadIndexListView::~ThreadIndexListView () {
@@ -304,6 +353,9 @@ namespace Astroid {
             if (event->state & GDK_SHIFT_MASK) {
               /* open message in new tab (if so configured) */
               thread_index->open_thread (thread, open_paned_default);
+            } else if (event->state & GDK_CONTROL_MASK) {
+              /* open message in new window */
+              thread_index->open_thread (thread, !open_paned_default, true);
             } else {
               /* open message in split pane (if so configured) */
               thread_index->open_thread (thread, !open_paned_default);
@@ -675,6 +727,7 @@ namespace Astroid {
       { "0,End", "Go to last line" },
       { "Return", "Open thread (default action)" },
       { "S+Return", "Open thread in pane (default action)" },
+      { "C+Return", "Open thread in new window" },
       { "r", "Reply to last message in thread" },
       { "G", "Reply all to last message in thread" },
       { "f", "Forward last message in thread" },
@@ -694,9 +747,87 @@ namespace Astroid {
     return m;
   }
 
-  bool ThreadIndexListView::on_button_press (GdkEventButton *ev) {
+  bool ThreadIndexListView::on_button_press_event (GdkEventButton *ev) {
     /* Open context menu. */
 
+    bool return_value = TreeView::on_button_press_event(ev);
+
+    if ((ev->type == GDK_BUTTON_PRESS) && (ev->button == 3)) {
+
+      item_popup.popup (ev->button, ev->time);
+
+    }
+
+    return return_value;
+  }
+
+  void ThreadIndexListView::popup_activate_generic (enum PopupItem pi) {
+    auto thread = get_current_thread ();
+
+    switch (pi) {
+      case Reply:
+        {
+          if (thread) {
+
+            MessageThread mthread (thread);
+            Db db (Db::DbMode::DATABASE_READ_ONLY);
+
+            mthread.load_messages (&db);
+
+            /* reply to last message */
+            main_window->add_mode (new ReplyMessage (main_window, *(--mthread.messages.end())));
+
+          }
+        }
+        break;
+
+      case Forward:
+        {
+          if (thread) {
+
+            MessageThread mthread (thread);
+            Db db (Db::DbMode::DATABASE_READ_ONLY);
+
+            mthread.load_messages (&db);
+
+            /* reply to last message */
+            main_window->add_mode (new ForwardMessage (main_window, *(--mthread.messages.end())));
+
+          }
+        }
+        break;
+
+      case Archive:
+        {
+          if (thread) {
+
+            Db db (Db::DbMode::DATABASE_READ_WRITE);
+            main_window->actions.doit (&db, refptr<Action>(new ToggleAction(thread, "inbox")));
+
+          }
+        }
+        break;
+
+      case Open:
+        {
+          if (thread) {
+            log << info << "ti_list: loading: " << thread->thread_id << endl;
+
+            thread_index->open_thread (thread, !open_paned_default);
+          }
+        }
+        break;
+
+      case OpenNewWindow:
+        {
+          if (thread) {
+            log << info << "ti_list: loading: " << thread->thread_id << endl;
+
+            thread_index->open_thread (thread, !open_paned_default, true);
+          }
+        }
+        break;
+    }
   }
 
   void ThreadIndexListView::on_my_row_activated (
