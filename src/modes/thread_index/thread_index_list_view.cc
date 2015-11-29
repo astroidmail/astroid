@@ -131,6 +131,7 @@ namespace Astroid {
         sigc::bind (
           sigc::mem_fun (*this, &ThreadIndexListView::popup_activate_generic)
           , PopupItem::Reply));
+    reply_i->set_tooltip_text ("Reply to latest message");
 
     Gtk::Image * forward = Gtk::manage (new Gtk::Image ());
     forward->set_from_icon_name ("gtk-go-forward", Gtk::ICON_SIZE_LARGE_TOOLBAR);
@@ -139,6 +140,7 @@ namespace Astroid {
         sigc::bind (
           sigc::mem_fun (*this, &ThreadIndexListView::popup_activate_generic)
           , PopupItem::Forward));
+    forward_i->set_tooltip_text ("Forward latest message");
 
     Gtk::Image * archive = Gtk::manage (new Gtk::Image ());
     archive->set_from_icon_name ("gtk-apply", Gtk::ICON_SIZE_LARGE_TOOLBAR);
@@ -147,6 +149,7 @@ namespace Astroid {
         sigc::bind (
           sigc::mem_fun (*this, &ThreadIndexListView::popup_activate_generic)
           , PopupItem::Archive));
+    archive_i->set_tooltip_text ("Archive");
 
     item_popup.attach (*reply_i, 0, 1, 0, 1);
     item_popup.attach (*forward_i, 1, 2, 0, 1);
