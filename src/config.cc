@@ -16,6 +16,10 @@ using boost::property_tree::ptree;
 
 namespace Astroid {
   Config::Config (bool _test, bool no_load) {
+    if (_test) {
+      log << info << "cf: loading test config." << endl;
+    }
+
     load_dirs ();
 
     test = _test;
@@ -27,8 +31,11 @@ namespace Astroid {
   }
 
   Config::Config (const char * fname, bool no_load) {
+    test = false;
+
     load_dirs ();
     config_file = path(fname);
+    log << info << "cf: loading config: " << fname << endl;
     if (!no_load)
       load_config (); // re-sets config_dir to parent of fname
   }

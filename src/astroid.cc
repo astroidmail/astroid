@@ -62,6 +62,7 @@ namespace Astroid {
       ( "help,h", "print this help message")
       ( "config,c", po::value<ustring>(), "config file, default: $XDG_CONFIG_HOME/astroid/config")
       ( "new-config,n", "make new default config, then exit")
+      ( "test-config,t", "use test config (same as used when tests are run), only makes sense from the source root")
       ( "mailto,m", po::value<ustring>(), "compose mail with mailto url or address")
       ( "no-auto-poll", "do not poll automatically");
 
@@ -79,6 +80,7 @@ namespace Astroid {
     }
 
     show_help |= vm.count("help");
+    bool test_config = vm.count("test-config");
 
     if (show_help) {
 
@@ -89,6 +91,11 @@ namespace Astroid {
 
     /* make new config {{{ */
     if (vm.count("new-config")) {
+      if (test_config) {
+        log << error << "--new-config cannot be specified together with --test-config." << endl;
+        exit (1);
+      }
+
       log << info << "creating new config.." << endl;
       ustring cnf;
 
@@ -178,9 +185,19 @@ namespace Astroid {
 
     /* load config */
     if (vm.count("config")) {
+      if (test_config) {
+        log << error << "--config cannot be specified together with --test-config." << endl;
+        exit (1);
+      }
+
+      log << "astroid: loading config: " << vm["config"].as<ustring>().c_str() << endl;
       config = new Config (vm["config"].as<ustring>().c_str());
     } else {
-      config = new Config ();
+      if (test_config) {
+        config = new Config (true);
+      } else {
+        config = new Config ();
+      }
     }
 
     /* output db location */
