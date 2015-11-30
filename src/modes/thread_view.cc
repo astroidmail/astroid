@@ -949,10 +949,31 @@ namespace Astroid {
 
     if (m->missing_content) {
       /* set preview */
-      webkit_dom_html_element_set_inner_html (preview, "Message file is missing.", (err = NULL, &err));
+      webkit_dom_html_element_set_inner_html (preview, "<i>Message content is missing.</i>", (err = NULL, &err));
 
       /* set warning */
       set_warning (m, "The message file is missing, only fields cached in the notmuch database are shown. Most likely your database is out of sync.");
+
+      /* add an explenation to the body */
+      GError *err;
+
+      WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
+      WebKitDOMHTMLElement * body_container =
+        clone_select (WEBKIT_DOM_NODE(d), "#body_template");
+
+      webkit_dom_element_remove_attribute (WEBKIT_DOM_ELEMENT (body_container),
+          "id");
+
+      webkit_dom_html_element_set_inner_html (
+          body_container,
+          "<i>Message content is missing.</i>",
+          (err = NULL, &err));
+
+      webkit_dom_node_append_child (WEBKIT_DOM_NODE (span_body),
+          WEBKIT_DOM_NODE (body_container), (err = NULL, &err));
+
+      g_object_unref (body_container);
+      g_object_unref (d);
 
     } else {
 
