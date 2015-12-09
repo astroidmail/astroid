@@ -10,6 +10,7 @@
 # include <time.h>
 
 # include <gtkmm/image.h>
+# include <boost/property_tree/ptree.hpp>
 
 # include <notmuch.h>
 
@@ -19,15 +20,33 @@
 # include "log.hh"
 
 using namespace std;
+using boost::property_tree::ptree;
 
 namespace Astroid {
 
   ThreadIndexListCellRenderer::ThreadIndexListCellRenderer () {
+    ptree ti = astroid->config->config.get_child ("thread_index.cell");
+
     /* load font settings */
-    auto settings = Gio::Settings::create ("org.gnome.desktop.interface");
-    font_desc_string = settings->get_string ("monospace-font-name");
+    font_desc_string = ti.get<string> ("font_description");
+    if (font_desc_string == "" || font_desc_string == "default") {
+      auto settings = Gio::Settings::create ("org.gnome.desktop.interface");
+      font_desc_string = settings->get_string ("monospace-font-name");
+    }
 
     font_description = Pango::FontDescription (font_desc_string);
+
+    line_spacing  = ti.get<int> ("line_spacing");
+    date_len      = ti.get<int> ("date_length");
+    message_count_len = ti.get<int> ("message_count_length");
+    authors_len   = ti.get<int> ("authors_length");
+    tags_len      = ti.get<int> ("tags_length");
+
+    subject_color = ti.get<string> ("subject_color");
+    subject_color_selected = ti.get<string> ("subject_color_selected");
+
+    tags_color    = ti.get<string> ("tags_color");
+
   }
 
   void ThreadIndexListCellRenderer::render_vfunc (
@@ -243,12 +262,16 @@ namespace Astroid {
 
     Gdk::RGBA color = stylecontext->get_color(Gtk::STATE_FLAG_NORMAL);
     cr->set_source_rgb (color.get_red(), color.get_green(), color.get_blue());
+    ustring color_str;
     if ((flags & Gtk::CELL_RENDERER_SELECTED) != 0) {
-      pango_layout->set_markup ("<span color=\"#000000\">" + Glib::Markup::escape_text(thread->subject) + "</span>");
+      color_str = subject_color_selected;
     } else {
-      pango_layout->set_markup ("<span color=\"#807d74\">" + Glib::Markup::escape_text(thread->subject) + "</span>");
+      color_str = subject_color;
     }
 
+    pango_layout->set_markup (ustring::compose ("<span color=\"%1\">%2</span>",
+        color_str,
+        Glib::Markup::escape_text(thread->subject)));
 
     /* align in the middle */
     int w, h;
@@ -286,7 +309,10 @@ namespace Astroid {
     ustring tag_string = VectorUtils::concat_tags (tags);
     tag_string = tag_string.substr (0, tags_len);
 
-    pango_layout->set_markup ("<span font_style=\"italic\"  color=\"#31587a\">" + Glib::Markup::escape_text(tag_string) + "</span>");
+    pango_layout->set_markup (ustring::compose (
+          "<span font_style=\"italic\"  color=\"%1\">%2</span>",
+          tags_color,
+          Glib::Markup::escape_text(tag_string)));
 
     /* align in the middle */
     int w, h;

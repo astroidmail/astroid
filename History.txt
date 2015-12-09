@@ -12,6 +12,7 @@
 * Add popup menu with some actions for the thread-index.
 * Fix #23: Don't crash when message file is missing.
 * #25: Load html and css from config directory if present.
+* #25: Allow some parameters of the thread_index cells to be configured.
 
 == v0.4 / 2015-08-15
 

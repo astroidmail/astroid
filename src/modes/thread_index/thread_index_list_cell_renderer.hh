@@ -66,14 +66,14 @@ namespace Astroid {
 
     private:
       int content_height;
-      int line_spacing = 2;
+      int line_spacing = 2; // configurable
       int height;
       bool height_set = false;
 
       int left_icons_size;
       int left_icons_width;
-      int left_icons_width_n = 3;
-      int left_icons_padding = 1;
+      const int left_icons_width_n = 3;
+      const int left_icons_padding = 1;
       int padding;
 
       ustring font_desc_string;
@@ -81,22 +81,25 @@ namespace Astroid {
       Pango::FontMetrics     font_metrics;
 
       int date_start;
-      int date_len   = 10; // chars
+      int date_len   = 10; // chars, configurable
       int date_width;
 
       int message_count_start;
-      int message_count_len = 4; // chars
+      int message_count_len = 4; // chars, configurable
       int message_count_width;
 
       int authors_start;
-      int authors_len = 20; // chars
+      int authors_len = 20; // chars, configurable
       int authors_width;
 
       int tags_start;
       int tags_width;
-      int tags_len = 80; // chars
+      int tags_len = 80; // chars, configurable
+      ustring tags_color; // configurable
 
       int subject_start;
+      ustring subject_color; // configurable
+      ustring subject_color_selected; // configurable
 
       void render_background (
           const ::Cairo::RefPtr< ::Cairo::Context>&cr,
