@@ -6,6 +6,7 @@
 
 # include <gtkmm.h>
 # include <webkit/webkit.h>
+# include <boost/filesystem.hpp>
 
 # include "astroid.hh"
 # include "proto.hh"
@@ -13,6 +14,7 @@
 # include "message_thread.hh"
 
 using namespace std;
+using namespace boost::filesystem;
 
 namespace Astroid {
   extern "C" bool ThreadView_on_load_changed (
@@ -180,6 +182,8 @@ namespace Astroid {
       static ustring       thread_view_html;
       static ustring       thread_view_css;
       const char * STYLE_NAME = "STYLE";
+      const int THEME_VERSION = 1;
+      bool check_theme_version (path);
 
       atomic<bool> wk_loaded;
 

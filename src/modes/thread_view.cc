@@ -140,7 +140,16 @@ namespace Astroid {
       path tv_css  = def_tv_css;
 # endif
 
-      if (!exists(tv_html)) {
+      /* check for user modified theme files in config directory */
+      path user_tv_html = astroid->config->config_dir / def_tv_html;
+      path user_tv_css  = astroid->config->config_dir / def_tv_css;
+
+      if (exists (user_tv_html)) {
+          tv_html = user_tv_html;
+          log << info << "tv: using user html file: " << tv_html.c_str () << endl;
+
+
+      } else if (!exists(tv_html)) {
         log << error << "tv: cannot find html theme file: " << tv_html.c_str() << ", using default.." << endl;
         if (!exists(def_tv_html)) {
           log << error << "tv: cannot find default html theme file." << endl;
@@ -150,7 +159,18 @@ namespace Astroid {
         tv_html = def_tv_html;
       }
 
-      if (!exists(tv_css)) {
+      if (!check_theme_version (tv_html)) {
+
+        log << error << "tv: html file version does not match!" << endl;
+
+      }
+
+      if (exists (user_tv_css)) {
+          tv_css = user_tv_css;
+          log << info << "tv: using user css file: " << tv_css.c_str () << endl;
+
+
+      } else if (!exists(tv_css)) {
         log << error << "tv: cannot find css theme file: " << tv_css.c_str() << ", using default.." << endl;
         if (!exists(def_tv_css)) {
           log << error << "tv: cannot find default css theme file." << endl;
@@ -158,6 +178,12 @@ namespace Astroid {
         }
 
         tv_css = def_tv_css;
+      }
+
+      if (!check_theme_version (tv_css)) {
+
+        log << error << "tv: css file version does not match!" << endl;
+
       }
 
       ifstream tv_html_f (tv_html.c_str());
@@ -236,6 +262,22 @@ namespace Astroid {
     //g_object_unref (websettings);
     if (container) g_object_unref (container);
   } // }}}
+
+  bool ThreadView::check_theme_version (path p) {
+    /* check version found in first line in file */
+
+    ifstream f (p.c_str ());
+
+    ustring vline;
+    int version;
+    f >> vline >> vline >> version;
+
+    log << debug << "tv: testing version: " << version << endl;
+
+    f.close ();
+
+    return (version == THEME_VERSION);
+  }
 
   /* navigation requests {{{ */
   extern "C" void ThreadView_resource_request_starting (
