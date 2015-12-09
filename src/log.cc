@@ -88,7 +88,7 @@ namespace Astroid {
       case debug: return "debug";
       case info:  return "info ";
       case warn:  return "warn ";
-      case error: return "error";
+      case error: return "ERROR";
       case test:  return "TEST ";
       default:    return "unknown error level!";
     }
