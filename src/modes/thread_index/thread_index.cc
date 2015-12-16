@@ -257,21 +257,23 @@ namespace Astroid {
 
       case GDK_KEY_v:
         {
-          main_window->enable_command (CommandBar::CommandMode::Search,
-              query_string,
-              [&](ustring new_query) {
+          if (!invincible) {
+            main_window->enable_command (CommandBar::CommandMode::Search,
+                query_string,
+                [&](ustring new_query) {
 
-                query_string = new_query;
-                set_label (query_string);
-                list_store->clear ();
-                close_query ();
-                setup_query ();
-                load_more_threads ();
+                  query_string = new_query;
+                  set_label (query_string);
+                  list_store->clear ();
+                  close_query ();
+                  setup_query ();
+                  load_more_threads ();
 
-                /* select first */
-                list_view->set_cursor (Gtk::TreePath("0"));
+                  /* select first */
+                  list_view->set_cursor (Gtk::TreePath("0"));
 
-              });
+                });
+          }
 
           return true;
         }
