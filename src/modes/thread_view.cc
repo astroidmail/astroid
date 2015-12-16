@@ -253,15 +253,7 @@ namespace Astroid {
         Gtk::ICON_LOOKUP_USE_BUILTIN );
 
     show_all_children ();
-  } // }}}
-
-  ThreadView::~ThreadView () { // {{{
-    log << debug << "tv: deconstruct." << endl;
-    // TODO: possibly still some errors here in paned mode
-    //g_object_unref (webview); // probably garbage collected since it has a parent widget
-    //g_object_unref (websettings);
-    if (container) g_object_unref (container);
-  } // }}}
+  }
 
   bool ThreadView::check_theme_version (path p) {
     /* check version found in first line in file */
@@ -278,6 +270,15 @@ namespace Astroid {
 
     return (version == THEME_VERSION);
   }
+  // }}}
+
+  ThreadView::~ThreadView () { // {{{
+    log << debug << "tv: deconstruct." << endl;
+    // TODO: possibly still some errors here in paned mode
+    //g_object_unref (webview); // probably garbage collected since it has a parent widget
+    //g_object_unref (websettings);
+    if (container) g_object_unref (container);
+  } // }}}
 
   /* navigation requests {{{ */
   extern "C" void ThreadView_resource_request_starting (
