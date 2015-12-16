@@ -219,14 +219,21 @@ if debug:
 ## write config file
 print ("writing src/build_config.hh..")
 vfd = open ('src/build_config.hh', 'w')
+
+vfd.write ("""// this is an automatically generated file. it will be overwritten by\n"""
+           """// scons. do not check this file into git.\n""")
+
 vfd.write ("# pragma once\n")
 vfd.write ("# define GIT_DESC \"%s\"\n" % GIT_DESC)
 
 # write a prefix only if it is specified or
 # we are in release.
 if (in_release or not default_prefix):
-  vfd.write ("# define PREFIX \"%s\"\n\n" % prefix)
+  vfd.write ("# define PREFIX \"%s\"\n" % prefix)
+else:
+  vfd.write ("// # define PREFIX\n")
 
+vfd.write ("\n")
 vfd.close ()
 
 env.Append (CPPPATH = 'src')
