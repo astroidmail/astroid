@@ -74,6 +74,8 @@ namespace Astroid {
   }
 
   bool LogView::on_key_press_event (GdkEventKey * event) {
+    if (mode_key_handler (event)) return true;
+
     switch (event->keyval) {
       case GDK_KEY_j:
       case GDK_KEY_Down:
