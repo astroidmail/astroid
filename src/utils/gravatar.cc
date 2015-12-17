@@ -1,7 +1,7 @@
 # include "gravatar.hh"
-# include "openssl/md5.h"
 
 # include "proto.hh"
+# include "crypto.hh"
 # include "log.hh"
 
 # include <iomanip>
@@ -35,15 +35,7 @@ namespace Astroid {
       enum Default def,
       int size)
   {
-    unsigned char * tmp_hash;
-    tmp_hash = MD5 ((const unsigned char *)addr.c_str (), addr.length (), NULL);
-
-    ostringstream os;
-    for (int i = 0; i < MD5_DIGEST_LENGTH; i++) {
-      os << hex << setfill('0') << setw(2) << ((int)tmp_hash[i]);
-    }
-
-    ustring hash = os.str ();
+    ustring hash = Crypto::get_md5_digest (addr.c_str ());
 
     ustring uri = ustring::compose (
           "http://www.gravatar.com/avatar/%1?d=%2&s=%3",

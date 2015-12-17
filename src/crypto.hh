@@ -35,6 +35,10 @@ namespace Astroid {
       GMimeCryptoContext * gpgctx;
       ustring protocol;
       ustring gpgpath;
+
+    public:
+      static ustring get_md5_digest (ustring str);
   };
+
 }
 

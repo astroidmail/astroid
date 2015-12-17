@@ -80,6 +80,30 @@ namespace Astroid {
 
     return true;
   }
+
+  ustring Crypto::get_md5_digest (ustring str) {
+    GMimeStream * mem = g_mime_stream_mem_new ();
+    GMimeStream * filter_stream = g_mime_stream_filter_new (mem);
+
+    GMimeFilter * md5f = g_mime_filter_md5_new ();
+    g_mime_stream_filter_add(GMIME_STREAM_FILTER(filter_stream), md5f);
+
+    g_mime_stream_write_string (filter_stream, str.c_str ());
+
+    unsigned char digest[16];
+    g_mime_filter_md5_get_digest (GMIME_FILTER_MD5(md5f), digest);
+
+    ostringstream os;
+    for (int i = 0; i < 16; i++) {
+      os << hex << setfill('0') << setw(2) << ((int)digest[i]);
+    }
+
+    g_object_unref (md5f);
+    g_object_unref (filter_stream);
+    g_object_unref (mem);
+
+    return os.str ();
+  }
 }
 
 
