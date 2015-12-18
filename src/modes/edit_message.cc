@@ -310,6 +310,16 @@ namespace Astroid {
 
         Db db (Db::DbMode::DATABASE_READ_WRITE);
         lock_guard<Db> lk (db);
+
+        /* first remove tag in case it has been sent */
+        db.on_message (draft_msg->mid,
+          [&](notmuch_message_t * msg) {
+            for (ustring t : db.draft_tags) {
+              notmuch_message_remove_tag (msg,
+                  t.c_str ());
+            }
+          });
+
         db.remove_message (fname.c_str ());
       }
 
