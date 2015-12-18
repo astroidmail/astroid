@@ -13,6 +13,10 @@
 * Fix #23: Don't crash when message file is missing.
 * #25: Load html and css from config/ui directory if present.
 * #25: Allow some parameters of the thread_index cells to be configured.
+* Move expand all in thread view to C-e.
+* Save drafts with 's', discard them with 'D', edit them with 'E' from
+  thread index or thread view.
+* Edit messages as new with 'E'.
 
 == v0.4 / 2015-08-15
 
