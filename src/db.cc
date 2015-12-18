@@ -239,9 +239,32 @@ namespace Astroid {
     log << info << "db: loaded " << tags.size () << " tags." << endl;
   }
 
-  void Db::add_sent_message (ustring fname) {
-    log << info << "db: adding sent message: " << fname << endl;
+  void Db::remove_message (ustring fname) {
+    notmuch_message_t * msg;
+    notmuch_database_find_message_by_filename (nm_db,
+        fname.c_str (),
+        &msg);
 
+    const char * ctid = notmuch_message_get_thread_id (msg);
+    ustring tid = ustring (ctid);
+
+    notmuch_message_destroy (msg);
+
+    notmuch_status_t s = notmuch_database_remove_message (nm_db,
+        fname.c_str ());
+
+    if (s != NOTMUCH_STATUS_SUCCESS) {
+      log << error << "db: error removing message: " << s << endl;
+      throw database_error ("db: could not remove message from database.");
+    }
+
+    /* emit signal */
+    if (tid != "") {
+      astroid->global_actions->emit_thread_updated (this, tid);
+    }
+  }
+
+  void Db::add_message_with_tags (ustring fname, vector<ustring> tags) {
     notmuch_message_t * msg;
 
     notmuch_status_t s = notmuch_database_add_message (nm_db,
@@ -255,12 +278,12 @@ namespace Astroid {
         log << error << "db: file seems to have been moved, ignoring - probably a race condition with some syncing program." << endl;
         return;
       } else {
-        throw database_error ("db: could not add sent message to database.");
+        throw database_error ("db: could not add message to database.");
       }
     }
 
     /* add tags */
-    for (ustring &t : sent_tags) {
+    for (ustring &t : tags) {
       s = notmuch_message_add_tag (msg, t.c_str());
     }
 
@@ -272,6 +295,17 @@ namespace Astroid {
 
     notmuch_message_destroy (msg);
   }
+
+  void Db::add_sent_message (ustring fname) {
+    log << info << "db: adding sent message: " << fname << endl;
+    add_message_with_tags (fname, sent_tags);
+  }
+
+  void Db::add_draft_message (ustring fname) {
+    log << info << "db: adding draft message: " << fname << endl;
+    add_message_with_tags (fname, draft_tags);
+  }
+
 
   bool Db::thread_in_query (ustring query_in, ustring thread_id) {
     /* check if thread id is in query */

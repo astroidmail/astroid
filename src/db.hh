@@ -58,7 +58,7 @@ namespace Astroid {
         DATABASE_READ_WRITE,
       };
 
-      Db (DbMode);
+      Db (DbMode = DATABASE_READ_ONLY);
       ~Db ();
 
       void reopen ();
@@ -104,7 +104,11 @@ namespace Astroid {
       void test_query ();
 
       vector<ustring> sent_tags = { "sent" };
+      vector<ustring> draft_tags = { "draft" };
       void add_sent_message (ustring);
+      void add_draft_message (ustring);
+      void add_message_with_tags (ustring fname, vector<ustring> tags);
+      void remove_message (ustring);
   };
 
   /* exceptions */
