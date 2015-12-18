@@ -990,6 +990,23 @@ namespace Astroid {
         WEBKIT_DOM_NODE (div_message),
         ".header_container .preview");
 
+    {
+      Db db;
+
+      if (!edit_mode &&
+           any_of (db.draft_tags.begin (),
+                   db.draft_tags.end (),
+                   [&](ustring t) {
+                     return has (m->tags, t);
+                   }))
+      {
+
+        /* set warning */
+        set_warning (m, "This message is a draft, edit it with E.");
+
+      }
+    }
+
     if (m->missing_content) {
       /* set preview */
       webkit_dom_html_element_set_inner_html (preview, "<i>Message content is missing.</i>", (err = NULL, &err));
@@ -2085,7 +2102,33 @@ namespace Astroid {
       case GDK_KEY_e:
         {
           if (edit_mode) return false;
-          toggle_hidden ();
+
+          if (event->state & GDK_CONTROL_MASK) {
+            /* toggle hidden / shown status on all messages */
+
+            if (all_of (mthread->messages.begin(),
+                        mthread->messages.end (),
+                        [&](refptr<Message> m) {
+                          return !is_hidden (m);
+                        }
+                  )) {
+              /* all are shown */
+              for (auto m : mthread->messages) {
+                toggle_hidden (m, ToggleHide);
+              }
+
+            } else {
+              /* some are hidden */
+              for (auto m : mthread->messages) {
+                toggle_hidden (m, ToggleShow);
+              }
+            }
+
+          } else {
+
+            toggle_hidden ();
+
+          }
           return true;
         }
 
@@ -2222,27 +2265,12 @@ namespace Astroid {
 
       case GDK_KEY_E:
         {
-          /* toggle hidden / shown status on all messages */
+          /* edit currently focused message as new or draft */
+          if (!edit_mode) {
+            main_window->add_mode (new EditMessage (main_window, focused_message));
 
-          if (all_of (mthread->messages.begin(),
-                      mthread->messages.end (),
-                      [&](refptr<Message> m) {
-                        return !is_hidden (m);
-                      }
-                )) {
-            /* all are shown */
-            for (auto m : mthread->messages) {
-              toggle_hidden (m, ToggleHide);
-            }
-
-          } else {
-            /* some are hidden */
-            for (auto m : mthread->messages) {
-              toggle_hidden (m, ToggleShow);
-            }
+            return true;
           }
-
-          return true;
         }
     }
 
@@ -2269,12 +2297,13 @@ namespace Astroid {
       { "S", "Save all attachments" },
       { "o", "Open attachment or message" },
       { "e", "Toggle expand" },
-      { "E", "Toggle expand on all messages" },
+      { "C-E", "Toggle expand on all messages" },
       { "C-f", "Toggle flat or indented view of messages" },
       { "C-i", "Show remote images" },
       { "r", "Reply to current message" },
       { "G", "Reply all to current message" },
       { "f", "Forward current message" },
+      { "E", "Edit currently focused message as new or draft" },
       { "V", "View raw source for current message" },
       { "t", "Mark or unmark message" },
       { "T", "Toggle mark on all messages" },
