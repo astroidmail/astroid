@@ -31,6 +31,7 @@ namespace Astroid {
       MainWindow * main_window;
 
       bool invincible = false;
+      void close ();
 
     private:
       ustring label;

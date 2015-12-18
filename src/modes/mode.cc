@@ -80,6 +80,10 @@ namespace Astroid {
     answer_yes_no (false);
   }
 
+  void Mode::close () {
+    main_window->close_page (this);
+  }
+
   void Mode::ask_yes_no (
       ustring question,
       function <void (bool)> closure)

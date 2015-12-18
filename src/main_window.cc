@@ -362,6 +362,25 @@ namespace Astroid {
 
   }
 
+  void MainWindow::close_page (Mode * m) {
+    if (notebook.get_n_pages() > 1) {
+      if (!m->invincible) {
+        for (int c = 0; c < notebook.get_n_pages (); c++) {
+          if (m == (Mode*) notebook.get_nth_page (c)) {
+            del_mode (c);
+            break;
+          }
+        }
+      }
+    } else {
+      /* if there are more windows, close this one */
+      if (astroid->app->get_windows().size () > 1) {
+        log << debug << "mw: other windows available, closing this one." << endl;
+        quit ();
+      }
+    }
+  }
+
   void MainWindow::close_page () {
     /* close current page */
     if (notebook.get_n_pages() > 1) {
