@@ -253,7 +253,7 @@ namespace Astroid {
     notmuch_status_t s = notmuch_database_remove_message (nm_db,
         fname.c_str ());
 
-    if (s != NOTMUCH_STATUS_SUCCESS) {
+    if ((s != NOTMUCH_STATUS_SUCCESS) && (s != NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID)) {
       log << error << "db: error removing message: " << s << endl;
       throw database_error ("db: could not remove message from database.");
     }
@@ -271,7 +271,7 @@ namespace Astroid {
         fname.c_str (),
         &msg);
 
-    if (s != NOTMUCH_STATUS_SUCCESS) {
+    if ((s != NOTMUCH_STATUS_SUCCESS) && (s != NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID)) {
       log << error << "db: error adding message: " << s << endl;
 
       if (s == NOTMUCH_STATUS_FILE_ERROR) {
