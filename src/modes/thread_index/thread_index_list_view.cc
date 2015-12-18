@@ -617,6 +617,24 @@ namespace Astroid {
           }
         }
         return true;
+
+        /* edit draft */
+      case GDK_KEY_E:
+        {
+          auto thread = get_current_thread ();
+          if (thread) {
+
+            MessageThread mthread (thread);
+            Db db (Db::DbMode::DATABASE_READ_ONLY);
+
+            mthread.load_messages (&db);
+
+            /* edit last message as draft */
+            main_window->add_mode (new EditMessage (main_window, *(--mthread.messages.end())));
+
+          }
+          return true;
+        }
     }
 
     return false;
@@ -734,6 +752,7 @@ namespace Astroid {
       { "r", "Reply to last message in thread" },
       { "G", "Reply all to last message in thread" },
       { "f", "Forward last message in thread" },
+      { "E", "Edit last message in thread as new or draft" },
       { "M", "Load more threads in query" },
       { "!", "Load all threads in query" },
       { "a", "Toggle 'inbox' tag on thread" },
