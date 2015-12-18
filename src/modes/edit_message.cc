@@ -21,6 +21,8 @@
 # include "raw_message.hh"
 # include "main_window.hh"
 # include "message_thread.hh"
+# include "chunk.hh"
+# include "utils/utils.hh"
 # include "utils/ustring_utils.hh"
 # include "build_config.hh"
 # include "log.hh"
@@ -38,6 +40,25 @@ namespace Astroid {
 
     /* reload message */
     prepare_message ();
+    read_edited_message ();
+  }
+
+  EditMessage::EditMessage (MainWindow * mw, refptr<Message> msg) :
+    EditMessage (mw) {
+    /* load draft */
+    log << info << "em: loading draft from: " << msg->fname << endl;
+
+    draft_msg = msg;
+    msg_id = msg->mid;
+
+    for (auto &c : msg->attachments ()) {
+      add_attachment (new ComposeMessage::Attachment (c));
+    }
+
+    /* write msg to new tmpfile */
+    msg->save_to (tmpfile_path.c_str ());
+
+    /* reload message */
     read_edited_message ();
   }
 
@@ -220,6 +241,53 @@ namespace Astroid {
 
     if (is_regular_file (tmpfile_path)) {
       boost::filesystem::remove (tmpfile_path);
+    }
+  }
+
+  /* drafts */
+  bool EditMessage::save_draft () {
+    log << info << "em: saving draft.." << endl;
+    ComposeMessage * c = make_message ();
+    ustring fname;
+
+    if (!draft_msg) {
+      /* make new message */
+
+      path ddir = path(c->account->save_drafts_to.c_str ());
+      if (!is_directory(ddir)) {
+        log << error << "em: no draft directory specified!" << endl;
+        /* move to key handler:
+         * warning_str = "draft could not be saved!"; */
+        /* on_tv_ready (); */
+        return false;
+
+      } else {
+        /* msg_id might come from external client or server */
+        ddir = ddir / path(Utils::safe_fname (msg_id));
+        fname = ddir.c_str ();
+        c->write (fname);
+
+        /* TODO: add to notmuch (with draft tag) */
+      }
+    } else {
+      fname = draft_msg->fname; // overwrite
+      c->write (fname);
+    }
+
+    return true;
+  }
+
+  void EditMessage::delete_draft () {
+    log << info << "em: deleting draft." << endl;
+    if (draft_msg) {
+      path fname = path(draft_msg->fname.c_str());
+      draft_msg = refptr<Message>();
+
+      if (is_regular_file (fname)) {
+        boost::filesystem::remove (fname);
+      }
+
+      /* TODO: remove from notmuch */
     }
   }
 

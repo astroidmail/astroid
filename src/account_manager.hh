@@ -21,6 +21,7 @@ namespace Astroid {
 
       bool save_sent;
       ustring save_sent_to;
+      ustring save_drafts_to;
 
       ustring full_address ();
 

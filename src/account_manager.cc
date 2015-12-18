@@ -33,6 +33,8 @@ namespace Astroid {
       a->save_sent = kv.second.get<bool> ("save_sent");
       a->save_sent_to = kv.second.get<string> ("save_sent_to");
 
+      a->save_drafts_to = kv.second.get<string> ("save_drafts_to");
+
       log << info << "ac: setup account: " << a->id << " for " << a->name << " (default: " << a->isdefault << ")" << endl;
 
       accounts.push_back (*a);

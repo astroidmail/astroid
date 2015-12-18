@@ -25,6 +25,7 @@ namespace Astroid {
     public:
       EditMessage (MainWindow *);
       EditMessage (MainWindow *, ustring to);
+      EditMessage (MainWindow *, refptr<Message> _msg);
       ~EditMessage ();
 
       Gtk::Box * box_message;
@@ -103,8 +104,13 @@ namespace Astroid {
       atomic<bool> sending_in_progress;
       void send_message_finished (bool result);
 
-
       void prepare_message ();
+
+      /* draft */
+      bool save_draft ();
+      void delete_draft ();
+      const ustring draft_tag = "draft";
+      refptr<Message> draft_msg;
 
     protected:
       ptree editor_config;
