@@ -109,6 +109,8 @@ namespace Astroid {
       default_config.put ("accounts.charlie.save_sent_to",
           "/home/root/Mail/sent/cur/");
 
+      default_config.put ("accounts.charlie.save_drafts_to",
+          "/home/root/Mail/drafts/");
 
       /* default searches, also only set if initial */
       default_config.put("startup.queries.inbox", "tag:inbox");
@@ -240,11 +242,45 @@ namespace Astroid {
 
       merge_ptree (new_config);
 
-      if (new_config != config) {
-        log << warn << "cf: missing values in config have been updated with defaults." << endl;
-        write_back_config ();
-      }
+      check_config (new_config);
     }
+  }
+
+  bool Config::check_config (ptree new_config) {
+    bool changed = false;
+
+    if (new_config != config) {
+      changed = true;
+    }
+
+    if (config.get<int>("astroid.config.version") < 1) {
+      /* check accounts */
+      ptree apt = config.get_child ("accounts");
+
+      for (auto &kv : apt) {
+        try {
+
+          ustring sto = kv.second.get<string> ("save_drafts_to");
+
+        } catch (const boost::property_tree::ptree_bad_path &ex) {
+
+          log << warn << "config: setting default save draft path for account: " << kv.first << ", please update!" << endl;
+          ustring key = ustring::compose ("accounts.%1.save_drafts_to", kv.first);
+          config.put (key.c_str (), "/home/root/Mail/drafts/");
+
+        }
+      }
+
+      config.put ("astroid.config.version", CONFIG_VERSION);
+      changed = true;
+    }
+
+    if (changed) {
+      log << warn << "cf: missing values in config have been updated with defaults." << endl;
+      write_back_config ();
+    }
+
+    return !changed;
   }
 
   /* TODO: split into utils/ somewhere.. */

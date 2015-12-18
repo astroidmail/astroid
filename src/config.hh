@@ -38,12 +38,13 @@ namespace Astroid {
       void load_config (bool initial = false);
       void load_dirs ();
       void setup_default_config (bool);
+      bool check_config (ptree);
       void write_back_config ();
 
       ptree default_config;
       ptree config;
 
-      const int CONFIG_VERSION = 0;
+      const int CONFIG_VERSION = 1;
 
     private:
       /* TODO: split into utils/ somewhere.. */
