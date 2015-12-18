@@ -629,9 +629,29 @@ namespace Astroid {
 
             mthread.load_messages (&db);
 
-            /* edit last message as draft */
-            main_window->add_mode (new EditMessage (main_window, *(--mthread.messages.end())));
+            bool found = false;
 
+            /* find first message marked as draft */
+            for (auto m : mthread.messages) {
+              if (any_of (db.draft_tags.begin (),
+                          db.draft_tags.end (),
+                          [&](ustring t) {
+                            return has (m->tags, t);
+                          }))
+              {
+
+
+                main_window->add_mode (new EditMessage (main_window, m));
+
+                found = true;
+                break;
+              }
+            }
+
+            if (!found) {
+              /* edit last message as draft */
+              main_window->add_mode (new EditMessage (main_window, *(--mthread.messages.end())));
+            }
           }
           return true;
         }
@@ -752,7 +772,7 @@ namespace Astroid {
       { "r", "Reply to last message in thread" },
       { "G", "Reply all to last message in thread" },
       { "f", "Forward last message in thread" },
-      { "E", "Edit last message in thread as new or draft" },
+      { "E", "Edit first message marked as draft or last message in thread as new" },
       { "M", "Load more threads in query" },
       { "!", "Load all threads in query" },
       { "a", "Toggle 'inbox' tag on thread" },

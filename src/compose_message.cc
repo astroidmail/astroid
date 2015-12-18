@@ -317,6 +317,7 @@ namespace Astroid {
     GMimeStream * stream = g_mime_stream_file_new(MessageFile);
     g_mime_object_write_to_stream(GMIME_OBJECT(message), stream);
     g_object_unref(stream);
+    log << debug << "cm: wrote file: " << fname << endl;
   }
 
   ComposeMessage::Attachment::Attachment (path p) {
