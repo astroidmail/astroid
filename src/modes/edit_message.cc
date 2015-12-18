@@ -256,6 +256,7 @@ namespace Astroid {
       path ddir = path(c->account->save_drafts_to.c_str ());
       if (!is_directory(ddir)) {
         log << error << "em: no draft directory specified!" << endl;
+        warning_str = "draft could not be saved, no suitable draft directory for account specified.";
         /* move to key handler:
          * warning_str = "draft could not be saved!"; */
         /* on_tv_ready (); */
