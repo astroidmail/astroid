@@ -109,7 +109,6 @@ namespace Astroid {
       /* draft */
       bool save_draft ();
       void delete_draft ();
-      const ustring draft_tag = "draft";
       refptr<Message> draft_msg;
 
     protected:

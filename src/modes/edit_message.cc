@@ -48,8 +48,20 @@ namespace Astroid {
     /* load draft */
     log << info << "em: loading draft from: " << msg->fname << endl;
 
-    draft_msg = msg;
-    msg_id = msg->mid;
+    /* if this is a previously saved draft: use it, otherwise make new draft
+     * based on original message */
+
+    Db db;
+
+    if (any_of (db.draft_tags.begin (),
+                db.draft_tags.end (),
+                [&](ustring t) {
+                  return has (msg->tags, t);
+                }))
+    {
+      draft_msg = msg;
+      msg_id = msg->mid;
+    }
 
     for (auto &c : msg->attachments ()) {
       add_attachment (new ComposeMessage::Attachment (c));
@@ -250,6 +262,8 @@ namespace Astroid {
     ComposeMessage * c = make_message ();
     ustring fname;
 
+    bool add_to_notmuch = false;
+
     if (!draft_msg) {
       /* make new message */
 
@@ -266,13 +280,21 @@ namespace Astroid {
         /* msg_id might come from external client or server */
         ddir = ddir / path(Utils::safe_fname (msg_id));
         fname = ddir.c_str ();
-        c->write (fname);
 
-        /* TODO: add to notmuch (with draft tag) */
+        add_to_notmuch = true;
       }
     } else {
       fname = draft_msg->fname; // overwrite
-      c->write (fname);
+    }
+
+    c->write (fname);
+
+    log << info << "em: saved draft to: " << fname << endl;
+
+    if (add_to_notmuch) {
+      Db db (Db::DbMode::DATABASE_READ_WRITE);
+      lock_guard<Db> lk (db);
+      db.add_draft_message (fname);
     }
 
     return true;
@@ -282,13 +304,18 @@ namespace Astroid {
     log << info << "em: deleting draft." << endl;
     if (draft_msg) {
       path fname = path(draft_msg->fname.c_str());
-      draft_msg = refptr<Message>();
 
       if (is_regular_file (fname)) {
         boost::filesystem::remove (fname);
+
+        Db db (Db::DbMode::DATABASE_READ_WRITE);
+        lock_guard<Db> lk (db);
+        db.remove_message (fname.c_str ());
       }
 
-      /* TODO: remove from notmuch */
+      draft_msg = refptr<Message>();
+    } else {
+      log << warn << "em: not a draft, not deleting." << endl;
     }
   }
 
@@ -630,6 +657,52 @@ namespace Astroid {
             return false;
           }
         }
+
+      case GDK_KEY_s:
+        {
+          if (sending_in_progress.load ()) {
+            /* block closing the window while sending */
+            log << error << "em: message is being sent, it cannot be saved as draft anymore." << endl;
+          } else {
+
+            bool r;
+
+            r = save_draft ();
+
+            if (!r) {
+              on_tv_ready ();
+            } else {
+              close ();
+            }
+          }
+          return true;
+        }
+
+      case GDK_KEY_D:
+        {
+          if (!draft_msg) {
+            log << debug << "em: not a draft." << endl;
+            return true;
+          }
+
+          if (sending_in_progress.load ()) {
+            /* block closing the window while sending */
+            log << error << "em: message is being sent, cannot delete draft now. it will be deleted upon successfully sent message." << endl;
+          } else if (!message_sent) {
+            ask_yes_no ("Do you want to delete this draft and close it? (any changes will be lost)",
+                [&](bool yes) {
+                  if (yes) {
+                    delete_draft ();
+                    close ();
+                  }
+                });
+          } else {
+            // message has been sent successfully, no need to complain.
+            close ();
+          }
+          return true;
+
+        }
     }
 
     return false;
@@ -648,7 +721,9 @@ namespace Astroid {
       { "a", "Attach file" },
       { "d", "Remove attached file" },
       { "f", "Cycle through From selector" },
-      { "F", "Open From selecetor" }
+      { "F", "Open From selecetor" },
+      { "s", "Save draft" },
+      { "D", "Delete draft" }
     };
 
     ModeHelpInfo * tv = thread_view->key_help ();
@@ -740,6 +815,12 @@ namespace Astroid {
           "gtk-apply",
           42,
           Gtk::ICON_LOOKUP_USE_BUILTIN );
+
+      /* delete draft */
+      if (draft_msg) {
+        log << info << "em: deleting draft: " << draft_msg->fname << endl;
+        delete_draft ();
+      }
 
     } else {
       warning_str = "message could not be sent!";
