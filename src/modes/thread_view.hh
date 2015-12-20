@@ -98,7 +98,7 @@ namespace Astroid {
       void update_focus_to_view ();
       void update_focus_status ();
       ustring focus_next ();
-      ustring focus_previous ();
+      ustring focus_previous (bool focus_top = false);
 
       ustring focus_next_element (bool = false);
       ustring focus_previous_element (bool = false);
@@ -148,6 +148,7 @@ namespace Astroid {
            */
           vector<Element> elements;
           unsigned int    current_element;
+          Element * get_current_element ();
       };
 
       std::map<refptr<Message>, MessageState> state;

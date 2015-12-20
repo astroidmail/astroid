@@ -2648,6 +2648,7 @@ namespace Astroid {
   }
 
   void ThreadView::update_focus_status () {
+    /* update focus to currently set element (no scrolling ) */
     WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
     for (auto &m : mthread->messages) {
       ustring mid = "message_" + m->mid;
@@ -2871,8 +2872,14 @@ namespace Astroid {
     auto adj = scroll.get_vadjustment ();
     if (force_change || (adj->get_value () == adj->get_lower ())) {
       /* we're at the top, move focus up */
-      eid = focus_previous ();
-
+      ustring mid = focus_previous (false);
+      ThreadView::MessageState::Element * e =
+        state[focused_message].get_current_element ();
+      if (e != NULL) {
+        eid = e->element_id ();
+      } else {
+        eid = mid; // if no element selected, focus message
+      }
     } else {
       adj->set_value (adj->get_value() - adj->get_step_increment ());
       update_focus_to_view ();
@@ -2900,7 +2907,7 @@ namespace Astroid {
     return "message_" + focused_message->mid;
   }
 
-  ustring ThreadView::focus_previous () {
+  ustring ThreadView::focus_previous (bool focus_top) {
     //log << debug << "tv: focus previous." << endl;
 
     if (edit_mode) return "";
@@ -2910,7 +2917,7 @@ namespace Astroid {
         mthread->messages.end (),
         focused_message) - mthread->messages.begin ();
 
-    if (focused_position > 0) {
+    if (!focus_top && focused_position > 0) {
       focused_message = mthread->messages[focused_position - 1];
       if (!is_hidden (focused_message)) {
         state[focused_message].current_element = state[focused_message].elements.size()-1; // start at bottom
@@ -3209,6 +3216,14 @@ namespace Astroid {
 
   ustring ThreadView::MessageState::Element::element_id () {
     return ustring::compose("%1", id);
+  }
+
+  ThreadView::MessageState::Element * ThreadView::MessageState::get_current_element () {
+    if (current_element == 0) {
+      return NULL;
+    } else {
+      return &(elements[current_element]);
+    }
   }
 
   /* end MessageState }}} */
