@@ -14,7 +14,7 @@
 # include "thread_index.hh"
 # include "thread_index_list_view.hh"
 # include "thread_index_list_cell_renderer.hh"
-# include "modes/thread_view.hh"
+# include "modes/thread_view/thread_view.hh"
 # include "main_window.hh"
 
 using namespace std;

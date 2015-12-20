@@ -17,7 +17,7 @@
 # include "edit_message.hh"
 # include "compose_message.hh"
 # include "db.hh"
-# include "thread_view.hh"
+# include "thread_view/thread_view.hh"
 # include "raw_message.hh"
 # include "main_window.hh"
 # include "message_thread.hh"

@@ -10,8 +10,10 @@
 
 # include "astroid.hh"
 # include "proto.hh"
-# include "mode.hh"
+# include "modes/mode.hh"
 # include "message_thread.hh"
+
+# include "web_inspector.hh"
 
 using namespace std;
 using namespace boost::filesystem;
@@ -21,15 +23,6 @@ namespace Astroid {
           GtkWidget *,
           GParamSpec *,
           gpointer );
-
-  extern "C" WebKitWebView * ThreadView_activate_inspector (
-      WebKitWebInspector *,
-      WebKitWebView *,
-      gpointer );
-
-  extern "C" bool ThreadView_show_inspector (
-      WebKitWebInspector *,
-      gpointer);
 
   extern "C" gboolean ThreadView_navigation_request (
       WebKitWebView * w,
