@@ -96,6 +96,8 @@ namespace Astroid {
     notmuch_query_destroy (unread_q);
 
     set_label (ustring::compose ("%1 (%2/%3)", query_string, unread_messages, total_messages));
+
+    list_view->update_bg_image ();
   }
 
   void ThreadIndex::close_query () {
@@ -146,6 +148,8 @@ namespace Astroid {
     }
 
     log << debug << "ti: refreshed in " << ((clock() - t0) * 1000.0 / CLOCKS_PER_SEC) << " ms." << endl;
+
+    list_view->update_bg_image ();
   }
 
   void ThreadIndex::load_more_threads (bool all, int count, bool checked) {
@@ -221,6 +225,7 @@ namespace Astroid {
       }
     }
 
+    list_view->update_bg_image ();
     log << info << "ti: loaded " << i << " threads in " << ((clock()-t0) * 1000.0 / CLOCKS_PER_SEC) << " ms." << endl;
   }
 

@@ -10,6 +10,7 @@
 # include "thread_index.hh"
 # include "thread_index_list_view.hh"
 # include "thread_index_list_cell_renderer.hh"
+# include "modes/thread_view/thread_view.hh"
 # include "modes/reply_message.hh"
 # include "modes/forward_message.hh"
 # include "message_thread.hh"
@@ -81,6 +82,8 @@ namespace Astroid {
    * ---------
    */
   ThreadIndexListView::ThreadIndexListView (ThreadIndex * _thread_index, Glib::RefPtr<ThreadIndexListStore> store) {
+    set_name ("ThreadIndexListView");
+
     thread_index = _thread_index;
     main_window  = _thread_index->main_window;
     list_store = store;
@@ -175,6 +178,35 @@ namespace Astroid {
     item_popup.accelerate (*this);
     item_popup.show_all ();
 
+
+
+    auto css = Gtk::CssProvider::create ();
+    auto sc  = get_style_context ();
+
+
+# ifdef PREFIX
+    path no_mail_img = path(PREFIX) / path("ui/no-mail.png");
+# else
+    path no_mail_img = path("ui/no-mail.png");
+# endif
+
+    string css_data =
+      ustring::compose (
+                      "#ThreadIndexListView  { background-image: url(\"%1\");"
+                      "                        background-repeat: no-repeat;"
+                      "                        background-position: 50%% 50%%;"
+                      " }\n"
+                      "#ThreadIndexListView  .none { background-image: none; }",
+                      no_mail_img.c_str ());
+
+    try {
+      css->load_from_data (css_data);
+    } catch (Gtk::CssProviderError &e) {
+      cout << e.what () << endl;
+    }
+
+    auto screen = Gdk::Screen::get_default ();
+    sc->add_provider_for_screen (screen, css, GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
   }
 
   ThreadIndexListView::~ThreadIndexListView () {
@@ -981,6 +1013,18 @@ namespace Astroid {
     }
 
     thread_index->refresh_stats (db);
+  }
+
+  void ThreadIndexListView::update_bg_image () {
+    bool show = (list_store->children().size () == 0);
+
+    if (!show) {
+      auto sc = get_style_context ();
+      if (!sc->has_class ("none")) sc->add_class ("none");
+    } else {
+      auto sc = get_style_context ();
+      if (sc->has_class ("none")) sc->remove_class ("none");
+    }
   }
 
   /*

@@ -223,8 +223,6 @@ namespace Astroid {
 
       refptr<Gdk::Pixbuf> attachment_icon;
 
-      string assemble_data_uri (ustring, gchar *&, gsize);
-
       static const int THUMBNAIL_WIDTH = 150; // px
       static const int ATTACHMENT_ICON_WIDTH = 35;
 
@@ -245,6 +243,8 @@ namespace Astroid {
           ustring         selector);
 
     public:
+      static string assemble_data_uri (ustring, gchar *&, gsize);
+
       /* event wrappers */
       bool on_load_changed (
           GtkWidget *,

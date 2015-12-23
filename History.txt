@@ -17,6 +17,7 @@
 * Save drafts with 's', discard them with 'D', edit them with 'E' from
   thread index or thread view.
 * Edit messages as new with 'E'.
+* Added a dinosaur.
 
 == v0.4 / 2015-08-15
 
