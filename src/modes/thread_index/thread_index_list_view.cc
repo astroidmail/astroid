@@ -272,19 +272,9 @@ namespace Astroid {
 
     Keybindings * ky = &(thread_index->keys);
 
-    ky->register_key (Key::create("j"), "thread_index.down", "Next thread", 
+    ky->register_key ("j", { Key(false, false, (guint) GDK_KEY_Down) },
+        "thread_index.next_thread", "Next thread",
         [&](Key) {
-          return true;
-        });
-
-  }
-
-  bool ThreadIndexListView::old (GdkEventKey *event) {
-
-    switch (event->keyval) {
-      case GDK_KEY_j:
-      case GDK_KEY_Down:
-        {
           if (list_store->children().size() < 2)
             return true;
 
@@ -308,20 +298,35 @@ namespace Astroid {
           }
 
           return true;
+        });
+
+    ky->register_key ("k", { Key(false, false, (guint) GDK_KEY_Up) },
+        "thread_index.prev_thread", "Previous thread",
+        [&](Key) {
+            Gtk::TreePath path;
+            Gtk::TreeViewColumn *c;
+            get_cursor (path, c);
+            path.prev ();
+            if (path) {
+              set_cursor (path);
+            }
+            return true;
+          });
+
+  }
+
+  bool ThreadIndexListView::old (GdkEventKey *event) {
+
+    switch (event->keyval) {
+      case GDK_KEY_j:
+      case GDK_KEY_Down:
+        {
         }
         break;
 
       case GDK_KEY_k:
       case GDK_KEY_Up:
         {
-          Gtk::TreePath path;
-          Gtk::TreeViewColumn *c;
-          get_cursor (path, c);
-          path.prev ();
-          if (path) {
-            set_cursor (path);
-          }
-          return true;
         }
         break;
 

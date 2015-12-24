@@ -8,8 +8,8 @@ using namespace std;
 namespace Astroid {
   struct Key {
     Key ();
-    Key (bool _c, bool _m, char k, ustring name = "", ustring help = "");
     Key (bool _c, bool _m, guint k, ustring name = "", ustring help = "");
+    Key (bool _c, bool _m, char k, ustring name = "", ustring help = "");
     Key (GdkEventKey *, ustring name = "", ustring help = "");
 
     bool ctrl = false;
