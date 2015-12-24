@@ -183,30 +183,44 @@ namespace Astroid {
     auto css = Gtk::CssProvider::create ();
     auto sc  = get_style_context ();
 
+    path def_no_mail_img = path ("ui/no-mail.png");
+    path user_no_mail_img = astroid->config->config_dir / def_no_mail_img;
 
 # ifdef PREFIX
-    path no_mail_img = path(PREFIX) / path("ui/no-mail.png");
+    path no_mail_img = path(PREFIX) / def_no_mail_img;
 # else
-    path no_mail_img = path("ui/no-mail.png");
+    path no_mail_img = def_no_mail_img;
 # endif
 
-    string css_data =
-      ustring::compose (
-                      "#ThreadIndexListView  { background-image: url(\"%1\");"
-                      "                        background-repeat: no-repeat;"
-                      "                        background-position: 50%% 50%%;"
-                      " }\n"
-                      "#ThreadIndexListView  .none { background-image: none; }",
-                      no_mail_img.c_str ());
-
-    try {
-      css->load_from_data (css_data);
-    } catch (Gtk::CssProviderError &e) {
-      cout << e.what () << endl;
+    if (exists (user_no_mail_img)) {
+      log << debug << "ti: using user no-mail img." << endl;
+      no_mail_img = user_no_mail_img;
     }
 
-    auto screen = Gdk::Screen::get_default ();
-    sc->add_provider_for_screen (screen, css, GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+    if (!exists (no_mail_img)) {
+
+      log << error << "ti: could not load background image: " << no_mail_img.c_str () << endl;
+
+    } else {
+
+      string css_data =
+        ustring::compose (
+                        "#ThreadIndexListView  { background-image: url(\"%1\");"
+                        "                        background-repeat: no-repeat;"
+                        "                        background-position: 50%% 50%%;"
+                        " }\n"
+                        "#ThreadIndexListView  .hide_bg { background-image: none; }",
+                        no_mail_img.c_str ());
+
+      try {
+        css->load_from_data (css_data);
+      } catch (Gtk::CssProviderError &e) {
+        log << error << "ti: attempted to set background image: " << no_mail_img.c_str () << ": " << e.what () << endl;
+      }
+
+      auto screen = Gdk::Screen::get_default ();
+      sc->add_provider_for_screen (screen, css, GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+    }
   }
 
   ThreadIndexListView::~ThreadIndexListView () {
@@ -1016,14 +1030,14 @@ namespace Astroid {
   }
 
   void ThreadIndexListView::update_bg_image () {
-    bool show = (list_store->children().size () == 0);
+    bool hide = (list_store->children().empty());
 
-    if (!show) {
+    if (!hide) {
       auto sc = get_style_context ();
-      if (!sc->has_class ("none")) sc->add_class ("none");
+      if (!sc->has_class ("hide_bg")) sc->add_class ("hide_bg");
     } else {
       auto sc = get_style_context ();
-      if (sc->has_class ("none")) sc->remove_class ("none");
+      if (sc->has_class ("hide_bg")) sc->remove_class ("hide_bg");
     }
   }
 
