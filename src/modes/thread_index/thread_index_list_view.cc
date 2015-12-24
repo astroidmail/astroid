@@ -222,6 +222,10 @@ namespace Astroid {
       auto screen = Gdk::Screen::get_default ();
       sc->add_provider_for_screen (screen, css, GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
     }
+
+
+    /* set up keys */
+    register_keys ();
   }
 
   ThreadIndexListView::~ThreadIndexListView () {
@@ -259,15 +263,23 @@ namespace Astroid {
     }
   }
 
-  void ThreadIndexListView::generic_key (Key k) {
+  void ThreadIndexListView::register_keys () {
+
+    /*
+    thread_index->keys.register_key (Key(true, true, 'k'),
+        bind(&ThreadIndexListView::generic_key, this, _1));
+        */
+
+    Keybindings * ky = &(thread_index->keys);
+
+    ky->register_key (Key::create("j"), "thread_index.down", "Next thread", 
+        [&](Key) {
+          return true;
+        });
 
   }
 
-  bool ThreadIndexListView::on_key_press_event (GdkEventKey *event) {
-    if (thread_index->mode_key_handler (event)) return true;
-
-    keys.register_key (Key(true, true, 'k'), 
-        bind(&ThreadIndexListView::generic_key, this, _1));
+  bool ThreadIndexListView::old (GdkEventKey *event) {
 
     switch (event->keyval) {
       case GDK_KEY_j:

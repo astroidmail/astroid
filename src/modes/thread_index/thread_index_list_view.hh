@@ -70,11 +70,11 @@ namespace Astroid {
       virtual ModeHelpInfo * key_help ();
       void update_bg_image ();
 
-      Keybindings keys;
-      void generic_key (Key);
-
     protected:
-      virtual bool on_key_press_event (GdkEventKey *) override;
+      void register_keys ();
+
+      bool old (GdkEventKey *);
+
       ustring multi_key_help = "t: toggle, a: archive, *: flag, N: toggle unread, S: toggle spam, C-m: mute";
       bool multi_key_handler (GdkEventKey *);
       void on_my_row_activated  (const Gtk::TreeModel::Path &, Gtk::TreeViewColumn *);

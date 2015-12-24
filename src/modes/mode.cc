@@ -1,5 +1,6 @@
 # include "mode.hh"
 # include "main_window.hh"
+# include "keybindings.hh"
 # include "log.hh"
 
 namespace Astroid {
@@ -185,6 +186,12 @@ namespace Astroid {
     }
 
     return false;
+  }
+
+  bool Mode::on_key_press_event (GdkEventKey *event) {
+    if (mode_key_handler (event)) return true;
+
+    return keys.handle (event);
   }
 
   ModeHelpInfo * Mode::key_help () {

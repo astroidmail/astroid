@@ -5,6 +5,7 @@
 # include <list>
 
 # include "proto.hh"
+# include "keybindings.hh"
 
 using namespace std;
 
@@ -58,11 +59,13 @@ namespace Astroid {
       void set_label (ustring);
 
     public:
+      bool on_key_press_event (GdkEventKey *event) override;
+      Keybindings keys;
+
       void ask_yes_no (ustring, function<void(bool)>);
       void multi_key (ustring, function<bool(GdkEventKey *)>);
 
       bool mode_key_handler (GdkEventKey *);
-
 
       virtual void grab_modal () = 0;
       virtual void release_modal () = 0;
