@@ -2,6 +2,7 @@
 
 # include <map>
 # include <functional>
+# include <atomic>
 
 using namespace std;
 
@@ -19,9 +20,9 @@ namespace Astroid {
     ustring name = "";
     ustring help = "";
 
-    bool hasaliases = false;
-    bool isalias = false; /* this is an alias for another master key */
-    Key  * master_key;
+    bool hasaliases = false; /* this is a master key with other aliases */
+    bool isalias    = false; /* this key is an alias for another master key */
+    const Key * master_key;
 
     bool operator== ( const Key & other ) const;
     bool operator<  ( const Key & other ) const;
@@ -31,19 +32,46 @@ namespace Astroid {
     static Key create (string spec);
   };
 
+  /* exceptions */
+  class keyspec_error : public runtime_error {
+    public:
+      keyspec_error (const char *);
+
+  };
+
   class Keybindings {
     public:
       Keybindings ();
+      static void init ();
 
       typedef pair<Key, function<bool (Key)>> KeyBinding;
+
       void register_key (Key, ustring name, ustring help, function<bool (Key)>);
       void register_key (ustring spec, ustring name, ustring help, function<bool (Key)>);
 
-      void register_key (Key, vector<Key>, ustring name, ustring help, function<bool (Key)>);
-      void register_key (ustring spec, vector<ustring>, ustring name, ustring help, function<bool (Key)>);
+      void register_key (Key,
+                         vector<Key>,
+                         ustring name,
+                         ustring help,
+                         function<bool (Key)>);
 
-      void register_key (Key, vector<ustring>, ustring name, ustring help, function<bool (Key)>);
-      void register_key (ustring spec, vector<Key>, ustring name, ustring help, function<bool (Key)>);
+      void register_key (ustring spec,
+                         vector<ustring>,
+                         ustring name,
+                         ustring help,
+                         function<bool (Key)>);
+
+      void register_key (Key,
+                         vector<ustring>,
+                         ustring name,
+                         ustring help,
+                         function<bool (Key)>);
+
+      void register_key (ustring spec,
+                         vector<Key>,
+                         ustring name,
+                         ustring help,
+                         function<bool (Key)>);
 
       bool handle (GdkEventKey *);
 
@@ -53,6 +81,11 @@ namespace Astroid {
 
     private:
       map<Key, function<bool (Key)>> keys;
+
+    public:
+      static vector<Key>  user_bindings;
+      static atomic<bool> user_bindings_loaded;
+      static const char * user_bindings_file;
   };
 }
 

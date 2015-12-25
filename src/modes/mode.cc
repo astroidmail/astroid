@@ -122,7 +122,7 @@ namespace Astroid {
     yes_no_waiting = false;
   }
 
-  bool Mode::multi_key (Keybindings & kb, Key k)
+  bool Mode::multi_key (Keybindings & kb, Key /* k */)
   {
     log << info << "mode: starting multi key." << endl;
 
@@ -190,7 +190,6 @@ namespace Astroid {
   }
 
   bool Mode::on_key_press_event (GdkEventKey *event) {
-    log << debug << "mode: keypress: " << get_label () << endl;
     if (mode_key_handler (event)) return true;
 
     return keys.handle (event);

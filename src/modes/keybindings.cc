@@ -1,13 +1,101 @@
+# include <atomic>
+
 # include "astroid.hh"
 # include "keybindings.hh"
+# include "config.hh"
+# include "utils/ustring_utils.hh"
+# include "utils/vector_utils.hh"
 
 # include "log.hh"
 
 using namespace std;
 
 namespace Astroid {
-  Keybindings::Keybindings () {
 
+  /* Keybidnings {{{ */
+  atomic<bool> Keybindings::user_bindings_loaded (false);
+  const char * Keybindings::user_bindings_file = "keybindings";
+  vector<Key>  Keybindings::user_bindings;
+
+  void Keybindings::init () {
+    if (!user_bindings_loaded) {
+      user_bindings_loaded = true;
+
+      path bindings_file = astroid->config->config_dir / path (user_bindings_file);
+
+      if (exists(bindings_file)) {
+        log << info << "keybindings: loading user bindings from: " << bindings_file.c_str () << endl;
+
+        /* the bindings file has the format:
+         *
+         * thread_index.next_thread=j
+         * thread_index.next_thread=Down
+         * thread_index.label=C-j
+         *
+         * # thread_
+         *
+         * blank lines, or lines starting with # are ignored. a keybinding
+         * can be listed several times, in which case they will be listed as
+         * aliases for the same target.
+         */
+
+        ifstream bf (bindings_file.c_str());
+
+        while (!bf.eof()) {
+
+          ustring line;
+
+          bf >> line;
+
+          UstringUtils::trim (line);
+
+          if (line.size () == 0) continue;
+          if (line[0] == '#') continue;
+
+          log << debug << "ky: parsing line: " << line << endl;
+          vector<ustring> parts = VectorUtils::split_and_trim (line, "=");
+
+          if (parts.size () != 2) {
+            log << error << "ky: user bindings: too many parts in: " << line << endl;
+            continue;
+          }
+
+          Key k = Key::create (parts[1]);
+          k.name = parts[0];
+
+          user_bindings.push_back (k);
+        }
+
+        bf.close ();
+      }
+    }
+  }
+
+  Keybindings::Keybindings () {
+  }
+
+  ustring Keybindings::short_help () {
+    ustring h;
+
+    bool first = true;
+
+    for (auto &km : keys) {
+      auto k = km.first;
+
+      if (!first) {
+        h += ", ";
+      }
+
+      first = false;
+
+      h += k.str () + ": " + k.help;
+    }
+
+    return h;
+  }
+
+  void Keybindings::clear () {
+    keys.clear ();
   }
 
   void Keybindings::register_key (ustring spec,
@@ -62,7 +150,35 @@ namespace Astroid {
      * name  name used for configurable keys
      */
 
-    log << debug << "key: registering key: " << name << ": " << (char) gdk_keyval_to_unicode (k.key) << endl;
+    log << debug << "key: registering key: " << name << ": " << k.str () << endl;
+
+    /* check if these are user configured */
+    auto res = find_if (user_bindings.begin (),
+                        user_bindings.end (),
+                        [&](Key e) {
+                          return (e.name == name);
+                        });
+
+    if (res != user_bindings.end ()) {
+      Key uk = (*res);
+
+      k.key  = uk.key;
+      k.ctrl = uk.ctrl;
+      k.meta = uk.meta;
+
+      res++;
+
+      aliases.clear (); // drop any default aliases
+
+      while (res != user_bindings.end ()) {
+        Key ak = (*res);
+
+        aliases.push_back (ak);
+
+        res++;
+      }
+    }
+
 
     k.name = name;
     k.help = help;
@@ -70,22 +186,30 @@ namespace Astroid {
     k.hasaliases = !aliases.empty ();
     keys.insert (KeyBinding (k, t));
 
+    /* get pointer to key in map */
+    const Key * master;
+    auto s = keys.find (k);
+    master = &(s->first);
+
     for (auto & ka : aliases) {
-      log << debug << "key: alias: " << (char) gdk_keyval_to_unicode (ka.key) <<  "(" << ka.key << ")" << endl;
+
+      log << debug << "key: alias: " << ka.str () <<  "(" << ka.key << ")" << endl;
+
       ka.name = k.name;
       ka.help = k.help;
       ka.isalias = true;
-      ka.master_key = &k;
+      ka.master_key = master;
       keys.insert (KeyBinding (ka, NULL));
     }
   }
 
   bool Keybindings::handle (GdkEventKey * event) {
-    log << debug << "ky: handling: " << (char) gdk_keyval_to_unicode (event->keyval) << " (" << event->keyval << ")" << endl;
+    log << debug << "ky: handling: " << Key (event).str () << " (" << event->keyval << ")" << endl;
 
-    auto s = keys.find (Key(event));
+    Key ek (event);
+    auto s = keys.find (ek);
+
     if (s != keys.end ()) {
-
       if (s->first.isalias) {
         auto m = keys.find (*(s->first.master_key));
         return m->second (s->first);
@@ -94,11 +218,12 @@ namespace Astroid {
       }
     }
 
-    log << debug << "ky: false" << endl;
-
     return false;
   }
 
+  // }}}
+
+  /* Key {{{ */
   Key::Key () { }
 
   Key::Key (bool _c, bool _m, char k, ustring _n, ustring _h) {
@@ -129,7 +254,12 @@ namespace Astroid {
     ustring s;
     if (ctrl) s += "C-";
     if (meta) s += "M-";
-    s += gdk_keyval_to_unicode (key);
+
+    char k = gdk_keyval_to_unicode (key);
+    if (isgraph (k))
+      s += k;
+    else
+      s += ustring::compose ("%1", key);
 
     return s;
   }
@@ -170,7 +300,7 @@ namespace Astroid {
 
     if (!((spec.size() == 1) || (spec.size () == 3) || (spec.size() == 5))) {
       log << error << "key spec invalid: " << spec << endl;
-      return k;
+      throw keyspec_error ("invalid length of spec");
     }
 
     if (spec.size () == 1) {
@@ -185,7 +315,7 @@ namespace Astroid {
       char M = spec[0];
       if (!((M == 'C') || (M == 'M'))) {
         log << error << "key spec invalid: " << spec << endl;
-        return k;
+        throw keyspec_error ("invalid modifier in key spec");
       }
 
       if (M == 'C') k.ctrl = true;
@@ -193,7 +323,7 @@ namespace Astroid {
 
       if (spec[1] != '-') {
         log << error << "key spec invalid: " << spec << endl;
-        return k;
+        throw keyspec_error ("invalid delimiter");
       }
 
       k.key = gdk_unicode_to_keyval (spec[2]);
@@ -205,27 +335,27 @@ namespace Astroid {
 
       if (!((M == 'C') || (M == 'M'))) {
         log << error << "key spec invalid: " << spec << endl;
-        return k;
+        throw keyspec_error ("invalid modifier");
       }
 
       if (M == 'C') {
         if (k.ctrl) {
           log << error << "key spec invalid: " << spec << endl;
-          return k;
+          throw keyspec_error ("modifier already specified");
         }
         k.ctrl = true;
       }
       if (M == 'M') {
         if (k.meta) {
           log << error << "key spec invalid: " << spec << endl;
-          return k;
+          throw keyspec_error ("modifier already specified");
         }
         k.meta = true;
       }
 
       if (spec[3] != '-') {
         log << error << "key spec invalid: " << spec << endl;
-        return k;
+        throw keyspec_error ("invalid delimiter");
       }
 
       k.key = gdk_unicode_to_keyval (spec[4]);
@@ -234,27 +364,17 @@ namespace Astroid {
     return k;
   } // }}}
 
-  ustring Keybindings::short_help () {
-    ustring h;
 
-    bool first = true;
+  /************
+   * exceptions
+   * **********
+   */
 
-    for (auto &km : keys) {
-      auto k = km.first;
-
-      if (!first) {
-        h += ", ";
-        first = false;
-      }
-
-      h += k.str () + ": " + k.help;
-    }
-
-    return h;
+  keyspec_error::keyspec_error (const char * w) : runtime_error (w)
+  {
   }
 
-  void Keybindings::clear () {
-    keys.clear ();
-  }
+  // }}}
+
 }
 
