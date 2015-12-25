@@ -125,7 +125,7 @@ namespace Astroid {
     signal_row_activated ().connect (
         sigc::mem_fun (this, &ThreadIndexListView::on_my_row_activated));
 
-    /* set up popup menu */
+    /* set up popup menu {{{ */
 
     /* icon list */
     Gtk::Image * reply = Gtk::manage (new Gtk::Image ());
@@ -179,8 +179,9 @@ namespace Astroid {
     item_popup.accelerate (*this);
     item_popup.show_all ();
 
+    // }}}
 
-
+    // background image {{{
     auto css = Gtk::CssProvider::create ();
     auto sc  = get_style_context ();
 
@@ -221,8 +222,7 @@ namespace Astroid {
 
       auto screen = Gdk::Screen::get_default ();
       sc->add_provider_for_screen (screen, css, GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-    }
-
+    } // }}}
 
     /* set up keys */
     register_keys ();
@@ -312,6 +312,20 @@ namespace Astroid {
             }
             return true;
           });
+
+
+    /* set up for multi key handler */
+    Keybindings multi_keys;
+    multi_keys.register_key ("N",
+                             "thread_index.multi.mark_unread",
+                             "Mark unread",
+                             bind (&ThreadIndexListView::multi_key_handler, this, _1));
+
+
+    ky->register_key ("+",
+                      "therad_index.multi",
+                      "Apply action to marked threads",
+                      bind (&ThreadIndex::multi_key, thread_index, multi_keys, _1));
 
   }
 
@@ -535,7 +549,7 @@ namespace Astroid {
           }
 
           if (found) {
-            thread_index->multi_key (multi_key_help, bind(&ThreadIndexListView::multi_key_handler, this, _1));
+            /* thread_index->multi_key (multi_key_help, bind(&ThreadIndexListView::multi_key_handler, this, _1)); */
           }
 
           return true;
@@ -731,7 +745,7 @@ namespace Astroid {
     return false;
   }
 
-  bool ThreadIndexListView::multi_key_handler (GdkEventKey * event) {
+  bool ThreadIndexListView::multi_key_handler (Key k) {
     log << debug << "tl: m k h" << endl;
 
     Gtk::TreePath path;
@@ -744,7 +758,8 @@ namespace Astroid {
     Gtk::ListStore::Row row;
 
 
-    switch (event->keyval) {
+    /*
+    switch (k.key) {
       case GDK_KEY_asterisk:
       case GDK_KEY_N:
       case GDK_KEY_S:
@@ -821,6 +836,7 @@ namespace Astroid {
         }
     }
 
+    */
     return false;
   }
 

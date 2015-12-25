@@ -62,22 +62,27 @@ namespace Astroid {
      * name  name used for configurable keys
      */
 
+    log << debug << "key: registering key: " << name << ": " << (char) gdk_keyval_to_unicode (k.key) << endl;
+
     k.name = name;
     k.help = help;
 
+    k.hasaliases = !aliases.empty ();
     keys.insert (KeyBinding (k, t));
 
-    k.hasaliases = !aliases.empty ();
-
     for (auto & ka : aliases) {
+      log << debug << "key: alias: " << (char) gdk_keyval_to_unicode (ka.key) <<  "(" << ka.key << ")" << endl;
       ka.name = k.name;
       ka.help = k.help;
       ka.isalias = true;
       ka.master_key = &k;
+      keys.insert (KeyBinding (ka, NULL));
     }
   }
 
   bool Keybindings::handle (GdkEventKey * event) {
+    log << debug << "ky: handling: " << (char) gdk_keyval_to_unicode (event->keyval) << " (" << event->keyval << ")" << endl;
+
     auto s = keys.find (Key(event));
     if (s != keys.end ()) {
 
@@ -88,6 +93,8 @@ namespace Astroid {
         return s->second (s->first);
       }
     }
+
+    log << debug << "ky: false" << endl;
 
     return false;
   }
@@ -226,5 +233,28 @@ namespace Astroid {
 
     return k;
   } // }}}
+
+  ustring Keybindings::short_help () {
+    ustring h;
+
+    bool first = true;
+
+    for (auto &km : keys) {
+      auto k = km.first;
+
+      if (!first) {
+        h += ", ";
+        first = false;
+      }
+
+      h += k.str () + ": " + k.help;
+    }
+
+    return h;
+  }
+
+  void Keybindings::clear () {
+    keys.clear ();
+  }
 }
 

@@ -229,7 +229,7 @@ namespace Astroid {
     log << info << "ti: loaded " << i << " threads in " << ((clock()-t0) * 1000.0 / CLOCKS_PER_SEC) << " ms." << endl;
   }
 
-  bool ThreadIndex::on_key_press_event (GdkEventKey *event) {
+  bool ThreadIndex::old_on_key_press_event (GdkEventKey *event) {
     switch (event->keyval) {
       case GDK_KEY_x:
         {

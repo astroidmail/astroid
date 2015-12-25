@@ -52,7 +52,7 @@ namespace Astroid {
       virtual ModeHelpInfo * key_help () override;
 
     protected:
-      virtual bool on_key_press_event (GdkEventKey *) override;
+      virtual bool old_on_key_press_event (GdkEventKey *); 
 
   };
 }

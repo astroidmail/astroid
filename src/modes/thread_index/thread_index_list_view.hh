@@ -76,7 +76,7 @@ namespace Astroid {
       bool old (GdkEventKey *);
 
       ustring multi_key_help = "t: toggle, a: archive, *: flag, N: toggle unread, S: toggle spam, C-m: mute";
-      bool multi_key_handler (GdkEventKey *);
+      bool multi_key_handler (Key);
       void on_my_row_activated  (const Gtk::TreeModel::Path &, Gtk::TreeViewColumn *);
 
       virtual bool on_button_press_event (GdkEventButton *) override;

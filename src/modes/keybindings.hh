@@ -16,11 +16,11 @@ namespace Astroid {
     bool meta = false;
     guint key = 0; /* GDK_KEY_* */
 
-    ustring name;
-    ustring help;
+    ustring name = "";
+    ustring help = "";
 
-    bool hasaliases;
-    bool isalias; /* this is an alias for another master key */
+    bool hasaliases = false;
+    bool isalias = false; /* this is an alias for another master key */
     Key  * master_key;
 
     bool operator== ( const Key & other ) const;
@@ -46,6 +46,10 @@ namespace Astroid {
       void register_key (ustring spec, vector<Key>, ustring name, ustring help, function<bool (Key)>);
 
       bool handle (GdkEventKey *);
+
+      void clear ();
+
+      ustring short_help ();
 
     private:
       map<Key, function<bool (Key)>> keys;

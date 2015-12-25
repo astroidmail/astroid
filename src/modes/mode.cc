@@ -122,21 +122,22 @@ namespace Astroid {
     yes_no_waiting = false;
   }
 
-  void Mode::multi_key (ustring str,
-      function<bool(GdkEventKey *)> closure)
+  bool Mode::multi_key (Keybindings & kb, Key k)
   {
-    log << info << "mode: " << str << endl;
+    log << info << "mode: starting multi key." << endl;
 
     if (yes_no_waiting || multi_waiting) {
       log << warn << "mode: already waiting for answer to previous question, discarding this one." << endl;
-      return;
+      return true;
     }
 
     multi_waiting = true;
-    multi_closure = closure;
+    multi_keybindings = kb;
 
     rev_multi->set_reveal_child (true);
-    label_multi->set_text (str);
+    label_multi->set_text (kb.short_help ());
+
+    return true;
   }
 
   bool Mode::mode_key_handler (GdkEventKey * event) {
@@ -169,7 +170,7 @@ namespace Astroid {
 
         default:
           {
-            res = multi_closure (event);
+            res = multi_keybindings.handle (event);
           }
           break;
       }
@@ -179,7 +180,7 @@ namespace Astroid {
 
       if (res) {
         rev_multi->set_reveal_child (false);
-        multi_closure = NULL;
+        multi_keybindings.clear ();
       }
 
       return res;
@@ -189,6 +190,7 @@ namespace Astroid {
   }
 
   bool Mode::on_key_press_event (GdkEventKey *event) {
+    log << debug << "mode: keypress: " << get_label () << endl;
     if (mode_key_handler (event)) return true;
 
     return keys.handle (event);

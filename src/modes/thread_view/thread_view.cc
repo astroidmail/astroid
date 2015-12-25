@@ -2042,7 +2042,7 @@ namespace Astroid {
               )
           {
 
-            multi_key (multi_key_help, bind(&ThreadView::multi_key_handler, this, _1));
+            /* multi_key (multi_key_help, bind(&ThreadView::multi_key_handler, this, _1)); */
           }
 
           return true;
