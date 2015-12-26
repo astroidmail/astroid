@@ -12,10 +12,14 @@ using namespace std;
 
 namespace Astroid {
 
-  /* Keybidnings {{{ */
+  /* Keybindings {{{ */
   atomic<bool> Keybindings::user_bindings_loaded (false);
   const char * Keybindings::user_bindings_file = "keybindings";
   vector<Key>  Keybindings::user_bindings;
+  map<guint, ustring> keynames = {
+    { GDK_KEY_Down, "Down" },
+    { GDK_KEY_Up,   "Up" },
+  };
 
   void Keybindings::init () {
     if (!user_bindings_loaded) {
@@ -28,14 +32,16 @@ namespace Astroid {
 
         /* the bindings file has the format:
          *
+         * ```
          * thread_index.next_thread=j
          * thread_index.next_thread=Down
          * thread_index.label=C-j
          *
          * # thread_
+         * ```
          *
          * blank lines, or lines starting with # are ignored. a keybinding
-         * can be listed several times, in which case they will be listed as
+         * can be listed several times, in which case they will be interpreted as
          * aliases for the same target.
          */
 
@@ -89,6 +95,32 @@ namespace Astroid {
       first = false;
 
       h += k.str () + ": " + k.help;
+    }
+
+    return h;
+  }
+
+  ustring Keybindings::help () {
+    ustring h;
+
+    for (auto &km : keys) {
+      auto k = km.first;
+
+      if (k.isalias) continue;
+
+      auto aliases = find_if (keys.begin (), keys.end (),
+          [&](KeyBinding kb) {
+            return (kb.first.isalias && (*(kb.first.master_key) == k));
+          });
+
+      h += "<b>" + k.str ();
+
+      while (aliases != keys.end ()) {
+        h += "," + aliases->first.str ();
+        aliases++;
+      }
+
+      h += "</b>: " + k.help + "\n";
     }
 
     return h;
@@ -179,11 +211,11 @@ namespace Astroid {
       }
     }
 
-
     k.name = name;
     k.help = help;
 
     k.hasaliases = !aliases.empty ();
+
     keys.insert (KeyBinding (k, t));
 
     /* get pointer to key in map */
@@ -250,16 +282,22 @@ namespace Astroid {
     help = _h;
   }
 
-  ustring Key::str () {
+  ustring Key::str () const {
     ustring s;
     if (ctrl) s += "C-";
     if (meta) s += "M-";
 
     char k = gdk_keyval_to_unicode (key);
-    if (isgraph (k))
+    if (isgraph (k)) {
       s += k;
-    else
-      s += ustring::compose ("%1", key);
+    } else {
+      try {
+        ustring kk = keynames.at (key);
+        s += kk;
+      } catch (exception &ex) {
+        s += ustring::compose ("%1", key);
+      }
+    }
 
     return s;
   }
@@ -286,13 +324,7 @@ namespace Astroid {
      * C-M-K  : for Ctrl-Alt-Shift-K
      * K      : for Shift-k
      *
-     * other keys supported:
-     *
-     * ESC
-     * Up
-     * Down
-     * Backspace
-     * Delete
+     * TODO: other keys supported: check keynames map.
      *
      */
 

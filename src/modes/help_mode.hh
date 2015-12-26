@@ -20,7 +20,7 @@ namespace Astroid {
 
       /* show help */
       void show_help (Mode * m);
-      ustring generate_help (ModeHelpInfo *);
+      ustring generate_help (Gtk::Widget *);
 
       Gtk::ScrolledWindow scroll;
       Gtk::Label help_text;

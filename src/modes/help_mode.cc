@@ -1,5 +1,6 @@
 # include <iostream>
 
+# include "main_window.hh"
 # include "mode.hh"
 # include "help_mode.hh"
 # include "build_config.hh"
@@ -36,25 +37,32 @@ namespace Astroid {
     "<a href=\"https://github.com/gauteh/astroid\">https://github.com/gauteh/astroid</a> | <a href=\"mailto:astroidmail@googlegroups.com\">astroidmail@googlegroups.com</a>\n"
     "\n";
 
-    ustring help = header + generate_help (mhelp);
+    ustring help = header + generate_help (m);
 
     delete mhelp;
 
     help_text.set_markup (help);
   }
 
-  ustring HelpMode::generate_help (ModeHelpInfo * m) {
+  ustring HelpMode::generate_help (Gtk::Widget * w) {
     ustring h;
 
-    if (m->parent != NULL && !m->toplevel) {
-      h = generate_help (m->parent);
-      h += "---\n";
+    MainWindow * mw = dynamic_cast<MainWindow *> (w);
+    bool is_mw = (mw != NULL); // we stop here
+
+    Mode * m   = dynamic_cast<Mode *> (w);
+    bool is_mode = (m != NULL);
+
+
+    if (!is_mw) {
+      h = generate_help (w->get_parent ());
     }
 
-    h += "<i>" + m->title + "</i>\n";
+    if (is_mode) {
+      h += "---\n";
+      h += "<i>" + m->mode_help_title + "</i>";
 
-    for (auto &t : m->keys) {
-      h += "<b>" + t.first + "</b> " + t.second + ".\n";
+      h += m->keys.help ();
     }
 
     return h;

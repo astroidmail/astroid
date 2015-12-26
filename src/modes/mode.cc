@@ -200,7 +200,7 @@ namespace Astroid {
 
     m->parent   = MainWindow::key_help();
     m->toplevel = false;
-    m->title    = "All modes";
+    m->title    = mode_help_title;
 
     return m;
   }

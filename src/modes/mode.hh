@@ -34,6 +34,8 @@ namespace Astroid {
       bool invincible = false;
       void close ();
 
+      ustring mode_help_title = "Mode";
+
     private:
       ustring label;
 

@@ -27,7 +27,7 @@ namespace Astroid {
     bool operator== ( const Key & other ) const;
     bool operator<  ( const Key & other ) const;
 
-    ustring str ();
+    ustring str () const;
 
     static Key create (string spec);
   };
@@ -78,6 +78,7 @@ namespace Astroid {
       void clear ();
 
       ustring short_help ();
+      ustring help ();
 
     private:
       map<Key, function<bool (Key)>> keys;
@@ -86,6 +87,8 @@ namespace Astroid {
       static vector<Key>  user_bindings;
       static atomic<bool> user_bindings_loaded;
       static const char * user_bindings_file;
+
+      static map<guint, ustring> keynames;
   };
 }
 
