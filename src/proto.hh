@@ -45,7 +45,6 @@ namespace Astroid {
 
   /* modes */
   class Mode;
-  struct ModeHelpInfo;
   class PanedMode;
   class ThreadIndex;
   class ThreadIndexScrolled;

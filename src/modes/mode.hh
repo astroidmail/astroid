@@ -10,18 +10,6 @@
 using namespace std;
 
 namespace Astroid {
-  struct ModeHelpInfo {
-    public:
-      ModeHelpInfo ();
-      ~ModeHelpInfo ();
-
-      ustring title;
-      list<pair<ustring, ustring>> keys;
-
-      ModeHelpInfo * parent;
-      bool toplevel;
-  };
-
   class Mode : public Gtk::Box {
     public:
       Mode (MainWindow *);
@@ -71,7 +59,6 @@ namespace Astroid {
 
       virtual void grab_modal () = 0;
       virtual void release_modal () = 0;
-      virtual ModeHelpInfo * key_help ();
       virtual ustring get_label ();
   };
 }

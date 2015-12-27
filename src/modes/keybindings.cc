@@ -16,6 +16,7 @@ namespace Astroid {
   atomic<bool> Keybindings::user_bindings_loaded (false);
   const char * Keybindings::user_bindings_file = "keybindings";
   vector<Key>  Keybindings::user_bindings;
+
   map<guint, ustring> keynames = {
     { GDK_KEY_Down, "Down" },
     { GDK_KEY_Up,   "Up" },

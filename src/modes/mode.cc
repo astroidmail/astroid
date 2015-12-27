@@ -194,32 +194,5 @@ namespace Astroid {
 
     return keys.handle (event);
   }
-
-  ModeHelpInfo * Mode::key_help () {
-    ModeHelpInfo * m = new ModeHelpInfo ();
-
-    m->parent   = MainWindow::key_help();
-    m->toplevel = false;
-    m->title    = mode_help_title;
-
-    return m;
-  }
-
-  ustring Mode::get_label () {
-    return label;
-  }
-
-  ModeHelpInfo::ModeHelpInfo () {
-    toplevel = false;
-    parent   = NULL;
-  }
-
-  ModeHelpInfo::~ModeHelpInfo () {
-    if (parent != NULL) delete parent;
-  }
-
-  Mode::~Mode () {
-  }
-
 }
 
