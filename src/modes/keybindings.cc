@@ -18,8 +18,9 @@ namespace Astroid {
   vector<Key>  Keybindings::user_bindings;
 
   map<guint, ustring> keynames = {
-    { GDK_KEY_Down, "Down" },
-    { GDK_KEY_Up,   "Up" },
+    { GDK_KEY_Down,   "Down" },
+    { GDK_KEY_Up,     "Up" },
+    { GDK_KEY_Tab,    "Tab" },
   };
 
   void Keybindings::init () {
@@ -67,7 +68,7 @@ namespace Astroid {
             continue;
           }
 
-          Key k = Key::create (parts[1]);
+          Key k = Key (parts[1]);
           k.name = parts[0];
 
           user_bindings.push_back (k);
@@ -146,7 +147,7 @@ namespace Astroid {
                                   function<bool (Key)> t)
   {
 
-    register_key (Key::create (spec), aliases, name, help, t);
+    register_key (Key (spec), aliases, name, help, t);
 
   }
 
@@ -159,9 +160,9 @@ namespace Astroid {
 
     vector<Key> aliases;
     for (auto &s : spec_aliases)
-      aliases.push_back (Key::create (s));
+      aliases.push_back (Key (s));
 
-    register_key (Key::create (spec), aliases, name, help, t);
+    register_key (Key (spec), aliases, name, help, t);
 
   }
 
@@ -259,6 +260,93 @@ namespace Astroid {
   /* Key {{{ */
   Key::Key () { }
 
+  Key::Key (ustring spec, ustring _n, ustring _h) { // {{{
+    /* generate key from spec like:
+     * k      : for key 'k'
+     * C-k    : for Ctrl-k
+     * M-k    : for Alt-k
+     * C-M-K  : for Ctrl-Alt-Shift-K
+     * K      : for Shift-k
+     *
+     * TODO: other keys supported: check keynames map.
+     *
+     */
+
+    name = _n;
+    help = _h;
+
+    if (!((spec.size() == 1) || (spec.size () == 3) || (spec.size() == 5))) {
+      log << error << "key spec invalid: " << spec << endl;
+      throw keyspec_error ("invalid length of spec");
+    }
+
+    if (spec.size () == 1) {
+      ctrl = false;
+      meta = false;
+
+      key = gdk_unicode_to_keyval (spec[0]);
+    }
+
+    if (spec.size () >= 3) {
+      /* one modifier */
+      char M = spec[0];
+      if (!((M == 'C') || (M == 'M'))) {
+        log << error << "key spec invalid: " << spec << endl;
+        throw keyspec_error ("invalid modifier in key spec");
+      }
+
+      if (M == 'C') ctrl = true;
+      if (M == 'M') meta = true;
+
+      if (spec[1] != '-') {
+        log << error << "key spec invalid: " << spec << endl;
+        throw keyspec_error ("invalid delimiter");
+      }
+
+      key = gdk_unicode_to_keyval (spec[2]);
+    }
+
+    if (spec.size () == 5) {
+      key = 0;
+      char M = spec[2];
+
+      if (!((M == 'C') || (M == 'M'))) {
+        log << error << "key spec invalid: " << spec << endl;
+        throw keyspec_error ("invalid modifier");
+      }
+
+      if (M == 'C') {
+        if (ctrl) {
+          log << error << "key spec invalid: " << spec << endl;
+          throw keyspec_error ("modifier already specified");
+        }
+        ctrl = true;
+      }
+      if (M == 'M') {
+        if (meta) {
+          log << error << "key spec invalid: " << spec << endl;
+          throw keyspec_error ("modifier already specified");
+        }
+        meta = true;
+      }
+
+      if (spec[3] != '-') {
+        log << error << "key spec invalid: " << spec << endl;
+        throw keyspec_error ("invalid delimiter");
+      }
+
+      key = gdk_unicode_to_keyval (spec[4]);
+    }
+  } // }}}
+
+  Key::Key (guint k, ustring _n, ustring _h) {
+    ctrl = false;
+    meta = false;
+    key  = k;
+    name = _n;
+    help = _h;
+  }
+
   Key::Key (bool _c, bool _m, char k, ustring _n, ustring _h) {
     ctrl = _c;
     meta = _m;
@@ -316,87 +404,6 @@ namespace Astroid {
 
     return key < other.key;
   }
-
-  Key Key::create (string spec) { // {{{
-    /* generate key from spec like:
-     * k      : for key 'k'
-     * C-k    : for Ctrl-k
-     * M-k    : for Alt-k
-     * C-M-K  : for Ctrl-Alt-Shift-K
-     * K      : for Shift-k
-     *
-     * TODO: other keys supported: check keynames map.
-     *
-     */
-
-    Key k;
-
-    if (!((spec.size() == 1) || (spec.size () == 3) || (spec.size() == 5))) {
-      log << error << "key spec invalid: " << spec << endl;
-      throw keyspec_error ("invalid length of spec");
-    }
-
-    if (spec.size () == 1) {
-      k.ctrl = false;
-      k.meta = false;
-
-      k.key = gdk_unicode_to_keyval (spec[0]);
-    }
-
-    if (spec.size () >= 3) {
-      /* one modifier */
-      char M = spec[0];
-      if (!((M == 'C') || (M == 'M'))) {
-        log << error << "key spec invalid: " << spec << endl;
-        throw keyspec_error ("invalid modifier in key spec");
-      }
-
-      if (M == 'C') k.ctrl = true;
-      if (M == 'M') k.meta = true;
-
-      if (spec[1] != '-') {
-        log << error << "key spec invalid: " << spec << endl;
-        throw keyspec_error ("invalid delimiter");
-      }
-
-      k.key = gdk_unicode_to_keyval (spec[2]);
-    }
-
-    if (spec.size () == 5) {
-      k.key = 0;
-      char M = spec[2];
-
-      if (!((M == 'C') || (M == 'M'))) {
-        log << error << "key spec invalid: " << spec << endl;
-        throw keyspec_error ("invalid modifier");
-      }
-
-      if (M == 'C') {
-        if (k.ctrl) {
-          log << error << "key spec invalid: " << spec << endl;
-          throw keyspec_error ("modifier already specified");
-        }
-        k.ctrl = true;
-      }
-      if (M == 'M') {
-        if (k.meta) {
-          log << error << "key spec invalid: " << spec << endl;
-          throw keyspec_error ("modifier already specified");
-        }
-        k.meta = true;
-      }
-
-      if (spec[3] != '-') {
-        log << error << "key spec invalid: " << spec << endl;
-        throw keyspec_error ("invalid delimiter");
-      }
-
-      k.key = gdk_unicode_to_keyval (spec[4]);
-    }
-
-    return k;
-  } // }}}
-
 
   /************
    * exceptions

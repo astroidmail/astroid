@@ -41,6 +41,65 @@ namespace Astroid {
 
     /* select first */
     list_view->set_cursor (Gtk::TreePath("0"));
+
+    /* register keys {{{ */
+    keys.register_key ("x", "thread_index.close_pane", "Close thread view pane if open",
+        [&](Key k) {
+          if (current == 1) {
+            if (thread_view_loaded && thread_view_visible) {
+              /* hide thread view */
+              del_pane (1);
+              thread_view_visible = false;
+
+              return true;
+            }
+          }
+
+          return false;
+        });
+
+
+    keys.register_key (Key((guint) GDK_KEY_dollar), "thread_index.refresh", "Refresh query",
+        [&] (Key k) {
+          refresh (false, max(thread_load_step, current_thread), false);
+          return true;
+        });
+
+    keys.register_key (Key ((guint) GDK_KEY_Tab), "thread_index.pane_swap_focus",
+        "Swap focus to other pane if open",
+        [&] (Key k) {
+          if (packed == 2) {
+            release_modal ();
+            current = (current == 0 ? 1 : 0);
+            grab_modal ();
+          }
+          return true;
+        });
+
+
+    keys.register_key ("v", "thread_index.refine_query", "Refine query",
+        [&] (Key k) {
+          if (!invincible) {
+            main_window->enable_command (CommandBar::CommandMode::Search,
+                query_string,
+                [&](ustring new_query) {
+
+                  query_string = new_query;
+                  set_label (query_string);
+                  list_store->clear ();
+                  close_query ();
+                  setup_query ();
+                  load_more_threads ();
+
+                  /* select first */
+                  list_view->set_cursor (Gtk::TreePath("0"));
+
+                });
+          }
+
+          return true;
+        });
+    // }}}
   }
 
   void ThreadIndex::setup_query () {
@@ -230,83 +289,6 @@ namespace Astroid {
   }
 
   bool ThreadIndex::old_on_key_press_event (GdkEventKey *event) {
-    switch (event->keyval) {
-      case GDK_KEY_x:
-        {
-          if (current == 1) {
-            if (thread_view_loaded && thread_view_visible) {
-              /* hide thread view */
-              del_pane (1);
-              thread_view_visible = false;
-
-              return true;
-            }
-          }
-        }
-        break;
-
-      case GDK_KEY_dollar:
-        {
-          refresh (false, max(thread_load_step, current_thread), false);
-          return true;
-        }
-
-      /* toggle between panes */
-      case GDK_KEY_Tab:
-        if (packed == 2) {
-          release_modal ();
-          current = (current == 0 ? 1 : 0);
-          grab_modal ();
-        }
-        return true;
-
-      case GDK_KEY_v:
-        {
-          if (!invincible) {
-            main_window->enable_command (CommandBar::CommandMode::Search,
-                query_string,
-                [&](ustring new_query) {
-
-                  query_string = new_query;
-                  set_label (query_string);
-                  list_store->clear ();
-                  close_query ();
-                  setup_query ();
-                  load_more_threads ();
-
-                  /* select first */
-                  list_view->set_cursor (Gtk::TreePath("0"));
-
-                });
-          }
-
-          return true;
-        }
-
-    }
-
-    return false;
-  }
-
-  ModeHelpInfo * ThreadIndex::key_help () {
-    ModeHelpInfo * m = new ModeHelpInfo ();
-
-    m->parent   = PanedMode::key_help ();
-    m->toplevel = false;
-    m->title    = "Thread Index";
-
-    m->keys = {
-      { "x", "Close thread view pane if open" },
-      { "Tab", "Swap focus to other pane if open" },
-      { "$", "Refresh query" },
-      { "v", "Refine query" }
-    };
-
-    ModeHelpInfo * lm = list_view->key_help ();
-    lm->parent = m;
-
-    return lm;
-  }
 
   void ThreadIndex::open_thread (refptr<NotmuchThread> thread, bool new_tab, bool new_window) {
     log << debug << "ti: open thread: " << thread->thread_id << " (" << new_tab << ")" << endl;

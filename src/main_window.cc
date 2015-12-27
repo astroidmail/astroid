@@ -105,6 +105,154 @@ namespace Astroid {
     update_title_dispatcher.connect (
         sigc::mem_fun (this, &MainWindow::on_update_title));
 
+    /* register keys {{{ */
+    keys.register_key ("q", { Key ("Q") },
+        "main_window.quit_ask",
+        "Quit astroid",
+        [&] (Key k) {
+          if (k.key == GDK_KEY_q) {
+            if (astroid->app->get_windows().size () > 1) {
+              /* other windows, just close this one */
+              quit ();
+            } else {
+              Mode * m = (Mode *) notebook.get_children()[notebook.get_current_page ()];
+              m->ask_yes_no ("Really quit?", [&](bool yes){ if (yes) quit (); });
+            }
+          } else if (k.key == GDK_KEY_Q) {
+            quit ();
+          }
+
+          return true;
+        });
+
+    keys.register_key ("b", "main_window.next_page",
+        "Next page",
+        [&] (Key)
+        {
+          if (notebook.get_current_page () == (notebook.get_n_pages () - 1))
+            set_active (0);
+          else
+            set_active (notebook.get_current_page() + 1);
+
+          return true;
+        });
+
+    keys.register_key ("B", "main_window.previous_page",
+        "Previous page",
+        [&] (Key) {
+          if (notebook.get_current_page() == 0)
+            set_active (notebook.get_n_pages()-1);
+          else
+            set_active (notebook.get_current_page() - 1);
+
+          return true;
+        });
+
+    keys.register_key (Key(false, true, (guint) GDK_KEY_1),
+        { Key (false, true, (guint) GDK_KEY_2),
+          Key (false, true, (guint) GDK_KEY_3),
+          Key (false, true, (guint) GDK_KEY_4),
+          Key (false, true, (guint) GDK_KEY_5),
+          Key (false, true, (guint) GDK_KEY_6),
+          Key (false, true, (guint) GDK_KEY_7),
+          Key (false, true, (guint) GDK_KEY_8),
+          Key (false, true, (guint) GDK_KEY_9),
+          Key (false, true, (guint) GDK_KEY_0) },
+        "main_window.jump_to_page",
+        "Jump to page",
+        [&] (Key k) {
+          int pg = k.key - GDK_KEY_0;
+
+          if (pg == 0) {
+            pg = notebook.get_n_pages () - 1;
+          } else {
+            pg--;
+          }
+
+          log << debug << "mw: swapping to page: " << pg << endl;
+
+          if (notebook.get_current_page () != pg) {
+            set_active (pg);
+          }
+
+
+          return true;
+        });
+
+    keys.register_key ("x", "main_window.close_page",
+        "Close mode (or window if other windows are open)",
+        [&] (Key) {
+          close_page ();
+          return true;
+        });
+
+    keys.register_key ("F", "main_window.search",
+        "Search",
+        [&] (Key) {
+          enable_command (CommandBar::CommandMode::Search, "", NULL);
+          return true;
+        });
+
+    keys.register_key ("L", "main_window.search_tag",
+        "Search for tag:",
+        [&] (Key) {
+          enable_command (CommandBar::CommandMode::Search, "tag:", NULL);
+          return true;
+        });
+
+
+    keys.register_key (Key (GDK_KEY_question), "main_window.show_help",
+        "Show help",
+        [&] (Key) {
+          HelpMode * h = new HelpMode (this);
+          h->show_help ((Mode*) notebook.get_nth_page (notebook.get_current_page()));
+          add_mode (h);
+          return true;
+        });
+
+    keys.register_key ("z", "main_window.show_log",
+        "Show log window",
+        [&] (Key) {
+          add_mode (new LogView (this));
+          return true;
+        });
+
+    keys.register_key ("u", "main_window.undo",
+        "Undo last action",
+        [&] (Key) {
+          actions.undo ();
+          return true;
+        });
+
+    keys.register_key ("m", "main_window.new_mail",
+        "Compose new mail",
+        [&] (Key) {
+          add_mode (new EditMessage (this));
+          return true;
+        });
+
+    keys.register_key ("P", "main_window.poll",
+        "Start manual poll",
+        [&] (Key) {
+          astroid->poll->poll ();
+          return true;
+        });
+
+    keys.register_key ("C-p", "main_window.toggle_auto_poll",
+        "Toggle auto poll",
+        [&] (Key) {
+          astroid->poll->toggle_auto_poll ();
+          return true;
+        });
+
+    keys.register_key ("O", "main_window.open_new_window",
+        "Open new main window",
+        [&] (Key) {
+          astroid->open_new_window ();
+          return true;
+        });
+
+    // }}}
   }
 
   void MainWindow::set_title (ustring t) {
@@ -162,168 +310,7 @@ namespace Astroid {
       return true;
     }
 
-    switch (event->keyval) {
-      case GDK_KEY_q:
-        {
-          if (astroid->app->get_windows().size () > 1) {
-            /* other windows, just close this one */
-            quit ();
-          } else {
-            Mode * m = (Mode *) notebook.get_children()[notebook.get_current_page ()];
-            m->ask_yes_no ("Really quit?", [&](bool yes){ if (yes) quit (); });
-          }
-        }
-        return true;
-
-      case GDK_KEY_Q:
-        quit ();
-        return true;
-
-      /* page through notebook */
-      case GDK_KEY_b:
-        if (notebook.get_current_page () == (notebook.get_n_pages () - 1))
-          set_active (0);
-        else
-          set_active (notebook.get_current_page() + 1);
-        return true;
-
-      case GDK_KEY_B:
-        if (notebook.get_current_page() == 0)
-          set_active (notebook.get_n_pages()-1);
-        else
-          set_active (notebook.get_current_page() - 1);
-
-        return true;
-
-      case GDK_KEY_1:
-      case GDK_KEY_2:
-      case GDK_KEY_3:
-      case GDK_KEY_4:
-      case GDK_KEY_5:
-      case GDK_KEY_6:
-      case GDK_KEY_7:
-      case GDK_KEY_8:
-      case GDK_KEY_9:
-      case GDK_KEY_0:
-        {
-          if (event->state & GDK_MOD1_MASK) {
-            int pg = event->keyval - GDK_KEY_0;
-
-            if (pg == 0) {
-              pg = notebook.get_n_pages () - 1;
-            } else {
-              pg--;
-            }
-
-            log << debug << "mw: swapping to page: " << pg << endl;
-
-            if (notebook.get_current_page () != pg) {
-              set_active (pg);
-            }
-
-            return true;
-          }
-        }
-        break;
-
-
-      /* close page */
-      case GDK_KEY_x:
-        close_page ();
-        return true;
-
-      /* search */
-      case GDK_KEY_F:
-        enable_command (CommandBar::CommandMode::Search, "", NULL);
-        return true;
-
-      /* short cut for searching for label */
-      case GDK_KEY_L:
-        enable_command (CommandBar::CommandMode::Search, "tag:", NULL);
-        return true;
-
-      /* command */
-      /*
-      case GDK_KEY_colon:
-        enable_command (CommandBar::CommandMode::Generic, "", NULL);
-        return true;
-      */
-
-      /* help */
-      case GDK_KEY_question:
-        {
-          HelpMode * h = new HelpMode (this);
-          h->show_help ((Mode*) notebook.get_nth_page (notebook.get_current_page()));
-          add_mode (h);
-          return true;
-        }
-
-      /* log window */
-      case GDK_KEY_z:
-        add_mode (new LogView (this));
-        return true;
-
-      /* undo */
-      case GDK_KEY_u:
-        {
-          actions.undo ();
-          return true;
-        }
-
-      case GDK_KEY_m:
-        {
-          add_mode (new EditMessage (this));
-          return true;
-        }
-
-      case GDK_KEY_P:
-        {
-          astroid->poll->poll ();
-          return true;
-        }
-
-      case GDK_KEY_p:
-        {
-          if (event->state & GDK_CONTROL_MASK) {
-            astroid->poll->toggle_auto_poll ();
-            return true;
-          }
-          return false;
-        }
-
-      case GDK_KEY_O:
-        {
-          astroid->open_new_window ();
-          return true;
-        }
-
-    }
-    return false;
-  }
-
-  ModeHelpInfo * MainWindow::key_help () {
-    ModeHelpInfo * m = new ModeHelpInfo ();
-    m->toplevel = true;
-    m->title = "Main window";
-
-    m->keys = {
-      { "m", "Compose new mail" },
-      { "P", "Call poll script manually" },
-      { "C-p", "Toggle auto poll" },
-      { "F", "Search" },
-      { "L", "Search for tag:" },
-      { "u", "Undo last action" },
-      { "z", "Show log window" },
-      { "?", "Show help" },
-      { "O", "Open new main window" },
-      /* { ":", "Command" }, */
-      { "b,B", "Page through modes" },
-      { "A-#", "Page to # page" },
-      { "x", "Close mode (or window if other windows are open)" },
-      { "q,Q", "Quit astroid" },
-    };
-
-    return m;
+    return keys.handle (event);
   }
 
   void MainWindow::add_mode (Mode * m) {

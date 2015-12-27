@@ -9,6 +9,7 @@
 # include "proto.hh"
 # include "command_bar.hh"
 # include "modes/mode.hh"
+# include "modes/keybindings.hh"
 # include "actions/action_manager.hh"
 
 using namespace std;
@@ -67,9 +68,9 @@ namespace Astroid {
 
       void quit ();
 
-      static ModeHelpInfo * key_help ();
-
       Glib::Dispatcher update_title_dispatcher;
+
+      Keybindings keys;
 
     private:
       bool on_my_focus_in_event (GdkEventFocus *);
