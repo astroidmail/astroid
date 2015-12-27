@@ -41,6 +41,129 @@ namespace Astroid {
     /* reload message */
     prepare_message ();
     read_edited_message ();
+
+    /* register keys {{{ */
+    keys.register_key (Key (GDK_KEY_Return), { Key (GDK_KEY_KP_Enter) },
+        "edit_message.edit",
+        "Edit message in editor",
+        [&] (Key) {
+          if (!message_sent && !sending_in_progress.load()) {
+            editor_toggle (true);
+            activate_field (Editor);
+          }
+          return true;
+        });
+
+    keys.register_key ("y", "edit_message.send",
+        "Send message",
+        [&] (Key) {
+          if (!message_sent && !sending_in_progress.load()) {
+            ask_yes_no ("Really send message?", [&](bool yes){ if (yes) send_message (); });
+          }
+          return true;
+        });
+
+    keys.register_key ("V", "edit_message.view_raw",
+        "View raw message",
+        [&] (Key) {
+          /* view raw source of to be sent message */
+          ComposeMessage * c = make_message ();
+          ustring tmpf = c->write_tmp ();
+
+          main_window->add_mode (new RawMessage (main_window, tmpf.c_str()));
+
+          delete c;
+
+          unlink (tmpf.c_str());
+
+          return true;
+        });
+
+    keys.register_key ("f", "edit_message.cycle_from",
+        "Cycle through From selector",
+        [&] (Key) {
+          /* cycle through from combo box */
+          if (!message_sent && !sending_in_progress.load()) {
+            int i = from_combo->get_active_row_number ();
+            if (i >= (static_cast<int>(from_store->children().size())-1)) i = 0;
+            else i++;
+            from_combo->set_active (i);
+          }
+
+          return true;
+        });
+
+    keys.register_key ("a", "edit_message.attach",
+        "Attach file",
+        [&] (Key) {
+          attach_file ();
+          return true;
+        });
+
+    keys.register_key ("x", "edit_message.close",
+        "Close",
+        [&] (Key) {
+          if (sending_in_progress.load ()) {
+            /* block closing the window while sending */
+            return true;
+          } else if (!message_sent) {
+            ask_yes_no ("Do you want to close this message? (any changes will be lost)", [&](bool yes){ if (yes) { main_window->close_page(); } });
+            return true;
+          } else {
+            // message has been sent successfully, no need to complain.
+            return false;
+          }
+        });
+
+    keys.register_key ("s", "edit_message.save_draft",
+        "Save draft",
+        [&] (Key) {
+          if (sending_in_progress.load ()) {
+            /* block closing the window while sending */
+            log << error << "em: message is being sent, it cannot be saved as draft anymore." << endl;
+          } else {
+
+            bool r;
+
+            r = save_draft ();
+
+            if (!r) {
+              on_tv_ready ();
+            } else {
+              close ();
+            }
+          }
+          return true;
+        });
+
+    keys.register_key ("D", "edit_message.delete_draft",
+        "Delete draft",
+        [&] (Key) {
+          if (!draft_msg) {
+            log << debug << "em: not a draft." << endl;
+            return true;
+          }
+
+          if (sending_in_progress.load ()) {
+            /* block closing the window while sending */
+            log << error << "em: message is being sent, cannot delete draft now. it will be deleted upon successfully sent message." << endl;
+          } else if (!message_sent) {
+            ask_yes_no ("Do you want to delete this draft and close it? (any changes will be lost)",
+                [&](bool yes) {
+                  if (yes) {
+                    delete_draft ();
+                    close ();
+                  }
+                });
+          } else {
+            // message has been sent successfully, no need to complain.
+            close ();
+          }
+          return true;
+        });
+
+
+    // }}}
   }
 
   EditMessage::EditMessage (MainWindow * mw, refptr<Message> msg) :
@@ -585,168 +708,11 @@ namespace Astroid {
 
   /* }}} */
 
-  /* keybindings {{{ */
-  bool EditMessage::on_key_press_event (GdkEventKey * event) {
-    log << debug << "em: got key press" << endl;
-
-    if (mode_key_handler (event)) return true;
-
-    switch (event->keyval) {
-      case GDK_KEY_KP_Enter:
-      case GDK_KEY_Return:
-        {
-          if (!message_sent && !sending_in_progress.load()) {
-            editor_toggle (true);
-            activate_field (Editor);
-          }
-          return true;
-        }
-
-      case GDK_KEY_y:
-        {
-          if (!message_sent && !sending_in_progress.load()) {
-            ask_yes_no ("Really send message?", [&](bool yes){ if (yes) send_message (); });
-          }
-          return true;
-        }
-
-      case GDK_KEY_V:
-        {
-          /* view raw source of to be sent message */
-          ComposeMessage * c = make_message ();
-          ustring tmpf = c->write_tmp ();
-
-          main_window->add_mode (new RawMessage (main_window, tmpf.c_str()));
-
-          delete c;
-
-          unlink (tmpf.c_str());
-
-          return true;
-        }
-
-      case GDK_KEY_f:
-        {
-          /* cycle through from combo box */
-          if (!message_sent && !sending_in_progress.load()) {
-            int i = from_combo->get_active_row_number ();
-            if (i >= (static_cast<int>(from_store->children().size())-1)) i = 0;
-            else i++;
-            from_combo->set_active (i);
-          }
-
-          return true;
-        }
-      case GDK_KEY_F:
-        {
-          /* bring up from combo box */
-          if (!message_sent && !sending_in_progress.load()) {
-            from_combo->popup ();
-          }
-
-          return true;
-        }
-
-      case GDK_KEY_a:
-        {
-          /* attach file */
-          attach_file ();
-          return true;
-        }
-
-      case GDK_KEY_x:
-        {
-          if (sending_in_progress.load ()) {
-            /* block closing the window while sending */
-            return true;
-          } else if (!message_sent) {
-            ask_yes_no ("Do you want to close this message? (any changes will be lost)", [&](bool yes){ if (yes) { main_window->close_page(); } });
-            return true;
-          } else {
-            // message has been sent successfully, no need to complain.
-            return false;
-          }
-        }
-
-      case GDK_KEY_s:
-        {
-          if (sending_in_progress.load ()) {
-            /* block closing the window while sending */
-            log << error << "em: message is being sent, it cannot be saved as draft anymore." << endl;
-          } else {
-
-            bool r;
-
-            r = save_draft ();
-
-            if (!r) {
-              on_tv_ready ();
-            } else {
-              close ();
-            }
-          }
-          return true;
-        }
-
-      case GDK_KEY_D:
-        {
-          if (!draft_msg) {
-            log << debug << "em: not a draft." << endl;
-            return true;
-          }
-
-          if (sending_in_progress.load ()) {
-            /* block closing the window while sending */
-            log << error << "em: message is being sent, cannot delete draft now. it will be deleted upon successfully sent message." << endl;
-          } else if (!message_sent) {
-            ask_yes_no ("Do you want to delete this draft and close it? (any changes will be lost)",
-                [&](bool yes) {
-                  if (yes) {
-                    delete_draft ();
-                    close ();
-                  }
-                });
-          } else {
-            // message has been sent successfully, no need to complain.
-            close ();
-          }
-          return true;
-
-        }
-    }
-
-    return false;
-  }
-
-  ModeHelpInfo * EditMessage::key_help () {
-    ModeHelpInfo * m = new ModeHelpInfo ();
-
-    m->parent   = Mode::key_help ();
-    m->toplevel = false;
-    m->title    = "Edit message";
-
-    m->keys = {
-      { "Return", "Edit message in editor" },
-      { "y", "Send message" },
-      { "a", "Attach file" },
-      { "d", "Remove attached file" },
-      { "f", "Cycle through From selector" },
-      { "F", "Open From selecetor" },
-      { "s", "Save draft" },
-      { "D", "Delete draft" }
-    };
-
-    ModeHelpInfo * tv = thread_view->key_help ();
-    tv->parent = m;
-
-    return tv;
-  }
-
-  void EditMessage::on_element_action (int id, char action) {
+  void EditMessage::on_element_action (int id, ThreadView::ElementAction action) {
 
     if (sending_in_progress.load ()) return;
 
-    if (action == 'd') {
+    if (action == ThreadView::ElementAction::EDelete) {
       /* delete attachment */
       log << info << "em: remove attachment: " << id << endl;
 

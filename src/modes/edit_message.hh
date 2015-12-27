@@ -16,6 +16,7 @@
 # include "mode.hh"
 # include "compose_message.hh"
 # include "account_manager.hh"
+# include "thread_view/thread_view.hh"
 
 using namespace std;
 using namespace boost::filesystem;
@@ -166,12 +167,10 @@ namespace Astroid {
       bool message_sent = false;
       void lock_message_after_send ();
 
-      virtual ModeHelpInfo * key_help () override;
-
     private:
       void on_from_combo_changed ();
       //bool on_from_combo_key_press (GdkEventKey *);
-      void on_element_action (int id, char action);
+      void on_element_action (int id, ThreadView::ElementAction action);
 
     public:
       void grab_modal () override;
@@ -183,9 +182,6 @@ namespace Astroid {
 
     protected:
       type_message_sent_attempt m_message_sent_attempt;
-
-    protected:
-      virtual bool on_key_press_event (GdkEventKey *) override;
   };
 }
 
