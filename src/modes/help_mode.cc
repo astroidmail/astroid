@@ -18,6 +18,76 @@ namespace Astroid {
     pack_start (scroll, true, true, 5);
 
     scroll.show_all ();
+
+    /* register keys */
+    keys.register_key ("j",
+        { Key("C-j"),
+          Key (true, false, (guint) GDK_KEY_Down),
+          Key(GDK_KEY_Down) },
+        "help.down",
+        "Scroll down",
+        [&] (Key k) {
+          if (k.ctrl) {
+            auto adj = scroll.get_vadjustment ();
+            adj->set_value (adj->get_value() + adj->get_page_increment ());
+          } else {
+            auto adj = scroll.get_vadjustment ();
+            adj->set_value (adj->get_value() + adj->get_step_increment ());
+          }
+
+          return true;
+        });
+
+    keys.register_key ("k",
+        { Key ("C-k"),
+          Key (true, false, (guint) GDK_KEY_Up),
+          Key (GDK_KEY_Up) },
+        "help.up",
+        "Scroll up",
+        [&] (Key k) {
+          if (k.ctrl) {
+            auto adj = scroll.get_vadjustment ();
+            adj->set_value (adj->get_value() - adj->get_page_increment ());
+          } else {
+            auto adj = scroll.get_vadjustment ();
+            adj->set_value (adj->get_value() - adj->get_step_increment ());
+          }
+
+          return true;
+        });
+
+    keys.register_key ("K", { Key (GDK_KEY_Page_Up) }, "help.page_up",
+        "Page up",
+        [&] (Key k) {
+          auto adj = scroll.get_vadjustment ();
+          adj->set_value (adj->get_value() - adj->get_page_increment ());
+          return true;
+        });
+
+    keys.register_key ("J", { Key (GDK_KEY_Page_Down) }, "help.page_down",
+        "Page down",
+        [&] (Key k) {
+          auto adj = scroll.get_vadjustment ();
+          adj->set_value (adj->get_value() + adj->get_page_increment ());
+          return true;
+        });
+
+    keys.register_key ("1", { Key (GDK_KEY_Home) }, "help.page_top",
+        "Scroll to top",
+        [&] (Key k) {
+          auto adj = scroll.get_vadjustment ();
+          adj->set_value (adj->get_lower ());
+          return true;
+        });
+
+    keys.register_key ("0", { Key (GDK_KEY_End) }, "help.page_end",
+        "Scroll to end",
+        [&] (Key k) {
+          auto adj = scroll.get_vadjustment ();
+          adj->set_value (adj->get_upper ());
+          return true;
+        });
+
   }
 
   HelpMode::HelpMode (MainWindow *mw, Mode * m) : HelpMode (mw) {
@@ -66,91 +136,6 @@ namespace Astroid {
     }
 
     return h;
-  }
-
-  bool HelpMode::on_key_press_event (GdkEventKey *event) {
-    switch (event->keyval) {
-      case GDK_KEY_j:
-      case GDK_KEY_Down:
-        {
-          if (event->state & GDK_CONTROL_MASK) {
-            auto adj = scroll.get_vadjustment ();
-            adj->set_value (adj->get_value() + adj->get_page_increment ());
-          } else {
-            auto adj = scroll.get_vadjustment ();
-            adj->set_value (adj->get_value() + adj->get_step_increment ());
-          }
-        }
-        return true;
-
-      case GDK_KEY_k:
-      case GDK_KEY_Up:
-        {
-          if (event->state & GDK_CONTROL_MASK) {
-            auto adj = scroll.get_vadjustment ();
-            adj->set_value (adj->get_value() - adj->get_page_increment ());
-          } else {
-            auto adj = scroll.get_vadjustment ();
-            adj->set_value (adj->get_value() - adj->get_step_increment ());
-          }
-        }
-        return true;
-
-      case GDK_KEY_K:
-      case GDK_KEY_Page_Up:
-        {
-          auto adj = scroll.get_vadjustment ();
-          adj->set_value (adj->get_value() - adj->get_page_increment ());
-        }
-        return true;
-
-      case GDK_KEY_J:
-      case GDK_KEY_Page_Down:
-        {
-          auto adj = scroll.get_vadjustment ();
-          adj->set_value (adj->get_value() + adj->get_page_increment ());
-        }
-        return true;
-
-      case GDK_KEY_1:
-      case GDK_KEY_Home:
-        {
-          if (!(event->state & GDK_MOD1_MASK)) {
-            auto adj = scroll.get_vadjustment ();
-            adj->set_value (adj->get_lower ());
-            return true;
-          }
-        }
-        break;
-
-      case GDK_KEY_0:
-      case GDK_KEY_End:
-        {
-          if (!(event->state & GDK_MOD1_MASK)) {
-            auto adj = scroll.get_vadjustment ();
-            adj->set_value (adj->get_upper ());
-            return true;
-          }
-        }
-        break;
-    }
-
-    return false;
-  }
-
-  ModeHelpInfo * HelpMode::key_help () {
-    ModeHelpInfo * m = new ModeHelpInfo ();
-
-    m->parent   = Mode::key_help ();
-    m->toplevel = false;
-    m->title    = "Help";
-
-    m->keys = {
-      { "k,j,Up,Down", "Scroll up and down" },
-      { "C+direction,J,K,Page+direction", "Page up and down" },
-    };
-
-    return m;
   }
 
   void HelpMode::grab_modal () {
