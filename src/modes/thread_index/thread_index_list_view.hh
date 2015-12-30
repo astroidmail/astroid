@@ -53,7 +53,6 @@ namespace Astroid {
       ~ThreadIndexListView ();
 
       ptree config;
-      bool  open_paned_default = true;
 
       ThreadIndex * thread_index;
       MainWindow  * main_window;
@@ -67,15 +66,22 @@ namespace Astroid {
       ustring get_current_thread_id ();
       refptr<NotmuchThread> get_current_thread ();
 
-      virtual ModeHelpInfo * key_help ();
       void update_bg_image ();
 
     protected:
       void register_keys ();
 
-      bool old (GdkEventKey *);
+      typedef enum {
+        MUnread = 0,
+        MFlag,
+        MArchive,
+        MSpam,
+        MMute,
+        MToggle,
+      } multi_key_action;
 
-      bool multi_key_handler (Key);
+      bool multi_key_handler (multi_key_action, Key);
+
       void on_my_row_activated  (const Gtk::TreeModel::Path &, Gtk::TreeViewColumn *);
 
       virtual bool on_button_press_event (GdkEventButton *) override;

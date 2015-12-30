@@ -48,9 +48,5 @@ namespace Astroid {
       Db * db = NULL;
       notmuch_query_t   * query;
       notmuch_threads_t * threads;
-
-    protected:
-      virtual bool old_on_key_press_event (GdkEventKey *); 
-
   };
 }

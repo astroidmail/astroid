@@ -43,6 +43,8 @@ namespace Astroid {
     list_view->set_cursor (Gtk::TreePath("0"));
 
     /* register keys {{{ */
+    keys.title = "ThreadIndex mode";
+
     keys.register_key ("x", "thread_index.close_pane", "Close thread view pane if open",
         [&](Key k) {
           if (current == 1) {
@@ -287,8 +289,6 @@ namespace Astroid {
     list_view->update_bg_image ();
     log << info << "ti: loaded " << i << " threads in " << ((clock()-t0) * 1000.0 / CLOCKS_PER_SEC) << " ms." << endl;
   }
-
-  bool ThreadIndex::old_on_key_press_event (GdkEventKey *event) {
 
   void ThreadIndex::open_thread (refptr<NotmuchThread> thread, bool new_tab, bool new_window) {
     log << debug << "ti: open thread: " << thread->thread_id << " (" << new_tab << ")" << endl;

@@ -90,7 +90,6 @@ namespace Astroid {
     list_store = store;
 
     config = astroid->config->config.get_child ("thread_index");
-    open_paned_default = config.get<bool>("open_default_paned");
     page_jump_rows     = config.get<int>("page_jump_rows");
 
     set_model (list_store);
@@ -265,14 +264,9 @@ namespace Astroid {
 
   void ThreadIndexListView::register_keys () {
 
-    /*
-    thread_index->keys.register_key (Key(true, true, 'k'),
-        bind(&ThreadIndexListView::generic_key, this, _1));
-        */
+    Keybindings * keys = &(thread_index->keys);
 
-    Keybindings * ky = &(thread_index->keys);
-
-    ky->register_key ("j", { Key(false, false, (guint) GDK_KEY_Down) },
+    keys->register_key ("j", { Key(false, false, (guint) GDK_KEY_Down) },
         "thread_index.next_thread", "Next thread",
         [&](Key) {
           if (list_store->children().size() < 2)
@@ -300,7 +294,7 @@ namespace Astroid {
           return true;
         });
 
-    ky->register_key ("k", { Key(false, false, (guint) GDK_KEY_Up) },
+    keys->register_key ("k", { Key(false, false, (guint) GDK_KEY_Up) },
         "thread_index.prev_thread", "Previous thread",
         [&](Key) {
             Gtk::TreePath path;
@@ -319,22 +313,22 @@ namespace Astroid {
     multi_keys.register_key ("N",
                              "thread_index.multi.mark_unread",
                              "Mark unread",
-                             bind (&ThreadIndexListView::multi_key_handler, this, _1));
+                             bind (&ThreadIndexListView::multi_key_handler, this, MUnread, _1));
 
     multi_keys.register_key ("*",
                              "thread_index.multi.flag",
                              "Flag",
-                             bind (&ThreadIndexListView::multi_key_handler, this, _1));
+                             bind (&ThreadIndexListView::multi_key_handler, this, MFlag, _1));
 
     multi_keys.register_key ("a",
                              "thread_index.multi.archive",
                              "Archive",
-                             bind (&ThreadIndexListView::multi_key_handler, this, _1));
+                             bind (&ThreadIndexListView::multi_key_handler, this, MArchive, _1));
 
     multi_keys.register_key ("S",
                              "thread_index.multi.mark_spam",
                              "Mark spam",
-                             bind (&ThreadIndexListView::multi_key_handler, this, _1));
+                             bind (&ThreadIndexListView::multi_key_handler, this, MSpam, _1));
 
     /*
     multi_keys.register_key ("l",
@@ -347,33 +341,47 @@ namespace Astroid {
     multi_keys.register_key ("C-m",
                              "thread_index.multi.mute",
                              "Mute",
-                             bind (&ThreadIndexListView::multi_key_handler, this, _1));
+                             bind (&ThreadIndexListView::multi_key_handler, this, MMute, _1));
 
+    multi_keys.register_key ("t",
+                             "thread_index.multi.toggle",
+                             "Toggle marked",
+                             bind (&ThreadIndexListView::multi_key_handler, this, MToggle, _1));
 
-    ky->register_key ("+",
-                      "therad_index.multi",
-                      "Apply action to marked threads",
-                      bind (&ThreadIndex::multi_key, thread_index, multi_keys, _1));
+    keys->register_key ("+",
+          "therad_index.multi",
+          "Apply action to marked threads",
+          [&] (Key k) {
 
-  }
+            /* check if anything is marked */
+            Gtk::TreePath path;
+            Gtk::TreeIter fwditer;
 
-  bool ThreadIndexListView::old (GdkEventKey *event) {
+            fwditer = list_store->get_iter ("0");
+            Gtk::ListStore::Row row;
 
-    switch (event->keyval) {
-      case GDK_KEY_j:
-      case GDK_KEY_Down:
-        {
-        }
-        break;
+            bool found = false;
 
-      case GDK_KEY_k:
-      case GDK_KEY_Up:
-        {
-        }
-        break;
+            while (fwditer) {
+              row = *fwditer;
+              if (row[list_store->columns.marked]) {
+                found = true;
+                break;
+              }
 
-      case GDK_KEY_J:
-        {
+              fwditer++;
+            }
+
+            if (found) {
+              thread_index->multi_key (multi_keys, k);
+            }
+
+            return true;
+          });
+
+    keys->register_key ("J", "thread_index.scroll_down",
+        "Scroll down",
+        [&] (Key) {
           if (list_store->children().size() >= 2) {
 
             Gtk::TreePath path;
@@ -408,10 +416,11 @@ namespace Astroid {
           }
 
           return true;
-        }
+        });
 
-      case GDK_KEY_K:
-        {
+    keys->register_key ("K", "thread_index.scroll_up",
+        "Scroll up",
+        [&] (Key) {
           Gtk::TreePath path;
           Gtk::TreeViewColumn *c;
           get_cursor (path, c);
@@ -429,60 +438,72 @@ namespace Astroid {
           }
 
           return true;
-        }
+        });
 
-      case GDK_KEY_Home:
-      case GDK_KEY_1:
-        {
+    keys->register_key ("1", { Key(GDK_KEY_Home) }, "thread_index.scroll_home",
+        "Scroll to first line",
+        [&] (Key) {
           /* select first */
-          if (!(event->state & GDK_MOD1_MASK)) {
-            set_cursor (Gtk::TreePath("0"));
-            return true;
+          set_cursor (Gtk::TreePath("0"));
+          return true;
+        });
+
+    keys->register_key ("0", { Key (GDK_KEY_End) }, "thread_index.scroll_end",
+        "Scroll to last line",
+        [&] (Key) {
+          if (list_store->children().size() >= 1) {
+            auto it = list_store->children().end ();
+            auto p  = list_store->get_path (--it);
+            if (p) set_cursor (p);
           }
-        }
-        break;
 
-      case GDK_KEY_End:
-      case GDK_KEY_0:
-        {
-          /* select last */
-          if (!(event->state & GDK_MOD1_MASK)) {
-            if (list_store->children().size() >= 1) {
-              auto it = list_store->children().end ();
-              auto p  = list_store->get_path (--it);
-              if (p) set_cursor (p);
-            }
+          return true;
+        });
 
-            return true;
-          }
-        }
-        break;
-
-      case GDK_KEY_KP_Enter:
-      case GDK_KEY_Return:
-        {
+    keys->register_key (Key (GDK_KEY_Return), { Key (GDK_KEY_KP_Enter) },
+        "thread_index.open_thread",
+        "Open thread",
+        [&] (Key) {
+          /* open message in split pane (if so configured) */
           auto thread = get_current_thread ();
 
-          if (thread) {
-            log << info << "ti_list: loading: " << thread->thread_id << endl;
+          if (thread)
+            thread_index->open_thread (thread, true);
 
-            if (event->state & GDK_SHIFT_MASK) {
-              /* open message in new tab (if so configured) */
-              thread_index->open_thread (thread, open_paned_default);
-            } else if (event->state & GDK_CONTROL_MASK) {
-              /* open message in new window */
-              thread_index->open_thread (thread, !open_paned_default, true);
-            } else {
-              /* open message in split pane (if so configured) */
-              thread_index->open_thread (thread, !open_paned_default);
-            }
-          }
           return true;
-        }
+        });
 
-      /* reply */
-      case GDK_KEY_r:
-        {
+    keys->register_key (Key (false, true, (guint) GDK_KEY_Return),
+        { Key (false, true, (guint) GDK_KEY_KP_Enter) },
+        "thread_index.open_paned",
+        "Open thread in pane",
+        [&] (Key) {
+          /* open message in split pane (if so configured) */
+          auto thread = get_current_thread ();
+
+          if (thread)
+            thread_index->open_thread (thread, false);
+
+          return true;
+        });
+
+    keys->register_key (Key (true, false, (guint) GDK_KEY_Return),
+        { Key (true, false, (guint) GDK_KEY_KP_Enter) },
+        "thread_index.open_new_window",
+        "Open thread in new window",
+        [&] (Key) {
+          /* open message in split pane (if so configured) */
+          auto thread = get_current_thread ();
+
+          if (thread)
+            thread_index->open_thread (thread, false, true);
+
+          return true;
+        });
+
+    keys->register_key ("r", "thread_index.reply",
+        "Reply to last message in thread",
+        [&] (Key) {
           auto thread = get_current_thread ();
           if (thread) {
 
@@ -496,11 +517,11 @@ namespace Astroid {
 
           }
           return true;
-        }
+        });
 
-      /* reply */
-      case GDK_KEY_G:
-        {
+    keys->register_key ("G", "thread_index.reply_all",
+        "Reply all to last message in thread",
+        [&] (Key) {
           auto thread = get_current_thread ();
           if (thread) {
 
@@ -514,11 +535,11 @@ namespace Astroid {
 
           }
           return true;
-        }
+        });
 
-      /* forward */
-      case GDK_KEY_f:
-        {
+    keys->register_key ("f", "thread_index.forward",
+        "Forward last message in thread",
+        [&] (Key) {
           auto thread = get_current_thread ();
           if (thread) {
 
@@ -532,10 +553,11 @@ namespace Astroid {
 
           }
           return true;
-        }
+        });
 
-      case GDK_KEY_t:
-        {
+    keys->register_key ("t", "thread_index.toggle_marked",
+        "Mark thread",
+        [&] (Key) {
           if (list_store->children().size() < 1)
             return true;
 
@@ -552,40 +574,11 @@ namespace Astroid {
           }
 
           return true;
-        }
+        });
 
-      /* group actions */
-      case GDK_KEY_plus:
-        {
-          /* check if anything is marked */
-          Gtk::TreePath path;
-          Gtk::TreeIter fwditer;
-
-          fwditer = list_store->get_iter ("0");
-          Gtk::ListStore::Row row;
-
-          bool found = false;
-
-          while (fwditer) {
-            row = *fwditer;
-            if (row[list_store->columns.marked]) {
-              found = true;
-              break;
-            }
-
-            fwditer++;
-          }
-
-          if (found) {
-            /* thread_index->multi_key (multi_key_help, bind(&ThreadIndexListView::multi_key_handler, this, _1)); */
-          }
-
-          return true;
-        }
-
-      case GDK_KEY_T:
-        {
-          /* toggle all */
+    keys->register_key ("T", "thread_index.toggle_marked_all",
+        "Toggle arked on all loaded threads",
+        [&] (Key) {
           Gtk::TreePath path;
           Gtk::TreeIter fwditer;
           fwditer = list_store->get_iter ("0");
@@ -596,25 +589,25 @@ namespace Astroid {
             fwditer++;
           }
           return true;
-        }
+        });
 
-      /* load more threads */
-      case GDK_KEY_M:
-        {
+    keys->register_key ("M", "thread_index.load_more",
+        "Load more threads",
+        [&] (Key) {
           thread_index->load_more_threads ();
           return true;
-        }
+        });
 
-      /* load all threads */
-      case GDK_KEY_exclam:
-        {
+    keys->register_key (Key(GDK_KEY_exclam), "thread_index.load_all",
+        "Load all threads",
+        [&] (Key) {
           thread_index->load_more_threads (true);
           return true;
-        }
+        });
 
-      /* toggle archived */
-      case GDK_KEY_a:
-        {
+    keys->register_key ("a", "thread_index.archive",
+        "Toggle 'inbox' tag on thread",
+        [&] (Key) {
           auto thread = get_current_thread ();
           if (thread) {
             Db db (Db::DbMode::DATABASE_READ_WRITE);
@@ -622,11 +615,11 @@ namespace Astroid {
           }
 
           return true;
-        }
+        });
 
-      /* toggle flagged */
-      case GDK_KEY_asterisk:
-        {
+    keys->register_key (Key (GDK_KEY_asterisk), "thread_index.flag",
+        "Toggle 'flagged' tag on thread",
+        [&] (Key) {
           auto thread = get_current_thread ();
           if (thread) {
 
@@ -635,11 +628,11 @@ namespace Astroid {
           }
 
           return true;
-        }
+        });
 
-      /* toggle unread */
-      case GDK_KEY_N:
-        {
+    keys->register_key ("N", "thread_index.unread",
+        "Toggle 'unread' tag on thread",
+        [&] (Key) {
           auto thread = get_current_thread ();
           if (thread) {
 
@@ -648,11 +641,11 @@ namespace Astroid {
           }
 
           return true;
-        }
+        });
 
-      /* toggle spam */
-      case GDK_KEY_S:
-        {
+    keys->register_key ("S", "thread_index.spam",
+        "Toggle 'spam' tag on thread",
+        [&] (Key) {
           auto thread = get_current_thread ();
           if (thread) {
 
@@ -661,28 +654,24 @@ namespace Astroid {
           }
 
           return true;
-        }
+        });
 
-      /* toggle muted: C-m */
-      case GDK_KEY_m:
-        {
-          if ((event->state & GDK_CONTROL_MASK)) {
-            auto thread = get_current_thread ();
-            if (thread) {
+    keys->register_key ("C-m", "thread_index.mute",
+        "Toggle 'muted' tag on thread, it will be excluded from searches",
+        [&] (Key) {
+          auto thread = get_current_thread ();
+          if (thread) {
 
-              Db db (Db::DbMode::DATABASE_READ_WRITE);
-              main_window->actions.doit (&db, refptr<Action>(new MuteAction(thread)));
-            }
-
-            return true;
-          } else {
-            return false;
+            Db db (Db::DbMode::DATABASE_READ_WRITE);
+            main_window->actions.doit (&db, refptr<Action>(new MuteAction(thread)));
           }
-        }
 
-      case GDK_KEY_l:
-        {
-          /* edit tags */
+          return true;
+        });
+
+    keys->register_key ("l", "thread_index.label",
+        "Edit tags for thread",
+        [&] (Key) {
           auto thread = get_current_thread ();
           if (thread) {
             ustring tag_list = VectorUtils::concat_tags (thread->tags) + ", ";
@@ -728,12 +717,13 @@ namespace Astroid {
                   }
                 });
           }
-        }
-        return true;
 
-        /* edit draft */
-      case GDK_KEY_E:
-        {
+          return true;
+        });
+
+    keys->register_key ("E", "thread_index.edit_draft",
+        "Edit first message marked as draft or last message in thread as new",
+        [&] (Key) {
           auto thread = get_current_thread ();
           if (thread) {
 
@@ -767,13 +757,13 @@ namespace Astroid {
             }
           }
           return true;
-        }
-    }
+        });
 
-    return false;
   }
 
-  bool ThreadIndexListView::multi_key_handler (Key k) {
+  bool ThreadIndexListView::multi_key_handler (
+      ThreadIndexListView::multi_key_action maction,
+      Key) {
     log << debug << "tl: m k h" << endl;
 
     Gtk::TreePath path;
@@ -785,15 +775,12 @@ namespace Astroid {
     fwditer = list_store->get_iter ("0");
     Gtk::ListStore::Row row;
 
-
-    /*
-    switch (k.key) {
-      case GDK_KEY_asterisk:
-      case GDK_KEY_N:
-      case GDK_KEY_S:
-      case GDK_KEY_l:
-      case GDK_KEY_m:
-      case GDK_KEY_a:
+    switch (maction) {
+      case MFlag:
+      case MUnread:
+      case MSpam:
+      case MMute:
+      case MArchive:
         {
           vector<refptr<NotmuchThread>> threads;
 
@@ -811,27 +798,25 @@ namespace Astroid {
           }
 
           refptr<Action> a;
-          switch (event->keyval) {
-            case GDK_KEY_a:
+          switch (maction) {
+            case MArchive:
               a = refptr<Action>(new ToggleAction(threads, "inbox"));
               break;
 
-            case GDK_KEY_asterisk:
+            case MFlag:
               a = refptr<Action>(new ToggleAction(threads, "flagged"));
               break;
 
-            case GDK_KEY_N:
+            case MUnread:
               a = refptr<Action>(new ToggleAction(threads, "unread"));
               break;
 
-            case GDK_KEY_S:
+            case MSpam:
               a = refptr<Action>(new SpamAction(threads));
               break;
 
-            case GDK_KEY_m:
-              if ((event->state & GDK_CONTROL_MASK)) {
-                a = refptr<Action>(new MuteAction(threads));
-              }
+            case MMute:
+              a = refptr<Action>(new MuteAction(threads));
               break;
 
             default:
@@ -845,9 +830,10 @@ namespace Astroid {
 
           return true;
         }
+        break;
 
 
-      case GDK_KEY_t:
+      case MToggle:
         {
           while (fwditer) {
             row = *fwditer;
@@ -863,45 +849,7 @@ namespace Astroid {
           return true;
         }
     }
-
-    */
     return false;
-  }
-
-  ModeHelpInfo * ThreadIndexListView::key_help () {
-    ModeHelpInfo * m = new ModeHelpInfo ();
-
-    m->parent   = NULL;
-    m->toplevel = false;
-    m->title    = "Thread Index List View";
-
-    m->keys = {
-      { "j,Down", "Next line" },
-      { "k,Up", "Previous line" },
-      { "J,K", "Scroll view" },
-      { "1,Home", "Go to first line" },
-      { "0,End", "Go to last line" },
-      { "Return", "Open thread (default action)" },
-      { "S+Return", "Open thread in pane (default action)" },
-      { "C+Return", "Open thread in new window" },
-      { "r", "Reply to last message in thread" },
-      { "G", "Reply all to last message in thread" },
-      { "f", "Forward last message in thread" },
-      { "E", "Edit first message marked as draft or last message in thread as new" },
-      { "M", "Load more threads in query" },
-      { "!", "Load all threads in query" },
-      { "a", "Toggle 'inbox' tag on thread" },
-      { "*", "Toggle 'flagged' tag on thread" },
-      { "N", "Toggle 'unread' tag on thread" },
-      { "S", "Toggle 'spam' tag on thread" },
-      { "C-m", "Toggle 'muted' tag on thread, it will be excluded from searches." },
-      { "l", "Edit tags for thread" },
-      { "t", "Mark thread" },
-      { "+", "Apply action to marked thread" },
-      { "T", "Toggle marked on all loaded threads" },
-    };
-
-    return m;
   }
 
   bool ThreadIndexListView::on_button_press_event (GdkEventButton *ev) {
@@ -970,7 +918,7 @@ namespace Astroid {
           if (thread) {
             log << info << "ti_list: loading: " << thread->thread_id << endl;
 
-            thread_index->open_thread (thread, !open_paned_default);
+            thread_index->open_thread (thread, true);
           }
         }
         break;
@@ -980,7 +928,7 @@ namespace Astroid {
           if (thread) {
             log << info << "ti_list: loading: " << thread->thread_id << endl;
 
-            thread_index->open_thread (thread, !open_paned_default, true);
+            thread_index->open_thread (thread, true, true);
           }
         }
         break;
@@ -996,8 +944,8 @@ namespace Astroid {
     if (thread) {
       log << info << "ti_list: loading: " << thread->thread_id << endl;
 
-      /* open message in new tab (if so configured) */
-      thread_index->open_thread (thread, !open_paned_default);
+      /* open message in new tab  */
+      thread_index->open_thread (thread, true);
     }
   }
 
