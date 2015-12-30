@@ -21,6 +21,10 @@ namespace Astroid {
     { GDK_KEY_Down,   "Down" },
     { GDK_KEY_Up,     "Up" },
     { GDK_KEY_Tab,    "Tab" },
+    { GDK_KEY_Home,   "Home" },
+    { GDK_KEY_End,    "End" },
+    { GDK_KEY_Return, "Return" },
+    { GDK_KEY_KP_Enter, "KP_Enter" },
   };
 
   void Keybindings::init () {

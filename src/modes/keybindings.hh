@@ -46,6 +46,8 @@ namespace Astroid {
       Keybindings ();
       static void init ();
 
+      ustring title; /* title of keybinding set */
+
       typedef pair<Key, function<bool (Key)>> KeyBinding;
 
       void register_key (Key, ustring name, ustring help, function<bool (Key)>);
