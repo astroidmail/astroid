@@ -22,8 +22,6 @@ namespace Astroid {
       bool invincible = false;
       void close ();
 
-      ustring mode_help_title = "Mode";
-
     private:
       ustring label;
 
@@ -49,8 +47,9 @@ namespace Astroid {
       void set_label (ustring);
 
     public:
-      bool on_key_press_event (GdkEventKey *event) override;
       Keybindings keys;
+      bool on_key_press_event (GdkEventKey *event) override;
+      virtual Keybindings * get_keys ();
 
       void ask_yes_no (ustring, function<void(bool)>);
       bool multi_key (Keybindings &, Key);

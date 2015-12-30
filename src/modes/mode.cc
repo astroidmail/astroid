@@ -57,6 +57,8 @@ namespace Astroid {
     rev_multi->add (*rh_);
     rev_multi->set_reveal_child (false);
     pack_end (*rev_multi, false, true, 0);
+
+    keys.title = "All modes";
   }
 
   void Mode::set_main_window (MainWindow *mw) {
@@ -193,6 +195,10 @@ namespace Astroid {
     if (mode_key_handler (event)) return true;
 
     return keys.handle (event);
+  }
+
+  Keybindings * Mode::get_keys () {
+    return &keys;
   }
 }
 

@@ -95,9 +95,7 @@ namespace Astroid {
   }
 
   void HelpMode::show_help (Mode * m) {
-    ModeHelpInfo * mhelp = m->key_help ();
-
-    set_label ("Help: " + mhelp->title);
+    set_label ("Help: " + m->get_keys ()->title);
 
     ustring header =
     "<b>Astroid</b> (" GIT_DESC ") \n"
@@ -108,8 +106,6 @@ namespace Astroid {
     "\n";
 
     ustring help = header + generate_help (m);
-
-    delete mhelp;
 
     help_text.set_markup (help);
   }
@@ -130,9 +126,14 @@ namespace Astroid {
 
     if (is_mode) {
       h += "---\n";
-      h += "<i>" + m->mode_help_title + "</i>";
+      h += "<i>" + m->get_keys ()->title + "</i>";
 
-      h += m->keys.help ();
+      h += m->get_keys ()->help ();
+    }
+
+    if (is_mw) {
+      h += "<i>Main window</i>";
+      h += mw->keys.help ();
     }
 
     return h;
