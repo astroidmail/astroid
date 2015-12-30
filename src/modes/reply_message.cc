@@ -107,6 +107,37 @@ namespace Astroid {
     /* sent signal */
     message_sent_attempt().connect (
         sigc::mem_fun (this, &ReplyMessage::on_message_sent_attempt_received));
+
+    keys.title = "Reply mode";
+
+    keys.register_key ("r", "reply.cycle_reply_to",
+        "Cycle through reply selector",
+        [&] (Key) {
+          /* cycle through reply combo box */
+          if (!message_sent && !sending_in_progress.load()) {
+            int i = reply_mode_combo->get_active_row_number ();
+
+            if (i >= (static_cast<int>(reply_store->children().size())-1))
+              i = 0;
+            else
+              i++;
+
+            reply_mode_combo->set_active (i);
+          }
+
+          return true;
+        });
+
+    keys.register_key ("R", "reply.open_reply_to",
+        "Open reply selector",
+        [&] (Key) {
+          /* bring up reply combo box */
+          if (!message_sent && !sending_in_progress.load()) {
+            reply_mode_combo->popup ();
+          }
+
+          return true;
+        });
   }
 
   void ReplyMessage::on_receiver_combo_changed () {
@@ -168,53 +199,6 @@ namespace Astroid {
       acc.remove_me ();
       bcc = acc.str ();
     }
-  }
-
-  bool ReplyMessage::on_key_press_event (GdkEventKey * event) {
-    log << debug << "re: got key press" << endl;
-
-    if (mode_key_handler (event)) return true;
-
-    switch (event->keyval) {
-      case GDK_KEY_r:
-        {
-          /* cycle through reply combo box */
-          if (!message_sent && !sending_in_progress.load()) {
-            int i = reply_mode_combo->get_active_row_number ();
-            if (i >= (static_cast<int>(reply_store->children().size())-1)) i = 0;
-            else i++;
-            reply_mode_combo->set_active (i);
-          }
-
-          return true;
-        }
-      case GDK_KEY_R:
-        {
-          /* bring up reply combo box */
-          if (!message_sent && !sending_in_progress.load()) {
-            reply_mode_combo->popup ();
-          }
-
-          return true;
-        }
-    }
-
-    return EditMessage::on_key_press_event (event);
-  }
-
-  ModeHelpInfo * ReplyMessage::key_help () {
-    ModeHelpInfo * m = new ModeHelpInfo ();
-
-    m->parent   = EditMessage::key_help ();
-    m->toplevel = false;
-    m->title    = "Reply message";
-
-    m->keys = {
-      { "r", "Cycle through Reply selector" },
-      { "R", "Open Reply selecetor" }
-    };
-
-    return m;
   }
 
   void ReplyMessage::on_message_sent_attempt_received (bool res) {

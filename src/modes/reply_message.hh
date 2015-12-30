@@ -35,16 +35,11 @@ namespace Astroid {
       ReplyModeColumns reply_columns;
       refptr<Gtk::ListStore> reply_store;
 
-      virtual ModeHelpInfo * key_help () override;
-
     private:
       void load_receivers ();
       void on_receiver_combo_changed ();
 
       void on_message_sent_attempt_received (bool);
-
-    protected:
-      virtual bool on_key_press_event (GdkEventKey *) override;
   };
 }
 
