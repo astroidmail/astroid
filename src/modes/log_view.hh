@@ -35,10 +35,6 @@ namespace Astroid {
       Gtk::TreeView tv;
       Gtk::ScrolledWindow scroll;
       refptr<Gtk::ListStore> store;
-
-    protected:
-      virtual bool on_key_press_event (GdkEventKey *) override;
-
   };
 }
 

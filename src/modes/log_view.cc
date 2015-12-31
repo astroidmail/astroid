@@ -32,6 +32,81 @@ namespace Astroid {
 
     log.add_log_view (this);
     log << debug << "log window ready." << endl;
+
+    keys.title = "Log view";
+    keys.register_key ("j", { Key (GDK_KEY_Down) },
+        "log.down",
+        "Move cursor down",
+        [&] (Key) {
+          if (store->children().size() < 2)
+            return true;
+
+          Gtk::TreePath path;
+          Gtk::TreeViewColumn *c;
+          tv.get_cursor (path, c);
+
+          path.next ();
+          Gtk::TreeIter it = store->get_iter (path);
+
+          if (it) {
+            tv.set_cursor (path);
+          }
+
+          return true;
+        });
+
+    keys.register_key ("k", { Key (GDK_KEY_Up) },
+        "log.up",
+        "Move cursor up",
+        [&] (Key) {
+          Gtk::TreePath path;
+          Gtk::TreeViewColumn *c;
+          tv.get_cursor (path, c);
+          path.prev ();
+          if (path) {
+            tv.set_cursor (path);
+          }
+          return true;
+        });
+
+    keys.register_key ("J",
+        "log.page_down",
+        "Page down",
+        [&] (Key) {
+          auto adj = tv.get_vadjustment ();
+          adj->set_value (adj->get_value() + adj->get_step_increment ());
+          return true;
+        });
+
+    keys.register_key ("K",
+        "log.page_up",
+        "Page up",
+        [&] (Key) {
+          auto adj = tv.get_vadjustment ();
+          adj->set_value (adj->get_value() - adj->get_step_increment ());
+          return true;
+        });
+
+    keys.register_key ("1", { Key (GDK_KEY_Home) },
+        "log.home",
+        "Scroll home",
+        [&] (Key) {
+          /* select first */
+          tv.set_cursor (Gtk::TreePath("0"));
+          return true;
+        });
+
+    keys.register_key ("0", { Key (GDK_KEY_End) },
+        "log.end",
+        "Scroll to end",
+        [&] (Key) {
+          /* select last */
+          auto it = store->children().end ();
+          auto p  = store->get_path (--it);
+          tv.set_cursor (p);
+
+          return true;
+        });
   }
 
   LogView::~LogView () {
@@ -71,89 +146,6 @@ namespace Astroid {
 
   void LogView::release_modal () {
     remove_modal_grab ();
-  }
-
-  bool LogView::on_key_press_event (GdkEventKey * event) {
-    if (mode_key_handler (event)) return true;
-
-    switch (event->keyval) {
-      case GDK_KEY_j:
-      case GDK_KEY_Down:
-        {
-          if (store->children().size() < 2)
-            return true;
-
-          Gtk::TreePath path;
-          Gtk::TreeViewColumn *c;
-          tv.get_cursor (path, c);
-
-          path.next ();
-          Gtk::TreeIter it = store->get_iter (path);
-
-          if (it) {
-            tv.set_cursor (path);
-          }
-
-          return true;
-        }
-        break;
-
-      case GDK_KEY_k:
-      case GDK_KEY_Up:
-        {
-          Gtk::TreePath path;
-          Gtk::TreeViewColumn *c;
-          tv.get_cursor (path, c);
-          path.prev ();
-          if (path) {
-            tv.set_cursor (path);
-          }
-          return true;
-        }
-        break;
-
-      case GDK_KEY_J:
-        {
-          auto adj = tv.get_vadjustment ();
-          adj->set_value (adj->get_value() + adj->get_step_increment ());
-          return true;
-        }
-
-      case GDK_KEY_K:
-        {
-          auto adj = tv.get_vadjustment ();
-          adj->set_value (adj->get_value() - adj->get_step_increment ());
-          return true;
-        }
-
-      case GDK_KEY_Home:
-      case GDK_KEY_1:
-        {
-          /* select first */
-          if (!(event->state & GDK_MOD1_MASK)) {
-            tv.set_cursor (Gtk::TreePath("0"));
-            return true;
-          }
-        }
-        break;
-
-      case GDK_KEY_End:
-      case GDK_KEY_0:
-        {
-          /* select last */
-          if (!(event->state & GDK_MOD1_MASK)) {
-            auto it = store->children().end ();
-            auto p  = store->get_path (--it);
-            tv.set_cursor (p);
-
-            return true;
-          }
-        }
-        break;
-
-
-    }
-    return false;
   }
 
 }
