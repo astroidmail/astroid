@@ -192,6 +192,7 @@ namespace Astroid {
   }
 
   bool Mode::on_key_press_event (GdkEventKey *event) {
+    /* log << debug << "mode: key: " << typeid (*this).name () << endl; */
     if (mode_key_handler (event)) return true;
 
     return keys.handle (event);
