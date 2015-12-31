@@ -13,7 +13,6 @@ namespace Astroid {
   class Mode : public Gtk::Box {
     public:
       Mode (MainWindow *);
-      ~Mode ();
       Gtk::Label tab_label;
 
       void set_main_window (MainWindow *);

@@ -197,6 +197,10 @@ namespace Astroid {
     return keys.handle (event);
   }
 
+  ustring Mode::get_label () {
+    return label;
+  }
+
   Keybindings * Mode::get_keys () {
     return &keys;
   }
