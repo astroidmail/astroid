@@ -21,7 +21,7 @@
   </a>
 
 ## design and user interface goals
-* (keyboard)    fully operatable by keyboard only - but accept mouse clicks
+* (done    )    fully operatable by keyboard only - but accept mouse clicks
 *               lightweight.
 * (partly done) base interface on sup, but allow buffers to be dragged out
                 or separated as windows so that multiple views/buffers can be
@@ -29,7 +29,7 @@
 * (done)        allow several simultaneous windows.
 * (done)        display html mail and some attachments inline.
 * (done)        render math using MathJax
-* (partly done) syntax highlighting between triple-backtick tags (markdown style)
+* (done)        syntax highlighting between triple-backtick tags (markdown style)
 * ([in progress](https://github.com/gauteh/astroid/pull/24)) built-in crypto (gpg,..) support.
 * (only vim)    editors: embed vim or emacs (possibly ship a simple editor)
 * (linux)       Support: Platforms supported by notmuch and other libraries, specifically:

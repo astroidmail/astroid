@@ -18,6 +18,7 @@
   thread index or thread view.
 * Edit messages as new with 'E'.
 * Added a dinosaur.
+* Configurable keybindings.
 
 == v0.4 / 2015-08-15
 
