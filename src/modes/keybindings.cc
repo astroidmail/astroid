@@ -277,7 +277,8 @@ namespace Astroid {
     auto s = keys.find (ek);
 
     if (s != keys.end ()) {
-      log << debug << "ky: " << title << ", handling: " << s->first.str () << " (" << s->first.name << ")" << endl;
+      if (loghandle)
+        log << debug << "ky: " << title << ", handling: " << s->first.str () << " (" << s->first.name << ")" << endl;
 
       if (s->first.isalias) {
         auto m = keys.find (*(s->first.master_key));
@@ -286,7 +287,8 @@ namespace Astroid {
         return s->second (s->first);
       }
     } else {
-      log << debug << "ky: " << title << ",  unknown key: " << ek.str () << endl;
+      if (loghandle)
+        log << debug << "ky: " << title << ",  unknown key: " << ek.str () << endl;
     }
 
     return false;

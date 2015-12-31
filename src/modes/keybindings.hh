@@ -53,6 +53,7 @@ namespace Astroid {
       static void init ();
 
       ustring title; /* title of keybinding set */
+      bool loghandle = true; /* log handling */
 
       typedef pair<Key, function<bool (Key)>> KeyBinding;
 

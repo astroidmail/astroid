@@ -107,6 +107,8 @@ namespace Astroid {
 
           return true;
         });
+
+    keys.loghandle = false;
   }
 
   LogView::~LogView () {
