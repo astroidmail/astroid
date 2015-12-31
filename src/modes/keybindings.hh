@@ -41,6 +41,12 @@ namespace Astroid {
 
   };
 
+  class duplicatekey_error : public runtime_error {
+    public:
+      duplicatekey_error (const char *);
+
+  };
+
   class Keybindings {
     public:
       Keybindings ();

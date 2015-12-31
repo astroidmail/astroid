@@ -222,7 +222,26 @@ namespace Astroid {
 
     k.hasaliases = !aliases.empty ();
 
-    keys.insert (KeyBinding (k, t));
+    /* check if key name already exists */
+    if (find_if (keys.begin (), keys.end (),
+          [&] (KeyBinding mk) {
+            return mk.first.name == k.name;
+          }) != keys.end ()) {
+
+      log << error << ustring::compose (
+            "key: %1, there is a key with name %2 registered already",
+            k.str (), k.name) << endl;
+      throw duplicatekey_error (ustring::compose (
+            "key: %1, there is a key with name %2 registered already",
+            k.str (), k.name).c_str ());
+    }
+
+    auto r = keys.insert (KeyBinding (k, t));
+    if (!r.second) {
+      log << error << "key: " << k.str () << " already exists in map." << endl;
+      throw duplicatekey_error (ustring::compose ("key: %1 already exists",
+            k.str()).c_str ());
+    }
 
     /* get pointer to key in map */
     const Key * master;
@@ -237,7 +256,13 @@ namespace Astroid {
       ka.help = k.help;
       ka.isalias = true;
       ka.master_key = master;
-      keys.insert (KeyBinding (ka, NULL));
+      auto r = keys.insert (KeyBinding (ka, NULL));
+
+      if (!r.second) {
+        log << error << "key alias: " << k.str () << " already exists in map." << endl;
+        throw duplicatekey_error (ustring::compose ("key: %1 already exists",
+              k.str()).c_str ());
+      }
     }
   }
 
@@ -415,6 +440,10 @@ namespace Astroid {
    */
 
   keyspec_error::keyspec_error (const char * w) : runtime_error (w)
+  {
+  }
+
+  duplicatekey_error::duplicatekey_error (const char * w) : runtime_error (w)
   {
   }
 
