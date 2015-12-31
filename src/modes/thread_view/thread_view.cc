@@ -303,11 +303,11 @@ namespace Astroid {
   }
 
   void ThreadView::resource_request_starting (
-      WebKitWebView         *web_view,
-      WebKitWebFrame        *web_frame,
-      WebKitWebResource     *web_resource,
-      WebKitNetworkRequest  *request,
-      WebKitNetworkResponse *response) {
+      WebKitWebView         * /* web_view */,
+      WebKitWebFrame        * /* web_frame */,
+      WebKitWebResource     * /* web_resource */,
+      WebKitNetworkRequest  * request,
+      WebKitNetworkResponse * response) {
 
     if (response != NULL) {
       /* a previously handled request */
@@ -540,8 +540,8 @@ namespace Astroid {
   }
 
   bool ThreadView::on_load_changed (
-      GtkWidget *       w,
-      GParamSpec *      p)
+      GtkWidget *       /* w */,
+      GParamSpec *      /* p */)
   {
     WebKitLoadStatus ev = webkit_web_view_get_load_status (webview);
     log << debug << "tv: on_load_changed: " << ev << endl;
@@ -1028,7 +1028,7 @@ namespace Astroid {
       refptr<Message> message,
       refptr<Chunk> c,
       WebKitDOMHTMLElement * span_body,
-      bool check_siblings)
+      bool /* check_siblings */)
   {
 
     ustring mime_type = ustring(g_mime_content_type_to_string (c->content_type));
@@ -1462,7 +1462,7 @@ namespace Astroid {
 
   /* attachments {{{ */
   void ThreadView::set_attachment_icon (
-      refptr<Message> message,
+      refptr<Message> /* message */,
       WebKitDOMHTMLElement * div_message)
 
   {
@@ -1706,7 +1706,7 @@ namespace Astroid {
 
   /* marked {{{ */
   void ThreadView::load_marked_icon (
-      refptr<Message> message,
+      refptr<Message> /* message */,
       WebKitDOMHTMLElement * div_message)
   {
     GError *err;
@@ -1898,6 +1898,8 @@ namespace Astroid {
   /* clone and create end }}} */
 
   void ThreadView::register_keys () {
+    keys.title = "Thread View";
+
     keys.register_key ("j", "thread_view.down",
         "Scroll down or move focus to next element",
         [&] (Key) {
