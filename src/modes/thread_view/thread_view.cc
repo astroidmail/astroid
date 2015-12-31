@@ -2728,7 +2728,13 @@ namespace Astroid {
 
     if (force_change  || (v == adj->get_value ())) {
       /* we're at the bottom, just move focus down */
-      eid = focus_next ();
+      bool last = find (
+          mthread->messages.begin (),
+          mthread->messages.end (),
+          focused_message) == (mthread->messages.end () - 1);
+
+
+      if (!last) eid = focus_next ();
     } else {
       update_focus_to_view ();
     }
