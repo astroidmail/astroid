@@ -114,16 +114,21 @@ namespace Astroid {
 
       if (k.isalias) continue;
 
+      h += "<b>" + k.str ();
+
       auto aliases = find_if (keys.begin (), keys.end (),
           [&](KeyBinding kb) {
             return (kb.first.isalias && (*(kb.first.master_key) == k));
           });
 
-      h += "<b>" + k.str ();
-
       while (aliases != keys.end ()) {
         h += "," + aliases->first.str ();
+
         aliases++;
+        aliases = find_if (aliases, keys.end (),
+            [&](KeyBinding kb) {
+              return (kb.first.isalias && (*(kb.first.master_key) == k));
+            });
       }
 
       h += "</b>: " + k.help + "\n";
@@ -220,6 +225,7 @@ namespace Astroid {
     k.name = name;
     k.help = help;
 
+    k.isalias = false;
     k.hasaliases = !aliases.empty ();
 
     /* check if key name already exists */
@@ -271,7 +277,7 @@ namespace Astroid {
     auto s = keys.find (ek);
 
     if (s != keys.end ()) {
-      log << debug << "ky: handling: " << s->first.str () << " (" << s->first.name << ")" << endl;
+      log << debug << "ky: " << title << ", handling: " << s->first.str () << " (" << s->first.name << ")" << endl;
 
       if (s->first.isalias) {
         auto m = keys.find (*(s->first.master_key));
@@ -279,6 +285,8 @@ namespace Astroid {
       } else {
         return s->second (s->first);
       }
+    } else {
+      log << debug << "ky: " << title << ",  unknown key: " << ek.str () << endl;
     }
 
     return false;
