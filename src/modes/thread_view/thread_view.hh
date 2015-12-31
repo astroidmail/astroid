@@ -161,7 +161,14 @@ namespace Astroid {
       void hide_info (refptr<Message>);
 
       /* activate message or selected element */
-      bool element_action (char);
+      typedef enum {
+        EEnter = 0,
+        EOpen,
+        ESave,
+        EDelete,
+      } ElementAction;
+
+      bool element_action (ElementAction);
 
     private:
       /* webkit (using C api) */
@@ -283,14 +290,9 @@ namespace Astroid {
       /* mode */
       virtual void grab_modal () override;
       virtual void release_modal () override;
-      virtual ModeHelpInfo * key_help () override;
 
-    protected:
-      virtual bool on_key_press_event (GdkEventKey *) override;
-
-      /* multi key */
-      ustring multi_key_help = "t: toggle, s: save";
-      bool multi_key_handler (GdkEventKey *);
+    private:
+      void register_keys ();
 
     public:
       /* the tv is ready */
@@ -301,10 +303,10 @@ namespace Astroid {
       atomic<bool> ready; // all messages and elements rendered
 
       /* action on element */
-      typedef sigc::signal <void, unsigned int, char> type_element_action;
+      typedef sigc::signal <void, unsigned int, ElementAction> type_element_action;
       type_element_action signal_element_action ();
 
-      void emit_element_action (unsigned int element, char action);
+      void emit_element_action (unsigned int element, ElementAction action);
 
     protected:
       type_signal_ready m_signal_ready;

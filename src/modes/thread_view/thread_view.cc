@@ -22,6 +22,7 @@
 # include "utils/gravatar.hh"
 # include "actions/action.hh"
 # include "actions/tag_action.hh"
+# include "modes/mode.hh"
 # include "modes/reply_message.hh"
 # include "modes/forward_message.hh"
 # include "modes/raw_message.hh"
@@ -253,6 +254,8 @@ namespace Astroid {
         "object-select-symbolic",
         ATTACHMENT_ICON_WIDTH,
         Gtk::ICON_LOOKUP_USE_BUILTIN );
+
+    register_keys ();
 
     show_all_children ();
   }
@@ -1894,211 +1897,191 @@ namespace Astroid {
 
   /* clone and create end }}} */
 
-  bool ThreadView::on_key_press_event (GdkEventKey *event) { // {{{
+  void ThreadView::register_keys () {
+    keys.register_key ("j", "thread_view.down",
+        "Scroll down or move focus to next element",
+        [&] (Key) {
+          focus_next_element ();
+          return true;
+        });
 
-    if (!ready) {
-      log << warn << "tv: not ready yet." << endl;
-      return true;
-    }
+    keys.register_key ("C-j", "thread_view.next_element",
+        "Move focus to next element",
+        [&] (Key) {
+          /* move focus to next element and optionally scroll to it */
 
-    if (mode_key_handler (event)) return true;
-
-    switch (event->keyval) {
-
-      case GDK_KEY_j:
-        {
-          if (!(event->state & GDK_CONTROL_MASK)) {
-            focus_next_element ();
-            return true;
-          } else {
-            /* move focus to next element and optionally scroll to it */
-            ustring eid = focus_next_element (true);
-            if (eid != "") {
-              scroll_to_element (eid, false);
-            }
-            return true;
+          ustring eid = focus_next_element (true);
+          if (eid != "") {
+            scroll_to_element (eid, false);
           }
-        }
+          return true;
+        });
 
-      case GDK_KEY_J:
-      case GDK_KEY_Down:
-        {
-          if (event->state & GDK_CONTROL_MASK) {
-            auto adj = scroll.get_vadjustment ();
-            adj->set_value (adj->get_value() + adj->get_page_increment ());
-            update_focus_to_view ();
-          } else {
-            auto adj = scroll.get_vadjustment ();
-            double v = adj->get_value ();
-            adj->set_value (adj->get_value() + adj->get_step_increment ());
-
-            if (v < adj->get_value ()) {
-              update_focus_to_view ();
-            }
-          }
-        }
-        return true;
-
-      case GDK_KEY_k:
-        {
-          if (!(event->state & GDK_CONTROL_MASK)) {
-            focus_previous_element ();
-            return true;
-          } else {
-            /* move focus to previous element and optionally scroll to it */
-            ustring eid = focus_previous_element (true);
-            if (eid != "") {
-              scroll_to_element (eid, false);
-            }
-            return true;
-          }
-        }
-
-      case GDK_KEY_K:
-      case GDK_KEY_Up:
-        {
-          if (event->state & GDK_CONTROL_MASK) {
-            auto adj = scroll.get_vadjustment ();
-            adj->set_value (adj->get_value() - adj->get_page_increment ());
-            update_focus_to_view ();
-          } else {
-            auto adj = scroll.get_vadjustment ();
-            if (!(adj->get_value () == adj->get_lower ())) {
-              adj->set_value (adj->get_value() - adj->get_step_increment ());
-              update_focus_to_view ();
-            }
-          }
-        }
-        return true;
-
-      case GDK_KEY_Page_Up:
-        {
+    keys.register_key ("J", { Key (GDK_KEY_Down) }, "thread_view.scroll_down",
+        "Scroll down",
+        [&] (Key) {
           auto adj = scroll.get_vadjustment ();
-          adj->set_value (adj->get_value() - adj->get_page_increment ());
-          update_focus_to_view ();
-        }
-        return true;
+          double v = adj->get_value ();
+          adj->set_value (adj->get_value() + adj->get_step_increment ());
 
-      case GDK_KEY_Page_Down:
-        {
+          if (v < adj->get_value ()) {
+            update_focus_to_view ();
+          }
+
+          return true;
+        });
+
+    keys.register_key ("C-J", { Key (true, false, (guint) GDK_KEY_Down), Key (GDK_KEY_Page_Down) },
+        "thread_view.page_down",
+        "Page down",
+        [&] (Key) {
           auto adj = scroll.get_vadjustment ();
           adj->set_value (adj->get_value() + adj->get_page_increment ());
           update_focus_to_view ();
-        }
-        return true;
+          return true;
+        });
 
-      case GDK_KEY_1:
-      case GDK_KEY_Home:
-        {
-          if (!(event->state & GDK_MOD1_MASK)) {
-            auto adj = scroll.get_vadjustment ();
-            adj->set_value (adj->get_lower ());
-            focused_message = mthread->messages[0];
-            update_focus_status ();
-            return true;
+    keys.register_key ("k", "thread_view.up",
+        "Scroll up or move focus to previous element",
+        [&] (Key) {
+          focus_previous_element ();
+          return true;
+        });
+
+    keys.register_key ("C-k", "thread_view.previous_element",
+        "Move focus to previous element",
+        [&] (Key) {
+          ustring eid = focus_previous_element (true);
+          if (eid != "") {
+            scroll_to_element (eid, false);
           }
-        }
-        break;
+          return true;
+        });
 
-      case GDK_KEY_0:
-      case GDK_KEY_End:
-        {
-          if (!(event->state & GDK_MOD1_MASK)) {
-            auto adj = scroll.get_vadjustment ();
-            adj->set_value (adj->get_upper ());
-            focused_message = mthread->messages[mthread->messages.size()-1];
-            update_focus_status ();
-            return true;
+    keys.register_key ("K", { Key (GDK_KEY_Up) },
+        "thread_view.scroll_up",
+        "Scroll up",
+        [&] (Key) {
+          auto adj = scroll.get_vadjustment ();
+          if (!(adj->get_value () == adj->get_lower ())) {
+            adj->set_value (adj->get_value() - adj->get_step_increment ());
+            update_focus_to_view ();
           }
-        }
-        break;
+          return true;
+        });
 
-      case GDK_KEY_KP_Enter:
-      case GDK_KEY_Return:
-        {
-          return element_action ('\n');
-        }
+    keys.register_key ("C-K", { Key (true, false, (guint) GDK_KEY_Up), Key (GDK_KEY_Page_Up) },
+        "thread_view.page_up",
+        "Page up",
+        [&] (Key) {
+          auto adj = scroll.get_vadjustment ();
+          adj->set_value (adj->get_value() - adj->get_page_increment ());
+          update_focus_to_view ();
+          return true;
+        });
 
-      case GDK_KEY_s:
-        {
-          /* save attachment */
-          return element_action ('s');
-        }
+    keys.register_key ("1", { Key (GDK_KEY_Home) },
+        "thread_view.home",
+        "Scroll home",
+        [&] (Key) {
+          auto adj = scroll.get_vadjustment ();
+          adj->set_value (adj->get_lower ());
+          focused_message = mthread->messages[0];
+          update_focus_status ();
+          return true;
+        });
 
-      case GDK_KEY_d:
-        {
+    keys.register_key ("0", { Key (GDK_KEY_End) },
+        "thread_view.end",
+        "Scroll to end",
+        [&] (Key) {
+          auto adj = scroll.get_vadjustment ();
+          adj->set_value (adj->get_upper ());
+          focused_message = mthread->messages[mthread->messages.size()-1];
+          update_focus_status ();
+          return true;
+        });
+
+    keys.register_key (Key (GDK_KEY_Return), { Key (GDK_KEY_KP_Enter) },
+        "thread_view.activate",
+        "Open/expand/activate focused element",
+        [&] (Key) {
+          return element_action (EEnter);
+        });
+
+    keys.register_key ("s", "thread_view.save",
+        "Save attachment or message",
+        [&] (Key) {
+          return element_action (ESave);
+        });
+
+    keys.register_key ("d", "thread_view.delete",
+        "Delete attachment (if editing)",
+        [&] (Key) {
           if (edit_mode) {
             /* del attachment */
-            return element_action ('d');
+            return element_action (EDelete);
           }
           return false;
-        }
+        });
 
-      case GDK_KEY_plus:
-        {
-          if (any_of (state.begin(), state.end(),
-                [](std::pair<refptr<Message>, ThreadView::MessageState> ms)
-                { return ms.second.marked; })
-              )
-          {
+    keys.register_key ("o", "thread_view.open",
+        "Open attachment or message",
+        [&] (Key) {
+          return element_action (EOpen);
+        });
 
-            /* multi_key (multi_key_help, bind(&ThreadView::multi_key_handler, this, _1)); */
-          }
-
-          return true;
-        }
-
-      case GDK_KEY_o:
-        {
-          /* open attachment */
-          return element_action ('o');
-        }
-
-      case GDK_KEY_e:
-        {
+    keys.register_key ("e", "thread_view.expand",
+        "Toggle expand",
+        [&] (Key) {
           if (edit_mode) return false;
 
-          if (event->state & GDK_CONTROL_MASK) {
-            /* toggle hidden / shown status on all messages */
+          toggle_hidden ();
 
-            if (all_of (mthread->messages.begin(),
-                        mthread->messages.end (),
-                        [&](refptr<Message> m) {
-                          return !is_hidden (m);
-                        }
-                  )) {
-              /* all are shown */
-              for (auto m : mthread->messages) {
-                toggle_hidden (m, ToggleHide);
-              }
+          return true;
+        });
 
-            } else {
-              /* some are hidden */
-              for (auto m : mthread->messages) {
-                toggle_hidden (m, ToggleShow);
-              }
+    keys.register_key ("C-e", "thread_view.toggle_expand_all",
+        "Toggle expand on all messages",
+        [&] (Key) {
+          /* toggle hidden / shown status on all messages */
+          if (edit_mode) return false;
+
+          if (all_of (mthread->messages.begin(),
+                      mthread->messages.end (),
+                      [&](refptr<Message> m) {
+                        return !is_hidden (m);
+                      }
+                )) {
+            /* all are shown */
+            for (auto m : mthread->messages) {
+              toggle_hidden (m, ToggleHide);
             }
 
           } else {
-
-            toggle_hidden ();
-
+            /* some are hidden */
+            for (auto m : mthread->messages) {
+              toggle_hidden (m, ToggleShow);
+            }
           }
-          return true;
-        }
 
-      /* marked */
-      case GDK_KEY_t:
-        {
+          return true;
+        });
+
+    keys.register_key ("t", "thread_view.mark",
+        "Mark or unmark message",
+        [&] (Key) {
           if (!edit_mode) {
             state[focused_message].marked = !(state[focused_message].marked);
             update_marked_state (focused_message);
             return true;
           }
-        }
+          return false;
+        });
 
-      case GDK_KEY_T:
-        {
+    keys.register_key ("T", "thread_view.toggle_mark_all",
+        "Toggle mark on all messages",
+        [&] (Key) {
           if (!edit_mode) {
             for (auto &s : state) {
               s.second.marked = !s.second.marked;
@@ -2107,238 +2090,230 @@ namespace Astroid {
 
             return true;
           }
-        }
+          return false;
+        });
 
-      case GDK_KEY_i:
-        {
-          if (event->state & GDK_CONTROL_MASK) {
-            show_remote_images = true;
-            log << debug << "tv: show remote images: " << show_remote_images << endl;
-            reload_images ();
-            return true;
-          }
-        }
+    keys.register_key ("C-i", "thread_view.show_remote_images",
+        "Show remote images",
+        [&] (Key) {
+          show_remote_images = true;
+          log << debug << "tv: show remote images: " << show_remote_images << endl;
+          reload_images ();
+          return true;
+        });
 
-      /* save all attachments */
-      case GDK_KEY_S:
-        {
+    keys.register_key ("S", "thread_view.save_all_attachments",
+        "Save all attachments",
+        [&] (Key) {
           if (edit_mode) return false;
           save_all_attachments ();
           return true;
-        }
+        });
 
+    keys.register_key ("n", "thread_view.next_message",
+        "Focus next message",
+        [&] (Key) {
+          focus_next ();
+          scroll_to_message (focused_message);
+          return true;
+        });
 
-      case GDK_KEY_n:
-        {
-          if (event->state & GDK_CONTROL_MASK) {
-            if (state[focused_message].scroll_expanded) {
-              toggle_hidden (focused_message, ToggleHide);
-              state[focused_message].scroll_expanded = false;
-              in_scroll = true;
-            }
+    keys.register_key ("C-n", "thread_view.next_message_expand",
+        "Focus next message (and expand if necessary)",
+        [&] (Key) {
+          if (state[focused_message].scroll_expanded) {
+            toggle_hidden (focused_message, ToggleHide);
+            state[focused_message].scroll_expanded = false;
+            in_scroll = true;
           }
 
           focus_next ();
 
-          if (event->state & GDK_CONTROL_MASK) {
-            if (is_hidden (focused_message)) {
-              toggle_hidden (focused_message, ToggleShow);
-              state[focused_message].scroll_expanded = true;
-              in_scroll = true;
-            }
+          if (is_hidden (focused_message)) {
+            toggle_hidden (focused_message, ToggleShow);
+            state[focused_message].scroll_expanded = true;
+            in_scroll = true;
           }
           scroll_to_message (focused_message);
           return true;
-        }
+        });
 
-      case GDK_KEY_p:
-        {
-          if (event->state & GDK_CONTROL_MASK) {
-            if (state[focused_message].scroll_expanded) {
-              toggle_hidden (focused_message, ToggleHide);
-              state[focused_message].scroll_expanded = false;
-              in_scroll = true;
-            }
+    keys.register_key ("p", "thread_view.previous_message",
+        "Focus previous message",
+        [&] (Key) {
+          focus_previous ();
+          scroll_to_message (focused_message);
+          return true;
+        });
+
+    keys.register_key ("C-p", "thread_view.previous_message_expand",
+        "Focus previous message (and expand if necessary)",
+        [&] (Key) {
+          if (state[focused_message].scroll_expanded) {
+            toggle_hidden (focused_message, ToggleHide);
+            state[focused_message].scroll_expanded = false;
+            in_scroll = true;
           }
 
           focus_previous ();
 
-          if (event->state & GDK_CONTROL_MASK) {
-            if (is_hidden (focused_message)) {
-              toggle_hidden (focused_message, ToggleShow);
-              state[focused_message].scroll_expanded = true;
-              in_scroll = true;
-            }
+          if (is_hidden (focused_message)) {
+            toggle_hidden (focused_message, ToggleShow);
+            state[focused_message].scroll_expanded = true;
+            in_scroll = true;
           }
           scroll_to_message (focused_message);
           return true;
-        }
+        });
 
-      case GDK_KEY_r:
-        {
+    keys.register_key ("r", "thread_view.reply",
+        "Reply to current message",
+        [&] (Key) {
           /* reply to currently focused message */
           if (!edit_mode) {
             main_window->add_mode (new ReplyMessage (main_window, focused_message));
 
             return true;
           }
-        }
+          return false;
+        });
 
-      case GDK_KEY_G:
-        {
+    keys.register_key ("G", "thread_view.reply_all",
+        "Reply all to current message",
+        [&] (Key) {
           /* reply to currently focused message */
           if (!edit_mode) {
             main_window->add_mode (new ReplyMessage (main_window, focused_message, ReplyMessage::ReplyMode::Rep_All));
 
             return true;
           }
-        }
+          return false;
+        });
 
-      case GDK_KEY_f:
-        {
-          if (event->state & GDK_CONTROL_MASK) {
-            indent_messages = !indent_messages;
-            update_all_indent_states ();
+    keys.register_key ("f", "thread_view.forward",
+        "Forward current message",
+        [&] (Key) {
+          /* forward currently focused message */
+          if (!edit_mode) {
+            main_window->add_mode (new ForwardMessage (main_window, focused_message));
+
             return true;
-          } else {
-            /* forward currently focused message */
-            if (!edit_mode) {
-              main_window->add_mode (new ForwardMessage (main_window, focused_message));
-
-              return true;
-            }
           }
-        }
+          return false;
+        });
 
-      case GDK_KEY_V:
-        {
+    keys.register_key ("C-f", "thread_view.flat",
+        "Toggle flat or indented view of messages",
+        [&] (Key) {
+          indent_messages = !indent_messages;
+          update_all_indent_states ();
+          return true;
+        });
+
+    keys.register_key ("V", "thread_view.view_raw",
+        "View raw source for current message",
+        [&] (Key) {
           /* view raw source of currently focused message */
           main_window->add_mode (new RawMessage (main_window, focused_message));
 
           return true;
-        }
+        });
 
-      case GDK_KEY_E:
-        {
+    keys.register_key ("E", "thread_view.edit_draft",
+        "Edit currently focused message as new or draft",
+        [&] (Key) {
           /* edit currently focused message as new or draft */
           if (!edit_mode) {
             main_window->add_mode (new EditMessage (main_window, focused_message));
 
             return true;
           }
-        }
-    }
+          return false;
+        });
 
-    return false;
-  }
+    Keybindings multi_keys;
 
-  ModeHelpInfo * ThreadView::key_help () {
-    ModeHelpInfo * m = new ModeHelpInfo ();
-
-    m->parent   = Mode::key_help ();
-    m->toplevel = false;
-    m->title    = "Thread View";
-
-    m->keys = {
-      { "k,j", "Scroll up/down or move focus up/down between the elements in a thread or email" },
-      { "C-k,C-j", "Move focus to previous/next element" },
-      { "K,J", "Scroll up/down" },
-      { "S-K,S-J", "Page up/down" },
-      { "n,p", "Focus next or previous message" },
-      { "1,Home", "Scroll to top" },
-      { "0,End" , "Scroll to bottom" },
-      { "Return", "Open/expand/activate focused element" },
-      { "s", "Save attachment or message" },
-      { "S", "Save all attachments" },
-      { "o", "Open attachment or message" },
-      { "e", "Toggle expand" },
-      { "C-E", "Toggle expand on all messages" },
-      { "C-f", "Toggle flat or indented view of messages" },
-      { "C-i", "Show remote images" },
-      { "r", "Reply to current message" },
-      { "G", "Reply all to current message" },
-      { "f", "Forward current message" },
-      { "E", "Edit currently focused message as new or draft" },
-      { "V", "View raw source for current message" },
-      { "t", "Mark or unmark message" },
-      { "T", "Toggle mark on all messages" },
-      { "+", "Apply action to marked messages" },
-
-    };
-
-    return m;
-  }
-
-  bool ThreadView::multi_key_handler (GdkEventKey * event) {
-    log << debug << "tv: m k h" << endl;
-
-    vector<refptr<Message>> tosave;
-
-    for (auto &ms : state) {
-      refptr<Message> m = ms.first;
-      MessageState    s = ms.second;
-
-      switch (event->keyval) {
-        case GDK_KEY_t:
-          {
+    multi_keys.register_key ("t", "thread_view.multi.toggle",
+        "Toggle marked",
+        [&] (Key) {
+          for (auto &ms : state) {
+            refptr<Message> m = ms.first;
+            MessageState    s = ms.second;
             if (s.marked) {
               state[m].marked = false;
               update_marked_state (m);
             }
           }
-          break;
+          return true;
+        });
 
-        case GDK_KEY_s:
-          {
+    multi_keys.register_key ("s", "thread_view.multi.save",
+        "Save marked",
+        [&] (Key) {
+          vector<refptr<Message>> tosave;
+
+          for (auto &ms : state) {
+            refptr<Message> m = ms.first;
+            MessageState    s = ms.second;
             if (s.marked) {
               tosave.push_back (m);
             }
           }
-          break;
 
-        default:
-          break;
+          if (!tosave.empty()) {
+            log << debug << "tv: saving messages: " << tosave.size() << endl;
 
-      }
-    }
+            Gtk::FileChooserDialog dialog ("Save messages to folder..",
+                Gtk::FILE_CHOOSER_ACTION_SELECT_FOLDER);
 
-    if (!tosave.empty()) {
-      log << debug << "tv: saving messages: " << tosave.size() << endl;
+            dialog.add_button ("_Cancel", Gtk::RESPONSE_CANCEL);
+            dialog.add_button ("_Select", Gtk::RESPONSE_OK);
 
-      Gtk::FileChooserDialog dialog ("Save messages to folder..",
-          Gtk::FILE_CHOOSER_ACTION_SELECT_FOLDER);
+            int result = dialog.run ();
 
-      dialog.add_button ("_Cancel", Gtk::RESPONSE_CANCEL);
-      dialog.add_button ("_Select", Gtk::RESPONSE_OK);
+            switch (result) {
+              case (Gtk::RESPONSE_OK):
+                {
+                  string dir = dialog.get_filename ();
+                  log << info << "tv: saving messages to: " << dir << endl;
 
-      int result = dialog.run ();
+                  for (refptr<Message> m : tosave) {
+                    m->save_to (dir);
+                  }
 
-      switch (result) {
-        case (Gtk::RESPONSE_OK):
-          {
-            string dir = dialog.get_filename ();
-            log << info << "tv: saving messages to: " << dir << endl;
+                  break;
+                }
 
-            for (refptr<Message> m : tosave) {
-              m->save_to (dir);
+              default:
+                {
+                  log << debug << "tv: save: cancelled." << endl;
+                }
+            }
+          }
+
+          return true;
+        });
+
+    keys.register_key ("+",
+          "therad_view.multi",
+          "Apply action to marked threads",
+          [&] (Key k) {
+            if (any_of (state.begin(), state.end(),
+                  [](std::pair<refptr<Message>, ThreadView::MessageState> ms)
+                  { return ms.second.marked; })
+                )
+            {
+
+              multi_key (multi_keys, k);
             }
 
-            break;
-          }
-
-        default:
-          {
-            log << debug << "tv: save: cancelled." << endl;
-          }
-      }
-    }
-
-    return true;
+            return true;
+          });
   }
 
   // }}}
 
-  bool ThreadView::element_action (char a) { // {{{
+  bool ThreadView::element_action (ElementAction a) { // {{{
     log << debug << "tv: activate item." << endl;
 
     if (!(focused_message)) {
@@ -2348,19 +2323,19 @@ namespace Astroid {
 
     if (!edit_mode) {
       if (is_hidden (focused_message)) {
-        if (a == '\n') {
+        if (a == EEnter) {
           toggle_hidden ();
-        } else if (a == 's') {
+        } else if (a == ESave) {
           /* save message to */
           focused_message->save ();
         }
 
       } else {
         if (state[focused_message].current_element == 0) {
-          if (a == '\n') {
+          if (a == EEnter) {
             /* nothing selected, closing message */
             toggle_hidden ();
-          } else if (a == 's') {
+          } else if (a == ESave) {
             /* save message to */
             focused_message->save ();
           }
@@ -2368,7 +2343,7 @@ namespace Astroid {
           switch (state[focused_message].elements[state[focused_message].current_element].type) {
             case MessageState::ElementType::Attachment:
               {
-                if (a == '\n' || a == 'o') {
+                if (a == EEnter || a == EOpen) {
                   /* open attachment */
 
                   refptr<Chunk> c = focused_message->get_chunk_by_id (
@@ -2380,7 +2355,7 @@ namespace Astroid {
                     log << error << "tv: could not find chunk for element." << endl;
                   }
 
-                } else if (a == 's') {
+                } else if (a == ESave) {
                   /* save attachment */
                   refptr<Chunk> c = focused_message->get_chunk_by_id (
                       state[focused_message].elements[state[focused_message].current_element].id);
@@ -2395,7 +2370,7 @@ namespace Astroid {
               break;
             case MessageState::ElementType::Part:
               {
-                if (a == '\n' || a == 'o') {
+                if (a == EEnter || a == EOpen) {
                   /* open part */
 
                   refptr<Chunk> c = focused_message->get_chunk_by_id (
@@ -2414,7 +2389,7 @@ namespace Astroid {
                     log << error << "tv: could not find chunk for element." << endl;
                   }
 
-                } else if (a == 's') {
+                } else if (a == ESave) {
                   /* save part */
                   refptr<Chunk> c = focused_message->get_chunk_by_id (
                       state[focused_message].elements[state[focused_message].current_element].id);
@@ -2431,7 +2406,7 @@ namespace Astroid {
 
             case MessageState::ElementType::MimeMessage:
               {
-                if (a == '\n' || a == 'o') {
+                if (a == EEnter || a == EOpen) {
                   /* open part */
                   refptr<Chunk> c = focused_message->get_chunk_by_id (
                       state[focused_message].elements[state[focused_message].current_element].id);
@@ -2444,7 +2419,7 @@ namespace Astroid {
 
                   main_window->add_mode (tv);
 
-                } else if (a == 's') {
+                } else if (a == ESave) {
                   /* save part */
                   refptr<Chunk> c = focused_message->get_chunk_by_id (
                       state[focused_message].elements[state[focused_message].current_element].id);
@@ -3142,12 +3117,8 @@ namespace Astroid {
     return m_element_action;
   }
 
-  void ThreadView::emit_element_action (unsigned int element, char action) {
-    if (action == '\n') {
-      log << debug << "tv: element action emitted: " << element << ", action: enter" << endl;
-    } else {
-      log << debug << "tv: element action emitted: " << element << ", action: " << action << endl;
-    }
+  void ThreadView::emit_element_action (unsigned int element, ElementAction action) {
+    log << debug << "tv: element action emitted: " << element << ", action: enter" << endl;
     m_element_action.emit (element, action);
   }
 
