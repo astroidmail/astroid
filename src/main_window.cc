@@ -106,6 +106,8 @@ namespace Astroid {
         sigc::mem_fun (this, &MainWindow::on_update_title));
 
     /* register keys {{{ */
+    keys.title = "MainWindow";
+
     keys.register_key ("q", { Key ("Q") },
         "main_window.quit_ask",
         "Quit astroid",
