@@ -58,7 +58,7 @@ namespace Astroid {
     rev_multi->set_reveal_child (false);
     pack_end (*rev_multi, false, true, 0);
 
-    keys.title = "All modes";
+    keys.title = "Mode";
   }
 
   void Mode::set_main_window (MainWindow *mw) {
