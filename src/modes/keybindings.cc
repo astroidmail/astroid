@@ -267,12 +267,12 @@ namespace Astroid {
   }
 
   bool Keybindings::handle (GdkEventKey * event) {
-    log << debug << "ky: handling: " << Key (event).str () << " (" << event->keyval << ")" << endl;
-
     Key ek (event);
     auto s = keys.find (ek);
 
     if (s != keys.end ()) {
+      log << debug << "ky: handling: " << s->first.str () << " (" << s->first.name << ")" << endl;
+
       if (s->first.isalias) {
         auto m = keys.find (*(s->first.master_key));
         return m->second (s->first);
