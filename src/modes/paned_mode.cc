@@ -19,6 +19,8 @@ namespace Astroid {
 
     pack_start (paned, true, true, 5);
     paned.show_all ();
+
+    keys.title = "Paned mode";
   }
 
   void PanedMode::add_pane (int p, Mode &w) {
