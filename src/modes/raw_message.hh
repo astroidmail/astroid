@@ -20,10 +20,6 @@ namespace Astroid {
     private:
       Gtk::ScrolledWindow scroll;
       Gtk::TextView       tv;
-
-
-    protected:
-      virtual bool on_key_press_event (GdkEventKey *) override;
   };
 }
 

@@ -24,6 +24,63 @@ namespace Astroid {
     tv.override_font (fnt);
 
     show_all_children ();
+
+    keys.title = "Raw message";
+    keys.register_key ("j", { Key (GDK_KEY_Down) },
+        "raw.down",
+        "Move down",
+        [&] (Key) {
+          auto adj = tv.get_vadjustment ();
+          adj->set_value (adj->get_value() + adj->get_step_increment ());
+          return true;
+        });
+
+    keys.register_key ("J",
+        "raw.page_down",
+        "Page down",
+        [&] (Key) {
+          auto adj = tv.get_vadjustment ();
+          adj->set_value (adj->get_value() + adj->get_page_increment ());
+          return true;
+        });
+
+    keys.register_key ("k", { Key (GDK_KEY_Up) },
+        "raw.up",
+        "Move up",
+        [&] (Key) {
+          auto adj = tv.get_vadjustment ();
+          adj->set_value (adj->get_value() - adj->get_step_increment ());
+          return true;
+        });
+
+    keys.register_key ("K",
+        "raw.page_up",
+        "Page up",
+        [&] (Key) {
+          auto adj = tv.get_vadjustment ();
+          adj->set_value (adj->get_value() - adj->get_page_increment ());
+          return true;
+        });
+
+    keys.register_key ("1", { Key (GDK_KEY_Home) },
+        "raw.home",
+        "Scroll home",
+        [&] (Key) {
+          /* select top */
+          auto adj = tv.get_vadjustment ();
+          adj->set_value (adj->get_lower());
+          return true;
+        });
+
+    keys.register_key ("0", { Key (GDK_KEY_End) },
+        "raw.end",
+        "Scroll to end",
+        [&] (Key) {
+          /* select end */
+          auto adj = tv.get_vadjustment ();
+          adj->set_value (adj->get_upper());
+          return true;
+        });
   }
 
   RawMessage::RawMessage (MainWindow * mw, const char * fname) : RawMessage (mw) {
@@ -64,64 +121,5 @@ namespace Astroid {
   void RawMessage::release_modal () {
     remove_modal_grab ();
   }
-
-  bool RawMessage::on_key_press_event (GdkEventKey * event) {
-    switch (event->keyval) {
-      case GDK_KEY_j:
-      case GDK_KEY_Down:
-        {
-          auto adj = tv.get_vadjustment ();
-          adj->set_value (adj->get_value() + adj->get_step_increment ());
-          return true;
-        }
-      case GDK_KEY_J:
-        {
-          auto adj = tv.get_vadjustment ();
-          adj->set_value (adj->get_value() + adj->get_page_increment ());
-          return true;
-        }
-
-      case GDK_KEY_k:
-      case GDK_KEY_Up:
-        {
-          auto adj = tv.get_vadjustment ();
-          adj->set_value (adj->get_value() - adj->get_step_increment ());
-          return true;
-        }
-      case GDK_KEY_K:
-        {
-          auto adj = tv.get_vadjustment ();
-          adj->set_value (adj->get_value() - adj->get_page_increment ());
-          return true;
-        }
-
-      case GDK_KEY_Home:
-      case GDK_KEY_1:
-        {
-          /* select top */
-          if (!(event->state & GDK_MOD1_MASK)) {
-            auto adj = tv.get_vadjustment ();
-            adj->set_value (adj->get_lower());
-            return true;
-          }
-        }
-        break;
-
-      case GDK_KEY_End:
-      case GDK_KEY_0:
-        {
-          /* select end */
-          if (!(event->state & GDK_MOD1_MASK)) {
-            auto adj = tv.get_vadjustment ();
-            adj->set_value (adj->get_upper());
-            return true;
-          }
-        }
-        break;
-
-    }
-    return false;
-  }
-
 }
 
