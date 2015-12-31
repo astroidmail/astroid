@@ -97,6 +97,9 @@ namespace Astroid {
 
       void popup_activate_generic (enum PopupItem);
 
+      // ignore built-in key handler
+      virtual bool on_key_press_event (GdkEventKey *) override;
+
       void on_thread_updated (Db *, ustring);
       void on_refreshed ();
 
