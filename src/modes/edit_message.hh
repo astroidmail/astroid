@@ -4,6 +4,7 @@
 # include <ctime>
 # include <atomic>
 # include <memory>
+# include <fstream>
 
 # include <gtkmm/socket.h>
 # include <glibmm/iochannel.h>
@@ -19,7 +20,6 @@
 # include "thread_view/thread_view.hh"
 
 using namespace std;
-using namespace boost::filesystem;
 
 namespace Astroid {
   class EditMessage : public Mode {
@@ -156,8 +156,8 @@ namespace Astroid {
 
       AccountManager * accounts;
 
-      path tmpfile_path;
-      fstream tmpfile;
+      boost::filesystem::path tmpfile_path;
+      std::fstream tmpfile;
       void make_tmpfile ();
 
       Gtk::Image message_sending_status_icon;

@@ -51,7 +51,7 @@ namespace Astroid {
          * aliases for the same target.
          */
 
-        ifstream bf (bindings_file.c_str());
+        std::ifstream bf (bindings_file.c_str());
 
         while (!bf.eof()) {
 

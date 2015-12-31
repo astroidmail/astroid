@@ -455,7 +455,7 @@ namespace Astroid {
       return false;
     }
 
-    ofstream f (to.c_str (), std::ofstream::binary);
+    std::ofstream f (to.c_str (), std::ofstream::binary);
 
     auto data = contents ();
     f.write (reinterpret_cast<char*>(data->get_data ()), data->size ());

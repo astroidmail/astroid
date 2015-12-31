@@ -473,7 +473,7 @@ namespace Astroid {
     auto from_ia = internet_address_mailbox_new (a->name.c_str(), a->email.c_str());
     ustring from = internet_address_to_string (from_ia, true);
 
-    tmpfile.open (tmpfile_path.c_str(), fstream::out);
+    tmpfile.open (tmpfile_path.c_str(), std::fstream::out);
     tmpfile << "From: " << from << endl;
     tmpfile << "To: " << to << endl;
     tmpfile << "Cc: " << cc << endl;
@@ -937,7 +937,7 @@ namespace Astroid {
       throw runtime_error ("em: tmpfile already exists!");
     }
 
-    tmpfile.open (tmpfile_path.c_str(), fstream::out);
+    tmpfile.open (tmpfile_path.c_str(), std::fstream::out);
 
     if (tmpfile.fail()) {
       log << error << "em: error: could not create tmpfile!" << endl;

@@ -189,14 +189,14 @@ namespace Astroid {
 
       }
 
-      ifstream tv_html_f (tv_html.c_str());
+      std::ifstream tv_html_f (tv_html.c_str());
       istreambuf_iterator<char> eos; // default is eos
       istreambuf_iterator<char> tv_iit (tv_html_f);
 
       thread_view_html.append (tv_iit, eos);
       tv_html_f.close ();
 
-      ifstream tv_css_f (tv_css.c_str());
+      std::ifstream tv_css_f (tv_css.c_str());
       istreambuf_iterator<char> tv_css_iit (tv_css_f);
       thread_view_css.append (tv_css_iit, eos);
       tv_css_f.close ();
@@ -263,7 +263,7 @@ namespace Astroid {
   bool ThreadView::check_theme_version (path p) {
     /* check version found in first line in file */
 
-    ifstream f (p.c_str ());
+    std::ifstream f (p.c_str ());
 
     ustring vline;
     int version;

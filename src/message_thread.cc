@@ -562,8 +562,8 @@ namespace Astroid {
 
     if (has_file)
     {
-      ifstream src (fname, ios::binary);
-      ofstream dst (tofname, ios::binary);
+      std::ifstream src (fname, ios::binary);
+      std::ofstream dst (tofname, ios::binary);
 
       if (!src.good () || !dst.good ()) {
         log << error << "msg: failed writing to: " << tofname << endl;
