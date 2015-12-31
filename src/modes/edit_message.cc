@@ -41,129 +41,6 @@ namespace Astroid {
     /* reload message */
     prepare_message ();
     read_edited_message ();
-
-    /* register keys {{{ */
-    keys.register_key (Key (GDK_KEY_Return), { Key (GDK_KEY_KP_Enter) },
-        "edit_message.edit",
-        "Edit message in editor",
-        [&] (Key) {
-          if (!message_sent && !sending_in_progress.load()) {
-            editor_toggle (true);
-            activate_field (Editor);
-          }
-          return true;
-        });
-
-    keys.register_key ("y", "edit_message.send",
-        "Send message",
-        [&] (Key) {
-          if (!message_sent && !sending_in_progress.load()) {
-            ask_yes_no ("Really send message?", [&](bool yes){ if (yes) send_message (); });
-          }
-          return true;
-        });
-
-    keys.register_key ("V", "edit_message.view_raw",
-        "View raw message",
-        [&] (Key) {
-          /* view raw source of to be sent message */
-          ComposeMessage * c = make_message ();
-          ustring tmpf = c->write_tmp ();
-
-          main_window->add_mode (new RawMessage (main_window, tmpf.c_str()));
-
-          delete c;
-
-          unlink (tmpf.c_str());
-
-          return true;
-        });
-
-    keys.register_key ("f", "edit_message.cycle_from",
-        "Cycle through From selector",
-        [&] (Key) {
-          /* cycle through from combo box */
-          if (!message_sent && !sending_in_progress.load()) {
-            int i = from_combo->get_active_row_number ();
-            if (i >= (static_cast<int>(from_store->children().size())-1)) i = 0;
-            else i++;
-            from_combo->set_active (i);
-          }
-
-          return true;
-        });
-
-    keys.register_key ("a", "edit_message.attach",
-        "Attach file",
-        [&] (Key) {
-          attach_file ();
-          return true;
-        });
-
-    keys.register_key ("x", "edit_message.close",
-        "Close",
-        [&] (Key) {
-          if (sending_in_progress.load ()) {
-            /* block closing the window while sending */
-            return true;
-          } else if (!message_sent) {
-            ask_yes_no ("Do you want to close this message? (any changes will be lost)", [&](bool yes){ if (yes) { main_window->close_page(); } });
-            return true;
-          } else {
-            // message has been sent successfully, no need to complain.
-            return false;
-          }
-        });
-
-    keys.register_key ("s", "edit_message.save_draft",
-        "Save draft",
-        [&] (Key) {
-          if (sending_in_progress.load ()) {
-            /* block closing the window while sending */
-            log << error << "em: message is being sent, it cannot be saved as draft anymore." << endl;
-          } else {
-
-            bool r;
-
-            r = save_draft ();
-
-            if (!r) {
-              on_tv_ready ();
-            } else {
-              close ();
-            }
-          }
-          return true;
-        });
-
-    keys.register_key ("D", "edit_message.delete_draft",
-        "Delete draft",
-        [&] (Key) {
-          if (!draft_msg) {
-            log << debug << "em: not a draft." << endl;
-            return true;
-          }
-
-          if (sending_in_progress.load ()) {
-            /* block closing the window while sending */
-            log << error << "em: message is being sent, cannot delete draft now. it will be deleted upon successfully sent message." << endl;
-          } else if (!message_sent) {
-            ask_yes_no ("Do you want to delete this draft and close it? (any changes will be lost)",
-                [&](bool yes) {
-                  if (yes) {
-                    delete_draft ();
-                    close ();
-                  }
-                });
-          } else {
-            // message has been sent successfully, no need to complain.
-            close ();
-          }
-          return true;
-        });
-
-
-    // }}}
   }
 
   EditMessage::EditMessage (MainWindow * mw, refptr<Message> msg) :
@@ -361,6 +238,130 @@ namespace Astroid {
         sigc::mem_fun (this, &EditMessage::on_from_combo_changed));
 
     start_vim_on_socket_ready = true;
+
+    /* register keys {{{ */
+    keys.title = "Edit mode";
+    keys.register_key (Key (GDK_KEY_Return), { Key (GDK_KEY_KP_Enter) },
+        "edit_message.edit",
+        "Edit message in editor",
+        [&] (Key) {
+          if (!message_sent && !sending_in_progress.load()) {
+            editor_toggle (true);
+            activate_field (Editor);
+          }
+          return true;
+        });
+
+    keys.register_key ("y", "edit_message.send",
+        "Send message",
+        [&] (Key) {
+          if (!message_sent && !sending_in_progress.load()) {
+            ask_yes_no ("Really send message?", [&](bool yes){ if (yes) send_message (); });
+          }
+          return true;
+        });
+
+    keys.register_key ("V", "edit_message.view_raw",
+        "View raw message",
+        [&] (Key) {
+          /* view raw source of to be sent message */
+          ComposeMessage * c = make_message ();
+          ustring tmpf = c->write_tmp ();
+
+          main_window->add_mode (new RawMessage (main_window, tmpf.c_str()));
+
+          delete c;
+
+          unlink (tmpf.c_str());
+
+          return true;
+        });
+
+    keys.register_key ("f", "edit_message.cycle_from",
+        "Cycle through From selector",
+        [&] (Key) {
+          /* cycle through from combo box */
+          if (!message_sent && !sending_in_progress.load()) {
+            int i = from_combo->get_active_row_number ();
+            if (i >= (static_cast<int>(from_store->children().size())-1)) i = 0;
+            else i++;
+            from_combo->set_active (i);
+          }
+
+          return true;
+        });
+
+    keys.register_key ("a", "edit_message.attach",
+        "Attach file",
+        [&] (Key) {
+          attach_file ();
+          return true;
+        });
+
+    keys.register_key ("x", "edit_message.close",
+        "Close",
+        [&] (Key) {
+          if (sending_in_progress.load ()) {
+            /* block closing the window while sending */
+            return true;
+          } else if (!message_sent) {
+            ask_yes_no ("Do you want to close this message? (any changes will be lost)", [&](bool yes){ if (yes) { main_window->close_page(); } });
+            return true;
+          } else {
+            // message has been sent successfully, no need to complain.
+            return false;
+          }
+        });
+
+    keys.register_key ("s", "edit_message.save_draft",
+        "Save draft",
+        [&] (Key) {
+          if (sending_in_progress.load ()) {
+            /* block closing the window while sending */
+            log << error << "em: message is being sent, it cannot be saved as draft anymore." << endl;
+          } else {
+
+            bool r;
+
+            r = save_draft ();
+
+            if (!r) {
+              on_tv_ready ();
+            } else {
+              close ();
+            }
+          }
+          return true;
+        });
+
+    keys.register_key ("D", "edit_message.delete_draft",
+        "Delete draft",
+        [&] (Key) {
+          if (!draft_msg) {
+            log << debug << "em: not a draft." << endl;
+            return true;
+          }
+
+          if (sending_in_progress.load ()) {
+            /* block closing the window while sending */
+            log << error << "em: message is being sent, cannot delete draft now. it will be deleted upon successfully sent message." << endl;
+          } else if (!message_sent) {
+            ask_yes_no ("Do you want to delete this draft and close it? (any changes will be lost)",
+                [&](bool yes) {
+                  if (yes) {
+                    delete_draft ();
+                    close ();
+                  }
+                });
+          } else {
+            // message has been sent successfully, no need to complain.
+            close ();
+          }
+          return true;
+        });
+
+
+    // }}}
   } // }}}
 
   EditMessage::~EditMessage () {

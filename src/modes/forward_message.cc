@@ -77,6 +77,8 @@ namespace Astroid {
     /* sent signal */
     message_sent_attempt().connect (
         sigc::mem_fun (this, &ForwardMessage::on_message_sent_attempt_received));
+
+    keys.title = "Forward mode";
   }
 
   void ForwardMessage::on_message_sent_attempt_received (bool res) {
