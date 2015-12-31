@@ -126,13 +126,13 @@ namespace Astroid {
 
     if (is_mode) {
       h += "---\n";
-      h += "<i>" + m->get_keys ()->title + "</i>";
+      h += "<i>" + m->get_keys ()->title + "</i>\n";
 
       h += m->get_keys ()->help ();
     }
 
     if (is_mw) {
-      h += "<i>Main window</i>";
+      h += "<i>Main window</i>\n";
       h += mw->keys.help ();
     }
 
