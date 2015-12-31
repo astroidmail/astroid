@@ -58,7 +58,7 @@ namespace Astroid {
 
     keys.register_key ("K", { Key (GDK_KEY_Page_Up) }, "help.page_up",
         "Page up",
-        [&] (Key k) {
+        [&] (Key) {
           auto adj = scroll.get_vadjustment ();
           adj->set_value (adj->get_value() - adj->get_page_increment ());
           return true;
@@ -66,7 +66,7 @@ namespace Astroid {
 
     keys.register_key ("J", { Key (GDK_KEY_Page_Down) }, "help.page_down",
         "Page down",
-        [&] (Key k) {
+        [&] (Key) {
           auto adj = scroll.get_vadjustment ();
           adj->set_value (adj->get_value() + adj->get_page_increment ());
           return true;
@@ -74,7 +74,7 @@ namespace Astroid {
 
     keys.register_key ("1", { Key (GDK_KEY_Home) }, "help.page_top",
         "Scroll to top",
-        [&] (Key k) {
+        [&] (Key) {
           auto adj = scroll.get_vadjustment ();
           adj->set_value (adj->get_lower ());
           return true;
@@ -82,7 +82,7 @@ namespace Astroid {
 
     keys.register_key ("0", { Key (GDK_KEY_End) }, "help.page_end",
         "Scroll to end",
-        [&] (Key k) {
+        [&] (Key) {
           auto adj = scroll.get_vadjustment ();
           adj->set_value (adj->get_upper ());
           return true;
