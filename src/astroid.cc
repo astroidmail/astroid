@@ -318,7 +318,7 @@ namespace Astroid {
       ustring to, cc, bcc, subject, body;
 
       ustring::size_type pos = url.find ("?");
-      ustring::size_type next;
+      /* ustring::size_type next; */
       if (pos == ustring::npos) pos = url.length ();
       to = url.substr (0, pos);
 
