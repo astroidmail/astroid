@@ -17,7 +17,8 @@ def unitTestAction(target, source, env):
     myenv[k] = v
 
   # add notmuch path
-  myenv['NOTMUCH_CONFIG'] = 'test/mail/test_config'
+  config = os.path.abspath(os.path.join (os.path.curdir, 'test/mail/test_config'))
+  myenv['NOTMUCH_CONFIG'] = config
 
   app = str(source[0].abspath)
   process = subprocess.Popen (app, shell = True, env = myenv)

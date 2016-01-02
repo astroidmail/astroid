@@ -7,11 +7,14 @@ def nmAction(target, source, env):
   '''
   set up notmuch test db in target directory
   '''
-  env['ENV']['NOTMUCH_CONFIG'] = 'mail/test_config'
+
+  config = os.path.abspath(os.path.join (os.path.curdir, 'test/mail/test_config'))
+
+  env['ENV']['NOTMUCH_CONFIG'] = config
 
   # run notmuch
   myenv = os.environ.copy()
-  myenv['NOTMUCH_CONFIG'] = 'test/mail/test_config'
+  myenv['NOTMUCH_CONFIG'] = config
 
   # remove old db
   print "Remove test/mail/.notmuch.."
@@ -26,8 +29,12 @@ def nmAction(target, source, env):
     else:
       o.write (l)
 
+  t.close ()
+  o.flush ()
+  o.close ()
 
-  Popen ("notmuch new", env = myenv, shell = True)
+  p = Popen ("notmuch new", env = myenv, shell = True)
+  p.wait ()
 
   open(str(target[0]),'w').write("SETUP\n")
 
