@@ -1897,7 +1897,7 @@ namespace Astroid {
 
   /* clone and create end }}} */
 
-  void ThreadView::register_keys () {
+  void ThreadView::register_keys () { // {{{
     keys.title = "Thread View";
 
     keys.register_key ("j", "thread_view.down",

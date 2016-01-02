@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_SUITE(Reading)
     /* test writing out */
     string name = tmpnam (NULL);
     Astroid::log << test << "writing to tmp file " << name << endl;
-    fstream tmpfile (name, fstream::out);
+    std::fstream tmpfile (name, std::fstream::out);
 
     tmpfile << "From: test@test.no" << endl;
 
