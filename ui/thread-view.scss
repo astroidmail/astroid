@@ -1,13 +1,18 @@
 /* ui-version: 1 (do not change when modifying theme for yourself) */
-/** Variables **/
-/*** Background colors associated with received emails: ***/
-$recv-normal: white;
+/* Variables */
+/* Background colors associated with received emails: */
+$recv-normal: #ffffff;
 $recv-quoted: #e8e8e8;
 $recv-collapsed: #f5f5f5;
-/*** Background colors associated with sent emails: ***/
-$sent-normal: white;
+/* Background colors associated with sent emails: */
+$sent-normal: #ffffff;
 $sent-quoted: #e8e8e8;
 $sent-collapsed: #f5f5f5;
+/* Fonts */
+$font-base-size: 18px;
+$font-mono: "Input Mono", "Inconsolata", monospace;
+$font-sans: "Input Sans", "Roboto", sans-serif;
+$font-family-default: $font-mono;
 
 @media print {
 
@@ -37,7 +42,8 @@ $sent-collapsed: #f5f5f5;
 body {
     margin: 0 !important;
     padding: 0 !important;
-    /*font-size: smaller !important;*/
+    font-size: $font-base-size;
+    font-family: $font-family-default;
     -webkit-user-select: none;
     -webkit-user-drag: none;
     text-align: center;
@@ -99,7 +105,7 @@ hr {
     box-shadow: 0 3px 3px rgba(0,0,0,1);
     display: block;
     word-wrap: break-word;
-    width: 50em;
+    width: auto;
     /*margin-left: auto;*/
     /*margin-right: auto;*/
     /*width: 60em;*/
@@ -176,7 +182,7 @@ hr {
 }
 
 .email_container .header_container .preview {
-  /*font-size: 8pt;*/
+    /*font-size: 8pt;*/
     font-size: x-small;
     color: #777;
     white-space: nowrap;
@@ -186,7 +192,7 @@ hr {
 }
 
 .email_container .header_container .tags {
-  /*font-size: 8pt;*/
+    /*font-size: 8pt;*/
     font-size: x-small;
     color: #31587a;
     white-space: nowrap;
@@ -196,7 +202,7 @@ hr {
 }
 
 .email_container .header_container .subject {
-  /*font-size: 8pt;*/
+    /*font-size: 8pt;*/
     font-size: x-small;
     color: #000;
     white-space: nowrap;
@@ -206,7 +212,7 @@ hr {
 }
 
 .focused {
-  box-shadow: 5px 3px 3px rgba(71,71,173,1) !important;
+    box-shadow: 5px 3px 3px rgba(71,71,173,1) !important;
 }
 
 .avatar {
@@ -388,12 +394,12 @@ body:not(.nohide) .email.hide .header_container .avatar {
 
 }
 
-@media (-webkit-min-device-pixel-ratio: 1),
-       (min-resolution: 196dpi)
+@media (-webkit-min-device-pixel-ratio: 1), (min-resolution: 196dpi)
 {
-  body {
-    font-size: smaller !important;
-  }
+    body {
+        /* Why this choice? */
+        /* font-size: smaller !important; */
+    }
 }
 
 .email .compressed_note {
@@ -530,35 +536,35 @@ body.nohide .email .compressed_note > span {
 }
 
 #sibling_container {
-  display: none;
+    display: none;
 }
 
 .email > .email_container > .body > .sibling_container {
-  display: block;
-  vertical-align: middle;
-  text-align: center;
-  padding-bottom: 5px;
-  padding-top: 5px;
-  margin-top: 5px;
-  margin-bottom: 5px;
-  background-color: #8CE7FF;
-  border: 1px solid black;
+    display: block;
+    vertical-align: middle;
+    text-align: center;
+    padding-bottom: 5px;
+    padding-top: 5px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    background-color: #8CE7FF;
+    border: 1px solid black;
 }
 
 #mime_container {
-  display: none;
+    display: none;
 }
 
 .email > .email_container > .body > .mime_container {
-  display: block;
-  vertical-align: middle;
-  text-align: center;
-  padding-bottom: 5px;
-  padding-top: 5px;
-  margin-top: 5px;
-  margin-bottom: 5px;
-  background-color: gray;
-  border: 1px solid black;
+    display: block;
+    vertical-align: middle;
+    text-align: center;
+    padding-bottom: 5px;
+    padding-top: 5px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    background-color: gray;
+    border: 1px solid black;
 }
 
 .header {
@@ -656,14 +662,15 @@ body:not(.nohide) .quote_container.controllable.show > .quote {
 }
 
 #message_container {
-  /*position: absolute;*/
-  /*left: 0;*/
-  /*right: 0;*/
-  /*padding: 0 5px 0px;*/
-  /*left: 50%;*/
+    /*position: absolute;*/
+    /*left: 0;*/
+    /*right: 0;*/
+    /*padding: 0 5px 0px;*/
+    /*left: 50%;*/
     margin: 0 auto;
     display: inline-block;
-    font-family: monospace;
+    width: 100%;
+    font-family: $font-family-default;
 }
 #multiple_messages {
     display: none;
