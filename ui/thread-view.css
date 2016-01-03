@@ -167,7 +167,7 @@ hr {
 
 .email_container .header_container .preview {
   /*font-size: 8pt;*/
-  font-size: x-small;
+  font-size: small;
   color: #777;
   white-space: nowrap;
   text-overflow: ellipsis;
