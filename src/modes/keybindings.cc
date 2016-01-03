@@ -275,7 +275,7 @@ namespace Astroid {
 
       } else {
         ustring err = ustring::compose (
-            "key: %1 (%2) already is already user-configured in map with name: %3",
+            "key: %1 (%2) is already user-configured in map with name: %3",
             k.str (), k.name, r.first->first.name);
 
         log << error << err << endl;
@@ -316,7 +316,7 @@ namespace Astroid {
 
         } else {
           ustring err = ustring::compose (
-              "key: %1 (%2) already is already user-configured in map with name: %3",
+              "key: %1 (%2) is already user-configured in map with name: %3",
               k.str (), k.name, r.first->first.name);
 
           log << error << err << endl;
