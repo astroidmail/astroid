@@ -202,6 +202,7 @@ namespace Astroid {
                           return (e.name == name);
                         });
 
+    // add aliases
     if (res != user_bindings.end ()) {
       Key uk = (*res);
 
@@ -210,6 +211,11 @@ namespace Astroid {
       k.meta = uk.meta;
 
       res++;
+      res = find_if (res,
+                     user_bindings.end (),
+                     [&](Key e) {
+                       return (e.name == name);
+                     });
 
       aliases.clear (); // drop any default aliases
 
@@ -219,6 +225,12 @@ namespace Astroid {
         aliases.push_back (ak);
 
         res++;
+        res = find_if (res++,
+                       user_bindings.end (),
+                       [&](Key e) {
+                         return (e.name == name);
+                       });
+
       }
     }
 
