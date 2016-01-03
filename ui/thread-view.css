@@ -3,7 +3,6 @@
 /* Background colors associated with received emails: */
 /* Background colors associated with sent emails: */
 /* Fonts */
-/* Colours */
 @media print {
   body {
     background-color: white !important; }
@@ -27,7 +26,7 @@
 body {
   margin: 0 !important;
   padding: 0 !important;
-  font-size: 16px;
+  font-size: 18px;
   font-family: "Input Mono", "Inconsolata", monospace;
   -webkit-user-select: none;
   -webkit-user-drag: none;
@@ -76,42 +75,21 @@ hr {
   box-shadow: inset 0px 0px 1px rgba(0, 0, 0, 0.05); }
 
 .email {
-  font-size: 16px;
-  /* border: 1px rgba(0,0,0,1) solid; */
-  border: 1px solid #d8d8d8;
-  border-width: 1px 0px;
-  background-color: #ffffff !important;
+  border: 1px black solid;
+  background-color: white;
+  /* recv-normal */
   color: black;
   /*font-size: small;*/
-  /* box-shadow: 0 3px 3px rgba(0,0,0,1);
-  display: inline-block;
+  box-shadow: 0 3px 3px black;
+  display: block;
   word-wrap: break-word;
   width: auto;
   /*margin-left: auto;*/
   /*margin-right: auto;*/
-  width: 100%;
-  /*min-width: 48em;*/
+  /*width: 60em;*/
   box-sizing: border-box;
-  text-align: left;
-  margin: 3px 0;
-  /* use a left border indicator for focused/unfocused email */
-  padding-left: 7px; }
-  .email + .email {
-    margin-right: auto !important; }
-  .email > .email > .email > .email > .email {
-    font-size: 90%; }
-  .email.focused {
-    padding-left: 1px;
-    border-left: 6px solid;
-    border-left-color: #d5e5f6;
-    box-shadow: 0 0 0 transparent !important; }
-  .email.hide {
-    background-color: #f2f2f2 !important;
-    border-color: #d8d8d8;
-    border-left-color: #4a90d9; }
-  .email .body {
-    padding: 15px;
-    max-width: 60em; }
+  margin-top: 5px;
+  text-align: left; }
 
 .email.sent {
   background-color: white;
@@ -176,7 +154,7 @@ hr {
 
 .email_container .header_container .preview {
   /*font-size: 8pt;*/
-  font-size: 0.8em;
+  font-size: x-small;
   color: #777;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -185,7 +163,7 @@ hr {
 
 .email_container .header_container .tags {
   /*font-size: 8pt;*/
-  font-size: 0.7em;
+  font-size: x-small;
   color: #31587a;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -194,7 +172,7 @@ hr {
 
 .email_container .header_container .subject {
   /*font-size: 8pt;*/
-  font-size: 0.7em;
+  font-size: x-small;
   color: #000;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -222,10 +200,10 @@ body:not(.nohide) .email.hide .header_container .avatar {
   border-radius: 2.5px; }
 
 .email .body {
-  border-top: 1px solid #d8d8d8;
+  border-top: 1px solid #999;
   margin: 5px;
   margin-top: 0;
-  padding-top: 25px;
+  padding-top: 5px;
   overflow-x: auto;
   overflow-y: hidden; }
 
@@ -256,7 +234,7 @@ body:not(.nohide) .email.hide .header_container .avatar {
   background: #ffc;
   box-shadow: 0 3px 11px rgba(0, 0, 0, 0.21);
   /* Reset styles */
-  font-size: 0.8em;
+  font-size: small;
   font-family: sans;
   color: black; }
 
@@ -455,7 +433,6 @@ body.nohide .email .compressed_note > span {
   overflow: hidden;
   /*font-size: 10pt;*/
   /*font-size: small;*/
-  font-size: 0.8em;
   cursor: pointer;
   border: 1px solid transparent;
   border-radius: 4px;
@@ -496,7 +473,7 @@ body.nohide .email .compressed_note > span {
 .email > .attachment_container > .attachment .info {
   vertical-align: middle;
   padding-left: 5px;
-  font-size: 0.7em; }
+  font-size: smaller; }
 
 .email > .attachment_container > .attachment .info > :not(.filename) {
   color: #666; }
@@ -597,7 +574,7 @@ body.nohide .email .compressed_note > span {
   color: #777;
   font-family: sans-serif;
   /*font-size: 75%;*/
-  font-size: 0.8em;
+  font-size: small;
   cursor: pointer;
   display: none; }
 
@@ -628,8 +605,6 @@ body:not(.nohide) .quote_container.controllable.show > .quote {
   margin: 0 auto;
   display: inline-block;
   width: 100%;
-  max-width: 60em;
-  text-align: center;
   font-family: "Input Mono", "Inconsolata", monospace; }
 
 #multiple_messages {
@@ -649,8 +624,8 @@ body:not(.nohide) .quote_container.controllable.show > .quote {
 
 blockquote {
   margin: 5px 10px 5px 10px;
-  padding-left: 15px;
-  padding-right: 15px;
+  padding-left: 5px;
+  padding-right: 5px;
   border: 0;
   /*border-left: 3px #aaa solid;*/
   border-left: #5555EE solid 0.2em;
@@ -658,8 +633,7 @@ blockquote {
 
 blockquote > blockquote {
   border-left: #425c78 solid 0.2em;
-  color: #425c78;
-  margin-left: 0; }
+  color: #425c78; }
 
 blockquote > blockquote > blockquote {
   border-left: #729fcf solid 0.2em;
