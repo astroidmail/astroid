@@ -202,8 +202,11 @@ namespace Astroid {
                           return (e.name == name);
                         });
 
+    bool userdefined = false;
+
     // add aliases
     if (res != user_bindings.end ()) {
+      userdefined = true;
       Key uk = (*res);
 
       k.key  = uk.key;
@@ -237,6 +240,7 @@ namespace Astroid {
     k.name = name;
     k.help = help;
 
+    k.userdefined = userdefined;
     k.isalias = false;
     k.hasaliases = !aliases.empty ();
 
@@ -256,13 +260,28 @@ namespace Astroid {
 
     auto r = keys.insert (KeyBinding (k, t));
     if (!r.second) {
-      ustring err = ustring::compose (
-          "key: %1 (%2) already exists in map with name: %3",
-          k.str (), k.name, r.first->first.name);
+      if (!r.first->first.userdefined) {
+        /* default key, removing and replacing with user defined. target of
+         * default key will be unreachable.
+         */
+        ustring wrr = ustring::compose (
+            "key: %1 (%2) already exists in map with name: %3, overwriting.",
+            k.str (), k.name, r.first->first.name);
 
-      log << error << err << endl;
+        log << warn << wrr << endl;
 
-      throw duplicatekey_error (err.c_str());
+        keys.erase (r.first);
+        r = keys.insert (KeyBinding (k, t));
+
+      } else {
+        ustring err = ustring::compose (
+            "key: %1 (%2) already is already user-configured in map with name: %3",
+            k.str (), k.name, r.first->first.name);
+
+        log << error << err << endl;
+
+        throw duplicatekey_error (err.c_str());
+      }
     }
 
     /* get pointer to key in map */
@@ -276,14 +295,34 @@ namespace Astroid {
 
       ka.name = k.name;
       ka.help = k.help;
+      ka.userdefined = userdefined;
       ka.isalias = true;
       ka.master_key = master;
       auto r = keys.insert (KeyBinding (ka, NULL));
 
       if (!r.second) {
-        log << error << "key alias: " << k.str () << " already exists in map." << endl;
-        throw duplicatekey_error (ustring::compose ("key: %1 already exists",
-              k.str()).c_str ());
+        if (!r.first->first.userdefined) {
+          /* default key, removing and replacing with user defined. target of
+           * default key will be unreachable.
+           */
+          ustring wrr = ustring::compose (
+              "key: %1 (%2) already exists in map with name: %3, overwriting.",
+              k.str (), k.name, r.first->first.name);
+
+          log << warn << wrr << endl;
+
+          keys.erase (r.first);
+          r = keys.insert (KeyBinding (k, t));
+
+        } else {
+          ustring err = ustring::compose (
+              "key: %1 (%2) already is already user-configured in map with name: %3",
+              k.str (), k.name, r.first->first.name);
+
+          log << error << err << endl;
+
+          throw duplicatekey_error (err.c_str());
+        }
       }
     }
   }

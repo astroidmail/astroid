@@ -22,6 +22,8 @@ namespace Astroid {
     ustring name = "";
     ustring help = "";
 
+    bool userdefined = false;
+
     bool hasaliases = false; /* this is a master key with other aliases */
     bool isalias    = false; /* this key is an alias for another master key */
     const Key * master_key;
