@@ -244,9 +244,13 @@ namespace Astroid {
 
     auto r = keys.insert (KeyBinding (k, t));
     if (!r.second) {
-      log << error << "key: " << k.str () << " already exists in map." << endl;
-      throw duplicatekey_error (ustring::compose ("key: %1 already exists",
-            k.str()).c_str ());
+      ustring err = ustring::compose (
+          "key: %1 (%2) already exists in map with name: %3",
+          k.str (), k.name, r.first->first.name);
+
+      log << error << err << endl;
+
+      throw duplicatekey_error (err.c_str());
     }
 
     /* get pointer to key in map */
