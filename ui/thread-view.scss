@@ -690,7 +690,8 @@ body:not(.nohide) .quote_container.controllable.show > .quote {
     /*left: 50%;*/
     margin: 0 auto;
     display: inline-block;
-    width: 60em;
+    width: auto;
+    max-width: 60em;
     font-family: $font-family-default;
 }
 #multiple_messages {
