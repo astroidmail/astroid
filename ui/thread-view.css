@@ -637,8 +637,8 @@ body:not(.nohide) .quote_container.controllable.show > .quote {
 
 blockquote {
   margin: 5px 10px 5px 10px;
-  padding-left: 5px;
-  padding-right: 5px;
+  padding-left: 15px;
+  padding-right: 15px;
   border: 0;
   /*border-left: 3px #aaa solid;*/
   border-left: #5555EE solid 0.2em;
