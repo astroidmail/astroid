@@ -82,17 +82,22 @@ hr {
   color: black;
   /*font-size: small;*/
   /* box-shadow: 0 3px 3px rgba(0,0,0,1);
-  display: block;
+  display: inline-block;
   word-wrap: break-word;
   width: auto;
   /*margin-left: auto;*/
   /*margin-right: auto;*/
-  /*width: 60em;*/
+  width: 100%;
+  min-width: 48em;
   box-sizing: border-box;
   text-align: left;
   margin: 0;
   /* use a left border indicator for focused/unfocused email */
   padding-left: 7px; }
+  .email + .email {
+    margin-right: auto !important; }
+    .email + .email + .email + .email + .email + .email + .email + .email + .email + .email {
+      font-size: 90%; }
   .email.focused {
     padding-left: 1px;
     border-left: 6px solid #d8d8d8;
@@ -617,8 +622,9 @@ body:not(.nohide) .quote_container.controllable.show > .quote {
   /*left: 50%;*/
   margin: 0 auto;
   display: inline-block;
-  width: auto;
+  width: 100%;
   max-width: 60em;
+  text-align: center;
   font-family: "Input Mono", "Inconsolata", monospace; }
 
 #multiple_messages {
