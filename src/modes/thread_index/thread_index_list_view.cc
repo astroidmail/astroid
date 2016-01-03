@@ -349,7 +349,7 @@ namespace Astroid {
                              bind (&ThreadIndexListView::multi_key_handler, this, MToggle, _1));
 
     keys->register_key ("+",
-          "therad_index.multi",
+          "thread_index.multi",
           "Apply action to marked threads",
           [&] (Key k) {
 
