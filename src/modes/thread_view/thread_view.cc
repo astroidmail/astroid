@@ -2233,8 +2233,6 @@ namespace Astroid {
           return false;
         });
 
-    Keybindings multi_keys;
-
     multi_keys.register_key ("t", "thread_view.multi.toggle",
         "Toggle marked",
         [&] (Key) {

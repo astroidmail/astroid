@@ -309,7 +309,6 @@ namespace Astroid {
 
 
     /* set up for multi key handler */
-    Keybindings multi_keys;
     multi_keys.register_key ("N",
                              "thread_index.multi.mark_unread",
                              "Mark unread",

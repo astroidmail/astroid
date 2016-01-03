@@ -292,6 +292,7 @@ namespace Astroid {
       virtual void release_modal () override;
 
     private:
+      Keybindings multi_keys;
       void register_keys ();
 
     public:

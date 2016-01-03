@@ -69,6 +69,7 @@ namespace Astroid {
       void update_bg_image ();
 
     protected:
+      Keybindings multi_keys;
       void register_keys ();
 
       typedef enum {
