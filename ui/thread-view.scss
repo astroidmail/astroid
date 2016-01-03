@@ -13,6 +13,9 @@ $font-base-size: 18px;
 $font-mono: "Input Mono", "Inconsolata", monospace;
 $font-sans: "Input Sans", "Roboto", sans-serif;
 $font-family-default: $font-mono;
+/* Colours */
+$email-solid: #d8d8d8;
+$focused-solid: #d8d8d8;
 
 @media print {
 
@@ -98,11 +101,12 @@ hr {
 }
 
 .email {
-    border: 1px rgba(0,0,0,1) solid;
-    background-color: white;/* recv-normal */
+    /* border: 1px rgba(0,0,0,1) solid; */
+    border-bottom: 1px solid $email-solid;
+    background-color: $recv-normal !important;
     color: black;
     /*font-size: small;*/
-    box-shadow: 0 3px 3px rgba(0,0,0,1);
+    /* box-shadow: 0 3px 3px rgba(0,0,0,1);
     display: block;
     word-wrap: break-word;
     width: auto;
@@ -110,8 +114,25 @@ hr {
     /*margin-right: auto;*/
     /*width: 60em;*/
     box-sizing:border-box;
-    margin-top: 5px;
     text-align: left;
+    margin: 0;
+
+    /* use a left border indicator for focused/unfocused email */
+    padding-left: 7px;
+    &.focused {
+      padding-left: 1px;
+      border-left: 6px solid $focused-solid;
+      border-color: $focused-solid;
+      box-shadow: 0 0 0 transparent !important;
+    }
+    &.hide {
+      background-color: darken( $recv-normal, 5% ) !important;
+    }
+
+    .body {
+      padding: 15px;
+      max-width: 60em;
+    }
 }
 
 .email.sent {
@@ -236,10 +257,10 @@ body:not(.nohide) .email.hide .header_container .avatar {
 }
 
 .email .body {
-    border-top: 1px solid #999;
+    border-top: 1px solid $email-solid;
     margin: 5px;
     margin-top: 0;
-    padding-top: 5px;
+    padding-top: 25px;
     overflow-x: auto;
     overflow-y: hidden;
 }

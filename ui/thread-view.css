@@ -3,6 +3,7 @@
 /* Background colors associated with received emails: */
 /* Background colors associated with sent emails: */
 /* Fonts */
+/* Colours */
 @media print {
   body {
     background-color: white !important; }
@@ -75,12 +76,12 @@ hr {
   box-shadow: inset 0px 0px 1px rgba(0, 0, 0, 0.05); }
 
 .email {
-  border: 1px black solid;
-  background-color: white;
-  /* recv-normal */
+  /* border: 1px rgba(0,0,0,1) solid; */
+  border-bottom: 1px solid #d8d8d8;
+  background-color: #ffffff !important;
   color: black;
   /*font-size: small;*/
-  box-shadow: 0 3px 3px black;
+  /* box-shadow: 0 3px 3px rgba(0,0,0,1);
   display: block;
   word-wrap: break-word;
   width: auto;
@@ -88,8 +89,20 @@ hr {
   /*margin-right: auto;*/
   /*width: 60em;*/
   box-sizing: border-box;
-  margin-top: 5px;
-  text-align: left; }
+  text-align: left;
+  margin: 0;
+  /* use a left border indicator for focused/unfocused email */
+  padding-left: 7px; }
+  .email.focused {
+    padding-left: 1px;
+    border-left: 6px solid #d8d8d8;
+    border-color: #d8d8d8;
+    box-shadow: 0 0 0 transparent !important; }
+  .email.hide {
+    background-color: #f2f2f2 !important; }
+  .email .body {
+    padding: 15px;
+    max-width: 60em; }
 
 .email.sent {
   background-color: white;
@@ -200,10 +213,10 @@ body:not(.nohide) .email.hide .header_container .avatar {
   border-radius: 2.5px; }
 
 .email .body {
-  border-top: 1px solid #999;
+  border-top: 1px solid #d8d8d8;
   margin: 5px;
   margin-top: 0;
-  padding-top: 5px;
+  padding-top: 25px;
   overflow-x: auto;
   overflow-y: hidden; }
 
