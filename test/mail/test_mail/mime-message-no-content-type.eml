@@ -1,0 +1,241 @@
+Delivered-To: eg@gaute.vetsj.com
+Received: by 10.28.63.147 with SMTP id m141csp5483751wma;
+        Sun, 3 Jan 2016 14:00:23 -0800 (PST)
+X-Received: by 10.28.22.199 with SMTP id 190mr53705039wmw.54.1451858423121;
+        Sun, 03 Jan 2016 14:00:23 -0800 (PST)
+Return-Path: <hugo@fsfe.org>
+Received: from cavendish.fsfeurope.org (cavendish.fsfeurope.org. [2001:aa8:ffed::3:102])
+        by mx.google.com with ESMTPS id wl8si3570248wjc.134.2016.01.03.14.00.23
+        for <eg@gaute.vetsj.com>
+        (version=TLS1 cipher=AES128-SHA bits=128/128);
+        Sun, 03 Jan 2016 14:00:23 -0800 (PST)
+Received-SPF: neutral (google.com: 2001:aa8:ffed::3:102 is neither permitted nor denied by best guess record for domain of hugo@fsfe.org) client-ip=2001:aa8:ffed::3:102;
+Authentication-Results: mx.google.com;
+       spf=neutral (google.com: 2001:aa8:ffed::3:102 is neither permitted nor denied by best guess record for domain of hugo@fsfe.org) smtp.mailfrom=hugo@fsfe.org
+Received: from localhost (localhost [127.0.0.1])
+	by cavendish.fsfeurope.org (Postfix) with ESMTP id B18BC63B7B3
+	for <eg@gaute.vetsj.com>; Sun,  3 Jan 2016 23:00:26 +0100 (CET)
+X-Virus-Scanned: Debian amavisd-new at cavendish
+Received: from cavendish.fsfeurope.org ([127.0.0.1])
+	by localhost (cavendish.fsfeurope.org [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id q7XxsCXRZ3AJ for <eg@gaute.vetsj.com>;
+	Sun,  3 Jan 2016 23:00:23 +0100 (CET)
+Received: from localhost (195-132-30-150.rev.numericable.fr [195.132.30.150])
+	(using TLSv1 with cipher AES128-SHA (128/128 bits))
+	(Client did not present a certificate)
+	(Authenticated sender: hugo)
+	by cavendish.fsfeurope.org (Postfix) with ESMTPSA id 3783E63B7AA
+	for <eg@gaute.vetsj.com>; Sun,  3 Jan 2016 23:00:22 +0100 (CET)
+Date: Sun, 3 Jan 2016 23:00:16 +0100
+From: Hugo Roy <hugo@fsfe.org>
+To: eg@gaute.vetsj.com
+Subject: [Fwd] Re: [astroid] Keybinding configuration (#21)
+Message-ID: <20160103220016.GA7757@xps.dartybox.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="jq0ap7NbKX2Kqbes"
+Content-Disposition: inline
+User-Agent: Mutt/1.5.23.1 (2014-03-12)
+X-Keywords: \Important,\Inbox,dev/astroid
+
+
+--jq0ap7NbKX2Kqbes
+Content-Type: multipart/mixed; boundary="tKW2IUtsqtDRztdT"
+Content-Disposition: inline
+
+
+--tKW2IUtsqtDRztdT
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+
+Hi,
+
+This is how I forward emails. Trying to open a thread on such an email
+crashes astroid for me as described in:
+
+https://github.com/gauteh/astroid/issues/30
+
+I will test with this very email to see if this reproduces it.
+
+
+Best regards,
+
+
+--=20
+Hugo Roy =E2=80=93 Free Software Foundation Europe https://fsfe.org/about/r=
+oy
+=20
+Please use cryptography for email: see https://emailselfdefense.fsf.org/en/
+Merci d=E2=80=99utiliser la cryptographie pour l=E2=80=99email=C2=A0: voir =
+https://emailselfdefense.fsf.org/fr/
+
+--tKW2IUtsqtDRztdT
+Content-Type: message/rfc822
+Content-Disposition: inline
+
+Return-Path: <noreply@github.com>
+Received: from totosh.ampoliros.net ([unix socket])
+	 by totosh (Cyrus git2.5+0-Debian-2.5~dev2015021301-0~kolab2) with LMTPA;
+	 Sun, 03 Jan 2016 20:16:24 +0100
+X-Sieve: CMU Sieve 2.4
+Received: by totosh.ampoliros.net (Postfix, from userid 116)
+ id E6C3C23C5; Sun,  3 Jan 2016 20:16:23 +0100 (CET)
+X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on totosh.ampoliros.net
+Received: from cavendish.fsfeurope.org (cavendish.fsfeurope.org
+ [IPv6:2001:aa8:ffed::3:102])
+ (using TLSv1 with cipher ADH-AES256-SHA (256/256 bits))
+ (No client certificate requested)
+ by totosh.ampoliros.net (Postfix) with ESMTPS id D792423A7
+ for <hugo+fsfe@ampoliros.net>; Sun,  3 Jan 2016 20:16:22 +0100 (CET)
+X-FSFE-Incoming: Origin:github.com, Trust:hi,
+ Action:SkipGreylist (DNSWLId 22159)
+Received: from github-smtp2b-ext-cp1-prd.iad.github.net
+ (github-smtp2-ext6.iad.github.net [192.30.252.197])
+ (using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+ (Client CN "*.iad.github.net",
+ Issuer "DigiCert SHA2 High Assurance Server CA" (verified OK))
+ by cavendish.fsfeurope.org (Postfix) with ESMTPS id B0EF363B793
+ for <hugo@fsfe.org>; Sun,  3 Jan 2016 20:17:56 +0100 (CET)
+Date: Sun, 03 Jan 2016 11:17:50 -0800
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=github.com;
+ s=pf2014; t=1451848670;
+ bh=jJEd9vv0sAOuClygsTGaEduhKSu7JUZAhVHRZlFfzwQ=;
+ h=From:Reply-To:To:Cc:In-Reply-To:References:Subject:List-ID:
+ List-Archive:List-Post:List-Unsubscribe:From;
+ b=Rz7NDNDVPgwxmhNUDPGx+Ezag7DWskTev8JfRGy5CVVmxJNOZBWngTMb4ayGppDts
+ DdkXjYLLK/UgelZyuze52mc6EGgrVbN82eyGTgpsw4NFjiwqzae7wuK2q8Z4WdOGYb
+ sHHpgi0LtIwuHBZXELtK+ClkQOEX6IZ9OwEbgCQk=
+From: Gaute Hope <notifications@github.com>
+Reply-To: gauteh/astroid
+ <reply+0018de4be84a1e9eff6f9d7cf5db4dfaccb645570986f08192cf0000000112a135de92a169ce066e91e8@reply.github.com>
+To: gauteh/astroid <astroid@noreply.github.com>
+Cc: Hugo Roy <hugo@fsfe.org>
+Message-ID: <gauteh/astroid/issues/21/168533265@github.com>
+In-Reply-To: <gauteh/astroid/issues/21@github.com>
+References: <gauteh/astroid/issues/21@github.com>
+Subject: Re: [astroid] Keybinding configuration (#21)
+Mime-Version: 1.0
+Content-Type: multipart/alternative;
+ boundary="--==_mimepart_568973de735b3_31b63f87383d729c15738";
+ charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Precedence: list
+X-GitHub-Sender: gauteh
+X-GitHub-Recipient: hugoroy
+X-GitHub-Reason: author
+List-ID: gauteh/astroid <astroid.gauteh.github.com>
+List-Archive: https://github.com/gauteh/astroid
+List-Post: <mailto:reply+0018de4be84a1e9eff6f9d7cf5db4dfaccb645570986f08192cf0000000112a135de92a169ce066e91e8@reply.github.com>
+List-Unsubscribe: <mailto:unsub+0018de4be84a1e9eff6f9d7cf5db4dfaccb645570986f08192cf0000000112a135de92a169ce066e91e8@reply.github.com>,
+ <https://github.com/notifications/unsubscribe/ABjeS6FltMZa22fXdEh4qy1wYfLkgzfzks5pWWtegaJpZM4GCT5K>
+X-Auto-Response-Suppress: All
+X-GitHub-Recipient-Address: hugo@fsfe.org
+
+
+----==_mimepart_568973de735b3_31b63f87383d729c15738
+Content-Type: text/plain;
+ charset=UTF-8
+Content-Transfer-Encoding: 7bit
+
+Hugo Roy writes on January 3, 2016 12:29:
+> I'm having a hard time to set my own keybindings right now. It doesn't seem possible to override the defaults  (i.e. if a key is already set to something then it can't be defined by the user for something else?)
+> 
+> For instance, this doesn't work:
+> 
+> `#thread_view.next_message=j`
+> 
+> ```
+> [debug] (12:28:38): key: registering key: thread_view.next_message: n
+> [ERROR] (12:28:38): key: j already exists in map.
+
+First; I updated the error so that it is possible to know which key it
+is conflicting with.
+
+In this case it is conflicting with `thread_view.down`.
+
+Secondly, this is a choice, since the other key-target would be
+unreachable. The current behavior is to not allow targets to be
+unreachable, and you would have to _also_ define `thread_view.down` in
+your custom keybindings. I guess, the other way is more logical? To just
+delete the original one (if it is not user-defined)?
+
+ 
+> Also, why can't a key be more than once, if the context is different. For instance consider:
+> 
+> `main_window.close_page=C-w
+> thread_index.close_pane=C-w`
+> 
+
+There was a bug in how I scanned for user-aliases, this should be fixed.
+
+
+---
+Reply to this email directly or view it on GitHub:
+https://github.com/gauteh/astroid/issues/21#issuecomment-168533265
+----==_mimepart_568973de735b3_31b63f87383d729c15738
+Content-Type: text/html;
+ charset=UTF-8
+Content-Transfer-Encoding: 7bit
+
+Hugo Roy writes on January 3, 2016 12:29:<br>
+&gt; I&#39;m having a hard time to set my own keybindings right now. It doesn&#39;t seem possible to override the defaults  (i.e. if a key is already set to something then it can&#39;t be defined by the user for something else?)<br>
+&gt; <br>
+&gt; For instance, this doesn&#39;t work:<br>
+&gt; <br>
+&gt; `#thread_view.next_message=j`<br>
+&gt; <br>
+&gt; ```<br>
+&gt; [debug] (12:28:38): key: registering key: thread_view.next_message: n<br>
+&gt; [ERROR] (12:28:38): key: j already exists in map.<br>
+<br>
+First; I updated the error so that it is possible to know which key it<br>
+is conflicting with.<br>
+<br>
+In this case it is conflicting with `thread_view.down`.<br>
+<br>
+Secondly, this is a choice, since the other key-target would be<br>
+unreachable. The current behavior is to not allow targets to be<br>
+unreachable, and you would have to _also_ define `thread_view.down` in<br>
+your custom keybindings. I guess, the other way is more logical? To just<br>
+delete the original one (if it is not user-defined)?<br>
+<br>
+ <br>
+&gt; Also, why can&#39;t a key be more than once, if the context is different. For instance consider:<br>
+&gt; <br>
+&gt; `main_window.close_page=C-w<br>
+&gt; thread_index.close_pane=C-w`<br>
+&gt; <br>
+<br>
+There was a bug in how I scanned for user-aliases, this should be fixed.<br>
+
+
+<p style="font-size:small;-webkit-text-size-adjust:none;color:#666;">&mdash;<br>Reply to this email directly or <a href="https://github.com/gauteh/astroid/issues/21#issuecomment-168533265">view it on GitHub</a>.<img alt="" height="1" src="https://github.com/notifications/beacon/ABjeS0lr4rVTDB9woDabDydf5Xe2jrizks5pWWtegaJpZM4GCT5K.gif" width="1" /></p>
+<div itemscope itemtype="http://schema.org/EmailMessage">
+<div itemprop="action" itemscope itemtype="http://schema.org/ViewAction">
+  <link itemprop="url" href="https://github.com/gauteh/astroid/issues/21#issuecomment-168533265"></link>
+  <meta itemprop="name" content="View Issue"></meta>
+</div>
+<meta itemprop="description" content="View this Issue on GitHub"></meta>
+</div>
+
+----==_mimepart_568973de735b3_31b63f87383d729c15738--
+
+--tKW2IUtsqtDRztdT--
+
+--jq0ap7NbKX2Kqbes
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEcBAEBCgAGBQJWiZntAAoJEI0CLJmz17eVyxoIAKD2SjxKdLWm+aqwgXSn9yGp
+ZLQKLpd9cMoNNcWQTgJbsKePkZCBt2vhHmNMpA/1F9c/truyNuPz8qWp3SZ7zwhA
+iqTYVTl56NRrhNJIfpdTz7eqO6EceZefl7SgiWmd8+SRPsJSQ3CL1Bn9ygA/2aW+
+G0ei/JxQ2YI6sgLDPhwV0fN7O+CMUf5WKsFuU30Ggfzn1kGbUAXUp2P5Vc6YPst0
+VkQLS0xcnSvAxob2IWOW1J4TCjpX8Svol0xJYYOh/x+RAGHFqe8H/oZfjUQPihni
+soaS0h6C2l+Y5IFJNePJN+ro41GJ9UuIeGy2O9m6XZF4ibUt7wHrvdxtL5Sboog=
+=cjsM
+-----END PGP SIGNATURE-----
+
+--jq0ap7NbKX2Kqbes--
