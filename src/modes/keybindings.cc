@@ -260,7 +260,7 @@ namespace Astroid {
 
     auto r = keys.insert (KeyBinding (k, t));
     if (!r.second) {
-      if (!r.first->first.userdefined) {
+      if (!r.first->first.userdefined && k.userdefined) {
         /* default key, removing and replacing with user defined. target of
          * default key will be unreachable.
          */
@@ -301,7 +301,7 @@ namespace Astroid {
       auto r = keys.insert (KeyBinding (ka, NULL));
 
       if (!r.second) {
-        if (!r.first->first.userdefined) {
+        if (!r.first->first.userdefined && ka.userdefined) {
           /* default key, removing and replacing with user defined. target of
            * default key will be unreachable.
            */
@@ -359,7 +359,7 @@ namespace Astroid {
      * k      : for key 'k'
      * C-k    : for Ctrl-k
      * M-k    : for Alt-k
-     * C-M-K  : for Ctrl-Alt-Shift-K
+     * C-M-K  : for Ctrl-Alt-K
      * K      : for Shift-k
      *
      * TODO: other keys supported: check keynames map.
