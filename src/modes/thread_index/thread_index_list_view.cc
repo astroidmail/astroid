@@ -294,6 +294,33 @@ namespace Astroid {
           return true;
         });
 
+    keys->register_key (Key (GDK_KEY_Tab),
+        "thread_index.next_unread",
+        "Jump to next unread thread",
+        [&] (Key) {
+          Gtk::TreePath path;
+          Gtk::TreeIter fwditer;
+
+          fwditer = list_store->get_iter ("0");
+          Gtk::ListStore::Row row;
+
+          while (fwditer) {
+            row = *fwditer;
+
+            Glib::RefPtr<NotmuchThread> thread;
+            thread = row[list_store->columns.thread];
+            if (thread->unread) {
+              path = list_store->get_path (fwditer);
+              set_cursor (path);
+              break;
+            }
+
+            fwditer++;
+          }
+
+          return true;
+        });
+
     keys->register_key ("k", { Key(false, false, (guint) GDK_KEY_Up) },
         "thread_index.prev_thread", "Previous thread",
         [&](Key) {
