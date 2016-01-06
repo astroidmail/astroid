@@ -63,7 +63,7 @@ namespace Astroid {
 
 
     keys.register_key (Key((guint) GDK_KEY_dollar), "thread_index.refresh", "Refresh query",
-        [&] (Key k) {
+        [&] (Key) {
           refresh (false, max(thread_load_step, current_thread), false);
           return true;
         });
@@ -84,7 +84,7 @@ namespace Astroid {
 
 
     keys.register_key ("v", "thread_index.refine_query", "Refine query",
-        [&] (Key k) {
+        [&] (Key) {
           if (!invincible) {
             main_window->enable_command (CommandBar::CommandMode::Search,
                 query_string,
