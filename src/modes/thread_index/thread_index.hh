@@ -18,7 +18,7 @@ namespace Astroid {
 
   class ThreadIndex : public PanedMode  {
     public:
-      ThreadIndex (MainWindow *, ustring);
+      ThreadIndex (MainWindow *, ustring, ustring = "");
       ~ThreadIndex ();
 
       int total_messages;
@@ -43,10 +43,13 @@ namespace Astroid {
       ThreadIndexListView * list_view;
       ThreadIndexScrolled * scroll;
 
+      ustring name = ""; // used as title for default queries
       ustring query_string;
 
       Db * db = NULL;
       notmuch_query_t   * query;
       notmuch_threads_t * threads;
+
+      virtual ustring get_label () override;
   };
 }

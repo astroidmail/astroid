@@ -20,10 +20,11 @@
 using namespace std;
 
 namespace Astroid {
-  ThreadIndex::ThreadIndex (MainWindow *mw, ustring _query) : PanedMode(mw), query_string(_query) {
+  ThreadIndex::ThreadIndex (MainWindow *mw, ustring _query, ustring _name) : PanedMode(mw), query_string(_query) {
 
+    name = _name;
     set_orientation (Gtk::Orientation::ORIENTATION_VERTICAL);
-    set_label (query_string);
+    set_label (get_label ());
 
     /* set up treeview */
     list_store = Glib::RefPtr<ThreadIndexListStore>(new ThreadIndexListStore ());
@@ -87,7 +88,7 @@ namespace Astroid {
                 [&](ustring new_query) {
 
                   query_string = new_query;
-                  set_label (query_string);
+                  set_label (get_label ());
                   list_store->clear ();
                   close_query ();
                   setup_query ();
@@ -156,9 +157,16 @@ namespace Astroid {
     unread_messages = notmuch_query_count_messages (unread_q); // destructive
     notmuch_query_destroy (unread_q);
 
-    set_label (ustring::compose ("%1 (%2/%3)", query_string, unread_messages, total_messages));
+    set_label (get_label ());
 
     list_view->update_bg_image ();
+  }
+
+  ustring ThreadIndex::get_label () {
+    if (name == "")
+      return ustring::compose ("%1 (%2/%3)", query_string, unread_messages, total_messages);
+    else
+      return ustring::compose ("%1 (%2/%3)", name, unread_messages, total_messages);
   }
 
   void ThreadIndex::close_query () {

@@ -19,6 +19,7 @@
 * Edit messages as new with 'E'.
 * Added a dinosaur.
 * Configurable keybindings.
+* Show name of pre-defined searches in tab.
 
 == v0.4 / 2015-08-15
 
