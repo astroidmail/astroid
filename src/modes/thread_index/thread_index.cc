@@ -68,10 +68,9 @@ namespace Astroid {
           return true;
         });
 
-    /*
-    keys.register_key (Key ((guint) GDK_KEY_Tab), "thread_index.pane_swap_focus",
+    keys.register_key (Key (false, true, (guint) GDK_KEY_Tab), "thread_index.pane_swap_focus",
         "Swap focus to other pane if open",
-        [&] (Key k) {
+        [&] (Key) {
           if (packed == 2) {
             release_modal ();
             current = (current == 0 ? 1 : 0);
@@ -79,9 +78,6 @@ namespace Astroid {
           }
           return true;
         });
-
-    */
-
 
     keys.register_key ("v", "thread_index.refine_query", "Refine query",
         [&] (Key) {
