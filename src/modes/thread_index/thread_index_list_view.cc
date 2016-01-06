@@ -208,7 +208,7 @@ namespace Astroid {
         ustring::compose (
                         "#ThreadIndexListView  { background-image: url(\"%1\");"
                         "                        background-repeat: no-repeat;"
-                        "                        background-position: 50%% 50%%;"
+                        "                        background-position: 98%% 98%%;"
                         " }\n"
                         "#ThreadIndexListView  .hide_bg { background-image: none; }",
                         no_mail_img.c_str ());
