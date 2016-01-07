@@ -21,6 +21,7 @@
 * Configurable keybindings.
 * Show name of pre-defined searches in tab.
 * Tab: jump to next unread thread.
+* X: Force close tab.
 
 == v0.4 / 2015-08-15
 

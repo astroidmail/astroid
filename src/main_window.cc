@@ -188,6 +188,13 @@ namespace Astroid {
           return true;
         });
 
+    keys.register_key ("X", "main_window.close_page_force",
+        "Force close mode (or window if other windows are open)",
+        [&] (Key) {
+          close_page (true);
+          return true;
+        });
+
     keys.register_key ("F", "main_window.search",
         "Search",
         [&] (Key) {
@@ -351,42 +358,14 @@ namespace Astroid {
 
   }
 
-  void MainWindow::close_page (Mode * m) {
-    if (notebook.get_n_pages() > 1) {
-      if (!m->invincible) {
-        for (int c = 0; c < notebook.get_n_pages (); c++) {
-          if (m == (Mode*) notebook.get_nth_page (c)) {
-            del_mode (c);
-            break;
-          }
-        }
-      }
-    } else {
-      /* if there are more windows, close this one */
-      if (astroid->app->get_windows().size () > 1) {
-        log << debug << "mw: other windows available, closing this one." << endl;
-        quit ();
-      }
-    }
+  void MainWindow::close_page (Mode * m, bool force) {
+    m->close (force);
   }
 
-  void MainWindow::close_page () {
-    /* close current page */
-    if (notebook.get_n_pages() > 1) {
-      int c = notebook.get_current_page ();
+  void MainWindow::close_page (bool force) {
+    int c = notebook.get_current_page ();
 
-      if (!((Mode*) notebook.get_nth_page (c))->invincible) {
-        del_mode (c);
-      } else {
-        log << debug << "mw: mode invincible, not closing." << endl;
-      }
-    } else {
-      /* if there are more windows, close this one */
-      if (astroid->app->get_windows().size () > 1) {
-        log << debug << "mw: other windows available, closing this one." << endl;
-        quit ();
-      }
-    }
+    ((Mode*) notebook.get_nth_page (c))->close (force);
   }
 
   void MainWindow::ungrab_active () {

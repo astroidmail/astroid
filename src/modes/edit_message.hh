@@ -175,6 +175,7 @@ namespace Astroid {
     public:
       void grab_modal () override;
       void release_modal () override;
+      void close (bool = false) override;
 
       typedef sigc::signal <void, bool> type_message_sent_attempt;
       type_message_sent_attempt message_sent_attempt ();
