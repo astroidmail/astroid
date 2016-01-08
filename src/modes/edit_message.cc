@@ -369,7 +369,7 @@ namespace Astroid {
     if (sending_in_progress.load ()) {
       /* block closing the window while sending */
     } else if (!message_sent) {
-      ask_yes_no ("Do you want to close this message? (any changes will be lost)", [&](bool yes){ if (yes) { main_window->close_page(); } });
+      ask_yes_no ("Do you want to close this message? (any changes will be lost)", [&](bool yes){ if (yes) { Mode::close (force); } });
     } else {
       // message has been sent successfully, no need to complain.
       Mode::close (force);
