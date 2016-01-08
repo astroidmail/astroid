@@ -646,6 +646,18 @@ namespace Astroid {
           return true;
         });
 
+    keys->register_key ("w", "thread_index.waiting",
+        "Toggle 'waiting' tag on thread",
+        [&] (Key) {
+          auto thread = get_current_thread ();
+          if (thread) {
+            Db db (Db::DbMode::DATABASE_READ_WRITE);
+            main_window->actions.doit (&db, refptr<Action>(new ToggleAction(thread, "waiting")));
+          }
+
+          return true;
+        });
+
     keys->register_key (Key (GDK_KEY_asterisk), "thread_index.flag",
         "Toggle 'flagged' tag on thread",
         [&] (Key) {
