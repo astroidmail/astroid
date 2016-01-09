@@ -102,7 +102,8 @@ hr {
 
 .email {
     /* border: 1px rgba(0,0,0,1) solid; */
-    border-bottom: 1px solid $email-solid;
+    border: 1px solid $email-solid;
+    border-width: 1px 0px;
     background-color: $recv-normal !important;
     color: black;
     /*font-size: small;*/
@@ -116,7 +117,7 @@ hr {
     /*min-width: 48em;*/
     box-sizing:border-box;
     text-align: left;
-    margin: 0;
+    margin: 3px 0;
 
     & + & {
       margin-right: auto !important;
