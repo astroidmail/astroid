@@ -96,8 +96,8 @@ hr {
   padding-left: 7px; }
   .email + .email {
     margin-right: auto !important; }
-    .email + .email + .email + .email + .email + .email + .email + .email + .email + .email {
-      font-size: 90%; }
+  .email > .email > .email > .email > .email {
+    font-size: 90%; }
   .email.focused {
     padding-left: 1px;
     border-left: 6px solid;
