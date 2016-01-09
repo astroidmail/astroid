@@ -100,11 +100,13 @@ hr {
       font-size: 90%; }
   .email.focused {
     padding-left: 1px;
-    border-left: 6px solid #d8d8d8;
-    border-color: #d8d8d8;
+    border-left: 6px solid;
+    border-left-color: #d5e5f6;
     box-shadow: 0 0 0 transparent !important; }
   .email.hide {
-    background-color: #f2f2f2 !important; }
+    background-color: #f2f2f2 !important;
+    border-color: #d8d8d8;
+    border-left-color: #4a90d9; }
   .email .body {
     padding: 15px;
     max-width: 60em; }
