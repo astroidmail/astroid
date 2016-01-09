@@ -120,10 +120,10 @@ hr {
 
     & + & {
       margin-right: auto !important;
+    }
 
-      & + & + & + & + & {
+    & > & > & > & > & {
         font-size: 90%;
-        }
     }
 
     /* use a left border indicator for focused/unfocused email */
