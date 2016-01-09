@@ -103,7 +103,8 @@ namespace Astroid {
       void load_tags ();
       void test_query ();
 
-      vector<ustring> sent_tags = { "sent" };
+      /* FIXME: add astroid.notmuch.sent_tags in config */
+      vector<ustring> sent_tags = { "sent,inbox" }; 
       vector<ustring> draft_tags = { "draft" };
       void add_sent_message (ustring);
       void add_draft_message (ustring);
