@@ -15,7 +15,7 @@ $font-sans: "Input Sans", "Roboto", sans-serif;
 $font-family-default: $font-mono;
 /* Colours */
 $email-solid: #d8d8d8;
-$focused-solid: #d8d8d8;
+$focused-solid: #4a90d9;
 
 @media print {
 
@@ -130,12 +130,14 @@ hr {
     padding-left: 7px;
     &.focused {
       padding-left: 1px;
-      border-left: 6px solid $focused-solid;
-      border-color: $focused-solid;
+      border-left: 6px solid;
+      border-left-color: lighten( $focused-solid, 33% );
       box-shadow: 0 0 0 transparent !important;
     }
     &.hide {
       background-color: darken( $recv-normal, 5% ) !important;
+      border-color: $email-solid;
+      border-left-color: $focused-solid;
     }
 
     .body {
