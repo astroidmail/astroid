@@ -77,7 +77,8 @@ hr {
 
 .email {
   /* border: 1px rgba(0,0,0,1) solid; */
-  border-bottom: 1px solid #d8d8d8;
+  border: 1px solid #d8d8d8;
+  border-width: 1px 0px;
   background-color: #ffffff !important;
   color: black;
   /*font-size: small;*/
@@ -91,7 +92,7 @@ hr {
   /*min-width: 48em;*/
   box-sizing: border-box;
   text-align: left;
-  margin: 0;
+  margin: 3px 0;
   /* use a left border indicator for focused/unfocused email */
   padding-left: 7px; }
   .email + .email {
