@@ -44,7 +44,7 @@ namespace Astroid {
       ptree default_config;
       ptree config;
 
-      const int CONFIG_VERSION = 1;
+      const int CONFIG_VERSION = 2;
 
     private:
       /* TODO: split into utils/ somewhere.. */

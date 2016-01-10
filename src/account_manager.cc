@@ -9,6 +9,7 @@
 # include "config.hh"
 # include "log.hh"
 # include "utils/ustring_utils.hh"
+# include "utils/vector_utils.hh"
 
 using namespace std;
 using boost::property_tree::ptree;
@@ -32,6 +33,9 @@ namespace Astroid {
 
       a->save_sent = kv.second.get<bool> ("save_sent");
       a->save_sent_to = kv.second.get<string> ("save_sent_to");
+      ustring sent_tags_s = kv.second.get<string> ("additional_sent_tags");
+      a->additional_sent_tags = VectorUtils::split_and_trim (sent_tags_s, ",");
+      sort (a->additional_sent_tags.begin (), a->additional_sent_tags.end ());
 
       a->save_drafts_to = kv.second.get<string> ("save_drafts_to");
 

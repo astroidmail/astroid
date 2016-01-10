@@ -22,9 +22,6 @@ using namespace std;
 using namespace boost::filesystem;
 
 namespace Astroid {
-
-  vector<ustring> Db::excluded_tags;
-
   Db::Db (DbMode mode) {
     config = astroid->config->config.get_child ("astroid.notmuch");
 
@@ -63,7 +60,11 @@ namespace Astroid {
 
     ustring excluded_tags_s = config.get<string> ("excluded_tags");
     excluded_tags = VectorUtils::split_and_trim (excluded_tags_s, ",");
+    sort (excluded_tags.begin (), excluded_tags.end ());
 
+    ustring sent_tags_s = config.get<string> ("sent_tags");
+    sent_tags = VectorUtils::split_and_trim (sent_tags_s, ",");
+    sort (sent_tags.begin (), sent_tags.end ());
   }
 
   void Db::reopen () {
@@ -296,9 +297,15 @@ namespace Astroid {
     notmuch_message_destroy (msg);
   }
 
-  void Db::add_sent_message (ustring fname) {
+  void Db::add_sent_message (ustring fname, vector<ustring> additional_sent_tags) {
     log << info << "db: adding sent message: " << fname << endl;
-    add_message_with_tags (fname, sent_tags);
+    additional_sent_tags.insert (additional_sent_tags.end (), sent_tags.begin (), sent_tags.end ());
+    additional_sent_tags.erase (unique (additional_sent_tags.begin (),
+          additional_sent_tags.end ()),
+          additional_sent_tags.end ());
+
+
+    add_message_with_tags (fname, additional_sent_tags);
   }
 
   void Db::add_draft_message (ustring fname) {

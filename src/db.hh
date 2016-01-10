@@ -98,15 +98,15 @@ namespace Astroid {
       ptree config;
 
       vector<ustring> tags;
-      static vector<ustring> excluded_tags;
 
       void load_tags ();
       void test_query ();
 
-      /* FIXME: add astroid.notmuch.sent_tags in config */
-      vector<ustring> sent_tags = { "sent,inbox" }; 
+      vector<ustring> sent_tags = { "sent" };
       vector<ustring> draft_tags = { "draft" };
-      void add_sent_message (ustring);
+      vector<ustring> excluded_tags = { "muted", "spam", "deleted" };
+
+      void add_sent_message (ustring, vector<ustring>);
       void add_draft_message (ustring);
       void add_message_with_tags (ustring fname, vector<ustring> tags);
       void remove_message (ustring);

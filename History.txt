@@ -23,6 +23,7 @@
 * Tab: jump to next unread thread.
 * X: Force close tab.
 * C-s: Cycle through sorting the thread_index (default configurable)
+* Configurable sent-tags (per-account and global)
 
 == v0.4 / 2015-08-15
 
