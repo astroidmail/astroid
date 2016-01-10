@@ -51,5 +51,9 @@ namespace Astroid {
       notmuch_threads_t * threads;
 
       virtual ustring get_label () override;
+
+    private:
+      notmuch_sort_t sort;
+      vector<ustring> sort_strings = { "oldest", "newest", "messageid", "unsorted" };
   };
 }

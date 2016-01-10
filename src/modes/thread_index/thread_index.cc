@@ -26,6 +26,20 @@ namespace Astroid {
     set_orientation (Gtk::Orientation::ORIENTATION_VERTICAL);
     set_label (get_label ());
 
+    ustring sort_order = astroid->config->config.get<string> ("thread_index.sort_order");
+    if (sort_order == "newest") {
+      sort = NOTMUCH_SORT_NEWEST_FIRST;
+    } else if (sort_order == "oldest") {
+      sort = NOTMUCH_SORT_OLDEST_FIRST;
+    } else if (sort_order == "messageid") {
+      sort = NOTMUCH_SORT_OLDEST_FIRST;
+    } else if (sort_order == "unsorted") {
+      sort = NOTMUCH_SORT_UNSORTED;
+    } else {
+      log << error << "ti: unknown sort order, must be 'newest', 'oldest', 'messageid' or 'unsorted': " << sort_order << ", using 'newest'." << endl;
+      sort = NOTMUCH_SORT_NEWEST_FIRST;
+    }
+
     /* set up treeview */
     list_store = Glib::RefPtr<ThreadIndexListStore>(new ThreadIndexListStore ());
     list_view  = Gtk::manage(new ThreadIndexListView (this, list_store));
@@ -101,6 +115,23 @@ namespace Astroid {
 
           return true;
         });
+
+    keys.register_key ("C-s", "thread_index.cycle_sort",
+        "Cycle through sort options: 'oldest', 'newest', 'messageid', 'unsorted'",
+        [&] (Key) {
+          if (sort == NOTMUCH_SORT_UNSORTED) {
+            sort = NOTMUCH_SORT_OLDEST_FIRST;
+          } else {
+            int s = static_cast<int> (sort);
+            s++;
+            sort = static_cast<notmuch_sort_t> (s);
+          }
+
+          log << info << "ti: sorting by: " << sort_strings[static_cast<int>(sort)] << endl;
+
+          refresh (false, max(thread_load_step, current_thread), false);
+          return true;
+        });
     // }}}
   }
 
@@ -115,6 +146,7 @@ namespace Astroid {
       notmuch_query_add_tag_exclude (query, t.c_str());
     }
     notmuch_query_set_omit_excluded (query, NOTMUCH_EXCLUDE_TRUE);
+    notmuch_query_set_sort (query, sort);
 
     /* notmuch_query_count_threads is destructive.
      *

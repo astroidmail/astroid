@@ -70,7 +70,7 @@ namespace Astroid {
 
   ThreadIndexListStore::ThreadIndexListStore () {
     set_column_types (columns);
-    set_sort_column (0, Gtk::SortType::SORT_DESCENDING);
+    /* set_sort_column (0, Gtk::SortType::SORT_DESCENDING); */
   }
 
   ThreadIndexListStore::~ThreadIndexListStore () {
