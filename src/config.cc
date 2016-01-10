@@ -87,6 +87,7 @@ namespace Astroid {
     default_config.put ("astroid.config.version", CONFIG_VERSION);
     default_config.put ("astroid.notmuch.db", "~/.mail");
     default_config.put ("astroid.notmuch.excluded_tags", "muted,spam,deleted");
+    default_config.put ("astroid.notmuch.sent_tags", "sent");
 
     default_config.put ("astroid.debug.dryrun_sending", false);
 
@@ -107,6 +108,7 @@ namespace Astroid {
       default_config.put ("accounts.charlie.save_sent", false);
       default_config.put ("accounts.charlie.save_sent_to",
           "/home/root/Mail/sent/cur/");
+      default_config.put ("accounts.charlie.additional_sent_tags", "");
 
       default_config.put ("accounts.charlie.save_drafts_to",
           "/home/root/Mail/drafts/");
@@ -268,6 +270,26 @@ namespace Astroid {
           ustring key = ustring::compose ("accounts.%1.save_drafts_to", kv.first);
           config.put (key.c_str (), "/home/root/Mail/drafts/");
 
+        }
+      }
+
+      config.put ("astroid.config.version", CONFIG_VERSION);
+      changed = true;
+    }
+
+    if (config.get<int>("astroid.config.version") < 2) {
+      /* check accounts */
+      ptree apt = config.get_child ("accounts");
+
+      for (auto &kv : apt) {
+        try {
+
+          ustring sto = kv.second.get<string> ("additional_sent_tags");
+
+        } catch (const boost::property_tree::ptree_bad_path &ex) {
+
+          ustring key = ustring::compose ("accounts.%1.additional_sent_tags", kv.first);
+          config.put (key.c_str (), "");
         }
       }
 
