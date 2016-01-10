@@ -32,7 +32,7 @@ namespace Astroid {
     } else if (sort_order == "oldest") {
       sort = NOTMUCH_SORT_OLDEST_FIRST;
     } else if (sort_order == "messageid") {
-      sort = NOTMUCH_SORT_OLDEST_FIRST;
+      sort = NOTMUCH_SORT_MESSAGE_ID;
     } else if (sort_order == "unsorted") {
       sort = NOTMUCH_SORT_UNSORTED;
     } else {
