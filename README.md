@@ -51,25 +51,6 @@ get astroid from:
 
   [Distribution specific instructions](https://github.com/gauteh/astroid/wiki) can be found in the wiki.
 
-## licence and attribution
-
-  GNU [GPL] v3 or later:
-
-    Copyright (c) 2014  Gaute Hope <eg@gaute.vetsj.com>
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
 ## installation and usage
 
 astroid uses [scons] for building, also you might need [git] for the build
@@ -153,3 +134,6 @@ Also check out #astroid or #notmuch on irc.freenode.net.
 [boost::property_tree]: http://www.boost.org/doc/libs/1_56_0/doc/html/property_tree.html
 [ner]: http://the-ner.org/
 
+## licensing
+
+See [LICENSE.md](./LICENSE.md) for licensing information.
