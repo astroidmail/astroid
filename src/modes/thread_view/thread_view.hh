@@ -12,6 +12,7 @@
 # include "proto.hh"
 # include "modes/mode.hh"
 # include "message_thread.hh"
+# include "theme.hh"
 
 # include "web_inspector.hh"
 
@@ -78,6 +79,7 @@ namespace Astroid {
       bool    code_is_on = false; // for this thread
       void    filter_code_tags (ustring &); // look for code tags
 
+      Theme theme;
 
     private:
       /* message manipulation and location */
@@ -177,14 +179,6 @@ namespace Astroid {
       WebKitDOMHTMLDivElement * container = NULL;
       WebKitWebInspector * web_inspector;
 
-      static bool theme_loaded;
-      static const char *  thread_view_html_f;
-      static const char *  thread_view_css_f;
-      static ustring       thread_view_html;
-      static ustring       thread_view_css;
-      const char * STYLE_NAME = "STYLE";
-      const int THEME_VERSION = 1;
-      bool check_theme_version (path);
 
       atomic<bool> wk_loaded;
 

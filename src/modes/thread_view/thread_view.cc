@@ -10,6 +10,7 @@
 
 # include "thread_view.hh"
 # include "web_inspector.hh"
+# include "theme.hh"
 
 # include "main_window.hh"
 # include "message_thread.hh"
@@ -29,16 +30,11 @@
 # include "modes/thread_index/thread_index.hh"
 # include "log.hh"
 # include "build_config.hh"
-
+# include "theme.hh"
 
 using namespace std;
 
 namespace Astroid {
-  bool ThreadView::theme_loaded = false;
-  const char * ThreadView::thread_view_html_f = "ui/thread-view.html";
-  const char * ThreadView::thread_view_css_f  = "ui/thread-view.css";
-  ustring ThreadView::thread_view_html;
-  ustring ThreadView::thread_view_css;
 
   ThreadView::ThreadView (MainWindow * mw) : Mode (mw) { // {{{
     indent_messages = astroid->config->config.get<bool> ("thread_view.indent_messages");
@@ -131,79 +127,6 @@ namespace Astroid {
 
     scroll.show_all ();
 
-    /* load css, html and DOM objects */
-    if (!theme_loaded) {
-      path def_tv_html = path(thread_view_html_f);
-      path def_tv_css  = path(thread_view_css_f);
-# ifdef PREFIX
-      path tv_html = path(PREFIX) / path("share/astroid") / def_tv_html;
-      path tv_css  = path(PREFIX) / path("share/astroid") / def_tv_css;
-# else
-      path tv_html = def_tv_html;
-      path tv_css  = def_tv_css;
-# endif
-
-      /* check for user modified theme files in config directory */
-      path user_tv_html = astroid->config->config_dir / def_tv_html;
-      path user_tv_css  = astroid->config->config_dir / def_tv_css;
-
-      if (exists (user_tv_html)) {
-          tv_html = user_tv_html;
-          log << info << "tv: using user html file: " << tv_html.c_str () << endl;
-
-
-      } else if (!exists(tv_html)) {
-        log << error << "tv: cannot find html theme file: " << tv_html.c_str() << ", using default.." << endl;
-        if (!exists(def_tv_html)) {
-          log << error << "tv: cannot find default html theme file." << endl;
-          exit (1);
-        }
-
-        tv_html = def_tv_html;
-      }
-
-      if (!check_theme_version (tv_html)) {
-
-        log << error << "tv: html file version does not match!" << endl;
-
-      }
-
-      if (exists (user_tv_css)) {
-          tv_css = user_tv_css;
-          log << info << "tv: using user css file: " << tv_css.c_str () << endl;
-
-
-      } else if (!exists(tv_css)) {
-        log << error << "tv: cannot find css theme file: " << tv_css.c_str() << ", using default.." << endl;
-        if (!exists(def_tv_css)) {
-          log << error << "tv: cannot find default css theme file." << endl;
-          exit (1);
-        }
-
-        tv_css = def_tv_css;
-      }
-
-      if (!check_theme_version (tv_css)) {
-
-        log << error << "tv: css file version does not match!" << endl;
-
-      }
-
-      std::ifstream tv_html_f (tv_html.c_str());
-      istreambuf_iterator<char> eos; // default is eos
-      istreambuf_iterator<char> tv_iit (tv_html_f);
-
-      thread_view_html.append (tv_iit, eos);
-      tv_html_f.close ();
-
-      std::ifstream tv_css_f (tv_css.c_str());
-      istreambuf_iterator<char> tv_css_iit (tv_css_f);
-      thread_view_css.append (tv_css_iit, eos);
-      tv_css_f.close ();
-
-      theme_loaded = true;
-    }
-
     wk_loaded = false;
 
     g_signal_connect (webview, "notify::load-status",
@@ -260,21 +183,6 @@ namespace Astroid {
     show_all_children ();
   }
 
-  bool ThreadView::check_theme_version (path p) {
-    /* check version found in first line in file */
-
-    std::ifstream f (p.c_str ());
-
-    ustring vline;
-    int version;
-    f >> vline >> vline >> version;
-
-    log << debug << "tv: testing version: " << version << endl;
-
-    f.close ();
-
-    return (version == THEME_VERSION);
-  }
   // }}}
 
   ThreadView::~ThreadView () { // {{{
@@ -553,10 +461,10 @@ namespace Astroid {
           /* load css style */
           GError *err = NULL;
           WebKitDOMDocument *d = webkit_web_view_get_dom_document (webview);
-          WebKitDOMElement  *e = webkit_dom_document_create_element (d, STYLE_NAME, &err);
+          WebKitDOMElement  *e = webkit_dom_document_create_element (d, theme.STYLE_NAME, &err);
 
           WebKitDOMText *t = webkit_dom_document_create_text_node
-            (d, thread_view_css.c_str());
+            (d, theme.thread_view_css.c_str());
 
           webkit_dom_node_append_child (WEBKIT_DOM_NODE(e), WEBKIT_DOM_NODE(t), (err = NULL, &err));
 
@@ -711,7 +619,7 @@ namespace Astroid {
         astroid->config->config_dir.c_str(),
         UstringUtils::random_alphanumeric (120));
 
-    webkit_web_view_load_html_string (webview, thread_view_html.c_str (), home_uri.c_str());
+    webkit_web_view_load_html_string (webview, theme.thread_view_html.c_str (), home_uri.c_str());
     ready     = false;
   }
 

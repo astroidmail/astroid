@@ -122,11 +122,6 @@ if os.environ.has_key('CPPFLAGS'):
 if os.environ.has_key('LDFLAGS'):
   env['LINKFLAGS'] += SCons.Util.CLVar(os.environ['LDFLAGS'])
 
-if os.environ.has_key('SCCS'):
-  scss_p = os.environ['SCSS']
-else:
-  scss_p = None
-
 def CheckPKGConfig(context, version):
   context.Message( 'Checking for pkg-config... ' )
   ret = context.TryAction('pkg-config --atleast-pkgconfig-version=%s' % version)[0]
@@ -184,6 +179,10 @@ if not conf.CheckPKG('webkitgtk-3.0'):
   print "webkitgtk not found."
   Exit (1)
 
+if not conf.CheckPKG('libsass'):
+  print "libsass not found."
+  Exit (1)
+
 if not conf.CheckLibWithHeader ('notmuch', 'notmuch.h', 'c'):
   print "notmuch does not seem to be installed."
   Exit (1)
@@ -200,6 +199,7 @@ env.ParseConfig ('pkg-config --libs --cflags glibmm-2.4')
 env.ParseConfig ('pkg-config --libs --cflags gtkmm-3.0')
 env.ParseConfig ('pkg-config --libs --cflags gmime-2.6')
 env.ParseConfig ('pkg-config --libs --cflags webkitgtk-3.0')
+env.ParseConfig ('pkg-config --libs --cflags libsass')
 
 if not conf.CheckLib ('boost_filesystem', language = 'c++'):
   print "boost_filesystem does not seem to be installed."
@@ -266,18 +266,7 @@ Export ('debug')
 
 env = conf.Finish ()
 
-# CSS
-if scss_p is None:
-  scss_p = 'sassc'
-
-scssbld = Builder (action = '%s $SOURCE $TARGET' % scss_p)
-env.Append (BUILDERS = { 'Css': scssbld })
-
-css = env.Css ('ui/thread-view.css', 'ui/thread-view.scss')
-
 astroid = env.Program (source = ['src/main.cc', source_objs], target = 'astroid')
-
-env.Depends ('astroid', css)
 build = env.Alias ('build', 'astroid')
 
 Export ('env')
