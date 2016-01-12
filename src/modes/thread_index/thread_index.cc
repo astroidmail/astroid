@@ -45,6 +45,8 @@ namespace Astroid {
     list_view  = Gtk::manage(new ThreadIndexListView (this, list_store));
     scroll     = Gtk::manage(new ThreadIndexScrolled (main_window, list_store, list_view));
 
+    list_view->set_sort_type (sort);
+
     add_pane (0, *scroll);
 
     show_all ();
@@ -129,6 +131,7 @@ namespace Astroid {
 
           log << info << "ti: sorting by: " << sort_strings[static_cast<int>(sort)] << endl;
 
+          list_view->set_sort_type (sort);
           refresh (false, max(thread_load_step, current_thread), false);
           return true;
         });
@@ -308,6 +311,7 @@ namespace Astroid {
       Gtk::ListStore::Row row = *iter;
 
       row[list_store->columns.newest_date] = t->newest_date;
+      row[list_store->columns.oldest_date] = t->oldest_date;
       row[list_store->columns.thread_id]   = t->thread_id;
       row[list_store->columns.thread]      = Glib::RefPtr<NotmuchThread>(t);
 

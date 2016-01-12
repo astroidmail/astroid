@@ -28,6 +28,7 @@ namespace Astroid {
 
       ustring subject;
       time_t  newest_date;
+      time_t  oldest_date;
       bool    unread;
       bool    attachment;
       bool    flagged;

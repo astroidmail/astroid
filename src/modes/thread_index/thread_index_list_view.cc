@@ -63,6 +63,7 @@ namespace Astroid {
    */
   ThreadIndexListStore::ThreadIndexListStoreColumnRecord::ThreadIndexListStoreColumnRecord () {
     add (newest_date);
+    add (oldest_date);
     add (thread_id);
     add (thread);
     add (marked);
@@ -70,7 +71,6 @@ namespace Astroid {
 
   ThreadIndexListStore::ThreadIndexListStore () {
     set_column_types (columns);
-    /* set_sort_column (0, Gtk::SortType::SORT_DESCENDING); */
   }
 
   ThreadIndexListStore::~ThreadIndexListStore () {
@@ -259,6 +259,16 @@ namespace Astroid {
       r->thread = row[list_store->columns.thread];
       r->marked = row[list_store->columns.marked];
 
+    }
+  }
+
+  void ThreadIndexListView::set_sort_type (notmuch_sort_t sort) {
+    if (sort == NOTMUCH_SORT_NEWEST_FIRST) {
+      list_store->set_sort_column (0, Gtk::SortType::SORT_DESCENDING);
+    } else if (sort == NOTMUCH_SORT_OLDEST_FIRST) {
+      list_store->set_sort_column (1, Gtk::SortType::SORT_ASCENDING);
+    } else {
+      list_store->set_sort_column (Gtk::TreeSortable::DEFAULT_UNSORTED_COLUMN_ID, Gtk::SortType::SORT_ASCENDING);
     }
   }
 
@@ -1041,6 +1051,7 @@ namespace Astroid {
         refptr<NotmuchThread> thread = row[list_store->columns.thread];
         thread->refresh (db);
         row[list_store->columns.newest_date] = thread->newest_date;
+        row[list_store->columns.oldest_date] = thread->oldest_date;
 
       } else {
         /* deleted */
@@ -1066,6 +1077,7 @@ namespace Astroid {
           });
 
         newrow[list_store->columns.newest_date] = t->newest_date;
+        newrow[list_store->columns.oldest_date] = t->oldest_date;
         newrow[list_store->columns.thread_id]   = t->thread_id;
         newrow[list_store->columns.thread]      = Glib::RefPtr<NotmuchThread>(t);
 

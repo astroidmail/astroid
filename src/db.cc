@@ -499,6 +499,7 @@ namespace Astroid {
     }
 
     newest_date = notmuch_thread_get_newest_date (nm_thread);
+    oldest_date = notmuch_thread_get_oldest_date (nm_thread);
     total_messages = check_total_messages (nm_thread);
     authors     = get_authors (nm_thread);
     tags        = get_tags (nm_thread);
