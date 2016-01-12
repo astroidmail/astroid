@@ -253,7 +253,7 @@ namespace Astroid {
           /* add to notmuch with sent tag */
           Db db (Db::DbMode::DATABASE_READ_WRITE);
           lock_guard<Db> lk (db);
-          db.add_sent_message (save_to.c_str());
+          db.add_sent_message (save_to.c_str(), account->additional_sent_tags);
           if (output)
             log << info << "cm: sent message added to db." << endl;
         }
