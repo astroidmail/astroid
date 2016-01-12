@@ -237,14 +237,20 @@ namespace Astroid {
       config = default_config;
       write_back_config ();
     } else {
+
+      /* loading config file */
       ptree new_config;
       setup_default_config (false);
+
       config = default_config;
       read_json (config_file.c_str(), new_config);
+      log << info << "cf: version: " << config.get<int>("astroid.config.version") << endl;
 
       merge_ptree (new_config);
 
-      check_config (new_config);
+      if (!check_config (new_config)) {
+        write_back_config ();
+      }
     }
   }
 
@@ -255,8 +261,10 @@ namespace Astroid {
       changed = true;
     }
 
-    if (config.get<int>("astroid.config.version") < 1) {
-      /* check accounts */
+    int version = config.get<int>("astroid.config.version");
+
+    if (version < 1) {
+      /* check accounts for save_draft */
       ptree apt = config.get_child ("accounts");
 
       for (auto &kv : apt) {
@@ -273,12 +281,11 @@ namespace Astroid {
         }
       }
 
-      config.put ("astroid.config.version", CONFIG_VERSION);
       changed = true;
     }
 
-    if (config.get<int>("astroid.config.version") < 2) {
-      /* check accounts */
+    if (version < 2) {
+      /* check accounts additional_sent_tags */
       ptree apt = config.get_child ("accounts");
 
       for (auto &kv : apt) {
@@ -293,13 +300,16 @@ namespace Astroid {
         }
       }
 
+      changed = true;
+    }
+
+    if (version < CONFIG_VERSION) {
       config.put ("astroid.config.version", CONFIG_VERSION);
       changed = true;
     }
 
     if (changed) {
-      log << warn << "cf: missing values in config have been updated with defaults." << endl;
-      write_back_config ();
+      log << warn << "cf: missing values in config have been updated with defaults (old version: " << version << ", new: " << CONFIG_VERSION << ")" << endl;
     }
 
     return !changed;
