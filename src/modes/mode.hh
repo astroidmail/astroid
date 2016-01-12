@@ -1,6 +1,7 @@
 # pragma once
 
 # include <gtkmm.h>
+# include <atomic>
 
 # include <list>
 
@@ -18,8 +19,8 @@ namespace Astroid {
       void set_main_window (MainWindow *);
       MainWindow * main_window;
 
-      bool invincible = false;
-      void close ();
+      atomic<bool> invincible;
+      virtual void close (bool = false);
 
     private:
       ustring label;

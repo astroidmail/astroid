@@ -8,6 +8,7 @@ namespace Astroid {
     Gtk::Box (Gtk::ORIENTATION_VERTICAL)
   {
     set_main_window (mw);
+    invincible = false;
 
     tab_label.set_can_focus (false);
 
@@ -83,8 +84,23 @@ namespace Astroid {
     answer_yes_no (false);
   }
 
-  void Mode::close () {
-    main_window->close_page (this);
+  void Mode::close (bool force) {
+    /* close current page */
+    if (main_window->notebook.get_n_pages() > 1) {
+      int c = main_window->notebook.get_current_page ();
+
+      if (((Mode*) main_window->notebook.get_nth_page (c))->invincible && !force) {
+        log << debug << "mode: mode invincible, not closing." << endl;
+      } else {
+        main_window->del_mode (c);
+      }
+    } else {
+      /* if there are more windows, close this one */
+      if (astroid->app->get_windows().size () > 1) {
+        log << debug << "mw: other windows available, closing this one." << endl;
+        main_window->quit ();
+      }
+    }
   }
 
   void Mode::ask_yes_no (

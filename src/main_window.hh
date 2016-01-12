@@ -58,8 +58,8 @@ namespace Astroid {
       void add_mode (Mode *);
       void del_mode (int);
       void remove_all_modes ();
-      void close_page ();
-      void close_page (Mode *);
+      void close_page (bool = false);
+      void close_page (Mode *, bool = false);
 
       void ungrab_active ();
       void grab_active (int);

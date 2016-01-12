@@ -87,6 +87,7 @@ namespace Astroid {
     default_config.put ("astroid.config.version", CONFIG_VERSION);
     default_config.put ("astroid.notmuch.db", "~/.mail");
     default_config.put ("astroid.notmuch.excluded_tags", "muted,spam,deleted");
+    default_config.put ("astroid.notmuch.sent_tags", "sent");
 
     default_config.put ("astroid.debug.dryrun_sending", false);
 
@@ -107,6 +108,7 @@ namespace Astroid {
       default_config.put ("accounts.charlie.save_sent", false);
       default_config.put ("accounts.charlie.save_sent_to",
           "/home/root/Mail/sent/cur/");
+      default_config.put ("accounts.charlie.additional_sent_tags", "");
 
       default_config.put ("accounts.charlie.save_drafts_to",
           "/home/root/Mail/drafts/");
@@ -117,6 +119,8 @@ namespace Astroid {
 
     /* ui behaviour */
     default_config.put ("thread_index.page_jump_rows", 6);
+    default_config.put ("thread_index.sort_order", "newest");
+
     default_config.put ("general.time.clock_format", "local"); // or 24h, 12h
     default_config.put ("general.time.same_year", "%b %-e");
     default_config.put ("general.time.diff_year", "%x");
@@ -233,14 +237,20 @@ namespace Astroid {
       config = default_config;
       write_back_config ();
     } else {
+
+      /* loading config file */
       ptree new_config;
       setup_default_config (false);
+
       config = default_config;
       read_json (config_file.c_str(), new_config);
+      log << info << "cf: version: " << config.get<int>("astroid.config.version") << endl;
 
       merge_ptree (new_config);
 
-      check_config (new_config);
+      if (!check_config (new_config)) {
+        write_back_config ();
+      }
     }
   }
 
@@ -251,8 +261,10 @@ namespace Astroid {
       changed = true;
     }
 
-    if (config.get<int>("astroid.config.version") < 1) {
-      /* check accounts */
+    int version = config.get<int>("astroid.config.version");
+
+    if (version < 1) {
+      /* check accounts for save_draft */
       ptree apt = config.get_child ("accounts");
 
       for (auto &kv : apt) {
@@ -269,13 +281,35 @@ namespace Astroid {
         }
       }
 
+      changed = true;
+    }
+
+    if (version < 2) {
+      /* check accounts additional_sent_tags */
+      ptree apt = config.get_child ("accounts");
+
+      for (auto &kv : apt) {
+        try {
+
+          ustring sto = kv.second.get<string> ("additional_sent_tags");
+
+        } catch (const boost::property_tree::ptree_bad_path &ex) {
+
+          ustring key = ustring::compose ("accounts.%1.additional_sent_tags", kv.first);
+          config.put (key.c_str (), "");
+        }
+      }
+
+      changed = true;
+    }
+
+    if (version < CONFIG_VERSION) {
       config.put ("astroid.config.version", CONFIG_VERSION);
       changed = true;
     }
 
     if (changed) {
-      log << warn << "cf: missing values in config have been updated with defaults." << endl;
-      write_back_config ();
+      log << warn << "cf: missing values in config have been updated with defaults (old version: " << version << ", new: " << CONFIG_VERSION << ")" << endl;
     }
 
     return !changed;

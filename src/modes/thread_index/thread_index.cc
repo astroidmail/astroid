@@ -20,15 +20,32 @@
 using namespace std;
 
 namespace Astroid {
-  ThreadIndex::ThreadIndex (MainWindow *mw, ustring _query) : PanedMode(mw), query_string(_query) {
+  ThreadIndex::ThreadIndex (MainWindow *mw, ustring _query, ustring _name) : PanedMode(mw), query_string(_query) {
 
+    name = _name;
     set_orientation (Gtk::Orientation::ORIENTATION_VERTICAL);
-    set_label (query_string);
+    set_label (get_label ());
+
+    ustring sort_order = astroid->config->config.get<string> ("thread_index.sort_order");
+    if (sort_order == "newest") {
+      sort = NOTMUCH_SORT_NEWEST_FIRST;
+    } else if (sort_order == "oldest") {
+      sort = NOTMUCH_SORT_OLDEST_FIRST;
+    } else if (sort_order == "messageid") {
+      sort = NOTMUCH_SORT_MESSAGE_ID;
+    } else if (sort_order == "unsorted") {
+      sort = NOTMUCH_SORT_UNSORTED;
+    } else {
+      log << error << "ti: unknown sort order, must be 'newest', 'oldest', 'messageid' or 'unsorted': " << sort_order << ", using 'newest'." << endl;
+      sort = NOTMUCH_SORT_NEWEST_FIRST;
+    }
 
     /* set up treeview */
     list_store = Glib::RefPtr<ThreadIndexListStore>(new ThreadIndexListStore ());
     list_view  = Gtk::manage(new ThreadIndexListView (this, list_store));
     scroll     = Gtk::manage(new ThreadIndexScrolled (main_window, list_store, list_view));
+
+    list_view->set_sort_type (sort);
 
     add_pane (0, *scroll);
 
@@ -62,14 +79,14 @@ namespace Astroid {
 
 
     keys.register_key (Key((guint) GDK_KEY_dollar), "thread_index.refresh", "Refresh query",
-        [&] (Key k) {
+        [&] (Key) {
           refresh (false, max(thread_load_step, current_thread), false);
           return true;
         });
 
-    keys.register_key (Key ((guint) GDK_KEY_Tab), "thread_index.pane_swap_focus",
+    keys.register_key (Key (false, true, (guint) GDK_KEY_Tab), "thread_index.pane_swap_focus",
         "Swap focus to other pane if open",
-        [&] (Key k) {
+        [&] (Key) {
           if (packed == 2) {
             release_modal ();
             current = (current == 0 ? 1 : 0);
@@ -78,16 +95,15 @@ namespace Astroid {
           return true;
         });
 
-
     keys.register_key ("v", "thread_index.refine_query", "Refine query",
-        [&] (Key k) {
+        [&] (Key) {
           if (!invincible) {
             main_window->enable_command (CommandBar::CommandMode::Search,
                 query_string,
                 [&](ustring new_query) {
 
                   query_string = new_query;
-                  set_label (query_string);
+                  set_label (get_label ());
                   list_store->clear ();
                   close_query ();
                   setup_query ();
@@ -99,6 +115,24 @@ namespace Astroid {
                 });
           }
 
+          return true;
+        });
+
+    keys.register_key ("C-s", "thread_index.cycle_sort",
+        "Cycle through sort options: 'oldest', 'newest', 'messageid', 'unsorted'",
+        [&] (Key) {
+          if (sort == NOTMUCH_SORT_UNSORTED) {
+            sort = NOTMUCH_SORT_OLDEST_FIRST;
+          } else {
+            int s = static_cast<int> (sort);
+            s++;
+            sort = static_cast<notmuch_sort_t> (s);
+          }
+
+          log << info << "ti: sorting by: " << sort_strings[static_cast<int>(sort)] << endl;
+
+          list_view->set_sort_type (sort);
+          refresh (false, max(thread_load_step, current_thread), false);
           return true;
         });
     // }}}
@@ -115,6 +149,7 @@ namespace Astroid {
       notmuch_query_add_tag_exclude (query, t.c_str());
     }
     notmuch_query_set_omit_excluded (query, NOTMUCH_EXCLUDE_TRUE);
+    notmuch_query_set_sort (query, sort);
 
     /* notmuch_query_count_threads is destructive.
      *
@@ -156,9 +191,16 @@ namespace Astroid {
     unread_messages = notmuch_query_count_messages (unread_q); // destructive
     notmuch_query_destroy (unread_q);
 
-    set_label (ustring::compose ("%1 (%2/%3)", query_string, unread_messages, total_messages));
+    set_label (get_label ());
 
     list_view->update_bg_image ();
+  }
+
+  ustring ThreadIndex::get_label () {
+    if (name == "")
+      return ustring::compose ("%1 (%2/%3)", query_string, unread_messages, total_messages);
+    else
+      return ustring::compose ("%1 (%2/%3)", name, unread_messages, total_messages);
   }
 
   void ThreadIndex::close_query () {
@@ -269,6 +311,7 @@ namespace Astroid {
       Gtk::ListStore::Row row = *iter;
 
       row[list_store->columns.newest_date] = t->newest_date;
+      row[list_store->columns.oldest_date] = t->oldest_date;
       row[list_store->columns.thread_id]   = t->thread_id;
       row[list_store->columns.thread]      = Glib::RefPtr<NotmuchThread>(t);
 

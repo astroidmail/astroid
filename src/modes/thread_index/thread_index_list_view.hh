@@ -11,6 +11,8 @@
 # include "modes/mode.hh"
 # include "modes/keybindings.hh"
 
+# include "notmuch.h"
+
 using namespace std;
 
 namespace Astroid {
@@ -30,6 +32,7 @@ namespace Astroid {
       {
         public:
           Gtk::TreeModelColumn<time_t> newest_date;
+          Gtk::TreeModelColumn<time_t> oldest_date;
           Gtk::TreeModelColumn<Glib::ustring> thread_id;
           Gtk::TreeModelColumn<Glib::RefPtr<NotmuchThread>> thread;
           Gtk::TreeModelColumn<bool> marked;
@@ -67,8 +70,10 @@ namespace Astroid {
       refptr<NotmuchThread> get_current_thread ();
 
       void update_bg_image ();
+      void set_sort_type (notmuch_sort_t sort);
 
     protected:
+      Keybindings multi_keys;
       void register_keys ();
 
       typedef enum {

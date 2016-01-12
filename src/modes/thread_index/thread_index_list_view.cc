@@ -63,6 +63,7 @@ namespace Astroid {
    */
   ThreadIndexListStore::ThreadIndexListStoreColumnRecord::ThreadIndexListStoreColumnRecord () {
     add (newest_date);
+    add (oldest_date);
     add (thread_id);
     add (thread);
     add (marked);
@@ -70,7 +71,6 @@ namespace Astroid {
 
   ThreadIndexListStore::ThreadIndexListStore () {
     set_column_types (columns);
-    set_sort_column (0, Gtk::SortType::SORT_DESCENDING);
   }
 
   ThreadIndexListStore::~ThreadIndexListStore () {
@@ -208,7 +208,7 @@ namespace Astroid {
         ustring::compose (
                         "#ThreadIndexListView  { background-image: url(\"%1\");"
                         "                        background-repeat: no-repeat;"
-                        "                        background-position: 50%% 50%%;"
+                        "                        background-position: 98%% 98%%;"
                         " }\n"
                         "#ThreadIndexListView  .hide_bg { background-image: none; }",
                         no_mail_img.c_str ());
@@ -262,6 +262,16 @@ namespace Astroid {
     }
   }
 
+  void ThreadIndexListView::set_sort_type (notmuch_sort_t sort) {
+    if (sort == NOTMUCH_SORT_NEWEST_FIRST) {
+      list_store->set_sort_column (0, Gtk::SortType::SORT_DESCENDING);
+    } else if (sort == NOTMUCH_SORT_OLDEST_FIRST) {
+      list_store->set_sort_column (1, Gtk::SortType::SORT_ASCENDING);
+    } else {
+      list_store->set_sort_column (Gtk::TreeSortable::DEFAULT_UNSORTED_COLUMN_ID, Gtk::SortType::SORT_ASCENDING);
+    }
+  }
+
   void ThreadIndexListView::register_keys () {
 
     Keybindings * keys = &(thread_index->keys);
@@ -294,6 +304,36 @@ namespace Astroid {
           return true;
         });
 
+    keys->register_key (Key (GDK_KEY_Tab),
+        "thread_index.next_unread",
+        "Jump to next unread thread",
+        [&] (Key) {
+          Gtk::TreePath path;
+          Gtk::TreeIter fwditer;
+          Gtk::TreeViewColumn *c;
+
+          get_cursor (path, c);
+          path.next ();
+          fwditer = list_store->get_iter (path);
+
+          Gtk::ListStore::Row row;
+
+          while (fwditer) {
+            row = *fwditer;
+
+            Glib::RefPtr<NotmuchThread> thread = row[list_store->columns.thread];
+            if (thread->unread) {
+              path = list_store->get_path (fwditer);
+              set_cursor (path);
+              break;
+            }
+
+            fwditer++;
+          }
+
+          return true;
+        });
+
     keys->register_key ("k", { Key(false, false, (guint) GDK_KEY_Up) },
         "thread_index.prev_thread", "Previous thread",
         [&](Key) {
@@ -309,7 +349,6 @@ namespace Astroid {
 
 
     /* set up for multi key handler */
-    Keybindings multi_keys;
     multi_keys.register_key ("N",
                              "thread_index.multi.mark_unread",
                              "Mark unread",
@@ -349,7 +388,7 @@ namespace Astroid {
                              bind (&ThreadIndexListView::multi_key_handler, this, MToggle, _1));
 
     keys->register_key ("+",
-          "therad_index.multi",
+          "thread_index.multi",
           "Apply action to marked threads",
           [&] (Key k) {
 
@@ -1012,6 +1051,7 @@ namespace Astroid {
         refptr<NotmuchThread> thread = row[list_store->columns.thread];
         thread->refresh (db);
         row[list_store->columns.newest_date] = thread->newest_date;
+        row[list_store->columns.oldest_date] = thread->oldest_date;
 
       } else {
         /* deleted */
@@ -1037,6 +1077,7 @@ namespace Astroid {
           });
 
         newrow[list_store->columns.newest_date] = t->newest_date;
+        newrow[list_store->columns.oldest_date] = t->oldest_date;
         newrow[list_store->columns.thread_id]   = t->thread_id;
         newrow[list_store->columns.thread]      = Glib::RefPtr<NotmuchThread>(t);
 

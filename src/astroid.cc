@@ -278,7 +278,7 @@ namespace Astroid {
         ustring query = kv.second.data();
 
         log << info << "astroid: got query: " << name << ": " << query << endl;
-        Mode * ti = new ThreadIndex (mw, query);
+        Mode * ti = new ThreadIndex (mw, query, name);
         ti->invincible = true; // set startup queries to be invincible
         mw->add_mode (ti);
       }

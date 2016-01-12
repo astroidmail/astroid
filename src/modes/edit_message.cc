@@ -298,21 +298,6 @@ namespace Astroid {
           return true;
         });
 
-    keys.register_key ("x", "edit_message.close",
-        "Close",
-        [&] (Key) {
-          if (sending_in_progress.load ()) {
-            /* block closing the window while sending */
-            return true;
-          } else if (!message_sent) {
-            ask_yes_no ("Do you want to close this message? (any changes will be lost)", [&](bool yes){ if (yes) { main_window->close_page(); } });
-            return true;
-          } else {
-            // message has been sent successfully, no need to complain.
-            return false;
-          }
-        });
-
     keys.register_key ("s", "edit_message.save_draft",
         "Save draft",
         [&] (Key) {
@@ -377,6 +362,17 @@ namespace Astroid {
 
     if (is_regular_file (tmpfile_path)) {
       boost::filesystem::remove (tmpfile_path);
+    }
+  }
+
+  void EditMessage::close (bool force) {
+    if (sending_in_progress.load ()) {
+      /* block closing the window while sending */
+    } else if (!message_sent) {
+      ask_yes_no ("Do you want to close this message? (any changes will be lost)", [&](bool yes){ if (yes) { Mode::close (force); } });
+    } else {
+      // message has been sent successfully, no need to complain.
+      Mode::close (force);
     }
   }
 
