@@ -807,6 +807,11 @@ namespace Astroid {
 
     set_message_html (m, div_message);
 
+    /* insert mime messages */
+    if (!m->missing_content) {
+      insert_mime_messages (m, div_message);
+    }
+
     /* insert attachments */
     if (!m->missing_content) {
       bool has_attachment = insert_attachments (m, div_message);
@@ -819,11 +824,6 @@ namespace Astroid {
 
     /* marked */
     load_marked_icon (m, div_message);
-
-    /* insert mime messages */
-    if (!m->missing_content) {
-      insert_mime_messages (m, div_message);
-    }
 
     if (!edit_mode) {
       /* optionally hide / collapse the message */
