@@ -185,7 +185,6 @@ namespace Astroid {
 
         }
 
-
         GMimeDataWrapper * data = g_mime_data_wrapper_new_with_stream (file_stream,
             GMIME_CONTENT_ENCODING_DEFAULT);
 
@@ -195,8 +194,11 @@ namespace Astroid {
           g_mime_part_new_with_type(g_mime_content_type_get_media_type (contentType),
           g_mime_content_type_get_media_subtype (contentType));
         g_mime_part_set_content_object (part, data);
-        g_mime_part_set_content_encoding (part, GMIME_CONTENT_ENCODING_BASE64);
         g_mime_part_set_filename (part, a->name.c_str());
+
+        if (a->is_mime_message) {
+          g_mime_object_set_disposition (GMIME_OBJECT(part), "inline");
+        }
 
         g_mime_multipart_add (multipart, (GMimeObject*) part);
         g_object_unref (part);
@@ -370,6 +372,18 @@ namespace Astroid {
     } else {
       content_type = "application/octet-stream";
     }
+
+    valid = true;
+  }
+
+  ComposeMessage::Attachment::Attachment (refptr<Message> msg) {
+    log << debug << "cm: at: construct from message." << endl;
+    name = msg->subject;
+    on_disk = false;
+    is_mime_message = true;
+
+    contents = msg->raw_contents ();
+    content_type = "message/rfc822";
 
     valid = true;
   }

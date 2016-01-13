@@ -53,10 +53,12 @@ namespace Astroid {
         public:
           Attachment (path);
           Attachment (refptr<Chunk>);
+          Attachment (refptr<Message>);
           ~Attachment ();
           ustring name;
           path    fname;
           bool    on_disk;
+          bool    is_mime_message = false;
           bool    valid;
 
           refptr<Glib::ByteArray> contents;
