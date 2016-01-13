@@ -1031,7 +1031,12 @@ namespace Astroid {
       bool /* check_siblings */)
   {
 
-    ustring mime_type = ustring(g_mime_content_type_to_string (c->content_type));
+    ustring mime_type;
+    if (c->content_type) {
+      mime_type = ustring(g_mime_content_type_to_string (c->content_type));
+    } else {
+      mime_type = "application/octet-stream";
+    }
 
     log << debug << "create message part: " << c->id << " (siblings: " << c->siblings.size() << ") (kids: " << c->kids.size() << ")" <<
       " (attachment: " << c->attachment << ")" << " (viewable: " << c->viewable << ")" << " (mimetype: " << mime_type << ")" << endl;
