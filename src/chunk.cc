@@ -34,7 +34,11 @@ namespace Astroid {
 
     content_type = g_mime_object_get_content_type (mime_object);
 
-    log << debug << "chunk: content-type: " << g_mime_content_type_to_string (content_type) << endl;
+    if (content_type) {
+      log << debug << "chunk: content-type: " << g_mime_content_type_to_string (content_type) << endl;
+    } else {
+      log << warn << "chunk: content-type not specified, could be mime-message." << endl;
+    }
 
     if (GMIME_IS_PART (mime_object)) {
       // has no sub-parts
