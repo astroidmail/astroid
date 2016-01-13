@@ -374,8 +374,10 @@ namespace Astroid {
                                 // not the first
       newt += completion;
 
-      // add remainder of text field
-      newt += t.substr (pos+key.size() + ((pos > 0) ? 1 : 0), t.size());
+      // add remainder of text field, unless we are at the end of the line
+      if (pos + key.size() < t.size()) {
+        newt += t.substr (pos+key.size() + ((pos > 0) ? 1 : 0), t.size());
+      }
 
       entry->set_text (newt);
       entry->set_position (pos + completion.size()+((pos > 0) ? 1 : 0));
