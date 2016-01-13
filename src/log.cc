@@ -61,7 +61,10 @@ namespace Astroid {
     for (auto &o : out_streams) {
       *o << "[" << level_string (_next_level) << "] "
          << time_str.str() << ": "
-         << _next_line.str() << endl << flush;
+         << _next_line.str() << endl;
+# ifdef DEBUG
+      *o << flush;
+# endif
     }
 
     lock_guard<mutex> grd (m_lines);

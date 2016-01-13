@@ -8,7 +8,7 @@ def getGitDesc():
 env = Environment ()
 
 AddOption ("--release", action="store", dest="release", default="git", help="Make a release (default: git describe output)")
-AddOption ("--enable-debug", action="store_true", dest="debug", default=None, help="Enable the -g flag for debugging (default: true when release is git)")
+AddOption ("--enable-debug", action="store", dest="debug", default=None, help="Enable the -g flag for debugging (default: true when release is git)")
 AddOption ("--prefix", action="store", dest="prefix", default=None, help="Directory to install astroid under")
 
 prefix = GetOption ("prefix")
@@ -28,6 +28,9 @@ else:
 debug = GetOption("debug")
 if debug == None:
   debug = (release == "git")
+
+else:
+  debug = (debug.lower () == 'yes' or debug.lower () == 'true')
 
 print "debug flag enabled: " + str(debug)
 
@@ -215,7 +218,7 @@ env.AppendUnique (LIBS = libs)
 env.AppendUnique (CPPFLAGS = ['-Wall', '-std=c++11', '-pthread'] )
 
 if debug:
-  env.AppendUnique (CPPFLAGS = ['-g', '-Wextra'])
+  env.AppendUnique (CPPFLAGS = ['-g', '-Wextra', '-DDEBUG'])
 
 ## write config file
 print ("writing src/build_config.hh..")
