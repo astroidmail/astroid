@@ -61,6 +61,7 @@ namespace Astroid {
 
     /* register keys {{{ */
     keys.title = "ThreadIndex mode";
+    keys.set_prefix ("thread_index");
 
     keys.register_key ("x", "thread_index.close_pane", "Close thread view pane if open",
         [&](Key k) {

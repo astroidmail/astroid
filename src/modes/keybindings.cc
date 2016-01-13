@@ -41,17 +41,31 @@ namespace Astroid {
 
         /* the bindings file has the format:
          *
-         * ```
-         * thread_index.next_thread=j
-         * thread_index.next_thread=Down
+         * ``` thread_index.next_thread=j thread_index.next_thread=Down
          * thread_index.label=C-j
          *
-         * # thread_
-         * ```
+         * # thread_ ```
          *
-         * blank lines, or lines starting with # are ignored. a keybinding
-         * can be listed several times, in which case they will be interpreted as
+         * blank lines, or lines starting with # are ignored. a keybinding can
+         * be listed several times, in which case they will be interpreted as
          * aliases for the same target.
+         *
+         * shell hooks follow the format:
+         *
+         *  thread_index.run(cmd)=key
+         *
+         *  it will be parsed by searching for:
+         *
+         *  1. prefix.run( 2. then search backwards for )= 3. split in cmd and
+         *  key
+         *
+         *  on run the arguments for the cmd need to be got from the current
+         *  mode and passed on.
+         *
+         *  on finished run the event [void on_run (bool success)] will be run,
+         *  with 'bool success' indicating a sucessfull run of the command. in
+         *  thread_index this will for instance be used to refresh the current
+         *  thread.
          */
 
         std::ifstream bf (bindings_file.c_str());
@@ -93,6 +107,12 @@ namespace Astroid {
   }
 
   Keybindings::Keybindings () {
+  }
+
+  void set_prefix (ustring p) {
+    prefix = p;
+    log << debug << "ti: loading prefix: " << p << endl;
+
   }
 
   ustring Keybindings::short_help () {

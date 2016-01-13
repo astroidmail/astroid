@@ -59,6 +59,8 @@ namespace Astroid {
       Keybindings ();
       static void init ();
 
+      void set_prefix (ustring);
+
       ustring title; /* title of keybinding set */
       bool loghandle = true; /* log handling */
 
@@ -100,6 +102,7 @@ namespace Astroid {
 
     private:
       std::map<Key, std::function<bool (Key)>> keys;
+      ustring prefix = ""; /* used to load custom hooks */
 
     public:
       static std::vector<Key>  user_bindings;
