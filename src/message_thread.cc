@@ -590,6 +590,30 @@ namespace Astroid {
     }
   }
 
+  refptr<Glib::ByteArray> Message::raw_contents () {
+    time_t t0 = clock ();
+
+    // https://github.com/skx/lumail/blob/master/util/attachments.c
+
+    GMimeStream * mem = g_mime_stream_mem_new ();
+
+    g_mime_object_write_to_stream (GMIME_OBJECT(message), mem);
+    g_mime_stream_flush (mem);
+
+    GByteArray * res = g_mime_stream_mem_get_byte_array (GMIME_STREAM_MEM (mem));
+
+    auto data = Glib::ByteArray::create ();
+    if (res != NULL) {
+      data->append (res->data, res->len);
+    }
+
+    g_object_unref (mem);
+
+    log << info << "message: contents: loaded " << data->size () << " bytes in " << ( (clock () - t0) * 1000.0 / CLOCKS_PER_SEC ) << " ms." << endl;
+
+    return data;
+  }
+
   bool Message::is_patch () {
     return (
         (subject.substr(0,3).uppercase() != "RE:") &&
