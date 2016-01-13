@@ -147,6 +147,7 @@ namespace Astroid {
     /* mail composition */
     default_config.put ("mail.reply.quote_line", "Excerpts from %1's message of %2:"); // %1 = author, %2 = pretty_verbose_date
     default_config.put ("mail.forward.quote_line", "Forwarding %1's message of %2:"); // %1 = author, %2 = pretty_verbose_date
+    default_config.put ("mail.forward.disposition", "inline");
 
     /* contacts (not in use)
     default_config.put ("contacts.lbdb.cmd", "lbdb");

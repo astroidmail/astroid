@@ -28,35 +28,42 @@ namespace Astroid {
       set_label ("New message: " + subject);
     }
 
-    /* quote original message */
-    ostringstream quoted;
+    if (astroid->config->config.get<string> ("mail.forward.disposition") == "attachment") {
 
-    ustring quoting_a = ustring::compose (astroid->config->config.get<string> ("mail.forward.quote_line"),
-        Address(msg->sender.raw()).fail_safe_name(), msg->pretty_verbose_date());
+      add_attachment (new ComposeMessage::Attachment (msg));
 
-    quoted  << quoting_a.raw ()
-            << endl;
+    } else {
 
-    /* add forward header */
-    quoted << "From: " << msg->sender << endl;
-    quoted << "Date: " << msg->pretty_verbose_date() << endl;
-    quoted << "Subject: " << msg->subject << endl;
-    quoted << "To: " << AddressList(msg->to()).str () << endl;
-    auto cc = AddressList (msg->cc());
-    if (cc.addresses.size () > 0)
-      quoted << "Cc: " << AddressList(msg->cc()).str () << endl;
-    quoted << endl;
+      /* quote original message */
+      ostringstream quoted;
 
-    string vt = msg->viewable_text(false);
-    quoted << vt;
+      ustring quoting_a = ustring::compose (astroid->config->config.get<string> ("mail.forward.quote_line"),
+          Address(msg->sender.raw()).fail_safe_name(), msg->pretty_verbose_date());
 
-    body = ustring(quoted.str());
+      quoted  << quoting_a.raw ()
+              << endl;
 
-    for (auto &c : msg->attachments ()) {
-      add_attachment (new ComposeMessage::Attachment (c));
+      /* add forward header */
+      quoted << "From: " << msg->sender << endl;
+      quoted << "Date: " << msg->pretty_verbose_date() << endl;
+      quoted << "Subject: " << msg->subject << endl;
+      quoted << "To: " << AddressList(msg->to()).str () << endl;
+      auto cc = AddressList (msg->cc());
+      if (cc.addresses.size () > 0)
+        quoted << "Cc: " << AddressList(msg->cc()).str () << endl;
+      quoted << endl;
+
+      string vt = msg->viewable_text(false);
+      quoted << vt;
+
+      body = ustring(quoted.str());
+
+      for (auto &c : msg->attachments ()) {
+        add_attachment (new ComposeMessage::Attachment (c));
+      }
+
+      /* TODO: add non-text parts */
     }
-
-    /* TODO: add non-text parts */
 
 
     /* try to figure which account the message was sent to, using
