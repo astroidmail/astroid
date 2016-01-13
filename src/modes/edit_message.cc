@@ -313,7 +313,7 @@ namespace Astroid {
             if (!r) {
               on_tv_ready ();
             } else {
-              close ();
+              close (true);
             }
           }
           return true;
@@ -335,7 +335,7 @@ namespace Astroid {
                 [&](bool yes) {
                   if (yes) {
                     delete_draft ();
-                    close ();
+                    close (true);
                   }
                 });
           } else {
@@ -368,7 +368,7 @@ namespace Astroid {
   void EditMessage::close (bool force) {
     if (sending_in_progress.load ()) {
       /* block closing the window while sending */
-    } else if (!message_sent) {
+    } else if (!force && !message_sent) {
       ask_yes_no ("Do you want to close this message? (any changes will be lost)", [&](bool yes){ if (yes) { Mode::close (force); } });
     } else {
       // message has been sent successfully, no need to complain.
