@@ -19,7 +19,7 @@ namespace Astroid {
       static ustring       thread_view_html;
       static ustring       thread_view_css;
       const char * STYLE_NAME = "STYLE";
-      const int THEME_VERSION = 1;
+      const int THEME_VERSION = 2;
 
     private:
       bool check_theme_version (path);
