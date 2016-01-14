@@ -8,11 +8,24 @@ $recv-collapsed: #f5f5f5;
 $sent-normal: #ffffff;
 $sent-quoted: #e8e8e8;
 $sent-collapsed: #f5f5f5;
+
 /* Fonts */
-$font-base-size: 16px;
-$font-mono: "Input Mono", "Inconsolata", monospace;
-$font-sans: "Input Sans", "Roboto", sans-serif;
-$font-family-default: $font-mono;
+@if not(global-variable-exists(font-base-size)) {
+  $font-base-size: 16px !global;
+}
+
+@if not(global-variable-exists(font-mono)) {
+  $font-mono: "Input Mono", "Inconsolata", monospace !global;
+}
+
+@if not(global-variable-exists(font-sans)) {
+  $font-sans: "Input Sans", "Roboto", sans-serif !global;
+}
+
+@if not(global-variable-exists(font-family-default)) {
+  $font-family-default: $font-mono !global;
+}
+
 /* Colours */
 $email-solid: #d8d8d8;
 $focused-solid: #4a90d9;
