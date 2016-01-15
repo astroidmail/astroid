@@ -3,6 +3,7 @@
 # include <functional>
 
 # include <boost/filesystem.hpp>
+# include <boost/filesystem/operations.hpp>
 # include <boost/property_tree/ptree.hpp>
 # include <boost/property_tree/json_parser.hpp>
 
@@ -20,9 +21,9 @@ namespace Astroid {
       log << info << "cf: loading test config." << endl;
     }
 
-    load_dirs ();
-
     test = _test;
+
+    load_dirs ();
 
     config_file = config_dir / path("config");
 
@@ -41,14 +42,26 @@ namespace Astroid {
   }
 
   void Config::load_dirs () {
-    char * home_c      = getenv ("HOME");
 
-    if (home_c == NULL) {
-      log << error << "cf: HOME environment variable not set." << endl;
-      exit (1);
+    if (test) {
+      /* using $PWD/test/test_home */
+
+      path cur_path (current_path() );
+
+      home = cur_path / path("test/test_home");
+
+      log << LogLevel::test << "cf: using home directory: " << home.c_str () << endl;
+
+    } else {
+      char * home_c = getenv ("HOME");
+
+      if (home_c == NULL) {
+        log << error << "cf: HOME environment variable not set." << endl;
+        exit (1);
+      }
+
+      home = path(home_c);
     }
-
-    home = path(home_c);
 
     /* default config */
     char * config_home = getenv ("XDG_CONFIG_HOME");
