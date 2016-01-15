@@ -11,4 +11,5 @@ test_no_newline_msg
 test_non_existant_file
 test_open_db
 test_mime_message
+test_theme
 
