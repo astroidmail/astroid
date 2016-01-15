@@ -50,7 +50,7 @@ namespace Astroid {
 
     ustring mj_only_tags = astroid->config->config.get<string> ("thread_view.mathjax.for_tags");
     if (mj_only_tags.length() > 0) {
-      mathjax_only_tags = VectorUtils::split_and_trim (mj_only_tags, ";");
+      mathjax_only_tags = VectorUtils::split_and_trim (mj_only_tags, ",");
     }
 
     enable_code_prettify = astroid->config->config.get<bool> ("thread_view.code_prettify.enable");
@@ -59,7 +59,7 @@ namespace Astroid {
 
     ustring cp_only_tags = astroid->config->config.get<string> ("thread_view.code_prettify.for_tags");
     if (cp_only_tags.length() > 0) {
-      code_prettify_only_tags = VectorUtils::split_and_trim (cp_only_tags, ";");
+      code_prettify_only_tags = VectorUtils::split_and_trim (cp_only_tags, ",");
     }
 
     code_prettify_code_tag = astroid->config->config.get<string> ("thread_view.code_prettify.code_tag");

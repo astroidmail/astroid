@@ -183,7 +183,7 @@ namespace Astroid {
     // MathJax.js will be added to this uri when the script is loaded
     default_config.put ("thread_view.mathjax.uri_prefix", "https://cdn.mathjax.org/mathjax/latest/");
 
-    // a ; delimited list of tags which mathjax is enabled for, if empty,
+    // a comma-separated list of tags which mathjax is enabled for, if empty,
     // allow for all messages.
     default_config.put ("thread_view.mathjax.for_tags", "");
 
@@ -193,7 +193,7 @@ namespace Astroid {
     // run_prettify.js will be added to this uri when the script is loaded
     default_config.put ("thread_view.code_prettify.uri_prefix", "https://google-code-prettify.googlecode.com/svn/loader/");
 
-    // a ; delimited list of tags which code_prettify is enabled for, if empty,
+    // a comma-separeted list of tags which code_prettify is enabled for, if empty,
     // allow for all messages.
     default_config.put ("thread_view.code_prettify.for_tags", "");
 
