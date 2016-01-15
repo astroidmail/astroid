@@ -28,6 +28,7 @@
 * Hugo Roy: Fix licences to be correct for borrowed stuff.
 * Franz Fellner: Fix some long standing annoying bugs.
 * Use ',' as separator for 'for_tags' in config, not ';'.
+* Hugo Roy: Refurbished thread-view theme and move to scss processing.
 
 == v0.4 / 2015-08-15
 
