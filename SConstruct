@@ -293,7 +293,7 @@ idir_ui         = os.path.join (idir_shr, 'ui')
 
 inst_bin = env.Install (idir_bin, astroid)
 inst_shr = env.Install (idir_ui,  Glob ('ui/*.glade') +
-                                  Glob ('ui/*.css') +
+                                  Glob ('ui/*.scss') +
                                   Glob ('ui/*.png') +
                                   Glob ('ui/*.html'))
 env.Alias ('install', inst_bin)
