@@ -198,6 +198,8 @@ namespace Astroid {
 
         if (a->is_mime_message) {
           g_mime_object_set_disposition (GMIME_OBJECT(part), "inline");
+        } else {
+          g_mime_part_set_content_encoding (part, GMIME_CONTENT_ENCODING_BASE64);
         }
 
         g_mime_multipart_add (multipart, (GMimeObject*) part);
