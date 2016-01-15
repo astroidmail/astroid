@@ -27,6 +27,7 @@
 * Allow messages to be sent as attachments.
 * Hugo Roy: Fix licences to be correct for borrowed stuff.
 * Franz Fellner: Fix some long standing annoying bugs.
+* Use ',' as separator for 'for_tags' in config, not ';'.
 
 == v0.4 / 2015-08-15
 
