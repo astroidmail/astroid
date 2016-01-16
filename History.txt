@@ -29,6 +29,7 @@
 * Franz Fellner: Fix some long standing annoying bugs.
 * Use ',' as separator for 'for_tags' in config, not ';'.
 * Hugo Roy: Refurbished thread-view theme and move to scss processing.
+* Franz Fellner: Clean-up coding style and name-space pollution.
 
 == v0.4 / 2015-08-15
 

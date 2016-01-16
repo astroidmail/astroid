@@ -1,6 +1,6 @@
 # pragma once
 
-using namespace std;
+# include <vector>
 
 # include "proto.hh"
 # include "action.hh"
@@ -12,18 +12,18 @@ namespace Astroid {
 
       TagAction (
           refptr<NotmuchThread>,
-          const vector<ustring>,
-          const vector<ustring>);
+          const std::vector<ustring>,
+          const std::vector<ustring>);
 
-      TagAction (vector<refptr<NotmuchThread>>);
+      TagAction (std::vector<refptr<NotmuchThread>>);
 
       TagAction (
-          vector<refptr<NotmuchThread>>,
-          const vector<ustring>,
-          const vector<ustring>);
+          std::vector<refptr<NotmuchThread>>,
+          const std::vector<ustring>,
+          const std::vector<ustring>);
 
-      vector<ustring> add;
-      vector<ustring> remove;
+      std::vector<ustring> add;
+      std::vector<ustring> remove;
 
       virtual bool doit (Db *) override;
       virtual bool undo (Db *) override;

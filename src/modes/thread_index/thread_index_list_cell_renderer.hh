@@ -1,12 +1,12 @@
 # pragma once
 
+# include <vector>
+
 # include <gtkmm.h>
 # include <gtkmm/cellrenderer.h>
 
 # include "proto.hh"
 # include "db.hh"
-
-using namespace std;
 
 namespace Astroid {
   class ThreadIndexListCellRenderer : public Gtk::CellRenderer {
@@ -20,7 +20,7 @@ namespace Astroid {
 
       /* these tags are displayed otherwisely, so they are not
        * shown explicitly: MUST BE SORTED */
-      const vector<ustring> hidden_tags =
+      const std::vector<ustring> hidden_tags =
               { "attachment", "flagged", "unread"
               };
 

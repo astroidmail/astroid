@@ -1,6 +1,6 @@
 # pragma once
 
-# include <string>
+# include <vector>
 
 # include <gtkmm.h>
 # include <gtkmm/box.h>
@@ -10,9 +10,6 @@
 # include <notmuch.h>
 
 # include "modes/paned_mode.hh"
-
-
-using namespace std;
 
 namespace Astroid {
 
@@ -54,6 +51,6 @@ namespace Astroid {
 
     private:
       notmuch_sort_t sort;
-      vector<ustring> sort_strings = { "oldest", "newest", "messageid", "unsorted" };
+      std::vector<ustring> sort_strings = { "oldest", "newest", "messageid", "unsorted" };
   };
 }

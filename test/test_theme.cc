@@ -7,8 +7,8 @@
 
 # include "modes/thread_view/theme.hh"
 
-
 using namespace std;
+using Astroid::ustring;
 
 
 BOOST_AUTO_TEST_SUITE(Theme)

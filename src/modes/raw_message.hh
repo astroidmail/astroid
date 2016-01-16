@@ -1,9 +1,6 @@
 # include "proto.hh"
-# include "astroid.hh"
 
 # include "mode.hh"
-
-using namespace std;
 
 namespace Astroid {
   class RawMessage : public Mode {

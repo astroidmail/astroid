@@ -86,6 +86,7 @@ namespace Astroid {
 
   void Mode::close (bool force) {
     /* close current page */
+    using std::endl;
     if (main_window->notebook.get_n_pages() > 1) {
       int c = main_window->notebook.get_current_page ();
 
@@ -105,8 +106,9 @@ namespace Astroid {
 
   void Mode::ask_yes_no (
       ustring question,
-      function <void (bool)> closure)
+      std::function <void (bool)> closure)
   {
+    using std::endl;
     log << info << "mode: " << question << endl;
 
     if (yes_no_waiting || multi_waiting) {
@@ -122,6 +124,7 @@ namespace Astroid {
   }
 
   void Mode::answer_yes_no (bool yes) {
+    using std::endl;
     rev_yes_no->set_reveal_child (false);
 
     if (yes) {
@@ -142,6 +145,7 @@ namespace Astroid {
 
   bool Mode::multi_key (Keybindings & kb, Key /* k */)
   {
+    using std::endl;
     log << info << "mode: starting multi key." << endl;
 
     if (yes_no_waiting || multi_waiting) {

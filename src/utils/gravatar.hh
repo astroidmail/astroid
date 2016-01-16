@@ -3,8 +3,6 @@
 # include "proto.hh"
 # include <vector>
 
-using namespace std;
-
 namespace Astroid {
   class Gravatar {
     public:
@@ -21,7 +19,7 @@ namespace Astroid {
         RETRO,
       };
 
-      static vector<ustring> DefaultStr;
+      static std::vector<ustring> DefaultStr;
 
       static ustring get_image_uri (ustring, enum Default, int = Gravatar::DEFAULT_SIZE);
 

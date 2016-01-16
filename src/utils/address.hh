@@ -7,8 +7,6 @@
 
 # include <gmime/gmime.h>
 
-using namespace std;
-
 namespace Astroid {
 
   class Address {
@@ -39,7 +37,7 @@ namespace Astroid {
       AddressList (Address);
       AddressList (ustring);
 
-      vector<Address> addresses;
+      std::vector<Address> addresses;
       ustring str ();
 
       AddressList& operator+= (const Address &);

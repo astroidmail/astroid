@@ -6,8 +6,6 @@
 # include "proto.hh"
 # include "utils/address.hh"
 
-using namespace std;
-
 namespace Astroid {
   class Account {
     public:
@@ -21,7 +19,7 @@ namespace Astroid {
 
       bool save_sent;
       ustring save_sent_to;
-      vector<ustring> additional_sent_tags;
+      std::vector<ustring> additional_sent_tags;
       ustring save_drafts_to;
 
       ustring full_address ();
@@ -34,7 +32,7 @@ namespace Astroid {
       AccountManager ();
       ~AccountManager ();
 
-      vector<Account> accounts;
+      std::vector<Account> accounts;
       int default_account;
       Account * get_account_for_address (ustring);
       Account * get_account_for_address (Address);

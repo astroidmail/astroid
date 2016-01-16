@@ -2,7 +2,7 @@
 
 # include <mutex>
 # include <atomic>
-# include <condition_variable>
+# include <functional>
 
 # include <vector>
 
@@ -14,8 +14,6 @@
 # include "astroid.hh"
 # include "config.hh"
 # include "proto.hh"
-
-using namespace std;
 
 namespace Astroid {
   /* the notmuch thread object should get by on the db only */
@@ -33,8 +31,8 @@ namespace Astroid {
       bool    attachment;
       bool    flagged;
       int     total_messages;
-      vector<ustring> authors;
-      vector<ustring> tags;
+      std::vector<ustring> authors;
+      std::vector<ustring> tags;
 
       bool has_tag (ustring);
 
@@ -48,11 +46,11 @@ namespace Astroid {
 
     private:
       int     check_total_messages (notmuch_thread_t *);
-      vector<ustring> get_authors (notmuch_thread_t *);
-      vector<ustring> get_tags (notmuch_thread_t *);
+      std::vector<ustring> get_authors (notmuch_thread_t *);
+      std::vector<ustring> get_tags (notmuch_thread_t *);
   };
 
-  class Db : public recursive_mutex {
+  class Db : public std::recursive_mutex {
     public:
       enum DbMode {
         DATABASE_READ_ONLY,
@@ -65,8 +63,8 @@ namespace Astroid {
       void reopen ();
       bool check_reopen (bool);
 
-      void on_thread  (ustring, function <void(notmuch_thread_t *)>);
-      void on_message (ustring, function <void(notmuch_message_t *)>);
+      void on_thread  (ustring, std::function <void(notmuch_thread_t *)>);
+      void on_message (ustring, std::function <void(notmuch_message_t *)>);
 
       bool thread_in_query (ustring, ustring);
 
@@ -83,13 +81,13 @@ namespace Astroid {
       };
 
       /* internal lock for open and close operations */
-      atomic<DbState> db_state;
+      std::atomic<DbState> db_state;
 
       bool open_db_write (bool);
       bool open_db_read_only ();
       void close_db ();
 
-      path path_db;
+      bfs::path path_db;
       const int db_write_open_timeout = 30; // seconds
       const int db_write_open_delay   = 1; // seconds
 
@@ -98,23 +96,23 @@ namespace Astroid {
 
       ptree config;
 
-      vector<ustring> tags;
+      std::vector<ustring> tags;
 
       void load_tags ();
       void test_query ();
 
-      vector<ustring> sent_tags = { "sent" };
-      vector<ustring> draft_tags = { "draft" };
-      vector<ustring> excluded_tags = { "muted", "spam", "deleted" };
+      std::vector<ustring> sent_tags = { "sent" };
+      std::vector<ustring> draft_tags = { "draft" };
+      std::vector<ustring> excluded_tags = { "muted", "spam", "deleted" };
 
-      void add_sent_message (ustring, vector<ustring>);
+      void add_sent_message (ustring, std::vector<ustring>);
       void add_draft_message (ustring);
-      void add_message_with_tags (ustring fname, vector<ustring> tags);
+      void add_message_with_tags (ustring fname, std::vector<ustring> tags);
       void remove_message (ustring);
   };
 
   /* exceptions */
-  class database_error : public runtime_error {
+  class database_error : public std::runtime_error {
     public:
       database_error (const char *);
 

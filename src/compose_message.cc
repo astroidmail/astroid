@@ -16,7 +16,7 @@
 # include "chunk.hh"
 
 using namespace std;
-using namespace boost::filesystem;
+namespace bfs = boost::filesystem;
 
 namespace Astroid {
   ComposeMessage::ComposeMessage () {
@@ -248,6 +248,7 @@ namespace Astroid {
           log << warn << "cm: message sent successfully!" << endl;
 
         if (account->save_sent) {
+          using bfs::path;
           path save_to = path(account->save_sent_to) / path(id + ":2,");
           if (output)
             log << info << "cm: saving message to: " << save_to << endl;
@@ -324,7 +325,7 @@ namespace Astroid {
     log << debug << "cm: wrote file: " << fname << endl;
   }
 
-  ComposeMessage::Attachment::Attachment (path p) {
+  ComposeMessage::Attachment::Attachment (bfs::path p) {
     log << debug << "cm: at: construct from file." << endl;
     fname   = p;
     on_disk = true;
@@ -370,7 +371,7 @@ namespace Astroid {
 
     const char * ct = g_mime_content_type_to_string (c->content_type);
     if (ct != NULL) {
-      content_type = string (ct);
+      content_type = std::string (ct);
     } else {
       content_type = "application/octet-stream";
     }

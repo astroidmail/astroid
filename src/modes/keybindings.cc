@@ -8,16 +8,18 @@
 
 # include "log.hh"
 
-using namespace std;
+using std::function;
+using std::vector;
+using std::endl;
 
 namespace Astroid {
 
   /* Keybindings {{{ */
-  atomic<bool> Keybindings::user_bindings_loaded (false);
+  std::atomic<bool> Keybindings::user_bindings_loaded (false);
   const char * Keybindings::user_bindings_file = "keybindings";
-  vector<Key>  Keybindings::user_bindings;
+  std::vector<Key>  Keybindings::user_bindings;
 
-  map<guint, ustring> keynames = {
+  std::map<guint, ustring> keynames = {
     { GDK_KEY_Down,   "Down" },
     { GDK_KEY_Up,     "Up" },
     { GDK_KEY_Tab,    "Tab" },
@@ -31,6 +33,7 @@ namespace Astroid {
     if (!user_bindings_loaded) {
       user_bindings_loaded = true;
 
+      using bfs::path;
       path bindings_file = astroid->config->config_dir / path (user_bindings_file);
 
       if (exists(bindings_file)) {
@@ -477,7 +480,7 @@ namespace Astroid {
       try {
         ustring kk = keynames.at (key);
         s += kk;
-      } catch (exception &ex) {
+      } catch (std::exception &ex) {
         s += ustring::compose ("%1", key);
       }
     }

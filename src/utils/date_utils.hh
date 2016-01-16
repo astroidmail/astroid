@@ -2,8 +2,6 @@
 
 # include "astroid.hh"
 
-using namespace std;
-
 namespace Astroid {
   class Date {
     public:
@@ -18,8 +16,8 @@ namespace Astroid {
       //
       // See http://developer.gnome.org/glib/2.32/glib-GDateTime.html#g-date-time-format
 
-      static const vector<ustring> pretty_dates;
-      static const vector<ustring> pretty_verbose_dates;
+      static const std::vector<ustring> pretty_dates;
+      static const std::vector<ustring> pretty_verbose_dates;
 
       // Date format for dates within the current year, i.e. Nov 8
       static ustring same_year;

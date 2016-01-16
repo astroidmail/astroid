@@ -4,8 +4,6 @@
 # include <functional>
 # include <atomic>
 
-using namespace std;
-
 namespace Astroid {
   struct Key {
     Key ();
@@ -37,13 +35,13 @@ namespace Astroid {
   };
 
   /* exceptions */
-  class keyspec_error : public runtime_error {
+  class keyspec_error : public std::runtime_error {
     public:
       keyspec_error (const char *);
 
   };
 
-  class duplicatekey_error : public runtime_error {
+  class duplicatekey_error : public std::runtime_error {
     public:
       duplicatekey_error (const char *);
 
@@ -57,34 +55,34 @@ namespace Astroid {
       ustring title; /* title of keybinding set */
       bool loghandle = true; /* log handling */
 
-      typedef pair<Key, function<bool (Key)>> KeyBinding;
+      typedef std::pair<Key, std::function<bool (Key)>> KeyBinding;
 
-      void register_key (Key, ustring name, ustring help, function<bool (Key)>);
-      void register_key (ustring spec, ustring name, ustring help, function<bool (Key)>);
-
-      void register_key (Key,
-                         vector<Key>,
-                         ustring name,
-                         ustring help,
-                         function<bool (Key)>);
-
-      void register_key (ustring spec,
-                         vector<ustring>,
-                         ustring name,
-                         ustring help,
-                         function<bool (Key)>);
+      void register_key (Key, ustring name, ustring help, std::function<bool (Key)>);
+      void register_key (ustring spec, ustring name, ustring help, std::function<bool (Key)>);
 
       void register_key (Key,
-                         vector<ustring>,
+                         std::vector<Key>,
                          ustring name,
                          ustring help,
-                         function<bool (Key)>);
+                         std::function<bool (Key)>);
 
       void register_key (ustring spec,
-                         vector<Key>,
+                         std::vector<ustring>,
                          ustring name,
                          ustring help,
-                         function<bool (Key)>);
+                         std::function<bool (Key)>);
+
+      void register_key (Key,
+                         std::vector<ustring>,
+                         ustring name,
+                         ustring help,
+                         std::function<bool (Key)>);
+
+      void register_key (ustring spec,
+                         std::vector<Key>,
+                         ustring name,
+                         ustring help,
+                         std::function<bool (Key)>);
 
       bool handle (GdkEventKey *);
 
@@ -94,14 +92,14 @@ namespace Astroid {
       ustring help ();
 
     private:
-      map<Key, function<bool (Key)>> keys;
+      std::map<Key, std::function<bool (Key)>> keys;
 
     public:
-      static vector<Key>  user_bindings;
-      static atomic<bool> user_bindings_loaded;
+      static std::vector<Key>  user_bindings;
+      static std::atomic<bool> user_bindings_loaded;
       static const char * user_bindings_file;
 
-      static map<guint, ustring> keynames;
+      static std::map<guint, ustring> keynames;
   };
 }
 

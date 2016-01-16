@@ -7,8 +7,11 @@
 # include "message_thread.hh"
 # include "glibmm.h"
 
-using namespace std;
+using std::cout;
+using std::endl;
+using std::locale;
 
+using Astroid::ustring;
 
 BOOST_AUTO_TEST_SUITE(Reading)
 
@@ -36,7 +39,7 @@ BOOST_AUTO_TEST_SUITE(Reading)
 
     BOOST_WARN_MESSAGE (Glib::get_charset (), "The current locale is not utf8");
 
-    string current_locale;
+    std::string current_locale;
     Glib::get_charset (current_locale);
     BOOST_TEST_MESSAGE ("locale: " + current_locale);
 
@@ -49,7 +52,7 @@ BOOST_AUTO_TEST_SUITE(Reading)
 
     ustring fname = "test/mail/test_mail/convert_error.eml";
 
-    Message m (fname);
+    Astroid::Message m (fname);
 
     BOOST_CHECK_NO_THROW (m.viewable_text (false));
 
@@ -62,21 +65,21 @@ BOOST_AUTO_TEST_SUITE(Reading)
 
     ustring fname = "test/mail/test_mail/bad-convert-error.eml";
 
-    Message msg (fname);
+    Astroid::Message msg (fname);
     /* quote original message */
-    ostringstream quoted;
+    std::ostringstream quoted;
 
     ustring quoting_a = ustring::compose ("Excerpts from %1's message of %2:",
-        Address(msg.sender.raw()).fail_safe_name(), msg.pretty_verbose_date());
+        Astroid::Address(msg.sender.raw()).fail_safe_name(), msg.pretty_verbose_date());
 
     quoted  << quoting_a.raw ()
             << endl;
 
-    string vt = msg.viewable_text(false);
-    stringstream sstr (vt);
+    std::string vt = msg.viewable_text(false);
+    std::stringstream sstr (vt);
     while (sstr.good()) {
-      string line;
-      getline (sstr, line);
+      std::string line;
+      std::getline (sstr, line);
       quoted << ">";
 
       if (line[0] != '>')
@@ -89,8 +92,8 @@ BOOST_AUTO_TEST_SUITE(Reading)
 
 
     /* test writing out */
-    string name = tmpnam (NULL);
-    Astroid::log << test << "writing to tmp file " << name << endl;
+    std::string name = tmpnam (NULL);
+    Astroid::log << Astroid::test << "writing to tmp file " << name << endl;
     std::fstream tmpfile (name, std::fstream::out);
 
     tmpfile << "From: test@test.no" << endl;
@@ -101,8 +104,8 @@ BOOST_AUTO_TEST_SUITE(Reading)
     tmpfile << endl;
     tmpfile.close ();
 
-    Astroid::log << test << "removing tmp file" << endl;
-    remove (name);
+    Astroid::log << Astroid::test << "removing tmp file" << endl;
+    std::remove (name.c_str());
 
     teardown ();
   }

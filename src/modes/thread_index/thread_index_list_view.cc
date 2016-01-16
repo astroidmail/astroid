@@ -83,6 +83,8 @@ namespace Astroid {
    * ---------
    */
   ThreadIndexListView::ThreadIndexListView (ThreadIndex * _thread_index, Glib::RefPtr<ThreadIndexListStore> store) {
+    using bfs::path;
+
     set_name ("ThreadIndexListView");
 
     thread_index = _thread_index;

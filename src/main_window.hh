@@ -1,6 +1,7 @@
 # pragma once
 
 # include <atomic>
+# include <functional>
 
 # include <gtkmm.h>
 # include <gtkmm/window.h>
@@ -11,8 +12,6 @@
 # include "modes/mode.hh"
 # include "modes/keybindings.hh"
 # include "actions/action_manager.hh"
-
-using namespace std;
 
 namespace Astroid {
   class Notebook : public Gtk::Notebook {
@@ -45,7 +44,7 @@ namespace Astroid {
 
       bool is_command = false;
       void enable_command (CommandBar::CommandMode, ustring,
-          function<void(ustring)>);
+          std::function<void(ustring)>);
       void disable_command ();
       void on_command_mode_changed ();
 
@@ -79,7 +78,7 @@ namespace Astroid {
 
       void on_update_title ();
 
-      static atomic<uint> nextid;
+      static std::atomic<uint> nextid;
   };
 
 }

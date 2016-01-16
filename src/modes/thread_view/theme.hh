@@ -5,15 +5,14 @@
 
 # include "proto.hh"
 
-using namespace std;
-using namespace boost::filesystem;
+namespace bfs = boost::filesystem;
 
 namespace Astroid {
   class Theme {
     public:
       Theme ();
 
-      static atomic<bool> theme_loaded;
+      static std::atomic<bool> theme_loaded;
       static const char *  thread_view_html_f;
       static const char *  thread_view_scss_f;
       static ustring       thread_view_html;
@@ -22,7 +21,7 @@ namespace Astroid {
       const int THEME_VERSION = 2;
 
     private:
-      bool check_theme_version (path);
+      bool check_theme_version (bfs::path);
       ustring process_scss (const char * scsspath);
   };
 }

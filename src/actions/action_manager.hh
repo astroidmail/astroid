@@ -5,17 +5,14 @@
 # include <sigc++/sigc++.h>
 # include <glibmm/threads.h>
 
-# include "astroid.hh"
 # include "proto.hh"
-
-using namespace std;
 
 namespace Astroid {
   class ActionManager {
     public:
       ActionManager ();
 
-      vector<refptr<Action>> actions;
+      std::vector<refptr<Action>> actions;
 
       bool doit (Db *, refptr<Action>);
       bool undo ();

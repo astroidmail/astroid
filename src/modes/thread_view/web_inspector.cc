@@ -20,7 +20,7 @@ namespace Astroid {
       WebKitWebView          * web_view)
   {
     /* set up inspector window */
-    log << info << "tv: starting conversation inspector.." << endl;
+    log << info << "tv: starting conversation inspector.." << std::endl;
     inspector_window = new Gtk::Window ();
     inspector_window->set_default_size (600, 600);
     if (thread)
@@ -41,7 +41,7 @@ namespace Astroid {
   }
 
   bool ThreadView::show_inspector (WebKitWebInspector * wi) {
-    log << info << "tv: show inspector.." << endl;
+    log << info << "tv: show inspector.." << std::endl;
 
     inspector_window->show_all ();
 

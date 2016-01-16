@@ -13,10 +13,11 @@
 # include "utils/address.hh"
 # include "chunk.hh"
 
-using namespace std;
-
 namespace Astroid {
   ForwardMessage::ForwardMessage (MainWindow * mw, refptr<Message> _msg) : EditMessage (mw) {
+    using std::endl;
+    using std::string;
+
     msg = _msg;
 
     log << info << "fwd: forwarding message " << msg->mid << endl;
@@ -35,7 +36,7 @@ namespace Astroid {
     } else {
 
       /* quote original message */
-      ostringstream quoted;
+      std::ostringstream quoted;
 
       ustring quoting_a = ustring::compose (astroid->config->config.get<string> ("mail.forward.quote_line"),
           Address(msg->sender.raw()).fail_safe_name(), msg->pretty_verbose_date());
@@ -89,6 +90,7 @@ namespace Astroid {
   }
 
   void ForwardMessage::on_message_sent_attempt_received (bool res) {
+    using std::endl;
     if (res) {
       log << info << "fwd: message successfully sent, adding passed tag to original." << endl;
 

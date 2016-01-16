@@ -15,13 +15,15 @@ using namespace std;
 using namespace boost::filesystem;
 
 namespace Astroid {
-  atomic<bool> Theme::theme_loaded (false);
+  std::atomic<bool> Theme::theme_loaded (false);
   const char * Theme::thread_view_html_f = "ui/thread-view.html";
   const char * Theme::thread_view_scss_f  = "ui/thread-view.scss";
   ustring Theme::thread_view_html;
   ustring Theme::thread_view_css;
 
   Theme::Theme () {
+    using bfs::path;
+    using std::endl;
     log << debug << "theme: loading.." << endl;
 
     /* load css, html and DOM objects */
@@ -83,8 +85,8 @@ namespace Astroid {
       }
 
       std::ifstream tv_html_f (tv_html.c_str());
-      istreambuf_iterator<char> eos; // default is eos
-      istreambuf_iterator<char> tv_iit (tv_html_f);
+      std::istreambuf_iterator<char> eos; // default is eos
+      std::istreambuf_iterator<char> tv_iit (tv_html_f);
 
       thread_view_html.append (tv_iit, eos);
       tv_html_f.close ();
@@ -106,6 +108,7 @@ namespace Astroid {
     /* - https://github.com/sass/libsass/blob/master/docs/api-doc.md
      * - https://github.com/sass/libsass/blob/master/docs/api-context-example.md
      */
+    using std::endl;
 
     log << info << "theme: processing: " << scsspath << endl;
 
@@ -134,7 +137,7 @@ namespace Astroid {
     return ustring (output);
   }
 
-  bool Theme::check_theme_version (path p) {
+  bool Theme::check_theme_version (bfs::path p) {
     /* check version found in first line in file */
 
     std::ifstream f (p.c_str ());
@@ -143,7 +146,7 @@ namespace Astroid {
     int version;
     f >> vline >> vline >> version;
 
-    log << debug << "tv: testing version: " << version << endl;
+    log << debug << "tv: testing version: " << version << std::endl;
 
     f.close ();
 

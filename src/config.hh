@@ -8,8 +8,7 @@
 # include <boost/property_tree/ptree.hpp>
 # include <boost/property_tree/json_parser.hpp>
 
-using namespace std;
-using namespace boost::filesystem;
+namespace bfs = boost::filesystem;
 using boost::property_tree::ptree;
 
 namespace Astroid {
@@ -27,13 +26,13 @@ namespace Astroid {
 
       bool test;
 
-      path home;
-      path config_dir;
-      path data_dir;
-      path cache_dir;
-      path runtime_dir;
+      bfs::path home;
+      bfs::path config_dir;
+      bfs::path data_dir;
+      bfs::path cache_dir;
+      bfs::path runtime_dir;
 
-      path config_file;
+      bfs::path config_file;
 
       void load_config (bool initial = false);
       void load_dirs ();
@@ -59,7 +58,7 @@ namespace Astroid {
 
       void traverse(
           const boost::property_tree::ptree &parent,
-          function<void(const ptree &,
+          std::function<void(const ptree &,
             const ptree::path_type &,
             const ptree&)> method);
 

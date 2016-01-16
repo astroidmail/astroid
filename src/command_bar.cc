@@ -92,7 +92,7 @@ namespace Astroid {
     callback = NULL;
   }
 
-  void CommandBar::enable_command (CommandMode m, ustring cmd, function<void(ustring)> f) {
+  void CommandBar::enable_command (CommandMode m, ustring cmd, std::function<void(ustring)> f) {
     mode = m;
 
     reset_bar ();
@@ -217,12 +217,12 @@ namespace Astroid {
    ********************/
   bool CommandBar::GenericCompletion::match (const ustring&, const Gtk::TreeModel::const_iterator&) {
     // do not call directly
-    throw bad_function_call ();
+    throw std::bad_function_call ();
   }
 
   bool CommandBar::GenericCompletion::on_match_selected(const Gtk::TreeModel::iterator&) {
     // do not call directly
-    throw bad_function_call ();
+    throw std::bad_function_call ();
   }
 
   /* get the next match in the list and use it to complete */

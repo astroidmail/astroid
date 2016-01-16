@@ -1,23 +1,19 @@
 # pragma once
 
-# include <iostream>
 # include <atomic>
 # include <map>
+# include <vector>
+# include <string>
 
 # include <gtkmm.h>
 # include <webkit/webkit.h>
-# include <boost/filesystem.hpp>
 
-# include "astroid.hh"
 # include "proto.hh"
 # include "modes/mode.hh"
 # include "message_thread.hh"
 # include "theme.hh"
 
 # include "web_inspector.hh"
-
-using namespace std;
-using namespace boost::filesystem;
 
 namespace Astroid {
   extern "C" bool ThreadView_on_load_changed (
@@ -64,12 +60,12 @@ namespace Astroid {
       /* resources */
       bool    enable_mathjax;
       ustring mathjax_uri_prefix;
-      vector<ustring> mathjax_only_tags;
+      std::vector<ustring> mathjax_only_tags;
       ustring home_uri;           // relative url for requests
       bool    math_is_on = false; // for this thread
 
       bool    enable_code_prettify;
-      vector<ustring> code_prettify_only_tags;
+      std::vector<ustring> code_prettify_only_tags;
       ustring code_prettify_prefix; // add run_prettify.js to this
       ustring code_prettify_code_tag;
       bool    enable_code_prettify_for_patches;
@@ -141,7 +137,7 @@ namespace Astroid {
            * first element is always empty and represents the message
            * itself.
            */
-          vector<Element> elements;
+          std::vector<Element> elements;
           unsigned int    current_element;
           Element * get_current_element ();
       };
@@ -180,7 +176,7 @@ namespace Astroid {
       WebKitWebInspector * web_inspector;
 
 
-      atomic<bool> wk_loaded;
+      std::atomic<bool> wk_loaded;
 
       /* rendering */
       void render ();
@@ -244,7 +240,7 @@ namespace Astroid {
           ustring         selector);
 
     public:
-      static string assemble_data_uri (ustring, gchar *&, gsize);
+      static std::string assemble_data_uri (ustring, gchar *&, gsize);
 
       /* event wrappers */
       bool on_load_changed (
@@ -295,7 +291,7 @@ namespace Astroid {
       type_signal_ready signal_ready ();
 
       void emit_ready ();
-      atomic<bool> ready; // all messages and elements rendered
+      std::atomic<bool> ready; // all messages and elements rendered
 
       /* action on element */
       typedef sigc::signal <void, unsigned int, ElementAction> type_element_action;

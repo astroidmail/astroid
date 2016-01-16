@@ -3,18 +3,17 @@
 # include <vector>
 # include <map>
 # include <atomic>
+# include <string>
 
 # include <gmime/gmime.h>
 
 # include "astroid.hh"
 # include "proto.hh"
 
-using namespace std;
-
 namespace Astroid {
   class Chunk : public Glib::Object {
     private:
-      static atomic<uint> nextid;
+      static std::atomic<uint> nextid;
 
     public:
       Chunk (GMimeObject *);
@@ -31,8 +30,8 @@ namespace Astroid {
 
       ustring viewable_text (bool);
 
-      vector<refptr<Chunk>> kids;
-      vector<refptr<Chunk>> siblings;
+      std::vector<refptr<Chunk>> kids;
+      std::vector<refptr<Chunk>> siblings;
       refptr<Chunk> get_by_id (int, bool check_siblings = true);
 
       bool any_kids_viewable ();
@@ -48,7 +47,7 @@ namespace Astroid {
 
       refptr<Message> get_mime_message ();
 
-      map<ustring, GMimeContentType *> viewable_types = {
+      std::map<ustring, GMimeContentType *> viewable_types = {
         { "plain", g_mime_content_type_new ("text", "plain") },
         { "html" , g_mime_content_type_new ("text", "html") }
       };
@@ -60,7 +59,7 @@ namespace Astroid {
       size_t  get_file_size ();
       refptr<Glib::ByteArray> contents ();
 
-      bool save_to (string filename, bool overwrite = false);
+      bool save_to (std::string filename, bool overwrite = false);
       void open ();
       void save ();
 

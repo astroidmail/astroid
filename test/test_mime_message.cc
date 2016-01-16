@@ -8,6 +8,8 @@
 # include "glibmm.h"
 
 using namespace std;
+using Astroid::Message;
+using Astroid::ustring;
 
 
 BOOST_AUTO_TEST_SUITE(Reading)

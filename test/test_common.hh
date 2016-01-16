@@ -2,11 +2,11 @@
 
 # include "astroid.hh"
 # include "log.hh"
-
-using namespace Astroid;
+# include "proto.hh"
 
 void setup () {
-  Astroid::astroid = new Astroid::Astroid ();
+  using Astroid::astroid;
+  astroid = new Astroid::Astroid ();
   astroid->main_test ();
 }
 

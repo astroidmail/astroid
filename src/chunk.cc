@@ -18,18 +18,17 @@
 # include "config.hh"
 # include "crypto.hh"
 
-using namespace boost::filesystem;
-
 namespace Astroid {
 
-  atomic<uint> Chunk::nextid (0);
+  std::atomic<uint> Chunk::nextid (0);
 
   Chunk::Chunk (GMimeObject * mp) : mime_object (mp) {
+    using std::endl;
     id = nextid++;
 
     if (mp == NULL) {
       log << error << "chunk: got NULL mime_object." << endl;
-      throw logic_error ("chunk: got NULL mime_object");
+      throw std::logic_error ("chunk: got NULL mime_object");
     }
 
     content_type = g_mime_object_get_content_type (mime_object);
@@ -43,7 +42,7 @@ namespace Astroid {
     if (GMIME_IS_PART (mime_object)) {
       // has no sub-parts
 
-      string disposition = g_mime_object_get_disposition(mime_object) ? : string();
+      std::string disposition = g_mime_object_get_disposition(mime_object) ? : std::string();
       viewable = !(disposition == "attachment");
 
       const char * cid = g_mime_part_get_content_id ((GMimePart *) mime_object);
@@ -189,6 +188,7 @@ namespace Astroid {
   }
 
   ustring Chunk::viewable_text (bool html = true) {
+    using std::endl;
 
     GMimeStream * content_stream = NULL;
 
@@ -232,7 +232,7 @@ namespace Astroid {
         if (charset)
         {
           log << debug << "charset: " << charset << endl;
-          if (string(charset) == "utf-8") {
+          if (std::string(charset) == "utf-8") {
             charset = "UTF-8";
           }
 
@@ -289,7 +289,7 @@ namespace Astroid {
         if (charset)
         {
           log << debug << "charset: " << charset << endl;
-          if (string(charset) == "utf-8") {
+          if (std::string(charset) == "utf-8") {
             charset = "UTF-8";
           }
 
@@ -312,7 +312,7 @@ namespace Astroid {
       char buffer[4097];
       ssize_t prevn = 1;
       ssize_t n;
-      stringstream sstr;
+      std::stringstream sstr;
 
       while ((n = g_mime_stream_read (content_stream, buffer, 4096), n) >= 0)
       {
@@ -378,7 +378,7 @@ namespace Astroid {
     refptr<Glib::ByteArray> cnt = contents ();
     size_t sz = cnt->size ();
 
-    log << info << "chunk: file size: " << sz << " (time used to calculate: " << ( (clock () - t0) * 1000.0 / CLOCKS_PER_SEC ) << " ms.)" << endl;
+    log << info << "chunk: file size: " << sz << " (time used to calculate: " << ( (clock () - t0) * 1000.0 / CLOCKS_PER_SEC ) << " ms.)" << std::endl;
 
     return sz;
   }
@@ -412,13 +412,15 @@ namespace Astroid {
 
     g_object_unref (mem);
 
-    log << info << "chunk: contents: loaded " << data->size () << " bytes in " << ( (clock () - t0) * 1000.0 / CLOCKS_PER_SEC ) << " ms." << endl;
+    log << info << "chunk: contents: loaded " << data->size () << " bytes in " << ( (clock () - t0) * 1000.0 / CLOCKS_PER_SEC ) << " ms." << std::endl;
 
     return data;
   }
 
-  bool Chunk::save_to (string filename, bool overwrite) {
+  bool Chunk::save_to (std::string filename, bool overwrite) {
     /* saves chunk to file name, if filename is dir, own name */
+    using std::endl;
+    using bfs::path;
 
     path to (filename.c_str());
 
@@ -494,14 +496,15 @@ namespace Astroid {
   }
 
   void Chunk::open () {
-    log << info << "chunk: " << get_filename () << ", opening.." << endl;
+    using bfs::path;
+    log << info << "chunk: " << get_filename () << ", opening.." << std::endl;
 
     path tf = astroid->config->cache_dir;
 
     ustring tmp_fname = ustring::compose("%1-%2", UstringUtils::random_alphanumeric (10), Utils::safe_fname(get_filename ()));
     tf /= path (tmp_fname.c_str());
 
-    log << debug << "chunk: saving to tmp path: " << tf.c_str() << endl;
+    log << debug << "chunk: saving to tmp path: " << tf.c_str() << std::endl;
     save_to (tf.c_str());
 
     ustring tf_p (tf.c_str());
@@ -513,12 +516,13 @@ namespace Astroid {
   }
 
   void Chunk::do_open (ustring tf) {
-    ustring external_cmd = astroid->config->config.get<string> ("attachment.external_open_cmd");
+    using std::endl;
+    ustring external_cmd = astroid->config->config.get<std::string> ("attachment.external_open_cmd");
 
-    vector<string> args = { external_cmd.c_str(), tf.c_str () };
+    std::vector<std::string> args = { external_cmd.c_str(), tf.c_str () };
     log << debug << "chunk: spawning: " << args[0] << ", " << args[1] << endl;
-    string stdout;
-    string stderr;
+    std::string stdout;
+    std::string stderr;
     int    exitcode;
     try {
       Glib::spawn_sync ("",
@@ -581,6 +585,7 @@ namespace Astroid {
   }
 
   void Chunk::save () {
+    using std::endl;
     log << info << "chunk: " << get_filename () << ", saving.." << endl;
     Gtk::FileChooserDialog dialog ("Save attachment to folder..",
         Gtk::FILE_CHOOSER_ACTION_SAVE);
@@ -596,7 +601,7 @@ namespace Astroid {
     switch (result) {
       case (Gtk::RESPONSE_OK):
         {
-          string fname = dialog.get_filename ();
+          std::string fname = dialog.get_filename ();
           log << info << "chunk: saving attachment to: " << fname << endl;
 
           /* the dialog asks whether to overwrite or not */
@@ -614,8 +619,8 @@ namespace Astroid {
 
   refptr<Message> Chunk::get_mime_message () {
     if (!mime_message) {
-      log << error << "chunk: this is not a mime message." << endl;
-      throw runtime_error ("chunk: not a mime message");
+      log << error << "chunk: this is not a mime message." << std::endl;
+      throw std::runtime_error ("chunk: not a mime message");
     }
 
     refptr<Message> m = refptr<Message> ( new Message (GMIME_MESSAGE(mime_object)) );

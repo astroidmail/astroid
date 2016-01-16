@@ -4,7 +4,6 @@
 
 # include "test_common.hh"
 # include "compose_message.hh"
-using namespace std;
 
 BOOST_AUTO_TEST_SUITE(Generic)
 

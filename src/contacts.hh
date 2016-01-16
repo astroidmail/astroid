@@ -1,13 +1,10 @@
 # pragma once
 
-# include <iostream>
 # include <vector>
 
 # include "astroid.hh"
 # include "proto.hh"
 # include "config.hh"
-
-using namespace std;
 
 namespace Astroid {
   class Contacts {
@@ -26,8 +23,8 @@ namespace Astroid {
 
       void add_contact (ustring);
 
-      vector<ustring> contacts;
-      vector<ustring>::iterator search_external (ustring);
+      std::vector<ustring> contacts;
+      std::vector<ustring>::iterator search_external (ustring);
 
       class ContactCompletion : public Gtk::EntryCompletion {
         public:

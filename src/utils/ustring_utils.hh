@@ -4,8 +4,6 @@
 
 # include "astroid.hh"
 
-using namespace std;
-
 namespace Astroid {
   class UstringUtils {
     public:

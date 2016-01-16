@@ -6,8 +6,6 @@
 # include "mode.hh"
 # include "log.hh"
 
-using namespace std;
-
 namespace Astroid {
   class LogView : public Mode {
     public:
