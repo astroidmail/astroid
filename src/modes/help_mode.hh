@@ -1,16 +1,11 @@
 # pragma once
 
-# include <iostream>
-# include <atomic>
-
 # include <gtkmm.h>
 # include <webkit/webkit.h>
 
 # include "astroid.hh"
 # include "proto.hh"
 # include "mode.hh"
-
-using namespace std;
 
 namespace Astroid {
   class HelpMode : public Mode {

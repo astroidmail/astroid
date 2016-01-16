@@ -1,14 +1,10 @@
 # pragma once
 
-# include <string>
-
 # include <gtkmm.h>
 # include <gtkmm/box.h>
 # include <gtkmm/widget.h>
 
 # include "mode.hh"
-
-using namespace std;
 
 namespace Astroid {
   /* a virtual mode class with two panes */

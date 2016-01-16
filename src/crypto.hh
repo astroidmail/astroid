@@ -1,15 +1,9 @@
 # pragma once
 
-# include <vector>
-# include <map>
-# include <atomic>
-
 # include <gmime/gmime.h>
 
 # include "astroid.hh"
 # include "proto.hh"
-
-using namespace std;
 
 namespace Astroid {
   class Crypto {

@@ -19,8 +19,6 @@
 # include "account_manager.hh"
 # include "thread_view/thread_view.hh"
 
-using namespace std;
-
 namespace Astroid {
   class EditMessage : public Mode {
     public:
@@ -59,7 +57,7 @@ namespace Astroid {
       ustring references;
       ustring inreplyto;
 
-      vector<shared_ptr<ComposeMessage::Attachment>> attachments;
+      std::vector<std::shared_ptr<ComposeMessage::Attachment>> attachments;
       void add_attachment (ComposeMessage::Attachment *);
       void attach_file ();
 
@@ -102,7 +100,7 @@ namespace Astroid {
       ComposeMessage * make_message ();
 
       ComposeMessage * sending_message;
-      atomic<bool> sending_in_progress;
+      std::atomic<bool> sending_in_progress;
       void send_message_finished (bool result);
 
       void prepare_message ();
@@ -151,8 +149,8 @@ namespace Astroid {
       void reset_entry (Gtk::Entry *);
 
       /* gvim config */
-      string gvim_cmd;
-      string gvim_args;
+      std::string gvim_cmd;
+      std::string gvim_args;
 
       AccountManager * accounts;
 

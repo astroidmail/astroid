@@ -1,14 +1,11 @@
 # pragma once
 
 # include <vector>
-# include <memory>
 
 # include <gtkmm.h>
 # include <glibmm.h>
 
 # include "proto.hh"
-
-using namespace std;
 
 namespace Astroid {
   class Astroid {

@@ -8,7 +8,6 @@
 # include "message_thread.hh"
 # include "glibmm.h"
 # include "chunk.hh"
-using namespace std;
 
 using namespace boost::filesystem;
 
@@ -18,17 +17,25 @@ BOOST_AUTO_TEST_SUITE(Reading)
   {
     setup ();
 
-    string fname = "test/mail/test_mail/this-one-should-not-exist.eml";
+    std::string fname = "test/mail/test_mail/this-one-should-not-exist.eml";
 
     BOOST_CHECK (!exists(fname));
 
-    BOOST_CHECK_THROW(Message m (fname), message_error);
+    BOOST_CHECK_THROW(Astroid::Message m (fname), Astroid::message_error);
 
     teardown ();
   }
 
   BOOST_AUTO_TEST_CASE(out_of_sync)
   {
+    using Astroid::log;
+    using Astroid::test;
+    using std::endl;
+    using Astroid::Message;
+    using Astroid::Db;
+    using Astroid::AddressList;
+    using Astroid::ustring;
+
     setup ();
 
     /* open other email and make copy */
@@ -50,7 +57,6 @@ BOOST_AUTO_TEST_SUITE(Reading)
     ustring mid = "oos@asdf.com";
     Db db(Db::DATABASE_READ_ONLY);
     db.on_message (mid, [&](notmuch_message_t * msg) {
-
         Astroid::log << test << "trying to open deleted file." << endl;
 
         oos = new Message (msg, 0);

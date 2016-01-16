@@ -13,8 +13,6 @@
 
 # include "notmuch.h"
 
-using namespace std;
-
 namespace Astroid {
   /* the list view consists of:
    * - a scolled window (which may be paned)
@@ -109,7 +107,7 @@ namespace Astroid {
       void on_refreshed ();
 
     private:
-      chrono::time_point<chrono::steady_clock> last_redraw;
+      std::chrono::time_point<std::chrono::steady_clock> last_redraw;
       bool redraw ();
   };
 

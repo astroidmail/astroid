@@ -2,7 +2,9 @@
 
 # include <iostream>
 # include <vector>
+# include <string>
 # include <functional>
+# include <memory>
 # include <boost/filesystem.hpp>
 
 # include <gmime/gmime.h>
@@ -10,8 +12,7 @@
 # include "astroid.hh"
 # include "proto.hh"
 
-using namespace std;
-using namespace boost::filesystem;
+namespace bfs = boost::filesystem;
 
 namespace Astroid {
 
@@ -38,7 +39,7 @@ namespace Astroid {
 
       ustring to, cc, bcc, id, subject, references, inreplyto;
 
-      ostringstream body;
+      std::ostringstream body;
 
       void set_from (Account *);
       void set_to   (ustring);
@@ -51,22 +52,22 @@ namespace Astroid {
 
       struct Attachment {
         public:
-          Attachment (path);
+          Attachment (bfs::path);
           Attachment (refptr<Chunk>);
           Attachment (refptr<Message>);
           ~Attachment ();
           ustring name;
-          path    fname;
+          bfs::path    fname;
           bool    on_disk;
           bool    is_mime_message = false;
           bool    valid;
 
           refptr<Glib::ByteArray> contents;
-          string                  content_type;
+          std::string             content_type;
       };
 
-      void add_attachment (shared_ptr<Attachment>);
-      vector<shared_ptr<Attachment>> attachments;
+      void add_attachment (std::shared_ptr<Attachment>);
+      std::vector<std::shared_ptr<Attachment>> attachments;
 
       void load_message (ustring, ustring); // load draft or message as new
 

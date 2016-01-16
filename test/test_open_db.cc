@@ -9,6 +9,7 @@
 # include "glibmm.h"
 using namespace std;
 
+using namespace Astroid;
 using namespace boost::filesystem;
 
 BOOST_AUTO_TEST_SUITE(DbTest)

@@ -16,8 +16,6 @@
 
 # include <glibmm/threads.h>
 
-using namespace std;
-
 namespace Astroid {
   enum LogLevel {
     debug,
@@ -38,17 +36,17 @@ namespace Astroid {
   class Log {
     private:
       enum LogLevel _next_level;
-      stringstream  _next_line;
+      std::stringstream  _next_line;
 
-      mutex m_outstreams;
-      vector <ostream *> out_streams;
-      vector <LogView *> log_views;
+      std::mutex m_outstreams;
+      std::vector <std::ostream *> out_streams;
+      std::vector <LogView *> log_views;
 
       // this is the key: std::endl is a template function, and this is the signature of that function (For std::ostream).
       using endl_type = std::ostream&(std::ostream&);
 
-      queue <LogLine> lines;
-      mutex m_lines;
+      std::queue <LogLine> lines;
+      std::mutex m_lines;
 
       void flush_log ();
       Glib::Dispatcher d_flush;
@@ -77,8 +75,8 @@ namespace Astroid {
         return *this;
       }
 
-      void add_out_stream (ostream *);
-      void del_out_stream (ostream *);
+      void add_out_stream (std::ostream *);
+      void del_out_stream (std::ostream *);
       void add_log_view   (LogView *);
       void del_log_view   (LogView *);
   };

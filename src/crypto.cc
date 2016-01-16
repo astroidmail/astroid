@@ -1,6 +1,8 @@
 # include <glib.h>
 # include <gmime/gmime.h>
 
+# include <string>
+
 # include <boost/algorithm/string.hpp>
 
 # include "astroid.hh"
@@ -12,8 +14,9 @@
 
 namespace Astroid {
   Crypto::Crypto (ustring _protocol) {
+    using std::endl;
     ptree config = astroid->config->config.get_child ("crypto");
-    gpgpath = ustring (config.get<string> ("gpg.path"));
+    gpgpath = ustring (config.get<std::string> ("gpg.path"));
 
     log << debug << "crypto: gpg: " << gpgpath << endl;
 
@@ -40,6 +43,7 @@ namespace Astroid {
   }
 
   GMimeObject * Crypto::decrypt_and_verify (GMimeObject * part) {
+    using std::endl;
     log << debug << "crypto: decrypting and verifiying.." << endl;
     decrypt_tried = true;
     verify_tried = true;
@@ -71,7 +75,7 @@ namespace Astroid {
   bool Crypto::create_gpg_context () {
     gpgctx = g_mime_gpg_context_new (NULL, gpgpath.length() ? gpgpath.c_str () : "gpg");
     if (! gpgctx) {
-      log << error << "crypto: failed to create gpg context." << endl;
+      log << error << "crypto: failed to create gpg context." << std::endl;
       return false;
     }
 
@@ -93,9 +97,9 @@ namespace Astroid {
     unsigned char digest[16];
     g_mime_filter_md5_get_digest (GMIME_FILTER_MD5(md5f), digest);
 
-    ostringstream os;
+    std::ostringstream os;
     for (int i = 0; i < 16; i++) {
-      os << hex << setfill('0') << setw(2) << ((int)digest[i]);
+      os << std::hex << std::setfill('0') << std::setw(2) << ((int)digest[i]);
     }
 
     g_object_unref (md5f);

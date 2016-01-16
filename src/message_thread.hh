@@ -9,8 +9,6 @@
 # include "astroid.hh"
 # include "utils/address.hh"
 
-using namespace std;
-
 namespace Astroid {
   class Message : public Glib::Object {
     public:
@@ -58,13 +56,13 @@ namespace Astroid {
       ustring date ();
       ustring pretty_date ();
       ustring pretty_verbose_date (bool = false);
-      vector<ustring> tags;
+      std::vector<ustring> tags;
 
       ustring viewable_text (bool, bool fallback_html = false);
-      vector<refptr<Chunk>> attachments ();
+      std::vector<refptr<Chunk>> attachments ();
       refptr<Chunk> get_chunk_by_id (int id);
 
-      vector<refptr<Chunk>> mime_messages ();
+      std::vector<refptr<Chunk>> mime_messages ();
 
       refptr<Glib::ByteArray> contents ();
       refptr<Glib::ByteArray> raw_contents ();
@@ -76,7 +74,7 @@ namespace Astroid {
   };
 
   /* exceptions */
-  class message_error : public runtime_error {
+  class message_error : public std::runtime_error {
     public:
       message_error (const char *);
 
@@ -90,7 +88,7 @@ namespace Astroid {
       bool in_notmuch;
       refptr<NotmuchThread> thread;
       ustring subject;
-      vector<refptr<Message>> messages;
+      std::vector<refptr<Message>> messages;
 
       void load_messages (Db *);
       void add_message (ustring);

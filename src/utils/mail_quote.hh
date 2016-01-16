@@ -3,8 +3,6 @@
 # include "astroid.hh"
 # include "proto.hh"
 
-using namespace std;
-
 namespace Astroid {
 
   class MailQuotes {

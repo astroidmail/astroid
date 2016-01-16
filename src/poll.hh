@@ -4,10 +4,9 @@
 # include "log.hh"
 
 # include <mutex>
+# include <chrono>
 # include <glibmm/threads.h>
 # include <glibmm/iochannel.h>
-
-using namespace std;
 
 namespace Astroid {
   class Poll {
@@ -21,7 +20,7 @@ namespace Astroid {
       static const int DEFAULT_POLL_INTERVAL; // 60
 
     private:
-      mutex m_dopoll;
+      std::mutex m_dopoll;
 
       int poll_interval = 0;
       bool auto_polling_enabled = true;
@@ -29,8 +28,8 @@ namespace Astroid {
       void do_poll ();
       bool periodic_polling ();
 
-      chrono::time_point<chrono::steady_clock> t0; // start time of poll
-      chrono::time_point<chrono::steady_clock> last_poll;
+      std::chrono::time_point<std::chrono::steady_clock> t0; // start time of poll
+      std::chrono::time_point<std::chrono::steady_clock> last_poll;
 
 # ifdef HAVE_NOTMUCH_GET_REV
       unsigned long last_good_before_poll_revision = 0;

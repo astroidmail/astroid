@@ -2,13 +2,10 @@
 
 # include <gtkmm.h>
 # include <atomic>
-
-# include <list>
+# include <functional>
 
 # include "proto.hh"
 # include "keybindings.hh"
-
-using namespace std;
 
 namespace Astroid {
   class Mode : public Gtk::Box {
@@ -19,7 +16,7 @@ namespace Astroid {
       void set_main_window (MainWindow *);
       MainWindow * main_window;
 
-      atomic<bool> invincible;
+      std::atomic<bool> invincible;
       virtual void close (bool = false);
 
     private:
@@ -30,7 +27,7 @@ namespace Astroid {
       Gtk::Label    * label_yes_no;
 
       bool yes_no_waiting = false;
-      function <void (bool)> yes_no_closure = NULL;
+      std::function <void (bool)> yes_no_closure = NULL;
       void answer_yes_no (bool);
       void on_yes ();
       void on_no ();
@@ -51,7 +48,7 @@ namespace Astroid {
       bool on_key_press_event (GdkEventKey *event) override;
       virtual Keybindings * get_keys ();
 
-      void ask_yes_no (ustring, function<void(bool)>);
+      void ask_yes_no (ustring, std::function<void(bool)>);
       bool multi_key (Keybindings &, Key);
 
       bool mode_key_handler (GdkEventKey *);

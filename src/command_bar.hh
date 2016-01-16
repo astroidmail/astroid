@@ -17,8 +17,6 @@
 # include "astroid.hh"
 # include "proto.hh"
 
-using namespace std;
-
 namespace Astroid {
   class CommandBar : public Gtk::SearchBar {
     public:
@@ -40,9 +38,9 @@ namespace Astroid {
       void set_main_window (MainWindow *);
 
       void on_entry_activated ();
-      function<void(ustring)> callback;
+      std::function<void(ustring)> callback;
 
-      void enable_command (CommandMode, ustring, function<void(ustring)>);
+      void enable_command (CommandMode, ustring, std::function<void(ustring)>);
       void disable_command ();
 
       //void handle_command (ustring);
@@ -75,15 +73,15 @@ namespace Astroid {
       /********************
        * Tag editing
        ********************/
-      vector<ustring> existing_tags; // a sorted list of existing tags
+      std::vector<ustring> existing_tags; // a sorted list of existing tags
       void start_tagging (ustring);
 
       class TagCompletion : public GenericCompletion {
         public:
           TagCompletion ();
 
-          void load_tags (vector<ustring>);
-          vector<ustring> tags; // must be sorted
+          void load_tags (std::vector<ustring>);
+          std::vector<ustring> tags; // must be sorted
 
           // tree model columns, for the EntryCompletion's filter model
           class ModelColumns : public Gtk::TreeModel::ColumnRecord
@@ -117,8 +115,8 @@ namespace Astroid {
         public:
           SearchCompletion ();
 
-          void load_tags (vector<ustring>);
-          vector<ustring> tags; // must be sorted
+          void load_tags (std::vector<ustring>);
+          std::vector<ustring> tags; // must be sorted
 
           // tree model columns, for the EntryCompletion's filter model
           class ModelColumns : public Gtk::TreeModel::ColumnRecord
