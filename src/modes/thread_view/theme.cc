@@ -132,9 +132,10 @@ namespace Astroid {
     }
 
     const char * output = sass_context_get_output_string(context);
+    ustring output_str(output);
     sass_delete_file_context (file_ctx);
 
-    return ustring (output);
+    return output_str;
   }
 
   bool Theme::check_theme_version (bfs::path p) {
