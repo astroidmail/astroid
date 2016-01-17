@@ -2,6 +2,7 @@
 # Unit tests
 Import('testEnv')
 Import('env')
+Import('astroid')
 Import('source')
 Import('source_objs')
 Import('debug')
@@ -29,6 +30,8 @@ testEnv.Tool ('notmuch_test_db')
 test_db = testEnv.NotmuchTestDb ('mail/test_config.template')
 testEnv.Alias ('test_db', test_db)
 testEnv.Alias ('test', 'test_db')
+
+testEnv.Alias ('test', astroid)
 
 testEnv.addUnitTest ('test_generic', ['test_generic.cc', source_objs])
 

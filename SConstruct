@@ -270,6 +270,7 @@ astroid = env.Program (source = ['src/main.cc', source_objs], target = 'astroid'
 build = env.Alias ('build', 'astroid')
 
 Export ('env')
+Export ('astroid')
 
 ## tests
 # http://drowcode.blogspot.no/2008/12/few-days-ago-i-decided-i-wanted-to-use.html
