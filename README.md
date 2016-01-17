@@ -2,8 +2,8 @@
 
 [![Join the chat at https://gitter.im/gauteh/astroid](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/gauteh/astroid?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-  A graphical threads-with-tags mail user agent based on [sup] and [notmuch].
-  Written in C++ using [GTK+], [WebKit] and [gmime].
+  A graphical threads-with-tags mail user agent inspired by [sup] and
+  [notmuch]. Written in C++ using [GTK+], [WebKit] and [gmime].
 
   <a href="https://raw.githubusercontent.com/gauteh/astroid/master/doc/astroid-full-window.png">
     <img src="https://raw.githubusercontent.com/gauteh/astroid/master/doc/astroid-full-window.png">
@@ -20,26 +20,24 @@
     <img src="https://raw.githubusercontent.com/gauteh/astroid/master/doc/astroid-compose-code-highlight.png" width="49%" style="float: right;">
   </a>
 
+# getting started
+
+> Astroid is a Mail User Agent. As such, all Astroid provides is a graphical interface to your email. Thus, Astroid enables you to launch actions that rely on the performance of other programs to actually fetch, sync, index, search and send your email. A [suggested setup](https://github.com/gauteh/astroid/wiki/Astroid-in-your-general-mail-setup) is described in the wiki.
+
+Check out the [tour of how to install, configure and use astroid](https://github.com/gauteh/astroid/wiki). Brief instructions are provided [below](#acquiring-astroid).
+
 ## design and user interface goals
-* (done    )    fully operatable by keyboard only - but accept mouse clicks
+* (done)        fully operatable by keyboard only - but accept mouse clicks
 *               lightweight.
-* (partly done) base interface on sup, but allow buffers to be dragged out
-                or separated as windows so that multiple views/buffers can be
-                seen at one time.
+* (partly done) a graphical interface, inspired by sup. but allow buffers to be separeted and placed in several windows.
 * (done)        allow several simultaneous windows.
 * (done)        display html mail and some attachments inline.
 * (done)        render math using MathJax
 * (done)        syntax highlighting between triple-backtick tags (markdown style)
-* ([in progress](https://github.com/gauteh/astroid/pull/24)) built-in crypto (gpg,..) support.
+* (done)        themable and configurable
+* (in progress) built-in crypto (gpg,..) support.
 * (only vim)    editors: embed vim or emacs (possibly ship a simple editor)
-* (linux)       Support: Platforms supported by notmuch and other libraries, specifically:
-                         Linux, *BSD, Mac, Windows..
-
-### considerations
-  * Never use deprecated libraries - use as few libraries as possible.
-  * Never rewrite something if it exists an active library for it.
-  * All database operations / mail handling should be done by notmuch or other
-    tools.
+* (linux)       Support: Platforms supported by notmuch and other libraries, specifically: Linux, *BSD, Mac, Windows..
 
 ## acquiring astroid
 
@@ -47,19 +45,7 @@ get astroid from:
 
 ` $ git clone https://github.com/gauteh/astroid.git `
 
-[Instructions](#installation-and-usage) on how to [build](#compiling), [configure](#configuration) and [run astroid](#running-and-usage) can be found in this README. Once you get astroid running, press '?' to get a list of key bindings.
-
-  [Distribution specific instructions](https://github.com/gauteh/astroid/wiki) can be found in the wiki.
-
 ## installation and usage
-
-astroid uses [scons] for building, also you might need [git] for the build
-process to work properly. Both should be available in most distributions.
-
-A fairly recent version of [GTK+] and [glib] with their
-[C++ bindings](http://www.gtkmm.org/en/) are also required, along with
-[boost], [gmime] and a compiler that supports [C++11]. Of course, the
-[notmuch] libraries are also required.
 
 ### compiling
 
@@ -77,25 +63,17 @@ $ scons --prefix=/usr build
 $ scons --prefix=/usr install
 ```
 
-this will install the `astroid` binary into `/usr/bin/` and data files into `/usr/share/astroid/`.
+this will install the `astroid` binary into `/usr/bin/` and data files into `/usr/share/astroid/`. refer to the [installing section](https://github.com/gauteh/astroid/wiki/Compiling-and-Installing) in the wiki for more information.
 
 ### configuration
 
-astroid uses the `$XDG_CONFIG_HOME/astroid` directory (or `$HOME/.config/astroid` if it is not set) for storing its configuration file. When you first run astroid it will set up the default configuration file there. This is a JSON file created by [boost::property_tree]. Options not set here will be set to their default values as specified in [`src/config.cc`](https://github.com/gauteh/astroid/blob/master/src/config.cc#L78).
-
-By default astroid looks in `$HOME/.mail` for the notmuch database, but you can change this in the configuration file. You can also set up default queries and accounts for sending e-mail there.
-
-you can run:
-
-` $ astroid --new-config `
-
-to create a new configuration file in the default location, you can also specify a location of the new config file with the `-c` argument.
+running astroid will make a new configuration file in `$XDG_CONFIG_HOME/astroid` (normally: `~/.config/astroid/`. refer to the [configuration section](https://github.com/gauteh/astroid/wiki/Astroid-setup) in the wiki for more information.
 
 ### running and usage
 
 ` $ ./astroid `
 
-press `?` to get a list of available key bindings in the current mode, navigate up and down using `j` and `k`. The list is updated depending on the mode you are in.
+press `?` to get a list of available key bindings in the current mode, navigate up and down using `j` and `k`. refer to the [usage section](https://github.com/gauteh/astroid/wiki#usage) in the wiki for more information on usage and customization.
 
 ## patches, help, comments and bugs
 

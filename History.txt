@@ -11,14 +11,14 @@
 * thread-index: C-Enter: open thread in new window.
 * Add popup menu with some actions for the thread-index.
 * Fix #23: Don't crash when message file is missing.
-* #25: Load html and css from config/ui directory if present.
+* #25: Load html and scss from config/ui directory if present.
 * #25: Allow some parameters of the thread_index cells to be configured.
-* Move expand all in thread view to C-e.
+* Move 'expand all' in thread view to C-e.
 * Save drafts with 's', discard them with 'D', edit them with 'E' from
   thread index or thread view.
 * Edit messages as new with 'E'.
 * Added a dinosaur.
-* Configurable keybindings.
+* Configurable keybindings in ~/.config/astroid/keybindings.
 * Show name of pre-defined searches in tab.
 * Tab: jump to next unread thread.
 * X: Force close tab.
@@ -28,8 +28,10 @@
 * Hugo Roy: Fix licences to be correct for borrowed stuff.
 * Franz Fellner: Fix some long standing annoying bugs.
 * Use ',' as separator for 'for_tags' in config, not ';'.
-* Hugo Roy: Refurbished thread-view theme and move to scss processing.
+* Hugo Roy: Refurbished thread-view theme and move to scss processing,
+  your custom thread-view.css needs some attention.
 * Franz Fellner: Clean-up coding style and name-space pollution.
+* Hugo Roy: Made a tour of setting up astroid in the wiki.
 
 == v0.4 / 2015-08-15
 
