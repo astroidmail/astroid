@@ -80,6 +80,8 @@ namespace Astroid {
 
     private:
       ustring message_file;
+      bfs::path save_to;
+      bool      dryrun;
 
     public:
       /* message sent */
@@ -89,7 +91,7 @@ namespace Astroid {
       void emit_message_sent (bool);
 
       bool message_sent_result;
-      void dispatch_emit_message_sent();
+      void message_sent_event ();
       Glib::Dispatcher d_message_sent;
 
     protected:
