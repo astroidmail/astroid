@@ -58,9 +58,9 @@ namespace Astroid {
 
         while (!bf.eof()) {
 
-          ustring line;
-
-          bf >> line;
+          std::string sline;
+          std::getline (bf, sline);
+          ustring line (sline);
 
           UstringUtils::trim (line);
 
