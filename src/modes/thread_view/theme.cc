@@ -40,15 +40,15 @@ namespace Astroid {
 
       /* check for user modified theme files in config directory */
       path user_tv_html = astroid->config->config_dir / def_tv_html;
-      path user_tv_scss  = astroid->config->config_dir / def_tv_scss;
+      path user_tv_scss = astroid->config->config_dir / def_tv_scss;
 
       if (exists (user_tv_html)) {
           tv_html = user_tv_html;
-          log << info << "tv: using user html file: " << tv_html.c_str () << endl;
+          log << info << "tv: using user html file: " << absolute(tv_html).c_str () << endl;
 
 
       } else if (!exists(tv_html)) {
-        log << error << "tv: cannot find html theme file: " << tv_html.c_str() << ", using default.." << endl;
+        log << error << "tv: cannot find html theme file: " << absolute(tv_html).c_str() << ", using default.." << endl;
         if (!exists(def_tv_html)) {
           log << error << "tv: cannot find default html theme file." << endl;
           exit (1);
@@ -65,11 +65,11 @@ namespace Astroid {
 
       if (exists (user_tv_scss)) {
           tv_scss = user_tv_scss;
-          log << info << "tv: using user scss file: " << tv_scss.c_str () << endl;
+          log << info << "tv: using user scss file: " << absolute(tv_scss).c_str () << endl;
 
 
       } else if (!exists(tv_scss)) {
-        log << error << "tv: cannot find scss theme file: " << tv_scss.c_str() << ", using default.." << endl;
+        log << error << "tv: cannot find scss theme file: " << absolute(tv_scss).c_str() << ", using default.." << endl;
         if (!exists(def_tv_scss)) {
           log << error << "tv: cannot find default scss theme file." << endl;
           exit (1);
