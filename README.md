@@ -9,16 +9,7 @@
     <img src="https://raw.githubusercontent.com/gauteh/astroid/master/doc/astroid-full-window.png">
   </a>
 
-  <a href="https://raw.githubusercontent.com/gauteh/astroid/master/doc/astroid-thread-view.png">
-    <img src="https://raw.githubusercontent.com/gauteh/astroid/master/doc/astroid-thread-view.png" width="49%">
-  </a> <a href="https://raw.githubusercontent.com/gauteh/astroid/master/doc/astroid-searching.png">
-    <img src="https://raw.githubusercontent.com/gauteh/astroid/master/doc/astroid-searching.png" width="49%" style="float: right;">
-  </a>
-  <a href="https://raw.githubusercontent.com/gauteh/astroid/master/doc/astroid-editor-vim.png">
-    <img src="https://raw.githubusercontent.com/gauteh/astroid/master/doc/astroid-editor-vim.png" width="49%">
-  </a> <a href="https://raw.githubusercontent.com/gauteh/astroid/master/doc/astroid-compose-code-highlight.png">
-    <img src="https://raw.githubusercontent.com/gauteh/astroid/master/doc/astroid-compose-code-highlight.png" width="49%" style="float: right;">
-  </a>
+  ([more screenshots below](#more-screenshots))
 
 # getting started
 
@@ -38,6 +29,18 @@ Check out the [tour of how to install, configure and use astroid](https://github
 * (in progress) built-in crypto (gpg,..) support.
 * (only vim)    editors: embed vim or emacs (possibly ship a simple editor)
 * (linux)       Support: Platforms supported by notmuch and other libraries, specifically: Linux, *BSD, Mac, Windows..
+
+### more screenshots
+  <a href="https://raw.githubusercontent.com/gauteh/astroid/master/doc/astroid-thread-view.png">
+    <img src="https://raw.githubusercontent.com/gauteh/astroid/master/doc/astroid-thread-view.png" width="49%">
+  </a> <a href="https://raw.githubusercontent.com/gauteh/astroid/master/doc/astroid-searching.png">
+    <img src="https://raw.githubusercontent.com/gauteh/astroid/master/doc/astroid-searching.png" width="49%" style="float: right;">
+  </a>
+  <a href="https://raw.githubusercontent.com/gauteh/astroid/master/doc/astroid-editor-vim.png">
+    <img src="https://raw.githubusercontent.com/gauteh/astroid/master/doc/astroid-editor-vim.png" width="49%">
+  </a> <a href="https://raw.githubusercontent.com/gauteh/astroid/master/doc/astroid-compose-code-highlight.png">
+    <img src="https://raw.githubusercontent.com/gauteh/astroid/master/doc/astroid-compose-code-highlight.png" width="49%" style="float: right;">
+  </a>
 
 ## acquiring astroid
 
