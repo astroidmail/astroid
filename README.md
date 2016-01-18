@@ -17,7 +17,7 @@
 
 Check out the [tour of how to install, configure and use astroid](https://github.com/gauteh/astroid/wiki). Brief instructions are provided [below](#acquiring-astroid).
 
-## design and user interface goals
+## main features include:
 * (done)        fully operatable by keyboard only - but accept mouse clicks
 *               lightweight.
 * (partly done) a graphical interface, inspired by sup. but allow buffers to be separeted and placed in several windows.
