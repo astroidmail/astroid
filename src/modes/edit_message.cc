@@ -24,7 +24,6 @@
 # include "chunk.hh"
 # include "utils/utils.hh"
 # include "utils/ustring_utils.hh"
-# include "build_config.hh"
 # include "log.hh"
 
 using namespace std;

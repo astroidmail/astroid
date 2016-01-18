@@ -5,7 +5,6 @@
 # include <gtkmm/notebook.h>
 
 # include "astroid.hh"
-# include "build_config.hh"
 # include "poll.hh"
 # include "main_window.hh"
 # include "modes/mode.hh"
@@ -266,7 +265,7 @@ namespace Astroid {
 
   void MainWindow::set_title (ustring t) {
 
-    ustring tt = "Astroid (" GIT_DESC ")";
+    ustring tt = ustring::compose( "Astroid (%1)", Astroid::version);
 
     if (t.size() > 0) {
       tt = t + " - " + tt;

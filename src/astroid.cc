@@ -33,6 +33,7 @@ using namespace boost::filesystem;
 /* globally available static instance of the Astroid */
 Astroid::Astroid * (Astroid::astroid);
 Astroid::Log Astroid::log;
+const char* const Astroid::Astroid::version = GIT_DESC;
 
 namespace Astroid {
   Astroid::Astroid () {
@@ -41,14 +42,14 @@ namespace Astroid {
 
     log.add_out_stream (&cout);
 
-    log << info << "welcome to astroid! - " << GIT_DESC << endl;
+    log << info << "welcome to astroid! - " << Astroid::version << endl;
 
     string charset;
     Glib::get_charset(charset);
     log << debug << "utf8: " << Glib::get_charset () << ", " << charset << endl;
 
     /* user agent */
-    user_agent = ustring::compose ("astroid/v%1 (https://github.com/gauteh/astroid)", GIT_DESC);
+    user_agent = ustring::compose ("astroid/v%1 (https://github.com/gauteh/astroid)", Astroid::version);
 
     /* gmime settings */
     g_mime_init (0); // utf-8 is default

@@ -17,6 +17,7 @@ namespace Astroid {
 
       refptr<Gtk::Application> app;
 
+      static const char* const version;
       ustring user_agent;
 
       /* config */

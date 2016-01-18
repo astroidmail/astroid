@@ -29,7 +29,6 @@
 # include "modes/raw_message.hh"
 # include "modes/thread_index/thread_index.hh"
 # include "log.hh"
-# include "build_config.hh"
 # include "theme.hh"
 
 using namespace std;
