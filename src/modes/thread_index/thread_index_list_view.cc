@@ -596,6 +596,42 @@ namespace Astroid {
           return true;
         });
 
+    keys->register_key (UnboundKey (), "thread_index.forward_inline",
+        "Forward last message in thread inlined",
+        [&] (Key) {
+          auto thread = get_current_thread ();
+          if (thread) {
+
+            MessageThread mthread (thread);
+            Db db (Db::DbMode::DATABASE_READ_ONLY);
+
+            mthread.load_messages (&db);
+
+            /* reply to last message */
+            main_window->add_mode (new ForwardMessage (main_window, *(--mthread.messages.end()), ForwardMessage::FwdDisposition::FwdInline));
+
+          }
+          return true;
+        });
+
+    keys->register_key (UnboundKey (), "thread_index.forward_attached",
+        "Forward last message in thread attached",
+        [&] (Key) {
+          auto thread = get_current_thread ();
+          if (thread) {
+
+            MessageThread mthread (thread);
+            Db db (Db::DbMode::DATABASE_READ_ONLY);
+
+            mthread.load_messages (&db);
+
+            /* reply to last message */
+            main_window->add_mode (new ForwardMessage (main_window, *(--mthread.messages.end()), ForwardMessage::FwdDisposition::FwdAttach));
+
+          }
+          return true;
+        });
+
     keys->register_key ("t", "thread_index.toggle_marked",
         "Mark thread",
         [&] (Key) {

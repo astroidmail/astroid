@@ -2109,12 +2109,37 @@ namespace Astroid {
         [&] (Key) {
           /* forward currently focused message */
           if (!edit_mode) {
-            main_window->add_mode (new ForwardMessage (main_window, focused_message));
+            main_window->add_mode (new ForwardMessage (main_window, focused_message, ForwardMessage::FwdDisposition::FwdDefault));
 
             return true;
           }
           return false;
         });
+
+    keys.register_key (UnboundKey (), "thread_view.forward_inline",
+        "Forward current message inlined",
+        [&] (Key) {
+          /* forward currently focused message */
+          if (!edit_mode) {
+            main_window->add_mode (new ForwardMessage (main_window, focused_message, ForwardMessage::FwdDisposition::FwdInline));
+
+            return true;
+          }
+          return false;
+        });
+
+    keys.register_key (UnboundKey (), "thread_view.forward_attached",
+        "Forward current message as attachment",
+        [&] (Key) {
+          /* forward currently focused message */
+          if (!edit_mode) {
+            main_window->add_mode (new ForwardMessage (main_window, focused_message, ForwardMessage::FwdDisposition::FwdAttach));
+
+            return true;
+          }
+          return false;
+        });
+
 
     keys.register_key ("C-f", "thread_view.flat",
         "Toggle flat or indented view of messages",

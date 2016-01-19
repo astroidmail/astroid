@@ -14,7 +14,10 @@
 # include "chunk.hh"
 
 namespace Astroid {
-  ForwardMessage::ForwardMessage (MainWindow * mw, refptr<Message> _msg) : EditMessage (mw) {
+  ForwardMessage::ForwardMessage (MainWindow * mw,
+      refptr<Message> _msg,
+      FwdDisposition disp) : EditMessage (mw)
+  {
     using std::endl;
     using std::string;
 
@@ -29,7 +32,11 @@ namespace Astroid {
       set_label ("New message: " + subject);
     }
 
-    if (astroid->config->config.get<string> ("mail.forward.disposition") == "attachment") {
+    if (disp == FwdDefault) {
+      disp = (astroid->config->config.get<string> ("mail.forward.disposition") == "attachment") ? FwdAttach : FwdInline;
+    }
+
+    if (disp == FwdAttach) {
 
       add_attachment (new ComposeMessage::Attachment (msg));
 

@@ -7,7 +7,13 @@
 namespace Astroid {
   class ForwardMessage : public EditMessage {
     public:
-      ForwardMessage (MainWindow *, refptr<Message>);
+      typedef enum {
+        FwdDefault,
+        FwdInline,
+        FwdAttach,
+      } FwdDisposition;
+
+      ForwardMessage (MainWindow *, refptr<Message>, FwdDisposition disp = FwdDefault);
 
       refptr<Message> msg;
 
