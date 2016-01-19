@@ -238,6 +238,16 @@ namespace Astroid {
                        });
 
       }
+
+      if (k.unbound) {
+        log << info << "key: binding unbound target: " << k.name << endl;
+        k.unbound = false;
+      }
+    }
+
+    if (k.unbound) {
+      log << info << "key: unbound key: " << name << " does not have a key associated." << endl;
+      return;
     }
 
     k.name = name;
@@ -500,6 +510,10 @@ namespace Astroid {
     else if (meta && !other.meta) return false;
 
     return key < other.key;
+  }
+
+  UnboundKey::UnboundKey () {
+    unbound = true;
   }
 
   /************

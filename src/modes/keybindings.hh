@@ -20,6 +20,7 @@ namespace Astroid {
     ustring name = "";
     ustring help = "";
 
+    bool unbound     = false;
     bool userdefined = false;
 
     bool hasaliases = false; /* this is a master key with other aliases */
@@ -32,6 +33,12 @@ namespace Astroid {
     ustring str () const;
 
     static Key create (ustring spec);
+  };
+
+  /* unbound keys are used as targets that are not bound to a key
+   * by default, but may be bound using a custom keybinding */
+  struct UnboundKey : public Key {
+    UnboundKey ();
   };
 
   /* exceptions */
