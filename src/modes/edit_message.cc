@@ -25,6 +25,7 @@
 # include "utils/utils.hh"
 # include "utils/ustring_utils.hh"
 # include "log.hh"
+# include "build_config.hh"
 
 using namespace std;
 using namespace boost::filesystem;

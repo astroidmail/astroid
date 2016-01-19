@@ -8,6 +8,7 @@
 # include "astroid.hh"
 # include "config.hh"
 # include "log.hh"
+# include "build_config.hh"
 
 # include <sass/context.h>
 
