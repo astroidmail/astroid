@@ -341,6 +341,9 @@ namespace Astroid {
   }
 
   bool Keybindings::handle (GdkEventKey * event) {
+
+    if (keys.empty ()) return false;
+
     Key ek (event);
     auto s = keys.find (ek);
 
