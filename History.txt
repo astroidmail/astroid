@@ -32,6 +32,7 @@
   your custom thread-view.css needs some attention.
 * Franz Fellner: Clean-up coding style and name-space pollution.
 * Hugo Roy: Made a tour of setting up astroid in the wiki.
+* Print a thread with C-P.
 
 == v0.4 / 2015-08-15
 

@@ -100,7 +100,7 @@ namespace Astroid {
         ToggleShow
       };
 
-      void toggle_hidden (refptr<Message> = refptr<Message> (), ToggleState = ToggleToggle);
+      bool toggle_hidden (refptr<Message> = refptr<Message> (), ToggleState = ToggleToggle);
       bool is_hidden (refptr<Message>);
 
       /* message display state */

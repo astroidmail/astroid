@@ -2246,6 +2246,54 @@ namespace Astroid {
 
             return true;
           });
+
+    keys.register_key ("C-P",
+        "thread_view.print",
+        "Print focused message",
+        [&] (Key) {
+
+        GError * err = NULL;
+        WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
+
+        ustring mid = "message_" + focused_message->mid;
+        WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
+        WebKitDOMDOMTokenList * class_list =
+          webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(e));
+
+        webkit_dom_dom_token_list_add (class_list, "print",
+            (err = NULL, &err));
+
+        /* expand */
+        bool wasexpanded = toggle_hidden (focused_message, ToggleShow);
+
+        bool indented = indent_messages;
+        if (indent_messages) {
+          indent_messages = false;
+          update_all_indent_states ();
+        }
+
+        /* open print window */
+        WebKitWebFrame * frame = webkit_web_view_get_main_frame (webview);
+        webkit_web_frame_print (frame);
+
+        if (indented) {
+          indent_messages = true;
+          update_all_indent_states ();
+        }
+
+        if (!wasexpanded) {
+          toggle_hidden (focused_message, ToggleHide);
+        }
+
+        webkit_dom_dom_token_list_remove (class_list, "print",
+            (err = NULL, &err));
+
+        g_object_unref (class_list);
+        g_object_unref (e);
+        g_object_unref (d);
+
+        return true;
+        });
   }
 
   // }}}
@@ -2932,10 +2980,12 @@ namespace Astroid {
     return r;
   }
 
-  void ThreadView::toggle_hidden (
+  bool ThreadView::toggle_hidden (
       refptr<Message> m,
       ToggleState t)
   {
+    /* returns true if the message was expanded in the first place */
+
     if (!m) m = focused_message;
     ustring mid = "message_" + m->mid;
 
@@ -2951,8 +3001,12 @@ namespace Astroid {
 
     GError * gerr = NULL;
 
+    bool wasexpanded;
+
     if (webkit_dom_dom_token_list_contains (class_list, "hide", (gerr = NULL, &gerr)))
     {
+      wasexpanded = false;
+
       /* reset class */
       if (t == ToggleToggle || t == ToggleShow) {
         webkit_dom_dom_token_list_remove (class_list, "hide",
@@ -2960,6 +3014,8 @@ namespace Astroid {
       }
 
     } else {
+      wasexpanded = true;
+
       /* set class  */
       if (t == ToggleToggle || t == ToggleHide) {
         webkit_dom_dom_token_list_add (class_list, "hide",
@@ -2970,6 +3026,8 @@ namespace Astroid {
     g_object_unref (class_list);
     g_object_unref (e);
     g_object_unref (d);
+
+    return wasexpanded;
   }
 
   /* end message hinding }}} */

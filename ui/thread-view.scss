@@ -42,8 +42,10 @@ $focused-solid: #4a90d9;
         display: none !important;
     }
     .email.print {
-        display: inline-block !important;
+        display: block !important;
         background-color: white !important;
+        clear: both !important;
+        float: left !important;
     }
     .email.print .body {
         display: block !important;
@@ -53,6 +55,13 @@ $focused-solid: #4a90d9;
         display: none !important;
     }
 
+    .email.print .tags {
+        display: none !important;
+    }
+
+    .email.print .subject {
+        display: none !important;
+    }
 }
 
 body {
