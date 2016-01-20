@@ -6,7 +6,7 @@
 * C-i: Show remote images (cid-type images are not supported yet).
 * A-#: Page to # page.
 * Add gravatar support
-* C-p: Toggle auto poll.
+* M-p: Toggle auto poll.
 * C-j / C-k: Jump and scroll to next or previous element.
 * thread-index: C-Enter: open thread in new window.
 * Add popup menu with some actions for the thread-index.

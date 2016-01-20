@@ -2232,7 +2232,7 @@ namespace Astroid {
         });
 
     keys.register_key ("+",
-          "therad_view.multi",
+          "thread_view.multi",
           "Apply action to marked threads",
           [&] (Key k) {
             if (any_of (state.begin(), state.end(),

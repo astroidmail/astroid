@@ -246,7 +246,7 @@ namespace Astroid {
           return true;
         });
 
-    keys.register_key ("C-p", "main_window.toggle_auto_poll",
+    keys.register_key ("M-p", "main_window.toggle_auto_poll",
         "Toggle auto poll",
         [&] (Key) {
           astroid->poll->toggle_auto_poll ();
