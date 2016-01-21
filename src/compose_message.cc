@@ -24,7 +24,7 @@ namespace Astroid {
     message = g_mime_message_new (true);
 
     d_message_sent.connect (
-        sigc::mem_fun (this, &ComposeMessage::dispatch_emit_message_sent));
+        sigc::mem_fun (this, &ComposeMessage::message_sent_event));
   }
 
   ComposeMessage::~ComposeMessage () {
@@ -227,7 +227,7 @@ namespace Astroid {
   }
 
   bool ComposeMessage::send (bool output) {
-    bool dryrun = astroid->config->config.get<bool>("astroid.debug.dryrun_sending");
+    dryrun = astroid->config->config.get<bool>("astroid.debug.dryrun_sending");
 
     /* Send the message */
     if (!dryrun) {
@@ -249,18 +249,11 @@ namespace Astroid {
 
         if (account->save_sent) {
           using bfs::path;
-          path save_to = path(account->save_sent_to) / path(id + ":2,");
+          save_to = path(account->save_sent_to) / path(id + ":2,");
           if (output)
             log << info << "cm: saving message to: " << save_to << endl;
 
           write (save_to.c_str());
-
-          /* add to notmuch with sent tag */
-          Db db (Db::DbMode::DATABASE_READ_WRITE);
-          lock_guard<Db> lk (db);
-          db.add_sent_message (save_to.c_str(), account->additional_sent_tags);
-          if (output)
-            log << info << "cm: sent message added to db." << endl;
         }
 
         message_sent_result = true;
@@ -297,7 +290,15 @@ namespace Astroid {
     m_message_sent.emit (res);
   }
 
-  void ComposeMessage::dispatch_emit_message_sent () {
+  void ComposeMessage::message_sent_event () {
+    /* add to notmuch with sent tag (on main GUI thread) */
+    if (!dryrun && message_sent_result && account->save_sent) {
+      Db db (Db::DbMode::DATABASE_READ_WRITE);
+      lock_guard<Db> lk (db);
+      db.add_sent_message (save_to.c_str(), account->additional_sent_tags);
+      log << info << "cm: sent message added to db." << endl;
+    }
+
     emit_message_sent (message_sent_result);
   }
 
