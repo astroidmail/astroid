@@ -2231,6 +2231,74 @@ namespace Astroid {
           return true;
         });
 
+    multi_keys.register_key ("p", "thread_view.multi.print",
+        "Print marked messages",
+        [&] (Key) {
+          vector<refptr<Message>> toprint;
+          for (auto &ms : state) {
+            refptr<Message> m = ms.first;
+            MessageState    s = ms.second;
+            if (s.marked) {
+              toprint.push_back (m);
+            }
+          }
+
+          GError * err = NULL;
+          WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
+
+          for (auto &m : toprint) {
+            ustring mid = "message_" + m->mid;
+            WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
+            WebKitDOMDOMTokenList * class_list =
+              webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(e));
+
+            webkit_dom_dom_token_list_add (class_list, "print",
+                (err = NULL, &err));
+
+            /* expand */
+            state[m].print_expanded = !toggle_hidden (m, ToggleShow);
+
+          }
+
+          bool indented = indent_messages;
+          if (indent_messages) {
+            indent_messages = false;
+            update_all_indent_states ();
+          }
+
+          /* open print window */
+          WebKitWebFrame * frame = webkit_web_view_get_main_frame (webview);
+          webkit_web_frame_print (frame);
+
+          if (indented) {
+            indent_messages = true;
+            update_all_indent_states ();
+          }
+
+          for (auto &m : toprint) {
+
+            if (state[m].print_expanded) {
+              toggle_hidden (m, ToggleHide);
+              state[m].print_expanded = false;
+            }
+
+            ustring mid = "message_" + m->mid;
+            WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
+            WebKitDOMDOMTokenList * class_list =
+              webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(e));
+
+            webkit_dom_dom_token_list_remove (class_list, "print",
+                (err = NULL, &err));
+
+            g_object_unref (class_list);
+            g_object_unref (e);
+          }
+
+          g_object_unref (d);
+
+          return true;
+        });
+
     keys.register_key ("+",
           "thread_view.multi",
           "Apply action to marked threads",
@@ -2251,48 +2319,47 @@ namespace Astroid {
         "thread_view.print",
         "Print focused message",
         [&] (Key) {
+          GError * err = NULL;
+          WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
 
-        GError * err = NULL;
-        WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
+          ustring mid = "message_" + focused_message->mid;
+          WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
+          WebKitDOMDOMTokenList * class_list =
+            webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(e));
 
-        ustring mid = "message_" + focused_message->mid;
-        WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
-        WebKitDOMDOMTokenList * class_list =
-          webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(e));
+          webkit_dom_dom_token_list_add (class_list, "print",
+              (err = NULL, &err));
 
-        webkit_dom_dom_token_list_add (class_list, "print",
-            (err = NULL, &err));
+          /* expand */
+          bool wasexpanded = toggle_hidden (focused_message, ToggleShow);
 
-        /* expand */
-        bool wasexpanded = toggle_hidden (focused_message, ToggleShow);
+          bool indented = indent_messages;
+          if (indent_messages) {
+            indent_messages = false;
+            update_all_indent_states ();
+          }
 
-        bool indented = indent_messages;
-        if (indent_messages) {
-          indent_messages = false;
-          update_all_indent_states ();
-        }
+          /* open print window */
+          WebKitWebFrame * frame = webkit_web_view_get_main_frame (webview);
+          webkit_web_frame_print (frame);
 
-        /* open print window */
-        WebKitWebFrame * frame = webkit_web_view_get_main_frame (webview);
-        webkit_web_frame_print (frame);
+          if (indented) {
+            indent_messages = true;
+            update_all_indent_states ();
+          }
 
-        if (indented) {
-          indent_messages = true;
-          update_all_indent_states ();
-        }
+          if (!wasexpanded) {
+            toggle_hidden (focused_message, ToggleHide);
+          }
 
-        if (!wasexpanded) {
-          toggle_hidden (focused_message, ToggleHide);
-        }
+          webkit_dom_dom_token_list_remove (class_list, "print",
+              (err = NULL, &err));
 
-        webkit_dom_dom_token_list_remove (class_list, "print",
-            (err = NULL, &err));
+          g_object_unref (class_list);
+          g_object_unref (e);
+          g_object_unref (d);
 
-        g_object_unref (class_list);
-        g_object_unref (e);
-        g_object_unref (d);
-
-        return true;
+          return true;
         });
   }
 

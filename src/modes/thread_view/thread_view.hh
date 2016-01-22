@@ -110,8 +110,9 @@ namespace Astroid {
 
           /* the message was expanded as part of an
            * C-n or C-p command */
-          bool scroll_expanded = false;
-          bool marked = false;
+          bool scroll_expanded  = false;
+          bool print_expanded   = false;
+          bool marked           = false;
 
           enum ElementType {
             Empty,

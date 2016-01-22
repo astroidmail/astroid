@@ -70,6 +70,11 @@ $focused-solid: #4a90d9;
     .email.print {
         border-left: 0px !important;
     }
+
+    .email .header_container .marked.icon {
+      display: none !important;
+    }
+
 }
 
 body {
