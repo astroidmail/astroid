@@ -26,6 +26,8 @@ namespace Astroid {
 
   ThreadIndexListCellRenderer::ThreadIndexListCellRenderer () {
     ptree ti = astroid->config->config.get_child ("thread_index.cell");
+    hidden_tags = VectorUtils::split_and_trim (ti.get<string> ("hidden_tags"), ",");
+    std::sort (hidden_tags.begin (), hidden_tags.end ());
 
     /* load font settings */
     font_desc_string = ti.get<string> ("font_description");

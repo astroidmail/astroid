@@ -18,11 +18,9 @@ namespace Astroid {
       bool last;
       bool marked;
 
-      /* these tags are displayed otherwisely, so they are not
-       * shown explicitly: MUST BE SORTED */
-      const std::vector<ustring> hidden_tags =
-              { "attachment", "flagged", "unread"
-              };
+      /* these tags are displayed otherwisely (or ignored by the user), so they
+       * are not shown explicitly: MUST BE SORTED. default defined in config.cc. */
+      std::vector<ustring> hidden_tags; // default: { "attachment", "flagged", "unread" } };
 
       int get_height ();
 

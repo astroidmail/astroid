@@ -11,7 +11,7 @@ namespace Astroid {
   class VectorUtils {
     public:
 
-      static std::vector<ustring> split_and_trim (ustring & str, ustring delim);
+      static std::vector<ustring> split_and_trim (const ustring & str, const ustring delim);
       static ustring concat (std::vector<ustring> &, ustring, std::vector<ustring>);
       static ustring concat_tags (std::vector<ustring>);
       static ustring concat_authors (std::vector<ustring>);
