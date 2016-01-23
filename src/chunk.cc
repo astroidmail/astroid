@@ -499,7 +499,7 @@ namespace Astroid {
     using bfs::path;
     log << info << "chunk: " << get_filename () << ", opening.." << std::endl;
 
-    path tf = astroid->config->cache_dir;
+    path tf = astroid->standard_paths().cache_dir;
 
     ustring tmp_fname = ustring::compose("%1-%2", UstringUtils::random_alphanumeric (10), Utils::safe_fname(get_filename ()));
     tf /= path (tmp_fname.c_str());
@@ -517,7 +517,7 @@ namespace Astroid {
 
   void Chunk::do_open (ustring tf) {
     using std::endl;
-    ustring external_cmd = astroid->config->config.get<std::string> ("attachment.external_open_cmd");
+    ustring external_cmd = astroid->config().get<std::string> ("attachment.external_open_cmd");
 
     std::vector<std::string> args = { external_cmd.c_str(), tf.c_str () };
     log << debug << "chunk: spawning: " << args[0] << ", " << args[1] << endl;

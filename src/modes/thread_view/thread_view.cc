@@ -36,28 +36,29 @@ using namespace std;
 namespace Astroid {
 
   ThreadView::ThreadView (MainWindow * mw) : Mode (mw) { // {{{
-    indent_messages = astroid->config->config.get<bool> ("thread_view.indent_messages");
-    open_html_part_external = astroid->config->config.get<bool> ("thread_view.open_html_part_external");
-    open_external_link = astroid->config->config.get<string> ("thread_view.open_external_link");
+    const ptree& config = astroid->config ("thread_view");
+    indent_messages = config.get<bool> ("indent_messages");
+    open_html_part_external = config.get<bool> ("open_html_part_external");
+    open_external_link = config.get<string> ("open_external_link");
 
-    enable_mathjax = astroid->config->config.get<bool> ("thread_view.mathjax.enable");
-    mathjax_uri_prefix = astroid->config->config.get<string> ("thread_view.mathjax.uri_prefix");
+    enable_mathjax = config.get<bool> ("mathjax.enable");
+    mathjax_uri_prefix = config.get<string> ("mathjax.uri_prefix");
 
-    ustring mj_only_tags = astroid->config->config.get<string> ("thread_view.mathjax.for_tags");
+    ustring mj_only_tags = config.get<string> ("mathjax.for_tags");
     if (mj_only_tags.length() > 0) {
       mathjax_only_tags = VectorUtils::split_and_trim (mj_only_tags, ",");
     }
 
-    enable_code_prettify = astroid->config->config.get<bool> ("thread_view.code_prettify.enable");
-    enable_code_prettify_for_patches = astroid->config->config.get<bool> ("thread_view.code_prettify.enable_for_patches");
-    code_prettify_prefix = astroid->config->config.get<string> ("thread_view.code_prettify.uri_prefix");
+    enable_code_prettify = config.get<bool> ("code_prettify.enable");
+    enable_code_prettify_for_patches = config.get<bool> ("code_prettify.enable_for_patches");
+    code_prettify_prefix = config.get<string> ("code_prettify.uri_prefix");
 
-    ustring cp_only_tags = astroid->config->config.get<string> ("thread_view.code_prettify.for_tags");
+    ustring cp_only_tags = config.get<string> ("code_prettify.for_tags");
     if (cp_only_tags.length() > 0) {
       code_prettify_only_tags = VectorUtils::split_and_trim (cp_only_tags, ",");
     }
 
-    code_prettify_code_tag = astroid->config->config.get<string> ("thread_view.code_prettify.code_tag");
+    code_prettify_code_tag = config.get<string> ("code_prettify.code_tag");
 
     ready = false;
 
@@ -615,7 +616,7 @@ namespace Astroid {
     /* home uri used for thread view - request will be relative this
      * non-existant (hopefully) directory. */
     home_uri = ustring::compose ("%1/%2",
-        astroid->config->config_dir.c_str(),
+        astroid->standard_paths ().config_dir.c_str(),
         UstringUtils::random_alphanumeric (120));
 
     webkit_web_view_load_html_string (webview, theme.thread_view_html.c_str (), home_uri.c_str());

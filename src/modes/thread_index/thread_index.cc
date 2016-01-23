@@ -26,7 +26,7 @@ namespace Astroid {
     set_orientation (Gtk::Orientation::ORIENTATION_VERTICAL);
     set_label (get_label ());
 
-    ustring sort_order = astroid->config->config.get<string> ("thread_index.sort_order");
+    ustring sort_order = astroid->config ().get<string> ("thread_index.sort_order");
     if (sort_order == "newest") {
       sort = NOTMUCH_SORT_NEWEST_FIRST;
     } else if (sort_order == "oldest") {

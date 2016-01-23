@@ -92,7 +92,7 @@ namespace Astroid {
     main_window  = _thread_index->main_window;
     list_store = store;
 
-    config = astroid->config->config.get_child ("thread_index");
+    config = astroid->config ("thread_index");
     page_jump_rows     = config.get<int>("page_jump_rows");
 
     set_model (list_store);
@@ -188,7 +188,7 @@ namespace Astroid {
     auto sc  = get_style_context ();
 
     path def_no_mail_img = path ("ui/no-mail.png");
-    path user_no_mail_img = astroid->config->config_dir / def_no_mail_img;
+    path user_no_mail_img = astroid->standard_paths().config_dir / def_no_mail_img;
 
 # ifdef PREFIX
     path no_mail_img = path(PREFIX) / def_no_mail_img;

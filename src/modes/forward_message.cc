@@ -33,7 +33,7 @@ namespace Astroid {
     }
 
     if (disp == FwdDefault) {
-      disp = (astroid->config->config.get<string> ("mail.forward.disposition") == "attachment") ? FwdAttach : FwdInline;
+      disp = (astroid->config().get<string> ("mail.forward.disposition") == "attachment") ? FwdAttach : FwdInline;
     }
 
     if (disp == FwdAttach) {
@@ -45,7 +45,7 @@ namespace Astroid {
       /* quote original message */
       std::ostringstream quoted;
 
-      ustring quoting_a = ustring::compose (astroid->config->config.get<string> ("mail.forward.quote_line"),
+      ustring quoting_a = ustring::compose (astroid->config ().get<string> ("mail.forward.quote_line"),
           Address(msg->sender.raw()).fail_safe_name(), msg->pretty_verbose_date());
 
       quoted  << quoting_a.raw ()

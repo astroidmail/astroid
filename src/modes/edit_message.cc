@@ -75,9 +75,9 @@ namespace Astroid {
   }
 
   EditMessage::EditMessage (MainWindow * mw) : Mode (mw) {
-    editor_config = astroid->config->config.get_child ("editor");
+    editor_config = astroid->config ("editor");
 
-    tmpfile_path = astroid->config->runtime_dir;
+    tmpfile_path = astroid->standard_paths ().runtime_dir;
 
     set_label ("New message");
 
@@ -923,9 +923,9 @@ namespace Astroid {
 
     log << info << "em: tmpfile: " << tmpfile_path << endl;
 
-    if (!is_directory(astroid->config->runtime_dir)) {
+    if (!is_directory(astroid->standard_paths ().runtime_dir)) {
       log << warn << "em: making runtime dir.." << endl;
-      create_directories (astroid->config->runtime_dir);
+      create_directories (astroid->standard_paths ().runtime_dir);
     }
 
     if (is_regular_file (tmpfile_path)) {

@@ -26,7 +26,7 @@ namespace Astroid {
 
     poll_state = false;
 
-    poll_interval = astroid->config->config.get<int> ("poll.interval");
+    poll_interval = astroid->config ().get<int> ("poll.interval");
     log << debug << "poll: interval: " << poll_interval << endl;
 
     // check every 1 seconds if periodic poll has changed
@@ -96,7 +96,7 @@ namespace Astroid {
 
     t0 = chrono::steady_clock::now ();
 
-    path poll_script_uri = astroid->config->config_dir / path(poll_script);
+    path poll_script_uri = astroid->standard_paths().config_dir / path(poll_script);
 
     log << info << "poll: polling: " << poll_script_uri.c_str () << endl;
 

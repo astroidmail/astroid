@@ -18,7 +18,7 @@ namespace Astroid {
   Contacts::Contacts () {
     log << info << "ct: initializing.." << endl;
 
-    contacts_config = astroid->config->config.get_child ("contacts");
+    contacts_config = astroid->config ("contacts");
 
     enable_lbdb = contacts_config.get<bool> ("lbdb.enable");
     lbdb_cmd    = contacts_config.get<string> ("lbdb.cmd");

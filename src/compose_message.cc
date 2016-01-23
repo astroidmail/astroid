@@ -86,7 +86,7 @@ namespace Astroid {
     GMimeStream * contentStream = g_mime_stream_mem_new_with_buffer(body_content.c_str(), body_content.size());
     GMimePart * messagePart = g_mime_part_new_with_type ("text", "plain");
 
-    g_mime_object_set_content_type_parameter ((GMimeObject *) messagePart, "charset", astroid->config->config.get<string>("editor.charset").c_str());
+    g_mime_object_set_content_type_parameter ((GMimeObject *) messagePart, "charset", astroid->config().get<string>("editor.charset").c_str());
     g_mime_object_set_content_type_parameter ((GMimeObject *) messagePart, "format", "flowed");
 
     GMimeDataWrapper * contentWrapper = g_mime_data_wrapper_new_with_stream(contentStream, GMIME_CONTENT_ENCODING_DEFAULT);
@@ -227,7 +227,7 @@ namespace Astroid {
   }
 
   bool ComposeMessage::send (bool output) {
-    dryrun = astroid->config->config.get<bool>("astroid.debug.dryrun_sending");
+    dryrun = astroid->config().get<bool>("astroid.debug.dryrun_sending");
 
     /* Send the message */
     if (!dryrun) {

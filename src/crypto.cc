@@ -15,7 +15,7 @@
 namespace Astroid {
   Crypto::Crypto (ustring _protocol) {
     using std::endl;
-    ptree config = astroid->config->config.get_child ("crypto");
+    ptree config = astroid->config ("crypto");
     gpgpath = ustring (config.get<std::string> ("gpg.path"));
 
     log << debug << "crypto: gpg: " << gpgpath << endl;
