@@ -6,6 +6,7 @@
 # include <boost/filesystem/operations.hpp>
 # include <boost/property_tree/ptree.hpp>
 # include <boost/property_tree/json_parser.hpp>
+# include <boost/property_tree/ini_parser.hpp>
 
 # include "config.hh"
 # include "log.hh"
@@ -98,6 +99,7 @@ namespace Astroid {
 
   void Config::setup_default_config (bool initial) {
     default_config.put ("astroid.config.version", CONFIG_VERSION);
+    default_config.put ("astroid.notmuch_config" , "~/.notmuch_config");
     default_config.put ("astroid.notmuch.db", "~/.mail");
     default_config.put ("astroid.notmuch.excluded_tags", "muted,spam,deleted");
     default_config.put ("astroid.notmuch.sent_tags", "sent");
@@ -267,6 +269,7 @@ namespace Astroid {
         write_back_config ();
       }
     }
+    boost::property_tree::read_ini( config.get<std::string> ("astroid.notmuch_config"), notmuch_config );
   }
 
   bool Config::check_config (ptree new_config) {
