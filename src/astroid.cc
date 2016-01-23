@@ -233,7 +233,11 @@ namespace Astroid {
   }
 
   const boost::property_tree::ptree& Astroid::config (const std::string& id) const {
-    return m_config->config.get_child(id);
+    if (id == "astroid.notmuch") {
+      return m_config->notmuch_config;
+    } else {
+      return m_config->config.get_child(id);
+    }
   }
 
   const StandardPaths& Astroid::standard_paths() const {
