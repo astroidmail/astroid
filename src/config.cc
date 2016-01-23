@@ -236,13 +236,17 @@ namespace Astroid {
     write_json (std_paths.config_file.c_str (), config);
   }
 
+  void Config::populate_notmuch_config (const std::string& nm_cfg) {
+    boost::property_tree::read_ini( nm_cfg, notmuch_config );
+  } 
+
   void Config::load_config (bool initial) {
     if (test) {
       log << info << "cf: test config, loading defaults." << endl;
       config = setup_default_config (true);
       config.put ("poll.interval", 0);
       config.put ("astroid.notmuch.db", "test/mail/test_mail");
-      boost::property_tree::read_ini( config.get<std::string> ("astroid.notmuch_config"), notmuch_config );
+      populate_notmuch_config(config.get<std::string> ("astroid.notmuch_config"));
       return;
     }
 
@@ -275,7 +279,7 @@ namespace Astroid {
         write_back_config ();
       }
     }
-    boost::property_tree::read_ini( config.get<std::string> ("astroid.notmuch_config"), notmuch_config );
+    populate_notmuch_config (config.get<std::string> ("astroid.notmuch_config") );
   }
 
   bool Config::check_config (ptree new_config) {
