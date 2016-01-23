@@ -232,8 +232,13 @@ namespace Astroid {
     write_json (std_paths.config_file.c_str (), config);
   }
 
-  void Config::populate_notmuch_config (const std::string& nm_cfg) {
-    boost::property_tree::read_ini( nm_cfg, notmuch_config );
+  void Config::populate_notmuch_config (const std::string& cfg) {
+    ptree nm_cfg;
+    boost::property_tree::read_ini( cfg, nm_cfg );
+    notmuch_config.put ("db", nm_cfg.get<std::string> ("database.path"));
+    notmuch_config.put ("excluded_tags", nm_cfg.get<std::string> ("search.exclude_tags"));
+    // also merge "astroid.notmuch.sent_tags" into the (readonly) notmuch_config object
+    notmuch_config.put ("sent_tags", config.get<std::string> ("astroid.notmuch.sent_tags"));
   } 
 
   void Config::load_config (bool initial) {
