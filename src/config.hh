@@ -40,17 +40,17 @@ namespace Astroid {
 
       void load_config (bool initial = false);
       void load_dirs ();
-      void setup_default_config (bool);
       bool check_config (ptree);
       void write_back_config ();
 
-      ptree default_config;
       ptree config;
       ptree notmuch_config;
 
       const int CONFIG_VERSION = 2;
 
     private:
+      ptree setup_default_config (bool);
+
       /* TODO: split into utils/ somewhere.. */
       /* merge of property trees */
 
