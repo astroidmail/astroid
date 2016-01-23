@@ -50,6 +50,7 @@ namespace Astroid {
 
     private:
       ptree setup_default_config (bool);
+      void populate_notmuch_config (const std::string&);
 
       /* TODO: split into utils/ somewhere.. */
       /* merge of property trees */
