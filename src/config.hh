@@ -12,6 +12,15 @@ namespace bfs = boost::filesystem;
 using boost::property_tree::ptree;
 
 namespace Astroid {
+  struct StandardPaths {
+    bfs::path home;
+    bfs::path config_dir;
+    bfs::path data_dir;
+    bfs::path cache_dir;
+    bfs::path runtime_dir;
+    bfs::path config_file;
+  };
+
   class Config {
     public:
       Config (bool _test = false, bool no_load = false);
@@ -26,13 +35,8 @@ namespace Astroid {
 
       bool test;
 
-      bfs::path home;
-      bfs::path config_dir;
-      bfs::path data_dir;
-      bfs::path cache_dir;
-      bfs::path runtime_dir;
+      StandardPaths std_paths;
 
-      bfs::path config_file;
 
       void load_config (bool initial = false);
       void load_dirs ();

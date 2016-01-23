@@ -1,6 +1,9 @@
 # pragma once
 
 # include <vector>
+# include <string>
+
+# include <boost/property_tree/ptree.hpp>
 
 # include <gtkmm.h>
 # include <glibmm.h>
@@ -15,13 +18,13 @@ namespace Astroid {
       int main (int, char**);
       void main_test ();
 
+      const boost::property_tree::ptree& config (const std::string& path=std::string()) const;
+      const StandardPaths& standard_paths() const;
+
       refptr<Gtk::Application> app;
 
       static const char* const version;
       ustring user_agent;
-
-      /* config */
-      Config * config;
 
       /* accounts */
       AccountManager * accounts;
@@ -38,6 +41,8 @@ namespace Astroid {
       MainWindow * open_new_window (bool open_defaults = true);
 
     private:
+      /* config */
+      Config * m_config;
       bool activated = false;
       void on_signal_activate ();
       void on_mailto_activate (const Glib::VariantBase &);

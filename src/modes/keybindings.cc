@@ -34,7 +34,7 @@ namespace Astroid {
       user_bindings_loaded = true;
 
       using bfs::path;
-      path bindings_file = astroid->config->config_dir / path (user_bindings_file);
+      path bindings_file = astroid->standard_paths ().config_dir / path (user_bindings_file);
 
       if (exists(bindings_file)) {
         log << info << "keybindings: loading user bindings from: " << bindings_file.c_str () << endl;

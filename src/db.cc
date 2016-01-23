@@ -23,7 +23,7 @@ using namespace boost::filesystem;
 
 namespace Astroid {
   Db::Db (DbMode mode) {
-    config = astroid->config->config.get_child ("astroid.notmuch");
+    config = astroid->config ("astroid.notmuch");
 
     const char * home = getenv ("HOME");
     if (home == NULL) {

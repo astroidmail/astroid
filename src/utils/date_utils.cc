@@ -127,7 +127,7 @@ namespace Astroid {
   void Date::init () {
     log << info << "date: init." << endl;
 
-    ptree config = astroid->config->config.get_child ("general.time");
+    ptree config = astroid->config ("general.time");
     string c_f = config.get<string>("clock_format");
 
     if (c_f == "24h") {
