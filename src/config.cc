@@ -55,6 +55,7 @@ namespace Astroid {
 
     } else {
       char * home_c = getenv ("HOME");
+      log << debug << "HOME: " << home_c << endl;
 
       if (home_c == NULL) {
         log << error << "cf: HOME environment variable not set." << endl;
@@ -101,9 +102,11 @@ namespace Astroid {
     }
   }
 
-  void Config::setup_default_config (bool initial) {
+  ptree Config::setup_default_config (bool initial) {
+    ptree default_config;
     default_config.put ("astroid.config.version", CONFIG_VERSION);
-    default_config.put ("astroid.notmuch_config" , "~/.notmuch_config");
+    std::string nm_cfg = path(std_paths.home / path (".notmuch-config")).string();
+    default_config.put ("astroid.notmuch_config" , nm_cfg);
     default_config.put ("astroid.notmuch.db", "~/.mail");
     default_config.put ("astroid.notmuch.excluded_tags", "muted,spam,deleted");
     default_config.put ("astroid.notmuch.sent_tags", "sent");
@@ -223,6 +226,8 @@ namespace Astroid {
 
     /* crypto */
     default_config.put ("crypto.gpg.path", "gpg");
+
+    return default_config;
   }
 
   void Config::write_back_config () {
@@ -234,10 +239,10 @@ namespace Astroid {
   void Config::load_config (bool initial) {
     if (test) {
       log << info << "cf: test config, loading defaults." << endl;
-      setup_default_config (true);
-      config = default_config;
+      config = setup_default_config (true);
       config.put ("poll.interval", 0);
       config.put ("astroid.notmuch.db", "test/mail/test_mail");
+      boost::property_tree::read_ini( config.get<std::string> ("astroid.notmuch_config"), notmuch_config );
       return;
     }
 
@@ -254,16 +259,13 @@ namespace Astroid {
       if (!initial) {
         log << warn << "cf: no config, using defaults." << endl;
       }
-      setup_default_config (true);
-      config = default_config;
+      config = setup_default_config (true);
       write_back_config ();
     } else {
 
       /* loading config file */
       ptree new_config;
-      setup_default_config (false);
-
-      config = default_config;
+      config = setup_default_config (false);
       read_json (std_paths.config_file.c_str(), new_config);
       log << info << "cf: version: " << config.get<int>("astroid.config.version") << endl;
 
