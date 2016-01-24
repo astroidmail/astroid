@@ -17,7 +17,7 @@ BOOST_AUTO_TEST_SUITE(DbTest)
   BOOST_AUTO_TEST_CASE(open_confirm)
   {
     setup ();
-    astroid->config->config.put ("astroid.notmuch.db", "test/mail/test_mail");
+    test_astroid->set_database_path ("test/mail/test_mail");
 
     Db * db;
 
@@ -32,7 +32,7 @@ BOOST_AUTO_TEST_SUITE(DbTest)
   BOOST_AUTO_TEST_CASE(open_rw)
   {
     setup ();
-    astroid->config->config.put ("astroid.notmuch.db", "test/mail/test_mail");
+    test_astroid->set_database_path ("test/mail/test_mail");
 
     Db * db;
 
@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_SUITE(DbTest)
   BOOST_AUTO_TEST_CASE(open_error)
   {
     setup ();
-    astroid->config->config.put ("astroid.notmuch.db", "test/mail/test_mail/non_existant");
+    test_astroid->set_database_path ("test/mail/test_mail/non_existant");
 
     Db * db;
 

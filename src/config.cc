@@ -268,7 +268,7 @@ namespace Astroid {
       config = setup_default_config (true);
       config.put ("poll.interval", 0);
       config.put ("astroid.notmuch.db", "test/mail/test_mail");
-      populate_notmuch_config(config.get<std::string> ("astroid.notmuch_config"));
+      populate_notmuch_config (path(current_path() / path ("test/mail/test_config")).string());
       return;
     }
 
