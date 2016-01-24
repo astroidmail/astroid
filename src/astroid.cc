@@ -202,7 +202,7 @@ namespace Astroid {
     }
 
     /* output db location */
-    ustring db_path = ustring (config("astroid.notmuch").get<string> ("db"));
+    ustring db_path = ustring (notmuch_config().get<string> ("database.path"));
     log << info << "notmuch db: " << db_path << endl;
 
     /* set up static classes */
@@ -233,11 +233,11 @@ namespace Astroid {
   }
 
   const boost::property_tree::ptree& Astroid::config (const std::string& id) const {
-    if (id == "astroid.notmuch") {
-      return m_config->notmuch_config;
-    } else {
-      return m_config->config.get_child(id);
-    }
+    return m_config->config.get_child(id);
+  }
+
+  const boost::property_tree::ptree& Astroid::notmuch_config () const {
+    return m_config->notmuch_config;
   }
 
   const StandardPaths& Astroid::standard_paths() const {

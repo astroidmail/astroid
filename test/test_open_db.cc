@@ -17,7 +17,7 @@ BOOST_AUTO_TEST_SUITE(DbTest)
   BOOST_AUTO_TEST_CASE(open_confirm)
   {
     setup ();
-    const_cast<ptree&>(astroid->config("astroid.notmuch")).put ("db", "test/mail/test_mail");
+    const_cast<ptree&>(astroid->notmuch_config()).put ("database.path", "test/mail/test_mail");
 
     Db * db;
 
@@ -32,7 +32,7 @@ BOOST_AUTO_TEST_SUITE(DbTest)
   BOOST_AUTO_TEST_CASE(open_rw)
   {
     setup ();
-    const_cast<ptree&>(astroid->config("astroid.notmuch")).put ("db", "test/mail/test_mail");
+    const_cast<ptree&>(astroid->notmuch_config()).put ("database.path", "test/mail/test_mail");
 
     Db * db;
 
@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_SUITE(DbTest)
   BOOST_AUTO_TEST_CASE(open_error)
   {
     setup ();
-    const_cast<ptree&>(astroid->config("astroid.notmuch")).put ("db", "test/mail/test_mail/non_existant");
+    const_cast<ptree&>(astroid->notmuch_config()).put ("database.path", "test/mail/test_mail/non_existant");
 
     Db * db;
 

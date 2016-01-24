@@ -19,6 +19,7 @@ namespace Astroid {
       void main_test ();
 
       const boost::property_tree::ptree& config (const std::string& path=std::string()) const;
+      const boost::property_tree::ptree& notmuch_config () const;
       const StandardPaths& standard_paths() const;
 
       refptr<Gtk::Application> app;
