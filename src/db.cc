@@ -574,6 +574,7 @@ namespace Astroid {
     }
 
     bool res = true;
+    bool synchronize_flags = astroid->notmuch_config().get<bool> ("maildir.synchronize_flags", false);
 
     db->on_thread (thread_id, [&](notmuch_thread_t * nm_thread)
       {
@@ -590,14 +591,26 @@ namespace Astroid {
             message = notmuch_messages_get (qmessages);
 
             notmuch_status_t s = notmuch_message_add_tag (message, tag.c_str ());
+            if (s) {
+              log << error << "nm: could not add tag: " << tag << " to thread: " << thread_id << endl;
+              res = false;
+            } else {
+              res &= true;
+            }
+
+            if (synchronize_flags) {
+              s = notmuch_message_tags_to_maildir_flags (message);
+              if (s) {
+                log << error << "nm: could not synchronize tag " << tag << " to maildir flags" << endl;
+                res = false;
+              } else {
+                res &= true;
+              }
+            }
 
             notmuch_message_destroy (message);
 
-            if (s == NOTMUCH_STATUS_SUCCESS) {
-              res &= true;
-            } else {
-              log << error << "nm: could not add tag: " << tag << " to thread: " << thread_id << endl;
-              res = false;
+            if (res == false) {
               return;
             }
           }
@@ -635,6 +648,8 @@ namespace Astroid {
     }
 
     bool res = true;
+    bool synchronize_flags = astroid->notmuch_config().get<bool> ("maildir.synchronize_flags", false);
+
     db->on_thread (thread_id, [&](notmuch_thread_t * nm_thread)
       {
 
@@ -652,14 +667,26 @@ namespace Astroid {
             message = notmuch_messages_get (qmessages);
 
             notmuch_status_t s = notmuch_message_remove_tag (message, tag.c_str ());
+            if (s) {
+              log << error << "nm: could not remove tag: " << tag << " from thread: " << thread_id << endl;
+              res = false;
+            } else {
+              res &= true;
+            }
+
+            if (synchronize_flags) {
+              s = notmuch_message_tags_to_maildir_flags (message);
+              if (s) {
+                log << error << "nm: could not synchronize tag " << tag << " to maildir flags" << endl;
+                res = false;
+              } else {
+                res &= true;
+              }
+            }
 
             notmuch_message_destroy (message);
 
-            if (s == NOTMUCH_STATUS_SUCCESS) {
-              res &= true;
-            } else {
-              log << error << "nm: could not remove tag: " << tag << " from thread: " << thread_id << endl;
-              res = false;
+            if (res == false) {
               return;
             }
 
