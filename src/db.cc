@@ -23,7 +23,7 @@ using namespace boost::filesystem;
 
 namespace Astroid {
   Db::Db (DbMode mode) {
-    config = astroid->config ("astroid.notmuch");
+    const ptree& config = astroid->notmuch_config ();
 
     const char * home = getenv ("HOME");
     if (home == NULL) {
@@ -31,7 +31,7 @@ namespace Astroid {
       throw invalid_argument ("db: error: HOME environment variable not set.");
     }
 
-    ustring db_path = ustring (config.get<string> ("db"));
+    ustring db_path = ustring (config.get<string> ("database.path"));
 
     /* replace ~ with home */
     if (db_path[0] == '~') {
@@ -58,11 +58,14 @@ namespace Astroid {
     log << debug << "db: open time: " << diff << " ms." << endl;
 
 
-    ustring excluded_tags_s = config.get<string> ("excluded_tags");
+    ustring excluded_tags_s = config.get<string> ("search.exclude_tags");
     excluded_tags = VectorUtils::split_and_trim (excluded_tags_s, ",");
     sort (excluded_tags.begin (), excluded_tags.end ());
 
-    ustring sent_tags_s = config.get<string> ("sent_tags");
+    // TODO: find a better way to handle sent_tags
+    // Probably via AccountManager?
+    // ustring sent_tags_s = config.get<string> ("sent_tags");
+    ustring sent_tags_s = astroid->config().get<std::string> ("astroid.notmuch.sent_tags");
     sent_tags = VectorUtils::split_and_trim (sent_tags_s, ",");
     sort (sent_tags.begin (), sent_tags.end ());
   }
