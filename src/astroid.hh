@@ -40,9 +40,10 @@ namespace Astroid {
 
       MainWindow * open_new_window (bool open_defaults = true);
 
-    private:
-      /* config */
+    protected:
       Config * m_config;
+
+    private:
       bool activated = false;
       void on_signal_activate ();
       void on_mailto_activate (const Glib::VariantBase &);
