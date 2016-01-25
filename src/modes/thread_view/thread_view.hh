@@ -195,7 +195,7 @@ namespace Astroid {
       void insert_header_address_list (ustring &, ustring, AddressList, bool);
       void insert_header_row (ustring &, ustring, ustring, bool);
       void insert_header_date (ustring &, refptr<Message>);
-      ustring create_header_row (ustring, ustring, bool, bool);
+      ustring create_header_row (ustring title, ustring value, bool important, bool escape, bool noprint = false);
 
       bool open_html_part_external;
       void display_part (refptr<Message>, refptr<Chunk>, MessageState::Element);

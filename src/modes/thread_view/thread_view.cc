@@ -812,7 +812,7 @@ namespace Astroid {
       ustring tags_s_c = ustring::compose ("<span style=\"color:#31587a !important\">%1</span>",
           Glib::Markup::escape_text(tags_s));
 
-      header += create_header_row ("Tags", tags_s_c, false, false);
+      header += create_header_row ("Tags", tags_s_c, false, false, true);
 
 
       WebKitDOMHTMLElement * tags = select (
@@ -1356,14 +1356,16 @@ namespace Astroid {
       ustring title,
       ustring value,
       bool important,
-      bool escape) {
+      bool escape,
+      bool noprint) {
 
     return ustring::compose (
-        "<div class=\"field %1\">"
-        "  <div class=\"title\">%2:</div>"
-        "  <div class=\"value\">%3</div>"
+        "<div class=\"field %1 %2\">"
+        "  <div class=\"title\">%3:</div>"
+        "  <div class=\"value\">%4</div>"
         "</div>",
         (important ? "important" : ""),
+        (noprint ? "noprint" : ""),
         Glib::Markup::escape_text (title),
         (escape ? Glib::Markup::escape_text (value) : value)
         );
