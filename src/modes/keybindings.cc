@@ -67,6 +67,12 @@ namespace Astroid {
           if (line.size () == 0) continue;
           if (line[0] == '#') continue;
 
+          /* cut off comments appended to the end of the line */
+          std::size_t fnd = line.find ("#");
+          if (fnd != std::string::npos) {
+            line = line.substr (0, fnd);
+          }
+
           log << debug << "ky: parsing line: " << line << endl;
           vector<ustring> parts = VectorUtils::split_and_trim (line, "=");
 
