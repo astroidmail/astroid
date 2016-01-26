@@ -6,12 +6,13 @@
 # include "glibmm.h"
 
 # include "modes/keybindings.hh"
+# include "utils/cmd.hh"
 
 using namespace std;
 using Astroid::ustring;
 
 
-BOOST_AUTO_TEST_SUITE(Theme)
+BOOST_AUTO_TEST_SUITE(Keybindings)
 
   BOOST_AUTO_TEST_CASE(loading_keybindings)
   {
@@ -54,6 +55,8 @@ BOOST_AUTO_TEST_SUITE(Theme)
 
       ustring final_cmd = ustring::compose (cmd, test_thread);
       log << test << "key: would run: " << final_cmd << endl;
+
+      Cmd("test", final_cmd).run ();
 
       return true;
     };
