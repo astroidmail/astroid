@@ -107,10 +107,11 @@ namespace Astroid {
 
     private:
       std::map<Key, std::function<bool (Key)>> keys;
-      ustring prefix = ""; /* used to load custom hooks */
+      ustring prefix = "";
 
       static std::vector<Key>  user_bindings;
       static std::vector<std::pair<Key, ustring>> user_run_bindings;
+
       static std::atomic<bool> user_bindings_loaded;
       static const char * user_bindings_file;
 

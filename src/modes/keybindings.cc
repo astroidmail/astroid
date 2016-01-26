@@ -43,10 +43,13 @@ namespace Astroid {
 
         /* the bindings file has the format:
          *
-         * ``` thread_index.next_thread=j thread_index.next_thread=Down
+         * ```
+         * thread_index.next_thread=j
+         * thread_index.next_thread=Down
          * thread_index.label=C-j
          *
-         * # thread_ ```
+         * # thread_
+         * ```
          *
          * blank lines, or lines starting with # are ignored. a keybinding can
          * be listed several times, in which case they will be interpreted as
@@ -136,6 +139,7 @@ namespace Astroid {
 
             k.name = name;
             k.allow_duplicate_name = true;
+            k.userdefined = true;
 
             user_run_bindings.push_back (std::make_pair (k, target));
 
