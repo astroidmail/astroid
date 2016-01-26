@@ -437,12 +437,11 @@ namespace Astroid {
       /* b is now a matching binding */
       log << info << "ky: run, binding: " << name << " to: " << b->second << endl;
 
-      std::function <bool (Key)> f = bind (cb, _1, b->second);
-
       register_key (b->first,
                     b->first.name,
                     ustring::compose ("Run hook: %1", b->second),
-                    f);
+                    bind (cb, _1, b->second)
+                    );
 
       b++;
     }

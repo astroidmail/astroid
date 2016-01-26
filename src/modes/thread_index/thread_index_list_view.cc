@@ -16,6 +16,7 @@
 # include "modes/forward_message.hh"
 # include "message_thread.hh"
 # include "utils/utils.hh"
+# include "utils/cmd.hh"
 
 # include "command_bar.hh"
 
@@ -836,7 +837,24 @@ namespace Astroid {
           return true;
         });
 
+    keys->register_run ("thread_index.run",
+        [&] (Key k, ustring cmd) {
+          auto t = get_current_thread ();
+
+          if (t) {
+            cmd = ustring::compose (cmd, t->thread_id);
+            int r = Cmd ("thread_index.run", cmd).run ();
+
+            if (r == 0) {
+              Db db;
+              astroid->global_actions->emit_thread_updated (&db, t->thread_id);
+            }
+          }
+
+          return true;
+        });
   }
+
 
   bool ThreadIndexListView::multi_key_handler (
       ThreadIndexListView::multi_key_action maction,
