@@ -49,7 +49,7 @@ namespace Astroid {
     log << debug << "utf8: " << Glib::get_charset () << ", " << charset << endl;
 
     /* user agent */
-    user_agent = ustring::compose ("astroid/v%1 (https://github.com/gauteh/astroid)", Astroid::version);
+    user_agent = ustring::compose ("astroid/%1 (https://github.com/gauteh/astroid)", Astroid::version);
 
     /* gmime settings */
     g_mime_init (0); // utf-8 is default
