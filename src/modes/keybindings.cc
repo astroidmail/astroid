@@ -98,16 +98,19 @@ namespace Astroid {
             fnd = line.find ("(", fnd);
 
             if (fnd == std::string::npos) {
-              ustring erru = "invalid 'run'-keyspec";
-              log << error << "ky: " << erru << endl;
-              throw keyspec_error (erru.c_str ());
+              log << error <<  "ky: invalid 'run'-specification: no '('" << endl;
+              continue;
             }
 
             std::size_t rfnd = line.rfind ("=");
             if (rfnd == std::string::npos) {
-              ustring erru = "invalid 'run'-keyspec";
-              log << error << "ky: " << erru << endl;
-              throw keyspec_error (erru.c_str ());
+              log << error << "ky: invalid 'run'-specification: no '='" << endl;
+              continue;
+            }
+
+            if (rfnd < fnd) {
+              log << error << "ky: invalid 'run'-specification:  '=' before '('" << endl;
+              continue;
             }
 
             ustring keyspec = line.substr (rfnd+1, std::string::npos);
@@ -115,9 +118,13 @@ namespace Astroid {
 
             rfnd = line.rfind (")", rfnd);
             if (rfnd == std::string::npos) {
-              ustring erru = "invalid 'run'-keyspec";
-              log << error << "ky: " << erru << endl;
-              throw keyspec_error (erru.c_str ());
+              log << error << "ky: invalid 'run'-specfication: no ')'" << endl;
+              continue;
+            }
+
+            if (rfnd < fnd) {
+              log << error << "ky: invalid 'run'-specification: ')' before '('" << endl;
+              continue;
             }
 
             ustring target = line.substr (fnd + 1, rfnd - fnd -1);
