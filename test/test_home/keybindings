@@ -1,0 +1,17 @@
+# comment
+
+thread_index.next=J
+thread_index.next=k # alias and end of line comment
+
+thread_index.asdf = j
+
+# test
+test.a = k
+test.b=j
+test.b=j # double, should throw exception
+
+
+
+# unbound
+test.unbound2=1
+

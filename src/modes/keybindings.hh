@@ -59,7 +59,7 @@ namespace Astroid {
       Keybindings ();
       static void init ();
 
-      void set_prefix (ustring);
+      void set_prefix (ustring title, ustring prefix);
 
       ustring title; /* title of keybinding set */
       bool loghandle = true; /* log handling */

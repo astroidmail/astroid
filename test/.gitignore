@@ -12,4 +12,5 @@ test_non_existant_file
 test_open_db
 test_mime_message
 test_theme
+test_keybindings
 

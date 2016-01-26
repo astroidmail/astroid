@@ -50,7 +50,7 @@ namespace Astroid {
 
       home = cur_path / path("test/test_home");
 
-      log << LogLevel::test << "cf: using home directory: " << home.c_str () << endl;
+      log << LogLevel::test << "cf: using home and config_dir directory: " << home.c_str () << endl;
 
     } else {
       char * home_c = getenv ("HOME");
@@ -64,11 +64,15 @@ namespace Astroid {
     }
 
     /* default config */
-    char * config_home = getenv ("XDG_CONFIG_HOME");
-    if (config_home == NULL) {
-      config_dir = home / path(".config/astroid");
+    if (test) {
+      config_dir = home;
     } else {
-      config_dir = path(config_home) / path("astroid");
+      char * config_home = getenv ("XDG_CONFIG_HOME");
+      if (config_home == NULL) {
+        config_dir = home / path(".config/astroid");
+      } else {
+        config_dir = path(config_home) / path("astroid");
+      }
     }
 
     /* default data */

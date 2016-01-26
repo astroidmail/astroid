@@ -81,8 +81,18 @@ namespace Astroid {
           if (line.size () == 0) continue;
           if (line[0] == '#') continue;
 
+          std::size_t fnd;
+
+          /* check if this is a run line */
+          fnd = line.find (".run");
+          if (fnd != std::string::npos) {
+            log << debug << "ky: parsing hook: " << line << endl;
+
+
+          }
+
           /* cut off comments appended to the end of the line */
-          std::size_t fnd = line.find ("#");
+          fnd = line.find ("#");
           if (fnd != std::string::npos) {
             line = line.substr (0, fnd);
           }
@@ -109,10 +119,9 @@ namespace Astroid {
   Keybindings::Keybindings () {
   }
 
-  void set_prefix (ustring p) {
+  void Keybindings::set_prefix (ustring t, ustring p) {
+    title  = t;
     prefix = p;
-    log << debug << "ti: loading prefix: " << p << endl;
-
   }
 
   ustring Keybindings::short_help () {

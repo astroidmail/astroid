@@ -50,5 +50,7 @@ testEnv.addUnitTest ('test_mime_message', ['test_mime_message.cc', source_objs])
 
 testEnv.addUnitTest ('test_theme', ['test_theme.cc', source_objs])
 
+testEnv.addUnitTest ('test_keybindings', ['test_keybindings.cc', source_objs])
+
 
 # all the tests added above are automatically added to the 'test' alias
