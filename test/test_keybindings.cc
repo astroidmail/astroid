@@ -16,6 +16,7 @@ BOOST_AUTO_TEST_SUITE(Theme)
   BOOST_AUTO_TEST_CASE(loading_keybindings)
   {
     using namespace Astroid;
+    using Astroid::log;
     setup ();
 
     Astroid::Keybindings::init ();
@@ -43,6 +44,28 @@ BOOST_AUTO_TEST_SUITE(Theme)
     BOOST_CHECK_THROW (
       keys.register_key ("a", "test.a", "duplicate keyspec", [&] (Key) { return true; }),
       duplicatekey_error);
+
+
+    /* test run hook */
+    ustring test_thread = "001";
+
+    auto f = [&] (Key k, ustring cmd) {
+      log << test << "key: run-hook got back: " << cmd << endl;
+
+      ustring final_cmd = ustring::compose (cmd, test_thread);
+      log << test << "key: would run: " << final_cmd << endl;
+
+      return true;
+    };
+
+    keys.register_run ("test.run", f);
+
+    Key n ("n");
+    GdkEventKey e;
+    e.keyval = n.key;
+
+    keys.handle (&e);
+
 
     teardown ();
   }

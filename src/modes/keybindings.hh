@@ -23,6 +23,8 @@ namespace Astroid {
     bool unbound     = false;
     bool userdefined = false;
 
+    bool allow_duplicate_name = false; /* used for run targets */
+
     bool hasaliases = false; /* this is a master key with other aliases */
     bool isalias    = false; /* this key is an alias for another master key */
     const Key * master_key;
@@ -93,6 +95,9 @@ namespace Astroid {
                          ustring help,
                          std::function<bool (Key)>);
 
+      void register_run (ustring name,
+                         std::function<bool (Key, ustring)>);
+
       bool handle (GdkEventKey *);
 
       void clear ();
@@ -104,8 +109,8 @@ namespace Astroid {
       std::map<Key, std::function<bool (Key)>> keys;
       ustring prefix = ""; /* used to load custom hooks */
 
-    public:
       static std::vector<Key>  user_bindings;
+      static std::vector<std::pair<Key, ustring>> user_run_bindings;
       static std::atomic<bool> user_bindings_loaded;
       static const char * user_bindings_file;
 

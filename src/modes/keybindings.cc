@@ -1,4 +1,5 @@
 # include <atomic>
+# include <functional>
 
 # include "astroid.hh"
 # include "keybindings.hh"
@@ -17,7 +18,8 @@ namespace Astroid {
   /* Keybindings {{{ */
   std::atomic<bool> Keybindings::user_bindings_loaded (false);
   const char * Keybindings::user_bindings_file = "keybindings";
-  std::vector<Key>  Keybindings::user_bindings;
+ std::vector<Key>  Keybindings::user_bindings;
+ std::vector<std::pair<Key, ustring>> Keybindings::user_run_bindings;
 
   std::map<guint, ustring> keynames = {
     { GDK_KEY_Down,   "Down" },
@@ -56,16 +58,17 @@ namespace Astroid {
          *
          *  it will be parsed by searching for:
          *
-         *  1. prefix.run( 2. then search backwards for )= 3. split in cmd and
-         *  key
+         *  1. prefix.run(
+         *  2. then search backwards for =
+         *  3. split out key
+         *  4. search backwards for )
+         *  5. split out cmd
          *
-         *  on run the arguments for the cmd need to be got from the current
-         *  mode and passed on.
+         * a mode then registers run targets which is a function that gets the
+         * target, runs it and signals update_thread or similar if necessary.
          *
-         *  on finished run the event [void on_run (bool success)] will be run,
-         *  with 'bool success' indicating a sucessfull run of the command. in
-         *  thread_index this will for instance be used to refresh the current
-         *  thread.
+         * a helper for running the command should be located here.
+         *
          */
 
         std::ifstream bf (bindings_file.c_str());
@@ -86,9 +89,50 @@ namespace Astroid {
           /* check if this is a run line */
           fnd = line.find (".run");
           if (fnd != std::string::npos) {
-            log << debug << "ky: parsing hook: " << line << endl;
+            log << debug << "ky: parsing run-hook: " << line << endl;
 
+            /* get full name */
+            ustring name = line.substr (0, fnd + 4);
 
+            /* get target, between  () */
+            fnd = line.find ("(", fnd);
+
+            if (fnd == std::string::npos) {
+              ustring erru = "invalid 'run'-keyspec";
+              log << error << "ky: " << erru << endl;
+              throw keyspec_error (erru.c_str ());
+            }
+
+            std::size_t rfnd = line.rfind ("=");
+            if (rfnd == std::string::npos) {
+              ustring erru = "invalid 'run'-keyspec";
+              log << error << "ky: " << erru << endl;
+              throw keyspec_error (erru.c_str ());
+            }
+
+            ustring keyspec = line.substr (rfnd+1, std::string::npos);
+            UstringUtils::trim (keyspec);
+
+            rfnd = line.rfind (")", rfnd);
+            if (rfnd == std::string::npos) {
+              ustring erru = "invalid 'run'-keyspec";
+              log << error << "ky: " << erru << endl;
+              throw keyspec_error (erru.c_str ());
+            }
+
+            ustring target = line.substr (fnd + 1, rfnd - fnd -1);
+            UstringUtils::trim (target);
+
+            Key k (keyspec);
+
+            log << debug << "ky: run: " << name << "(" << k.str () << "): " << target << endl;
+
+            k.name = name;
+            k.allow_duplicate_name = true;
+
+            user_run_bindings.push_back (std::make_pair (k, target));
+
+            continue;
           }
 
           /* cut off comments appended to the end of the line */
@@ -293,17 +337,19 @@ namespace Astroid {
     k.hasaliases = !aliases.empty ();
 
     /* check if key name already exists */
-    if (find_if (keys.begin (), keys.end (),
-          [&] (KeyBinding mk) {
-            return mk.first.name == k.name;
-          }) != keys.end ()) {
+    if (!k.allow_duplicate_name) {
+      if (find_if (keys.begin (), keys.end (),
+            [&] (KeyBinding mk) {
+              return mk.first.name == k.name;
+            }) != keys.end ()) {
 
-      log << error << ustring::compose (
-            "key: %1, there is a key with name %2 registered already",
-            k.str (), k.name) << endl;
-      throw duplicatekey_error (ustring::compose (
-            "key: %1, there is a key with name %2 registered already",
-            k.str (), k.name).c_str ());
+        log << error << ustring::compose (
+              "key: %1, there is a key with name %2 registered already",
+              k.str (), k.name) << endl;
+        throw duplicatekey_error (ustring::compose (
+              "key: %1, there is a key with name %2 registered already",
+              k.str (), k.name).c_str ());
+      }
     }
 
     auto r = keys.insert (KeyBinding (k, t));
@@ -372,6 +418,33 @@ namespace Astroid {
           throw duplicatekey_error (err.c_str());
         }
       }
+    }
+  }
+
+  void Keybindings::register_run (ustring name,
+      std::function<bool (Key, ustring)> cb) {
+
+    /* name will be look up in user targets, cb will be
+     * called with target cmd string */
+    auto b = user_run_bindings.begin ();
+
+    while (b = std::find_if (b, user_run_bindings.end (),
+          [&](std::pair<Key, ustring> p) {
+            return p.first.name == name;
+          }),
+        b != user_run_bindings.end ()) {
+
+      /* b is now a matching binding */
+      log << info << "ky: run, binding: " << name << " to: " << b->second << endl;
+
+      std::function <bool (Key)> f = bind (cb, _1, b->second);
+
+      register_key (b->first,
+                    b->first.name,
+                    ustring::compose ("Run hook: %1", b->second),
+                    f);
+
+      b++;
     }
   }
 

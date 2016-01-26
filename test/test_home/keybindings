@@ -15,3 +15,10 @@ test.b=j # double, should throw exception
 # unbound
 test.unbound2=1
 
+
+# test some run targets
+
+test.run(echo %1)=n
+test.run(echo %1)=y
+
+
