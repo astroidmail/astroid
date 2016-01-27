@@ -46,11 +46,10 @@ namespace Astroid {
       ptree config;
       ptree notmuch_config;
 
-      const int CONFIG_VERSION = 2;
+      const int CONFIG_VERSION = 3;
 
     private:
       ptree setup_default_config (bool);
-      void populate_notmuch_config (const std::string&);
 
       /* TODO: split into utils/ somewhere.. */
       /* merge of property trees */

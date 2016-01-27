@@ -107,8 +107,6 @@ namespace Astroid {
     default_config.put ("astroid.config.version", CONFIG_VERSION);
     std::string nm_cfg = path(std_paths.home / path (".notmuch-config")).string();
     default_config.put ("astroid.notmuch_config" , nm_cfg);
-    default_config.put ("astroid.notmuch.db", "~/.mail");
-    default_config.put ("astroid.notmuch.excluded_tags", "muted,spam,deleted");
     default_config.put ("astroid.notmuch.sent_tags", "sent");
 
     default_config.put ("astroid.debug.dryrun_sending", false);
@@ -236,38 +234,14 @@ namespace Astroid {
     write_json (std_paths.config_file.c_str (), config);
   }
 
-  void Config::populate_notmuch_config (const std::string& cfg) {
-    boost::property_tree::read_ini( cfg, notmuch_config);
-
-    std::string nm_db = config.get<std::string> ("astroid.notmuch.db", "");
-    bool deprecated = false;
-    if (!nm_db.empty()) {
-      deprecated = true;
-      log << warn << "astroid.notmuch.db is deprecated. Use database.path in the file configured via astroid.notmuch_config" << endl;
-      if (bfs::exists(nm_db)) {
-        notmuch_config.put ("database.path", nm_db);
-      }
-    }
-
-    std::string excluded_tags = config.get<std::string> ("astroid.notmuch.excluded_tags", "");
-    if (!excluded_tags.empty()) {
-      deprecated = true;
-      log << warn << "astroid.notmuch.excluded_tags is deprecated. Use search.exclude_tags in the file configured via astroid.notmuch_config" << endl;
-      notmuch_config.put ("search.exclude_tags", excluded_tags);
-    }
-
-    if (deprecated) {
-      log << warn << "Deprecated keys astroid.notmuch.db and/or astroid.notmuch.excluded_tags will be ignored starting with Astroid v0.7" << endl;
-    }
-  } 
-
   void Config::load_config (bool initial) {
     if (test) {
       log << info << "cf: test config, loading defaults." << endl;
       config = setup_default_config (true);
       config.put ("poll.interval", 0);
       config.put ("astroid.notmuch.db", "test/mail/test_mail");
-      populate_notmuch_config (path(current_path() / path ("test/mail/test_config")).string());
+      std::string test_nmcfg_path = path(current_path() / path ("test/mail/test_config")).string();
+      boost::property_tree::read_ini (test_nmcfg_path, notmuch_config);
       return;
     }
 
@@ -300,7 +274,9 @@ namespace Astroid {
         write_back_config ();
       }
     }
-    populate_notmuch_config (config.get<std::string> ("astroid.notmuch_config") );
+    boost::property_tree::read_ini (
+      config.get<std::string> ("astroid.notmuch_config"),
+      notmuch_config);
   }
 
   bool Config::check_config (ptree new_config) {
