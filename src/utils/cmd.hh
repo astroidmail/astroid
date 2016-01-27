@@ -18,6 +18,8 @@ namespace Astroid {
     private:
       ustring prefix;
       ustring cmd;
+
+      ustring substitute (ustring);
   };
 }
 

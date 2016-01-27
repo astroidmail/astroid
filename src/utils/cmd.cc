@@ -2,20 +2,22 @@
 # include "astroid.hh"
 # include "log.hh"
 # include "vector_utils.hh"
+# include "config.hh"
 
 # include <glibmm.h>
+# include <boost/filesystem.hpp>
 
 using std::endl;
 using std::string;
+namespace bfs = boost::filesystem;
 
 namespace Astroid {
-  Cmd::Cmd (ustring _prefix, ustring _cmd) {
+  Cmd::Cmd (ustring _prefix, ustring _cmd) : Cmd (_cmd) {
     prefix = _prefix + ": ";
-    cmd = _cmd;
   }
 
   Cmd::Cmd (ustring _cmd) {
-    cmd = _cmd;
+    cmd = substitute (_cmd);
   }
 
   int Cmd::run () {
@@ -40,6 +42,18 @@ namespace Astroid {
     }
 
     return exit;
+  }
+
+  ustring Cmd::substitute (const ustring _cmd) {
+    ustring ncmd = _cmd;
+
+    ustring key = "hooks::";
+    std::size_t fnd = ncmd.find (key);
+    if (fnd != std::string::npos) {
+      ncmd.replace (fnd, key.length (), (astroid->config->config_dir / bfs::path("hooks/")).c_str ());
+    }
+
+    return ncmd;
   }
 }
 
