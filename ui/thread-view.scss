@@ -1,13 +1,32 @@
 /* ui-version: 2 (do not change when modifying theme for yourself) */
 /* Variables */
+@if not(global-variable-exists(background-color)) {
+  $background-color: #ccc;
+}
+
 /* Background colors associated with received emails: */
-$recv-normal: #ffffff;
-$recv-quoted: #e8e8e8;
-$recv-collapsed: #f5f5f5;
+@if not(global-variable-exists(recv-normal)) {
+  $recv-normal: #ffffff;
+}
+@if not(global-variable-exists(recv-quoted)) {
+  $recv-quoted: #e8e8e8;
+}
+@if not(global-variable-exists(recv-collapsed)) {
+  $recv-collapsed: #f5f5f5;
+}
+
 /* Background colors associated with sent emails: */
-$sent-normal: #ffffff;
-$sent-quoted: #e8e8e8;
-$sent-collapsed: #f5f5f5;
+@if not(global-variable-exists(sent-normal)) {
+  $sent-normal: #ffffff;
+}
+
+@if not(global-variable-exists(sent-quoted)) {
+  $sent-quoted: #e8e8e8;
+}
+
+@if not(global-variable-exists(sent-collapsed)) {
+  $sent-collapsed: #f5f5f5;
+}
 
 /* Fonts */
 @if not(global-variable-exists(font-base-size)) {
@@ -366,7 +385,7 @@ body:not(.nohide) .email.hide .header_container .avatar {
 @media screen {
 
     body {
-        background-color: #ccc !important;
+        background-color: $background-color !important;
     }
 
     body:not(.nohide) .email.hide,
