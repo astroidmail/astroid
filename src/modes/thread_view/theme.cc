@@ -40,8 +40,8 @@ namespace Astroid {
 # endif
 
       /* check for user modified theme files in config directory */
-      path user_tv_html = astroid->config->config_dir / def_tv_html;
-      path user_tv_scss = astroid->config->config_dir / def_tv_scss;
+      path user_tv_html = astroid->standard_paths ().config_dir / def_tv_html;
+      path user_tv_scss = astroid->standard_paths ().config_dir / def_tv_scss;
 
       if (exists (user_tv_html)) {
           tv_html = user_tv_html;

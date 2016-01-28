@@ -94,8 +94,6 @@ namespace Astroid {
     public:
       notmuch_database_t * nm_db;
 
-      ptree config;
-
       std::vector<ustring> tags;
 
       void load_tags ();

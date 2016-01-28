@@ -110,17 +110,17 @@ namespace Astroid {
           exit (1);
         }
 
-        ncnf.config_file = path(cnf);
+        ncnf.std_paths.config_file = path(cnf);
 
       } else {
         /* use default */
-        if (exists(ncnf.config_file)) {
-          log << error << "the config file: " << ncnf.config_file.c_str() << " already exists." << endl;
+        if (exists(ncnf.std_paths.config_file)) {
+          log << error << "the config file: " << ncnf.std_paths.config_file.c_str() << " already exists." << endl;
           exit (1);
         }
       }
 
-      log << info << "writing default config to: " << ncnf.config_file.c_str() << endl;
+      log << info << "writing default config to: " << ncnf.std_paths.config_file.c_str() << endl;
       ncnf.load_config (true);
 
       exit (0);
@@ -192,17 +192,17 @@ namespace Astroid {
       }
 
       log << "astroid: loading config: " << vm["config"].as<ustring>().c_str() << endl;
-      config = new Config (vm["config"].as<ustring>().c_str());
+      m_config = new Config (vm["config"].as<ustring>().c_str());
     } else {
       if (test_config) {
-        config = new Config (true);
+        m_config = new Config (true);
       } else {
-        config = new Config ();
+        m_config = new Config ();
       }
     }
 
     /* output db location */
-    ustring db_path = ustring (config->config.get<string> ("astroid.notmuch.db"));
+    ustring db_path = ustring (notmuch_config().get<string> ("database.path"));
     log << info << "notmuch db: " << db_path << endl;
 
     /* set up static classes */
@@ -232,8 +232,20 @@ namespace Astroid {
     return 0;
   }
 
+  const boost::property_tree::ptree& Astroid::config (const std::string& id) const {
+    return m_config->config.get_child(id);
+  }
+
+  const boost::property_tree::ptree& Astroid::notmuch_config () const {
+    return m_config->notmuch_config;
+  }
+
+  const StandardPaths& Astroid::standard_paths() const {
+    return m_config->std_paths;
+  }
+
   void Astroid::main_test () {
-    config = new Config (true);
+    m_config = new Config (true);
 
     /* set up static classes */
     Date::init ();
@@ -253,11 +265,11 @@ namespace Astroid {
 
   Astroid::~Astroid () {
     /* clean up and exit */
-    if (accounts != NULL) delete accounts;
+    delete accounts;
     //if (contacts != NULL) delete contacts;
-    if (config != NULL) delete config;
-    if (poll != NULL) delete poll;
-    if (global_actions != NULL) delete global_actions;
+    delete m_config;
+    delete poll;
+    delete global_actions;
 
     log << info << "astroid: goodbye!" << endl;
     log.del_out_stream (&cout);
@@ -272,7 +284,7 @@ namespace Astroid {
     MainWindow * mw = new MainWindow (); // is freed / destroyed by application
 
     if (open_defaults) {
-      ptree qpt = config->config.get_child ("startup.queries");
+      ptree qpt = config ("startup.queries");
 
       for (const auto &kv : qpt) {
         ustring name = kv.first;

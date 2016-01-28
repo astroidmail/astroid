@@ -18,7 +18,7 @@ namespace Astroid {
     AccountManager::AccountManager () {
     log << info << "ac: initializing accounts.." << endl;
 
-    ptree apt = astroid->config->config.get_child ("accounts");
+    ptree apt = astroid->config ("accounts");
 
     for (const auto &kv : apt) {
       Account * a = new Account ();

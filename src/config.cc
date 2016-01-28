@@ -6,6 +6,7 @@
 # include <boost/filesystem/operations.hpp>
 # include <boost/property_tree/ptree.hpp>
 # include <boost/property_tree/json_parser.hpp>
+# include <boost/property_tree/ini_parser.hpp>
 
 # include "config.hh"
 # include "log.hh"
@@ -25,7 +26,7 @@ namespace Astroid {
 
     load_dirs ();
 
-    config_file = config_dir / path("config");
+    std_paths.config_file = std_paths.config_dir / path("config");
 
     if (!no_load)
       load_config (); // re-sets config_dir to parent of fname
@@ -35,7 +36,7 @@ namespace Astroid {
     test = false;
 
     load_dirs ();
-    config_file = path(fname);
+    std_paths.config_file = path(fname);
     log << info << "cf: loading config: " << fname << endl;
     if (!no_load)
       load_config (); // re-sets config_dir to parent of fname
@@ -48,58 +49,60 @@ namespace Astroid {
 
       path cur_path (current_path() );
 
-      home = cur_path / path("test/test_home");
+      std_paths.home = cur_path / path("test/test_home");
 
-      log << LogLevel::test << "cf: using home directory: " << home.c_str () << endl;
+      log << LogLevel::test << "cf: using home directory: " << std_paths.home.c_str () << endl;
 
     } else {
       char * home_c = getenv ("HOME");
+      log << debug << "HOME: " << home_c << endl;
 
       if (home_c == NULL) {
         log << error << "cf: HOME environment variable not set." << endl;
         exit (1);
       }
 
-      home = path(home_c);
+      std_paths.home = path(home_c);
     }
 
     /* default config */
     char * config_home = getenv ("XDG_CONFIG_HOME");
     if (config_home == NULL) {
-      config_dir = home / path(".config/astroid");
+      std_paths.config_dir = std_paths.home / path(".config/astroid");
     } else {
-      config_dir = path(config_home) / path("astroid");
+      std_paths.config_dir = path(config_home) / path("astroid");
     }
 
     /* default data */
     char * data = getenv ("XDG_DATA_HOME");
     if (data == NULL) {
-      data_dir = home / path(".local/share/astroid");
+      std_paths.data_dir = std_paths.home / path(".local/share/astroid");
     } else {
-      data_dir = path(data) / path("astroid");
+      std_paths.data_dir = path(data) / path("astroid");
     }
 
     /* default cache */
     char * cache = getenv ("XDG_CACHE_HOME");
     if (cache == NULL) {
-      cache_dir = home / path(".cache/astroid");
+      std_paths.cache_dir = std_paths.home / path(".cache/astroid");
     } else {
-      cache_dir = path(cache) / path("astroid");
+      std_paths.cache_dir = path(cache) / path("astroid");
     }
 
     /* default runtime */
     char * runtime = getenv ("XDG_RUNTIME_HOME");
     if (runtime == NULL) {
-      runtime_dir = cache_dir;
+      std_paths.runtime_dir = std_paths.cache_dir;
     } else {
-      runtime_dir = path(runtime) / path("astroid");
+      std_paths.runtime_dir = path(runtime) / path("astroid");
     }
   }
 
-  void Config::setup_default_config (bool initial) {
+  ptree Config::setup_default_config (bool initial) {
+    ptree default_config;
     default_config.put ("astroid.config.version", CONFIG_VERSION);
-    default_config.put ("astroid.notmuch.db", "~/.mail");
-    default_config.put ("astroid.notmuch.excluded_tags", "muted,spam,deleted");
+    std::string nm_cfg = path(std_paths.home / path (".notmuch-config")).string();
+    default_config.put ("astroid.notmuch_config" , nm_cfg);
     default_config.put ("astroid.notmuch.sent_tags", "sent");
 
     default_config.put ("astroid.debug.dryrun_sending", false);
@@ -217,48 +220,48 @@ namespace Astroid {
 
     /* crypto */
     default_config.put ("crypto.gpg.path", "gpg");
+
+    return default_config;
   }
 
   void Config::write_back_config () {
-    log << warn << "cf: writing back config to: " << config_file << endl;
+    log << warn << "cf: writing back config to: " << std_paths.config_file << endl;
 
-    write_json (config_file.c_str (), config);
+    write_json (std_paths.config_file.c_str (), config);
   }
 
   void Config::load_config (bool initial) {
     if (test) {
       log << info << "cf: test config, loading defaults." << endl;
-      setup_default_config (true);
-      config = default_config;
+      config = setup_default_config (true);
       config.put ("poll.interval", 0);
       config.put ("astroid.notmuch.db", "test/mail/test_mail");
+      std::string test_nmcfg_path = path(current_path() / path ("test/mail/test_config")).string();
+      boost::property_tree::read_ini (test_nmcfg_path, notmuch_config);
       return;
     }
 
-    log << info << "cf: loading: " << config_file << endl;
+    log << info << "cf: loading: " << std_paths.config_file << endl;
 
-    config_dir = absolute(config_file.parent_path());
-    if (!is_directory(config_dir)) {
+    std_paths.config_dir = absolute(std_paths.config_file.parent_path());
+    if (!is_directory(std_paths.config_dir)) {
       log << warn << "cf: making config dir.." << endl;
-      create_directories (config_dir);
+      create_directories (std_paths.config_dir);
     }
 
 
-    if (!is_regular_file (config_file)) {
+    if (!is_regular_file (std_paths.config_file)) {
       if (!initial) {
         log << warn << "cf: no config, using defaults." << endl;
       }
-      setup_default_config (true);
-      config = default_config;
+      config = setup_default_config (true);
       write_back_config ();
     } else {
 
       /* loading config file */
       ptree new_config;
-      setup_default_config (false);
-
-      config = default_config;
-      read_json (config_file.c_str(), new_config);
+      config = setup_default_config (false);
+      read_json (std_paths.config_file.c_str(), new_config);
       log << info << "cf: version: " << config.get<int>("astroid.config.version") << endl;
 
       merge_ptree (new_config);
@@ -267,6 +270,9 @@ namespace Astroid {
         write_back_config ();
       }
     }
+    boost::property_tree::read_ini (
+      config.get<std::string> ("astroid.notmuch_config"),
+      notmuch_config);
   }
 
   bool Config::check_config (ptree new_config) {

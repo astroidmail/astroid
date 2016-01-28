@@ -35,7 +35,7 @@ namespace Astroid {
     /* quote original message */
     ostringstream quoted;
 
-    ustring quoting_a = ustring::compose (astroid->config->config.get<string> ("mail.reply.quote_line"),
+    ustring quoting_a = ustring::compose (astroid->config ().get<string> ("mail.reply.quote_line"),
         Address(msg->sender.raw()).fail_safe_name(), msg->pretty_verbose_date());
 
     quoted  << quoting_a.raw ()
