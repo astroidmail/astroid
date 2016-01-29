@@ -67,7 +67,7 @@ namespace Astroid {
 
     /* default config */
     if (test) {
-      std_paths.config_dir = home;
+      std_paths.config_dir = std_paths.home;
     } else {
       char * config_home = getenv ("XDG_CONFIG_HOME");
       if (config_home == NULL) {
@@ -239,7 +239,6 @@ namespace Astroid {
       log << info << "cf: test config, loading defaults." << endl;
       config = setup_default_config (true);
       config.put ("poll.interval", 0);
-      config.put ("astroid.notmuch.db", "test/mail/test_mail");
       std::string test_nmcfg_path = path(current_path() / path ("test/mail/test_config")).string();
       boost::property_tree::read_ini (test_nmcfg_path, notmuch_config);
       return;

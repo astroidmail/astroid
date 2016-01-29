@@ -50,7 +50,7 @@ namespace Astroid {
     ustring key = "hooks::";
     std::size_t fnd = ncmd.find (key);
     if (fnd != std::string::npos) {
-      ncmd.replace (fnd, key.length (), (astroid->config->config_dir / bfs::path("hooks/")).c_str ());
+      ncmd.replace (fnd, key.length (), (astroid->standard_paths ().config_dir / bfs::path("hooks/")).c_str ());
     }
 
     return ncmd;
