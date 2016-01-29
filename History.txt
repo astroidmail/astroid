@@ -33,6 +33,8 @@
 * Franz Fellner: Clean-up coding style and name-space pollution.
 * Hugo Roy: Made a tour of setting up astroid in the wiki.
 * Print message with C-P and print marked messages with t+p.
+* Run-hooks: Run user-defined shell hooks on keypress using keybinding
+  configuration.
 
 == v0.4 / 2015-08-15
 
