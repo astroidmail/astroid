@@ -107,7 +107,6 @@ namespace Astroid {
     default_config.put ("astroid.config.version", CONFIG_VERSION);
     std::string nm_cfg = path(std_paths.home / path (".notmuch-config")).string();
     default_config.put ("astroid.notmuch_config" , nm_cfg);
-    default_config.put ("astroid.notmuch.sent_tags", "sent");
 
     default_config.put ("astroid.debug.dryrun_sending", false);
 
@@ -169,6 +168,7 @@ namespace Astroid {
     default_config.put ("mail.reply.quote_line", "Excerpts from %1's message of %2:"); // %1 = author, %2 = pretty_verbose_date
     default_config.put ("mail.forward.quote_line", "Forwarding %1's message of %2:"); // %1 = author, %2 = pretty_verbose_date
     default_config.put ("mail.forward.disposition", "inline");
+    default_config.put ("mail.sent_tags", "sent");
 
     /* contacts (not in use)
     default_config.put ("contacts.lbdb.cmd", "lbdb");
@@ -327,6 +327,35 @@ namespace Astroid {
 
       changed = true;
     }
+
+    if (version < 3) {
+      log << warn << "config: 'astroid.notmuch.sent_tags' have been moved to 'mail.sent_tags'" << endl;
+
+      config.put ("mail.sent_tags", config.get<string>("astroid.notmuch.sent_tags"));
+      config.erase ("astroid.notmuch.sent_tags");
+
+      changed = true;
+
+      log << warn << "config: astroid now reads standard notmuch options from notmuch config, it is configured through: 'astroid.notmuch_config' and is now set to the default: ~/.notmuch-config. please validate!" << endl;
+    }
+
+    /* check deprecated keys (as of version 3) */
+    try {
+      config.get<string> ("astroid.notmuch.db");
+
+      log << error << "config: option 'astroid.notmuch.db' is deprecated, it is read from notmuch config." << endl;
+    } catch (const boost::property_tree::ptree_bad_path &ex) { }
+
+
+    try {
+      config.get<string> ("astroid.notmuch.excluded_tags");
+      log << error << "config: option 'astroid.notmuch.excluded_tags' is deprecated, it is read from notmuch config." << endl;
+    } catch (const boost::property_tree::ptree_bad_path &ex) { }
+
+    try {
+      config.get<string> ("astroid.notmuch.sent_tags");
+      log << error << "config: option 'astroid.notmuch.sent_tags' is deprecated, it is moved to 'mail.sent_tags'." << endl;
+    } catch (const boost::property_tree::ptree_bad_path &ex) { }
 
     if (version < CONFIG_VERSION) {
       config.put ("astroid.config.version", CONFIG_VERSION);

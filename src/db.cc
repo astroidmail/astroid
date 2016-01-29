@@ -62,10 +62,8 @@ namespace Astroid {
     excluded_tags = VectorUtils::split_and_trim (excluded_tags_s, ",");
     sort (excluded_tags.begin (), excluded_tags.end ());
 
-    // TODO: find a better way to handle sent_tags
-    // Probably via AccountManager?
-    // ustring sent_tags_s = config.get<string> ("sent_tags");
-    ustring sent_tags_s = astroid->config().get<std::string> ("astroid.notmuch.sent_tags");
+    // TODO: find a better way to handle sent_tags, probably via AccountManager?
+    ustring sent_tags_s = astroid->config().get<std::string> ("mail.sent_tags");
     sent_tags = VectorUtils::split_and_trim (sent_tags_s, ",");
     sort (sent_tags.begin (), sent_tags.end ());
   }
