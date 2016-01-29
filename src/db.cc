@@ -59,7 +59,7 @@ namespace Astroid {
 
 
     ustring excluded_tags_s = config.get<string> ("search.exclude_tags");
-    excluded_tags = VectorUtils::split_and_trim (excluded_tags_s, ",");
+    excluded_tags = VectorUtils::split_and_trim (excluded_tags_s, ";");
     sort (excluded_tags.begin (), excluded_tags.end ());
 
     // TODO: find a better way to handle sent_tags, probably via AccountManager?
