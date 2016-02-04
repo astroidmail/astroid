@@ -583,6 +583,9 @@ namespace Astroid {
       const char * ac = notmuch_message_get_header (message, "From");
       if (ac != NULL) {
         a = Address(ustring (ac)).fail_safe_name ();
+      } else {
+        log << error << "nmt: got NULL for author!" << endl;
+        continue;
       }
 
       unread = false;
