@@ -170,13 +170,6 @@ namespace Astroid {
     default_config.put ("mail.forward.disposition", "inline");
     default_config.put ("mail.sent_tags", "sent");
 
-    /* contacts (not in use)
-    default_config.put ("contacts.lbdb.cmd", "lbdb");
-    default_config.put ("contacts.lbdb.enable", false);
-    default_config.put ("contacts.recent.load", 100);
-    default_config.put ("contacts.recent.query", "not tag:spam");
-    */
-
     /* polling */
     default_config.put ("poll.interval", Poll::DEFAULT_POLL_INTERVAL); // seconds
 
