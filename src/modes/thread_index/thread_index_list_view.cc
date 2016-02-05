@@ -148,6 +148,15 @@ namespace Astroid {
           , PopupItem::Forward));
     forward_i->set_tooltip_text ("Forward latest message");
 
+    Gtk::Image * flag = Gtk::manage (new Gtk::Image ());
+    flag->set_from_icon_name ("starred-symbolic", Gtk::ICON_SIZE_LARGE_TOOLBAR);
+    Gtk::MenuItem * flag_i = Gtk::manage (new Gtk::MenuItem (*flag));
+    flag_i->signal_activate ().connect (
+        sigc::bind (
+          sigc::mem_fun (*this, &ThreadIndexListView::popup_activate_generic)
+          , PopupItem::Flag));
+    flag_i->set_tooltip_text ("Flag");
+
     Gtk::Image * archive = Gtk::manage (new Gtk::Image ());
     archive->set_from_icon_name ("gtk-apply", Gtk::ICON_SIZE_LARGE_TOOLBAR);
     Gtk::MenuItem * archive_i = Gtk::manage (new Gtk::MenuItem (*archive));
@@ -159,7 +168,8 @@ namespace Astroid {
 
     item_popup.attach (*reply_i, 0, 1, 0, 1);
     item_popup.attach (*forward_i, 1, 2, 0, 1);
-    item_popup.attach (*archive_i, 2, 3, 0, 1);
+    item_popup.attach (*flag_i, 2, 3, 0, 1);
+    item_popup.attach (*archive_i, 3, 4, 0, 1);
 
     Gtk::MenuItem * sep = Gtk::manage (new Gtk::SeparatorMenuItem ());
     item_popup.append (*sep);
@@ -997,6 +1007,17 @@ namespace Astroid {
 
             /* reply to last message */
             main_window->add_mode (new ForwardMessage (main_window, *(--mthread.messages.end())));
+
+          }
+        }
+        break;
+
+      case Flag:
+        {
+          if (thread) {
+
+            Db db (Db::DbMode::DATABASE_READ_WRITE);
+            main_window->actions.doit (&db, refptr<Action>(new ToggleAction(thread, "flagged")));
 
           }
         }

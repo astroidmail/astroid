@@ -93,6 +93,7 @@ namespace Astroid {
       enum PopupItem {
         Reply,
         Forward,
+        Flag,
         Archive,
         Open,
         OpenNewWindow,
