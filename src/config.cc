@@ -216,7 +216,7 @@ namespace Astroid {
     default_config.put ("thread_view.code_prettify.enable_for_patches", true);
 
     /* crypto */
-    default_config.put ("crypto.gpg.path", "gpg");
+    default_config.put ("crypto.gpg.path", "gpg2");
 
     return default_config;
   }
