@@ -29,22 +29,14 @@ namespace Astroid {
 
       Gtk::Box * box_message;
 
-      enum Field {
-        From = 0,
-        Encryption,
-        Editor,
-        Thread,
-        no_fields // last
-      };
-
       Gtk::ComboBox *from_combo, *encryption_combo,
         *reply_mode_combo;
       Gtk::Revealer *fields_revealer;
       Gtk::Revealer *reply_revealer;
       Gtk::Revealer *encryption_revealer;
 
-      Field current_field = From;
-      void activate_field (Field);
+      bool editor_active = false;
+      void activate_editor (bool editor);
 
       ustring msg_id;
 
@@ -143,17 +135,17 @@ namespace Astroid {
       ustring warning_str;
       ustring info_str;
 
-      void vim_start ();
-      void vim_stop ();
+      void editor_start ();
+      void editor_stop ();
+      /*
       void vim_remote_expr (ustring);
       void vim_remote_keys (ustring);
       void vim_remote_files (ustring);
+      */
 
-      void reset_entry (Gtk::Entry *);
-
-      /* gvim config */
-      std::string gvim_cmd;
-      std::string gvim_args;
+      /* editor config */
+      std::string editor_cmd;
+      std::string editor_args;
 
       AccountManager * accounts;
 

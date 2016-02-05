@@ -103,7 +103,7 @@ namespace Astroid {
 
     pack_start (*box_message, true, 5);
 
-    /* set up message id and random server name for gvim */
+    /* set up message id and random server name for editor */
     id = edit_id++;
 
     char hostname[1024];
@@ -128,8 +128,8 @@ namespace Astroid {
     make_tmpfile ();
 
     /* gvim settings */
-    gvim_cmd                = editor_config.get <string>("gvim.cmd");
-    gvim_args               = editor_config.get <string>("gvim.args");
+    editor_cmd  = editor_config.get <string>("gvim.cmd");
+    editor_args = editor_config.get <string>("gvim.args");
 
     /* gtk::socket:
      * http://stackoverflow.com/questions/13359699/pyside-embed-vim
@@ -555,8 +555,8 @@ namespace Astroid {
 
     vim_ready = true;
 
-    if (current_field == Editor) {
-      activate_field (Editor);
+    if (editor_active) {
+      activate_field (true);
     }
   }
 
@@ -603,7 +603,7 @@ namespace Astroid {
     if (on) {
       prepare_message ();
 
-      current_field = Editor;
+      editor_active = true;
 
       /*
       editor_rev->set_reveal_child (true);
@@ -656,14 +656,12 @@ namespace Astroid {
     }
   }
 
-  void EditMessage::activate_field (Field f) {
+  void EditMessage::activate_editor (bool editor) {
     log << debug << "em: activate field: " << f << endl;
 
-    current_field = f;
+    editor_active = editor;
 
-    if (f == Editor) {
-      // Gtk::IconSize isize  (Gtk::BuiltinIconSize::ICON_SIZE_BUTTON);
-
+    if (editor) {
       log << debug << "em: activate editor." << endl;
 
       if (!socket_ready) {
@@ -687,19 +685,12 @@ namespace Astroid {
 
       }
 
-    } else if (f == Thread) {
+    } else {
       log << debug << "em: focus thread view" << endl;
 
       grab_modal ();
 
       thread_view->grab_focus ();
-
-    } else if (f == From) {
-      //from_combo->set_sensitive (true);
-      from_combo->grab_focus ();
-
-    } else if (f == Encryption) {
-      encryption_combo->grab_focus ();
     }
 
     /* update tab in case something changed */
@@ -1005,7 +996,7 @@ namespace Astroid {
   }
 
   void EditMessage::grab_modal () {
-    if (current_field != Editor) add_modal_grab ();
+    if (!editor_active) add_modal_grab ();
   }
 
   void EditMessage::release_modal () {
