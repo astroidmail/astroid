@@ -1,4 +1,4 @@
-==
+== v0.5 / 2016-02-06
 
 * Startup queries are invincible.
 * q: ask to quit, Q: quit right away.
