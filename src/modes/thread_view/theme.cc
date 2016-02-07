@@ -10,7 +10,7 @@
 # include "log.hh"
 # include "build_config.hh"
 
-# include <sass/context.h>
+# include <sass.h>
 
 using namespace std;
 using namespace boost::filesystem;
