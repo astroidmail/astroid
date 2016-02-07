@@ -63,7 +63,7 @@ namespace Astroid {
     keys.set_prefix ("Thread Index", "thread_index");
 
     keys.register_key ("x", "thread_index.close_pane", "Close thread view pane if open",
-        [&](Key k) {
+        [&](Key) {
           if (current == 1) {
             if (thread_view_loaded && thread_view_visible) {
               /* hide thread view */
@@ -160,7 +160,7 @@ namespace Astroid {
     */
 
     /* slow */
-    threads = notmuch_query_search_threads (query);
+    /* notmuch_status_t st = */ notmuch_query_search_threads_st (query, &threads);
     float diff = (clock () - start) * 1000.0 / CLOCKS_PER_SEC;
 
     refresh_stats (db);
@@ -172,6 +172,8 @@ namespace Astroid {
   }
 
   void ThreadIndex::refresh_stats (Db * dbs) {
+    /* notmuch_status_t st; */
+
     /* stats */
     log << debug << "ti: refresh stats." << endl;
     notmuch_query_t * query_t =  notmuch_query_create (dbs->nm_db, query_string.c_str ());
@@ -179,7 +181,7 @@ namespace Astroid {
       notmuch_query_add_tag_exclude (query_t, t.c_str());
     }
     notmuch_query_set_omit_excluded (query_t, NOTMUCH_EXCLUDE_TRUE);
-    total_messages = notmuch_query_count_messages (query_t); // destructive
+    /* st = */ notmuch_query_count_messages_st (query_t, &total_messages); // destructive
     notmuch_query_destroy (query_t);
 
     ustring unread_q_s = "(" + query_string + ") AND tag:unread";
@@ -188,7 +190,7 @@ namespace Astroid {
       notmuch_query_add_tag_exclude (unread_q, t.c_str());
     }
     notmuch_query_set_omit_excluded (unread_q, NOTMUCH_EXCLUDE_TRUE);
-    unread_messages = notmuch_query_count_messages (unread_q); // destructive
+    /* st = */ notmuch_query_count_messages_st (unread_q, &unread_messages); // destructive
     notmuch_query_destroy (unread_q);
 
     set_label (get_label ());

@@ -100,12 +100,18 @@ namespace Astroid {
     notmuch_query_t * q = notmuch_query_create (nm_db, "thread:fail");
 
     /* this will produce an error, but no way to ensure failure */
-    notmuch_query_count_threads (q);
+    unsigned int c;
+    notmuch_status_t st = notmuch_query_count_threads_st (q, &c);
 
-    /* this returns NULL when error */
-    notmuch_threads_t * threads = notmuch_query_search_threads (q);
+    if (st != NOTMUCH_STATUS_SUCCESS) invalid = true;
 
-    if (threads == NULL) invalid = true;
+    if (!invalid) {
+      /* this returns NULL when error */
+      notmuch_threads_t * threads;
+      st = notmuch_query_search_threads_st (q, &threads);
+
+      if (st != NOTMUCH_STATUS_SUCCESS || threads == NULL) invalid = true;
+    }
 
     notmuch_query_destroy (q);
 
@@ -166,7 +172,7 @@ namespace Astroid {
 
       }
 
-    } while ((s == NOTMUCH_STATUS_XAPIAN_EXCEPTION) && (time <= db_write_open_timeout));
+    } while (block && (s == NOTMUCH_STATUS_XAPIAN_EXCEPTION) && (time <= db_write_open_timeout));
 
     if (s != NOTMUCH_STATUS_SUCCESS) {
       log << error << "db: error: failed opening database for writing, have you configured the notmuch database path correctly?" << endl;
@@ -338,7 +344,8 @@ namespace Astroid {
     }
     notmuch_query_set_omit_excluded (query, NOTMUCH_EXCLUDE_TRUE);
 
-    int c = notmuch_query_count_threads (query);
+    unsigned int c;
+    /* notmuch_status_t st = */ notmuch_query_count_threads_st (query, &c);
 
     if (c > 1) {
       throw database_error ("db: got more than one thread for thread id.");
@@ -359,19 +366,22 @@ namespace Astroid {
     string query_s = "thread:" + thread_id;
 
     notmuch_query_t * query = notmuch_query_create (nm_db, query_s.c_str());
-    notmuch_threads_t * nm_threads = notmuch_query_search_threads (query);
     notmuch_thread_t  * nm_thread;
+    notmuch_threads_t * nm_threads;
+    notmuch_status_t st;
 
-    if (nm_threads == NULL) {
+    st = notmuch_query_search_threads_st (query, &nm_threads);
+
+    if ((st != NOTMUCH_STATUS_SUCCESS) || nm_threads == NULL) {
       /* try to reopen db in case we got an Xapian::DatabaseModifiedError */
       log << warn << "db: trying to reopen database.." << endl;
 
       reopen ();
 
       query = notmuch_query_create (nm_db, query_s.c_str());
-      nm_threads = notmuch_query_search_threads (query);
+      st = notmuch_query_search_threads_st (query, &nm_threads);
 
-      if (nm_threads == NULL) {
+      if ((st != NOTMUCH_STATUS_SUCCESS) || nm_threads == NULL) {
         /* could not do that, failing */
         log << error << "db: to no avail, failure is iminent." << endl;
 
@@ -438,14 +448,18 @@ namespace Astroid {
     log << info << "db: running test query.." << endl;
     auto q = notmuch_query_create (nm_db, "label:inbox");
 
+    unsigned int c;
+    /* notmuch_status_t st = */ notmuch_query_count_messages_st (q, &c);
+
     log << info << "query: " << notmuch_query_get_query_string (q) << ", approx: "
-         << notmuch_query_count_messages (q) << " messages." << endl;
+         << c << " messages." << endl;
 
     notmuch_messages_t * messages;
     notmuch_message_t  * message;
+    notmuch_status_t st;
 
-    for (messages = notmuch_query_search_messages (q);
-         notmuch_messages_valid (messages);
+    for (st = notmuch_query_search_messages_st (q, &messages);
+         (st == NOTMUCH_STATUS_SUCCESS) && notmuch_messages_valid (messages);
          notmuch_messages_move_to_next (messages)) {
       message = notmuch_messages_get (messages);
 

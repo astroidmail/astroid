@@ -390,7 +390,7 @@ namespace Astroid {
       traverse_recursive(parent, "", parent, method);
     }
 
-  void Config::merge(const ptree &parent,
+  void Config::merge(const ptree & /* parent */,
              const ptree::path_type &childPath,
              const ptree &child) {
 

@@ -18,8 +18,8 @@ namespace Astroid {
       ThreadIndex (MainWindow *, ustring, ustring = "");
       ~ThreadIndex ();
 
-      int total_messages;
-      int unread_messages;
+      unsigned int total_messages;
+      unsigned int unread_messages;
 
       int thread_load_step    = 150;
       int current_thread      = 0;

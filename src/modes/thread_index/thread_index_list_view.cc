@@ -848,7 +848,7 @@ namespace Astroid {
         });
 
     keys->register_run ("thread_index.run",
-        [&] (Key k, ustring cmd) {
+        [&] (Key, ustring cmd) {
           auto t = get_current_thread ();
 
           if (t) {
@@ -1057,8 +1057,8 @@ namespace Astroid {
   }
 
   void ThreadIndexListView::on_my_row_activated (
-      const Gtk::TreeModel::Path & path,
-      Gtk::TreeViewColumn * column) {
+      const Gtk::TreeModel::Path &,
+      Gtk::TreeViewColumn *) {
 
     auto thread = get_current_thread ();
 

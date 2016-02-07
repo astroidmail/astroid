@@ -54,7 +54,7 @@ namespace Astroid {
   void ThreadIndexListCellRenderer::render_vfunc (
       const ::Cairo::RefPtr< ::Cairo::Context>&cr,
       Gtk::Widget    &widget,
-      const Gdk::Rectangle &background_area,
+      const Gdk::Rectangle & /* background_area */,
       const Gdk::Rectangle &cell_area,
       Gtk::CellRendererState flags)
   {
@@ -128,7 +128,7 @@ namespace Astroid {
 
   void ThreadIndexListCellRenderer::render_background ( // {{{
       const ::Cairo::RefPtr< ::Cairo::Context>&cr,
-      Gtk::Widget &widget,
+      Gtk::Widget & /* widget */,
       const Gdk::Rectangle &background_area,
       Gtk::CellRendererState flags) {
 
@@ -154,7 +154,7 @@ namespace Astroid {
   /* render icons {{{ */
   void ThreadIndexListCellRenderer::render_marked (
       const ::Cairo::RefPtr< ::Cairo::Context>&cr,
-      Gtk::Widget &widget,
+      Gtk::Widget & /* widget */,
       const Gdk::Rectangle &cell_area ) {
 
 
@@ -181,7 +181,7 @@ namespace Astroid {
 
   void ThreadIndexListCellRenderer::render_flagged (
       const ::Cairo::RefPtr< ::Cairo::Context>&cr,
-      Gtk::Widget &widget,
+      Gtk::Widget & /* widget */,
       const Gdk::Rectangle &cell_area ) {
 
 
@@ -208,7 +208,7 @@ namespace Astroid {
 
   void ThreadIndexListCellRenderer::render_attachment (
       const ::Cairo::RefPtr< ::Cairo::Context>&cr,
-      Gtk::Widget &widget,
+      Gtk::Widget & /* widget */,
       const Gdk::Rectangle &cell_area ) {
 
 
@@ -235,7 +235,7 @@ namespace Astroid {
 
   void ThreadIndexListCellRenderer::render_delimiter ( // {{{
       const ::Cairo::RefPtr< ::Cairo::Context>&cr,
-      Gtk::Widget &widget,
+      Gtk::Widget & /*widget */,
       const Gdk::Rectangle &cell_area ) {
 
     cr->set_line_width(0.5);
@@ -528,7 +528,7 @@ namespace Astroid {
 
   void ThreadIndexListCellRenderer::get_preferred_height_for_width_vfunc (
       Gtk::Widget& widget,
-      int width,
+      int /* width */,
       int& minimum_height,
       int& natural_height) const {
 
@@ -538,7 +538,7 @@ namespace Astroid {
   }
 
   void ThreadIndexListCellRenderer::get_preferred_width_vfunc (
-      Gtk::Widget& widget,
+      Gtk::Widget& /* widget*/,
       int& minimum_width,
       int& natural_width) const {
 
@@ -547,12 +547,12 @@ namespace Astroid {
   }
 
   bool ThreadIndexListCellRenderer::activate_vfunc(
-      GdkEvent* event,
-      Gtk::Widget& widget,
-      const Glib::ustring& path,
-      const Gdk::Rectangle& background_area,
-      const Gdk::Rectangle& cell_area,
-      Gtk::CellRendererState flags)
+      GdkEvent* /* event */,
+      Gtk::Widget& /* widget */,
+      const Glib::ustring& /* path */,
+      const Gdk::Rectangle& /* background_area */,
+      const Gdk::Rectangle& /* cell_area */,
+      Gtk::CellRendererState /* flags */)
   {
     return false;
   }

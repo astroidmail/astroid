@@ -219,16 +219,18 @@ namespace Astroid {
 
         notmuch_query_t * qry = notmuch_query_create (db.nm_db, query.c_str ());
 
-        int total_threads = notmuch_query_count_threads (qry);
+        unsigned int total_threads;
+        notmuch_status_t st = notmuch_query_count_threads_st (qry, &total_threads);
 
         log << info << "poll: " << total_threads << " threads changed, updating.." << endl;
 
-        if (total_threads > 0) {
-          notmuch_threads_t * threads = notmuch_query_search_threads (qry);
+        if (st == NOTMUCH_STATUS_SUCCESS && total_threads > 0) {
+          notmuch_threads_t * threads;
           notmuch_thread_t  * thread;
+          st = notmuch_query_search_threads_st (qry, &threads);
 
           for (;
-               notmuch_threads_valid (threads);
+               (st == NOTMUCH_STATUS_SUCCESS) && notmuch_threads_valid (threads);
                notmuch_threads_move_to_next (threads)) {
 
             thread = notmuch_threads_get (threads);

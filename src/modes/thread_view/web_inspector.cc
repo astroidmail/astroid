@@ -16,8 +16,8 @@ namespace Astroid {
 
 
   WebKitWebView * ThreadView::activate_inspector (
-      WebKitWebInspector     * web_inspector,
-      WebKitWebView          * web_view)
+      WebKitWebInspector     * /* web_inspector */,
+      WebKitWebView          * /* web_view */)
   {
     /* set up inspector window */
     log << info << "tv: starting conversation inspector.." << std::endl;
@@ -40,7 +40,7 @@ namespace Astroid {
     return ((ThreadView *) data)->show_inspector (wi);
   }
 
-  bool ThreadView::show_inspector (WebKitWebInspector * wi) {
+  bool ThreadView::show_inspector (WebKitWebInspector * /* wi */) {
     log << info << "tv: show inspector.." << std::endl;
 
     inspector_window->show_all ();
