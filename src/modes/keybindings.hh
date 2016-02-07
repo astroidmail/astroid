@@ -64,7 +64,7 @@ namespace Astroid {
       void set_prefix (ustring title, ustring prefix);
 
       ustring title; /* title of keybinding set */
-      bool loghandle = true; /* log handling */
+      bool loghandle = false; /* log handling */
 
       typedef std::pair<Key, std::function<bool (Key)>> KeyBinding;
 

@@ -286,7 +286,7 @@ namespace Astroid {
      * name  name used for configurable keys
      */
 
-    log << debug << "key: registering key: " << name << ": " << k.str () << endl;
+    /* log << debug << "key: registering key: " << name << ": " << k.str () << endl; */
 
     /* check if these are user configured */
     auto res = find_if (user_bindings.begin (),
@@ -336,7 +336,7 @@ namespace Astroid {
     }
 
     if (k.unbound) {
-      log << info << "key: unbound key: " << name << " does not have a key associated." << endl;
+      /* log << info << "key: unbound key: " << name << " does not have a key associated." << endl; */
       return;
     }
 
@@ -396,7 +396,7 @@ namespace Astroid {
 
     for (auto & ka : aliases) {
 
-      log << debug << "key: alias: " << ka.str () <<  "(" << ka.key << ")" << endl;
+      /* log << debug << "key: alias: " << ka.str () <<  "(" << ka.key << ")" << endl; */
 
       ka.name = k.name;
       ka.help = k.help;
