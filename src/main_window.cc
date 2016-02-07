@@ -149,36 +149,55 @@ namespace Astroid {
           return true;
         });
 
-    keys.register_key (Key(false, true, (guint) GDK_KEY_1),
-        { Key (false, true, (guint) GDK_KEY_2),
-          Key (false, true, (guint) GDK_KEY_3),
-          Key (false, true, (guint) GDK_KEY_4),
-          Key (false, true, (guint) GDK_KEY_5),
-          Key (false, true, (guint) GDK_KEY_6),
-          Key (false, true, (guint) GDK_KEY_7),
-          Key (false, true, (guint) GDK_KEY_8),
-          Key (false, true, (guint) GDK_KEY_9),
-          Key (false, true, (guint) GDK_KEY_0) },
-        "main_window.jump_to_page",
-        "Jump to page",
-        [&] (Key k) {
-          int pg = k.key - GDK_KEY_0;
+    keys.register_key ("M-1",
+        "main_window.jump_to_page_1",
+        "Jump to page 1",
+        bind (&MainWindow::jump_to_page, this, _1, 1));
 
-          if (pg == 0) {
-            pg = notebook.get_n_pages () - 1;
-          } else {
-            pg--;
-          }
+    keys.register_key ("M-2",
+        "main_window.jump_to_page_2",
+        "Jump to page 2",
+        bind (&MainWindow::jump_to_page, this, _1, 2));
 
-          log << debug << "mw: swapping to page: " << pg << endl;
+    keys.register_key ("M-3",
+        "main_window.jump_to_page_3",
+        "Jump to page 3",
+        bind (&MainWindow::jump_to_page, this, _1, 3));
 
-          if (notebook.get_current_page () != pg) {
-            set_active (pg);
-          }
+    keys.register_key ("M-4",
+        "main_window.jump_to_page_4",
+        "Jump to page 4",
+        bind (&MainWindow::jump_to_page, this, _1, 4));
 
+    keys.register_key ("M-5",
+        "main_window.jump_to_page_5",
+        "Jump to page 5",
+        bind (&MainWindow::jump_to_page, this, _1, 5));
 
-          return true;
-        });
+    keys.register_key ("M-6",
+        "main_window.jump_to_page_6",
+        "Jump to page 6",
+        bind (&MainWindow::jump_to_page, this, _1, 6));
+
+    keys.register_key ("M-7",
+        "main_window.jump_to_page_7",
+        "Jump to page 7",
+        bind (&MainWindow::jump_to_page, this, _1, 7));
+
+    keys.register_key ("M-8",
+        "main_window.jump_to_page_8",
+        "Jump to page 8",
+        bind (&MainWindow::jump_to_page, this, _1, 8));
+
+    keys.register_key ("M-9",
+        "main_window.jump_to_page_9",
+        "Jump to page 9",
+        bind (&MainWindow::jump_to_page, this, _1, 9));
+
+    keys.register_key ("M-0",
+        "main_window.jump_to_page_0",
+        "Jump to page 0",
+        bind (&MainWindow::jump_to_page, this, _1, 0));
 
     keys.register_key ("x", "main_window.close_page",
         "Close mode (or window if other windows are open)",
@@ -261,6 +280,22 @@ namespace Astroid {
         });
 
     // }}}
+  }
+
+  bool MainWindow::jump_to_page (Key, int pg) {
+    if (pg == 0) {
+      pg = notebook.get_n_pages () - 1;
+    } else {
+      pg--;
+    }
+
+    log << debug << "mw: swapping to page: " << pg << endl;
+
+    if (notebook.get_current_page () != pg) {
+      set_active (pg);
+    }
+
+    return true;
   }
 
   void MainWindow::set_title (ustring t) {
