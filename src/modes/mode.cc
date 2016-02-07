@@ -116,6 +116,9 @@ namespace Astroid {
       return;
     }
 
+    /* allow events to be sent to the mode */
+    rev_yes_no->add_modal_grab ();
+
     yes_no_waiting = true;
     yes_no_closure = closure;
 
@@ -132,6 +135,9 @@ namespace Astroid {
     } else {
       log << info << "mode: yes-no: got no :/" << endl;
     }
+
+    /* return modal to original mode */
+    grab_modal ();
 
     if (yes_no_waiting) {
       if (yes_no_closure != NULL) {
