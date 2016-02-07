@@ -10,7 +10,12 @@
 # include "log.hh"
 # include "build_config.hh"
 
-# include <sass.h>
+# ifdef SASSCTX_CONTEXT_H
+  # include <sass/context.h>
+# elif SASSCTX_SASS_CONTEXT_H
+  # include <sass_context.h>
+# endif
+
 
 using namespace std;
 using namespace boost::filesystem;

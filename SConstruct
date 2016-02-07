@@ -179,8 +179,12 @@ if not conf.CheckPKG('webkitgtk-3.0'):
   print "webkitgtk not found."
   Exit (1)
 
-if not conf.CheckPKG('libsass'):
-  print "libsass not found."
+if conf.CheckLibWithHeader ('libsass', 'sass_context.h', 'c'):
+  env.AppendUnique (CPPFLAGS = [ '-DSASSCTX_SASS_CONTEXT_H' ])
+elif conf.CheckLibWithHeader ('libsass', 'sass/context.h', 'c'):
+  env.AppendUnique (CPPFLAGS = [ '-DSASSCTX_CONTEXT_H' ])
+else:
+  print "libsass must be installed: could not find header file."
   Exit (1)
 
 if not conf.CheckLibWithHeader ('notmuch', 'notmuch.h', 'c'):
