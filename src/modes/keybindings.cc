@@ -18,8 +18,8 @@ namespace Astroid {
   /* Keybindings {{{ */
   std::atomic<bool> Keybindings::user_bindings_loaded (false);
   const char * Keybindings::user_bindings_file = "keybindings";
- std::vector<Key>  Keybindings::user_bindings;
- std::vector<std::pair<Key, ustring>> Keybindings::user_run_bindings;
+  std::vector<Key>  Keybindings::user_bindings;
+  std::vector<std::pair<Key, ustring>> Keybindings::user_run_bindings;
 
   std::map<guint, ustring> keynames = {
     { GDK_KEY_Down,   "Down" },
@@ -29,6 +29,8 @@ namespace Astroid {
     { GDK_KEY_End,    "End" },
     { GDK_KEY_Return, "Return" },
     { GDK_KEY_KP_Enter, "KP_Enter" },
+    { GDK_KEY_Page_Up, "Page_Up" },
+    { GDK_KEY_Page_Down, "Page_Down" },
   };
 
   void Keybindings::init () {
