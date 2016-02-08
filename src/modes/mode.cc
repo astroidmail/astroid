@@ -4,6 +4,8 @@
 # include "log.hh"
 
 namespace Astroid {
+  guint32 Mode::mode_event_handled;
+
   Mode::Mode (MainWindow * mw) :
     Gtk::Box (Gtk::ORIENTATION_VERTICAL)
   {
@@ -117,13 +119,15 @@ namespace Astroid {
     }
 
     /* allow events to be sent to the mode */
-    rev_yes_no->add_modal_grab ();
+    release_modal ();
+    grab_focus ();
 
     yes_no_waiting = true;
     yes_no_closure = closure;
 
     rev_yes_no->set_reveal_child (true);
     label_yes_no->set_text (question + " [y/n]");
+    /* rev_yes_no->add_modal_grab (); */
   }
 
   void Mode::answer_yes_no (bool yes) {
@@ -169,6 +173,25 @@ namespace Astroid {
   }
 
   bool Mode::mode_key_handler (GdkEventKey * event) {
+    Widget * wp = get_parent ();
+    Mode * parent = dynamic_cast<Mode *> (wp);
+    MainWindow * mw = dynamic_cast<MainWindow *> (wp);
+
+    while (mw == NULL) {
+      if (parent != NULL) {
+        if (parent->mode_key_handler (event)) {
+          return true;
+        }
+
+        /* only re-run for parent, will be recursively called */
+        break;
+      }
+
+      wp = wp->get_parent ();
+      parent = dynamic_cast<Mode *> (wp);
+      mw = dynamic_cast<MainWindow *> (wp);
+    }
+
     if (yes_no_waiting) {
       switch (event->keyval) {
         case GDK_KEY_Y:
@@ -219,7 +242,14 @@ namespace Astroid {
 
   bool Mode::on_key_press_event (GdkEventKey *event) {
     /* log << debug << "mode: key: " << typeid (*this).name () << endl; */
-    if (mode_key_handler (event)) return true;
+
+    /* we need to check all parent widget modes too, before checking for the
+     * default keys. */
+
+    if (event->time > mode_event_handled) {
+      if (mode_key_handler (event)) return true;
+      mode_event_handled = event->time;
+    }
 
     return keys.handle (event);
   }

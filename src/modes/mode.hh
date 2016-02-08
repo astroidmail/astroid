@@ -39,6 +39,8 @@ namespace Astroid {
       bool multi_waiting  = false;
       Keybindings multi_keybindings;
 
+      static guint32 mode_event_handled;
+
     protected:
       const int MAX_TAB_LEN = 35;
       void set_label (ustring);
