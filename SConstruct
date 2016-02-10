@@ -9,11 +9,9 @@ env = Environment ()
 
 AddOption ("--release", action="store", dest="release", default="git", help="Make a release (default: git describe output)")
 AddOption ("--enable-debug", action="store", dest="debug", default=None, help="Enable the -g flag for debugging (default: true when release is git)")
-AddOption ("--prefix", action="store", dest="prefix", default=None, help="Directory to install astroid under")
+AddOption ("--prefix", action="store", dest="prefix", default = '/usr/local', help="Directory to install astroid under")
 
 prefix = GetOption ("prefix")
-default_prefix = (prefix == None)
-prefix = prefix if prefix else '/usr'
 
 release = GetOption("release")
 if release != "git":
@@ -238,13 +236,7 @@ vfd.write ("""// this is an automatically generated file. it will be overwritten
 
 vfd.write ("# pragma once\n")
 vfd.write ("# define GIT_DESC \"%s\"\n" % GIT_DESC)
-
-# write a prefix only if it is specified or
-# we are in release.
-if (in_release or not default_prefix):
-  vfd.write ("# define PREFIX \"%s\"\n" % prefix)
-else:
-  vfd.write ("// # define PREFIX\n")
+vfd.write ("# define PREFIX \"%s\"\n" % prefix)
 
 vfd.write ("\n")
 vfd.close ()

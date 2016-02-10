@@ -233,7 +233,9 @@ namespace Astroid {
     if (!dryrun) {
       if (output)
         log << warn << "cm: sending message from account: " << account->full_address () << endl;
-      ustring send_command = account->sendmail ;
+
+      ustring send_command = account->sendmail;
+
       FILE * sendMailPipe = popen(send_command.c_str(), "w");
       GMimeStream * sendMailStream = g_mime_stream_file_new(sendMailPipe);
       g_mime_stream_file_set_owner(GMIME_STREAM_FILE(sendMailStream), false);

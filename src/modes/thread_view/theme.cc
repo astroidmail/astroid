@@ -8,7 +8,7 @@
 # include "astroid.hh"
 # include "config.hh"
 # include "log.hh"
-# include "build_config.hh"
+# include "utils/resource.hh"
 
 # ifdef SASSCTX_CONTEXT_H
   # include <sass/context.h>
@@ -34,54 +34,13 @@ namespace Astroid {
 
     /* load css, html and DOM objects */
     if (!theme_loaded) {
-      path def_tv_html = path(thread_view_html_f);
-      path def_tv_scss = path(thread_view_scss_f);
-# ifdef PREFIX
-      path tv_html = path(PREFIX) / path("share/astroid") / def_tv_html;
-      path tv_scss = path(PREFIX) / path("share/astroid") / def_tv_scss;
-# else
-      path tv_html = def_tv_html;
-      path tv_scss = def_tv_scss;
-# endif
-
-      /* check for user modified theme files in config directory */
-      path user_tv_html = astroid->standard_paths ().config_dir / def_tv_html;
-      path user_tv_scss = astroid->standard_paths ().config_dir / def_tv_scss;
-
-      if (exists (user_tv_html)) {
-          tv_html = user_tv_html;
-          log << info << "tv: using user html file: " << absolute(tv_html).c_str () << endl;
-
-
-      } else if (!exists(tv_html)) {
-        log << error << "tv: cannot find html theme file: " << absolute(tv_html).c_str() << ", using default.." << endl;
-        if (!exists(def_tv_html)) {
-          log << error << "tv: cannot find default html theme file." << endl;
-          exit (1);
-        }
-
-        tv_html = def_tv_html;
-      }
+      path tv_html = Resource (true, thread_view_html_f).get_path ();
+      path tv_scss = Resource (true, thread_view_scss_f).get_path ();
 
       if (!check_theme_version (tv_html)) {
 
         log << error << "tv: html file version does not match!" << endl;
 
-      }
-
-      if (exists (user_tv_scss)) {
-          tv_scss = user_tv_scss;
-          log << info << "tv: using user scss file: " << absolute(tv_scss).c_str () << endl;
-
-
-      } else if (!exists(tv_scss)) {
-        log << error << "tv: cannot find scss theme file: " << absolute(tv_scss).c_str() << ", using default.." << endl;
-        if (!exists(def_tv_scss)) {
-          log << error << "tv: cannot find default scss theme file." << endl;
-          exit (1);
-        }
-
-        tv_scss = def_tv_scss;
       }
 
       if (!check_theme_version (tv_scss)) {
