@@ -38,6 +38,11 @@ namespace Astroid {
 
     font_description = Pango::FontDescription (font_desc_string);
 
+    /* https://developer.gnome.org/pangomm/stable/classPango_1_1FontDescription.html#details */
+    if (font_description.get_size () == 0) {
+      log << warn << "thread_index.cell.font_description: no size specified, expect weird behaviour." << endl;
+    }
+
     line_spacing  = ti.get<int> ("line_spacing");
     date_len      = ti.get<int> ("date_length");
     message_count_len = ti.get<int> ("message_count_length");
