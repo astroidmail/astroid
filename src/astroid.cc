@@ -263,6 +263,10 @@ namespace Astroid {
     poll = new Poll (false);
   }
 
+  bool Astroid::in_test () {
+    return m_config->test;
+  }
+
   Astroid::~Astroid () {
     /* clean up and exit */
     delete accounts;

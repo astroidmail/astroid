@@ -1,5 +1,6 @@
 # include "resource.hh"
 # include "build_config.hh"
+# include "astroid.hh"
 # include "config.hh"
 # include "log.hh"
 
@@ -17,6 +18,15 @@ namespace Astroid {
 
     /* if this resource is user-configurable, check there first */
     path user_p = astroid->standard_paths ().config_dir / local_p;
+
+    if (astroid->in_test ()) {
+      if (!exists (local_p)) {
+        log << test << "re: could not find local resource: " << local_p.c_str () << endl;
+        exit (1);
+      }
+      finalpath = local_p;
+      return;
+    }
 
     if (has_user) {
       if (exists (user_p)) {
