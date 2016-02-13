@@ -55,7 +55,7 @@ namespace Astroid {
       log << info << "re: using installed resource: " << absolute (prefix_p).c_str () << endl;
       finalpath = prefix_p;
     } else {
-      log << error << "re: could not find resource: " << local_p.c_str () << " or " << prefix_p.c_str () << endl;
+      log << error << "re: could not find resource: " << prefix_p.c_str () << endl;
       exit (1);
     }
 # endif
