@@ -119,8 +119,7 @@ namespace Astroid {
     }
 
     /* allow events to be sent to the mode */
-    release_modal ();
-    grab_focus ();
+    main_window->ungrab_active ();
 
     yes_no_waiting = true;
     yes_no_closure = closure;
@@ -141,7 +140,7 @@ namespace Astroid {
     }
 
     /* return modal to original mode */
-    grab_modal ();
+    main_window->grab_active (main_window->current);
 
     if (yes_no_waiting) {
       if (yes_no_closure != NULL) {
@@ -241,7 +240,7 @@ namespace Astroid {
   }
 
   bool Mode::on_key_press_event (GdkEventKey *event) {
-    /* log << debug << "mode: key: " << typeid (*this).name () << endl; */
+    /* log << debug << "mode: key: " << typeid (*this).name () << std::endl; */
 
     /* we need to check all parent widget modes too, before checking for the
      * default keys. */

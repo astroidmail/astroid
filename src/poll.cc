@@ -47,7 +47,7 @@ namespace Astroid {
   }
 
   bool Poll::periodic_polling () {
-    if (auto_polling_enabled) {
+    if (auto_polling_enabled && !astroid->in_failure ()) {
       chrono::duration<double> elapsed = chrono::steady_clock::now() - last_poll;
 
       if (elapsed.count () >= poll_interval) {

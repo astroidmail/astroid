@@ -50,12 +50,18 @@ namespace Astroid {
     auto now_time_t = std::chrono::system_clock::to_time_t( now );
     auto now_tm     = std::localtime( &now_time_t );
 
+
     stringstream time_str;
     time_str << "("
          << setw(2) << setfill('0') << now_tm->tm_hour << ":"
          << setw(2) << setfill('0') << now_tm->tm_min << ":"
          << setw(2) << setfill('0') << now_tm->tm_sec << ")";
 
+    LogLine l (_next_level, time_str.str (), _next_line.str ());
+
+    if (_next_level == fatal) {
+      astroid->fail (_next_line.str ());
+    }
 
     lock_guard<mutex> grd_s (m_outstreams);
     for (auto &o : out_streams) {
@@ -67,8 +73,9 @@ namespace Astroid {
 # endif
     }
 
+
     lock_guard<mutex> grd (m_lines);
-    lines.push (LogLine (_next_level, time_str.str (), _next_line.str()));
+    lines.push (l);
 
     _next_line.str (string());
     _next_line.clear ();
@@ -92,6 +99,7 @@ namespace Astroid {
       case info:  return "info ";
       case warn:  return "warn ";
       case error: return "ERROR";
+      case fatal: return "FATAL";
       case test:  return "TEST ";
       default:    return "unknown error level!";
     }
