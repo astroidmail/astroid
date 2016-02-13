@@ -215,9 +215,6 @@ namespace Astroid {
     /* set up accounts */
     accounts = new AccountManager ();
 
-    /* set up contacts */
-    //contacts = new Contacts ();
-
     /* set up global actions */
     global_actions = new GlobalActions ();
 
@@ -258,9 +255,6 @@ namespace Astroid {
 
     /* set up accounts */
     accounts = new AccountManager ();
-
-    /* set up contacts */
-    //contacts = new Contacts ();
 
     /* set up global actions */
     global_actions = new GlobalActions ();
