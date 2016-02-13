@@ -48,6 +48,7 @@ namespace Astroid {
 
     protected:
       Config * m_config;
+      bool     _in_test;
       bool     _in_failure;
       bool     _failmode_shown;
       bool     _is_main_window_ready;

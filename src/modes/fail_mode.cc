@@ -42,6 +42,8 @@ namespace Astroid {
 
     fail_text.set_markup (errmsg);
 
+    fail_text.set_line_wrap (true);
+
     show_all ();
   }
 

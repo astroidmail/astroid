@@ -203,8 +203,10 @@ namespace Astroid {
     }
 
     /* output db location */
-    ustring db_path = ustring (notmuch_config().get<string> ("database.path"));
-    log << info << "notmuch db: " << db_path << endl;
+    if (!in_failure ()) {
+      ustring db_path = ustring (notmuch_config().get<string> ("database.path"));
+      log << info << "notmuch db: " << db_path << endl;
+    }
 
     /* set up static classes */
     Date::init ();
@@ -247,6 +249,8 @@ namespace Astroid {
   }
 
   void Astroid::main_test () {
+    _in_test = true;
+
     m_config = new Config (true);
 
     /* set up static classes */
@@ -266,7 +270,9 @@ namespace Astroid {
   }
 
   bool Astroid::in_test () {
-    return m_config->test;
+    /* should match m_config->test, but may be required before Config
+     * is instantiated */
+    return _in_test;
   }
 
   Astroid::~Astroid () {
