@@ -365,13 +365,11 @@ namespace Astroid {
                              "Mark spam",
                              bind (&ThreadIndexListView::multi_key_handler, this, MSpam, _1));
 
-    /*
     multi_keys.register_key ("l",
                              "thread_index.multi.tag",
                              "Tag",
-                             bind (&ThreadIndexListView::multi_key_handler, this, _1));
+                             bind (&ThreadIndexListView::multi_key_handler, this, MTag, _1));
 
-   */
 
     multi_keys.register_key ("C-m",
                              "thread_index.multi.mute",

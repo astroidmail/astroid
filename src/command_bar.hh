@@ -107,6 +107,12 @@ namespace Astroid {
       refptr<TagCompletion> tag_completion;
 
       /********************
+       * Completer for diff Tag editing:
+       *
+       * +tag1 -tag1
+       */
+
+      /********************
        * Search completion
        ********************/
       void start_searching (ustring);

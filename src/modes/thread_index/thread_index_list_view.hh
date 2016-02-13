@@ -81,6 +81,7 @@ namespace Astroid {
         MSpam,
         MMute,
         MToggle,
+        MTag,
       } multi_key_action;
 
       bool multi_key_handler (multi_key_action, Key);
