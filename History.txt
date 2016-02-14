@@ -1,3 +1,7 @@
+==
+
+* scss: fix #82: make all variables global.
+
 == v0.5 / 2016-02-06
 
 * Startup queries are invincible.
