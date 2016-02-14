@@ -32,7 +32,7 @@ namespace Astroid {
     using std::endl;
     log << debug << "theme: loading.." << endl;
 
-    /* load css, html and DOM objects */
+    /* load html and css (from scss) */
     if (!theme_loaded) {
       path tv_html = Resource (true, thread_view_html_f).get_path ();
       path tv_scss = Resource (true, thread_view_scss_f).get_path ();
@@ -57,13 +57,6 @@ namespace Astroid {
       tv_html_f.close ();
 
       thread_view_css = process_scss (tv_scss.c_str ());
-
-      /*
-      std::ifstream tv_css_f (tv_css.c_str());
-      istreambuf_iterator<char> tv_css_iit (tv_css_f);
-      thread_view_css.append (tv_css_iit, eos);
-      tv_css_f.close ();
-      */
 
       theme_loaded = true;
     }
