@@ -24,6 +24,7 @@ namespace Astroid {
         Search = 0,
         //Generic,
         Tag,        /* apply or remove tags */
+        DiffTag,    /* apply or remove tags using + or - */
       };
 
       CommandBar ();
@@ -96,6 +97,7 @@ namespace Astroid {
 
           ModelColumns m_columns;
 
+          ustring break_on = ", ";
           ustring get_partial_tag (ustring, ustring_sz&);
 
           bool match (const ustring&, const
@@ -110,7 +112,44 @@ namespace Astroid {
        * Completer for diff Tag editing:
        *
        * +tag1 -tag1
+       ********************
        */
+
+      void start_difftagging (ustring);
+      class DiffTagCompletion : public TagCompletion {
+        public:
+          DiffTagCompletion ();
+
+          void load_tags (std::vector<ustring>);
+          std::vector<ustring> tags; // must be sorted
+
+          // tree model columns, for the EntryCompletion's filter model
+          class ModelColumns : public Gtk::TreeModel::ColumnRecord
+          {
+            public:
+
+              ModelColumns ()
+              { add(m_tag); }
+
+              Gtk::TreeModelColumn<Glib::ustring> m_tag;
+          };
+
+          ModelColumns m_columns;
+
+          /* ustring break_on = "+- "; */
+
+          /*
+          ustring get_partial_tag (ustring, ustring_sz&);
+
+          bool match (const ustring&, const
+              Gtk::TreeModel::const_iterator&) override;
+
+          bool on_match_selected(const Gtk::TreeModel::iterator& iter) override;
+          */
+
+      };
+      refptr<DiffTagCompletion> difftag_completion;
+
 
       /********************
        * Search completion

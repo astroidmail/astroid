@@ -43,8 +43,9 @@ namespace Astroid {
     db.load_tags ();
     existing_tags = db.tags;
 
-    tag_completion = refptr<TagCompletion>(new TagCompletion());
-    search_completion = refptr<SearchCompletion>(new SearchCompletion());
+    tag_completion = refptr<TagCompletion> (new TagCompletion());
+    search_completion = refptr<SearchCompletion> (new SearchCompletion());
+    difftag_completion = refptr<DiffTagCompletion> (new DiffTagCompletion ());
   }
 
   void CommandBar::set_main_window (MainWindow * mw) {
@@ -82,6 +83,7 @@ namespace Astroid {
         break;
       */
 
+      case CommandMode::DiffTag:
       case CommandMode::Tag:
         {
         }
@@ -126,6 +128,15 @@ namespace Astroid {
           start_tagging (cmd);
         }
         break;
+
+      case CommandMode::DiffTag:
+        {
+          mode_label.set_text ("Change tags:");
+          entry.set_icon_from_icon_name ("system-run-symbolic");
+
+          start_difftagging (cmd);
+        }
+        break;
     }
 
     callback = f;
@@ -154,6 +165,15 @@ namespace Astroid {
     tag_completion->load_tags (existing_tags);
     entry.set_completion (tag_completion);
     current_completion = tag_completion;
+  }
+
+  void CommandBar::start_difftagging (ustring tagstring) {
+    entry.set_text (tagstring);
+
+    /* set up completion */
+    difftag_completion->load_tags (existing_tags);
+    entry.set_completion (difftag_completion);
+    current_completion = difftag_completion;
   }
 
   /*
@@ -304,17 +324,26 @@ namespace Astroid {
     int cursor     = e->get_position ();
     if (cursor == -1) cursor = c.size();
 
-    outpos = c.find_last_of (",", cursor-1);
+    outpos = c.find_last_of (break_on, cursor-1);
     if (outpos == ustring::npos) outpos = 0;
 
 
-    ustring_sz endpos = c.find_first_of (", ", outpos+2);
+    ustring_sz endpos = c.find_first_of (break_on, outpos+2);
     if (endpos == ustring::npos) endpos = c.size();
 
-    c = c.substr ((outpos > 0 ? outpos+1 : 0), (endpos-outpos-((outpos > 0) ? 1 : 0)));
+    if (outpos >= endpos) {
+      return "";
+    }
+
+    if (break_on.find_first_of (c[outpos]) != ustring::npos) {
+      outpos++; // skip delimiter
+      endpos--;
+    }
+
+    c = c.substr (outpos, endpos);
     UstringUtils::trim_left (c);
 
-    //log << debug << "cursor: " << cursor << ", outpos: " << outpos << ", in: " << in << ", o: " << c <<  endl;
+    log << debug << "cursor: " << cursor << ", outpos: " << outpos << ", in: " << in << ", o: " << c <<  endl;
     return c;
   }
 
@@ -359,19 +388,21 @@ namespace Astroid {
       ustring_sz pos;
       ustring key = get_partial_tag (t, pos);
 
-      //log << debug << "match selected: " << t << ", key: " << key << ", pos: " << pos << endl;
+      log << debug << "match selected: " << t << ", key: " << key << ", pos: " << pos << endl;
 
+      /* pos is positioned at beginning of tag, after delimiter */
       if (pos == ustring::npos) pos = 0;
-      else if (pos > 0) pos += 1; // now positioned after ','
+      /* else if (pos > 0) pos += 1; // now positioned after ',' */
 
       /* find end of key in input string */
-      ustring_sz n = t.find_first_of (", ", pos); // break on these
+      ustring_sz n = t.find_first_of (break_on, pos); // break on these
       if (n == ustring::npos) n = t.size();
 
       ustring newt;
       newt = t.substr (0, pos);
-      if (pos > 0) newt += " "; // add space between ',' and tag if this is
-                                // not the first
+      // add space between ',' and tag if this is not the first or there is already a space there
+      /* if (pos > 0 && *(newt.end()) != ' ') newt += " "; */
+
       newt += completion;
 
       // add remainder of text field, unless we are at the end of the line
@@ -384,6 +415,37 @@ namespace Astroid {
     }
 
     return true;
+  }
+
+
+  /********************
+   * Diff tagging
+   ********************/
+  CommandBar::DiffTagCompletion::DiffTagCompletion ()
+  {
+    completion_model = Gtk::ListStore::create (m_columns);
+    set_model (completion_model);
+    set_text_column (m_columns.m_tag);
+    set_match_func (sigc::mem_fun (*this,
+          &CommandBar::DiffTagCompletion::match));
+
+    set_popup_completion (true);
+    set_popup_single_match (true);
+    set_minimum_key_length (1);
+    break_on = "+- ";
+  }
+
+  void CommandBar::DiffTagCompletion::load_tags (vector<ustring> _tags) {
+    tags = _tags;
+    sort (tags.begin(), tags.end());
+
+    completion_model->clear ();
+
+    /* fill model with tags */
+    for (ustring t : tags) {
+      auto row = *(completion_model->append ());
+      row[m_columns.m_tag] = t;
+    }
   }
 
   /********************
