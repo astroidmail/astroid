@@ -1,5 +1,6 @@
 ==
 
+* Tags can be modified on multiple marked threads with + and -.
 * scss: fix #82: make all variables global.
 
 == v0.5 / 2016-02-06

@@ -12,8 +12,19 @@ namespace Astroid {
                      std::vector<ustring> add,
                      std::vector<ustring> rem);
 
-    public:
       static DiffTagAction * create (std::vector<refptr<NotmuchThread>>, ustring);
+
+      virtual bool doit (Db *) override;
+      virtual bool undo (Db *) override;
+
+    private:
+      struct ThreadAction {
+        refptr<NotmuchThread> thread;
+        std::vector<ustring>  add;
+        std::vector<ustring>  remove;
+      };
+
+      std::vector<ThreadAction> thread_actions;
   };
 }
 

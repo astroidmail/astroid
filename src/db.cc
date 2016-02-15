@@ -550,6 +550,8 @@ namespace Astroid {
 
     notmuch_tags_destroy (tags);
 
+    sort (ttags.begin (), ttags.end ());
+
     return ttags;
   }
 

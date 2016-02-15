@@ -59,6 +59,11 @@ namespace Astroid {
 
     log << endl;
 
+    if (remove.empty () && add.empty ()) {
+      log << debug << "difftag: nothing to do." << endl;
+      return NULL;
+    }
+
     return (new DiffTagAction (nmts, add, remove));
   }
 
@@ -70,6 +75,64 @@ namespace Astroid {
   {
     add     = _add;
     remove  = _rem;
+
+    sort (add.begin (), add.end ());
+    sort (remove.begin (), remove.end ());
+
+    for (auto &t : nmts) {
+      ThreadAction ta;
+      ta.thread = t;
+
+      /* find tags need to be removed */
+      set_intersection (remove.begin (),
+                        remove.end (),
+                        t->tags.begin (),
+                        t->tags.end (),
+                        std::back_inserter (ta.remove));
+
+      /* find tags that should be added */
+      set_difference (add.begin (),
+                      add.end (),
+                      t->tags.begin (),
+                      t->tags.end (),
+                      std::back_inserter (ta.add));
+
+      if (!ta.add.empty () || !ta.remove.empty ()) {
+        thread_actions.push_back (ta);
+      }
+    }
+  }
+
+  bool DiffTagAction::doit (Db * db) {
+    bool res = true;
+
+    for (auto &ta : thread_actions) {
+      for (auto &t : ta.add) {
+        res &= ta.thread->add_tag (db, t);
+      }
+
+      for (auto &t : ta.remove) {
+        res &= ta.thread->remove_tag (db, t);
+      }
+    }
+
+    return res;
+  }
+
+  bool DiffTagAction::undo (Db * db) {
+    bool res = true;
+
+    for (auto &ta : thread_actions) {
+      for (auto &t : ta.add) {
+        res &= ta.thread->remove_tag (db, t);
+      }
+
+      for (auto &t : ta.remove) {
+        res &= ta.thread->add_tag (db, t);
+      }
+    }
+
+    return res;
   }
 }
 
