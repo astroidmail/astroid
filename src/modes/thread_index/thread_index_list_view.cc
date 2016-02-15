@@ -24,6 +24,7 @@
 /* actions */
 # include "actions/tag_action.hh"
 # include "actions/toggle_action.hh"
+# include "actions/difftag_action.hh"
 
 using namespace std;
 
@@ -867,6 +868,7 @@ namespace Astroid {
       case MSpam:
       case MMute:
       case MArchive:
+      case MTag:
         {
           vector<refptr<NotmuchThread>> threads;
 
@@ -905,11 +907,29 @@ namespace Astroid {
               a = refptr<Action>(new MuteAction(threads));
               break;
 
+            case MTag:
+              {
+                /* ask for tags */
+                main_window->enable_command (CommandBar::CommandMode::DiffTag,
+                    "",
+                    [&, threads](ustring tgs) {
+                      log << debug << "ti: got difftags: " << tgs << endl;
+
+                      refptr<Action> ma = refptr<DiffTagAction> (DiffTagAction::create (threads, tgs));
+                      if (ma) {
+                        Db db (Db::DbMode::DATABASE_READ_WRITE);
+                        main_window->actions.doit (&db, ma);
+                      }
+                    });
+                return true;
+              }
+              break;
+
             default:
-              return false;
+              throw runtime_error ("impossible.");
           }
 
-          if (a) {
+          if ((maction != MTag) && a) {
             Db db (Db::DbMode::DATABASE_READ_WRITE);
             main_window->actions.doit (&db, a);
           }
@@ -917,7 +937,6 @@ namespace Astroid {
           return true;
         }
         break;
-
 
       case MToggle:
         {

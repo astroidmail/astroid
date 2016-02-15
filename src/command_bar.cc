@@ -62,6 +62,8 @@ namespace Astroid {
 
   void CommandBar::on_entry_activated () {
     /* handle input */
+    log << debug << "cb: got activated!" << endl;
+
     ustring cmd = get_text ();
     log << debug << "cb: cmd (in mode: " << mode << "): " << cmd << endl;
     set_search_mode (false); // emits changed -> disables search
