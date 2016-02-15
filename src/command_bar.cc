@@ -62,8 +62,6 @@ namespace Astroid {
 
   void CommandBar::on_entry_activated () {
     /* handle input */
-    log << debug << "cb: got activated!" << endl;
-
     ustring cmd = get_text ();
     log << debug << "cb: cmd (in mode: " << mode << "): " << cmd << endl;
     set_search_mode (false); // emits changed -> disables search
@@ -124,7 +122,7 @@ namespace Astroid {
 
       case CommandMode::Tag:
         {
-          mode_label.set_text ("Tags for thread:");
+          mode_label.set_text ("Change tags:");
           entry.set_icon_from_icon_name ("system-run-symbolic");
 
           start_tagging (cmd);
@@ -133,7 +131,7 @@ namespace Astroid {
 
       case CommandMode::DiffTag:
         {
-          mode_label.set_text ("Change tags:");
+          mode_label.set_text ("Change tags (+/-):");
           entry.set_icon_from_icon_name ("system-run-symbolic");
 
           start_difftagging (cmd);
@@ -249,7 +247,7 @@ namespace Astroid {
 
   /* get the next match in the list and use it to complete */
   void CommandBar::GenericCompletion::match_next () {
-    log << debug << "cb: completion: taking next match" << endl;
+    /* log << debug << "cb: completion: taking next match" << endl; */
 
     Gtk::TreeIter fwditer = completion_model->get_iter ("0");
 
@@ -345,7 +343,7 @@ namespace Astroid {
     c = c.substr (outpos, endpos);
     UstringUtils::trim_left (c);
 
-    log << debug << "cursor: " << cursor << ", outpos: " << outpos << ", in: " << in << ", o: " << c <<  endl;
+    /* log << debug << "cursor: " << cursor << ", outpos: " << outpos << ", in: " << in << ", o: " << c <<  endl; */
     return c;
   }
 
