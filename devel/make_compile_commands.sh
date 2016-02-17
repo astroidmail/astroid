@@ -6,6 +6,7 @@
 #
 # run from root source directory.
 
+export CXX=clang++
 scons -c
 bear scons --verbose
 
