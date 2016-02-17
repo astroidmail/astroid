@@ -557,15 +557,15 @@ namespace Astroid {
 
   vector<tuple<ustring,bool>> NotmuchThread::get_authors (notmuch_thread_t * nm_thread) {
     /* returns a vector of authors and whether they are authors of
-     * the an unread message in the thread */
-    vector<tuple<ustring,bool>> aths;
+     * an unread message in the thread */
+    vector<tuple<ustring, bool>> aths;
 
-    /* first check if any messages are unread, if not just fetch the authors for
-     * the thread without checking.
+    /* first check if any messages are unread, if not: just fetch the authors for
+     * the thread without checking each one.
      *
-     * get_tags () have already been run, so we can safely use `has_tags (..)` */
+     * `get_tags ()` have already been called, so we can safely use `unread` */
 
-    if (!has_tag ("unread")) {
+    if (!unread) {
       const char * auths = notmuch_thread_get_authors (nm_thread);
 
       ustring astr;
@@ -589,6 +589,8 @@ namespace Astroid {
     notmuch_messages_t * qmessages;
     notmuch_message_t  * message;
 
+    bool _unread;
+
     for (qmessages = notmuch_thread_get_messages (nm_thread);
          notmuch_messages_valid (qmessages);
          notmuch_messages_move_to_next (qmessages)) {
@@ -604,7 +606,7 @@ namespace Astroid {
         continue;
       }
 
-      unread = false;
+      _unread = false;
 
       /* get tags */
       notmuch_tags_t *tags;
@@ -617,7 +619,7 @@ namespace Astroid {
           tag = notmuch_tags_get (tags);
           if (ustring (tag) == "unread")
           {
-            unread = true;
+            _unread = true;
             break;
           }
       }
@@ -628,10 +630,10 @@ namespace Astroid {
           });
 
       if (fnd == aths.end ()) {
-        aths.push_back (make_tuple (a, unread));
+        aths.push_back (make_tuple (a, _unread));
       } else {
         /* check if it is marked unread */
-        if (unread && !(get<1> (*fnd))) {
+        if (_unread && !(get<1> (*fnd))) {
           get<1> (*fnd) = true;
         }
       }
@@ -795,10 +797,9 @@ namespace Astroid {
     return true;
   }
 
-  /************
-   * exceptions
-   * **********
-   */
+  /***************
+   * Exceptions
+   ***************/
 
   database_error::database_error (const char * w) : runtime_error (w)
   {
