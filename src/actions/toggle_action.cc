@@ -13,13 +13,13 @@
 using namespace std;
 
 namespace Astroid {
-  ToggleAction::ToggleAction (refptr<NotmuchThread> nmt, ustring _toggle_tag)
+  ToggleAction::ToggleAction (refptr<NotmuchTaggable> nmt, ustring _toggle_tag)
   : TagAction(nmt)
   {
     toggle_tag = _toggle_tag;
   }
 
-  ToggleAction::ToggleAction (vector<refptr<NotmuchThread>> nmts, ustring _toggle_tag)
+  ToggleAction::ToggleAction (vector<refptr<NotmuchTaggable>> nmts, ustring _toggle_tag)
   : TagAction(nmts)
   {
     toggle_tag = _toggle_tag;
@@ -28,16 +28,15 @@ namespace Astroid {
   bool ToggleAction::doit (Db * db) {
     bool res = true;
 
-    for (auto &thread : threads) {
-      log << info << "tag_action: " << thread->thread_id << ", add: ";
+    for (auto &tagged : taggables) {
+      log << debug << "toggle_action: " << tagged->str () << ", add: ";
 
-      if (find (thread->tags.begin(), thread->tags.end(), toggle_tag) != thread->tags.end ()) {
+      if (find (tagged->tags.begin(), tagged->tags.end(), toggle_tag) != tagged->tags.end ()) {
         remove.push_back (toggle_tag);
       } else {
         add.push_back (toggle_tag);
       }
 
-      log << info << "tag_action: " << thread->thread_id << ", add: ";
       for_each (add.begin(),
                 add.end(),
                 [&](ustring t) {
@@ -57,13 +56,13 @@ namespace Astroid {
       for_each (add.begin(),
                 add.end(),
                 [&](ustring t) {
-                  res &= thread->add_tag (db, t);
+                  res &= tagged->add_tag (db, t);
                 });
 
       for_each (remove.begin(),
                 remove.end(),
                 [&](ustring t) {
-                  res &= thread->remove_tag (db, t);
+                  res &= tagged->remove_tag (db, t);
                 });
 
 
@@ -74,19 +73,19 @@ namespace Astroid {
     return res;
   }
 
-  SpamAction::SpamAction (refptr<NotmuchThread> nmt)
+  SpamAction::SpamAction (refptr<NotmuchTaggable> nmt)
     : ToggleAction (nmt, "spam") {
     }
 
-  SpamAction::SpamAction (vector<refptr<NotmuchThread>> nmts)
+  SpamAction::SpamAction (vector<refptr<NotmuchTaggable>> nmts)
     : ToggleAction (nmts, "spam") {
     }
 
-  MuteAction::MuteAction (refptr<NotmuchThread> nmt)
+  MuteAction::MuteAction (refptr<NotmuchTaggable> nmt)
     : ToggleAction (nmt, "muted") {
     }
 
-  MuteAction::MuteAction (vector<refptr<NotmuchThread>> nmts)
+  MuteAction::MuteAction (vector<refptr<NotmuchTaggable>> nmts)
     : ToggleAction (nmts, "muted") {
     }
 }

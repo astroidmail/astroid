@@ -44,7 +44,7 @@ namespace Astroid {
 
     protected:
       type_signal_thread_updated m_signal_thread_updated;
-      type_signal_thread_updated m_signal_message_updated;
+      type_signal_message_updated m_signal_message_updated;
       type_signal_refreshed m_signal_refreshed;
 
   };

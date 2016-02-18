@@ -18,6 +18,7 @@
 # include "utils/address.hh"
 # include "log.hh"
 # include "actions/action_manager.hh"
+# include "message_thread.hh"
 
 using namespace std;
 using namespace boost::filesystem;
@@ -469,6 +470,35 @@ namespace Astroid {
     }
   } // }}}
 
+  ustring Db::sanitize_tag (ustring tag) {
+    UstringUtils::trim (tag);
+
+    return tag;
+  }
+
+  bool Db::check_tag (ustring tag) {
+    if (tag.empty()) {
+      log << error << "nmt: invalid tag, empty." << endl;
+      return false;
+    }
+
+    const vector<ustring> invalid_chars = { "\"" };
+
+    for (const ustring &c : invalid_chars) {
+      if (tag.find (c) != ustring::npos) {
+        log << error << "nmt: invalid char in tag: " << c << endl;
+        return false;
+      }
+    }
+
+    if (tag.size() > NOTMUCH_TAG_MAX) {
+      log << error << "nmt: error: maximum tag length is: " << NOTMUCH_TAG_MAX << endl;
+      return false;
+    }
+
+    return true;
+  }
+
 
   /* --------------
    * notmuch thread
@@ -654,8 +684,8 @@ namespace Astroid {
     lock_guard <Db> grd (*db);
 
     log << debug << "nm (" << thread_id << "): add tag: " << tag << endl;
-    tag = sanitize_tag (tag);
-    if (!check_tag (tag)) {
+    tag = Db::sanitize_tag (tag);
+    if (!Db::check_tag (tag)) {
       log << debug << "nm (" << thread_id << "): error, invalid tag: " << tag << endl;
       return false;
     }
@@ -709,14 +739,10 @@ namespace Astroid {
     return res;
   }
 
-  bool NotmuchThread::has_tag (ustring tag) {
-    return (find(tags.begin (), tags.end (), tag) != tags.end ());
-  }
-
   bool NotmuchThread::remove_tag (Db * db, ustring tag) {
     log << debug << "nm (" << thread_id << "): remove tag: " << tag << endl;
-    tag = sanitize_tag (tag);
-    if (!check_tag (tag)) {
+    tag = Db::sanitize_tag (tag);
+    if (!Db::check_tag (tag)) {
       log << debug << "nm (" << thread_id << "): error, invalid tag: " << tag << endl;
       return false;
     }
@@ -768,33 +794,122 @@ namespace Astroid {
     return res;
   }
 
-  ustring NotmuchThread::sanitize_tag (ustring tag) {
-    UstringUtils::trim (tag);
 
-    return tag;
+  void NotmuchThread::emit_updated (Db * db) {
+    astroid->global_actions->emit_thread_updated (db, thread_id);
   }
 
-  bool NotmuchThread::check_tag (ustring tag) {
-    if (tag.empty()) {
-      log << error << "nmt: invalid tag, empty." << endl;
+  ustring NotmuchThread::str () {
+    return "threadid:" + thread_id;
+  }
+
+  /****************
+   * NotmuchMessage
+   ****************/
+  NotmuchMessage::NotmuchMessage (refptr<Message> m) {
+    mid  = m->mid;
+    tags = m->tags;
+  }
+
+  /* tag actions */
+  bool NotmuchMessage::add_tag (Db * db, ustring tag) {
+    lock_guard <Db> grd (*db);
+
+    log << debug << "nm (" << mid << "): add tag: " << tag << endl;
+    tag = Db::sanitize_tag (tag);
+    if (!Db::check_tag (tag)) {
+      log << debug << "nm (" << mid << "): error, invalid tag: " << tag << endl;
       return false;
     }
 
-    const vector<ustring> invalid_chars = { "\"" };
+    bool res = true;
 
-    for (const ustring &c : invalid_chars) {
-      if (tag.find (c) != ustring::npos) {
-        log << error << "nmt: invalid char in tag: " << c << endl;
-        return false;
-      }
-    }
+    db->on_message (mid, [&](notmuch_message_t * message)
+      {
+        notmuch_status_t s = notmuch_message_add_tag (message, tag.c_str ());
 
-    if (tag.size() > NOTMUCH_TAG_MAX) {
-      log << error << "nmt: error: maximum tag length is: " << NOTMUCH_TAG_MAX << endl;
+
+        if (s == NOTMUCH_STATUS_SUCCESS) {
+          res &= true;
+        } else {
+          log << error << "nm: could not add tag: " << tag << " to message: " << mid << endl;
+          res = false;
+          return;
+        }
+
+        /*
+        if (res) {
+          tags.push_back (tag);
+
+          // add to global tag list
+          if (find(db->tags.begin (),
+                db->tags.end (),
+                tag) == db->tags.end ()) {
+            db->tags.push_back (tag);
+          }
+        }
+        */
+      });
+
+    return res;
+  }
+
+  bool NotmuchMessage::remove_tag (Db * db, ustring tag) {
+    lock_guard <Db> grd (*db);
+
+    log << debug << "nm (" << mid << "): remove tag: " << tag << endl;
+    tag = Db::sanitize_tag (tag);
+    if (!Db::check_tag (tag)) {
+      log << debug << "nm (" << mid << "): error, invalid tag: " << tag << endl;
       return false;
     }
 
-    return true;
+    bool res = true;
+
+    db->on_message (mid, [&](notmuch_message_t * message)
+      {
+        notmuch_status_t s = notmuch_message_remove_tag (message, tag.c_str ());
+
+
+        if (s == NOTMUCH_STATUS_SUCCESS) {
+          res &= true;
+        } else {
+          log << error << "nm: could not remove tag: " << tag << " from message: " << mid << endl;
+          res = false;
+          return;
+        }
+
+        /*
+        if (res) {
+          tags.push_back (tag);
+
+          // add to global tag list
+          if (find(db->tags.begin (),
+                db->tags.end (),
+                tag) == db->tags.end ()) {
+            db->tags.push_back (tag);
+          }
+        }
+        */
+      });
+
+    return res;
+  }
+
+  void NotmuchMessage::emit_updated (Db * db) {
+    astroid->global_actions->emit_message_updated (db, mid);
+  }
+
+  ustring NotmuchMessage::str () {
+    return "mid:" + mid;
+  }
+
+
+  /***************
+   * NotmuchTaggable
+   ***************/
+  bool NotmuchTaggable::has_tag (ustring tag) {
+    return (find(tags.begin (), tags.end (), tag) != tags.end ());
   }
 
   /***************

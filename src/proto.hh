@@ -13,6 +13,7 @@ namespace Astroid {
   /* core and database */
   class Astroid;
   class Db;
+  class NotmuchTaggable;
   class NotmuchThread;
   class Config;
   struct StandardPaths;

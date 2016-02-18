@@ -15,7 +15,7 @@
 using namespace std;
 
 namespace Astroid {
-  DiffTagAction * DiffTagAction::create (vector<refptr<NotmuchThread>> nmts, ustring diff_str) {
+  DiffTagAction * DiffTagAction::create (vector<refptr<NotmuchTaggable>> nmts, ustring diff_str) {
 
     log << "difftag: parsing: " << diff_str << endl;
 
@@ -68,7 +68,7 @@ namespace Astroid {
   }
 
   DiffTagAction::DiffTagAction (
-      vector<refptr<NotmuchThread>> nmts,
+      vector<refptr<NotmuchTaggable>> nmts,
       vector<ustring> _add,
       vector<ustring> _rem)
   : TagAction(nmts)
@@ -80,8 +80,8 @@ namespace Astroid {
     sort (remove.begin (), remove.end ());
 
     for (auto &t : nmts) {
-      ThreadAction ta;
-      ta.thread = t;
+      TaggableAction ta;
+      ta.taggable = t;
 
       /* find tags need to be removed */
       set_intersection (remove.begin (),
@@ -98,7 +98,7 @@ namespace Astroid {
                       std::back_inserter (ta.add));
 
       if (!ta.add.empty () || !ta.remove.empty ()) {
-        thread_actions.push_back (ta);
+        taggable_actions.push_back (ta);
       }
     }
   }
@@ -106,13 +106,13 @@ namespace Astroid {
   bool DiffTagAction::doit (Db * db) {
     bool res = true;
 
-    for (auto &ta : thread_actions) {
+    for (auto &ta : taggable_actions) {
       for (auto &t : ta.add) {
-        res &= ta.thread->add_tag (db, t);
+        res &= ta.taggable->add_tag (db, t);
       }
 
       for (auto &t : ta.remove) {
-        res &= ta.thread->remove_tag (db, t);
+        res &= ta.taggable->remove_tag (db, t);
       }
     }
 
@@ -122,13 +122,13 @@ namespace Astroid {
   bool DiffTagAction::undo (Db * db) {
     bool res = true;
 
-    for (auto &ta : thread_actions) {
+    for (auto &ta : taggable_actions) {
       for (auto &t : ta.add) {
-        res &= ta.thread->remove_tag (db, t);
+        res &= ta.taggable->remove_tag (db, t);
       }
 
       for (auto &t : ta.remove) {
-        res &= ta.thread->add_tag (db, t);
+        res &= ta.taggable->add_tag (db, t);
       }
     }
 

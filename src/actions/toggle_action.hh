@@ -8,8 +8,8 @@
 namespace Astroid {
   class ToggleAction : public TagAction {
     public:
-      ToggleAction (refptr<NotmuchThread>, ustring);
-      ToggleAction (std::vector<refptr<NotmuchThread>>, ustring);
+      ToggleAction (refptr<NotmuchTaggable>, ustring);
+      ToggleAction (std::vector<refptr<NotmuchTaggable>>, ustring);
       ustring toggle_tag;
 
       /* for toggleaction undo == doit, which works with
@@ -19,14 +19,14 @@ namespace Astroid {
 
   class SpamAction : public ToggleAction {
     public:
-      SpamAction (refptr<NotmuchThread>);
-      SpamAction (std::vector<refptr<NotmuchThread>>);
+      SpamAction (refptr<NotmuchTaggable>);
+      SpamAction (std::vector<refptr<NotmuchTaggable>>);
   };
 
   class MuteAction : public ToggleAction {
     public:
-      MuteAction (refptr<NotmuchThread>);
-      MuteAction (std::vector<refptr<NotmuchThread>>);
+      MuteAction (refptr<NotmuchTaggable>);
+      MuteAction (std::vector<refptr<NotmuchTaggable>>);
   };
 
 }

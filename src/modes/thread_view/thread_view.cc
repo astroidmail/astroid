@@ -2364,6 +2364,57 @@ namespace Astroid {
 
           return true;
         });
+
+    keys.register_key ("l",
+        "thread_view.tag_message",
+        "Tag message",
+        [&] (Key) {
+          ustring tag_list = VectorUtils::concat_tags (focused_message->tags) + ", ";
+
+          main_window->enable_command (CommandBar::CommandMode::Tag,
+              tag_list,
+              [&](ustring tgs) {
+                log << debug << "ti: got tags: " << tgs << endl;
+
+                vector<ustring> tags = VectorUtils::split_and_trim (tgs, ",");
+
+                /* remove empty */
+                tags.erase (std::remove (tags.begin (), tags.end (), ""), tags.end ());
+
+                sort (tags.begin (), tags.end ());
+                sort (focused_message->tags.begin (), focused_message->tags.end ());
+
+                vector<ustring> rem;
+                vector<ustring> add;
+
+                /* find tags that have been removed */
+                set_difference (focused_message->tags.begin (),
+                                focused_message->tags.end (),
+                                tags.begin (),
+                                tags.end (),
+                                std::back_inserter (rem));
+
+                /* find tags that should be added */
+                set_difference (tags.begin (),
+                                tags.end (),
+                                focused_message->tags.begin (),
+                                focused_message->tags.end (),
+                                std::back_inserter (add));
+
+
+                if (add.size () == 0 &&
+                    rem.size () == 0) {
+                  log << debug << "ti: nothing to do." << endl;
+                } else {
+                  Db db (Db::DbMode::DATABASE_READ_WRITE);
+                  main_window->actions.doit (&db,
+                     refptr<Action>(new TagAction (refptr<NotmuchTaggable>(new NotmuchMessage(focused_message)), add, rem)));
+                }
+
+              });
+          return true;
+        });
+
   }
 
   // }}}

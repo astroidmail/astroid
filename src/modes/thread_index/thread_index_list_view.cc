@@ -870,16 +870,16 @@ namespace Astroid {
       case MArchive:
       case MTag:
         {
-          vector<refptr<NotmuchThread>> threads;
+          vector<refptr<NotmuchTaggable>> threads;
 
           while (fwditer) {
             row = *fwditer;
             if (row[list_store->columns.marked]) {
 
               // row[list_store->columns.marked] = false;
-              auto thread = row[list_store->columns.thread];
+              refptr<NotmuchThread> thread = row[list_store->columns.thread];
 
-              threads.push_back (thread);
+              threads.push_back (refptr<NotmuchTaggable>::cast_dynamic(thread));
             }
 
             fwditer++;

@@ -4,27 +4,28 @@
 
 # include "proto.hh"
 # include "action.hh"
+# include "tag_action.hh"
 
 namespace Astroid {
   class DiffTagAction : public TagAction {
     public:
-      DiffTagAction (std::vector<refptr<NotmuchThread>>,
+      DiffTagAction (std::vector<refptr<NotmuchTaggable>>,
                      std::vector<ustring> add,
                      std::vector<ustring> rem);
 
-      static DiffTagAction * create (std::vector<refptr<NotmuchThread>>, ustring);
+      static DiffTagAction * create (std::vector<refptr<NotmuchTaggable>>, ustring);
 
       virtual bool doit (Db *) override;
       virtual bool undo (Db *) override;
 
     private:
-      struct ThreadAction {
-        refptr<NotmuchThread> thread;
-        std::vector<ustring>  add;
-        std::vector<ustring>  remove;
+      struct TaggableAction {
+        refptr<NotmuchTaggable> taggable;
+        std::vector<ustring>    add;
+        std::vector<ustring>    remove;
       };
 
-      std::vector<ThreadAction> thread_actions;
+      std::vector<TaggableAction> taggable_actions;
   };
 }
 

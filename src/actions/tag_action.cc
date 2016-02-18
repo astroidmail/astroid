@@ -11,29 +11,29 @@
 using namespace std;
 
 namespace Astroid {
-  TagAction::TagAction ( refptr<NotmuchThread> nmt)
-  : Action(nmt)
+  TagAction::TagAction ( refptr<NotmuchTaggable> nmt) {
+    taggables.push_back (nmt);
+  }
+
+  TagAction::TagAction (
+      refptr<NotmuchTaggable> nmt,
+      vector<ustring> _add,
+      vector<ustring> _remove)
+  : add (_add), remove (_remove)
+  {
+    taggables.push_back (nmt);
+  }
+
+  TagAction::TagAction ( vector<refptr<NotmuchTaggable>> nmts)
+  : taggables (nmts)
   {
   }
 
   TagAction::TagAction (
-      refptr<NotmuchThread> nmt,
+      vector<refptr<NotmuchTaggable>> nmts,
       vector<ustring> _add,
       vector<ustring> _remove)
-  : Action(nmt), add (_add), remove (_remove)
-  {
-  }
-
-  TagAction::TagAction ( vector<refptr<NotmuchThread>> nmts)
-  : Action(nmts)
-  {
-  }
-
-  TagAction::TagAction (
-      vector<refptr<NotmuchThread>> nmts,
-      vector<ustring> _add,
-      vector<ustring> _remove)
-  : Action(nmts), add (_add), remove (_remove)
+  : taggables(nmts), add (_add), remove (_remove)
   {
   }
 
@@ -43,8 +43,8 @@ namespace Astroid {
 
   bool TagAction::doit (Db * db) {
     bool res = true;
-    for (auto &thread : threads) {
-      log << info << "tag_action: " << thread->thread_id << ", add: ";
+    for (auto &tagged : taggables) {
+      log << info << "tag_action: " << tagged->str () << ", add: ";
       for_each (add.begin(),
                 add.end(),
                 [&](ustring t) {
@@ -64,13 +64,13 @@ namespace Astroid {
       for_each (add.begin(),
                 add.end(),
                 [&](ustring t) {
-                  res &= thread->add_tag (db, t);
+                  res &= tagged->add_tag (db, t);
                 });
 
       for_each (remove.begin(),
                 remove.end(),
                 [&](ustring t) {
-                  res &= thread->remove_tag (db, t);
+                  res &= tagged->remove_tag (db, t);
                 });
 
     }
@@ -82,6 +82,12 @@ namespace Astroid {
 
     swap (add, remove);
     return doit (db);
+  }
+
+  void TagAction::emit (Db * db) {
+    for (auto &t : taggables) {
+      t->emit_updated (db);
+    }
   }
 
 }

@@ -16,8 +16,34 @@
 # include "proto.hh"
 
 namespace Astroid {
+  class NotmuchTaggable : public Glib::Object {
+    public:
+      std::vector <ustring> tags;
+      bool has_tag (ustring);
+
+      virtual bool remove_tag (Db *, ustring) = 0;
+      virtual bool add_tag (Db *, ustring) = 0;
+
+      virtual void emit_updated (Db *) = 0;
+
+      virtual ustring str () = 0;
+  };
+
+  /* the notmuch message object should get by on the db only */
+  class NotmuchMessage : public NotmuchTaggable {
+    public:
+      NotmuchMessage (refptr<Message>);
+
+      ustring mid;
+
+      bool remove_tag (Db *, ustring) override;
+      bool add_tag (Db *, ustring) override;
+      void emit_updated (Db *) override;
+      ustring str () override;
+  };
+
   /* the notmuch thread object should get by on the db only */
-  class NotmuchThread : public Glib::Object {
+  class NotmuchThread : public NotmuchTaggable {
     public:
       NotmuchThread (notmuch_thread_t *);
       ~NotmuchThread ();
@@ -32,17 +58,14 @@ namespace Astroid {
       bool    flagged;
       int     total_messages;
       std::vector<std::tuple<ustring,bool>> authors;
-      std::vector<ustring> tags;
-
-      bool has_tag (ustring);
 
       void refresh (Db *);
       void load (notmuch_thread_t *);
 
-      bool remove_tag (Db *, ustring);
-      bool add_tag (Db *, ustring);
-      ustring sanitize_tag (ustring);
-      bool check_tag (ustring);
+      bool remove_tag (Db *, ustring) override;
+      bool add_tag (Db *, ustring) override;
+      void emit_updated (Db *) override;
+      ustring str () override;
 
     private:
       int     check_total_messages (notmuch_thread_t *);
@@ -107,6 +130,9 @@ namespace Astroid {
       void add_draft_message (ustring);
       void add_message_with_tags (ustring fname, std::vector<ustring> tags);
       void remove_message (ustring);
+
+      static ustring sanitize_tag (ustring);
+      static bool check_tag (ustring);
   };
 
   /* exceptions */

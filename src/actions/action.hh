@@ -8,15 +8,10 @@
 namespace Astroid {
   class Action : public Glib::Object {
     public:
-      Action (refptr<NotmuchThread>);
-      Action (std::vector<refptr<NotmuchThread>>);
-
-      std::vector<refptr<NotmuchThread>> threads;
-
       virtual bool doit (Db *) = 0;
       virtual bool undo (Db *) = 0;
       virtual bool undoable ();
 
-      virtual void emit (Db *);
+      virtual void emit (Db *) = 0;
   };
 }
