@@ -79,12 +79,11 @@ namespace Astroid {
         MESSAGE_TAGS_CHANGED,
       } MessageChangedEvent;
 
-      typedef sigc::signal <void, Db *, MessageChangedEvent> type_signal_message_changed;
+      typedef sigc::signal <void, Db *, Message *, MessageChangedEvent> type_signal_message_changed;
       type_signal_message_changed signal_message_changed ();
 
-      void emit_message_changed (Db *, MessageChangedEvent);
-
     protected:
+      void emit_message_changed (Db *, MessageChangedEvent);
       type_signal_message_changed m_signal_message_changed;
   };
 

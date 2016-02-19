@@ -602,6 +602,46 @@ namespace Astroid {
     render ();
   }
 
+  void ThreadView::on_message_changed (
+      Db * /* db */,
+      Message * m,
+      Message::MessageChangedEvent me)
+  {
+    if (me == Message::MessageChangedEvent::MESSAGE_TAGS_CHANGED) {
+      if (m->in_notmuch) {
+        ustring tags_s = VectorUtils::concat_tags (m->tags);
+
+        ustring tags_s_c = ustring::compose ("<span style=\"color:#31587a !important\">%1</span>",
+            header_row_value (tags_s, true));
+
+        GError *err;
+        ustring mid = "message_" + m->mid;
+
+        WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
+        WebKitDOMElement * div_message = webkit_dom_document_get_element_by_id (d, mid.c_str());
+
+
+        WebKitDOMHTMLElement * tags = select (
+            WEBKIT_DOM_NODE (div_message),
+            ".header_container .tags");
+
+        webkit_dom_html_element_set_inner_html (tags, header_row_value(tags_s, true).c_str(), (err = NULL, &err));
+
+        g_object_unref (tags);
+
+        tags = select (
+            WEBKIT_DOM_NODE (div_message),
+            ".header_container .header div#Tags .value");
+
+        webkit_dom_html_element_set_inner_html (tags, tags_s_c.c_str (), (err = NULL, &err));
+
+        g_object_unref (tags);
+        g_object_unref (div_message);
+        g_object_unref (d);
+      }
+    }
+  }
+
   /* end message loading }}} */
 
   /* rendering {{{ */
@@ -638,6 +678,9 @@ namespace Astroid {
               [&](refptr<Message> m) {
                 add_message (m);
                 state.insert (std::pair<refptr<Message>, MessageState> (m, MessageState ()));
+
+                m->signal_message_changed ().connect (
+                    sigc::mem_fun (this, &ThreadView::on_message_changed));
               });
 
     update_all_indent_states ();
@@ -1361,16 +1404,19 @@ namespace Astroid {
       bool noprint) {
 
     return ustring::compose (
-        "<div class=\"field %1 %2\">"
+        "<div class=\"field %1 %2\" id=\"%3\">"
         "  <div class=\"title\">%3:</div>"
         "  <div class=\"value\">%4</div>"
         "</div>",
         (important ? "important" : ""),
         (noprint ? "noprint" : ""),
         Glib::Markup::escape_text (title),
-        (escape ? Glib::Markup::escape_text (value) : value)
+        header_row_value (value, escape)
         );
+  }
 
+  ustring ThreadView::header_row_value (ustring value, bool escape)  {
+    return (escape ? Glib::Markup::escape_text (value) : value);
   }
 
   /* headers end }}} */

@@ -96,7 +96,8 @@ namespace Astroid {
 
   void Message::emit_message_changed (Db * db, Message::MessageChangedEvent me) {
     log << info << "message: emitted changed signal for message: " << mid << ": " << me << endl;
-    m_signal_message_changed.emit (db, me);
+
+    m_signal_message_changed.emit (db, this, me);
   }
 
   void Message::load_tags (Db * db) {
