@@ -73,6 +73,19 @@ namespace Astroid {
 
       void save ();
       void save_to (ustring);
+
+      /* message changed signal */
+      typedef enum {
+        MESSAGE_TAGS_CHANGED,
+      } MessageChangedEvent;
+
+      typedef sigc::signal <void, Db *, MessageChangedEvent> type_signal_message_changed;
+      type_signal_message_changed signal_message_changed ();
+
+      void emit_message_changed (Db *, MessageChangedEvent);
+
+    protected:
+      type_signal_message_changed m_signal_message_changed;
   };
 
   /* exceptions */

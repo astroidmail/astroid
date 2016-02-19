@@ -83,7 +83,20 @@ namespace Astroid {
   void Message::on_message_updated (Db * db, ustring _mid) {
     if (in_notmuch && (mid == _mid)) {
       load_tags (db);
+      emit_message_changed (db, MessageChangedEvent::MESSAGE_TAGS_CHANGED);
     }
+  }
+
+  /* message changed signal*/
+  Message::type_signal_message_changed
+    Message::signal_message_changed ()
+  {
+    return m_signal_message_changed;
+  }
+
+  void Message::emit_message_changed (Db * db, Message::MessageChangedEvent me) {
+    log << info << "message: emitted changed signal for message: " << mid << ": " << me << endl;
+    m_signal_message_changed.emit (db, me);
   }
 
   void Message::load_tags (Db * db) {
