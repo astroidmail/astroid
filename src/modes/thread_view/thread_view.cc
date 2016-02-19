@@ -2415,6 +2415,10 @@ namespace Astroid {
         "thread_view.tag_message",
         "Tag message",
         [&] (Key) {
+          if (edit_mode) {
+            return false;
+          }
+
           ustring tag_list = VectorUtils::concat_tags (focused_message->tags) + ", ";
 
           main_window->enable_command (CommandBar::CommandMode::Tag,
