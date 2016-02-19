@@ -181,6 +181,9 @@ namespace Astroid {
     register_keys ();
 
     show_all_children ();
+
+    astroid->global_actions->signal_thread_updated ().connect (
+        sigc::mem_fun (this, &ThreadView::on_thread_updated));
   }
 
   // }}}
@@ -603,43 +606,68 @@ namespace Astroid {
   }
 
   void ThreadView::on_message_changed (
-      Db * /* db */,
+      Db * db,
       Message * m,
       Message::MessageChangedEvent me)
   {
     if (me == Message::MessageChangedEvent::MESSAGE_TAGS_CHANGED) {
       if (m->in_notmuch) {
-        ustring tags_s = VectorUtils::concat_tags (m->tags);
+        log << debug << "tv: got message updated." << endl;
+        refptr<Message> rm = refptr<Message> (m);
+        rm->reference ();
 
-        ustring tags_s_c = ustring::compose ("<span style=\"color:#31587a !important\">%1</span>",
-            header_row_value (tags_s, true));
-
-        GError *err;
-        ustring mid = "message_" + m->mid;
-
-        WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
-        WebKitDOMElement * div_message = webkit_dom_document_get_element_by_id (d, mid.c_str());
-
-
-        WebKitDOMHTMLElement * tags = select (
-            WEBKIT_DOM_NODE (div_message),
-            ".header_container .tags");
-
-        webkit_dom_html_element_set_inner_html (tags, header_row_value(tags_s, true).c_str(), (err = NULL, &err));
-
-        g_object_unref (tags);
-
-        tags = select (
-            WEBKIT_DOM_NODE (div_message),
-            ".header_container .header div#Tags .value");
-
-        webkit_dom_html_element_set_inner_html (tags, tags_s_c.c_str (), (err = NULL, &err));
-
-        g_object_unref (tags);
-        g_object_unref (div_message);
-        g_object_unref (d);
+        message_refresh_tags (db, rm);
       }
     }
+  }
+
+  void ThreadView::on_thread_updated (Db * db, ustring thread_id) {
+    if (thread && thread_id == thread->thread_id) {
+      log << debug << "tv: got thread updated." << endl;
+      /* thread was updated, check for:
+       * - changed tags
+       * - check if something should be done becasue of changed tags
+       * - messages have been added
+       * - messages have been removed
+       */
+
+      for (auto &m : mthread->messages) {
+        m->load_tags (db);
+        message_refresh_tags (db, m);
+      }
+    }
+  }
+
+  void ThreadView::message_refresh_tags (Db *, refptr<Message> m) {
+    ustring tags_s = VectorUtils::concat_tags (m->tags);
+
+    ustring tags_s_c = ustring::compose ("<span style=\"color:#31587a !important\">%1</span>",
+        header_row_value (tags_s, true));
+
+    GError *err;
+    ustring mid = "message_" + m->mid;
+
+    WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
+    WebKitDOMElement * div_message = webkit_dom_document_get_element_by_id (d, mid.c_str());
+
+
+    WebKitDOMHTMLElement * tags = select (
+        WEBKIT_DOM_NODE (div_message),
+        ".header_container .tags");
+
+    webkit_dom_html_element_set_inner_html (tags, header_row_value(tags_s, true).c_str(), (err = NULL, &err));
+
+    g_object_unref (tags);
+
+    tags = select (
+        WEBKIT_DOM_NODE (div_message),
+        ".header_container .header div#Tags .value");
+
+    webkit_dom_html_element_set_inner_html (tags, tags_s_c.c_str (), (err = NULL, &err));
+
+    g_object_unref (tags);
+    g_object_unref (div_message);
+    g_object_unref (d);
   }
 
   /* end message loading }}} */

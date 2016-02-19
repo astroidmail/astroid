@@ -1,6 +1,8 @@
 ==
 
 * Tags can be modified on multiple marked threads with + and -.
+* Modify tags on single message, they are updated in thread-view
+  and thread-index.
 * scss: fix #82: make all variables global.
 
 == v0.5 / 2016-02-06

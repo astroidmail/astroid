@@ -64,8 +64,20 @@ namespace Astroid {
   }
 
   void GlobalActions::emit_thread_updated (Db * db, ustring thread_id) {
-    log << info << "actions: emitted updated signal for thread: " << thread_id << endl;
+    log << info << "actions: emitted updated and changed signal for thread: " << thread_id << endl;
     m_signal_thread_updated.emit (db, thread_id);
+    m_signal_thread_changed.emit (db, thread_id);
+  }
+
+  GlobalActions::type_signal_thread_changed
+    GlobalActions::signal_thread_changed ()
+  {
+    return m_signal_thread_changed;
+  }
+
+  void GlobalActions::emit_thread_changed (Db * db, ustring thread_id) {
+    log << info << "actions: emitted changed signal for thread: " << thread_id << endl;
+    m_signal_thread_changed.emit (db, thread_id);
   }
 
   /* message */
@@ -86,7 +98,7 @@ namespace Astroid {
           if (tidc != NULL) {
             tid = ustring(tidc);
 
-            emit_thread_updated (db, tid);
+            emit_thread_changed (db, tid);
 
           }
       });

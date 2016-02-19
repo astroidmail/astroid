@@ -197,6 +197,7 @@ namespace Astroid {
       void insert_header_date (ustring &, refptr<Message>);
       ustring create_header_row (ustring title, ustring value, bool important, bool escape, bool noprint = false);
       ustring header_row_value (ustring value, bool escape);
+      void message_refresh_tags (Db *, refptr<Message>);
 
       bool open_html_part_external;
       void display_part (refptr<Message>, refptr<Chunk>, MessageState::Element);
@@ -288,7 +289,8 @@ namespace Astroid {
       void register_keys ();
 
       /* changed signals */
-      void on_message_changed (Db *, Message *m, Message::MessageChangedEvent);
+      void on_message_changed (Db *, Message *, Message::MessageChangedEvent);
+      void on_thread_updated (Db *, ustring);
 
     public:
       /* the tv is ready */

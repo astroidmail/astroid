@@ -115,8 +115,8 @@ namespace Astroid {
     column->set_cell_data_func (*renderer,
         sigc::mem_fun(this, &ThreadIndexListView::set_thread_data) );
 
-    astroid->global_actions->signal_thread_updated ().connect (
-        sigc::mem_fun (this, &ThreadIndexListView::on_thread_updated));
+    astroid->global_actions->signal_thread_changed ().connect (
+        sigc::mem_fun (this, &ThreadIndexListView::on_thread_changed));
 
     astroid->global_actions->signal_refreshed ().connect (
         sigc::mem_fun (this, &ThreadIndexListView::on_refreshed));
@@ -1075,8 +1075,8 @@ namespace Astroid {
     thread_index->refresh (false, max(thread_index->thread_load_step, thread_index->current_thread), false);
   }
 
-  void ThreadIndexListView::on_thread_updated (Db * db, ustring thread_id) {
-    log << info << "til: got updated thread signal: " << thread_id << endl;
+  void ThreadIndexListView::on_thread_changed (Db * db, ustring thread_id) {
+    log << info << "til: got changed thread signal: " << thread_id << endl;
 
     /* we now have three options:
      * - a new thread has been added (unlikely)

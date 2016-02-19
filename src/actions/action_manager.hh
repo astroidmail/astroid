@@ -22,11 +22,21 @@ namespace Astroid {
     public:
       GlobalActions ();
 
-      /* update signal (something has been done with a thread) */
+      /* thread updated: called from e.g. thread-index and poll, but
+       * not from message changes - so suitable for changes where there
+       * is _not_ an redundant message_updated signal. */
       typedef sigc::signal <void, Db *, ustring> type_signal_thread_updated;
       type_signal_thread_updated signal_thread_updated ();
 
       void emit_thread_updated (Db *, ustring);
+
+      /* thread changed: called from message updated, as well as those above.
+       * so suitable for thread-index where message_updated events are not
+       * handled. */
+      typedef sigc::signal <void, Db *, ustring> type_signal_thread_changed;
+      type_signal_thread_changed signal_thread_changed ();
+
+      void emit_thread_changed (Db *, ustring);
 
       /* message update signal */
       typedef sigc::signal <void, Db *, ustring> type_signal_message_updated;
@@ -44,6 +54,7 @@ namespace Astroid {
 
     protected:
       type_signal_thread_updated m_signal_thread_updated;
+      type_signal_thread_changed m_signal_thread_changed;
       type_signal_message_updated m_signal_message_updated;
       type_signal_refreshed m_signal_refreshed;
 

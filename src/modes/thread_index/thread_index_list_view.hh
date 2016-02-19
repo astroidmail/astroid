@@ -105,7 +105,7 @@ namespace Astroid {
       // ignore built-in key handler
       virtual bool on_key_press_event (GdkEventKey *) override;
 
-      void on_thread_updated (Db *, ustring);
+      void on_thread_changed (Db *, ustring);
       void on_refreshed ();
 
     private:
