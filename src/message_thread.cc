@@ -14,6 +14,7 @@
 # include "utils/date_utils.hh"
 # include "utils/address.hh"
 # include "utils/ustring_utils.hh"
+# include "actions/action_manager.hh"
 
 using namespace std;
 using namespace boost::filesystem;
@@ -27,35 +28,34 @@ namespace Astroid {
     in_notmuch = false;
     has_file   = false;
     missing_content = false;
+
+    astroid->global_actions->signal_message_updated ().connect (
+        sigc::mem_fun (this, &Message::on_message_updated));
   }
 
-  Message::Message (ustring _fname) : fname (_fname) {
+  Message::Message (ustring _fname) : Message () {
 
     log << info << "msg: loading message from file: " << fname << endl;
-    in_notmuch = false;
+    fname = _fname;
     has_file   = true;
-    missing_content = false;
     load_message_from_file (fname);
   }
 
-  Message::Message (ustring _mid, ustring _fname) {
+  Message::Message (ustring _mid, ustring _fname) : Message () {
     mid = _mid;
     fname = _fname;
     log << info << "msg: loading message from file (mid supplied): " << fname << endl;
-    in_notmuch = false;
     has_file   = true;
-    missing_content = false;
     load_message_from_file (fname);
   }
 
-  Message::Message (notmuch_message_t *message, int _level) {
+  Message::Message (notmuch_message_t *message, int _level) : Message () {
     /* The caller must make sure the message pointer
      * is valid and not destroyed while initializing */
 
     mid = notmuch_message_get_message_id (message);
     in_notmuch = true;
     has_file   = true;
-    missing_content = false;
     level      = _level;
 
     log << info << "msg: loading mid: " << mid << endl;
@@ -78,6 +78,12 @@ namespace Astroid {
 
   Message::~Message () {
     //g_object_unref (message);
+  }
+
+  void Message::on_message_updated (Db * db, ustring _mid) {
+    if (in_notmuch && (mid == _mid)) {
+      load_tags (db);
+    }
   }
 
   void Message::load_tags (Db * db) {

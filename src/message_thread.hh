@@ -34,6 +34,8 @@ namespace Astroid {
       void load_tags (Db *);
       void load_tags (notmuch_message_t *);
 
+      void on_message_updated (Db *, ustring);
+
       GMimeMessage * message;
       refptr<Chunk>     root;
       int level = 0;
