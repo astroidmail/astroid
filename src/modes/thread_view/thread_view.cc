@@ -2450,6 +2450,7 @@ namespace Astroid {
           ustring tag_list = VectorUtils::concat_tags (focused_message->tags) + ", ";
 
           main_window->enable_command (CommandBar::CommandMode::Tag,
+              "Change tags for message:",
               tag_list,
               [&](ustring tgs) {
                 log << debug << "ti: got tags: " << tgs << endl;

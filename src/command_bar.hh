@@ -41,7 +41,8 @@ namespace Astroid {
       void on_entry_activated ();
       std::function<void(ustring)> callback;
 
-      void enable_command (CommandMode, ustring, std::function<void(ustring)>);
+      void enable_command (CommandMode, ustring cmd, std::function<void(ustring)>);
+      void enable_command (CommandMode, ustring title, ustring cmd, std::function<void(ustring)>);
       void disable_command ();
 
       //void handle_command (ustring);

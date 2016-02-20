@@ -94,7 +94,21 @@ namespace Astroid {
     callback = NULL;
   }
 
-  void CommandBar::enable_command (CommandMode m, ustring cmd, std::function<void(ustring)> f) {
+  void CommandBar::enable_command (
+      CommandMode m,
+      ustring title,
+      ustring cmd,
+      std::function<void(ustring)> f) {
+
+    enable_command (m, cmd, f);
+
+    mode_label.set_text (title);
+  }
+
+  void CommandBar::enable_command (
+      CommandMode m,
+      ustring cmd,
+      std::function<void(ustring)> f) {
     mode = m;
 
     reset_bar ();

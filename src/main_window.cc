@@ -319,6 +319,13 @@ namespace Astroid {
     }
   }
 
+  void MainWindow::enable_command (CommandBar::CommandMode m, ustring title, ustring cmd, function<void(ustring)> f) {
+    ungrab_active ();
+    command.enable_command (m, title, cmd, f);
+    is_command = true;
+    command.add_modal_grab ();
+  }
+
   void MainWindow::enable_command (CommandBar::CommandMode m, ustring cmd, function<void(ustring)> f) {
     ungrab_active ();
     command.enable_command (m, cmd, f);
