@@ -38,6 +38,8 @@ namespace Astroid {
       gpointer               user_data);
 
   class ThreadView : public Mode {
+    friend class ThreadViewInspector;
+
     public:
       ThreadView (MainWindow *);
       ~ThreadView ();
@@ -78,6 +80,8 @@ namespace Astroid {
       Theme theme;
 
     private:
+      ThreadViewInspector thread_view_inspector;
+
       /* message manipulation and location */
       void scroll_to_message (refptr<Message>, bool = false);
       bool scroll_to_element (ustring, bool = false);
@@ -174,8 +178,6 @@ namespace Astroid {
       WebKitWebView     * webview;
       WebKitWebSettings * websettings;
       WebKitDOMHTMLDivElement * container = NULL;
-      WebKitWebInspector * web_inspector;
-
 
       std::atomic<bool> wk_loaded;
 
@@ -252,12 +254,6 @@ namespace Astroid {
 
       void on_scroll_vadjustment_changed();
 
-      Gtk::Window * inspector_window;
-      Gtk::ScrolledWindow inspector_scroll;
-      WebKitWebView * activate_inspector (
-          WebKitWebInspector *,
-          WebKitWebView *);
-      bool show_inspector (WebKitWebInspector *);
 
       gboolean navigation_request (
         WebKitWebView * w,

@@ -1,3 +1,6 @@
+# include <gtkmm.h>
+# include <webkit/webkit.h>
+
 # include "log.hh"
 # include "message_thread.hh"
 # include "db.hh"
@@ -6,16 +9,30 @@
 # include "thread_view.hh"
 
 namespace Astroid {
-  extern "C" WebKitWebView * ThreadView_activate_inspector (
+  void ThreadViewInspector::setup (ThreadView * tv) {
+    thread_view = tv;
+
+    /* set up web view inspector */
+    web_inspector = webkit_web_view_get_inspector (thread_view->webview);
+    g_signal_connect (web_inspector, "inspect-web-view",
+        G_CALLBACK(ThreadViewInspector_activate_inspector),
+        (gpointer) this);
+
+    g_signal_connect (web_inspector, "show-window",
+        G_CALLBACK(ThreadViewInspector_show_inspector),
+        (gpointer) this);
+  }
+
+  extern "C" WebKitWebView * ThreadViewInspector_activate_inspector (
       WebKitWebInspector * wi,
       WebKitWebView *          w,
       gpointer                 data )
   {
-    return ((ThreadView *) data)->activate_inspector (wi, w);
+    return ((ThreadViewInspector *) data)->activate_inspector (wi, w);
   }
 
 
-  WebKitWebView * ThreadView::activate_inspector (
+  WebKitWebView * ThreadViewInspector::activate_inspector (
       WebKitWebInspector     * /* web_inspector */,
       WebKitWebView          * /* web_view */)
   {
@@ -23,8 +40,8 @@ namespace Astroid {
     log << info << "tv: starting conversation inspector.." << std::endl;
     inspector_window = new Gtk::Window ();
     inspector_window->set_default_size (600, 600);
-    if (thread)
-      inspector_window->set_title (ustring::compose("Conversation inspector: %1", thread->subject));
+    if (thread_view->thread)
+      inspector_window->set_title (ustring::compose("Conversation inspector: %1", thread_view->thread->subject));
     inspector_window->add (inspector_scroll);
     WebKitWebView * inspector_view = WEBKIT_WEB_VIEW (webkit_web_view_new ());
     gtk_container_add (GTK_CONTAINER (inspector_scroll.gobj()),
@@ -33,19 +50,19 @@ namespace Astroid {
     return inspector_view;
   }
 
-  extern "C" bool ThreadView_show_inspector (
+  extern "C" bool ThreadViewInspector_show_inspector (
       WebKitWebInspector * wi,
       gpointer data)
   {
-    return ((ThreadView *) data)->show_inspector (wi);
+    return ((ThreadViewInspector *) data)->show_inspector (wi);
   }
 
-  bool ThreadView::show_inspector (WebKitWebInspector * /* wi */) {
+  bool ThreadViewInspector::show_inspector (WebKitWebInspector * /* wi */) {
     log << info << "tv: show inspector.." << std::endl;
 
     inspector_window->show_all ();
 
-    release_modal ();
+    thread_view->release_modal ();
 
     return true;
   }

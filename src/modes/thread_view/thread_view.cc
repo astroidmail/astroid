@@ -136,16 +136,10 @@ namespace Astroid {
 
     add_events (Gdk::KEY_PRESS_MASK);
 
-    /* set up web view inspector */
-    web_inspector = webkit_web_view_get_inspector (webview);
-    g_signal_connect (web_inspector, "inspect-web-view",
-        G_CALLBACK(ThreadView_activate_inspector),
-        (gpointer) this);
+    /* set up ThreadViewInspector */
+    thread_view_inspector.setup (this);
 
-    g_signal_connect (web_inspector, "show-window",
-        G_CALLBACK(ThreadView_show_inspector),
-        (gpointer) this);
-
+    /* navigation requests */
     g_signal_connect (webview, "navigation-policy-decision-requested",
         G_CALLBACK(ThreadView_navigation_request),
         (gpointer) this);
@@ -296,8 +290,6 @@ namespace Astroid {
           }
 
           // TODO: cid type images or attachment references are not loaded
-
-          //g_object_unref (ine);
         }
 
         g_object_unref (in);
