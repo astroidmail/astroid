@@ -186,7 +186,6 @@ namespace Astroid {
       void render_messages ();
       void add_message (refptr<Message>);
       void reload_images ();
-      WebKitDOMHTMLElement * make_message_div ();
 
       /* message loading */
       void set_message_html (refptr<Message>, WebKitDOMHTMLElement *);
@@ -229,23 +228,7 @@ namespace Astroid {
       static const int ATTACHMENT_ICON_WIDTH = 35;
 
       void save_all_attachments ();
-
-      /* webkit dom utils */
-      WebKitDOMHTMLElement * clone_select (
-          WebKitDOMNode * node,
-          ustring         selector,
-          bool            deep = true);
-
-      WebKitDOMHTMLElement * clone_node (
-          WebKitDOMNode * node,
-          bool            deep = true);
-
-      WebKitDOMHTMLElement * select (
-          WebKitDOMNode * node,
-          ustring         selector);
-
     public:
-      static std::string assemble_data_uri (ustring, gchar *&, gsize);
 
       /* event wrappers */
       bool on_load_changed (

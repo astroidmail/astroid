@@ -10,6 +10,7 @@
 
 # include "thread_view.hh"
 # include "web_inspector.hh"
+# include "dom_utils.hh"
 # include "theme.hh"
 
 # include "main_window.hh"
@@ -643,7 +644,7 @@ namespace Astroid {
     WebKitDOMElement * div_message = webkit_dom_document_get_element_by_id (d, mid.c_str());
 
 
-    WebKitDOMHTMLElement * tags = select (
+    WebKitDOMHTMLElement * tags = DomUtils::select (
         WEBKIT_DOM_NODE (div_message),
         ".header_container .tags");
 
@@ -651,7 +652,7 @@ namespace Astroid {
 
     g_object_unref (tags);
 
-    tags = select (
+    tags = DomUtils::select (
         WEBKIT_DOM_NODE (div_message),
         ".header_container .header div#Tags .value");
 
@@ -764,7 +765,7 @@ namespace Astroid {
     WebKitDOMNode * insert_before = webkit_dom_node_get_last_child (
         WEBKIT_DOM_NODE (container));
 
-    WebKitDOMHTMLElement * div_message = make_message_div ();
+    WebKitDOMHTMLElement * div_message = DomUtils::make_message_div (webview);
 
     GError * err = NULL;
     webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT(div_message),
@@ -837,7 +838,7 @@ namespace Astroid {
     /* load message into div */
     ustring header;
     WebKitDOMHTMLElement * div_email_container =
-      select (WEBKIT_DOM_NODE(div_message), "div.email_container");
+      DomUtils::select (WEBKIT_DOM_NODE(div_message), "div.email_container");
 
     /* build header */
     insert_header_address (header, "From", Address(m->sender), true);
@@ -857,7 +858,7 @@ namespace Astroid {
     if (m->subject.length() > 0) {
       insert_header_row (header, "Subject", m->subject, false);
 
-      WebKitDOMHTMLElement * subject = select (
+      WebKitDOMHTMLElement * subject = DomUtils::select (
           WEBKIT_DOM_NODE (div_message),
           ".header_container .subject");
 
@@ -879,7 +880,7 @@ namespace Astroid {
       header += create_header_row ("Tags", tags_s_c, false, false, true);
 
 
-      WebKitDOMHTMLElement * tags = select (
+      WebKitDOMHTMLElement * tags = DomUtils::select (
           WEBKIT_DOM_NODE (div_message),
           ".header_container .tags");
 
@@ -892,7 +893,7 @@ namespace Astroid {
     auto se = Address(m->sender);
 
     WebKitDOMHTMLImageElement * av = WEBKIT_DOM_HTML_IMAGE_ELEMENT (
-        select (
+        DomUtils::select (
         WEBKIT_DOM_NODE (div_message),
         ".avatar"));
 
@@ -902,7 +903,7 @@ namespace Astroid {
 
     /* insert header html*/
     WebKitDOMHTMLElement * table_header =
-      select (WEBKIT_DOM_NODE(div_email_container),
+      DomUtils::select (WEBKIT_DOM_NODE(div_email_container),
           ".header_container .header");
 
     webkit_dom_html_element_set_inner_html (
@@ -913,9 +914,9 @@ namespace Astroid {
     /* if message is missing body, set warning and don't add any content */
 
     WebKitDOMHTMLElement * span_body =
-      select (WEBKIT_DOM_NODE(div_email_container), ".body");
+      DomUtils::select (WEBKIT_DOM_NODE(div_email_container), ".body");
 
-    WebKitDOMHTMLElement * preview = select (
+    WebKitDOMHTMLElement * preview = DomUtils::select (
         WEBKIT_DOM_NODE (div_message),
         ".header_container .preview");
 
@@ -948,7 +949,7 @@ namespace Astroid {
 
       WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
       WebKitDOMHTMLElement * body_container =
-        clone_select (WEBKIT_DOM_NODE(d), "#body_template");
+        DomUtils::clone_select (WEBKIT_DOM_NODE(d), "#body_template");
 
       webkit_dom_element_remove_attribute (WEBKIT_DOM_ELEMENT (body_container),
           "id");
@@ -1058,7 +1059,7 @@ namespace Astroid {
 
     WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
     WebKitDOMHTMLElement * body_container =
-      clone_select (WEBKIT_DOM_NODE(d), "#body_template");
+      DomUtils::clone_select (WEBKIT_DOM_NODE(d), "#body_template");
 
     webkit_dom_element_remove_attribute (WEBKIT_DOM_ELEMENT (body_container),
         "id");
@@ -1145,10 +1146,10 @@ namespace Astroid {
     WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
 
     WebKitDOMHTMLElement * div_email_container =
-      select (WEBKIT_DOM_NODE(e), "div.email_container");
+      DomUtils::select (WEBKIT_DOM_NODE(e), "div.email_container");
 
     WebKitDOMHTMLElement * span_body =
-      select (WEBKIT_DOM_NODE(div_email_container), ".body");
+      DomUtils::select (WEBKIT_DOM_NODE(div_email_container), ".body");
 
     WebKitDOMElement * sibling =
       webkit_dom_document_get_element_by_id (d, el.element_id().c_str());
@@ -1200,7 +1201,7 @@ namespace Astroid {
 
     WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
     WebKitDOMHTMLElement * sibling_container =
-      clone_select (WEBKIT_DOM_NODE(d), "#sibling_template");
+      DomUtils::clone_select (WEBKIT_DOM_NODE(d), "#sibling_template");
 
     webkit_dom_element_remove_attribute (WEBKIT_DOM_ELEMENT (sibling_container),
         "id");
@@ -1219,7 +1220,7 @@ namespace Astroid {
         e.element_id ());
 
     WebKitDOMHTMLElement * message_cont =
-      select (WEBKIT_DOM_NODE (sibling_container), ".message");
+      DomUtils::select (WEBKIT_DOM_NODE (sibling_container), ".message");
 
     webkit_dom_html_element_set_inner_html (
         message_cont,
@@ -1244,7 +1245,7 @@ namespace Astroid {
     WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
     WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
 
-    WebKitDOMHTMLElement * warning = select (
+    WebKitDOMHTMLElement * warning = DomUtils::select (
         WEBKIT_DOM_NODE (e),
         ".email_warning");
 
@@ -1270,7 +1271,7 @@ namespace Astroid {
     WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
     WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
 
-    WebKitDOMHTMLElement * warning = select (
+    WebKitDOMHTMLElement * warning = DomUtils::select (
         WEBKIT_DOM_NODE (e),
         ".email_warning");
 
@@ -1302,7 +1303,7 @@ namespace Astroid {
       log << warn << "tv: could not get email div." << endl;
     }
 
-    WebKitDOMHTMLElement * info = select (
+    WebKitDOMHTMLElement * info = DomUtils::select (
         WEBKIT_DOM_NODE (e),
         ".email_info");
 
@@ -1331,7 +1332,7 @@ namespace Astroid {
       log << warn << "tv: could not get email div." << endl;
     }
 
-    WebKitDOMHTMLElement * info = select (
+    WebKitDOMHTMLElement * info = DomUtils::select (
         WEBKIT_DOM_NODE (e),
         ".email_info");
 
@@ -1449,7 +1450,7 @@ namespace Astroid {
   {
     GError *err;
 
-    WebKitDOMHTMLElement * attachment_icon_img = select (
+    WebKitDOMHTMLElement * attachment_icon_img = DomUtils::select (
         WEBKIT_DOM_NODE (div_message),
         ".attachment.icon.first");
 
@@ -1462,18 +1463,18 @@ namespace Astroid {
 
     err = NULL;
     webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (img), "src",
-        assemble_data_uri (image_content_type, content, content_size).c_str(), &err);
+        DomUtils::assemble_data_uri (image_content_type, content, content_size).c_str(), &err);
 
     g_object_unref (attachment_icon_img);
 
-    attachment_icon_img = select (
+    attachment_icon_img = DomUtils::select (
         WEBKIT_DOM_NODE (div_message),
         ".attachment.icon.sec");
     img = WEBKIT_DOM_HTML_IMAGE_ELEMENT (attachment_icon_img);
 
     err = NULL;
     webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (img), "src",
-        assemble_data_uri (image_content_type, content, content_size).c_str(), &err);
+        DomUtils::assemble_data_uri (image_content_type, content, content_size).c_str(), &err);
 
     WebKitDOMDOMTokenList * class_list =
       webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(div_message));
@@ -1511,9 +1512,9 @@ namespace Astroid {
 
     WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
     WebKitDOMHTMLElement * attachment_container =
-      clone_select (WEBKIT_DOM_NODE(d), "#attachment_template");
+      DomUtils::clone_select (WEBKIT_DOM_NODE(d), "#attachment_template");
     WebKitDOMHTMLElement * attachment_template =
-      select (WEBKIT_DOM_NODE(attachment_container), ".attachment");
+      DomUtils::select (WEBKIT_DOM_NODE(attachment_container), ".attachment");
 
     webkit_dom_element_remove_attribute (WEBKIT_DOM_ELEMENT (attachment_container),
         "id");
@@ -1525,12 +1526,12 @@ namespace Astroid {
     /* generate an attachment table for each attachment */
     for (refptr<Chunk> &c : message->attachments ()) {
       WebKitDOMHTMLElement * attachment_table =
-        clone_node (WEBKIT_DOM_NODE (attachment_template));
+        DomUtils::clone_node (WEBKIT_DOM_NODE (attachment_template));
 
       attachments++;
 
       WebKitDOMHTMLElement * info_fname =
-        select (WEBKIT_DOM_NODE (attachment_table), ".info .filename");
+        DomUtils::select (WEBKIT_DOM_NODE (attachment_table), ".info .filename");
 
       ustring fname = c->get_filename ();
       if (fname.size () == 0) {
@@ -1542,7 +1543,7 @@ namespace Astroid {
       webkit_dom_html_element_set_inner_text (info_fname, fname.c_str(), (err = NULL, &err));
 
       WebKitDOMHTMLElement * info_fsize =
-        select (WEBKIT_DOM_NODE (attachment_table), ".info .filesize");
+        DomUtils::select (WEBKIT_DOM_NODE (attachment_table), ".info .filesize");
 
       refptr<Glib::ByteArray> attachment_data = c->contents ();
 
@@ -1566,7 +1567,7 @@ namespace Astroid {
       // set image
       WebKitDOMHTMLImageElement * img =
         WEBKIT_DOM_HTML_IMAGE_ELEMENT(
-        select (WEBKIT_DOM_NODE (attachment_table), ".preview img"));
+        DomUtils::select (WEBKIT_DOM_NODE (attachment_table), ".preview img"));
 
       set_attachment_src (c, attachment_data, img);
 
@@ -1680,7 +1681,7 @@ namespace Astroid {
 
     GError * err = NULL;
     webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (img), "src",
-        assemble_data_uri (image_content_type, content, content_size).c_str(), &err);
+        DomUtils::assemble_data_uri (image_content_type, content, content_size).c_str(), &err);
 
   }
   /* attachments end }}} */
@@ -1692,7 +1693,7 @@ namespace Astroid {
   {
     GError *err;
 
-    WebKitDOMHTMLElement * marked_icon_img = select (
+    WebKitDOMHTMLElement * marked_icon_img = DomUtils::select (
         WEBKIT_DOM_NODE (div_message),
         ".marked.icon.first");
 
@@ -1705,16 +1706,16 @@ namespace Astroid {
 
     err = NULL;
     webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (img), "src",
-        assemble_data_uri (image_content_type, content, content_size).c_str(), &err);
+        DomUtils::assemble_data_uri (image_content_type, content, content_size).c_str(), &err);
 
     g_object_unref (marked_icon_img);
-    marked_icon_img = select (
+    marked_icon_img = DomUtils::select (
         WEBKIT_DOM_NODE (div_message),
         ".marked.icon.sec");
     img = WEBKIT_DOM_HTML_IMAGE_ELEMENT (marked_icon_img);
     err = NULL;
     webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (img), "src",
-        assemble_data_uri (image_content_type, content, content_size).c_str(), &err);
+        DomUtils::assemble_data_uri (image_content_type, content, content_size).c_str(), &err);
 
     g_object_unref (marked_icon_img);
   }
@@ -1755,10 +1756,10 @@ namespace Astroid {
 
   {
     WebKitDOMHTMLElement * div_email_container =
-      select (WEBKIT_DOM_NODE(div_message), "div.email_container");
+      DomUtils::select (WEBKIT_DOM_NODE(div_message), "div.email_container");
 
     WebKitDOMHTMLElement * span_body =
-      select (WEBKIT_DOM_NODE(div_email_container), ".body");
+      DomUtils::select (WEBKIT_DOM_NODE(div_email_container), ".body");
 
     for (refptr<Chunk> &c : message->mime_messages ()) {
       log << debug << "create mime message part: " << c->id << endl;
@@ -1772,7 +1773,7 @@ namespace Astroid {
 
       WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
       WebKitDOMHTMLElement * mime_container =
-        clone_select (WEBKIT_DOM_NODE(d), "#mime_template");
+        DomUtils::clone_select (WEBKIT_DOM_NODE(d), "#mime_template");
 
       webkit_dom_element_remove_attribute (WEBKIT_DOM_ELEMENT (mime_container),
           "id");
@@ -1792,7 +1793,7 @@ namespace Astroid {
           e.element_id ());
 
       WebKitDOMHTMLElement * message_cont =
-        select (WEBKIT_DOM_NODE (mime_container), ".message");
+        DomUtils::select (WEBKIT_DOM_NODE (mime_container), ".message");
 
       webkit_dom_html_element_set_inner_html (
           message_cont,
@@ -1819,64 +1820,6 @@ namespace Astroid {
 
 
   /* end rendering }}} */
-
-  /* clone and create html elements {{{ */
-  string ThreadView::assemble_data_uri (ustring mime_type, gchar * &data, gsize len) {
-    string base64 = "data:" + mime_type + ";base64," + Glib::Base64::encode (string(data, len));
-    return base64;
-  }
-
-  WebKitDOMHTMLElement * ThreadView::make_message_div () {
-    /* clone div from template in html file */
-    WebKitDOMDocument *d = webkit_web_view_get_dom_document (webview);
-    WebKitDOMHTMLElement *e = clone_select (WEBKIT_DOM_NODE(d),
-        "#email_template");
-    g_object_unref (d);
-    return e;
-  }
-
-  WebKitDOMHTMLElement * ThreadView::clone_select (
-      WebKitDOMNode * node,
-      ustring         selector,
-      bool            deep) {
-
-    return clone_node (WEBKIT_DOM_NODE(select (node, selector)), deep);
-  }
-
-  WebKitDOMHTMLElement * ThreadView::clone_node (
-      WebKitDOMNode * node,
-      bool            deep) {
-
-    return WEBKIT_DOM_HTML_ELEMENT(webkit_dom_node_clone_node (node, deep));
-  }
-
-  WebKitDOMHTMLElement * ThreadView::select (
-      WebKitDOMNode * node,
-      ustring         selector) {
-
-    GError * gerr = NULL;
-    WebKitDOMHTMLElement *e;
-
-    if (WEBKIT_DOM_IS_DOCUMENT(node)) {
-      e = WEBKIT_DOM_HTML_ELEMENT(
-        webkit_dom_document_query_selector (WEBKIT_DOM_DOCUMENT(node),
-                                            selector.c_str(),
-                                            &gerr));
-    } else {
-      /* ..DOMElement */
-      e = WEBKIT_DOM_HTML_ELEMENT(
-        webkit_dom_element_query_selector (WEBKIT_DOM_ELEMENT(node),
-                                            selector.c_str(),
-                                            &gerr));
-    }
-
-    if (gerr != NULL)
-      log << error << "tv: clone_s_s_err: " << gerr->message << endl;
-
-    return e;
-  }
-
-  /* clone and create end }}} */
 
   void ThreadView::register_keys () { // {{{
     keys.title = "Thread View";
