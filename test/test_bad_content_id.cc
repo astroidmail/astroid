@@ -9,7 +9,7 @@
 # include "glibmm.h"
 # include "log.hh"
 
-using namespace std;
+using std::endl;
 using Astroid::Message;
 using Astroid::MessageThread;
 using Astroid::Chunk;
@@ -18,8 +18,43 @@ using Astroid::test;
 
 BOOST_AUTO_TEST_SUITE(Reading)
 
+  /*
+   * the Content-Type: .. at line 30: seems to not be captured by gmime,
+   * removing the newline (as in BadContentId2) fixes the issue.
+   *
+   */
 
-  BOOST_AUTO_TEST_CASE(BadContentId)
+  BOOST_AUTO_TEST_CASE(BadContentId2)
+  {
+    setup ();
+
+    ustring fname = "test/mail/test_mail/bad-content-part-id-2.eml";
+
+    Message m (fname);
+
+    BOOST_CHECK_NO_THROW (m.viewable_text (true));
+
+    /* the first part is probablematic */
+    /* refptr<Chunk> c = m.root->kids[0]; */
+    for (auto &c : m.mime_messages ()) {
+      Astroid::log << test << "chunk: " << c->id
+        << ", viewable: " << c->viewable
+        << ", mime_message: " << c->mime_message
+        << endl;
+
+      /*
+      std::string content ((char *) c->contents ()->get_data ());
+      Astroid::log << test <<  content << endl;
+      */
+
+      refptr<MessageThread> mt = refptr<MessageThread> (new MessageThread ());
+      mt->add_message (c);
+    }
+
+    teardown ();
+  }
+
+  BOOST_AUTO_TEST_CASE(BadContentId1)
   {
     setup ();
 
@@ -32,7 +67,15 @@ BOOST_AUTO_TEST_SUITE(Reading)
     /* the first part is probablematic */
     /* refptr<Chunk> c = m.root->kids[0]; */
     for (auto &c : m.mime_messages ()) {
-      /* Astroid::log << test << "chunk: " << c->get_content_type () << endl; */
+      Astroid::log << test << "chunk: " << c->id
+        << ", viewable: " << c->viewable
+        << ", mime_message: " << c->mime_message
+        << endl;
+
+      /*
+      std::string content ((char *) c->contents ()->get_data ());
+      Astroid::log << test <<  content << endl;
+      */
 
       refptr<MessageThread> mt = refptr<MessageThread> (new MessageThread ());
       mt->add_message (c);

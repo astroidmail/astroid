@@ -27,16 +27,16 @@ namespace Astroid {
     id = nextid++;
 
     if (mp == NULL) {
-      log << error << "chunk: got NULL mime_object." << endl;
+      log << error << "chunk (" << id << "): got NULL mime_object." << endl;
       throw std::logic_error ("chunk: got NULL mime_object");
     }
 
     content_type = g_mime_object_get_content_type (mime_object);
 
     if (content_type) {
-      log << debug << "chunk: content-type: " << g_mime_content_type_to_string (content_type) << endl;
+      log << debug << "chunk (" << id << "): content-type: " << g_mime_content_type_to_string (content_type) << endl;
     } else {
-      log << warn << "chunk: content-type not specified, could be mime-message." << endl;
+      log << warn << "chunk (" << id << "): content-type not specified, could be mime-message." << endl;
     }
 
     if (GMIME_IS_PART (mime_object)) {
