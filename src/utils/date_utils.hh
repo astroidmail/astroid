@@ -9,6 +9,7 @@ namespace Astroid {
         TWELVE_HOURS,
         TWENTY_FOUR_HOURS,
         LOCALE_DEFAULT,
+        YEAR,
       };
 
       // TODO: translate, might need initialization on startup,
