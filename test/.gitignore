@@ -13,4 +13,5 @@ test_open_db
 test_mime_message
 test_theme
 test_keybindings
+test_bad_content_id
 
