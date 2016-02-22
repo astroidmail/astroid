@@ -222,13 +222,20 @@ namespace Astroid {
      */
 
     message = _msg;
+    const char *c;
 
     if (mid == "") {
-      mid = g_mime_message_get_message_id (message);
+      c = g_mime_message_get_message_id (message);
+      if (c != NULL) {
+        mid = ustring (c);
+      } else {
+        mid = UstringUtils::random_alphanumeric (10);
+        mid = ustring::compose ("%1-astroid-missing-mid", mid);
+        log << warn << "mt: message does not have a message id, inventing one: " << mid << endl;
+      }
     }
 
     /* read header fields */
-    const char *c;
     c  = g_mime_message_get_sender (message);
     if (c != NULL) sender = ustring (c);
     else sender = "";
