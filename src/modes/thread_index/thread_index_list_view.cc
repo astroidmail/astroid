@@ -957,9 +957,9 @@ namespace Astroid {
     return false;
   }
 
-  bool ThreadIndexListView::on_key_press_event (GdkEventKey *) {
-    // this one is here to ignore built-in key-handler
-    return false;
+  bool ThreadIndexListView::on_key_press_event (GdkEventKey * e) {
+    /* bypass scrolled window */
+    return thread_index->on_key_press_event (e);
   }
 
   bool ThreadIndexListView::on_button_press_event (GdkEventButton *ev) {

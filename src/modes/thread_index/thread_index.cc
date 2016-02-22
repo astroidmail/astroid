@@ -135,6 +135,64 @@ namespace Astroid {
           refresh (false, max(thread_load_step, current_thread), false);
           return true;
         });
+
+    keys.register_key ("C-u", { Key (true, false, (guint) GDK_KEY_Up), Key (GDK_KEY_Page_Up) },
+        "thread_index.page_up",
+        "Page up",
+        [&] (Key) {
+          auto adj = scroll->scroll.get_vadjustment ();
+          adj->set_value (adj->get_value() - adj->get_page_increment ());
+
+          /* check if cursor is in view */
+          Gtk::TreePath path;
+          Gtk::TreeViewColumn *c;
+          list_view->get_cursor (path, c);
+
+          gint * indices = gtk_tree_path_get_indices (path.gobj ());
+
+          double pos = *indices * (double) list_view->renderer->height;;
+          double top = adj->get_value ();
+          double bottom = top + scroll->get_height ();
+
+          if (pos < top || pos > bottom) {
+            /* not in view, move cursor to bottom */
+            Gtk::TreePath newpath;
+            int cx, cy;
+            list_view->get_path_at_pos (0, list_view->get_height (), newpath, c, cx, cy);
+            list_view->set_cursor (newpath);
+          }
+
+          return true;
+        });
+
+    keys.register_key ("C-d", { Key (true, false, (guint) GDK_KEY_Down), Key (GDK_KEY_Page_Down) },
+        "thread_index.page_down",
+        "Page down",
+        [&] (Key) {
+          auto adj = scroll->scroll.get_vadjustment ();
+          adj->set_value (adj->get_value() + adj->get_page_increment ());
+
+          /* check if cursor is in view */
+          Gtk::TreePath path;
+          Gtk::TreeViewColumn *c;
+          list_view->get_cursor (path, c);
+
+          gint * indices = gtk_tree_path_get_indices (path.gobj ());
+
+          double pos = *indices * (double) list_view->renderer->height;;
+          double top = adj->get_value ();
+          double bottom = top + scroll->get_height ();
+
+          if (pos < top || pos > bottom) {
+            /* not in view, move cursor to top */
+            Gtk::TreePath newpath;
+            int cx, cy;
+            list_view->get_path_at_pos (0, 0, newpath, c, cx, cy);
+            list_view->set_cursor (newpath);
+          }
+
+          return true;
+        });
     // }}}
   }
 

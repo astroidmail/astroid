@@ -174,6 +174,7 @@ namespace Astroid {
   }
 
   Keybindings::Keybindings () {
+    /* loghandle = true; */
   }
 
   void Keybindings::set_prefix (ustring t, ustring p) {

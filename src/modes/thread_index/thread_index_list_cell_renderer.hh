@@ -62,11 +62,13 @@ namespace Astroid {
 
       virtual Gtk::SizeRequestMode get_request_mode_vfunc () const override;
 
+    public:
+      int height;
+      bool height_set = false;
+
     private:
       int content_height;
       int line_spacing = 2; // configurable
-      int height;
-      bool height_set = false;
 
       int left_icons_size;
       int left_icons_width;
