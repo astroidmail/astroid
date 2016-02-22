@@ -1,0 +1,682 @@
+Return-path: <debian-user-digest-request@lists.debian.org>
+Envelope-to: mdt@emdete.de
+Delivery-date: Mon, 22 Feb 2016 13:45:00 +0100
+Received: from bendel.debian.org ([82.195.75.100])
+ by littlun with esmtp (Exim 4.86)
+ (envelope-from <debian-user-digest-request@lists.debian.org>)
+ id 1aXprI-0000qf-FD
+ for mdt@emdete.de; Mon, 22 Feb 2016 13:45:00 +0100
+Received: by bendel.debian.org (Postfix, from userid 38)
+ id BFB2CF1; Mon, 22 Feb 2016 12:44:59 +0000 (UTC)
+From: debian-user-digest-request@lists.debian.org
+Subject: debian-user-digest Digest V2016 #172
+X-Loop: debian-user-digest@lists.debian.org
+X-Mailing-List: <debian-user-digest@lists.debian.org> archive/volume2016/172
+List-Id: <debian-user-digest.lists.debian.org>
+List-Post: <mailto:debian-user@lists.debian.org>
+List-Help: <mailto:debian-user-digest-request@lists.debian.org?subject=help>
+List-Subscribe: <mailto:debian-user-digest-request@lists.debian.org?subject=subscribe>
+List-Unsubscribe: <mailto:debian-user-digest-request@lists.debian.org?subject=unsubscribe>
+Precedence: list
+MIME-Version: 1.0
+Content-Type: multipart/digest; boundary="31b46c1ec232c568ccf7093dd50f2af1"
+To: debian-user-digest@lists.debian.org
+Reply-To: debian-user@lists.debian.org
+Message-Id: <20160222124459.BFB2CF1@bendel.debian.org>
+Date: Mon, 22 Feb 2016 12:44:59 +0000 (UTC)
+X-Spambayes-Classification: ham; 0.00
+
+--31b46c1ec232c568ccf7093dd50f2af1
+
+Content-Type: text/plain
+
+debian-user-digest Digest				Volume 2016 : Issue 172
+
+Today's Topics:
+  Re: Help! System crashes and locks u  [ Sven Arvidsson <sa@whiz.se> ]
+  I Couldn't install geany-plugin-gdb   [ EenyMeenyMinyMoa <eenymeenyminymoa@ ]
+  Re: I Couldn't install geany-plugin-  [ Reco <recoverym4n@gmail.com> ]
+  Re: rotating screen in debian tablet  [ jdd <jdd@dodin.org> ]
+  Re: Is it possible to fully reinstal  [ Dalios <dalios@eumx.net> ]
+  BIND problem                          [ Glenn English <ghe@srv.slsware.net> ]
+  Re: BIND problem                      [ Reco <recoverym4n@gmail.com> ]
+  Re: Is it possible to fully reinstal  [ arian <debian@semioptimal.net> ]
+  Re: Is it possible to fully reinstal  [ Keith Bainbridge <keithrbaugroups@g ]
+  Re: Is it possible to fully reinstal  [ <tomas@tuxteam.de> ]
+  Enabling of the control grups with i  [ Mark Johnson <johnsonmark777@yahoo. ]
+  Re: Enabling of the control grups wi  [ Reco <recoverym4n@gmail.com> ]
+
+--31b46c1ec232c568ccf7093dd50f2af1
+
+Date: Mon, 22 Feb 2016 08:58:49 +0100
+From: Sven Arvidsson <sa@whiz.se>
+To: debian-user@lists.debian.org
+Subject: Re: Help! System crashes and locks up.
+Message-ID: <1456127929.8493.29.camel@whiz.se>
+Content-Type: multipart/signed; micalg="pgp-sha256";
+ protocol="application/pgp-signature"; boundary="=-M40tIYDCkVX2gxTdShOV"
+
+--=-M40tIYDCkVX2gxTdShOV
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+On Sun, 2016-02-21 at 18:12 -0600, Dennis Wicks wrote:
+> Greetings;
+>=20
+> I have a system I just put together. New pwr sup, mobo, and=C2=A0
+> 1 new SATA disk, 1TB. 2Gig memory. Processor is a Phenom=C2=A0
+> 9950 4 core. Running Deb 8.3.0 Jessie, new install.
+>=20
+> Every so often it crashes and locks up, and the monitor=C2=A0
+> screen has many narrow horizontal lines, mostly the=C2=A0
+> background color.
+>=20
+> When it crashes only reset and power off will work. I have=C2=A0
+> looked in every log file I can think of and no luck.
+>=20
+> Does this sound familiar to anybody? Any hints?
+>=20
+> Any help at all greatly appreciated!!
+
+https://blog.codinghorror.com/is-your-computer-stable/
+
+--=20
+Cheers,
+Sven Arvidsson
+http://www.whiz.se
+PGP Key ID 6FAB5CD5
+
+
+--=-M40tIYDCkVX2gxTdShOV
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAABCAAGBQJWyr+5AAoJEHzNaXRvq1zVg8oQAKNuVE08kKT9GIpWTgX4Q8Nj
+W3wD5wEbHCYQ6Z5ShGAyoyRNatUoVxJFJfLfBPS32R9lxHlXIfCBWdMDrIQJpBgx
+DP3wCHSa/psM03qVB4NXcbukai2utIQ+tLMozPZ6Eo8cWvRUHC1EC1+kXX48ZED3
+gIfeX05JTvekVR5Nz+vLcKEq5Xj/QXjBDRCxoxSuxZv0+i/DJHlfynnUs6kmoNtV
+IPOg2muwXfIKdBhFGtCidC2y4XQsiInJnXt3Ab5kcY3Rogy54TuIJnlrOnyaA7B6
+lBKW0FseckiqOSNH2eREjvzoSJ4sY0ZpFjNVNAprtfeADUG9XOCmZimbhZA7M9i+
+1jo9mcmlq50z0ZVSPv9bNeh2V84/KoWwKFzmbCDUVLB6wwRv1AV/JOF3ou/8pg04
+8kcjPgqEf8bQJ84XcmCq48Exl71HXhBtMjkK8g4e2Yh1A6nU6a/Mrtujo3pxeQHW
+Jfkue3tLpKO9rTmFTrwZ/CuRPCnSdmE4C1/nCAz+ZmphWtLWRkr1QTGhIzZKRFzr
+pOe3CUAM3uU2atkb6BhdriVjq7GBjLG1Wi55jsn6UnNrXCMvyuMmHkLyAfoZZ0WK
+zqwC62EHDD4nvJ5Aaq0x7fqEV46dtvxSkzLU4J9ha3yGYtnxndrMrxNy3nuP/tgN
+LPwMLbOGoharZmvAPZ+2
+=zF3j
+-----END PGP SIGNATURE-----
+
+--=-M40tIYDCkVX2gxTdShOV--
+
+--31b46c1ec232c568ccf7093dd50f2af1
+
+Date: Mon, 22 Feb 2016 16:21:31 +0800
+From: EenyMeenyMinyMoa <eenymeenyminymoa@gmail.com>
+To: debian-user@lists.debian.org
+Subject: I Couldn't install geany-plugin-gdb in jessie.
+Message-ID: <CAP6JtwgXhqzgRAOU0KTrCWWP27L06NsLK9xfQfPH8A9A=Qg4Cw@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+
+Hi,
+refering to
+
+https://packages.debian.org/search?lang=en&suite=all&searchon=names&keywords=geany-plugin-gdb
+
+I added the line
+deb http://ftp.jp.debian.org/debian/ wheezy main
+to /etc/apt/sources.list, and apt-get updated,
+but I was not able to install geany-plugin-gdb.
+
+$ sudo apt-get install geany-plugin-gdb
+Reading package lists... Done
+Building dependency tree
+Reading state information... Done
+Some packages could not be installed. This may mean that you have
+requested an impossible situation or if you are using the unstable
+distribution that some required packages have not yet been created
+or been moved out of Incoming.
+The following information may help to resolve the situation:
+The following packages have unmet dependencies:
+geany-plugin-gdb : Depends: geany-plugins-common (= 0.21.1.dfsg-4) but
+1.24+dfsg-5 is to be installed
+E: Unable to correct problems, you have held broken packages.
+
+What should I do?
+And why isn't geany-plugin-gdb in the jessie repository?
+
+
+EenyMeenyMinyMoa
+
+--31b46c1ec232c568ccf7093dd50f2af1
+
+Date: Mon, 22 Feb 2016 11:38:07 +0300
+From: Reco <recoverym4n@gmail.com>
+To: debian-user@lists.debian.org
+Subject: Re: I Couldn't install geany-plugin-gdb in jessie.
+Message-Id: <20160222113807.000b509eacdfe1e7a6330924@gmail.com>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+
+	Hi.
+
+On Mon, 22 Feb 2016 16:21:31 +0800
+EenyMeenyMinyMoa <eenymeenyminymoa@gmail.com> wrote:
+
+> Hi,
+> refering to
+> 
+> https://packages.debian.org/search?lang=en&suite=all&searchon=names&keywords=geany-plugin-gdb
+> 
+> I added the line
+> deb http://ftp.jp.debian.org/debian/ wheezy main
+> to /etc/apt/sources.list, and apt-get updated,
+> but I was not able to install geany-plugin-gdb.
+
+And you should not be able to as most of geany plugins depend on exact
+version of geany.
+
+This:
+
+> geany-plugin-gdb : Depends: geany-plugins-common (= 0.21.1.dfsg-4) but
+> 1.24+dfsg-5 is to be installed
+
+clearly shows us that you have installed geany from jessie, so the only
+kind of plugins that fit your install are geany plugins from Jessie.
+
+
+> What should I do?
+
+Try installing 'geany-plugin-debugger' instead.
+
+
+> And why isn't geany-plugin-gdb in the jessie repository?
+
+My guess is that they simply renamed the package.
+
+Reco
+
+--31b46c1ec232c568ccf7093dd50f2af1
+
+Date: Mon, 22 Feb 2016 09:57:00 +0100
+From: jdd <jdd@dodin.org>
+To: debian-user@lists.debian.org
+Subject: Re: rotating screen in debian tablet
+Message-ID: <56CACD5C.8030804@dodin.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+
+Le 21/02/2016 19:49, Sven Arvidsson a Ã©crit :
+
+> I also suggest that you document your efforts on getting Debian to run
+> here: https://wiki.debian.org/InstallingDebianOn/
+>
+> Both the stuff that works, and the stuff that doesn't.
+>
+I will, after having investigated a bit more :-)
+
+I was worried to notice the bug is still there when booting as 
+multi-user, that is with no X, and this was confirmed this morning, 
+there are no X recent logs.
+
+so I looked at the kernel logs and noticed a crash:
+
+http://dodin.org/owncloud/index.php/s/PzRjuxtZHKbMwzK
+
+that seems to be a known issue, with some fixes, but I do not really 
+understand what I have to do to apply the fixes :-(
+
+https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1492632
+
+https://bugs.launchpad.net/mesa/+bug/1274315
+
+any way to do this on the grub kernel command line?
+
+https://wiki.debian.org/KernelModesetting#Intel_GfxCards
+
+thanks
+jdd
+
+--31b46c1ec232c568ccf7093dd50f2af1
+
+Date: Mon, 22 Feb 2016 11:10:56 +0200
+From: Dalios <dalios@eumx.net>
+To: debian-user@lists.debian.org
+Subject: Re: Is it possible to fully reinstall the base system without
+ affecting /home?
+Message-ID: <56CAD0A0.6010402@eumx.net>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+
+On 02/22/2016 06:36 AM, Kynn Jones wrote:
+> My system is badly damaged, and it looks like the only way to fix it
+> is to do a full re-install.
+> 
+> I figure I will have to back everything up to an external drive,
+> reformat the hard drive, and install everything from scratch.
+> 
+> But I thought I'd ask if there's anything close to this that would not
+> require backing up everything and reformatting the hard disk.
+> Wouldn't it be possible, for example, to boot the system up from a
+> live CD, and reinstall the base system, leaving /home untouched?  (I
+> should mention that the hard disk in question is just one big
+> partition, including /home and everything else.)
+> 
+> Thanks in advance!
+> 
+> kj
+> 
+> 
+
+You can certainly do it but I am not sure you want!
+
+First of all you would have to move your /home to a new partition (to
+the same disk or another) and you would need to start from a Live CD/USB
+in order to do this step. Of course if you don't have another HD
+available then you would have to partition the disk which is risky for
+your data which you would have to backup elsewhere etc
+
+Next is the new installation procedure where you will eventually connect
+the new system with the old /home.
+
+However let me note that some of the problems of your current
+installation may live inside /home which means that you will still have
+to deal with them. The /home folder contains not only your data but also
+various settings files for your applications.
+
+So, as I said, you can certainly do it but I am not sure you want!
+
+Another approach would be to start a new thread (or more!) on this
+helpful list in order to try to solve your system's problems. Of course
+you can always re-install and start from scratch but how can you be sure
+you will not end on the same position after a while.
+
+
+Dalios
+
+--31b46c1ec232c568ccf7093dd50f2af1
+
+Date: Mon, 22 Feb 2016 02:35:52 -0700
+From: Glenn English <ghe@srv.slsware.net>
+To: debianUsers <debian-user@lists.debian.org>
+Subject: BIND problem
+Message-Id: <242CADDB-10D2-47CE-B9AD-D92D719F3E1B@srv.slsware.net>
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: quoted-printable
+
+I'm seeing lots of:
+
+> Feb 21 23:32:24 log named[20061]: dumping master file: =
+/var/cache/bind/slaves/tmp-I5cJjYH7fV: open: permission denied
+> Feb 21 23:36:54 log named[20117]: dumping master file: =
+/var/cache/bind/slaves/tmp-zsVXbHkEG1: open: permission denied
+> Feb 21 23:46:00 log named[20061]: dumping master file: =
+/var/cache/bind/slaves/tmp-ngGrdGrU2a: open: permission denied
+> Feb 21 23:49:26 log named[20117]: dumping master file: =
+/var/cache/bind/slaves/tmp-Q0vQCUg5xd: open: permission denied
+> Feb 21 23:58:36 log named[20061]: zone richeyrentals.com/IN: refresh: =
+could not set file modification time of =
+'/var/cache/bind/slaves/db.richeyrentals.com': permission denied
+> Feb 21 23:59:56 log named[20061]: dumping master file: =
+/var/cache/bind/slaves/tmp-Ef1P4JJ7WK: open: permission denied
+> Feb 22 00:02:30 log named[20117]: dumping master file: =
+/var/cache/bind/slaves/tmp-X7frzE1EHg: open: permission denied
+> Feb 22 00:14:26 log named[20061]: dumping master file: =
+/var/cache/bind/slaves/tmp-Mvis5kMjqB: open: permission denied
+> Feb 22 00:14:54 log named[20117]: dumping master file: =
+/var/cache/bind/slaves/tmp-5cVqqTAnb6: open: permission denied
+> Feb 22 00:25:31 log named[20117]: zone richeyrentals.com/IN: refresh: =
+could not set file modification time of =
+'/var/cache/bind/slaves/db.richeyrentals.com': permission denied
+> Feb 22 00:25:48 log named[20061]: dumping master file: =
+/var/cache/bind/slaves/tmp-5n3f6qn0Cj: open: permission denied
+> Feb 22 00:29:50 log named[20117]: dumping master file: =
+/var/cache/bind/slaves/tmp-qbxXuXSlvZ: open: permission denied
+> Feb 22 00:38:07 log named[20061]: dumping master file: =
+/var/cache/bind/slaves/tmp-n99ZL1tdSc: open: permission denied
+> Feb 22 00:43:19 log named[20117]: dumping master file: =
+/var/cache/bind/slaves/tmp-yhcq7G3STF: open: permission denied
+> Feb 22 00:51:46 log named[20061]: dumping master file: =
+/var/cache/bind/slaves/tmp-8m09QHZPqR: open: permission denied
+> Feb 22 00:53:20 log named[20061]: zone richeyrentals.com/IN: refresh: =
+could not set file modification time of =
+'/var/cache/bind/slaves/db.richeyrentals.com': permission denied
+
+in my log.
+
+I looked on the web, and no suggestion helped. Except one: one of then =
+said his worked when he ran bind (aka named) as root. I tried that and =
+sure enough, it 'fixed' the problem. Until monit somehow noticed the DNS =
+wasn't running and started it from /etc/init.d (I'm still running =
+Wheezy).=20
+
+It happens only on the master DNS server -- the slaves do their dumps =
+successfully, or maybe they don't try.
+
+I tried su -'ing from root to user bind (after giving bind a shell). No =
+joy.
+
+Everything in /var/cache/bind is owned by bind:bind, it's all owner and =
+group writable, root manages to write the files, there are no complaints =
+about the masters directory (there are also no files called tmp-*** in =
+there), and I'm at a loss as to why there's a problem setting the =
+modification time (touch does it just fine).
+
+Has anyone seen this and fixed it?=20
+
+I'm guessing somebody's just kidding about the directory they're trying =
+to write into, and their real directory is owned by user nobody...
+
+--=20
+Glenn English
+
+--31b46c1ec232c568ccf7093dd50f2af1
+
+Date: Mon, 22 Feb 2016 13:14:15 +0300
+From: Reco <recoverym4n@gmail.com>
+To: debian-user@lists.debian.org
+Subject: Re: BIND problem
+Message-Id: <20160222131415.d3a245e004784b44af0abc8a@gmail.com>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+
+	Hi.
+
+On Mon, 22 Feb 2016 02:35:52 -0700
+Glenn English <ghe@srv.slsware.net> wrote:
+
+> I'm seeing lots of:
+> 
+> > Feb 21 23:32:24 log named[20061]: dumping master file: /var/cache/bind/slaves/tmp-I5cJjYH7fV: open: permission denied
+> > Feb 21 23:36:54 log named[20117]: dumping master file: /var/cache/bind/slaves/tmp-zsVXbHkEG1: open: permission denied
+> > Feb 21 23:46:00 log named[20061]: dumping master file: /var/cache/bind/slaves/tmp-ngGrdGrU2a: open: permission denied
+> > Feb 21 23:49:26 log named[20117]: dumping master file: /var/cache/bind/slaves/tmp-Q0vQCUg5xd: open: permission denied
+> > Feb 21 23:58:36 log named[20061]: zone richeyrentals.com/IN: refresh: could not set file modification time of '/var/cache/bind/slaves/db.richeyrentals.com': permission denied
+> > Feb 21 23:59:56 log named[20061]: dumping master file: /var/cache/bind/slaves/tmp-Ef1P4JJ7WK: open: permission denied
+> > Feb 22 00:02:30 log named[20117]: dumping master file: /var/cache/bind/slaves/tmp-X7frzE1EHg: open: permission denied
+> > Feb 22 00:14:26 log named[20061]: dumping master file: /var/cache/bind/slaves/tmp-Mvis5kMjqB: open: permission denied
+> > Feb 22 00:14:54 log named[20117]: dumping master file: /var/cache/bind/slaves/tmp-5cVqqTAnb6: open: permission denied
+> > Feb 22 00:25:31 log named[20117]: zone richeyrentals.com/IN: refresh: could not set file modification time of '/var/cache/bind/slaves/db.richeyrentals.com': permission denied
+> > Feb 22 00:25:48 log named[20061]: dumping master file: /var/cache/bind/slaves/tmp-5n3f6qn0Cj: open: permission denied
+> > Feb 22 00:29:50 log named[20117]: dumping master file: /var/cache/bind/slaves/tmp-qbxXuXSlvZ: open: permission denied
+> > Feb 22 00:38:07 log named[20061]: dumping master file: /var/cache/bind/slaves/tmp-n99ZL1tdSc: open: permission denied
+> > Feb 22 00:43:19 log named[20117]: dumping master file: /var/cache/bind/slaves/tmp-yhcq7G3STF: open: permission denied
+> > Feb 22 00:51:46 log named[20061]: dumping master file: /var/cache/bind/slaves/tmp-8m09QHZPqR: open: permission denied
+> > Feb 22 00:53:20 log named[20061]: zone richeyrentals.com/IN: refresh: could not set file modification time of '/var/cache/bind/slaves/db.richeyrentals.com': permission denied
+> 
+> in my log.
+
+Please post the output of:
+
+ls -ald /var/cache/bind/slaves
+
+lsattr /var/cache/bind/slaves
+
+getfacl /var/cache/bind/slaves
+
+
+Also, do you have SELinux enabled?
+
+Reco
+
+--31b46c1ec232c568ccf7093dd50f2af1
+
+Date: Mon, 22 Feb 2016 11:20:24 +0100
+From: arian <debian@semioptimal.net>
+To: debian-user@lists.debian.org
+Subject: Re: Is it possible to fully reinstall the base system without
+ affecting /home?
+Message-ID: <56CAE0E8.60300@semioptimal.net>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="vjuNwe4No8IBtSrRxEwtuo27jeXq1Dgac"
+
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--vjuNwe4No8IBtSrRxEwtuo27jeXq1Dgac
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+
+Just to make sure, your filesystem is OK, right?
+
+> But I thought I'd ask if there's anything close to this that would not
+> require backing up everything and reformatting the hard disk.
+> Wouldn't it be possible, for example, to boot the system up from a
+> live CD, and reinstall the base system, leaving /home untouched?  (I
+> should mention that the hard disk in question is just one big
+> partition, including /home and everything else.)
+
+Just do a normal install with manual filesystem configuration, choose the=
+ existing partition with the prior filesystem format and make sure to _no=
+t_ choose format partition. The installer will warn you, something along =
+the lines that it will overwrite the old /usr, /etc/, /var, etc - which i=
+s what you want.
+
+optionally you can remove all directories but /home (and may be /root pri=
+or to installation from a live system (the installer will do).
+
+I strongly advise to make the backup before nonetheless - breaking things=
+ is easy, especially in the installer. This procedure will however spare =
+you restoring thing from the backup, if it works.
+
+
+--vjuNwe4No8IBtSrRxEwtuo27jeXq1Dgac
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQEcBAEBCAAGBQJWyuDoAAoJEAunSsW5SUcV/20H/1lNWw62P6ghP3mRCTfqlsQo
+Br1EDnZdFfnLbzeEu6BjJ5MsHhkS37mo05Egsp7rEQJcExFegMCTLlf/3FBBm87E
++7SG4QFnYWhbPSqTks6Wetvaly8VQxZ6NXY3EafWjf550hCH0UboPRAoi/nvmUEU
+rEtHfATMR0LMy08hDu+r1oWNtNye5gxipVhq1i2odLTxZvwi5Vvh+9sDPPwxsmPU
+tScJHFP90BUWbdqDkTjTbEpI674mareueRmjE24u3eblYAjFDAsGINjrjpROuc8M
+6/gUIjJUQOKBKUTjUgacucIWfedDvKYpZHu/9B7HAXpy3pSzovEwZNYYZgDn0oQ=
+=ivj+
+-----END PGP SIGNATURE-----
+
+--vjuNwe4No8IBtSrRxEwtuo27jeXq1Dgac--
+
+--31b46c1ec232c568ccf7093dd50f2af1
+
+Date: Mon, 22 Feb 2016 20:58:53 +1100
+From: Keith Bainbridge <keithrbaugroups@gmail.com>
+To: Dalios <dalios@eumx.net>, debian-user@lists.debian.org
+Subject: Re: Is it possible to fully reinstall the base system without
+ affecting /home?
+Message-ID: <56CADBDD.4060006@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+
+On 22/02/16 20:10, Dalios wrote:
+> First of all you would have to move your /home to a new partition (to
+> the same disk or another) and you would need to start from a Live CD/USB
+> in order to do this step.
+
+
+Or move /home from a terminal as root.  But if you have to create a new 
+partition you might as well move /home while you are using the live CD.
+
+-- 
+Keith Bainbridge
+
+keithrbaugroups@gmail.com
+
++61 (0)447 667 468
+
+--31b46c1ec232c568ccf7093dd50f2af1
+
+Date: Mon, 22 Feb 2016 11:33:43 +0100
+From: <tomas@tuxteam.de>
+To: debian-user@lists.debian.org
+Subject: Re: Is it possible to fully reinstall the base system without
+ affecting /home?
+Message-ID: <20160222103343.GA19361@tuxteam.de>
+Content-Type: text/plain; charset=utf-8; x-action=pgp-signed
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+On Mon, Feb 22, 2016 at 11:20:24AM +0100, arian wrote:
+> 
+> Just to make sure, your filesystem is OK, right?
+> 
+> > But I thought I'd ask if there's anything close to this that would not
+> > require backing up everything and reformatting the hard disk.
+> > Wouldn't it be possible, for example, to boot the system up from a
+> > live CD, and reinstall the base system, leaving /home untouched?  (I
+> > should mention that the hard disk in question is just one big
+> > partition, including /home and everything else.)
+> 
+> Just do a normal install with manual filesystem configuration, choose
+> the existing partition with the prior filesystem format and make sure
+> to _not_ choose format partition.
+
+This was my impression too: installation should not wipe home (actually
+it should'nt wipe anything, e.g. /usr/local and friends, just overwrite
+existing packages with their newer versions.
+
+That said, and as arian states, it's easy to fat-finger something and
+format your disks, so a backup is in order; and you might meet some
+niggles, like new packages stumbling upon older configurations and
+data in your home (think ~/.config, but also ~/.openffice.org, ~/.gimp
+and whatever nice things apps put into your home). Some may cope
+and some not.
+
+regards
+- -- t
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iEYEARECAAYFAlbK5AcACgkQBcgs9XrR2kbIKQCfUlb64LbSE2F5UHgT2hEGiYsI
+yDkAnjXbOy72G7BsuxPCBfS/qOWI6pyw
+=wbEI
+-----END PGP SIGNATURE-----
+
+--31b46c1ec232c568ccf7093dd50f2af1
+
+Date: Mon, 22 Feb 2016 11:01:29 +0000 (UTC)
+From: Mark Johnson <johnsonmark777@yahoo.ie>
+To: "debian-user@lists.debian.org" <debian-user@lists.debian.org>
+Subject: Enabling of the control grups with its subsystems and Kernel module
+ "net_cls" on Debian Jessie.
+Message-ID: <619888766.12428592.1456138889739.JavaMail.yahoo@mail.yahoo.com>
+Content-Type: multipart/alternative; 
+ boundary="----=_Part_12428591_2054080757.1456138889736"
+
+------=_Part_12428591_2054080757.1456138889736
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+
+Hi all.
+
+My name is Mark, and I try since a few days to implement outbound traffic shaping with cgoups and its podsystems (especially - "net_cls", "net_prio") and iptables. The problem is to enable cgroups (subsystems "net_cls" and daemons like "cgrulesengd") Spent many hours looking for education stuff, but everything was time wasting only. In my opinion something must be wrong with Kernel ( set-up?, patching?, upgrade? )
+ My Kernel - 3.16.If you could explain how-to in a few words, it would be really great news for me. We all belongs to big "Debian Family" are we not?
+
+Regards from Dublin
+Mark
+------=_Part_12428591_2054080757.1456138889736
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+
+<html><head></head><body><div style="color:#000; background-color:#fff; font-family:times new roman, new york, times, serif;font-size:16px"><div id="yui_3_16_0_1_1456135519830_2056" class="msg-body inner  undoreset" role="presentation" style="" tabindex="0"><div id="yui_3_16_0_1_1456135519830_2136" class="email-wrapped"><div id="yiv2459247252"><div id="yui_3_16_0_1_1456135519830_2135"><div id="yui_3_16_0_1_1456135519830_2134" style="color:#000;background-color:#fff;font-family:times new roman, new york, times, serif;font-size:16px;"><div id="yiv2459247252yui_3_16_0_1_1456133581644_3329">Hi all.<br><br>My
+
+ name is Mark, and I try since a few days to implement outbound traffic shaping with cgoups and its podsystems (especially - 
+"net_cls", "net_prio") and iptables. The problem is to enable cgroups 
+(subsystems "net_cls" and daemons like "cgrulesengd") Spent many 
+hours 
+looking for education stuff, but everything was time wasting only. In my
+ opinion something must be wrong with Kernel ( set-up?, patching?, 
+upgrade? )<br> My Kernel - 3.16.If you could explain how-to in a few 
+words, it would be really great news for me. We all belongs to big 
+"Debian Family" are we not?<br><br>Regards from Dublin<br></div><div id="yiv2459247252yui_3_16_0_1_1456082618249_2898" dir="ltr"><div id="yiv2459247252yui_3_16_0_1_1456133581644_3439" dir="ltr"><div id="yui_3_16_0_1_1456136754218_6113" dir="ltr">Mark</div></div></div></div></div></div></div></div></div></body></html>
+------=_Part_12428591_2054080757.1456138889736--
+
+--31b46c1ec232c568ccf7093dd50f2af1
+
+Date: Mon, 22 Feb 2016 14:32:40 +0300
+From: Reco <recoverym4n@gmail.com>
+To: debian-user@lists.debian.org
+Subject: Re: Enabling of the control grups with its subsystems and Kernel
+ module "net_cls" on Debian Jessie.
+Message-Id: <20160222143240.e2b452ef2bfff1e83cc6ff6a@gmail.com>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+
+	Hi.
+
+On Mon, 22 Feb 2016 11:01:29 +0000 (UTC)
+Mark Johnson <johnsonmark777@yahoo.ie> wrote:
+
+> Hi all.
+> 
+> My name is Mark, and I try since a few days to implement outbound traffic shaping with cgoups and its podsystems (especially - "net_cls", "net_prio") and iptables. The problem is to enable cgroups (subsystems "net_cls" and daemons like "cgrulesengd") Spent many hours looking for education stuff, but everything was time wasting only. In my opinion something must be wrong with Kernel ( set-up?, patching?, upgrade? )
+>  My Kernel - 3.16.If you could explain how-to in a few words, it would be really great news for me. We all belongs to big "Debian Family" are we not?
+
+A case study:
+
+1) Ensure that you're *not* running systemd as PID=1. It *will* screw
+things up, do not try it.
+
+2) Ensure that you don't have any services in enabled state that try to
+configure cgroups on their own. libvirtd or cgmanager, for instance.
+
+3) Write a configuration file /etc/cgconfig.conf with the contents like
+this:
+
+mount {
+    cpuset = /sys/fs/cgroup/cpuset;
+    cpu = /sys/fs/cgroup/cpu;
+    cpuacct = /sys/fs/cgroup/cpuacct;
+    devices = /sys/fs/cgroup/devices;
+    freezer = /sys/fs/cgroup/freezer;
+    net_cls = /sys/fs/cgroup/net_cls;
+    blkio = /sys/fs/cgroup/blkio;
+    perf_event = /sys/fs/cgroup/perf_event;
+}
+
+group mynet {
+    net_cls {
+        net_cls.classid="122541";
+    }
+}
+
+4) Invoke:
+
+mount -t tmpfs cgroup_root /sys/fs/cgroup
+/usr/sbin/cgconfigparser -l /etc/cgconfig.conf
+
+5) If all goes well you should see a bunch of mounted filesystems of
+type cgroup, one for each controller.
+
+6) Create a configuration file /etc/cgrules.conf with the contents
+like this:
+
+*:/bin/bash net_cls mynet
+
+7) Start cgrulesengd for debugging:
+
+/usr/sbin/cgrulesengd -nv
+
+8) Observe all instances of bash to migrate to mynet cgroup.
+Double-check it with:
+
+cat /sys/fs/cgroup/net_cls/nonet/tasks
+
+9) Clean up:
+
+/usr/sbin/cgclear
+umount /sys/fs/cgroup
+
+Reco
+
+--31b46c1ec232c568ccf7093dd50f2af1--
+End of debian-user-digest Digest V2016 Issue #172
+*************************************************
+
+
