@@ -56,39 +56,52 @@ namespace Astroid {
     CoarseDate cd = coarse_date (t);
 
     ustring fmt;
-    switch (cd) {
-      case CoarseDate::NOW:
-        return "Now";
+	if (clock_format == ClockFormat::YEAR) {
+		switch (cd) {
+		case CoarseDate::YEARS:
+		case CoarseDate::FUTURE:
+			fmt = diff_year;
+			break;
+		default:
+			fmt = same_year;
+			break;
+		}
+	}
+	else {
+		switch (cd) {
+		case CoarseDate::NOW:
+			return "Now";
 
-      case CoarseDate::MINUTES:
-        return ustring::compose("%1m ago", (ulong) (diff / 60));
+		case CoarseDate::MINUTES:
+			return ustring::compose("%1m ago", (ulong) (diff / 60));
 
-      case CoarseDate::HOURS:
-        return ustring::compose("%1h ago", (ulong) (diff / (60 * 60)));
+		case CoarseDate::HOURS:
+			return ustring::compose("%1h ago", (ulong) (diff / (60 * 60)));
 
-      case CoarseDate::TODAY:
-        fmt = pretty_dates[clock_format];
-        break;
+		case CoarseDate::TODAY:
+			fmt = pretty_dates[clock_format];
+			break;
 
-      case CoarseDate::YESTERDAY:
-        return "Yesterday";
+		case CoarseDate::YESTERDAY:
+			return "Yesterday";
 
-      case CoarseDate::THIS_WEEK:
-        // Date format that shows the weekday (Monday, Tuesday, ...)
-        // See http://developer.gnome.org/glib/2.32/glib-GDateTime.html#g-date-time-format
-        fmt = "%A";
-        break;
+		case CoarseDate::THIS_WEEK:
+			// Date format that shows the weekday (Monday, Tuesday, ...)
+			// See http://developer.gnome.org/glib/2.32/glib-GDateTime.html#g-date-time-format
+			fmt = "%A";
+			break;
 
-      case CoarseDate::THIS_YEAR:
-        fmt = same_year;
-        break;
+		case CoarseDate::THIS_YEAR:
+			fmt = same_year;
+			break;
 
-      case CoarseDate::YEARS:
-      case CoarseDate::FUTURE:
-      default:
-        fmt = diff_year;
-        break;
-    }
+		case CoarseDate::YEARS:
+		case CoarseDate::FUTURE:
+		default:
+			fmt = diff_year;
+			break;
+		}
+	}
 
     Glib::DateTime dt = Glib::DateTime::create_local (
         local_time.tm_year + 1900,
@@ -134,10 +147,12 @@ namespace Astroid {
       clock_format = ClockFormat::TWENTY_FOUR_HOURS;
     } else if (c_f == "12h") {
       clock_format = ClockFormat::TWELVE_HOURS;
+    } else if (c_f == "year") {
+      clock_format = ClockFormat::YEAR;
     } else if (c_f == "local") {
       clock_format = ClockFormat::LOCALE_DEFAULT;
     } else {
-      log << error << "date: error: unrecognized clock format in config: " << c_f << ", should be either 'local', '24h' or '12h'." << endl;
+      log << error << "date: error: unrecognized clock format in config: " << c_f << ", should be either 'local', '24h', '12h' or 'year'." << endl;
       clock_format = ClockFormat::LOCALE_DEFAULT;
     }
 
