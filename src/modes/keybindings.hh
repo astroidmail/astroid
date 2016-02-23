@@ -3,6 +3,9 @@
 # include <map>
 # include <functional>
 # include <atomic>
+# include <gtkmm.h>
+# include "proto.hh"
+
 
 namespace Astroid {
   struct Key {
@@ -13,21 +16,22 @@ namespace Astroid {
     Key (bool _c, bool _m, char k, ustring name = "", ustring help = "");
     Key (GdkEventKey *, ustring name = "", ustring help = "");
 
+    /* only these three memebers define the logical state of the Key */
     bool ctrl = false;
     bool meta = false;
     guint key = 0; /* GDK_KEY_* */
 
-    ustring name = "";
-    ustring help = "";
+    mutable ustring name = "";
+    mutable ustring help = "";
 
-    bool unbound     = false;
-    bool userdefined = false;
+    mutable bool unbound     = false;
+    mutable bool userdefined = false;
 
-    bool allow_duplicate_name = false; /* used for run targets */
+    mutable bool allow_duplicate_name = false; /* used for run targets */
 
-    bool hasaliases = false; /* this is a master key with other aliases */
-    bool isalias    = false; /* this key is an alias for another master key */
-    const Key * master_key;
+    mutable bool hasaliases = false; /* this is a master key with other aliases */
+    mutable bool isalias    = false; /* this key is an alias for another master key */
+    mutable const Key * master_key;
 
     bool operator== ( const Key & other ) const;
     bool operator<  ( const Key & other ) const;

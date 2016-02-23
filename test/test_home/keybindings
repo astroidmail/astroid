@@ -22,3 +22,7 @@ test.run(echo %1)=n
 test.run(echo %1)=y
 
 
+# replacing an existing non-userdefined binding
+test.foo=0
+test.foo2=2
+

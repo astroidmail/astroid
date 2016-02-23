@@ -348,7 +348,7 @@ namespace Astroid {
 
     k.userdefined = userdefined;
     k.isalias = false;
-    k.hasaliases = !aliases.empty ();
+    bool has_aliases = false;
 
     /* check if key name already exists */
     if (!k.allow_duplicate_name) {
@@ -366,8 +366,11 @@ namespace Astroid {
       }
     }
 
+    bool has_master = true;
+
     auto r = keys.insert (KeyBinding (k, t));
     if (!r.second) {
+      log << debug << "user def: " << k.userdefined << endl;
       if (!r.first->first.userdefined && k.userdefined) {
         /* default key, removing and replacing with user defined. target of
          * default key will be unreachable.
@@ -381,7 +384,7 @@ namespace Astroid {
         keys.erase (r.first);
         r = keys.insert (KeyBinding (k, t));
 
-      } else {
+      } else if (r.first->first.userdefined && k.userdefined) {
         ustring err = ustring::compose (
             "key: %1 (%2) is already user-configured in map with name: %3",
             k.str (), k.name, r.first->first.name);
@@ -389,13 +392,22 @@ namespace Astroid {
         log << error << err << endl;
 
         throw duplicatekey_error (err.c_str());
+      } else {
+        ustring err = ustring::compose (
+            "key: %1 (%2) is user-configured in map with name: %3, will try aliases.",
+            k.str (), k.name, r.first->first.name);
+
+        log << warn << err << endl;
+        has_master = false;
       }
     }
 
     /* get pointer to key in map */
     const Key * master;
-    auto s = keys.find (k);
-    master = &(s->first);
+    if (has_master) {
+      auto s = keys.find (k);
+      master = &(s->first);
+    }
 
     for (auto & ka : aliases) {
 
@@ -404,8 +416,11 @@ namespace Astroid {
       ka.name = k.name;
       ka.help = k.help;
       ka.userdefined = userdefined;
-      ka.isalias = true;
-      ka.master_key = master;
+      if (has_master) {
+        ka.isalias = true;
+        ka.master_key = master;
+      }
+
       auto r = keys.insert (KeyBinding (ka, NULL));
 
       if (!r.second) {
@@ -414,7 +429,7 @@ namespace Astroid {
            * default key will be unreachable.
            */
           ustring wrr = ustring::compose (
-              "key: %1 (%2) already exists in map with name: %3, overwriting.",
+              "key alias: %1 (%2) already exists in map with name: %3, overwriting.",
               k.str (), k.name, r.first->first.name);
 
           log << warn << wrr << endl;
@@ -422,16 +437,39 @@ namespace Astroid {
           keys.erase (r.first);
           r = keys.insert (KeyBinding (k, t));
 
-        } else {
+          if (has_master) has_aliases = true;
+          has_master = true;
+          auto s = keys.find (k);
+          master = &(s->first);
+
+        } else if (r.first->first.userdefined && k.userdefined) {
           ustring err = ustring::compose (
-              "key: %1 (%2) is already user-configured in map with name: %3",
+              "key alias: %1 (%2) is already user-configured in map with name: %3",
               k.str (), k.name, r.first->first.name);
 
           log << error << err << endl;
 
           throw duplicatekey_error (err.c_str());
+        } else {
+          ustring err = ustring::compose (
+              "key alias: %1 (%2) is user-configured in map with name: %3, will try other aliases.",
+              k.str (), k.name, r.first->first.name);
+
+          log << warn << err << endl;
         }
+      } else {
+        if (has_master) has_aliases = true;
+        has_master = true;
+        auto s = keys.find (k);
+        master = &(s->first);
       }
+    }
+
+    /* we dont know if any of the master key or any of the aliases
+     * got successfully added */
+    if (has_master) {
+      std::map<Key, std::function<bool (Key)>>::iterator s = keys.find (k);
+      s->first.hasaliases = has_aliases;
     }
   }
 

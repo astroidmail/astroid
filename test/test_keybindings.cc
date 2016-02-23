@@ -23,6 +23,8 @@ BOOST_AUTO_TEST_SUITE(Keybindings)
     Astroid::Keybindings::init ();
 
     Astroid::Keybindings keys;
+    keys.loghandle = true;
+
     keys.set_prefix ("Test", "test");
 
     keys.register_key ("a", "test.a", "A", [&] (Key) { return true; });
@@ -46,6 +48,17 @@ BOOST_AUTO_TEST_SUITE(Keybindings)
       keys.register_key ("a", "test.a", "duplicate keyspec", [&] (Key) { return true; }),
       duplicatekey_error);
 
+    /* check if adding a new _user-defined_ key to a different target which
+     * uses an existing _default_ key is allowed to replace the original
+     *
+     * test.foo=0 in keybidnings file.
+     */
+    keys.register_key ("1", "test.foo", "some dup", [&] (Key) { return true; });
+    keys.register_key ("0", "test.bar", "some dup", [&] (Key) { return true; });
+
+    /* also lets try it the other way around (this worked fine all the time) */
+    keys.register_key ("2", "test.bar2", "some dup", [&] (Key) { return true; });
+    keys.register_key ("3", "test.foo2", "some dup", [&] (Key) { return true; });
 
     /* test run hook */
     ustring test_thread = "001";
