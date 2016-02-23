@@ -26,3 +26,7 @@ test.run(echo %1)=y
 test.foo=0
 test.foo2=2
 
+# test special chars
+test.spec1=Tab
+test.spec2=C-Tab
+

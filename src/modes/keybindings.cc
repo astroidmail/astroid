@@ -21,7 +21,7 @@ namespace Astroid {
   std::vector<Key>  Keybindings::user_bindings;
   std::vector<std::pair<Key, ustring>> Keybindings::user_run_bindings;
 
-  std::map<guint, ustring> keynames = {
+  std::map<guint, ustring> Keybindings::keyval_to_keynames = {
     { GDK_KEY_Down,   "Down" },
     { GDK_KEY_Up,     "Up" },
     { GDK_KEY_Tab,    "Tab" },
@@ -33,7 +33,15 @@ namespace Astroid {
     { GDK_KEY_Page_Down, "Page_Down" },
   };
 
+  std::map<ustring, guint> Keybindings::keynames_to_keyval;
+
   void Keybindings::init () {
+    /* build keynames_to_keyval */
+    keynames_to_keyval.clear ();
+    for (auto &s : keyval_to_keynames) {
+      keynames_to_keyval.insert (std::make_pair (s.second, s.first));
+    }
+
     if (!user_bindings_loaded) {
       user_bindings_loaded = true;
 
@@ -529,6 +537,18 @@ namespace Astroid {
   /* Key {{{ */
   Key::Key () { }
 
+  guint Key::get_keyval (ustring k) {
+    if (k.size () == 1) {
+      return gdk_unicode_to_keyval (k[0]);
+    } else {
+      /* check if key is in map */
+      UstringUtils::trim (k);
+      guint kk = Keybindings::keynames_to_keyval.at (k);
+
+      return kk;
+    }
+  }
+
   Key::Key (ustring spec, ustring _n, ustring _h) { // {{{
     /* generate key from spec like:
      * k      : for key 'k'
@@ -537,28 +557,30 @@ namespace Astroid {
      * C-M-K  : for Ctrl-Alt-K
      * K      : for Shift-k
      *
-     * TODO: other keys supported: check keynames map.
-     *
      */
 
     name = _n;
     help = _h;
 
-    if (!((spec.size() == 1) || (spec.size () == 3) || (spec.size() == 5))) {
+    vector<ustring> spec_parts = VectorUtils::split_and_trim (spec, "-");
+
+    if (spec_parts.size () > 3) {
       log << error << "key spec invalid: " << spec << endl;
       throw keyspec_error ("invalid length of spec");
     }
 
-    if (spec.size () == 1) {
+    if (spec_parts.size () == 1) {
       ctrl = false;
       meta = false;
 
-      key = gdk_unicode_to_keyval (spec[0]);
+      key = get_keyval (spec_parts[0]);
+
+      return;
     }
 
-    if (spec.size () >= 3) {
+    if (spec_parts.size () >= 2) {
       /* one modifier */
-      char M = spec[0];
+      char M = spec_parts[0][0];
       if (!((M == 'C') || (M == 'M'))) {
         log << error << "key spec invalid: " << spec << endl;
         throw keyspec_error ("invalid modifier in key spec");
@@ -567,21 +589,18 @@ namespace Astroid {
       if (M == 'C') ctrl = true;
       if (M == 'M') meta = true;
 
-      if (spec[1] != '-') {
-        log << error << "key spec invalid: " << spec << endl;
-        throw keyspec_error ("invalid delimiter");
+      if (spec_parts.size () == 2) {
+        key = get_keyval (spec_parts[1]);
+        return;
       }
-
-      key = gdk_unicode_to_keyval (spec[2]);
     }
 
-    if (spec.size () == 5) {
-      key = 0;
-      char M = spec[2];
+    if (spec_parts.size () >= 3) {
+      char M = spec_parts[1][0];
 
       if (!((M == 'C') || (M == 'M'))) {
         log << error << "key spec invalid: " << spec << endl;
-        throw keyspec_error ("invalid modifier");
+        throw keyspec_error ("invalid modifier in key spec");
       }
 
       if (M == 'C') {
@@ -599,12 +618,7 @@ namespace Astroid {
         meta = true;
       }
 
-      if (spec[3] != '-') {
-        log << error << "key spec invalid: " << spec << endl;
-        throw keyspec_error ("invalid delimiter");
-      }
-
-      key = gdk_unicode_to_keyval (spec[4]);
+      key = get_keyval (spec_parts[2]);
     }
   } // }}}
 
@@ -650,7 +664,7 @@ namespace Astroid {
       s += k;
     } else {
       try {
-        ustring kk = keynames.at (key);
+        ustring kk = Keybindings::keyval_to_keynames.at (key);
         s += kk;
       } catch (std::exception &ex) {
         s += ustring::compose ("%1", key);

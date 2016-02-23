@@ -39,6 +39,7 @@ namespace Astroid {
     ustring str () const;
 
     static Key create (ustring spec);
+    static guint get_keyval (ustring k);
   };
 
   /* unbound keys are used as targets that are not bound to a key
@@ -119,7 +120,9 @@ namespace Astroid {
       static std::atomic<bool> user_bindings_loaded;
       static const char * user_bindings_file;
 
-      static std::map<guint, ustring> keynames;
+    public:
+      static std::map<guint, ustring> keyval_to_keynames;
+      static std::map<ustring, guint> keynames_to_keyval;
   };
 }
 

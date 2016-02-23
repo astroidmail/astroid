@@ -6,6 +6,7 @@
 * scss: fix #82: make all variables global.
 * C-d / C-u / Page in thread-index: Page and move cursor in thread
   index.
+* Special keys like Tab and Home can now be used in user-keybindings.
 
 == v0.5 / 2016-02-06
 
