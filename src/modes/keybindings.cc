@@ -378,7 +378,7 @@ namespace Astroid {
 
     auto r = keys.insert (KeyBinding (k, t));
     if (!r.second) {
-      log << debug << "user def: " << k.userdefined << endl;
+      /* log << debug << "user def: " << k.userdefined << endl; */
       if (!r.first->first.userdefined && k.userdefined) {
         /* default key, removing and replacing with user defined. target of
          * default key will be unreachable.
