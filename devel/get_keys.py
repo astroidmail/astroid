@@ -21,7 +21,13 @@ def stripper(s):
 	return s
 
 def out_binding(multi, key, function, documentation, ):
-	print(stripper(function), '=', stripper(key), '#', stripper(documentation), 'more:', stripper(multi))
+	if 'UnboundKey' in key:
+		key = 'no defaults'
+	else:
+		key  = 'default: ' + stripper(key)
+		if multi:
+			key += ', ' + stripper(multi)
+	print('#', stripper(function), '=', '#', stripper(documentation), key)
 
 def main(*options):
 	# pattern to look for:
