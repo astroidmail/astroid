@@ -217,6 +217,7 @@ namespace Astroid {
     notmuch_query_destroy (unread_q);
 
     set_label (get_label ());
+    list_view->update_bg_image ();
   }
 
   ustring ThreadIndex::get_label () {
@@ -281,7 +282,6 @@ namespace Astroid {
     log << debug << "ti: load more (all: " << all << ", count: " << count << ") threads.." << endl;
 
     Db db (Db::DATABASE_READ_ONLY);
-    refresh_stats (&db);
 
     /* set up query */
     notmuch_query_t * query;
@@ -360,11 +360,11 @@ namespace Astroid {
       }
     }
 
-    list_view->update_bg_image ();
-
     /* closing query */
     notmuch_threads_destroy (threads);
     notmuch_query_destroy (query);
+
+    refresh_stats (&db);
 
     log << info << "ti: loaded " << i << " threads in " << ((clock()-t0) * 1000.0 / CLOCKS_PER_SEC) << " ms." << endl;
   }
