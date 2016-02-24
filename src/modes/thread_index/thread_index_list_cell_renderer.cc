@@ -51,6 +51,7 @@ namespace Astroid {
 
     subject_color = ti.get<string> ("subject_color");
     subject_color_selected = ti.get<string> ("subject_color_selected");
+    background_color_selected = ti.get<string> ("background_color_selected");
 
     tags_color    = ti.get<string> ("tags_color");
 
@@ -59,7 +60,7 @@ namespace Astroid {
   void ThreadIndexListCellRenderer::render_vfunc (
       const ::Cairo::RefPtr< ::Cairo::Context>&cr,
       Gtk::Widget    &widget,
-      const Gdk::Rectangle & /* background_area */,
+      const Gdk::Rectangle & background_area,
       const Gdk::Rectangle &cell_area,
       Gtk::CellRendererState flags)
   {
@@ -98,7 +99,9 @@ namespace Astroid {
       font_description.set_weight (Pango::WEIGHT_NORMAL);
     }
 
-    //render_background (cr, widget, background_area, flags);
+    if (background_color_selected.length() > 0) {
+        render_background (cr, widget, background_area, flags);
+    }
     render_date (cr, widget, cell_area); // returns height
 
     if (thread->total_messages > 1)
@@ -143,13 +146,14 @@ namespace Astroid {
     int w = background_area.get_width ();
     int h = background_area.get_height ();
 
-    Gdk::Color gray;
     if ((flags & Gtk::CELL_RENDERER_SELECTED) != 0) {
-      gray.set_grey_p (.7);
+      Gdk::Color bg(background_color_selected);
+      cr->set_source_rgb (bg.get_red_p(), bg.get_green_p(), bg.get_blue_p());
     } else {
+      Gdk::Color gray;
       gray.set_grey_p (1.);
+      cr->set_source_rgb (gray.get_red_p(), gray.get_green_p(), gray.get_blue_p());
     }
-    cr->set_source_rgb (gray.get_red_p(), gray.get_green_p(), gray.get_blue_p());
 
     cr->rectangle (x, y, w, h);
     cr->fill ();
