@@ -40,6 +40,8 @@ namespace Astroid {
       sort = NOTMUCH_SORT_NEWEST_FIRST;
     }
 
+    thread_load_step = astroid->config ().get<int> ("thread_index.thread_load_step");
+
     /* set up treeview */
     list_store = Glib::RefPtr<ThreadIndexListStore>(new ThreadIndexListStore ());
     list_view  = Gtk::manage(new ThreadIndexListView (this, list_store));
@@ -52,8 +54,6 @@ namespace Astroid {
     show_all ();
 
     /* load threads */
-    db = new Db (Db::DbMode::DATABASE_READ_ONLY);
-    setup_query ();
     load_more_threads ();
 
     /* select first */
@@ -80,7 +80,7 @@ namespace Astroid {
 
     keys.register_key (Key((guint) GDK_KEY_dollar), "thread_index.refresh", "Refresh query",
         [&] (Key) {
-          refresh (false, max(thread_load_step, current_thread), false);
+          refresh (false, max(thread_load_step, current_threads_loaded));
           return true;
         });
 
@@ -105,9 +105,7 @@ namespace Astroid {
                   query_string = new_query;
                   set_label (get_label ());
                   list_store->clear ();
-                  close_query ();
-                  setup_query ();
-                  load_more_threads ();
+                  refresh (false, current_threads_loaded);
 
                   /* select first */
                   list_view->set_cursor (Gtk::TreePath("0"));
@@ -139,7 +137,7 @@ namespace Astroid {
           log << info << "ti: sorting by: " << sort_strings[static_cast<int>(sort)] << endl;
 
           list_view->set_sort_type (sort);
-          refresh (false, max(thread_load_step, current_thread), false);
+          refresh (false, max(thread_load_step, current_threads_loaded));
           return true;
         });
 
@@ -196,45 +194,12 @@ namespace Astroid {
     // }}}
   }
 
-  void ThreadIndex::setup_query () {
-    lock_guard <Db> grd (*db);
-
-    /* set up notmuch query */
-    time_t start = clock ();
-    query =  notmuch_query_create (db->nm_db, query_string.c_str ());
-
-    for (ustring & t : db->excluded_tags) {
-      notmuch_query_add_tag_exclude (query, t.c_str());
-    }
-    notmuch_query_set_omit_excluded (query, NOTMUCH_EXCLUDE_TRUE);
-    notmuch_query_set_sort (query, sort);
-
-    /* notmuch_query_count_threads is destructive.
-     *
-    log  << info;
-    log  << "ti, query: " << notmuch_query_get_query_string (query) << ", approx: "
-         << notmuch_query_count_threads (query) << " threads and " << notmuch_query_count_messages (query) << " messages matching."  << endl;
-
-    */
-
-    /* slow */
-    /* notmuch_status_t st = */ notmuch_query_search_threads_st (query, &threads);
-    float diff = (clock () - start) * 1000.0 / CLOCKS_PER_SEC;
-
-    refresh_stats (db);
-    float diffstat = (clock () - start) * 1000.0 / CLOCKS_PER_SEC;
-
-    log << debug << "ti: query, total: " << total_messages << ", unread: " << unread_messages << endl;
-    log << debug << "ti: query time: " << diff << " ms (with stat: " << diffstat << " ms." << endl;
-
-  }
-
-  void ThreadIndex::refresh_stats (Db * dbs) {
+  void ThreadIndex::refresh_stats (Db * db) {
     /* notmuch_status_t st; */
 
     /* stats */
     log << debug << "ti: refresh stats." << endl;
-    notmuch_query_t * query_t =  notmuch_query_create (dbs->nm_db, query_string.c_str ());
+    notmuch_query_t * query_t =  notmuch_query_create (db->nm_db, query_string.c_str ());
     for (ustring & t : db->excluded_tags) {
       notmuch_query_add_tag_exclude (query_t, t.c_str());
     }
@@ -243,7 +208,7 @@ namespace Astroid {
     notmuch_query_destroy (query_t);
 
     ustring unread_q_s = "(" + query_string + ") AND tag:unread";
-    notmuch_query_t * unread_q = notmuch_query_create (dbs->nm_db, unread_q_s.c_str());
+    notmuch_query_t * unread_q = notmuch_query_create (db->nm_db, unread_q_s.c_str());
     for (ustring & t : db->excluded_tags) {
       notmuch_query_add_tag_exclude (unread_q, t.c_str());
     }
@@ -252,8 +217,6 @@ namespace Astroid {
     notmuch_query_destroy (unread_q);
 
     set_label (get_label ());
-
-    list_view->update_bg_image ();
   }
 
   ustring ThreadIndex::get_label () {
@@ -263,13 +226,14 @@ namespace Astroid {
       return ustring::compose ("%1 (%2/%3)", name, unread_messages, total_messages);
   }
 
-  void ThreadIndex::close_query () {
-    notmuch_threads_destroy (threads);
-    notmuch_query_destroy (query);
-  }
-
-
-  void ThreadIndex::refresh (bool all, int count, bool checked) {
+  void ThreadIndex::refresh (bool all, int count) {
+    /*
+     * this function should be used sparingly as it resets the cursor
+     * and reload all threads - suitable e.g. if there has been
+     * modifications outside of astroid. all updated from a poll should
+     * have been caught in the lastmod per-thread signals from Poll.
+     *
+     */
     log << debug << "ti: refresh." << endl;
 
     time_t t0 = clock ();
@@ -284,16 +248,12 @@ namespace Astroid {
 
     list_store->clear ();
 
-    close_query ();
-    if (!checked) db->reopen ();
-    setup_query ();
+    current_threads_loaded = 0;
 
-    current_thread = 0;
-
-    load_more_threads (all, count, true);
+    load_more_threads (all, count);
 
     /* select old */
-    if (current_thread > 0) {
+    if (current_threads_loaded > 0) {
       if (!path) {
         path = Gtk::TreePath ("0");
       } else {
@@ -315,34 +275,61 @@ namespace Astroid {
     list_view->update_bg_image ();
   }
 
-  void ThreadIndex::load_more_threads (bool all, int count, bool checked) {
+  void ThreadIndex::load_more_threads (bool all, int count) {
     time_t t0 = clock ();
 
-    log << debug << "ti: load more (all: " << all << ") threads.." << endl;
-    lock_guard<Db> grd (*db);
+    log << debug << "ti: load more (all: " << all << ", count: " << count << ") threads.." << endl;
+
+    Db db (Db::DATABASE_READ_ONLY);
+    refresh_stats (&db);
+
+    /* set up query */
+    notmuch_query_t * query;
+    notmuch_threads_t * threads;
+
+    query = notmuch_query_create (db.nm_db, query_string.c_str ());
+    for (ustring & t : db.excluded_tags) {
+      notmuch_query_add_tag_exclude (query, t.c_str());
+    }
+
+    notmuch_query_set_omit_excluded (query, NOTMUCH_EXCLUDE_TRUE);
+    notmuch_query_set_sort (query, sort);
+
+    /* slow */
+    /* notmuch_status_t st = */ notmuch_query_search_threads_st (query, &threads);
+    float diff = (clock () - t0) * 1000.0 / CLOCKS_PER_SEC;
+
+
+    log << debug << "ti: query, total: " << total_messages << ", unread: " << unread_messages << endl;
+    log << debug << "ti: query time: " << diff << " ms." << endl;
 
     if (count < 0) count = thread_load_step;
 
-    if (reopen_tries > 1) {
-      log << error << "ti: could not reopen db." << endl;
-
-      throw database_error ("ti: could not reopen db.");
-    }
-
-    if (!checked) {
-      if (db->check_reopen (true)) {
-        reopen_tries++;
-        refresh (all, current_thread + count, true);
-        return;
-      }
-    }
-
-    reopen_tries = 0;
-
     int i = 0;
 
+    /* move beyond current thread */
+    float t1 = clock ();
     for (;
-         notmuch_threads_valid (threads);
+         notmuch_threads_valid (threads) &&
+         (i < current_threads_loaded);
+         notmuch_threads_move_to_next (threads))
+    {
+      /* we should not need to actually load the thread to move
+       * the iterator: this part is quite slow. */
+      notmuch_thread_t  * thread;
+      thread = notmuch_threads_get (threads);
+      notmuch_thread_destroy (thread);
+      i++;
+    }
+
+    float allreadyloadedt = (clock () - t1) * 1000.0 / CLOCKS_PER_SEC;
+    log << debug << "ti: query, time to move past already " << i << " loaded threads: " << allreadyloadedt << " ms." << endl;
+
+    i = 0;
+
+    for (;
+         notmuch_threads_valid (threads) &&
+         (i < count || all);
          notmuch_threads_move_to_next (threads)) {
 
       notmuch_thread_t  * thread;
@@ -352,16 +339,6 @@ namespace Astroid {
         log << error << "ti: error: could not get thread." << endl;
         throw database_error ("ti: could not get thread (is NULL)");
       }
-
-      /* test for revision discarded */
-      const char * ti = notmuch_thread_get_thread_id (thread);
-      if (ti == NULL) {
-        log << error << "ti: revision discarded, trying to reopen." << endl;
-        reopen_tries++;
-        refresh (all, current_thread + count, false);
-        return;
-      }
-
 
       NotmuchThread *t = new NotmuchThread (thread);
 
@@ -376,20 +353,19 @@ namespace Astroid {
       row[list_store->columns.thread]      = Glib::RefPtr<NotmuchThread>(t);
 
       i++;
-      current_thread++;
+      current_threads_loaded++;
 
       if ((i % 100) == 0) {
         log << debug << "ti: loaded " << i << " threads." << endl;
       }
-
-      if (!all) {
-        if (i >= count) {
-          break;
-        }
-      }
     }
 
     list_view->update_bg_image ();
+
+    /* closing query */
+    notmuch_threads_destroy (threads);
+    notmuch_query_destroy (query);
+
     log << info << "ti: loaded " << i << " threads in " << ((clock()-t0) * 1000.0 / CLOCKS_PER_SEC) << " ms." << endl;
   }
 
@@ -434,8 +410,6 @@ namespace Astroid {
 
   ThreadIndex::~ThreadIndex () {
     log << debug << "ti: deconstruct." << endl;
-    close_query ();
-    delete db;
 
     if (thread_view_loaded) {
       delete thread_view; // apparently not done by Gtk::manage

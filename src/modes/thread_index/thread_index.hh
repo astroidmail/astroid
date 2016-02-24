@@ -21,13 +21,11 @@ namespace Astroid {
       unsigned int total_messages;
       unsigned int unread_messages;
 
-      int thread_load_step    = 150;
-      int current_thread      = 0;
+      int thread_load_step;             /* configurable */
+      int current_threads_loaded  = 0;
 
-      void load_more_threads (bool all = false, int count = -1, bool checked = false);
-      void refresh (bool, int, bool);
-      void setup_query ();
-      void close_query ();
+      void load_more_threads (bool all = false, int count = -1);
+      void refresh (bool all, int count);
       void refresh_stats (Db *);
       int reopen_tries = 0;
 
@@ -42,10 +40,6 @@ namespace Astroid {
 
       ustring name = ""; // used as title for default queries
       ustring query_string;
-
-      Db * db = NULL;
-      notmuch_query_t   * query;
-      notmuch_threads_t * threads;
 
       virtual ustring get_label () override;
 

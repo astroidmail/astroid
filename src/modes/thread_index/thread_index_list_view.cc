@@ -1147,8 +1147,8 @@ namespace Astroid {
   }
 
   void ThreadIndexListView::on_refreshed () {
-    log << debug << "til: got refreshed signal." << endl;
-    thread_index->refresh (false, max(thread_index->thread_load_step, thread_index->current_thread), false);
+    log << warn << "til: got refreshed signal." << endl;
+    thread_index->refresh (false, max(thread_index->thread_load_step, thread_index->current_threads_loaded));
   }
 
   void ThreadIndexListView::on_thread_changed (Db * db, ustring thread_id) {
@@ -1211,6 +1211,9 @@ namespace Astroid {
         log << debug << "til: deleted" << endl;
         path = list_store->get_path (fwditer);
         list_store->erase (fwditer);
+
+        /* decrement loaded threads count */
+        thread_index->current_threads_loaded--;
       }
 
     } else {
