@@ -70,69 +70,6 @@ namespace Astroid {
     sort (sent_tags.begin (), sent_tags.end ());
   }
 
-  void Db::reopen () {
-    log << info << "db: reopening datbase.." << endl;
-
-    /* we now have all locks */
-    bool reopen_rw = (db_state == READ_WRITE);
-
-    /* these methods close the db before opening */
-    if (reopen_rw) {
-      open_db_write (true);
-    } else {
-      open_db_read_only ();
-    }
-  }
-
-  bool Db::check_reopen (bool doreopen) {
-    /* tries to provoke an Xapian::DatabaseModifiedError and
-     * optionally reopens the database.
-     *
-     * returns true if db is invalid. queries will be invalid
-     * afterwards, but might still respond true to notmuch_valid
-     * calls.
-     *
-     */
-
-    time_t start = clock ();
-    bool invalid = false;
-
-    /* testing */
-    notmuch_query_t * q = notmuch_query_create (nm_db, "thread:fail");
-
-    /* this will produce an error, but no way to ensure failure */
-    unsigned int c;
-    notmuch_status_t st = notmuch_query_count_threads_st (q, &c);
-
-    if (st != NOTMUCH_STATUS_SUCCESS) invalid = true;
-
-    if (!invalid) {
-      /* this returns NULL when error */
-      notmuch_threads_t * threads;
-      st = notmuch_query_search_threads_st (q, &threads);
-
-      if (st != NOTMUCH_STATUS_SUCCESS || threads == NULL) invalid = true;
-    }
-
-    notmuch_query_destroy (q);
-
-    float diff = (clock () - start) * 1000.0 / CLOCKS_PER_SEC;
-    log << debug << "db: test query time: " << diff << " ms." << endl;
-
-    if (invalid) {
-      log << warn << "db: no longer valid, reopen required." << endl;
-    } else {
-      log << debug << "db: valid." << endl;
-    }
-
-    if (invalid && doreopen) {
-      reopen ();
-    }
-
-
-    return invalid;
-  }
-
   void Db::close_db () {
     if (nm_db != NULL) {
       log << info << "db: closing db." << endl;
@@ -374,21 +311,9 @@ namespace Astroid {
     st = notmuch_query_search_threads_st (query, &nm_threads);
 
     if ((st != NOTMUCH_STATUS_SUCCESS) || nm_threads == NULL) {
-      /* try to reopen db in case we got an Xapian::DatabaseModifiedError */
-      log << warn << "db: trying to reopen database.." << endl;
+      log << error << "db: could not find thread: " << thread_id << ", status: " << st << endl;
 
-      reopen ();
-
-      query = notmuch_query_create (nm_db, query_s.c_str());
-      st = notmuch_query_search_threads_st (query, &nm_threads);
-
-      if ((st != NOTMUCH_STATUS_SUCCESS) || nm_threads == NULL) {
-        /* could not do that, failing */
-        log << error << "db: could not find thread: " << thread_id << ", status: " << st << endl;
-
-        throw database_error ("nmt: could not get a valid notmuch_threads_t from query.");
-
-      }
+      throw database_error ("nmt: could not get a valid notmuch_threads_t from query.");
     }
 
     int c = 0;
@@ -422,20 +347,9 @@ namespace Astroid {
     notmuch_status_t s = notmuch_database_find_message (nm_db, mid.c_str(), &msg);
 
     if (s != NOTMUCH_STATUS_SUCCESS) {
-      /* try to reopen db in case we got an Xapian::DatabaseModifiedError */
-      log << warn << "db: trying to reopen database.." << endl;
+      log << error << "db: could not find message: " << mid << ", status: " << s << endl;
 
-      reopen ();
-
-      s = notmuch_database_find_message (nm_db, mid.c_str(), &msg);
-
-      if (s != NOTMUCH_STATUS_SUCCESS) {
-        /* could not do that, failing */
-        log << error << "db: could not find message: " << mid << ", status: " << s << endl;
-
-        throw database_error ("db: could not find message.");
-
-      }
+      throw database_error ("db: could not find message.");
     }
 
     /* call function */

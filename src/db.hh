@@ -83,9 +83,6 @@ namespace Astroid {
       Db (DbMode = DATABASE_READ_ONLY);
       ~Db ();
 
-      void reopen ();
-      bool check_reopen (bool);
-
       void on_thread  (ustring, std::function <void(notmuch_thread_t *)>);
       void on_message (ustring, std::function <void(notmuch_message_t *)>);
 
