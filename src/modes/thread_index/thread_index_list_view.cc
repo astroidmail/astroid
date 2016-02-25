@@ -1242,6 +1242,9 @@ namespace Astroid {
           auto p = Gtk::TreePath("0");
           if (p) set_cursor (p);
         }
+
+        /* increment loaded threads count */
+        thread_index->current_threads_loaded++;
       }
     }
 
