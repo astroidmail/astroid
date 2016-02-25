@@ -384,7 +384,7 @@ namespace Astroid {
 
       if ((st != NOTMUCH_STATUS_SUCCESS) || nm_threads == NULL) {
         /* could not do that, failing */
-        log << error << "db: to no avail, failure is iminent." << endl;
+        log << error << "db: could not find thread: " << thread_id << ", status: " << st << endl;
 
         throw database_error ("nmt: could not get a valid notmuch_threads_t from query.");
 
@@ -431,7 +431,7 @@ namespace Astroid {
 
       if (s != NOTMUCH_STATUS_SUCCESS) {
         /* could not do that, failing */
-        log << error << "db: could not find message: " << mid << endl;
+        log << error << "db: could not find message: " << mid << ", status: " << s << endl;
 
         throw database_error ("db: could not find message.");
 
