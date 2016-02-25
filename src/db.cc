@@ -405,7 +405,7 @@ namespace Astroid {
     }
 
     if (c < 1) {
-      log << error << "db: could not find thread." << endl;
+      log << error << "db: could not find thread: " << thread_id << endl;
       throw invalid_argument ("db: could not find thread!");
     }
 
@@ -431,7 +431,7 @@ namespace Astroid {
 
       if (s != NOTMUCH_STATUS_SUCCESS) {
         /* could not do that, failing */
-        log << error << "db: to no avail, failure is iminent." << endl;
+        log << error << "db: could not find message: " << mid << endl;
 
         throw database_error ("db: could not find message.");
 
