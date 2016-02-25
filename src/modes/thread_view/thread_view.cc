@@ -585,12 +585,6 @@ namespace Astroid {
   void ThreadView::load_message_thread (refptr<MessageThread> _mthread) {
     mthread = _mthread;
 
-    /* remove unread status */
-    if (mthread->in_notmuch && mthread->thread->has_tag ("unread")) {
-      Db db (Db::DbMode::DATABASE_READ_WRITE);
-      main_window->actions.doit (&db, refptr<Action>(new TagAction(mthread->thread, {}, {"unread"})));
-    }
-
     ustring s = mthread->subject;
 
     set_label (s);
@@ -622,6 +616,12 @@ namespace Astroid {
        * - check if something should be done becasue of changed tags
        * - messages have been added
        * - messages have been removed
+       *
+       * TODO:
+       *
+       * if anything happens before the webview is ready it will not be shown,
+       * however, we don't want the unread tag to be removed before we get the
+       * chance to scroll to and expand the correct messages.
        */
 
       for (auto &m : mthread->messages) {
@@ -632,6 +632,9 @@ namespace Astroid {
   }
 
   void ThreadView::message_refresh_tags (Db *, refptr<Message> m) {
+
+    if (!wk_loaded || !ready) return;
+
     ustring tags_s = VectorUtils::concat_tags (m->tags);
 
     ustring tags_s_c = ustring::compose ("<span style=\"color:#31587a !important\">%1</span>",
@@ -726,6 +729,17 @@ namespace Astroid {
     }
 
     scroll_to_message (focused_message, true);
+
+    /* remove unread status:
+     *
+     * we do this here so that messages are can be exanded if they are unread,
+     * before the tag is removed.
+     *
+     */
+    if (mthread->in_notmuch && mthread->thread->has_tag ("unread")) {
+      Db db (Db::DbMode::DATABASE_READ_WRITE);
+      main_window->actions.doit (&db, refptr<Action>(new TagAction(mthread->thread, {}, {"unread"})));
+    }
 
     emit_ready ();
   }
