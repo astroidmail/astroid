@@ -22,12 +22,14 @@ def stripper(s):
 
 def out_binding(multi, key, function, documentation, ):
 	if 'UnboundKey' in key:
-		key = 'no defaults'
+		multi = 'no defaults'
 	else:
-		key  = 'default: ' + stripper(key)
+		key  = stripper(key)
 		if multi:
-			key += ', ' + stripper(multi)
-	print('#', stripper(function), '=', '#', stripper(documentation), key)
+			multi = 'default: ' + key + ', ' + stripper(multi)
+		else:
+			multi = 'default: ' + key
+	print('#', stripper(function) + '=' + key, '#', stripper(documentation), multi)
 
 def main(*options):
 	# pattern to look for:
