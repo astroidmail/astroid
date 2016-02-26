@@ -148,19 +148,15 @@ namespace Astroid {
           Gtk::TreeViewColumn *c;
           list_view->get_cursor (path, c);
 
-          gint * indices = gtk_tree_path_get_indices (path.gobj ());
-
-          double pos = *indices * (double) list_view->renderer->height;;
-          double top = adj->get_value ();
-          double bottom = top + scroll->get_height ();
-
-          if (pos < top || pos > bottom) {
-            /* not in view, move cursor to bottom */
-            Gtk::TreePath newpath;
-            int cx, cy;
-            list_view->get_path_at_pos (0, list_view->get_height (), newpath, c, cx, cy);
-            list_view->set_cursor (newpath);
+          /* not in view, move cursor to top */
+          Gtk::TreePath newpath;
+          int cx, cy;
+          list_view->get_path_at_pos (0, 0, newpath, c, cx, cy);
+          if (newpath == path) {
+            newpath  = Gtk::TreePath("0");
           }
+          if (newpath)
+            list_view->set_cursor (newpath);
 
           return true;
         });
@@ -177,19 +173,16 @@ namespace Astroid {
           Gtk::TreeViewColumn *c;
           list_view->get_cursor (path, c);
 
-          gint * indices = gtk_tree_path_get_indices (path.gobj ());
-
-          double pos = *indices * (double) list_view->renderer->height;;
-          double top = adj->get_value ();
-          double bottom = top + scroll->get_height ();
-
-          if (pos < top || pos > bottom) {
-            /* not in view, move cursor to top */
-            Gtk::TreePath newpath;
-            int cx, cy;
-            list_view->get_path_at_pos (0, 0, newpath, c, cx, cy);
-            list_view->set_cursor (newpath);
+          /* not in view, move cursor to bottom */
+          Gtk::TreePath newpath;
+          int cx, cy;
+          list_view->get_path_at_pos (0, list_view->get_height (), newpath, c, cx, cy);
+          if (!newpath || newpath == path) {
+            auto it = list_store->children().end ();
+            newpath  = list_store->get_path (--it);
           }
+          if (newpath)
+            list_view->set_cursor (newpath);
 
           return true;
         });
