@@ -97,12 +97,14 @@ namespace Astroid {
   }
 
   void QueryLoader::loader () {
+    std::lock_guard<std::mutex> loader_lk (loader_m);
     time_t t0 = clock ();
 
     log << debug << "ql: load threads for query: " << query << endl;
 
-
     Db db (Db::DATABASE_READ_ONLY);
+
+    refresh_stats (&db);
 
     /* set up query */
     notmuch_query_t * nmquery;
@@ -159,8 +161,6 @@ namespace Astroid {
     notmuch_threads_destroy (threads);
     notmuch_query_destroy (nmquery);
 
-    refresh_stats (&db);
-
     log << info << "ql: loaded " << i << " threads in " << ((clock()-t0) * 1000.0 / CLOCKS_PER_SEC) << " ms." << endl;
 
     if (!run) {
@@ -168,6 +168,8 @@ namespace Astroid {
     }
 
     run = false;
+
+    stats_ready.emit (); // update loading status
 
     // catch any remaining entries
     if (!in_destructor)
@@ -200,20 +202,10 @@ namespace Astroid {
         log << debug << "ql: loaded " << loaded_threads << " threads." << endl;
       }
     }
+  }
 
-    /* check if there are any deferred thread_updated events */
-    if (!run && !thread_changed_events_waiting.empty ()) {
-      Db db (Db::DATABASE_READ_ONLY);
-
-      while (!thread_changed_events_waiting.empty ()) {
-        ustring ti = thread_changed_events_waiting.front ();
-        thread_changed_events_waiting.pop ();
-
-        log << debug << "ql: running deferred thread changed event on: " << ti << endl;
-        on_thread_changed (&db, ti);
-
-      }
-    }
+  bool QueryLoader::loading () {
+    return run;
   }
 
   /***************
@@ -231,12 +223,7 @@ namespace Astroid {
 
     log << info << "ql: got changed thread signal: " << thread_id << endl;
 
-    if (run) {
-      log << warn << "ql: query is still loading, event will be deferred to later." << endl;
-
-      thread_changed_events_waiting.push (thread_id);
-      return;
-    }
+    std::lock_guard<std::mutex> loader_lk (loader_m);
 
     /* we now have three options:
      * - a new thread has been added (unlikely)
@@ -327,5 +314,6 @@ namespace Astroid {
 
     refresh_stats (db);
   }
+
 }
 

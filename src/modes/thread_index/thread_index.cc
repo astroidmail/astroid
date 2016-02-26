@@ -194,9 +194,9 @@ namespace Astroid {
 
   ustring ThreadIndex::get_label () {
     if (name == "")
-      return ustring::compose ("%1 (%2/%3)", query_string, queryloader.unread_messages, queryloader.total_messages);
+      return ustring::compose ("%1 (%2/%3)%4", query_string, queryloader.unread_messages, queryloader.total_messages, queryloader.loading() ? " (%)" : "");
     else
-      return ustring::compose ("%1 (%2/%3)", name, queryloader.unread_messages, queryloader.total_messages);
+      return ustring::compose ("%1 (%2/%3)%4", name, queryloader.unread_messages, queryloader.total_messages, queryloader.loading() ? " (%)" : "");
   }
 
   void ThreadIndex::open_thread (refptr<NotmuchThread> thread, bool new_tab, bool new_window) {

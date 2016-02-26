@@ -34,6 +34,7 @@ namespace Astroid {
       Glib::Dispatcher first_thread_ready;
       Glib::Dispatcher stats_ready;
 
+      bool loading ();
     private:
       ustring query;
 
@@ -42,6 +43,7 @@ namespace Astroid {
       void loader ();
 
       std::thread loader_thread;
+      std::mutex  loader_m;
 
       std::queue<refptr<NotmuchThread>> to_list_store;
       std::mutex to_list_m;
@@ -50,19 +52,6 @@ namespace Astroid {
       Glib::Dispatcher queue_has_data;
 
       /* signal handlers */
-
-      /*
-       * if the query is loading, defer these events
-       * untill the queue is loaded:
-       *
-       * to_list_adder () will check this queue when (run == false)
-       *
-       * (synchornization on this list should not be needed since both
-       *  on_thread_changed and to_list_adder are run on the main GUI
-       *  thread)
-       *
-       */
-      std::queue<ustring> thread_changed_events_waiting;
 
       void on_thread_changed (Db *, ustring);
       void on_refreshed ();
