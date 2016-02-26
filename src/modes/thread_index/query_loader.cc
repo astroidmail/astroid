@@ -7,6 +7,8 @@
 # include "config.hh"
 
 # include <thread>
+# include <queue>
+# include <mutex>
 # include <notmuch.h>
 
 using std::endl;
@@ -30,9 +32,12 @@ namespace Astroid {
     loaded_threads = 0;
     total_messages = 0;
     unread_messages = 0;
+
+    queue_has_data.connect (std::bind (&QueryLoader::to_list_adder, this));
   }
 
   QueryLoader::~QueryLoader () {
+    in_destructor = true;
     stop ();
   }
 
@@ -78,7 +83,7 @@ namespace Astroid {
     /* st = */ notmuch_query_count_messages_st (unread_q, &unread_messages); // destructive
     notmuch_query_destroy (unread_q);
 
-    stats_ready.emit ();
+    if (!in_destructor) stats_ready.emit ();
   }
 
   void QueryLoader::loader () {
@@ -107,7 +112,8 @@ namespace Astroid {
 
     log << debug << "ql: query time: " << diff << " ms." << endl;
 
-    loaded_threads = 0;
+    loaded_threads = 0; // incremented in list_adder
+    int i = 0;
 
     for (;
          run && notmuch_threads_valid (threads);
@@ -125,22 +131,17 @@ namespace Astroid {
 
       notmuch_thread_destroy (thread);
 
-      auto iter = list_store->append ();
-      Gtk::ListStore::Row row = *iter;
+      std::unique_lock<std::mutex> lk (to_list_m);
 
-      row[list_store->columns.newest_date] = t->newest_date;
-      row[list_store->columns.oldest_date] = t->oldest_date;
-      row[list_store->columns.thread_id]   = t->thread_id;
-      row[list_store->columns.thread]      = Glib::RefPtr<NotmuchThread>(t);
+      to_list_store.push (refptr<NotmuchThread>(t));
 
-      if (loaded_threads == 0) {
-        first_thread_ready.emit ();
-      }
+      lk.unlock ();
 
-      loaded_threads++;
+      i++;
 
-      if ((loaded_threads % 100) == 0) {
-        log << debug << "ql: loaded " << loaded_threads << " threads." << endl;
+      if ((i % 100) == 0) {
+        if (!in_destructor)
+          queue_has_data.emit ();
       }
     }
 
@@ -150,13 +151,45 @@ namespace Astroid {
 
     refresh_stats (&db);
 
-    log << info << "ql: loaded " << loaded_threads << " threads in " << ((clock()-t0) * 1000.0 / CLOCKS_PER_SEC) << " ms." << endl;
+    log << info << "ql: loaded " << i << " threads in " << ((clock()-t0) * 1000.0 / CLOCKS_PER_SEC) << " ms." << endl;
 
     if (!run) {
       log << warn << "ql: stopped before finishing." << endl;
     }
 
+    // catch any remaining entries
+    if (!in_destructor)
+      queue_has_data.emit ();
+
     run = false;
+  }
+
+  void QueryLoader::to_list_adder () {
+    std::lock_guard<std::mutex> lk (to_list_m);
+
+    while (!to_list_store.empty ()) {
+      refptr<NotmuchThread> t = to_list_store.front ();
+      to_list_store.pop ();
+
+      auto iter = list_store->append ();
+      Gtk::ListStore::Row row = *iter;
+
+      row[list_store->columns.newest_date] = t->newest_date;
+      row[list_store->columns.oldest_date] = t->oldest_date;
+      row[list_store->columns.thread_id]   = t->thread_id;
+      row[list_store->columns.thread]      = t;
+
+      if (loaded_threads == 0) {
+        if (!in_destructor)
+          first_thread_ready.emit ();
+      }
+
+      loaded_threads++;
+
+      if ((loaded_threads % 100) == 0) {
+        log << debug << "ql: loaded " << loaded_threads << " threads." << endl;
+      }
+    }
   }
 }
 

@@ -1,6 +1,8 @@
 # pragma once
 
 # include <thread>
+# include <mutex>
+# include <queue>
 # include <notmuch.h>
 
 # include "proto.hh"
@@ -36,9 +38,16 @@ namespace Astroid {
       ustring query;
 
       bool run = false;
+      bool in_destructor = false;
       void loader ();
 
       std::thread loader_thread;
+
+      std::queue<refptr<NotmuchThread>> to_list_store;
+      std::mutex to_list_m;
+
+      void to_list_adder ();
+      Glib::Dispatcher queue_has_data;
 
   };
 }

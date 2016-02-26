@@ -1219,7 +1219,7 @@ namespace Astroid {
   }
 
   void ThreadIndexListView::update_bg_image () {
-    bool hide = (list_store->children().empty());
+    bool hide = (thread_index->queryloader.total_messages == 0);
 
     if (!hide) {
       auto sc = get_style_context ();
