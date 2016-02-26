@@ -14,11 +14,14 @@ namespace Astroid {
     Key (guint, ustring name = "", ustring help = "");
     Key (bool _c, bool _m, guint k, ustring name = "", ustring help = "");
     Key (bool _c, bool _m, char k, ustring name = "", ustring help = "");
+    Key (bool _c, bool _m, bool _s, guint k, ustring name = "", ustring help = "");
+    Key (bool _c, bool _m, bool _s, char k, ustring name = "", ustring help = "");
     Key (GdkEventKey *, ustring name = "", ustring help = "");
 
     /* only these three memebers define the logical state of the Key */
     bool ctrl = false;
     bool meta = false;
+    bool shift = false;
     guint key = 0; /* GDK_KEY_* */
 
     mutable ustring name = "";

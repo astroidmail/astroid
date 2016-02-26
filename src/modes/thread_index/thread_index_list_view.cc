@@ -353,7 +353,7 @@ namespace Astroid {
           return true;
         });
 
-    keys->register_key (Key (false, true, (guint) GDK_KEY_Tab),
+    keys->register_key (Key (false, false, true, (guint) GDK_KEY_ISO_Left_Tab),
         "thread_index.previous_unread",
         "Jump to previous unread thread",
         [&] (Key) {

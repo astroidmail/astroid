@@ -25,6 +25,7 @@ namespace Astroid {
     { GDK_KEY_Down,   "Down" },
     { GDK_KEY_Up,     "Up" },
     { GDK_KEY_Tab,    "Tab" },
+    { GDK_KEY_ISO_Left_Tab, "ISO_Left_Tab" },
     { GDK_KEY_Home,   "Home" },
     { GDK_KEY_End,    "End" },
     { GDK_KEY_Return, "Return" },
@@ -557,6 +558,9 @@ namespace Astroid {
      * C-M-K  : for Ctrl-Alt-K
      * K      : for Shift-k
      *
+     * S-Tab  : for Shift-Tab
+     * C-M-S-Tab: for Ctrl-Alt-Shift-Tab
+     *
      */
 
     name = _n;
@@ -564,7 +568,7 @@ namespace Astroid {
 
     vector<ustring> spec_parts = VectorUtils::split_and_trim (spec, "-");
 
-    if (spec_parts.size () > 3) {
+    if (spec_parts.size () > 4) {
       log << error << "key spec invalid: " << spec << endl;
       throw keyspec_error ("invalid length of spec");
     }
@@ -575,22 +579,26 @@ namespace Astroid {
 
       key = get_keyval (spec_parts[0]);
 
+      shift = isupper (gdk_keyval_to_unicode (key));
+
       return;
     }
 
     if (spec_parts.size () >= 2) {
       /* one modifier */
       char M = spec_parts[0][0];
-      if (!((M == 'C') || (M == 'M'))) {
+      if (!((M == 'C') || (M == 'M') || (M == 'S'))) {
         log << error << "key spec invalid: " << spec << endl;
         throw keyspec_error ("invalid modifier in key spec");
       }
 
       if (M == 'C') ctrl = true;
       if (M == 'M') meta = true;
+      if (M == 'S') shift = true;
 
       if (spec_parts.size () == 2) {
         key = get_keyval (spec_parts[1]);
+        shift = isupper (gdk_keyval_to_unicode (key));
         return;
       }
     }
@@ -598,7 +606,7 @@ namespace Astroid {
     if (spec_parts.size () >= 3) {
       char M = spec_parts[1][0];
 
-      if (!((M == 'C') || (M == 'M'))) {
+      if (!((M == 'C') || (M == 'M') || (M == 'S'))) {
         log << error << "key spec invalid: " << spec << endl;
         throw keyspec_error ("invalid modifier in key spec");
       }
@@ -618,13 +626,64 @@ namespace Astroid {
         meta = true;
       }
 
-      key = get_keyval (spec_parts[2]);
+      if (M == 'S') {
+        if (shift) {
+          log << error << "key spec invalid: " << spec << endl;
+          throw keyspec_error ("modifier already specified");
+        }
+        shift = true;
+      }
+
+      if (spec_parts.size () == 3) {
+        key = get_keyval (spec_parts[2]);
+        shift = isupper (gdk_keyval_to_unicode (key));
+        return;
+      }
+    }
+
+    if (spec_parts.size () >= 3) {
+      char M = spec_parts[2][0];
+
+      if (!((M == 'C') || (M == 'M') || (M == 'S'))) {
+        log << error << "key spec invalid: " << spec << endl;
+        throw keyspec_error ("invalid modifier in key spec");
+      }
+
+      if (M == 'C') {
+        if (ctrl) {
+          log << error << "key spec invalid: " << spec << endl;
+          throw keyspec_error ("modifier already specified");
+        }
+        ctrl = true;
+      }
+      if (M == 'M') {
+        if (meta) {
+          log << error << "key spec invalid: " << spec << endl;
+          throw keyspec_error ("modifier already specified");
+        }
+        meta = true;
+      }
+
+      if (M == 'S') {
+        if (shift) {
+          log << error << "key spec invalid: " << spec << endl;
+          throw keyspec_error ("modifier already specified");
+        }
+        shift = true;
+      }
+
+      if (spec_parts.size () == 3) {
+        key = get_keyval (spec_parts[3]);
+        shift = isupper (gdk_keyval_to_unicode (key));
+        return;
+      }
     }
   } // }}}
 
   Key::Key (guint k, ustring _n, ustring _h) {
     ctrl = false;
     meta = false;
+    shift = isupper(gdk_keyval_to_unicode (k));
     key  = k;
     name = _n;
     help = _h;
@@ -633,6 +692,7 @@ namespace Astroid {
   Key::Key (bool _c, bool _m, char k, ustring _n, ustring _h) {
     ctrl = _c;
     meta = _m;
+    shift = isupper(k);
     key  = gdk_unicode_to_keyval(k);
     name = _n;
     help = _h;
@@ -641,6 +701,25 @@ namespace Astroid {
   Key::Key (bool _c, bool _m, guint k, ustring _n, ustring _h) {
     ctrl = _c;
     meta = _m;
+    shift = isupper(gdk_keyval_to_unicode (k));
+    key  = k;
+    name = _n;
+    help = _h;
+  }
+
+  Key::Key (bool _c, bool _m, bool _s, char k, ustring _n, ustring _h) {
+    ctrl = _c;
+    meta = _m;
+    shift = _s || isupper(k);
+    key  = gdk_unicode_to_keyval(k);
+    name = _n;
+    help = _h;
+  }
+
+  Key::Key (bool _c, bool _m, bool _s, guint k, ustring _n, ustring _h) {
+    ctrl = _c;
+    meta = _m;
+    shift = _s || isupper(gdk_keyval_to_unicode (k));
     key  = k;
     name = _n;
     help = _h;
@@ -649,7 +728,11 @@ namespace Astroid {
   Key::Key (GdkEventKey *event, ustring _n, ustring _h) {
     ctrl = (event->state & GDK_CONTROL_MASK);
     meta = (event->state & GDK_MOD1_MASK);
+    shift = (event->state & GDK_SHIFT_MASK);
     key  = event->keyval;
+
+    if (isupper (gdk_keyval_to_unicode (key))) shift = true;
+
     name = _n;
     help = _h;
   }
@@ -658,6 +741,7 @@ namespace Astroid {
     ustring s;
     if (ctrl) s += "C-";
     if (meta) s += "M-";
+    if (shift) s+= "S-";
 
     char k = gdk_keyval_to_unicode (key);
     if (isgraph (k)) {
@@ -675,7 +759,7 @@ namespace Astroid {
   }
 
   bool Key::operator== ( const Key & other ) const {
-    return ((other.key == key) && (other.ctrl == ctrl) && (other.meta == meta));
+    return ((other.key == key) && (other.ctrl == ctrl) && (other.shift == shift) && (other.meta == meta));
   }
 
   bool Key::operator< ( const Key & other ) const {
@@ -684,6 +768,9 @@ namespace Astroid {
 
     if (other.meta && !meta) return true;
     else if (meta && !other.meta) return false;
+
+    if (other.shift && !shift) return true;
+    else if (shift && !other.shift) return false;
 
     return key < other.key;
   }
