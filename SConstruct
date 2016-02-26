@@ -194,7 +194,7 @@ if conf.CheckNotmuchGetRev ():
   env.AppendUnique (CPPFLAGS = [ '-DHAVE_NOTMUCH_GET_REV' ])
 else:
   have_get_rev = False
-  print "notmuch_database_get_revision() not available. notmuch with lastmod capabilities will result in smoother polls."
+  print "notmuch_database_get_revision() not available. A recent notmuch with lastmod capabilities will result in easier updating of new threads and smoother polls."
 
 # external libraries
 env.ParseConfig ('pkg-config --libs --cflags glibmm-2.4')
