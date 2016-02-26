@@ -203,6 +203,7 @@ namespace Astroid {
         }
 
         g_mime_multipart_add (multipart, (GMimeObject*) part);
+
         g_object_unref (part);
         g_object_unref (contentType);
         g_object_unref (file_stream);
@@ -240,6 +241,8 @@ namespace Astroid {
       GMimeStream * sendMailStream = g_mime_stream_file_new(sendMailPipe);
       g_mime_stream_file_set_owner(GMIME_STREAM_FILE(sendMailStream), false);
       g_mime_object_write_to_stream(GMIME_OBJECT(message), sendMailStream);
+      g_mime_stream_flush (sendMailStream);
+
       g_object_unref(sendMailStream);
 
       int status = pclose(sendMailPipe);
@@ -312,6 +315,7 @@ namespace Astroid {
 
     GMimeStream * stream = g_mime_stream_fs_new(fd);
     g_mime_object_write_to_stream(GMIME_OBJECT(message), stream);
+    g_mime_stream_flush (stream);
 
     g_object_unref(stream);
 
@@ -322,9 +326,13 @@ namespace Astroid {
 
   void ComposeMessage::write (ustring fname) {
     FILE * MessageFile = fopen(fname.c_str(), "w");
+
     GMimeStream * stream = g_mime_stream_file_new(MessageFile);
     g_mime_object_write_to_stream(GMIME_OBJECT(message), stream);
+    g_mime_stream_flush (stream);
+
     g_object_unref(stream);
+
     log << debug << "cm: wrote file: " << fname << endl;
   }
 
