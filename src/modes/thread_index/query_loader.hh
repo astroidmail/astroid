@@ -37,7 +37,7 @@ namespace Astroid {
     private:
       ustring query;
 
-      bool run = false;
+      std::atomic<bool> run;
       bool in_destructor = false;
       void loader ();
 
@@ -49,6 +49,23 @@ namespace Astroid {
       void to_list_adder ();
       Glib::Dispatcher queue_has_data;
 
+      /* signal handlers */
+
+      /*
+       * if the query is loading, defer these events
+       * untill the queue is loaded:
+       *
+       * to_list_adder () will check this queue when (run == false)
+       *
+       * (synchornization on this list should not be needed since both
+       *  on_thread_changed and to_list_adder are run on the main GUI
+       *  thread)
+       *
+       */
+      std::queue<ustring> thread_changed_events_waiting;
+
+      void on_thread_changed (Db *, ustring);
+      void on_refreshed ();
   };
 }
 

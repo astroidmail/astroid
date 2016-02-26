@@ -5,10 +5,13 @@
 # include "query_loader.hh"
 # include "thread_index_list_view.hh"
 # include "config.hh"
+# include "actions/action_manager.hh"
 
 # include <thread>
 # include <queue>
 # include <mutex>
+# include <functional>
+
 # include <notmuch.h>
 
 using std::endl;
@@ -32,8 +35,15 @@ namespace Astroid {
     loaded_threads = 0;
     total_messages = 0;
     unread_messages = 0;
+    run = false;
 
     queue_has_data.connect (std::bind (&QueryLoader::to_list_adder, this));
+
+    astroid->global_actions->signal_thread_changed ().connect (
+        std::bind (&QueryLoader::on_thread_changed, this, std::placeholders::_1, std::placeholders::_2));
+
+    astroid->global_actions->signal_refreshed ().connect (
+        std::bind (&QueryLoader::on_refreshed, this));
   }
 
   QueryLoader::~QueryLoader () {
@@ -157,11 +167,11 @@ namespace Astroid {
       log << warn << "ql: stopped before finishing." << endl;
     }
 
+    run = false;
+
     // catch any remaining entries
     if (!in_destructor)
       queue_has_data.emit ();
-
-    run = false;
   }
 
   void QueryLoader::to_list_adder () {
@@ -190,6 +200,132 @@ namespace Astroid {
         log << debug << "ql: loaded " << loaded_threads << " threads." << endl;
       }
     }
+
+    /* check if there are any deferred thread_updated events */
+    if (!run && !thread_changed_events_waiting.empty ()) {
+      Db db (Db::DATABASE_READ_ONLY);
+
+      while (!thread_changed_events_waiting.empty ()) {
+        ustring ti = thread_changed_events_waiting.front ();
+        thread_changed_events_waiting.pop ();
+
+        log << debug << "ql: running deferred thread changed event on: " << ti << endl;
+        on_thread_changed (&db, ti);
+
+      }
+    }
+  }
+
+  /***************
+   * signals
+   **************/
+  void QueryLoader::on_refreshed () {
+    if (in_destructor) return;
+
+    log << warn << "ql: got refreshed signal." << endl;
+    reload ();
+  }
+
+  void QueryLoader::on_thread_changed (Db * db, ustring thread_id) {
+    if (in_destructor) return;
+
+    log << info << "ql: got changed thread signal: " << thread_id << endl;
+
+    if (run) {
+      log << warn << "ql: query is still loading, event will be deferred to later." << endl;
+
+      thread_changed_events_waiting.push (thread_id);
+      return;
+    }
+
+    /* we now have three options:
+     * - a new thread has been added (unlikely)
+     * - a thread has been deleted (kind of likely)
+     * - a thread has been updated (most likely)
+     *
+     * none of them needs to affect the threads that match the query in this
+     * list.
+     *
+     */
+
+    time_t t0 = clock ();
+
+    Gtk::TreePath path;
+    Gtk::TreeIter fwditer;
+
+    /* forward iterating is much faster than going backwards:
+     * https://developer.gnome.org/gtkmm/3.11/classGtk_1_1TreeIter.html
+     */
+
+    bool found = false;
+    fwditer = list_store->get_iter ("0");
+
+    Gtk::ListStore::Row row;
+
+    while (fwditer) {
+
+      row = *fwditer;
+
+      if (row[list_store->columns.thread_id] == thread_id) {
+        found = true;
+        break;
+      }
+
+      fwditer++;
+    }
+
+    /* test if thread is in the current query */
+    std::lock_guard<Db> grd (*db);
+    bool in_query = db->thread_in_query (query, thread_id);
+
+    if (found) {
+      /* thread has either been updated or deleted from current query */
+      log << debug << "ql: updated: found thread in: " << ((clock() - t0) * 1000.0 / CLOCKS_PER_SEC) << " ms." << endl;
+
+      if (in_query) {
+        /* updated */
+        log << debug << "ql: updated" << endl;
+        refptr<NotmuchThread> thread = row[list_store->columns.thread];
+        thread->refresh (db);
+        row[list_store->columns.newest_date] = thread->newest_date;
+        row[list_store->columns.oldest_date] = thread->oldest_date;
+
+      } else {
+        /* deleted */
+        log << debug << "ql: deleted" << endl;
+        path = list_store->get_path (fwditer);
+        list_store->erase (fwditer);
+      }
+
+    } else {
+      /* thread has possibly been added to the current query */
+      log << debug << "ql: updated: did not find thread, time used: " << ((clock() - t0) * 1000.0 / CLOCKS_PER_SEC) << " ms." << endl;
+      if (in_query) {
+        log << debug << "ql: new thread for query, adding.." << endl;
+        auto iter = list_store->prepend ();
+        Gtk::ListStore::Row newrow = *iter;
+
+        NotmuchThread * t;
+
+        db->on_thread (thread_id, [&](notmuch_thread_t *nmt) {
+
+            t = new NotmuchThread (nmt);
+
+          });
+
+        newrow[list_store->columns.newest_date] = t->newest_date;
+        newrow[list_store->columns.oldest_date] = t->oldest_date;
+        newrow[list_store->columns.thread_id]   = t->thread_id;
+        newrow[list_store->columns.thread]      = Glib::RefPtr<NotmuchThread>(t);
+
+        /* check if we should select it (if this is the only item) */
+        if (list_store->children().size() == 1) {
+          first_thread_ready.emit ();
+        }
+      }
+    }
+
+    refresh_stats (db);
   }
 }
 

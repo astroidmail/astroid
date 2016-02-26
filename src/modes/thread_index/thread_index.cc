@@ -181,13 +181,6 @@ namespace Astroid {
     // }}}
   }
 
-  void ThreadIndex::refresh_stats (Db * db) {
-    /* stats */
-    log << debug << "ti: refresh stats." << endl;
-
-    queryloader.refresh_stats (db);
-  }
-
   void ThreadIndex::on_stats_ready () {
     log << debug << "ti: got refresh stats." << endl;
     set_label (get_label ());

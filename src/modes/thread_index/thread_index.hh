@@ -17,8 +17,6 @@ namespace Astroid {
       ThreadIndex (MainWindow *, ustring, ustring = "");
       ~ThreadIndex ();
 
-      void refresh_stats (Db *);
-
       QueryLoader queryloader;
 
       void open_thread (refptr<NotmuchThread>, bool new_tab, bool new_window = false);

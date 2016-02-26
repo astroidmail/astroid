@@ -105,9 +105,6 @@ namespace Astroid {
       // bypass scrolled window
       virtual bool on_key_press_event (GdkEventKey *) override;
 
-      void on_thread_changed (Db *, ustring);
-      void on_refreshed ();
-
     private:
       std::chrono::time_point<std::chrono::steady_clock> last_redraw;
       bool redraw ();

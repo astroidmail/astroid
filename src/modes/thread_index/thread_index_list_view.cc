@@ -116,12 +116,6 @@ namespace Astroid {
     column->set_cell_data_func (*renderer,
         sigc::mem_fun(this, &ThreadIndexListView::set_thread_data) );
 
-    astroid->global_actions->signal_thread_changed ().connect (
-        sigc::mem_fun (this, &ThreadIndexListView::on_thread_changed));
-
-    astroid->global_actions->signal_refreshed ().connect (
-        sigc::mem_fun (this, &ThreadIndexListView::on_refreshed));
-
     /* re-draw every minute (check every second) */
     Glib::signal_timeout ().connect (
         sigc::mem_fun (this, &ThreadIndexListView::redraw), 1000);
@@ -1112,110 +1106,6 @@ namespace Astroid {
       /* open message in new tab  */
       thread_index->open_thread (thread, true);
     }
-  }
-
-  void ThreadIndexListView::on_refreshed () {
-    log << warn << "til: got refreshed signal." << endl;
-    thread_index->queryloader.reload ();
-  }
-
-  void ThreadIndexListView::on_thread_changed (Db * db, ustring thread_id) {
-    log << info << "til: got changed thread signal: " << thread_id << endl;
-
-    /* we now have three options:
-     * - a new thread has been added (unlikely)
-     * - a thread has been deleted (kind of likely)
-     * - a thread has been updated (most likely)
-     *
-     * none of them needs to affect the threads that match the query in this
-     * list.
-     *
-     */
-
-    time_t t0 = clock ();
-
-    Gtk::TreePath path;
-    Gtk::TreeIter fwditer;
-
-    /* forward iterating is much faster than going backwards:
-     * https://developer.gnome.org/gtkmm/3.11/classGtk_1_1TreeIter.html
-     */
-
-    bool found = false;
-    fwditer = list_store->get_iter ("0");
-
-    Gtk::ListStore::Row row;
-
-    while (fwditer) {
-
-      row = *fwditer;
-
-      if (row[list_store->columns.thread_id] == thread_id) {
-        found = true;
-        break;
-      }
-
-      fwditer++;
-    }
-
-    /* test if thread is in the current query */
-    lock_guard<Db> grd (*db);
-    bool in_query = db->thread_in_query (thread_index->query_string, thread_id);
-
-    if (found) {
-      /* thread has either been updated or deleted from current query */
-      log << debug << "til: updated: found thread in: " << ((clock() - t0) * 1000.0 / CLOCKS_PER_SEC) << " ms." << endl;
-
-      if (in_query) {
-        /* updated */
-        log << debug << "til: updated" << endl;
-        refptr<NotmuchThread> thread = row[list_store->columns.thread];
-        thread->refresh (db);
-        row[list_store->columns.newest_date] = thread->newest_date;
-        row[list_store->columns.oldest_date] = thread->oldest_date;
-
-      } else {
-        /* deleted */
-        log << debug << "til: deleted" << endl;
-        path = list_store->get_path (fwditer);
-        list_store->erase (fwditer);
-
-        /* TODO: lock on list_store */
-      }
-
-    } else {
-      /* thread has possibly been added to the current query */
-      log << debug << "til: updated: did not find thread, time used: " << ((clock() - t0) * 1000.0 / CLOCKS_PER_SEC) << " ms." << endl;
-      if (in_query) {
-        log << debug << "til: new thread for query, adding.." << endl;
-        auto iter = list_store->prepend ();
-        Gtk::ListStore::Row newrow = *iter;
-
-        NotmuchThread * t;
-
-        db->on_thread (thread_id, [&](notmuch_thread_t *nmt) {
-
-            t = new NotmuchThread (nmt);
-
-          });
-
-        newrow[list_store->columns.newest_date] = t->newest_date;
-        newrow[list_store->columns.oldest_date] = t->oldest_date;
-        newrow[list_store->columns.thread_id]   = t->thread_id;
-        newrow[list_store->columns.thread]      = Glib::RefPtr<NotmuchThread>(t);
-
-        /* check if we should select it (if this is the only item) */
-        if (list_store->children().size() == 1) {
-          auto p = Gtk::TreePath("0");
-          if (p) set_cursor (p);
-        }
-
-        /* increment loaded threads count */
-        /* TODO: lock on list_store */
-      }
-    }
-
-    thread_index->refresh_stats (db);
   }
 
   void ThreadIndexListView::update_bg_image () {
