@@ -7,9 +7,8 @@
 # include <gtkmm/liststore.h>
 # include <gtkmm/scrolledwindow.h>
 
-# include <notmuch.h>
-
 # include "modes/paned_mode.hh"
+# include "query_loader.hh"
 
 namespace Astroid {
 
@@ -18,16 +17,9 @@ namespace Astroid {
       ThreadIndex (MainWindow *, ustring, ustring = "");
       ~ThreadIndex ();
 
-      unsigned int total_messages;
-      unsigned int unread_messages;
-
-      int thread_load_step;             /* configurable */
-      int current_threads_loaded  = 0;
-
-      void load_more_threads (bool all = false, int count = -1);
-      void refresh (bool all, int count);
       void refresh_stats (Db *);
-      int reopen_tries = 0;
+
+      QueryLoader queryloader;
 
       void open_thread (refptr<NotmuchThread>, bool new_tab, bool new_window = false);
       ThreadView * thread_view;
@@ -44,7 +36,7 @@ namespace Astroid {
       virtual ustring get_label () override;
 
     private:
-      notmuch_sort_t sort;
-      std::vector<ustring> sort_strings = { "oldest", "newest", "messageid", "unsorted" };
+      void on_stats_ready ();
+      void on_first_thread_ready ();
   };
 }

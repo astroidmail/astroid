@@ -8,6 +8,7 @@
 # include "modes/paned_mode.hh"
 # include "main_window.hh"
 # include "thread_index.hh"
+# include "query_loader.hh"
 # include "thread_index_list_view.hh"
 # include "thread_index_list_cell_renderer.hh"
 # include "modes/keybindings.hh"
@@ -290,16 +291,7 @@ namespace Astroid {
 
           if (it) {
             set_cursor (path);
-          } else {
-            /* try to load more threads */
-            // TODO: async and lock
-            thread_index->load_more_threads ();
-
-            // retry to move down
-            it = list_store->get_iter (path);
-            if (it) set_cursor (path);
           }
-
           return true;
         });
 
@@ -509,20 +501,10 @@ namespace Astroid {
             if (it) {
               set_cursor (path);
             } else {
-              /* try to load more threads */
-              // TODO: async and lock
-              thread_index->load_more_threads ();
-
-              // retry to move down
-              it = list_store->get_iter (path);
-              if (it) {
-                set_cursor (path);
-              } else {
-                /* move to last */
-                auto it = list_store->children().end ();
-                auto p  = list_store->get_path (--it);
-                if (p) set_cursor (p);
-              }
+              /* move to last */
+              auto it = list_store->children().end ();
+              auto p  = list_store->get_path (--it);
+              if (p) set_cursor (p);
             }
           }
 
@@ -735,20 +717,6 @@ namespace Astroid {
             row[list_store->columns.marked] = !row[list_store->columns.marked];
             fwditer++;
           }
-          return true;
-        });
-
-    keys->register_key ("M", "thread_index.load_more",
-        "Load more threads",
-        [&] (Key) {
-          thread_index->load_more_threads ();
-          return true;
-        });
-
-    keys->register_key (Key(GDK_KEY_exclam), "thread_index.load_all",
-        "Load all threads",
-        [&] (Key) {
-          thread_index->load_more_threads (true);
           return true;
         });
 
@@ -1148,7 +1116,7 @@ namespace Astroid {
 
   void ThreadIndexListView::on_refreshed () {
     log << warn << "til: got refreshed signal." << endl;
-    thread_index->refresh (false, max(thread_index->thread_load_step, thread_index->current_threads_loaded));
+    thread_index->queryloader.reload ();
   }
 
   void ThreadIndexListView::on_thread_changed (Db * db, ustring thread_id) {
@@ -1212,8 +1180,7 @@ namespace Astroid {
         path = list_store->get_path (fwditer);
         list_store->erase (fwditer);
 
-        /* decrement loaded threads count */
-        thread_index->current_threads_loaded--;
+        /* TODO: lock on list_store */
       }
 
     } else {
@@ -1244,7 +1211,7 @@ namespace Astroid {
         }
 
         /* increment loaded threads count */
-        thread_index->current_threads_loaded++;
+        /* TODO: lock on list_store */
       }
     }
 
