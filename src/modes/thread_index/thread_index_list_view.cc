@@ -305,16 +305,18 @@ namespace Astroid {
         "thread_index.next_unread",
         "Jump to next unread thread",
         [&] (Key) {
-          Gtk::TreePath path;
+          Gtk::TreePath thispath, path;
           Gtk::TreeIter fwditer;
           Gtk::TreeViewColumn *c;
 
           get_cursor (path, c);
           path.next ();
           fwditer = list_store->get_iter (path);
+          thispath = path;
 
           Gtk::ListStore::Row row;
 
+          bool found = false;
           while (fwditer) {
             row = *fwditer;
 
@@ -322,10 +324,83 @@ namespace Astroid {
             if (thread->unread) {
               path = list_store->get_path (fwditer);
               set_cursor (path);
+              found = true;
               break;
             }
 
             fwditer++;
+          }
+
+          /* wrap, and check from start */
+          if (!found) {
+            fwditer = list_store->children().begin ();
+
+            while (fwditer && list_store->get_path(fwditer) < thispath) {
+            row = *fwditer;
+
+            Glib::RefPtr<NotmuchThread> thread = row[list_store->columns.thread];
+            if (thread->unread) {
+              path = list_store->get_path (fwditer);
+              set_cursor (path);
+              found = true;
+              break;
+            }
+
+            fwditer++;
+            }
+          }
+
+          return true;
+        });
+
+    keys->register_key (Key (false, true, (guint) GDK_KEY_Tab),
+        "thread_index.previous_unread",
+        "Jump to previous unread thread",
+        [&] (Key) {
+          Gtk::TreePath thispath, path;
+          Gtk::TreeIter iter;
+          Gtk::TreeViewColumn *c;
+
+          get_cursor (path, c);
+          path.prev ();
+          iter = list_store->get_iter (path);
+          thispath = path;
+
+          Gtk::ListStore::Row row;
+
+          bool found = false;
+          while (iter) {
+            row = *iter;
+
+            Glib::RefPtr<NotmuchThread> thread = row[list_store->columns.thread];
+            if (thread->unread) {
+              path = list_store->get_path (iter);
+              set_cursor (path);
+              found = true;
+              break;
+            }
+
+            iter--;
+          }
+
+          /* wrap, and check from end */
+          if (!found) {
+            iter = list_store->children().end ();
+            iter--;
+
+            while (iter && list_store->get_path(iter) > thispath) {
+            row = *iter;
+
+            Glib::RefPtr<NotmuchThread> thread = row[list_store->columns.thread];
+            if (thread->unread) {
+              path = list_store->get_path (iter);
+              set_cursor (path);
+              found = true;
+              break;
+            }
+
+            iter--;
+            }
           }
 
           return true;
