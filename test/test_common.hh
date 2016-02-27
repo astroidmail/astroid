@@ -4,8 +4,15 @@
 # include "log.hh"
 # include "proto.hh"
 
+using Astroid::astroid;
+using Astroid::error;
+using Astroid::info;
+using Astroid::warn;
+using Astroid::debug;
+using Astroid::test;
+using std::endl;
+
 void setup () {
-  using Astroid::astroid;
   astroid = new Astroid::Astroid ();
   astroid->main_test ();
 }

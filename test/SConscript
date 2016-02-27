@@ -54,4 +54,6 @@ testEnv.addUnitTest ('test_keybindings', ['test_keybindings.cc', source_objs])
 
 testEnv.addUnitTest ('test_bad_content_id', ['test_bad_content_id.cc', source_objs])
 
+testEnv.addUnitTest ('test_notmuch', ['test_notmuch.cc', source_objs])
+
 # all the tests added above are automatically added to the 'test' alias
