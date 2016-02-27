@@ -65,6 +65,10 @@ namespace Astroid {
   }
 
   void QueryLoader::stop () {
+    if (run) {
+      log << info << "ql (" << id << "): stopping loader..." << endl;
+    }
+
     run = false;
     loader_thread.join ();
   }
@@ -110,9 +114,8 @@ namespace Astroid {
 
   void QueryLoader::loader () {
     std::lock_guard<std::mutex> loader_lk (loader_m);
-    time_t t0 = clock ();
 
-    log << debug << "ql: load threads for query: " << query << endl;
+    /* important: we cannot safely output debug info from this thread */
 
     Db db (Db::DATABASE_READ_ONLY);
 
@@ -132,9 +135,6 @@ namespace Astroid {
 
     /* slow */
     /* notmuch_status_t st = */ notmuch_query_search_threads_st (nmquery, &threads);
-    float diff = (clock () - t0) * 1000.0 / CLOCKS_PER_SEC;
-
-    log << debug << "ql: query time: " << diff << " ms." << endl;
 
     loaded_threads = 0; // incremented in list_adder
     int i = 0;
@@ -172,12 +172,6 @@ namespace Astroid {
     /* closing query */
     notmuch_threads_destroy (threads);
     notmuch_query_destroy (nmquery);
-
-    log << info << "ql: loaded " << i << " threads in " << ((clock()-t0) * 1000.0 / CLOCKS_PER_SEC) << " ms." << endl;
-
-    if (!run) {
-      log << warn << "ql: stopped before finishing." << endl;
-    }
 
     run = false;
 

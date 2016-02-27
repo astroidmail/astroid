@@ -500,6 +500,8 @@ namespace Astroid {
   }
 
   vector<tuple<ustring,bool>> NotmuchThread::get_authors (notmuch_thread_t * nm_thread) {
+    /* important: this might be called from another thread, we cannot output anything here */
+
     /* returns a vector of authors and whether they are authors of
      * an unread message in the thread */
     vector<tuple<ustring, bool>> aths;
@@ -517,7 +519,7 @@ namespace Astroid {
       if (auths != NULL) {
         astr = auths;
       } else {
-        log << error << "nmt: got NULL for authors!" << endl;
+        /* log << error << "nmt: got NULL for authors!" << endl; */
       }
 
       std::vector<ustring> maths = VectorUtils::split_and_trim (astr, ",|\\|");
@@ -546,7 +548,7 @@ namespace Astroid {
       if (ac != NULL) {
         a = Address(ustring (ac)).fail_safe_name ();
       } else {
-        log << error << "nmt: got NULL for author!" << endl;
+        /* log << error << "nmt: got NULL for author!" << endl; */
         continue;
       }
 
