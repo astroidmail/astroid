@@ -17,7 +17,11 @@
 using std::endl;
 
 namespace Astroid {
+  int QueryLoader::nextid = 0;
+
   QueryLoader::QueryLoader () {
+    id = nextid++;
+
     ustring sort_order = astroid->config ().get<std::string> ("thread_index.sort_order");
     if (sort_order == "newest") {
       sort = NOTMUCH_SORT_NEWEST_FIRST;
@@ -37,16 +41,18 @@ namespace Astroid {
     unread_messages = 0;
     run = false;
 
-    queue_has_data.connect (std::bind (&QueryLoader::to_list_adder, this));
+    queue_has_data.connect (
+        sigc::mem_fun (this, &QueryLoader::to_list_adder));
 
     astroid->global_actions->signal_thread_changed ().connect (
-        std::bind (&QueryLoader::on_thread_changed, this, std::placeholders::_1, std::placeholders::_2));
+        sigc::mem_fun (this, &QueryLoader::on_thread_changed));
 
     astroid->global_actions->signal_refreshed ().connect (
-        std::bind (&QueryLoader::on_refreshed, this));
+        sigc::mem_fun (this, &QueryLoader::on_refreshed));
   }
 
   QueryLoader::~QueryLoader () {
+    log << debug << "ql: destruct." << endl;
     in_destructor = true;
     stop ();
   }
@@ -152,7 +158,7 @@ namespace Astroid {
       i++;
 
       if ((i % 100) == 0) {
-        if (!in_destructor)
+        if (run && !in_destructor)
           queue_has_data.emit ();
       }
     }
@@ -169,7 +175,8 @@ namespace Astroid {
 
     run = false;
 
-    stats_ready.emit (); // update loading status
+    if (!in_destructor)
+      stats_ready.emit (); // update loading status
 
     // catch any remaining entries
     if (!in_destructor)
@@ -214,14 +221,14 @@ namespace Astroid {
   void QueryLoader::on_refreshed () {
     if (in_destructor) return;
 
-    log << warn << "ql: got refreshed signal." << endl;
+    log << warn << "ql (" << id << "): got refreshed signal." << endl;
     reload ();
   }
 
   void QueryLoader::on_thread_changed (Db * db, ustring thread_id) {
     if (in_destructor) return;
 
-    log << info << "ql: got changed thread signal: " << thread_id << endl;
+    log << info << "ql (" << id << "): " << query << ", got changed thread signal: " << thread_id << endl;
 
     std::lock_guard<std::mutex> loader_lk (loader_m);
 
@@ -307,13 +314,13 @@ namespace Astroid {
 
         /* check if we should select it (if this is the only item) */
         if (list_store->children().size() == 1) {
-          first_thread_ready.emit ();
+          if (!in_destructor)
+            first_thread_ready.emit ();
         }
       }
     }
 
     refresh_stats (db);
   }
-
 }
 

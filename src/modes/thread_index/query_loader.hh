@@ -11,6 +11,9 @@
 namespace Astroid {
   class QueryLoader {
     public:
+      static int nextid;
+
+      int id;
       QueryLoader ();
       ~QueryLoader ();
 
