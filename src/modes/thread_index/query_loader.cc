@@ -58,6 +58,7 @@ namespace Astroid {
   }
 
   void QueryLoader::start (ustring q) {
+    std::lock_guard<std::mutex> lk (loader_m);
     query = q;
     run = true;
     loader_thread = std::thread (&QueryLoader::loader, this);
@@ -69,8 +70,13 @@ namespace Astroid {
   }
 
   void QueryLoader::reload () {
+    std::lock_guard<std::mutex> lk (to_list_m);
     stop ();
     list_store->clear ();
+
+    while (!to_list_store.empty ())
+      to_list_store.pop ();
+
     start (query);
   }
 
