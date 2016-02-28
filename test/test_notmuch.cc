@@ -8,6 +8,7 @@
 # include <notmuch.h>
 
 namespace bfs = boost::filesystem;
+using std::cout;
 
 BOOST_AUTO_TEST_SUITE(Notmuch)
 
@@ -28,15 +29,17 @@ BOOST_AUTO_TEST_SUITE(Notmuch)
     BOOST_CHECK (s == NOTMUCH_STATUS_SUCCESS);
 
     /* read all messages */
-    std::cout << "db: running test query.." << endl;
-    auto q = notmuch_query_create (nm_db, "*");
+    cout << "db: running test query.." << endl;
+    notmuch_query_t * q = notmuch_query_create (nm_db, "*");
 
     unsigned int c;
-    notmuch_status_t st = notmuch_query_count_messages_st (q, &c);
+    notmuch_status_t st = notmuch_query_count_messages_st (q, &c); // desctrutive
+    notmuch_query_destroy (q);
+    q = notmuch_query_create (nm_db, "*");
 
     BOOST_CHECK (st == NOTMUCH_STATUS_SUCCESS);
 
-    std::cout << "query: " << notmuch_query_get_query_string (q) << ", approx: "
+    cout << "query: " << notmuch_query_get_query_string (q) << ", approx: "
          << c << " messages." << endl;
 
     notmuch_messages_t * messages;
@@ -51,11 +54,89 @@ BOOST_AUTO_TEST_SUITE(Notmuch)
     {
       message = notmuch_messages_get (messages);
 
-      std::cout << "thread:" << notmuch_message_get_thread_id (message) << ", message: " << notmuch_message_get_header (message, "Subject") << endl;
+      cout << "thread:" << notmuch_message_get_thread_id (message) << ", message: " << notmuch_message_get_header (message, "Subject") << endl;
 
       notmuch_message_destroy (message);
     }
 
+
+    notmuch_database_close (nm_db);
+  }
+
+  BOOST_AUTO_TEST_CASE_EXPECTED_FAILURES (notmuch_threads_move_to_next_fail, 1)
+  BOOST_AUTO_TEST_CASE(notmuch_threads_move_to_next_fail)
+  {
+
+    bfs::path path_db = bfs::absolute (bfs::path("./test/mail/test_mail"));
+
+    notmuch_database_t * nm_db;
+
+    notmuch_status_t s =
+      notmuch_database_open (
+        path_db.c_str(),
+        notmuch_database_mode_t::NOTMUCH_DATABASE_MODE_READ_ONLY,
+        &nm_db);
+
+
+    BOOST_CHECK (s == NOTMUCH_STATUS_SUCCESS);
+
+    /* read all messages */
+    cout << "db: running test query.." << endl;
+    notmuch_query_t * q = notmuch_query_create (nm_db, "*");
+
+    unsigned int c;
+    notmuch_status_t st = notmuch_query_count_threads_st (q, &c); // destructive
+    notmuch_query_destroy (q);
+    q = notmuch_query_create (nm_db, "*");
+
+    BOOST_CHECK (st == NOTMUCH_STATUS_SUCCESS);
+
+    cout << "query: " << notmuch_query_get_query_string (q) << ", approx: "
+         << c << " threads." << endl;
+
+    notmuch_threads_t * threads;
+    notmuch_thread_t  * thread;
+    st = notmuch_query_search_threads_st (q, &threads);
+
+    std::string thread_id_of_first;
+
+    for (; notmuch_threads_valid (threads);
+           notmuch_threads_move_to_next (threads)) {
+      thread = notmuch_threads_get (threads);
+      thread_id_of_first = notmuch_thread_get_thread_id (thread);
+      notmuch_thread_destroy (thread);
+      break;
+    }
+
+    cout << "thread id of first thread: " << thread_id_of_first << endl;
+
+    /* restart query */
+    cout << "restarting query.." << endl;
+    notmuch_query_destroy (q);
+    q = notmuch_query_create (nm_db, "*");
+    st = notmuch_query_search_threads_st (q, &threads);
+
+    int i = 0;
+
+    for ( ; notmuch_threads_valid (threads);
+            notmuch_threads_move_to_next (threads))
+    {
+      cout << "jumping to second thread.." << endl;
+      i++;
+      break;
+    }
+
+    for ( ; notmuch_threads_valid (threads);
+            notmuch_threads_move_to_next (threads))
+    {
+      thread = notmuch_threads_get (threads);
+      std::string thread_id = notmuch_thread_get_thread_id (thread);
+      i++;
+
+      BOOST_CHECK_MESSAGE (thread_id != thread_id_of_first, "thread id equal to first, we are on the: " << i);
+
+      notmuch_thread_destroy (thread);
+    }
 
     notmuch_database_close (nm_db);
   }
