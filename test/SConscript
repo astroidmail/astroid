@@ -26,6 +26,7 @@ if debug:
 # you can also use glob to add all the files in the folder.
 
 testEnv.Tool ('notmuch_test_db')
+testEnv.Tool ('shellscript')
 
 test_db = testEnv.NotmuchTestDb ('mail/test_config.template')
 testEnv.Alias ('test_db', test_db)
@@ -53,7 +54,13 @@ testEnv.addUnitTest ('test_theme', ['test_theme.cc', source_objs])
 testEnv.addUnitTest ('test_keybindings', ['test_keybindings.cc', source_objs])
 
 testEnv.addUnitTest ('test_bad_content_id', ['test_bad_content_id.cc', source_objs])
-
 testEnv.addUnitTest ('test_notmuch', ['test_notmuch.cc', source_objs])
+
+test_nm_standalone = testEnv.Program (source = ['test_notmuch_standalone.cc', source_objs], target = 'test_notmuch_standalone')
+
+nm_standalone_run = testEnv.addSh ('test_notmuch_standalone.sh')
+env.Depends (nm_standalone_run, test_nm_standalone)
+testEnv.Alias ('test', nm_standalone_run)
+
 
 # all the tests added above are automatically added to the 'test' alias
