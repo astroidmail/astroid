@@ -102,7 +102,7 @@ namespace Astroid {
 
       void popup_activate_generic (enum PopupItem);
 
-      // ignore built-in key handler
+      // bypass scrolled window
       virtual bool on_key_press_event (GdkEventKey *) override;
 
       void on_thread_changed (Db *, ustring);

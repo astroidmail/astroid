@@ -265,11 +265,13 @@ namespace Astroid {
     } else if (sort == NOTMUCH_SORT_OLDEST_FIRST) {
       list_store->set_sort_column (1, Gtk::SortType::SORT_ASCENDING);
     } else {
+      // TODO: NOTMUCH_SORT_MESSAGE_ID
+
       list_store->set_sort_column (Gtk::TreeSortable::DEFAULT_UNSORTED_COLUMN_ID, Gtk::SortType::SORT_ASCENDING);
     }
   }
 
-  void ThreadIndexListView::register_keys () {
+  void ThreadIndexListView::register_keys () { // {{{
 
     Keybindings * keys = &(thread_index->keys);
 
@@ -920,8 +922,7 @@ namespace Astroid {
 
           return true;
         });
-  }
-
+  } // }}}
 
   bool ThreadIndexListView::multi_key_handler (
       ThreadIndexListView::multi_key_action maction,
