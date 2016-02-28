@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_SUITE(Notmuch)
     notmuch_database_close (nm_db);
   }
 
-  BOOST_AUTO_TEST_CASE_EXPECTED_FAILURES (notmuch_threads_move_to_next_fail, 1)
+  /* BOOST_AUTO_TEST_CASE_EXPECTED_FAILURES (notmuch_threads_move_to_next_fail, 1) */
   BOOST_AUTO_TEST_CASE(notmuch_threads_move_to_next_fail)
   {
 
@@ -98,32 +98,37 @@ BOOST_AUTO_TEST_SUITE(Notmuch)
     st = notmuch_query_search_threads_st (q, &threads);
 
     std::string thread_id_of_first;
+    int i = 0;
+    int stop = 3;
 
     for (; notmuch_threads_valid (threads);
            notmuch_threads_move_to_next (threads)) {
       thread = notmuch_threads_get (threads);
       thread_id_of_first = notmuch_thread_get_thread_id (thread);
       notmuch_thread_destroy (thread);
-      break;
+      i++;
+
+      if (i == stop) break;
     }
 
     cout << "thread id of first thread: " << thread_id_of_first << endl;
+    notmuch_query_destroy (q);
 
     /* restart query */
     cout << "restarting query.." << endl;
-    notmuch_query_destroy (q);
     q = notmuch_query_create (nm_db, "*");
     st = notmuch_query_search_threads_st (q, &threads);
 
-    int i = 0;
+    i = 0;
 
     for ( ; notmuch_threads_valid (threads);
             notmuch_threads_move_to_next (threads))
     {
-      cout << "jumping to second thread.." << endl;
       i++;
-      break;
+      cout << "move to next: " << i << endl;
+      if (i == stop) break;
     }
+    notmuch_threads_move_to_next (threads);
 
     for ( ; notmuch_threads_valid (threads);
             notmuch_threads_move_to_next (threads))
@@ -132,7 +137,7 @@ BOOST_AUTO_TEST_SUITE(Notmuch)
       std::string thread_id = notmuch_thread_get_thread_id (thread);
       i++;
 
-      BOOST_CHECK_MESSAGE (thread_id != thread_id_of_first, "thread id is equal to first, we are on thread: " << i);
+      BOOST_CHECK_MESSAGE (thread_id != thread_id_of_first, "thread id is equal to " << stop << " thread, we are on thread: " << i);
 
       notmuch_thread_destroy (thread);
     }
@@ -357,7 +362,7 @@ BOOST_AUTO_TEST_SUITE(Notmuch)
 
     notmuch_database_close (nm_db);
   }
-# endif 
+# endif
 
 BOOST_AUTO_TEST_SUITE_END()
 
