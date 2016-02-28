@@ -74,8 +74,8 @@ namespace Astroid {
   }
 
   void QueryLoader::reload () {
-    std::lock_guard<std::mutex> lk (to_list_m);
     stop ();
+    std::lock_guard<std::mutex> lk (to_list_m);
     list_store->clear ();
 
     while (!to_list_store.empty ())
