@@ -216,6 +216,7 @@ namespace Astroid {
     keys.register_key ("F", "main_window.search",
         "Search",
         [&] (Key) {
+          if (astroid->in_failure ()) return true;
           enable_command (CommandBar::CommandMode::Search, "", NULL);
           return true;
         });
@@ -223,6 +224,7 @@ namespace Astroid {
     keys.register_key ("L", "main_window.search_tag",
         "Search for tag:",
         [&] (Key) {
+          if (astroid->in_failure ()) return true;
           enable_command (CommandBar::CommandMode::Search, "tag:", NULL);
           return true;
         });
@@ -254,6 +256,7 @@ namespace Astroid {
     keys.register_key ("m", "main_window.new_mail",
         "Compose new mail",
         [&] (Key) {
+          if (astroid->in_failure ()) return true;
           add_mode (new EditMessage (this));
           return true;
         });
@@ -261,6 +264,7 @@ namespace Astroid {
     keys.register_key ("P", "main_window.poll",
         "Start manual poll",
         [&] (Key) {
+          if (astroid->in_failure ()) return true;
           astroid->poll->poll ();
           return true;
         });
@@ -268,6 +272,7 @@ namespace Astroid {
     keys.register_key ("M-p", "main_window.toggle_auto_poll",
         "Toggle auto poll",
         [&] (Key) {
+          if (astroid->in_failure ()) return true;
           astroid->poll->toggle_auto_poll ();
           return true;
         });
@@ -275,6 +280,7 @@ namespace Astroid {
     keys.register_key ("O", "main_window.open_new_window",
         "Open new main window",
         [&] (Key) {
+          if (astroid->in_failure ()) return true;
           astroid->open_new_window ();
           return true;
         });
@@ -430,7 +436,7 @@ namespace Astroid {
 
     //log << debug << "mw: grab modal to: " << n << endl;
 
-    if (has_focus() || (get_focus() && get_focus()->has_focus())) {
+    if (has_toplevel_focus() || (get_focus() && get_focus()->has_focus())) {
       /* we have focus */
       ((Mode*) notebook.get_nth_page (n))->grab_modal();
     } else {
@@ -461,15 +467,16 @@ namespace Astroid {
   }
 
   bool MainWindow::on_my_focus_in_event (GdkEventFocus * /* event */) {
-    if (active) set_active (current);
+    if (has_toplevel_focus () && active) set_active (current);
     //log << debug << "mw: focus-in: " << id << endl;
     return false;
   }
 
   bool MainWindow::on_my_focus_out_event (GdkEventFocus * /* event */) {
     //log << debug << "mw: focus-out: " << id << endl;
-    if ((current < notebook.get_n_pages ()) && (current >= 0))
-      ((Mode*) notebook.get_nth_page (current))->release_modal();
+    if (!has_toplevel_focus () &&
+        (current < notebook.get_n_pages ()) && (current >= 0))
+        ((Mode*) notebook.get_nth_page (current))->release_modal();
     return false;
   }
 }

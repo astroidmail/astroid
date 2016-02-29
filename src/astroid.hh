@@ -23,6 +23,13 @@ namespace Astroid {
       const StandardPaths& standard_paths() const;
       bool  in_test ();
 
+      /* this is true if there has been a fatal error, this means
+       * that nothing more really can happen except closing astroid.
+       *
+       * a window with the fatal error is shown plus a log window */
+      bool in_failure ();
+      void fail (ustring);
+
       refptr<Gtk::Application> app;
 
       static const char* const version;
@@ -30,9 +37,6 @@ namespace Astroid {
 
       /* accounts */
       AccountManager * accounts;
-
-      /* contacts */
-      //Contacts * contacts;
 
       /* actions */
       GlobalActions * global_actions;
@@ -44,6 +48,11 @@ namespace Astroid {
 
     protected:
       Config * m_config;
+      bool     _in_test;
+      bool     _in_failure;
+      bool     _failmode_shown;
+      bool     _is_main_window_ready;
+      ustring  fail_str;
 
     private:
       bool activated = false;

@@ -31,7 +31,6 @@ namespace Astroid {
     show_all_children ();
 
     log.add_log_view (this);
-    log << debug << "log window ready." << endl;
 
     keys.title = "Log view";
     keys.register_key ("j", { Key (GDK_KEY_Down) },
@@ -125,7 +124,7 @@ namespace Astroid {
         time_str,
         Glib::Markup::escape_text(s));
 
-    if (lvl == error) {
+    if (lvl == error || lvl == fatal) {
       row[m_columns.m_col_str] = "<span color=\"red\">" + l + "</span>";
     } else if (lvl == warn) {
       row[m_columns.m_col_str] = "<span color=\"pink\">" + l + "</span>";

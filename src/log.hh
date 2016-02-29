@@ -22,6 +22,7 @@ namespace Astroid {
     info,
     warn,
     error,
+    fatal,
     test,
   };
 

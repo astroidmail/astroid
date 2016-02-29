@@ -267,8 +267,17 @@ namespace Astroid {
         write_back_config ();
       }
     }
+    path nm_conf_path (config.get<std::string> ("astroid.notmuch_config"));
+
+    if (!exists (nm_conf_path)) {
+      log << fatal << "could not find notmuch config at: " << nm_conf_path.c_str ()
+        << ", please update the configuration variable: astroid.notmuch_config." << endl;
+      return;
+    }
+
+
     boost::property_tree::read_ini (
-      config.get<std::string> ("astroid.notmuch_config"),
+      nm_conf_path.c_str (),
       notmuch_config);
   }
 

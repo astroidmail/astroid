@@ -39,9 +39,11 @@ namespace Astroid {
         );
 
     /* set up tags */
-    Db db (Db::DbMode::DATABASE_READ_ONLY);
-    db.load_tags ();
-    existing_tags = db.tags;
+    if (!astroid->in_failure ()) {
+      Db db (Db::DbMode::DATABASE_READ_ONLY);
+      db.load_tags ();
+      existing_tags = db.tags;
+    }
 
     tag_completion = refptr<TagCompletion> (new TagCompletion());
     search_completion = refptr<SearchCompletion> (new SearchCompletion());

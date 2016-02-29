@@ -23,6 +23,7 @@
 # include "main_window.hh"
 # include "modes/thread_index/thread_index.hh"
 # include "modes/edit_message.hh"
+# include "modes/fail_mode.hh"
 
 /* gmime */
 # include <gmime/gmime.h>
@@ -202,8 +203,10 @@ namespace Astroid {
     }
 
     /* output db location */
-    ustring db_path = ustring (notmuch_config().get<string> ("database.path"));
-    log << info << "notmuch db: " << db_path << endl;
+    if (!in_failure ()) {
+      ustring db_path = ustring (notmuch_config().get<string> ("database.path"));
+      log << info << "notmuch db: " << db_path << endl;
+    }
 
     /* set up static classes */
     Date::init ();
@@ -211,9 +214,6 @@ namespace Astroid {
 
     /* set up accounts */
     accounts = new AccountManager ();
-
-    /* set up contacts */
-    //contacts = new Contacts ();
 
     /* set up global actions */
     global_actions = new GlobalActions ();
@@ -227,6 +227,7 @@ namespace Astroid {
     } else {
       open_new_window ();
     }
+
     app->run ();
 
     return 0;
@@ -245,6 +246,8 @@ namespace Astroid {
   }
 
   void Astroid::main_test () {
+    _in_test = true;
+
     m_config = new Config (true);
 
     /* set up static classes */
@@ -252,9 +255,6 @@ namespace Astroid {
 
     /* set up accounts */
     accounts = new AccountManager ();
-
-    /* set up contacts */
-    //contacts = new Contacts ();
 
     /* set up global actions */
     global_actions = new GlobalActions ();
@@ -264,7 +264,9 @@ namespace Astroid {
   }
 
   bool Astroid::in_test () {
-    return m_config->test;
+    /* should match m_config->test, but may be required before Config
+     * is instantiated */
+    return _in_test;
   }
 
   Astroid::~Astroid () {
@@ -287,7 +289,7 @@ namespace Astroid {
     /* start up default window with default buffers */
     MainWindow * mw = new MainWindow (); // is freed / destroyed by application
 
-    if (open_defaults) {
+    if (!in_failure () && open_defaults) {
       ptree qpt = config ("startup.queries");
 
       for (const auto &kv : qpt) {
@@ -306,7 +308,37 @@ namespace Astroid {
     app->add_window (*mw);
     mw->show_all ();
 
+    if (in_failure ()) {
+      if (!_is_main_window_ready) {
+        _is_main_window_ready = true;
+        fail (fail_str);
+      }
+    }
+    _is_main_window_ready = true;
+
     return mw;
+  }
+
+  bool Astroid::in_failure () {
+    return _in_failure;
+  }
+
+  void Astroid::fail (ustring err) {
+    _in_failure = true;
+    fail_str = err;
+
+    if (in_test ()) {
+      log << info << "fail: fatal error while running test, exiting: " << err << endl;
+      exit (1);
+    }
+
+    if (!_failmode_shown && _is_main_window_ready) {
+      MainWindow * mw = dynamic_cast<MainWindow *>(app->get_windows ()[0]);
+      Mode * f = new FailMode (mw, err);
+      mw->add_mode (f);
+      mw->set_active (mw->notebook.get_n_pages () - 1);
+      _failmode_shown = true;
+    }
   }
 
   void Astroid::on_signal_activate () {
