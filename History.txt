@@ -10,6 +10,7 @@
 * M. Dietrich: clock_format=year option to use clock format from this
   or previous year setting in thread-index.
 * M. Dietrich, G. Hope: Background color in thread-index configurable.
+* Gravatar is configurable.
 
 == v0.5 / 2016-02-06
 

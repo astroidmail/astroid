@@ -61,6 +61,8 @@ namespace Astroid {
 
     code_prettify_code_tag = config.get<string> ("code_prettify.code_tag");
 
+    enable_gravatar = config.get<bool>("gravatar.enable");
+
     ready = false;
 
     pack_start (scroll, true, true, 5);
@@ -228,8 +230,19 @@ namespace Astroid {
       {
         home_uri,
         "data:image/png;base64",
-        "http://www.gravatar.com/avatar/",
       };
+
+    if (enable_gravatar) {
+      allowed_uris.push_back ("http://www.gravatar.com/avatar/");
+    }
+
+    if (enable_mathjax) {
+      allowed_uris.push_back (mathjax_uri_prefix);
+    }
+
+    if (enable_code_prettify) {
+      allowed_uris.push_back (code_prettify_prefix);
+    }
 
     // TODO: show cid type images and inline-attachments
 
@@ -239,24 +252,14 @@ namespace Astroid {
             return (uri.substr (0, a.length ()) == a);
           }) != allowed_uris.end ())
     {
-      return; // yes
-    } else if (enable_mathjax &&
-        uri.substr(0, mathjax_uri_prefix.length()) == mathjax_uri_prefix) {
 
-      log << debug << "tv: mathjax request: approved" << endl;
-      return; // yes
-
-    } else if (enable_code_prettify &&
-        uri.substr(0, code_prettify_prefix.length()) == code_prettify_prefix) {
-
-      log << debug << "tv: code prettify request: approved" << endl;
       return; // yes
 
     } else {
       if (show_remote_images) {
         // TODO: use an approved-url (like geary) to only allow imgs, not JS
         //       or other content.
-        log << debug << "tv: remote images allowed: approved: " << uri << endl;
+        log << warn  << "tv: remote images allowed, approving _all_ requests: " << uri << endl;
         return; // yes
       } else {
         log << debug << "tv: request: denied: " << uri << endl;
@@ -904,16 +907,20 @@ namespace Astroid {
     }
 
     /* avatar */
-    auto se = Address(m->sender);
+    if (enable_gravatar) {
+      auto se = Address(m->sender);
 
-    WebKitDOMHTMLImageElement * av = WEBKIT_DOM_HTML_IMAGE_ELEMENT (
-        DomUtils::select (
-        WEBKIT_DOM_NODE (div_message),
-        ".avatar"));
+      WebKitDOMHTMLImageElement * av = WEBKIT_DOM_HTML_IMAGE_ELEMENT (
+          DomUtils::select (
+          WEBKIT_DOM_NODE (div_message),
+          ".avatar"));
 
-    webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (av), "src",
-        Gravatar::get_image_uri (se.email (), Gravatar::Default::RETRO, 48).c_str()
-        , &err);
+      webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (av), "src",
+          Gravatar::get_image_uri (se.email (), Gravatar::Default::RETRO, 48).c_str()
+          , &err);
+
+      g_object_unref (av);
+    }
 
     /* insert header html*/
     WebKitDOMHTMLElement * table_header =
@@ -935,6 +942,7 @@ namespace Astroid {
         ".header_container .preview");
 
     {
+      // TODO: we don't really need to open the db here
       Db db;
 
       if (!edit_mode &&
@@ -2034,7 +2042,7 @@ namespace Astroid {
         });
 
     keys.register_key ("C-i", "thread_view.show_remote_images",
-        "Show remote images",
+        "Show remote images (warning: approves all requests to remote content!)",
         [&] (Key) {
           show_remote_images = true;
           log << debug << "tv: show remote images: " << show_remote_images << endl;

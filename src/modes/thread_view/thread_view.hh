@@ -77,6 +77,8 @@ namespace Astroid {
       bool    code_is_on = false; // for this thread
       void    filter_code_tags (ustring &); // look for code tags
 
+      bool enable_gravatar;
+
       Theme theme;
 
     private:
@@ -86,9 +88,9 @@ namespace Astroid {
       void scroll_to_message (refptr<Message>, bool = false);
       bool scroll_to_element (ustring, bool = false);
 
-      bool in_scroll = false;
-      ustring         scroll_arg;
-      bool            _scroll_when_visible;
+      bool    in_scroll = false;
+      ustring scroll_arg;
+      bool    _scroll_when_visible;
 
       void update_focus_to_view ();
       void update_focus_status ();
