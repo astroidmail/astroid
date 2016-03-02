@@ -50,6 +50,9 @@ namespace Astroid {
     auto now_time_t = std::chrono::system_clock::to_time_t( now );
     auto now_tm     = std::localtime( &now_time_t );
 
+    m_log.lock (); // recursive mutex, locking second time - will only be possible in
+                   // the same thread.
+
     stringstream time_str;
     time_str << "("
          << setw(2) << setfill('0') << now_tm->tm_hour << ":"
@@ -76,11 +79,16 @@ namespace Astroid {
 
     d_flush (); // flush lines to log views
 
+    // locked once in <<LogLevel and once in <<endl
+    m_log.unlock ();
+    m_log.unlock ();
+
     return *this;
   }
 
   // log level
   Log& Log::operator<<(LogLevel lvl) {
+    m_log.lock ();
 
     _next_level = lvl;
     return *this;

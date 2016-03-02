@@ -51,6 +51,9 @@ namespace Astroid {
       void flush_log ();
       Glib::Dispatcher d_flush;
 
+      /* this is locked on input of a level line, then unlocked on endl */
+      std::recursive_mutex m_log;
+
     public:
 
       // constructor: User passes a custom log header and output stream, or uses defaults.
