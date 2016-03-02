@@ -78,10 +78,14 @@ BOOST_AUTO_TEST_SUITE(Keybindings)
 
     Key n ("n");
     GdkEventKey e;
+    e.state  = 0;
     e.keyval = n.key;
 
+    log << test << "handling key: n" << endl;
     keys.handle (&e);
 
+    keys.register_key ("4", "test.ru0", "test run foo", [&] (Key) { return true; });
+    keys.register_key ("5", "test.runfoo", "test run foo", [&] (Key) { return true; });
 
     teardown ();
   }
