@@ -307,7 +307,7 @@ namespace Astroid {
                           return (e.name == name);
                         });
 
-    bool userdefined = false;
+    bool userdefined = k.userdefined;
 
     // add aliases
     if (res != user_bindings.end ()) {
@@ -401,6 +401,7 @@ namespace Astroid {
         log << error << err << endl;
 
         throw duplicatekey_error (err.c_str());
+
       } else {
         ustring err = ustring::compose (
             "key: %1 (%2) is user-configured in map with name: %3, will try aliases.",
@@ -496,7 +497,7 @@ namespace Astroid {
         b != user_run_bindings.end ()) {
 
       /* b is now a matching binding */
-      log << info << "ky: run, binding: " << name << " to: " << b->second << endl;
+      log << info << "ky: run, binding: " << name << "(" << b->first.str () << ") (userdefined: " << b->first.userdefined << ") to: " << b->second << endl;
 
       register_key (b->first,
                     b->first.name,
@@ -691,6 +692,7 @@ namespace Astroid {
 
   UnboundKey::UnboundKey () {
     unbound = true;
+    userdefined = false;
   }
 
   /************
