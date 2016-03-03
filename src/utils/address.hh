@@ -9,6 +9,23 @@
 
 namespace Astroid {
 
+  /* Encoding and quoting:
+   *
+   * On construction of Address and AddressLists the full email address (mbox)
+   * gets interpreted (decoded and unquoted) by gmime. It is saved in UTF-8 in
+   * an ustring.
+   *
+   * When returnd from Address::full_address() or AddressList::str() it is not
+   * re-encoded, but it remains quoted. It is therefore suitable for an UTF-8
+   * editor which saves the draft email with the email addresses in quoted,
+   * unencoded, format.
+   *
+   * ComposeMessage loads the draft email (without decoding the address) and
+   * before displaying, sending or saving it build()'s and finalize()'s the message
+   * encoding the quoted address.
+   *
+   */
+
   class Address {
     public:
       Address ();

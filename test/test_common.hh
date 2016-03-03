@@ -11,6 +11,7 @@ using Astroid::warn;
 using Astroid::debug;
 using Astroid::test;
 using std::endl;
+using Astroid::ustring;
 
 void setup () {
   astroid = new Astroid::Astroid ();

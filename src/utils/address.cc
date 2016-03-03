@@ -98,7 +98,7 @@ namespace Astroid {
 
   ustring Address::full_address () {
     InternetAddress * mbox = internet_address_mailbox_new (_name.c_str(), _email.c_str());
-    const char * faddr = internet_address_to_string (mbox, true);
+    const char * faddr = internet_address_to_string (mbox, false);
     g_object_unref (mbox);
     return ustring(faddr);
   }
@@ -140,7 +140,7 @@ namespace Astroid {
       g_object_unref (addr);
     }
 
-    const char * addrs = internet_address_list_to_string (list, true);
+    const char * addrs = internet_address_list_to_string (list, false);
 
     ustring r ("");
 

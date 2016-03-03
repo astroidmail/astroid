@@ -63,4 +63,6 @@ env.Depends (nm_standalone_run, test_nm_standalone)
 testEnv.Alias ('test', nm_standalone_run)
 
 
+testEnv.addUnitTest ('test_address', ['test_address.cc', source_objs])
+
 # all the tests added above are automatically added to the 'test' alias
