@@ -706,8 +706,10 @@ namespace Astroid {
                 add_message (m);
                 state.insert (std::pair<refptr<Message>, MessageState> (m, MessageState ()));
 
-                m->signal_message_changed ().connect (
-                    sigc::mem_fun (this, &ThreadView::on_message_changed));
+                if (!edit_mode) {
+                  m->signal_message_changed ().connect (
+                      sigc::mem_fun (this, &ThreadView::on_message_changed));
+                }
               });
 
     update_all_indent_states ();
