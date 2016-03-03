@@ -11,6 +11,7 @@
   or previous year setting in thread-index.
 * M. Dietrich, G. Hope: Background color in thread-index configurable.
 * Gravatar is configurable.
+* #103: Drafts are saved on force close or quit by default.
 
 == v0.5 / 2016-02-06
 

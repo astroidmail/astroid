@@ -394,8 +394,9 @@ namespace Astroid {
     // used by Astroid::quit to deconstruct all modes before
     // exiting.
 
-    for (int n = notebook.get_n_pages()-1; n >= 0; n--)
-      del_mode (n);
+    for (int n = notebook.get_n_pages(); n > 0; n--) {
+      close_page (true);
+    }
 
   }
 

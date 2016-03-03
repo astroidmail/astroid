@@ -164,6 +164,7 @@ namespace Astroid {
     default_config.put ("editor.gvim.cmd", "gvim");
     default_config.put ("editor.gvim.args", "-f -c 'set ft=mail' '+set fileencoding=utf-8' '+set ff=unix' '+set enc=utf-8'"); //  '+/^\\s*\\n/' '+nohl'
     default_config.put ("editor.charset", "utf-8");
+    default_config.put ("editor.save_draft_on_force_quit", true);
 
     /* mail composition */
     default_config.put ("mail.reply.quote_line", "Excerpts from %1's message of %2:"); // %1 = author, %2 = pretty_verbose_date

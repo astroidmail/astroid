@@ -106,9 +106,11 @@ namespace Astroid {
       void prepare_message ();
 
       /* draft */
+      bool save_draft_on_force_quit;
       bool save_draft ();
       void delete_draft ();
       refptr<Message> draft_msg;
+      bool draft_saved = false;
 
     protected:
       ptree editor_config;

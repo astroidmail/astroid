@@ -77,6 +77,8 @@ namespace Astroid {
   EditMessage::EditMessage (MainWindow * mw) : Mode (mw) {
     editor_config = astroid->config ("editor");
 
+    save_draft_on_force_quit = editor_config.get <bool> ("save_draft_on_force_quit");
+
     tmpfile_path = astroid->standard_paths ().runtime_dir;
 
     set_label ("New message");
@@ -350,8 +352,15 @@ namespace Astroid {
   void EditMessage::close (bool force) {
     if (sending_in_progress.load ()) {
       /* block closing the window while sending */
-    } else if (!force && !message_sent) {
-      ask_yes_no ("Do you want to close this message? (any changes will be lost)", [&](bool yes){ if (yes) { Mode::close (force); } });
+    } else if (!force && !message_sent && !draft_saved) {
+      ask_yes_no ("Do you want to close this message? (unsaved changes will be lost)", [&](bool yes){ if (yes) { Mode::close (force); } });
+    } else if (force && !message_sent && !draft_saved && save_draft_on_force_quit) {
+      log << warn << "em: force quit, trying to save draft.." << endl;
+      bool r = save_draft ();
+      if (!r) {
+        log << error << "em: cannot save draft! check account config. changes will be lost." << endl;
+      }
+      Mode::close (force);
     } else {
       // message has been sent successfully, no need to complain.
       Mode::close (force);
@@ -361,6 +370,7 @@ namespace Astroid {
   /* drafts */
   bool EditMessage::save_draft () {
     log << info << "em: saving draft.." << endl;
+    draft_saved = false;
     ComposeMessage * c = make_message ();
     ustring fname;
 
@@ -399,6 +409,7 @@ namespace Astroid {
       db.add_draft_message (fname);
     }
 
+    draft_saved = true;
     return true;
   }
 
@@ -426,6 +437,7 @@ namespace Astroid {
       }
 
       draft_msg = refptr<Message>();
+      draft_saved = true; /* avoid saving on exit */
     } else {
       log << warn << "em: not a draft, not deleting." << endl;
     }
@@ -485,6 +497,8 @@ namespace Astroid {
 
   void EditMessage::read_edited_message () {
     /* make message */
+    draft_saved = false; // we expect changes to have been made
+
     ComposeMessage * c = make_message ();
 
     if (c == NULL) {
