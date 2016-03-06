@@ -192,16 +192,17 @@ hr {
 
     /* use a left border indicator for focused/unfocused email */
     padding-left: 7px;
+    &.focused, &.hide {
+      border-left-color: $focused-solid;
+      }
     &.focused {
       padding-left: 1px;
       border-left: 6px solid;
-      border-left-color: lighten( $focused-solid, 33% );
       box-shadow: 0 0 0 transparent !important;
     }
     &.hide {
       background-color: darken( $recv-normal, 5% ) !important;
       border-color: $email-solid;
-      border-left-color: $focused-solid;
     }
 
     .body {
