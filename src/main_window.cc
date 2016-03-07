@@ -60,6 +60,8 @@ namespace Astroid {
   MainWindow::MainWindow () {
     id = ++nextid;
 
+    actions = astroid->actions;
+
     log << debug << "mw: init, id: " << id << endl;
 
     set_title ("");
@@ -247,7 +249,7 @@ namespace Astroid {
     keys.register_key ("u", "main_window.undo",
         "Undo last action",
         [&] (Key) {
-          actions.undo ();
+          actions->undo ();
           return true;
         });
 

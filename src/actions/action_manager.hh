@@ -1,9 +1,13 @@
 # pragma once
 
 # include <vector>
+# include <queue>
+# include <deque>
+# include <thread>
+# include <mutex>
+# include <condition_variable>
 
 # include <sigc++/sigc++.h>
-# include <glibmm/threads.h>
 
 # include "proto.hh"
 
@@ -11,16 +15,29 @@ namespace Astroid {
   class ActionManager {
     public:
       ActionManager ();
+      ~ActionManager ();
 
-      std::vector<refptr<Action>> actions;
+      void doit (refptr<Action>);
+      void undo ();
 
-      bool doit (Db *, refptr<Action>);
-      bool undo ();
-  };
+    private:
+      bool run = false;
+      std::thread action_worker_t;
+      void action_worker ();
 
-  class GlobalActions {
+      std::mutex actions_m;
+      std::condition_variable actions_cv;
+
+      std::mutex toemit_m;
+
+      std::deque<refptr<Action>> doneactions;
+      std::deque<refptr<Action>> actions;
+      std::queue<refptr<Action>> toemit;
+
+      Glib::Dispatcher emit_ready;
+      void emitter ();
+
     public:
-      GlobalActions ();
 
       /* thread updated: called from e.g. thread-index and poll, but
        * not from message changes - so suitable for changes where there

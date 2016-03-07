@@ -179,7 +179,7 @@ namespace Astroid {
 
     show_all_children ();
 
-    astroid->global_actions->signal_thread_updated ().connect (
+    astroid->actions->signal_thread_updated ().connect (
         sigc::mem_fun (this, &ThreadView::on_thread_updated));
   }
 
@@ -742,8 +742,7 @@ namespace Astroid {
      *
      */
     if (mthread->in_notmuch && mthread->thread->has_tag ("unread")) {
-      Db db (Db::DbMode::DATABASE_READ_WRITE);
-      main_window->actions.doit (&db, refptr<Action>(new TagAction(mthread->thread, {}, {"unread"})));
+      main_window->actions->doit (refptr<Action>(new TagAction(mthread->thread, {}, {"unread"})));
     }
 
     emit_ready ();
@@ -2444,9 +2443,7 @@ namespace Astroid {
                     rem.size () == 0) {
                   log << debug << "ti: nothing to do." << endl;
                 } else {
-                  Db db (Db::DbMode::DATABASE_READ_WRITE);
-                  main_window->actions.doit (&db,
-                     refptr<Action>(new TagAction (refptr<NotmuchTaggable>(new NotmuchMessage(focused_message)), add, rem)));
+                  main_window->actions->doit (refptr<Action>(new TagAction (refptr<NotmuchTaggable>(new NotmuchMessage(focused_message)), add, rem)));
                 }
 
               });

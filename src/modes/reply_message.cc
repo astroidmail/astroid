@@ -220,7 +220,7 @@ namespace Astroid {
           });
 
 
-      astroid->global_actions->emit_message_updated (&db, msg->mid);
+      astroid->actions->emit_message_updated (&db, msg->mid);
     }
   }
 }

@@ -238,7 +238,7 @@ namespace Astroid {
             const char * t = notmuch_thread_get_thread_id (thread);
 
             ustring tt (t);
-            astroid->global_actions->emit_thread_updated (&db, tt);
+            astroid->actions->emit_thread_updated (&db, tt);
           }
         }
 
@@ -248,7 +248,7 @@ namespace Astroid {
 
       last_good_before_poll_revision = revnow;
 # else
-      astroid->global_actions->signal_refreshed_dispatcher ();
+      astroid->actions->signal_refreshed_dispatcher ();
 # endif
     }
 

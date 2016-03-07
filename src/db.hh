@@ -82,6 +82,7 @@ namespace Astroid {
 
       Db (DbMode = DATABASE_READ_ONLY);
       ~Db ();
+      void close ();
 
       void on_thread  (ustring, std::function <void(notmuch_thread_t *)>);
       void on_message (ustring, std::function <void(notmuch_message_t *)>);
@@ -105,7 +106,6 @@ namespace Astroid {
 
       bool open_db_write (bool);
       bool open_db_read_only ();
-      void close_db ();
 
       bfs::path path_db;
       const int db_write_open_timeout = 30; // seconds

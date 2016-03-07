@@ -719,8 +719,7 @@ namespace Astroid {
         [&] (Key) {
           auto thread = get_current_thread ();
           if (thread) {
-            Db db (Db::DbMode::DATABASE_READ_WRITE);
-            main_window->actions.doit (&db, refptr<Action>(new ToggleAction(thread, "inbox")));
+            main_window->actions->doit (refptr<Action>(new ToggleAction(thread, "inbox")));
           }
 
           return true;
@@ -731,9 +730,7 @@ namespace Astroid {
         [&] (Key) {
           auto thread = get_current_thread ();
           if (thread) {
-
-            Db db (Db::DbMode::DATABASE_READ_WRITE);
-            main_window->actions.doit (&db, refptr<Action>(new ToggleAction(thread, "flagged")));
+            main_window->actions->doit (refptr<Action>(new ToggleAction(thread, "flagged")));
           }
 
           return true;
@@ -744,9 +741,7 @@ namespace Astroid {
         [&] (Key) {
           auto thread = get_current_thread ();
           if (thread) {
-
-            Db db (Db::DbMode::DATABASE_READ_WRITE);
-            main_window->actions.doit (&db, refptr<Action>(new ToggleAction(thread, "unread")));
+            main_window->actions->doit (refptr<Action>(new ToggleAction(thread, "unread")));
           }
 
           return true;
@@ -757,9 +752,7 @@ namespace Astroid {
         [&] (Key) {
           auto thread = get_current_thread ();
           if (thread) {
-
-            Db db (Db::DbMode::DATABASE_READ_WRITE);
-            main_window->actions.doit (&db, refptr<Action>(new SpamAction(thread)));
+            main_window->actions->doit (refptr<Action>(new SpamAction(thread)));
           }
 
           return true;
@@ -770,9 +763,7 @@ namespace Astroid {
         [&] (Key) {
           auto thread = get_current_thread ();
           if (thread) {
-
-            Db db (Db::DbMode::DATABASE_READ_WRITE);
-            main_window->actions.doit (&db, refptr<Action>(new MuteAction(thread)));
+            main_window->actions->doit (refptr<Action>(new MuteAction(thread)));
           }
 
           return true;
@@ -820,9 +811,7 @@ namespace Astroid {
                       rem.size () == 0) {
                     log << debug << "ti: nothing to do." << endl;
                   } else {
-                    Db db (Db::DbMode::DATABASE_READ_WRITE);
-                    main_window->actions.doit (&db,
-                       refptr<Action>(new TagAction (thread, add, rem)));
+                    main_window->actions->doit (refptr<Action>(new TagAction (thread, add, rem)));
                   }
                 });
           }
@@ -878,7 +867,7 @@ namespace Astroid {
 
             if (r == 0) {
               Db db;
-              astroid->global_actions->emit_thread_updated (&db, t->thread_id);
+              astroid->actions->emit_thread_updated (&db, t->thread_id);
             }
           }
 
@@ -955,8 +944,7 @@ namespace Astroid {
 
                       refptr<Action> ma = refptr<DiffTagAction> (DiffTagAction::create (threads, tgs));
                       if (ma) {
-                        Db db (Db::DbMode::DATABASE_READ_WRITE);
-                        main_window->actions.doit (&db, ma);
+                        main_window->actions->doit (ma);
                       }
                     });
                 return true;
@@ -968,8 +956,7 @@ namespace Astroid {
           }
 
           if ((maction != MTag) && a) {
-            Db db (Db::DbMode::DATABASE_READ_WRITE);
-            main_window->actions.doit (&db, a);
+            main_window->actions->doit (a);
           }
 
           return true;
@@ -1053,10 +1040,7 @@ namespace Astroid {
       case Flag:
         {
           if (thread) {
-
-            Db db (Db::DbMode::DATABASE_READ_WRITE);
-            main_window->actions.doit (&db, refptr<Action>(new ToggleAction(thread, "flagged")));
-
+            main_window->actions->doit (refptr<Action>(new ToggleAction(thread, "flagged")));
           }
         }
         break;
@@ -1064,10 +1048,7 @@ namespace Astroid {
       case Archive:
         {
           if (thread) {
-
-            Db db (Db::DbMode::DATABASE_READ_WRITE);
-            main_window->actions.doit (&db, refptr<Action>(new ToggleAction(thread, "inbox")));
-
+            main_window->actions->doit (refptr<Action>(new ToggleAction(thread, "inbox")));
           }
         }
         break;

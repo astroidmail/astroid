@@ -32,7 +32,6 @@ namespace Astroid {
   class ComposeMessage;
 
   /* actions */
-  class GlobalActions;
   class ActionManager;
   class Action;
   class TagAction;

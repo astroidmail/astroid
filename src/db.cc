@@ -70,7 +70,7 @@ namespace Astroid {
     sort (sent_tags.begin (), sent_tags.end ());
   }
 
-  void Db::close_db () {
+  void Db::close () {
     if (nm_db != NULL) {
       log << info << "db: closing db." << endl;
       notmuch_database_close (nm_db);
@@ -81,7 +81,7 @@ namespace Astroid {
 
   bool Db::open_db_write (bool block) {
     log << info << "db: open db read-write." << endl;
-    close_db ();
+    close ();
     db_state = IN_CHANGE;
 
     notmuch_status_t s;
@@ -128,7 +128,7 @@ namespace Astroid {
 
   bool Db::open_db_read_only () {
     log << info << "db: open db read-only." << endl;
-    close_db ();
+    close ();
 
     db_state = IN_CHANGE;
 
@@ -153,7 +153,7 @@ namespace Astroid {
   }
 
   Db::~Db () {
-    close_db ();
+    close ();
   }
 
 # ifdef HAVE_NOTMUCH_GET_REV
@@ -207,7 +207,7 @@ namespace Astroid {
 
     /* emit signal */
     if (tid != "") {
-      astroid->global_actions->emit_thread_updated (this, tid);
+      astroid->actions->emit_thread_updated (this, tid);
     }
   }
 
@@ -237,7 +237,7 @@ namespace Astroid {
     /* emit signal */
     const char * mid = notmuch_message_get_message_id (msg);
     if (mid != NULL) {
-      astroid->global_actions->emit_message_updated (this, ustring (mid));
+      astroid->actions->emit_message_updated (this, ustring (mid));
     }
 
     notmuch_message_destroy (msg);
@@ -712,7 +712,7 @@ namespace Astroid {
 
 
   void NotmuchThread::emit_updated (Db * db) {
-    astroid->global_actions->emit_thread_updated (db, thread_id);
+    astroid->actions->emit_thread_updated (db, thread_id);
   }
 
   ustring NotmuchThread::str () {
@@ -813,7 +813,7 @@ namespace Astroid {
   }
 
   void NotmuchMessage::emit_updated (Db * db) {
-    astroid->global_actions->emit_message_updated (db, mid);
+    astroid->actions->emit_message_updated (db, mid);
   }
 
   ustring NotmuchMessage::str () {

@@ -15,6 +15,7 @@
 # include "config.hh"
 # include "account_manager.hh"
 # include "actions/action_manager.hh"
+# include "actions/action.hh"
 # include "utils/date_utils.hh"
 # include "log.hh"
 # include "poll.hh"
@@ -216,7 +217,7 @@ namespace Astroid {
     //contacts = new Contacts ();
 
     /* set up global actions */
-    global_actions = new GlobalActions ();
+    actions = new ActionManager ();
 
     /* set up poller */
     poll = new Poll (!no_auto_poll);
@@ -257,7 +258,7 @@ namespace Astroid {
     //contacts = new Contacts ();
 
     /* set up global actions */
-    global_actions = new GlobalActions ();
+    actions = new ActionManager ();
 
     /* set up poller */
     poll = new Poll (false);
@@ -273,7 +274,7 @@ namespace Astroid {
     //if (contacts != NULL) delete contacts;
     delete m_config;
     delete poll;
-    delete global_actions;
+    delete actions;
 
     log << info << "astroid: goodbye!" << endl;
     log.del_out_stream (&cout);

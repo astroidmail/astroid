@@ -44,10 +44,10 @@ namespace Astroid {
     queue_has_data.connect (
         sigc::mem_fun (this, &QueryLoader::to_list_adder));
 
-    astroid->global_actions->signal_thread_changed ().connect (
+    astroid->actions->signal_thread_changed ().connect (
         sigc::mem_fun (this, &QueryLoader::on_thread_changed));
 
-    astroid->global_actions->signal_refreshed ().connect (
+    astroid->actions->signal_refreshed ().connect (
         sigc::mem_fun (this, &QueryLoader::on_refreshed));
   }
 

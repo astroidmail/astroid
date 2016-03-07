@@ -35,7 +35,7 @@ namespace Astroid {
       //Contacts * contacts;
 
       /* actions */
-      GlobalActions * global_actions;
+      ActionManager * actions;
 
       /* poll */
       Poll * poll;

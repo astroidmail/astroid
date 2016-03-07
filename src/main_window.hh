@@ -51,7 +51,7 @@ namespace Astroid {
       void on_command_mode_changed ();
 
       /* actions */
-      ActionManager actions;
+      ActionManager * actions;
 
       int current = -1;
       bool active = false;

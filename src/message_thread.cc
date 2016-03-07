@@ -29,7 +29,7 @@ namespace Astroid {
     has_file   = false;
     missing_content = false;
 
-    astroid->global_actions->signal_message_updated ().connect (
+    astroid->actions->signal_message_updated ().connect (
         sigc::mem_fun (this, &Message::on_message_updated));
   }
 
