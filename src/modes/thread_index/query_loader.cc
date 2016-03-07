@@ -230,8 +230,6 @@ namespace Astroid {
 
     log << info << "ql (" << id << "): " << query << ", got changed thread signal: " << thread_id << endl;
 
-    std::lock_guard<std::mutex> loader_lk (loader_m);
-
     /* we now have three options:
      * - a new thread has been added (unlikely)
      * - a thread has been deleted (kind of likely)
