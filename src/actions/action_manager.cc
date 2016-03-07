@@ -23,6 +23,10 @@ namespace Astroid {
       std::unique_lock<std::mutex> lk (actions_m);
       actions_cv.wait (lk, [&] { return !actions.empty (); });
 
+      /* lock emitter now, so that it does not start opening a
+       * read-only db while the read-write db is open */
+      lock_guard<std::mutex> elk (toemit_m);
+
       /* allow new actions to be queued while waiting for db */
       lk.unlock ();
 
@@ -44,7 +48,6 @@ namespace Astroid {
           doneactions.push_back (a);
         }
 
-        lock_guard<std::mutex> elk (toemit_m);
         toemit.push (a);
       }
 

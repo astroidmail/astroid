@@ -1,6 +1,7 @@
 # pragma once
 
 # include <mutex>
+# include <condition_variable>
 # include <atomic>
 # include <functional>
 
@@ -94,18 +95,32 @@ namespace Astroid {
 # endif
 
     private:
-      enum DbState {
-        READ_ONLY,
-        READ_WRITE,
-        IN_CHANGE,
-        CLOSED,
-      };
+      /* we can have as many read-only db's open as we want, but only one
+       * read-write at the same time. there can also not be any other
+       * read-only db's open when there is a read-write open.
+       *
+       * if you open one read-only db, and try to open a read-write in the
+       * same thread without closing the read-only there will be a deadlock.
+       *
+       */
 
-      /* internal lock for open and close operations */
-      std::atomic<DbState> db_state;
+      /* number of open read-only dbs, when 0 a read-write can be opened */
+      static std::atomic<int>         read_only_dbs_open;
+
+      /* synchronizes openings, read-write dbs will lock this for
+       * its entire lifespan. read-only, only locks it while incrementing
+       * the read_only_dbs_open */
+      static std::mutex               db_open;
+
+      /* notify when read_only_dbs change */
+      static std::condition_variable  dbs_open;
+      std::unique_lock<std::mutex>    rw_lock;
+
+      DbMode mode;
 
       bool open_db_write (bool);
       bool open_db_read_only ();
+      bool closed = false;
 
       bfs::path path_db;
       const int db_write_open_timeout = 30; // seconds

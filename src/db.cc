@@ -8,6 +8,7 @@
 # include <chrono>
 # include <atomic>
 # include <condition_variable>
+# include <mutex>
 
 # include <glibmm.h>
 
@@ -24,8 +25,13 @@ using namespace std;
 using namespace boost::filesystem;
 
 namespace Astroid {
-  Db::Db (DbMode mode) {
+  std::atomic<int>          Db::read_only_dbs_open;
+  std::mutex                Db::db_open;
+  std::condition_variable   Db::dbs_open;
+
+  Db::Db (DbMode _mode) {
     const ptree& config = astroid->notmuch_config ();
+    mode = _mode;
 
     const char * home = getenv ("HOME");
     if (home == NULL) {
@@ -46,7 +52,6 @@ namespace Astroid {
 
     time_t start = clock ();
 
-    db_state  = CLOSED;
     nm_db     = NULL;
     if (mode == DATABASE_READ_ONLY) {
       open_db_read_only ();
@@ -71,18 +76,38 @@ namespace Astroid {
   }
 
   void Db::close () {
-    if (nm_db != NULL) {
-      log << info << "db: closing db." << endl;
-      notmuch_database_close (nm_db);
-      nm_db = NULL;
-      db_state = CLOSED;
+    if (!closed) {
+      closed = true;
+
+      if (nm_db != NULL) {
+        log << info << "db: closing db." << endl;
+        notmuch_database_close (nm_db);
+        nm_db = NULL;
+      }
+
+      if (mode == DATABASE_READ_WRITE) {
+        log << debug << "db: rw: releasing lock." << endl;
+        rw_lock.unlock ();
+        dbs_open.notify_all ();
+      } else {
+        log << debug << "db: ro: waiting for lock to close.." << endl;
+        std::lock_guard<std::mutex> lk (db_open);
+        log << debug << "db: ro: closing.." << endl;
+        read_only_dbs_open--;
+        dbs_open.notify_all ();
+      }
     }
   }
 
   bool Db::open_db_write (bool block) {
     log << info << "db: open db read-write." << endl;
-    close ();
-    db_state = IN_CHANGE;
+
+    /* lock will wait for all read-onlys to close, lk will not be released before
+     * db is closed */
+    log << debug << "db: waiting for rw lock.. (r-o open: " << read_only_dbs_open << ")" << endl;
+    rw_lock = std::unique_lock<std::mutex> (db_open);
+    dbs_open.wait (rw_lock, [] { return (read_only_dbs_open == 0); });
+    log << debug << "db: rw lock acquired." << endl;
 
     notmuch_status_t s;
 
@@ -117,20 +142,20 @@ namespace Astroid {
 
       throw database_error ("failed to open database for writing");
 
-      db_state = CLOSED;
 
       return false;
     }
 
-    db_state = READ_WRITE;
     return true;
   }
 
   bool Db::open_db_read_only () {
-    log << info << "db: open db read-only." << endl;
-    close ();
+    log << info << "db: open db read-only, waiting for lock.." << endl;
 
-    db_state = IN_CHANGE;
+    /* will block if there is an read-write db open */
+    std::lock_guard<std::mutex> lk (db_open);
+    read_only_dbs_open++;
+    log << debug << "db: read-only got lock." << endl;
 
     notmuch_status_t s =
       notmuch_database_open (
@@ -143,12 +168,10 @@ namespace Astroid {
 
       throw database_error ("failed to open database (read-only)");
 
-      db_state = CLOSED;
 
       return false;
     }
 
-    db_state = READ_ONLY;
     return true;
   }
 
