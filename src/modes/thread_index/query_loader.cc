@@ -269,7 +269,6 @@ namespace Astroid {
     }
 
     /* test if thread is in the current query */
-    std::lock_guard<Db> grd (*db);
     bool in_query = db->thread_in_query (query, thread_id);
 
     if (found) {

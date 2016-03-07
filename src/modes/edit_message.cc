@@ -405,7 +405,6 @@ namespace Astroid {
 
     if (add_to_notmuch) {
       Db db (Db::DbMode::DATABASE_READ_WRITE);
-      lock_guard<Db> lk (db);
       db.add_draft_message (fname);
     }
 
@@ -422,7 +421,6 @@ namespace Astroid {
         boost::filesystem::remove (fname);
 
         Db db (Db::DbMode::DATABASE_READ_WRITE);
-        lock_guard<Db> lk (db);
 
         /* first remove tag in case it has been sent */
         db.on_message (draft_msg->mid,

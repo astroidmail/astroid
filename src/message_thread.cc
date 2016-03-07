@@ -112,7 +112,6 @@ namespace Astroid {
     } else {
       /* get tags from nm db */
 
-      lock_guard<Db> grd (*db);
       db->on_message (mid, [&](notmuch_message_t * msg)
         {
           load_tags (msg);

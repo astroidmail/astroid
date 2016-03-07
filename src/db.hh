@@ -73,7 +73,7 @@ namespace Astroid {
       std::vector<ustring> get_tags (notmuch_thread_t *);
   };
 
-  class Db : public std::recursive_mutex {
+  class Db {
     public:
       enum DbMode {
         DATABASE_READ_ONLY,

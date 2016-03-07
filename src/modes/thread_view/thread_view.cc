@@ -578,7 +578,6 @@ namespace Astroid {
     set_label (thread->thread_id);
 
     Db db (Db::DbMode::DATABASE_READ_ONLY);
-    lock_guard<Db> grd (db);
 
     auto _mthread = refptr<MessageThread>(new MessageThread (thread));
     _mthread->load_messages (&db);

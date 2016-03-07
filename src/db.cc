@@ -437,7 +437,6 @@ namespace Astroid {
   void NotmuchThread::refresh (Db * db) {
     /* do a new db query and update all fields */
 
-    lock_guard <Db> grd (*db);
     db->on_thread (thread_id,
         [&](notmuch_thread_t * nm_thread) {
 
@@ -597,8 +596,6 @@ namespace Astroid {
 
   /* tag actions */
   bool NotmuchThread::add_tag (Db * db, ustring tag) {
-    lock_guard <Db> grd (*db);
-
     log << debug << "nm (" << thread_id << "): add tag: " << tag << endl;
     tag = Db::sanitize_tag (tag);
     if (!Db::check_tag (tag)) {
@@ -729,8 +726,6 @@ namespace Astroid {
 
   /* tag actions */
   bool NotmuchMessage::add_tag (Db * db, ustring tag) {
-    lock_guard <Db> grd (*db);
-
     log << debug << "nm (" << mid << "): add tag: " << tag << endl;
     tag = Db::sanitize_tag (tag);
     if (!Db::check_tag (tag)) {
@@ -771,8 +766,6 @@ namespace Astroid {
   }
 
   bool NotmuchMessage::remove_tag (Db * db, ustring tag) {
-    lock_guard <Db> grd (*db);
-
     log << debug << "nm (" << mid << "): remove tag: " << tag << endl;
     tag = Db::sanitize_tag (tag);
     if (!Db::check_tag (tag)) {
