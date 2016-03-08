@@ -26,6 +26,7 @@
 # include "actions/tag_action.hh"
 # include "actions/toggle_action.hh"
 # include "actions/difftag_action.hh"
+# include "actions/cmdaction.hh"
 
 using namespace std;
 
@@ -863,12 +864,10 @@ namespace Astroid {
 
           if (t) {
             cmd = ustring::compose (cmd, t->thread_id);
-            int r = Cmd ("thread_index.run", cmd).run ();
 
-            if (r == 0) {
-              Db db;
-              astroid->actions->emit_thread_updated (&db, t->thread_id);
-            }
+            astroid->actions->doit (refptr<Action> (new CmdAction (
+                    Cmd ("thread_index.run", cmd), t->thread_id, "")));
+
           }
 
           return true;

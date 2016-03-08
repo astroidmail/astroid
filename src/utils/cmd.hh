@@ -10,6 +10,7 @@
 namespace Astroid {
   class Cmd {
     public:
+      Cmd ();
       Cmd (ustring prefix, ustring cmd);
       Cmd (ustring cmd);
 

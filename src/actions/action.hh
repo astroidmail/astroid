@@ -16,6 +16,9 @@ namespace Astroid {
        * without adding it to the doneactions */
       bool in_undo = false;
 
+      /* generally actions need a read-write db */
+      bool needrwdb = true;
+
       virtual void emit (Db *) = 0;
   };
 }

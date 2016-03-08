@@ -20,6 +20,10 @@ namespace Astroid {
     cmd = substitute (_cmd);
   }
 
+  Cmd::Cmd () {
+
+  }
+
   int Cmd::run () {
     log << info << "cmd: running: " << cmd << endl;
     string _stdout;

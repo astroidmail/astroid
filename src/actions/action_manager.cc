@@ -27,22 +27,25 @@ namespace Astroid {
        * read-only db while the read-write db is open */
       lock_guard<std::mutex> elk (toemit_m);
 
-      /* allow new actions to be queued while waiting for db */
-      lk.unlock ();
-
-      Db db (Db::DbMode::DATABASE_READ_WRITE);
-
-      lk.lock ();
 
       while (!actions.empty ()) {
         refptr<Action> a = actions.front ();
         actions.pop_front ();
+
+        /* allow new actions to be queued while waiting for db */
+        lk.unlock ();
+
+        Db db (a->needrwdb ? Db::DbMode::DATABASE_READ_WRITE : Db::DbMode::DATABASE_READ_ONLY);
+
+        lk.lock ();
 
         if (!a->in_undo) {
           a->doit (&db);
         } else {
           a->undo (&db);
         }
+
+        db.close ();
 
         if (!a->in_undo && a->undoable ()) {
           doneactions.push_back (a);
@@ -51,7 +54,6 @@ namespace Astroid {
         toemit.push (a);
       }
 
-      db.close ();
       lk.unlock ();
 
       emit_ready ();
