@@ -14,6 +14,9 @@
 * #103: Drafts are saved on force close or quit by default.
 * C-v: duplicate and refine query.
 * Use state-less queries in thread-index
+* All DB write-operations run in the background and wait for any
+  reads to finish first. Reducing chances of changes happening to the DB
+  while it is read, without blocking the UI.
 
 == v0.5 / 2016-02-06
 
