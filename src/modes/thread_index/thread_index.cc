@@ -118,6 +118,13 @@ namespace Astroid {
           return true;
         });
 
+    keys.register_key ("C-v", "thread_index.duplicate_refine_query", "Duplicate and refine query",
+        [&] (Key) {
+          main_window->enable_command (CommandBar::CommandMode::Search, query_string, NULL);
+
+          return true;
+        });
+
     keys.register_key ("C-s", "thread_index.cycle_sort",
         "Cycle through sort options: 'oldest', 'newest', 'messageid', 'unsorted'",
         [&] (Key) {
