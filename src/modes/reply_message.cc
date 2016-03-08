@@ -7,6 +7,7 @@
 # include "reply_message.hh"
 
 # include "actions/action_manager.hh"
+# include "actions/onmessage.hh"
 
 # include "message_thread.hh"
 # include "utils/address.hh"
@@ -210,17 +211,14 @@ namespace Astroid {
         return;
       }
 
-      Db db(Db::DATABASE_READ_WRITE);
+      astroid->actions->doit (refptr<Action>(
+            new OnMessageAction (msg->mid,
 
-      db.on_message (msg->mid,
-          [&] (notmuch_message_t * nm_msg) {
+              [] (Db *, notmuch_message_t * msg) {
 
-            notmuch_message_add_tag (nm_msg, "replied");
+                notmuch_message_add_tag (msg, "replied");
 
-          });
-
-
-      astroid->actions->emit_message_updated (&db, msg->mid);
+              })));
     }
   }
 }

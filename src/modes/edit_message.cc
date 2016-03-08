@@ -26,6 +26,7 @@
 # include "utils/ustring_utils.hh"
 # include "utils/resource.hh"
 # include "log.hh"
+# include "actions/onmessage.hh"
 
 using namespace std;
 using namespace boost::filesystem;
@@ -404,8 +405,8 @@ namespace Astroid {
     log << info << "em: saved draft to: " << fname << endl;
 
     if (add_to_notmuch) {
-      Db db (Db::DbMode::DATABASE_READ_WRITE);
-      db.add_draft_message (fname);
+      astroid->actions->doit (refptr<Action> (
+            new AddDraftMessage (fname)));
     }
 
     draft_saved = true;
@@ -420,18 +421,18 @@ namespace Astroid {
       if (is_regular_file (fname)) {
         boost::filesystem::remove (fname);
 
-        Db db (Db::DbMode::DATABASE_READ_WRITE);
-
         /* first remove tag in case it has been sent */
-        db.on_message (draft_msg->mid,
-          [&](notmuch_message_t * msg) {
-            for (ustring t : db.draft_tags) {
-              notmuch_message_remove_tag (msg,
-                  t.c_str ());
-            }
-          });
+        astroid->actions->doit (refptr<Action>(
+              new OnMessageAction (draft_msg->mid,
 
-        db.remove_message (fname.c_str ());
+                [fname] (Db * db, notmuch_message_t * msg) {
+                  for (ustring t : Db::draft_tags) {
+                    notmuch_message_remove_tag (msg,
+                        t.c_str ());
+                  }
+
+                  db->remove_message (fname.c_str ());
+                })));
       }
 
       draft_msg = refptr<Message>();

@@ -126,6 +126,8 @@ namespace Astroid {
       const int db_write_open_timeout = 30; // seconds
       const int db_write_open_delay   = 1; // seconds
 
+      static bool settings_loaded;
+
     public:
       notmuch_database_t * nm_db;
 
@@ -134,13 +136,13 @@ namespace Astroid {
       void load_tags ();
       void test_query ();
 
-      std::vector<ustring> sent_tags = { "sent" };
-      std::vector<ustring> draft_tags = { "draft" };
-      std::vector<ustring> excluded_tags = { "muted", "spam", "deleted" };
+      static std::vector<ustring> sent_tags;
+      static std::vector<ustring> draft_tags;
+      static std::vector<ustring> excluded_tags;
 
-      void add_sent_message (ustring, std::vector<ustring>);
-      void add_draft_message (ustring);
-      void add_message_with_tags (ustring fname, std::vector<ustring> tags);
+      ustring add_sent_message (ustring, std::vector<ustring>);
+      ustring add_draft_message (ustring);
+      ustring add_message_with_tags (ustring fname, std::vector<ustring> tags);
       void remove_message (ustring);
 
       static ustring sanitize_tag (ustring);

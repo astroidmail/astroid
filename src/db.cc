@@ -29,6 +29,12 @@ namespace Astroid {
   std::mutex                Db::db_open;
   std::condition_variable   Db::dbs_open;
 
+  /* static settings */
+  bool Db::settings_loaded = false;
+  std::vector<ustring> Db::excluded_tags = { "muted", "spam", "deleted" };
+  std::vector<ustring> Db::sent_tags = { "sent" };
+  std::vector<ustring> Db::draft_tags = { "draft" };
+
   Db::Db (DbMode _mode) {
     const ptree& config = astroid->notmuch_config ();
     mode = _mode;
@@ -65,14 +71,18 @@ namespace Astroid {
     log << debug << "db: open time: " << diff << " ms." << endl;
 
 
-    ustring excluded_tags_s = config.get<string> ("search.exclude_tags");
-    excluded_tags = VectorUtils::split_and_trim (excluded_tags_s, ";");
-    sort (excluded_tags.begin (), excluded_tags.end ());
+    if (!settings_loaded) {
+      ustring excluded_tags_s = config.get<string> ("search.exclude_tags");
+      excluded_tags = VectorUtils::split_and_trim (excluded_tags_s, ";");
+      sort (excluded_tags.begin (), excluded_tags.end ());
 
-    // TODO: find a better way to handle sent_tags, probably via AccountManager?
-    ustring sent_tags_s = astroid->config().get<std::string> ("mail.sent_tags");
-    sent_tags = VectorUtils::split_and_trim (sent_tags_s, ",");
-    sort (sent_tags.begin (), sent_tags.end ());
+      // TODO: find a better way to handle sent_tags, probably via AccountManager?
+      ustring sent_tags_s = astroid->config().get<std::string> ("mail.sent_tags");
+      sent_tags = VectorUtils::split_and_trim (sent_tags_s, ",");
+      sort (sent_tags.begin (), sent_tags.end ());
+
+      settings_loaded = true;
+    }
   }
 
   void Db::close () {
@@ -234,7 +244,7 @@ namespace Astroid {
     }
   }
 
-  void Db::add_message_with_tags (ustring fname, vector<ustring> tags) {
+  ustring Db::add_message_with_tags (ustring fname, vector<ustring> tags) {
     notmuch_message_t * msg;
 
     notmuch_status_t s = notmuch_database_add_message (nm_db,
@@ -246,7 +256,7 @@ namespace Astroid {
 
       if (s == NOTMUCH_STATUS_FILE_ERROR) {
         log << error << "db: file seems to have been moved, ignoring - probably a race condition with some syncing program." << endl;
-        return;
+        return "";
       } else {
         throw database_error ("db: could not add message to database.");
       }
@@ -259,14 +269,18 @@ namespace Astroid {
 
     /* emit signal */
     const char * mid = notmuch_message_get_message_id (msg);
+    ustring _mid;
+
     if (mid != NULL) {
-      astroid->actions->emit_message_updated (this, ustring (mid));
+      _mid = ustring (mid);
     }
 
     notmuch_message_destroy (msg);
+
+    return _mid;
   }
 
-  void Db::add_sent_message (ustring fname, vector<ustring> additional_sent_tags) {
+  ustring Db::add_sent_message (ustring fname, vector<ustring> additional_sent_tags) {
     log << info << "db: adding sent message: " << fname << endl;
     additional_sent_tags.insert (additional_sent_tags.end (), sent_tags.begin (), sent_tags.end ());
     additional_sent_tags.erase (unique (additional_sent_tags.begin (),
@@ -274,12 +288,12 @@ namespace Astroid {
           additional_sent_tags.end ());
 
 
-    add_message_with_tags (fname, additional_sent_tags);
+    return add_message_with_tags (fname, additional_sent_tags);
   }
 
-  void Db::add_draft_message (ustring fname) {
+  ustring Db::add_draft_message (ustring fname) {
     log << info << "db: adding draft message: " << fname << endl;
-    add_message_with_tags (fname, draft_tags);
+    return add_message_with_tags (fname, draft_tags);
   }
 
 
@@ -334,9 +348,8 @@ namespace Astroid {
     st = notmuch_query_search_threads_st (query, &nm_threads);
 
     if ((st != NOTMUCH_STATUS_SUCCESS) || nm_threads == NULL) {
+      notmuch_query_destroy (query);
       log << error << "db: could not find thread: " << thread_id << ", status: " << st << endl;
-
-      throw database_error ("nmt: could not get a valid notmuch_threads_t from query.");
     }
 
     int c = 0;
@@ -369,10 +382,11 @@ namespace Astroid {
     notmuch_message_t * msg;
     notmuch_status_t s = notmuch_database_find_message (nm_db, mid.c_str(), &msg);
 
-    if (s != NOTMUCH_STATUS_SUCCESS) {
+    if (msg == NULL || s != NOTMUCH_STATUS_SUCCESS) {
+      notmuch_message_destroy (msg);
       log << error << "db: could not find message: " << mid << ", status: " << s << endl;
 
-      throw database_error ("db: could not find message.");
+      return;
     }
 
     /* call function */

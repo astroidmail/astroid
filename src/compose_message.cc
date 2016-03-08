@@ -14,6 +14,8 @@
 # include "account_manager.hh"
 # include "log.hh"
 # include "chunk.hh"
+# include "actions/action_manager.hh"
+# include "actions/onmessage.hh"
 
 using namespace std;
 namespace bfs = boost::filesystem;
@@ -298,8 +300,8 @@ namespace Astroid {
   void ComposeMessage::message_sent_event () {
     /* add to notmuch with sent tag (on main GUI thread) */
     if (!dryrun && message_sent_result && account->save_sent) {
-      Db db (Db::DbMode::DATABASE_READ_WRITE);
-      db.add_sent_message (save_to.c_str(), account->additional_sent_tags);
+      astroid->actions->doit (refptr<Action> (
+            new AddSentMessage (save_to.c_str (), account->additional_sent_tags)));
       log << info << "cm: sent message added to db." << endl;
     }
 
