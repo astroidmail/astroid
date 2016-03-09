@@ -92,7 +92,6 @@ namespace Astroid {
     log << info << "rm: loading message from file: " << fname << endl;
     ifstream f (fname);
 
-    /* TODO: convert to valid utf-8 */
     refptr<Gtk::TextBuffer> buf = tv.get_buffer ();
     stringstream s;
     s << f.rdbuf ();
@@ -109,8 +108,8 @@ namespace Astroid {
 
     refptr<Gtk::TextBuffer> buf = tv.get_buffer ();
     stringstream s;
-    s << msg->contents ()->get_data ();
-    buf->set_text (s.str());
+    s << msg->raw_contents ()->get_data ();
+    buf->set_text (s.str ());
   }
 
   void RawMessage::grab_modal () {
