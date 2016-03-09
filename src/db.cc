@@ -28,7 +28,6 @@ namespace Astroid {
   std::atomic<int>          Db::read_only_dbs_open;
   std::mutex                Db::db_open;
   std::condition_variable   Db::dbs_open;
-  std::unique_lock<std::mutex> Db::rw_lock_s;
 
   /* static settings */
   bool Db::settings_loaded = false;
@@ -91,10 +90,7 @@ namespace Astroid {
 
     /* lock will wait for all read-onlys to close, lk will not be released before
      * db is closed */
-    log << debug << "db: rw-s: waiting for rw lock.. (r-o open: " << read_only_dbs_open << ")" << endl;
-    rw_lock = std::unique_lock<std::mutex> (db_open);
-    dbs_open.wait (rw_lock, [] { return (read_only_dbs_open == 0); });
-    log << debug << "db: rw lock acquired." << endl;
+    rw_lock = Db::acquire_rw_lock ();
 
     notmuch_status_t s;
 
@@ -127,6 +123,7 @@ namespace Astroid {
     if (s != NOTMUCH_STATUS_SUCCESS) {
       log << error << "db: error: failed opening database for writing, have you configured the notmuch database path correctly?" << endl;
 
+      release_rw_lock (rw_lock);
       throw database_error ("failed to open database for writing");
 
 
@@ -157,18 +154,20 @@ namespace Astroid {
     return true;
   }
 
-  void Db::acquire_rw_lock () {
+  std::unique_lock<std::mutex> Db::acquire_rw_lock () {
     /* lock will wait for all read-onlys to close, lk will not be released before
      * db is closed */
     log << debug << "db: rw-s: waiting for rw lock.. (r-o open: " << read_only_dbs_open << ")" << endl;
-    rw_lock_s = std::unique_lock<std::mutex> (db_open);
-    dbs_open.wait (rw_lock_s, [] { return (read_only_dbs_open == 0); });
+    std::unique_lock<std::mutex> rwl (db_open);
+    dbs_open.wait (rwl, [] { return (read_only_dbs_open == 0); });
     log << debug << "db: rw-s lock acquired." << endl;
+
+    return rwl;
   }
 
-  void Db::release_rw_lock () {
+  void Db::release_rw_lock (std::unique_lock<std::mutex> &rwl) {
     log << debug << "db: rw-s: releasing lock." << endl;
-    rw_lock_s.unlock ();
+    rwl.unlock ();
     dbs_open.notify_all ();
   }
 
@@ -201,8 +200,7 @@ namespace Astroid {
 
       if (mode == DATABASE_READ_WRITE) {
         log << debug << "db: rw: releasing lock." << endl;
-        rw_lock.unlock ();
-        dbs_open.notify_all ();
+        release_rw_lock (rw_lock);
       } else {
         release_ro_lock ();
       }

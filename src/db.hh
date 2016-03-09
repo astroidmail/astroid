@@ -115,8 +115,8 @@ namespace Astroid {
 
       /* lock db: use if you need the db in external program and need
        * a specific lock */
-      static void acquire_rw_lock ();
-      static void release_rw_lock ();
+      static std::unique_lock<std::mutex> acquire_rw_lock ();
+      static void release_rw_lock (std::unique_lock<std::mutex> &);
 
       static void acquire_ro_lock ();
       static void release_ro_lock ();
@@ -142,7 +142,6 @@ namespace Astroid {
       /* notify when read_only_dbs change */
       static std::condition_variable  dbs_open;
       std::unique_lock<std::mutex>    rw_lock;
-      static std::unique_lock<std::mutex> rw_lock_s; // used by static locker
 
       DbMode mode;
 

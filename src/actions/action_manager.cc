@@ -36,6 +36,7 @@ namespace Astroid {
         lk.unlock ();
 
         Db * db;
+        std::unique_lock<std::mutex> rw_lock;
 
         if (a->need_db) {
           if (a->need_db_rw) {
@@ -47,7 +48,7 @@ namespace Astroid {
           }
         } else {
           if (a->need_db_rw) {
-            Db::acquire_rw_lock ();
+            rw_lock = Db::acquire_rw_lock ();
             db = NULL;
           } else {
             Db::acquire_ro_lock ();
@@ -68,7 +69,7 @@ namespace Astroid {
           delete db;
         } else {
           if (a->need_db_rw) {
-            Db::release_rw_lock ();
+            Db::release_rw_lock (rw_lock);
           } else {
             Db::release_ro_lock ();
           }
