@@ -94,6 +94,33 @@ namespace Astroid {
       unsigned long get_revision ();
 # endif
 
+      notmuch_database_t * nm_db;
+
+      std::vector<ustring> tags;
+
+      void load_tags ();
+      void test_query ();
+
+      static std::vector<ustring> sent_tags;
+      static std::vector<ustring> draft_tags;
+      static std::vector<ustring> excluded_tags;
+
+      ustring add_sent_message (ustring, std::vector<ustring>);
+      ustring add_draft_message (ustring);
+      ustring add_message_with_tags (ustring fname, std::vector<ustring> tags);
+      void remove_message (ustring);
+
+      static ustring sanitize_tag (ustring);
+      static bool check_tag (ustring);
+
+      /* lock db: use if you need the db in external program and need
+       * a specific lock */
+      static void acquire_rw_lock ();
+      static void release_rw_lock ();
+
+      static void acquire_ro_lock ();
+      static void release_ro_lock ();
+
     private:
       /* we can have as many read-only db's open as we want, but only one
        * read-write at the same time. there can also not be any other
@@ -115,6 +142,7 @@ namespace Astroid {
       /* notify when read_only_dbs change */
       static std::condition_variable  dbs_open;
       std::unique_lock<std::mutex>    rw_lock;
+      static std::unique_lock<std::mutex> rw_lock_s; // used by static locker
 
       DbMode mode;
 
@@ -127,26 +155,6 @@ namespace Astroid {
       const int db_write_open_delay   = 1; // seconds
 
       static bool settings_loaded;
-
-    public:
-      notmuch_database_t * nm_db;
-
-      std::vector<ustring> tags;
-
-      void load_tags ();
-      void test_query ();
-
-      static std::vector<ustring> sent_tags;
-      static std::vector<ustring> draft_tags;
-      static std::vector<ustring> excluded_tags;
-
-      ustring add_sent_message (ustring, std::vector<ustring>);
-      ustring add_draft_message (ustring);
-      ustring add_message_with_tags (ustring fname, std::vector<ustring> tags);
-      void remove_message (ustring);
-
-      static ustring sanitize_tag (ustring);
-      static bool check_tag (ustring);
   };
 
   /* exceptions */

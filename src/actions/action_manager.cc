@@ -35,17 +35,44 @@ namespace Astroid {
         /* allow new actions to be queued while waiting for db */
         lk.unlock ();
 
-        Db db (a->needrwdb ? Db::DbMode::DATABASE_READ_WRITE : Db::DbMode::DATABASE_READ_ONLY);
+        Db * db;
+
+        if (a->need_db) {
+          if (a->need_db_rw) {
+            db = new Db (Db::DbMode::DATABASE_READ_WRITE);
+
+          } else {
+            db = new Db (Db::DbMode::DATABASE_READ_ONLY);
+
+          }
+        } else {
+          if (a->need_db_rw) {
+            Db::acquire_rw_lock ();
+            db = NULL;
+          } else {
+            Db::acquire_ro_lock ();
+            db = NULL;
+          }
+        }
 
         lk.lock ();
 
         if (!a->in_undo) {
-          a->doit (&db);
+          a->doit (db);
         } else {
-          a->undo (&db);
+          a->undo (db);
         }
 
-        db.close ();
+        if (a->need_db) {
+          db->close ();
+          delete db;
+        } else {
+          if (a->need_db_rw) {
+            Db::release_rw_lock ();
+          } else {
+            Db::release_ro_lock ();
+          }
+        }
 
         if (!a->in_undo && a->undoable ()) {
           doneactions.push_back (a);

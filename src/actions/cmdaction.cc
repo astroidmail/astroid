@@ -7,7 +7,8 @@ namespace Astroid {
     cmd = _c;
     thread_id = _tid;
     mid = _mid;
-    needrwdb = false;
+    need_db    = false;
+    need_db_rw = true;
   }
 
   bool CmdAction::doit (Db *) {

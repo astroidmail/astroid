@@ -17,7 +17,8 @@ namespace Astroid {
       bool in_undo = false;
 
       /* generally actions need a read-write db */
-      bool needrwdb = true;
+      bool need_db    = true; /* only this will give ro-db */
+      bool need_db_rw = true; /* only this will lock db-rw */
 
       virtual void emit (Db *) = 0;
   };
