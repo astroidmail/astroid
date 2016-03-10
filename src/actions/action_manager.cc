@@ -90,7 +90,7 @@ namespace Astroid {
 
   void ActionManager::undo () {
     log << info << "actions: undo" << endl;
-    std::lock_guard<std::mutex> lk (actions_m);
+    std::unique_lock<std::mutex> lk (actions_m);
 
     if (!actions.empty ()) {
       log << info << "actions: action still in queue, removing.." << endl;
@@ -115,6 +115,8 @@ namespace Astroid {
       doneactions.pop_back ();
 
       a->in_undo = true;
+
+      lk.unlock ();
       doit (a); // queue for undo
     }
   }
