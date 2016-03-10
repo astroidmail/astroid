@@ -298,7 +298,7 @@ namespace Astroid {
 
         NotmuchThread * t;
 
-        db->on_thread (thread_id, [&](notmuch_thread_t *nmt) {
+        db->on_thread (thread_id, [&t](notmuch_thread_t *nmt) {
 
             t = new NotmuchThread (nmt);
 

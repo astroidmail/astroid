@@ -9,7 +9,7 @@
 # include "thread_index_list_view.hh"
 
 namespace Astroid {
-  class QueryLoader {
+  class QueryLoader : public sigc::trackable {
     public:
       static int nextid;
 
