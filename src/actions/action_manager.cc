@@ -21,7 +21,7 @@ namespace Astroid {
 
     while (run) {
       std::unique_lock<std::mutex> lk (actions_m);
-      actions_cv.wait (lk, [&] { return !actions.empty (); });
+      actions_cv.wait (lk, [&] { return (!actions.empty () || !run); });
 
       /* lock emitter now, so that it does not start opening a
        * read-only db while the read-write db is open */
@@ -151,7 +151,10 @@ namespace Astroid {
   }
 
   ActionManager::~ActionManager () {
+    std::unique_lock<std::mutex> lk (actions_m);
     run = false;
+    lk.unlock ();
+    actions_cv.notify_one ();
     action_worker_t.join ();
   }
 
