@@ -40,8 +40,7 @@ BOOST_AUTO_TEST_SUITE(DbTest)
 
     //this_thread::sleep_for (chrono::milliseconds(5000));
 
-    // it seems like a child process is killed here, is it xapian?
-    //delete db;
+    delete db;
 
     teardown ();
   }
