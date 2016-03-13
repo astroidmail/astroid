@@ -943,6 +943,11 @@ namespace Astroid {
   void EditMessage::attach_file () {
     log << info << "em: attach file.." << endl;
 
+    if (message_sent) {
+      log << debug << "em: message already sent." << endl;
+      return;
+    }
+
     Gtk::FileChooserDialog dialog ("Choose file to attach..",
         Gtk::FILE_CHOOSER_ACTION_OPEN);
 
