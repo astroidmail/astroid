@@ -627,7 +627,7 @@ namespace Astroid {
        */
 
       for (auto &m : mthread->messages) {
-        m->load_tags (db);
+        m->refresh (db);
         message_refresh_tags (db, m);
       }
     }

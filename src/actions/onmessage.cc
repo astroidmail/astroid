@@ -11,9 +11,11 @@
 namespace Astroid {
   OnMessageAction::OnMessageAction (
       ustring _msg_id,
+      ustring _tid,
       std::function <void(Db *, notmuch_message_t *)> _b) {
 
     msg_id  = _msg_id;
+    tid     = _tid;
     block   = _b;
   }
 
@@ -32,6 +34,9 @@ namespace Astroid {
 
   void OnMessageAction::emit (Db * db) {
     astroid->actions->emit_message_updated (db, msg_id);
+
+    if (tid != "")
+      astroid->actions->emit_thread_updated (db, tid);
   }
 
 

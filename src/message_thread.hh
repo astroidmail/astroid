@@ -21,6 +21,7 @@ namespace Astroid {
 
       ustring fname;
       ustring mid;
+      ustring tid;
       bool    in_notmuch;
       bool    has_file;
       bool    missing_content; // file does not have a gmimeobject nor a file, use
@@ -35,6 +36,7 @@ namespace Astroid {
       void load_tags (notmuch_message_t *);
 
       void on_message_updated (Db *, ustring);
+      void refresh (Db *);
 
       GMimeMessage * message;
       refptr<Chunk>     root;

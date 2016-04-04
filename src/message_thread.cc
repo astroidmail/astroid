@@ -54,6 +54,7 @@ namespace Astroid {
      * is valid and not destroyed while initializing */
 
     mid = notmuch_message_get_message_id (message);
+    tid = notmuch_message_get_thread_id (message);
     in_notmuch = true;
     has_file   = true;
     level      = _level;
@@ -82,9 +83,25 @@ namespace Astroid {
 
   void Message::on_message_updated (Db * db, ustring _mid) {
     if (in_notmuch && (mid == _mid)) {
-      load_tags (db);
+      refresh (db);
+
       emit_message_changed (db, MessageChangedEvent::MESSAGE_TAGS_CHANGED);
     }
+  }
+
+  void Message::refresh (Db * db) {
+    db->on_message (mid, [&](notmuch_message_t * msg)
+      {
+        const char * fn = notmuch_message_get_filename (msg);
+        if (fn != NULL) {
+          fname = ustring (fn);
+        } else {
+          fname = "";
+          has_file = false;
+        }
+
+        load_tags (msg);
+      });
   }
 
   /* message changed signal*/

@@ -423,7 +423,7 @@ namespace Astroid {
 
         /* first remove tag in case it has been sent */
         astroid->actions->doit (refptr<Action>(
-              new OnMessageAction (draft_msg->mid,
+              new OnMessageAction (draft_msg->mid, draft_msg->tid,
 
                 [fname] (Db * db, notmuch_message_t * msg) {
                   for (ustring t : Db::draft_tags) {
@@ -431,7 +431,12 @@ namespace Astroid {
                         t.c_str ());
                   }
 
-                  db->remove_message (fname.c_str ());
+                  bool persists = !db->remove_message (fname.c_str ());
+
+                  if (persists && db->maildir_synchronize_flags) {
+                    /* sync in case there are other copies of the message */
+                    notmuch_message_tags_to_maildir_flags (msg);
+                  }
                 })));
       }
 

@@ -19,6 +19,7 @@
 * Gravatar is configurable.
 * #103: Drafts are saved on force close or quit by default.
 * C-v: duplicate and refine query.
+* Synchronize maildir flags if so configured in .notmuch-config.
 
 == v0.5 / 2016-02-06
 

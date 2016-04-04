@@ -212,11 +212,15 @@ namespace Astroid {
       }
 
       astroid->actions->doit (refptr<Action>(
-            new OnMessageAction (msg->mid,
+            new OnMessageAction (msg->mid, msg->tid,
 
-              [] (Db *, notmuch_message_t * msg) {
+              [] (Db * db, notmuch_message_t * msg) {
 
                 notmuch_message_add_tag (msg, "replied");
+
+                if (db->maildir_synchronize_flags){
+                  notmuch_message_tags_to_maildir_flags (msg);
+                }
 
               })));
     }

@@ -71,6 +71,7 @@ namespace Astroid {
     float diff = (clock () - start) * 1000.0 / CLOCKS_PER_SEC;
     log << debug << "db: open time: " << diff << " ms." << endl;
 
+    maildir_synchronize_flags = config.get<bool> ("maildir.synchronize_flags");
 
     if (!settings_loaded) {
       ustring excluded_tags_s = config.get<string> ("search.exclude_tags");
@@ -242,29 +243,17 @@ namespace Astroid {
     log << info << "db: loaded " << tags.size () << " tags." << endl;
   }
 
-  void Db::remove_message (ustring fname) {
-    notmuch_message_t * msg;
-    notmuch_database_find_message_by_filename (nm_db,
-        fname.c_str (),
-        &msg);
-
-    const char * ctid = notmuch_message_get_thread_id (msg);
-    ustring tid = ustring (ctid);
-
-    notmuch_message_destroy (msg);
-
+  bool Db::remove_message (ustring fname) {
     notmuch_status_t s = notmuch_database_remove_message (nm_db,
         fname.c_str ());
 
-    if ((s != NOTMUCH_STATUS_SUCCESS) && (s != NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID)) {
+    if ((s != NOTMUCH_STATUS_SUCCESS) && (s != NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID))
+    {
       log << error << "db: error removing message: " << s << endl;
       throw database_error ("db: could not remove message from database.");
     }
 
-    /* emit signal */
-    if (tid != "") {
-      astroid->actions->emit_thread_updated (this, tid);
-    }
+    return (s != NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID);
   }
 
   ustring Db::add_message_with_tags (ustring fname, vector<ustring> tags) {
@@ -288,6 +277,10 @@ namespace Astroid {
     /* add tags */
     for (ustring &t : tags) {
       s = notmuch_message_add_tag (msg, t.c_str());
+    }
+
+    if ((s == NOTMUCH_STATUS_SUCCESS) && maildir_synchronize_flags) {
+      s = notmuch_message_tags_to_maildir_flags (msg);
     }
 
     /* emit signal */
@@ -681,6 +674,10 @@ namespace Astroid {
 
             notmuch_status_t s = notmuch_message_add_tag (message, tag.c_str ());
 
+            if ((s == NOTMUCH_STATUS_SUCCESS) && db->maildir_synchronize_flags) {
+              s = notmuch_message_tags_to_maildir_flags (message);
+            }
+
             notmuch_message_destroy (message);
 
             if (s == NOTMUCH_STATUS_SUCCESS) {
@@ -738,6 +735,10 @@ namespace Astroid {
             message = notmuch_messages_get (qmessages);
 
             notmuch_status_t s = notmuch_message_remove_tag (message, tag.c_str ());
+
+            if ((s == NOTMUCH_STATUS_SUCCESS) && db->maildir_synchronize_flags) {
+              s = notmuch_message_tags_to_maildir_flags (message);
+            }
 
             notmuch_message_destroy (message);
 
@@ -799,6 +800,9 @@ namespace Astroid {
       {
         notmuch_status_t s = notmuch_message_add_tag (message, tag.c_str ());
 
+        if ((s == NOTMUCH_STATUS_SUCCESS) && db->maildir_synchronize_flags) {
+          s = notmuch_message_tags_to_maildir_flags (message);
+        }
 
         if (s == NOTMUCH_STATUS_SUCCESS) {
           res &= true;
@@ -839,6 +843,9 @@ namespace Astroid {
       {
         notmuch_status_t s = notmuch_message_remove_tag (message, tag.c_str ());
 
+        if ((s == NOTMUCH_STATUS_SUCCESS) && db->maildir_synchronize_flags) {
+          s = notmuch_message_tags_to_maildir_flags (message);
+        }
 
         if (s == NOTMUCH_STATUS_SUCCESS) {
           res &= true;

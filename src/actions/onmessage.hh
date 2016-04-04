@@ -11,7 +11,7 @@
 namespace Astroid {
   class OnMessageAction : public Action {
     public:
-      OnMessageAction (ustring msg_id, std::function <void(Db *, notmuch_message_t *)>);
+      OnMessageAction (ustring msg_id, ustring tid, std::function <void(Db *, notmuch_message_t *)>);
 
       virtual bool doit (Db *) override;
       virtual bool undo (Db *) override;
@@ -20,6 +20,7 @@ namespace Astroid {
 
     private:
       ustring msg_id;
+      ustring tid;
       std::function <void(Db *, notmuch_message_t *)> block;
 
   };

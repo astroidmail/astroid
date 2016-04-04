@@ -108,7 +108,7 @@ namespace Astroid {
       ustring add_sent_message (ustring, std::vector<ustring>);
       ustring add_draft_message (ustring);
       ustring add_message_with_tags (ustring fname, std::vector<ustring> tags);
-      void remove_message (ustring);
+      bool remove_message (ustring);
 
       static ustring sanitize_tag (ustring);
       static bool check_tag (ustring);
@@ -120,6 +120,8 @@ namespace Astroid {
 
       static void acquire_ro_lock ();
       static void release_ro_lock ();
+
+      bool maildir_synchronize_flags = false;
 
     private:
       /* we can have as many read-only db's open as we want, but only one
