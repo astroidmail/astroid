@@ -41,7 +41,6 @@ namespace Astroid {
     /* set up tags */
     Db db (Db::DbMode::DATABASE_READ_ONLY);
     db.load_tags ();
-    existing_tags = db.tags;
 
     tag_completion = refptr<TagCompletion> (new TagCompletion());
     search_completion = refptr<SearchCompletion> (new SearchCompletion());
@@ -166,7 +165,7 @@ namespace Astroid {
     entry.set_text (searchstring);
 
     /* set up completion */
-    search_completion->load_tags (existing_tags);
+    search_completion->load_tags (Db::tags);
     entry.set_completion (search_completion);
     current_completion = search_completion;
   }
@@ -176,7 +175,7 @@ namespace Astroid {
     entry.set_text (tagstring);
 
     /* set up completion */
-    tag_completion->load_tags (existing_tags);
+    tag_completion->load_tags (Db::tags);
     entry.set_completion (tag_completion);
     current_completion = tag_completion;
   }
@@ -185,7 +184,7 @@ namespace Astroid {
     entry.set_text (tagstring);
 
     /* set up completion */
-    difftag_completion->load_tags (existing_tags);
+    difftag_completion->load_tags (Db::tags);
     entry.set_completion (difftag_completion);
     current_completion = difftag_completion;
   }

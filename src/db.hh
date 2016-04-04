@@ -69,7 +69,7 @@ namespace Astroid {
       ustring str () override;
 
     private:
-      int     check_total_messages (notmuch_thread_t *);
+      int check_total_messages (notmuch_thread_t *);
       std::vector<std::tuple<ustring,bool>> get_authors (notmuch_thread_t *);
       std::vector<ustring> get_tags (notmuch_thread_t *);
   };
@@ -96,7 +96,7 @@ namespace Astroid {
 
       notmuch_database_t * nm_db;
 
-      std::vector<ustring> tags;
+      static std::vector<ustring> tags;
 
       void load_tags ();
       void test_query ();

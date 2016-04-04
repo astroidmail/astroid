@@ -75,7 +75,6 @@ namespace Astroid {
       /********************
        * Tag editing
        ********************/
-      std::vector<ustring> existing_tags; // a sorted list of existing tags
       void start_tagging (ustring);
 
       class TagCompletion : public GenericCompletion {
