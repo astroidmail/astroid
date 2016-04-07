@@ -208,6 +208,7 @@ namespace Astroid {
 
     /* set up static classes */
     Date::init ();
+    Db::init ();
     Keybindings::init ();
 
     /* set up accounts */
@@ -250,6 +251,7 @@ namespace Astroid {
 
     /* set up static classes */
     Date::init ();
+    Db::init ();
 
     /* set up accounts */
     accounts = new AccountManager ();

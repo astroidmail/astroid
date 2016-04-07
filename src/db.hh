@@ -121,7 +121,8 @@ namespace Astroid {
       static void acquire_ro_lock ();
       static void release_ro_lock ();
 
-      bool maildir_synchronize_flags = false;
+      static bool maildir_synchronize_flags;
+      static void init ();
 
     private:
       /* we can have as many read-only db's open as we want, but only one
@@ -151,11 +152,10 @@ namespace Astroid {
       bool open_db_read_only ();
       bool closed = false;
 
-      bfs::path path_db;
+      static bfs::path path_db;
       const int db_write_open_timeout = 30; // seconds
       const int db_write_open_delay   = 1; // seconds
 
-      static bool settings_loaded;
   };
 
   /* exceptions */

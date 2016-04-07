@@ -30,15 +30,16 @@ namespace Astroid {
   std::condition_variable   Db::dbs_open;
 
   /* static settings */
-  bool Db::settings_loaded = false;
+  bool Db::maildir_synchronize_flags = false;
   std::vector<ustring> Db::excluded_tags = { "muted", "spam", "deleted" };
   std::vector<ustring> Db::sent_tags = { "sent" };
   std::vector<ustring> Db::draft_tags = { "draft" };
   std::vector<ustring> Db::tags;
 
-  Db::Db (DbMode _mode) {
+  bfs::path Db::path_db;
+
+  void Db::init () {
     const ptree& config = astroid->notmuch_config ();
-    mode = _mode;
 
     const char * home = getenv ("HOME");
     if (home == NULL) {
@@ -57,6 +58,21 @@ namespace Astroid {
 
     path_db = absolute (path_db);
 
+    ustring excluded_tags_s = config.get<string> ("search.exclude_tags");
+    excluded_tags = VectorUtils::split_and_trim (excluded_tags_s, ";");
+    sort (excluded_tags.begin (), excluded_tags.end ());
+
+    // TODO: find a better way to handle sent_tags, probably via AccountManager?
+    ustring sent_tags_s = astroid->config().get<std::string> ("mail.sent_tags");
+    sent_tags = VectorUtils::split_and_trim (sent_tags_s, ",");
+    sort (sent_tags.begin (), sent_tags.end ());
+
+    maildir_synchronize_flags = config.get<bool> ("maildir.synchronize_flags");
+  }
+
+  Db::Db (DbMode _mode) {
+    mode = _mode;
+
     time_t start = clock ();
 
     nm_db     = NULL;
@@ -70,21 +86,6 @@ namespace Astroid {
 
     float diff = (clock () - start) * 1000.0 / CLOCKS_PER_SEC;
     log << debug << "db: open time: " << diff << " ms." << endl;
-
-    maildir_synchronize_flags = config.get<bool> ("maildir.synchronize_flags");
-
-    if (!settings_loaded) {
-      ustring excluded_tags_s = config.get<string> ("search.exclude_tags");
-      excluded_tags = VectorUtils::split_and_trim (excluded_tags_s, ";");
-      sort (excluded_tags.begin (), excluded_tags.end ());
-
-      // TODO: find a better way to handle sent_tags, probably via AccountManager?
-      ustring sent_tags_s = astroid->config().get<std::string> ("mail.sent_tags");
-      sent_tags = VectorUtils::split_and_trim (sent_tags_s, ",");
-      sort (sent_tags.begin (), sent_tags.end ());
-
-      settings_loaded = true;
-    }
   }
 
   bool Db::open_db_write (bool block) {
