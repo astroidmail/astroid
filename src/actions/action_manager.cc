@@ -17,6 +17,11 @@ namespace Astroid {
     actions_cv.notify_one ();
   }
 
+  void ActionManager::doit (refptr<Action> action, bool undoable) {
+    action->skip_undo = !undoable;
+    doit (action);
+  }
+
   void ActionManager::action_worker () {
 
     while (run) {
@@ -75,7 +80,7 @@ namespace Astroid {
           }
         }
 
-        if (!a->in_undo && a->undoable ()) {
+        if (!a->in_undo && a->undoable () && !a->skip_undo) {
           doneactions.push_back (a);
         }
 
@@ -97,7 +102,7 @@ namespace Astroid {
 
       /* get last action queued and remove before it is done */
       refptr<Action> a = actions.back ();
-      if (!a->in_undo) actions.pop_back ();
+      if (!a->in_undo && !a->skip_undo) actions.pop_back ();
 
       /* just ignore the undo if the previous undo is not finished yet */
       return;

@@ -739,9 +739,12 @@ namespace Astroid {
      * we do this here so that messages are can be exanded if they are unread,
      * before the tag is removed.
      *
+     * TODO: it would be better to remove the unread tag once a message is focused
+     *       or focused for say 2 seconds.
+     *
      */
     if (mthread->in_notmuch && mthread->thread->has_tag ("unread")) {
-      main_window->actions->doit (refptr<Action>(new TagAction(mthread->thread, {}, {"unread"})));
+      main_window->actions->doit (refptr<Action>(new TagAction(mthread->thread, {}, {"unread"})), false);
     }
 
     emit_ready ();

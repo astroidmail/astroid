@@ -18,6 +18,7 @@ namespace Astroid {
       ~ActionManager ();
 
       void doit (refptr<Action>);
+      void doit (refptr<Action>, bool);
       void undo ();
 
     private:
