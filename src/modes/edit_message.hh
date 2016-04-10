@@ -109,6 +109,7 @@ namespace Astroid {
       bool save_draft_on_force_quit;
       bool save_draft ();
       void delete_draft ();
+      static void delete_draft (refptr<Message> draft_msg);
       refptr<Message> draft_msg;
       bool draft_saved = false;
 

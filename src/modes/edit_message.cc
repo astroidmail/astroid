@@ -52,10 +52,8 @@ namespace Astroid {
     /* if this is a previously saved draft: use it, otherwise make new draft
      * based on original message */
 
-    Db db;
-
-    if (any_of (db.draft_tags.begin (),
-                db.draft_tags.end (),
+    if (any_of (Db::draft_tags.begin (),
+                Db::draft_tags.end (),
                 [&](ustring t) {
                   return has (msg->tags, t);
                 }))
@@ -414,37 +412,44 @@ namespace Astroid {
   }
 
   void EditMessage::delete_draft () {
-    log << info << "em: deleting draft." << endl;
     if (draft_msg) {
-      path fname = path(draft_msg->fname.c_str());
 
-      if (is_regular_file (fname)) {
-        boost::filesystem::remove (fname);
+      delete_draft (draft_msg);
 
-        /* first remove tag in case it has been sent */
-        astroid->actions->doit (refptr<Action>(
-              new OnMessageAction (draft_msg->mid, draft_msg->tid,
-
-                [fname] (Db * db, notmuch_message_t * msg) {
-                  for (ustring t : Db::draft_tags) {
-                    notmuch_message_remove_tag (msg,
-                        t.c_str ());
-                  }
-
-                  bool persists = !db->remove_message (fname.c_str ());
-
-                  if (persists && db->maildir_synchronize_flags) {
-                    /* sync in case there are other copies of the message */
-                    notmuch_message_tags_to_maildir_flags (msg);
-                  }
-                })));
-      }
-
-      draft_msg = refptr<Message>();
+      draft_msg = refptr<Message> ();
       draft_saved = true; /* avoid saving on exit */
+
     } else {
       log << warn << "em: not a draft, not deleting." << endl;
     }
+  }
+
+  void EditMessage::delete_draft (refptr<Message> draft_msg) {
+    log << info << "em: deleting draft." << endl;
+    path fname = path(draft_msg->fname.c_str());
+
+    if (is_regular_file (fname)) {
+      boost::filesystem::remove (fname);
+
+      /* first remove tag in case it has been sent */
+      astroid->actions->doit (refptr<Action>(
+            new OnMessageAction (draft_msg->mid, draft_msg->tid,
+
+              [fname] (Db * db, notmuch_message_t * msg) {
+                for (ustring t : Db::draft_tags) {
+                  notmuch_message_remove_tag (msg,
+                      t.c_str ());
+                }
+
+                bool persists = !db->remove_message (fname.c_str ());
+
+                if (persists && db->maildir_synchronize_flags) {
+                  /* sync in case there are other copies of the message */
+                  notmuch_message_tags_to_maildir_flags (msg);
+                }
+              })));
+    }
+
   }
 
   /* edit / read message cycling {{{ */

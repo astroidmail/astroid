@@ -945,19 +945,16 @@ namespace Astroid {
         ".header_container .preview");
 
     {
-      // TODO: we don't really need to open the db here
-      Db db;
-
       if (!edit_mode &&
-           any_of (db.draft_tags.begin (),
-                   db.draft_tags.end (),
+           any_of (Db::draft_tags.begin (),
+                   Db::draft_tags.end (),
                    [&](ustring t) {
                      return has (m->tags, t);
                    }))
       {
 
         /* set warning */
-        set_warning (m, "This message is a draft, edit it with E.");
+        set_warning (m, "This message is a draft, edit it with E or delete with D.");
 
       }
     }
@@ -2203,6 +2200,30 @@ namespace Astroid {
             main_window->add_mode (new EditMessage (main_window, focused_message));
 
             return true;
+          }
+          return false;
+        });
+
+    keys.register_key ("D", "thread_view.delete_draft",
+        "Delete currently focused draft",
+        [&] (Key) {
+          if (!edit_mode) {
+
+            if (any_of (Db::draft_tags.begin (),
+                        Db::draft_tags.end (),
+                        [&](ustring t) {
+                          return has (focused_message->tags, t);
+                        }))
+            {
+              ask_yes_no ("Do you want to delete this draft? (any changes will be lost)",
+                  [&](bool yes) {
+                    if (yes) {
+                      EditMessage::delete_draft (focused_message);
+                    }
+                  });
+
+              return true;
+            }
           }
           return false;
         });
