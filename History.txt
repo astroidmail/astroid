@@ -1,6 +1,7 @@
 ==
 
-* Thread-index: load all threads in a query are in the background.
+* Thread-index: load all threads in the background.
+* Synchronize maildir flags if so configured in .notmuch-config.
 * All actions requiring write-access run in the background and wait for
   any reads to finish. All read operations need to wait for any ongoing
   write-operations to finish. All write-operations are therefore
@@ -19,7 +20,6 @@
 * Gravatar is configurable.
 * #103: Drafts are saved on force close or quit by default.
 * C-v: duplicate and refine query.
-* Synchronize maildir flags if so configured in .notmuch-config.
 
 == v0.5 / 2016-02-06
 
