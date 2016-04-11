@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_SUITE(DbTest)
   BOOST_AUTO_TEST_CASE(open_error)
   {
     setup ();
-    const_cast<ptree&>(astroid->notmuch_config()).put ("database.path", "test/mail/test_mail/non_existant");
+    Db::path_db = path ("test/mail/test_mail/non_existant");
 
     Db * db;
 
