@@ -599,36 +599,40 @@ namespace Astroid {
       Message * m,
       Message::MessageChangedEvent me)
   {
-    if (me == Message::MessageChangedEvent::MESSAGE_TAGS_CHANGED) {
-      if (m->in_notmuch) {
-        log << debug << "tv: got message updated." << endl;
-        refptr<Message> rm = refptr<Message> (m);
-        rm->reference ();
+    if (!edit_mode) { // edit mode doesn't show tags
+      if (me == Message::MessageChangedEvent::MESSAGE_TAGS_CHANGED) {
+        if (m->in_notmuch) {
+          log << debug << "tv: got message updated." << endl;
+          refptr<Message> rm = refptr<Message> (m);
+          rm->reference ();
 
-        message_refresh_tags (db, rm);
+          message_refresh_tags (db, rm);
+        }
       }
     }
   }
 
   void ThreadView::on_thread_updated (Db * db, ustring thread_id) {
-    if (thread && thread_id == thread->thread_id) {
-      log << debug << "tv: got thread updated." << endl;
-      /* thread was updated, check for:
-       * - changed tags
-       * - check if something should be done becasue of changed tags
-       * - messages have been added
-       * - messages have been removed
-       *
-       * TODO:
-       *
-       * if anything happens before the webview is ready it will not be shown,
-       * however, we don't want the unread tag to be removed before we get the
-       * chance to scroll to and expand the correct messages.
-       */
+    if (!edit_mode) { // edit mode doesn't show tags
+      if (thread && thread_id == thread->thread_id) {
+        log << debug << "tv: got thread updated." << endl;
+        /* thread was updated, check for:
+         * - changed tags
+         * - check if something should be done becasue of changed tags
+         * - messages have been added
+         * - messages have been removed
+         *
+         * TODO:
+         *
+         * if anything happens before the webview is ready it will not be shown,
+         * however, we don't want the unread tag to be removed before we get the
+         * chance to scroll to and expand the correct messages.
+         */
 
-      for (auto &m : mthread->messages) {
-        m->refresh (db);
-        message_refresh_tags (db, m);
+        for (auto &m : mthread->messages) {
+          m->refresh (db);
+          message_refresh_tags (db, m);
+        }
       }
     }
   }
