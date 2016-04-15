@@ -103,7 +103,7 @@ namespace Astroid {
     prepare_message ();
     read_edited_message ();
 
-    start_vim_on_socket_ready = true;
+    editor->start_editor_when_ready = true;
 
     /* sent signal */
     message_sent_attempt().connect (

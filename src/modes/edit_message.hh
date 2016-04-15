@@ -15,12 +15,17 @@
 # include "astroid.hh"
 # include "config.hh"
 # include "mode.hh"
+# include "editor/editor.hh"
+# include "editor/plugin.hh"
 # include "compose_message.hh"
 # include "account_manager.hh"
 # include "thread_view/thread_view.hh"
 
 namespace Astroid {
   class EditMessage : public Mode {
+    friend Editor;
+    friend Plugin;
+
     public:
       EditMessage (MainWindow *);
       EditMessage (MainWindow *, ustring to);
@@ -35,8 +40,9 @@ namespace Astroid {
       Gtk::Revealer *reply_revealer;
       Gtk::Revealer *encryption_revealer;
 
+      Editor * editor;
       bool editor_active = false;
-      void activate_editor (bool editor);
+      void activate_editor ();
 
       ustring msg_id;
 
@@ -109,21 +115,12 @@ namespace Astroid {
       ptree editor_config;
 
       Gtk::Box *    editor_box;
-      Gtk::Socket * editor_socket;
       ThreadView *  thread_view;
       Gtk::Revealer *editor_rev, *thread_rev;
-      void plug_added ();
-      bool plug_removed ();
-      void socket_realized ();
-      bool socket_ready = false;
-      bool vim_started  = false;
-      bool vim_ready    = false;
-      bool start_vim_on_socket_ready = false;
 
       static  int edit_id; // must be incremented each time a new editor is started
       int     id;          // id of this instance
       time_t  msg_time;
-      ustring vim_server;
 
       void editor_toggle (bool); // enable or disable editor or
                                  // thread view
@@ -134,18 +131,6 @@ namespace Astroid {
       void on_tv_ready ();
       ustring warning_str;
       ustring info_str;
-
-      void editor_start ();
-      void editor_stop ();
-      /*
-      void vim_remote_expr (ustring);
-      void vim_remote_keys (ustring);
-      void vim_remote_files (ustring);
-      */
-
-      /* editor config */
-      std::string editor_cmd;
-      std::string editor_args;
 
       AccountManager * accounts;
 

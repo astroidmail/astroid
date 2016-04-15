@@ -88,8 +88,6 @@ namespace Astroid {
     prepare_message ();
     read_edited_message ();
 
-    activate_field (Thread);
-
     /* sent signal */
     message_sent_attempt().connect (
         sigc::mem_fun (this, &ForwardMessage::on_message_sent_attempt_received));

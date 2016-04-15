@@ -28,6 +28,8 @@
 # include "log.hh"
 # include "actions/onmessage.hh"
 
+# include "editor/plugin.hh"
+
 using namespace std;
 using namespace boost::filesystem;
 
@@ -113,41 +115,23 @@ namespace Astroid {
     int pid = getpid ();
 
     msg_time = time(0);
-    vim_server = UstringUtils::random_alphanumeric (10);
+    ustring _mid = UstringUtils::random_alphanumeric (10);
 
-    vim_server = ustring::compose ("%2-astroid-%1-%3-%5@%4", id,
-        msg_time, vim_server, hostname, pid);
+    _mid = ustring::compose ("%2-astroid-%1-%3-%5@%4", id,
+        msg_time, _mid, hostname, pid);
 
     if (msg_id == "") {
-      msg_id = vim_server;
+      msg_id = _mid;
     }
 
     log << info << "em: msg id: " << msg_id << endl;
-    log << debug << "em: vim server name: " << vim_server << endl;
 
     make_tmpfile ();
 
-    /* gvim settings */
-    editor_cmd  = editor_config.get <string>("gvim.cmd");
-    editor_args = editor_config.get <string>("gvim.args");
-
-    /* gtk::socket:
-     * http://stackoverflow.com/questions/13359699/pyside-embed-vim
-     * https://developer.gnome.org/gtkmm-tutorial/stable/sec-plugs-sockets-example.html.en
-     * https://mail.gnome.org/archives/gtk-list/2011-January/msg00041.html
-     */
-    editor_socket = Gtk::manage(new Gtk::Socket ());
-    editor_socket->set_can_focus (true);
-    editor_socket->signal_plug_added ().connect (
-        sigc::mem_fun(*this, &EditMessage::plug_added) );
-    editor_socket->signal_plug_removed ().connect (
-        sigc::mem_fun(*this, &EditMessage::plug_removed) );
-
-    editor_socket->signal_realize ().connect (
-        sigc::mem_fun(*this, &EditMessage::socket_realized) );
+    editor = new Plugin (this, _mid);
 
     //editor_rev->add (*editor_socket);
-    editor_box->pack_start (*editor_socket, false, false, 2);
+    editor_box->pack_start (*editor, false, false, 2);
 
     thread_view = Gtk::manage(new ThreadView(main_window));
     thread_view->edit_mode = true;
@@ -220,7 +204,7 @@ namespace Astroid {
     from_combo->signal_changed().connect (
         sigc::mem_fun (this, &EditMessage::on_from_combo_changed));
 
-    start_vim_on_socket_ready = true;
+    /* editor->start_editor_when_ready = true; */
 
     /* register keys {{{ */
     keys.title = "Edit mode";
@@ -230,7 +214,6 @@ namespace Astroid {
         [&] (Key) {
           if (!message_sent && !sending_in_progress.load()) {
             editor_toggle (true);
-            activate_field (Editor);
           }
           return true;
         });
@@ -339,8 +322,8 @@ namespace Astroid {
       main_window->notebook.remove_widget (&message_sending_status_icon);
     }
 
-    if (vim_started) {
-      vim_remote_keys ("<ESC>:quit!<CR>");
+    if (editor->started ()) {
+      editor->stop ();
     }
 
     if (is_regular_file (tmpfile_path)) {
@@ -537,42 +520,6 @@ namespace Astroid {
 
   /* }}} */
 
-  /* VIM plugin {{{ */
-  void EditMessage::socket_realized ()
-  {
-    log << debug << "em: socket realized." << endl;
-    socket_ready = true;
-
-    if (start_vim_on_socket_ready) {
-      editor_toggle (true);
-      activate_field (Editor);
-      start_vim_on_socket_ready = false;
-    }
-  }
-
-  void EditMessage::plug_added () {
-    log << debug << "em: gvim connected" << endl;
-
-    vim_ready = true;
-
-    if (editor_active) {
-      activate_field (true);
-    }
-  }
-
-  bool EditMessage::plug_removed () {
-    log << debug << "em: gvim disconnected" << endl;
-    vim_ready   = false;
-    vim_started = false;
-    editor_toggle (false);
-
-    activate_field (Thread);
-
-    return true;
-  }
-
-  /* }}} */
-
   void EditMessage::on_tv_ready () {
     log << debug << "em: got tv ready." << endl;
 
@@ -610,10 +557,10 @@ namespace Astroid {
       thread_rev->set_reveal_child (false);
       */
 
-      editor_socket->show ();
+      editor->show ();
       thread_view->hide ();
 
-      gtk_box_set_child_packing (editor_box->gobj (), GTK_WIDGET(editor_socket->gobj ()), true, true, 5, GTK_PACK_START);
+      gtk_box_set_child_packing (editor_box->gobj (), GTK_WIDGET(editor->gobj ()), true, true, 5, GTK_PACK_START);
       gtk_box_set_child_packing (editor_box->gobj (), GTK_WIDGET(thread_view->gobj ()), false, false, 5, GTK_PACK_START);
 
       /* future Gtk
@@ -623,26 +570,26 @@ namespace Astroid {
 
       fields_hide ();
 
-      if (!vim_started) {
-        vim_start ();
+      if (!editor->started ()) {
+        editor->start ();
       }
 
     } else {
 
-      current_field = Thread;
+      editor_active = false;
 
-      if (vim_started) {
-        vim_stop ();
+      if (editor->started ()) {
+        editor->start ();
       }
 
       /*
       editor_rev->set_reveal_child (false);
       thread_rev->set_reveal_child (true);
       */
-      editor_socket->hide ();
+      editor->hide ();
       thread_view->show ();
 
-      gtk_box_set_child_packing (editor_box->gobj (), GTK_WIDGET(editor_socket->gobj ()), false, false, 5, GTK_PACK_START);
+      gtk_box_set_child_packing (editor_box->gobj (), GTK_WIDGET(editor->gobj ()), false, false, 5, GTK_PACK_START);
       gtk_box_set_child_packing (editor_box->gobj (), GTK_WIDGET(thread_view->gobj ()), true, true, 5, GTK_PACK_START);
 
       /* future Gtk
@@ -656,46 +603,32 @@ namespace Astroid {
     }
   }
 
-  void EditMessage::activate_editor (bool editor) {
-    log << debug << "em: activate field: " << f << endl;
+  void EditMessage::activate_editor () {
+    log << debug << "em: activate editor." << endl;
 
-    editor_active = editor;
+    editor_active = true;
 
-    if (editor) {
-      log << debug << "em: activate editor." << endl;
+    log << debug << "em: activate editor." << endl;
 
-      if (!socket_ready) {
-        log << warn << "em: activate editor: socket not ready." << endl;
-        return;
-      }
-
-      /*
-       * https://bugzilla.gnome.org/show_bug.cgi?id=729248
-       */
-
-      release_modal ();
-
-      if (vim_ready) {
-
-        editor_socket->child_focus (Gtk::DIR_TAB_FORWARD);
-
-      } else {
-
-        log << warn << "em: activate editor, editor not yet started!" << endl;
-
-      }
-
-    } else {
-      log << debug << "em: focus thread view" << endl;
-
-      grab_modal ();
-
-      thread_view->grab_focus ();
+    if (!editor->ready ()) {
+      log << warn << "em: activate editor: not ready." << endl;
+      return;
     }
 
-    /* update tab in case something changed */
-    if (subject.size () > 0) {
-      set_label ("New message: " + subject);
+    /*
+     * https://bugzilla.gnome.org/show_bug.cgi?id=729248
+     */
+
+    release_modal ();
+
+    if (editor->ready ()) {
+
+      editor->child_focus (Gtk::DIR_TAB_FORWARD);
+
+    } else {
+
+      log << warn << "em: activate editor, editor not yet started!" << endl;
+
     }
   }
 
@@ -862,58 +795,6 @@ namespace Astroid {
 
   /* }}} */
 
-  /* VIM control {{{ */
-
-  void EditMessage::vim_remote_keys (ustring keys) {
-    ustring cmd = ustring::compose ("%1 --servername %2 --remote-send %3", gvim_cmd, vim_server, keys);
-    log << info << "em: to vim: " << cmd << endl;
-    if (!vim_started) {
-      log << error << "em: to vim: error, vim not started." << endl;
-    } else {
-      Glib::spawn_command_line_async (cmd.c_str());
-    }
-  }
-
-  void EditMessage::vim_remote_files (ustring files) {
-    ustring cmd = ustring::compose ("%1 --servername %2 --remote %3", gvim_cmd, vim_server, files);
-    log << info << "em: to vim: " << cmd << endl;
-    if (!vim_started) {
-      log << error << "em: to vim: error, vim not started." << endl;
-    } else {
-      Glib::spawn_command_line_async (cmd.c_str());
-    }
-  }
-
-  void EditMessage::vim_remote_expr (ustring expr) {
-    ustring cmd = ustring::compose ("%1 --servername %2 --remote-expr %3", gvim_cmd, vim_server, expr);
-    log << info << "em: to vim: " << cmd << endl;
-    if (!vim_started) {
-      log << error << "em: to vim: error, vim not started." << endl;
-    } else {
-      Glib::spawn_command_line_async (cmd.c_str());
-    }
-  }
-
-  void EditMessage::vim_start () {
-    if (socket_ready) {
-      ustring cmd = ustring::compose ("%1 -geom 10x10 --servername %3 --socketid %4 %2 %5",
-          gvim_cmd, gvim_args, vim_server, editor_socket->get_id (),
-          tmpfile_path.c_str());
-      log << info << "em: starting gvim: " << cmd << endl;
-      Glib::spawn_command_line_async (cmd.c_str());
-      vim_started = true;
-    } else {
-      start_vim_on_socket_ready = true; // TODO: not thread-safe
-      log << debug << "em: gvim, waiting for socket.." << endl;
-    }
-  }
-
-  void EditMessage::vim_stop () {
-    vim_remote_keys (ustring::compose("<ESC>:b %1<CR>", tmpfile_path.c_str()));
-    vim_remote_keys ("<ESC>:wq!<CR>");
-    vim_started = false;
-  }
-
   void EditMessage::make_tmpfile () {
     tmpfile_path = tmpfile_path / path(msg_id);
 
@@ -938,8 +819,6 @@ namespace Astroid {
 
     tmpfile.close ();
   }
-
-  /* }}} */
 
   void EditMessage::attach_file () {
     log << info << "em: attach file.." << endl;
