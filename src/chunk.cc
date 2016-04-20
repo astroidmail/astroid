@@ -217,7 +217,8 @@ namespace Astroid {
         guint32 html_filter_flags = GMIME_FILTER_HTML_CONVERT_NL |
                                     GMIME_FILTER_HTML_CONVERT_SPACES |
                                     GMIME_FILTER_HTML_CONVERT_URLS |
-                                    GMIME_FILTER_HTML_CONVERT_ADDRESSES ;
+                                    GMIME_FILTER_HTML_CONVERT_ADDRESSES |
+                                    GMIME_FILTER_HTML_BLOCKQUOTE_CITATION ;
 
         /* convert encoding */
         GMimeContentEncoding enc = g_mime_data_wrapper_get_encoding (content);
