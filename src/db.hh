@@ -153,8 +153,8 @@ namespace Astroid {
       bool open_db_read_only ();
       bool closed = false;
 
-      const int db_write_open_timeout = 30; // seconds
-      const int db_write_open_delay   = 1; // seconds
+      const int db_write_open_timeout = 120; // seconds
+      const int db_write_open_delay   = 1;   // seconds
 
   };
 
