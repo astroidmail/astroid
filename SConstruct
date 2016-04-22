@@ -287,18 +287,25 @@ idir_prefix     = prefix
 idir_bin        = os.path.join (prefix, 'bin')
 idir_shr        = os.path.join (prefix, 'share/astroid')
 idir_ui         = os.path.join (idir_shr, 'ui')
+idir_app        = os.path.join (prefix, 'share/applications')
 
 inst_bin = env.Install (idir_bin, astroid)
 inst_shr = env.Install (idir_ui,  Glob ('ui/*.glade') +
                                   Glob ('ui/*.scss') +
                                   Glob ('ui/*.png') +
                                   Glob ('ui/*.html'))
+inst_app = env.Install (idir_app, 'ui/astroid.desktop')
+
 env.Alias ('install', inst_bin)
 env.Alias ('install', inst_shr)
+env.Alias ('install', inst_app)
+
 env.Depends (inst_bin, astroid)
 env.Depends (inst_shr, astroid)
+env.Depends (inst_app, astroid)
 Ignore ('.', inst_bin)
 Ignore ('.', inst_shr)
+Ignore ('.', inst_app)
 
 ## Default target
 Default (astroid)
