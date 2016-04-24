@@ -50,8 +50,11 @@ namespace Astroid {
       void set_inreplyto (ustring);
       void set_references (ustring);
 
+      bool include_signature = false;
+
       struct Attachment {
         public:
+          Attachment ();
           Attachment (bfs::path);
           Attachment (refptr<Chunk>);
           Attachment (refptr<Message>);
@@ -60,6 +63,7 @@ namespace Astroid {
           bfs::path    fname;
           bool    on_disk;
           bool    is_mime_message = false;
+          bool    dispostion_inline = false;
           bool    valid;
 
           refptr<Glib::ByteArray> contents;

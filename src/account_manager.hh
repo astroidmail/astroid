@@ -1,10 +1,13 @@
 # pragma once
 
 # include <vector>
+# include <boost/filesystem.hpp>
 
 # include "astroid.hh"
 # include "proto.hh"
 # include "utils/address.hh"
+
+namespace bfs = boost::filesystem;
 
 namespace Astroid {
   class Account {
@@ -21,6 +24,11 @@ namespace Astroid {
       ustring save_sent_to;
       std::vector<ustring> additional_sent_tags;
       ustring save_drafts_to;
+
+      bfs::path signature_file;
+      bool      signature_default_on;
+      bool      signature_attach;
+      bool      has_signature = false;
 
       ustring full_address ();
 

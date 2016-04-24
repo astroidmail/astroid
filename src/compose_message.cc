@@ -85,6 +85,16 @@ namespace Astroid {
 
     std::string body_content(body.str());
 
+    /* attached signatures are handled in ::finalize */
+    if (include_signature && !account->signature_attach) {
+      body_content += "-- \n";
+      std::ifstream s (account->signature_file.c_str ());
+      std::ostringstream sf;
+      sf << s.rdbuf ();
+      s.close ();
+      body_content += sf.str ();
+    }
+
     GMimeStream * contentStream = g_mime_stream_mem_new_with_buffer(body_content.c_str(), body_content.size());
     GMimePart * messagePart = g_mime_part_new_with_type ("text", "plain");
 
@@ -156,6 +166,31 @@ namespace Astroid {
     // TODO: leaking astroid PID
     g_mime_message_set_message_id(message, id.c_str());
 
+    /* inline signatures are handled in ::build */
+    if (include_signature && account->signature_attach) {
+      shared_ptr<ComposeMessage::Attachment> sa (
+        new ComposeMessage::Attachment ());
+
+      std::ifstream s (account->signature_file.c_str ());
+      std::ostringstream sf;
+      sf << s.rdbuf ();
+      s.close ();
+
+      string ssf = sf.str ();
+      sa->contents = Glib::ByteArray::create ();
+      sa->contents->append ((guint8 *) "-- \n", 4);
+      sa->contents->append ((guint8 *) ssf.c_str (), ssf.size ());
+      sa->contents->append ((guint8 *) "\n", 1);
+      /* sa->contents->reference (); */
+
+      sa->name = "signature";
+      sa->content_type = "text/plain";
+      sa->dispostion_inline = true;
+      sa->valid = true;
+      sa->on_disk = false;
+      add_attachment (sa);
+    }
+
     /* attachments (most of this copied from ner) */
     if (attachments.size() > 0)
     {
@@ -198,7 +233,7 @@ namespace Astroid {
         g_mime_part_set_content_object (part, data);
         g_mime_part_set_filename (part, a->name.c_str());
 
-        if (a->is_mime_message) {
+        if (a->is_mime_message || a->dispostion_inline) {
           g_mime_object_set_disposition (GMIME_OBJECT(part), "inline");
         } else {
           g_mime_part_set_content_encoding (part, GMIME_CONTENT_ENCODING_BASE64);
@@ -335,6 +370,10 @@ namespace Astroid {
     g_object_unref(stream);
 
     log << debug << "cm: wrote file: " << fname << endl;
+  }
+
+  ComposeMessage::Attachment::Attachment () {
+    on_disk = false;
   }
 
   ComposeMessage::Attachment::Attachment (bfs::path p) {

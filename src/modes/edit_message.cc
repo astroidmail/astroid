@@ -98,6 +98,7 @@ namespace Astroid {
     builder->get_widget ("encryption_revealer", encryption_revealer);
 
     builder->get_widget ("editor_box", editor_box);
+    builder->get_widget ("switch_signature", switch_signature);
     /*
     builder->get_widget ("editor_rev", editor_rev);
     builder->get_widget ("thread_rev", thread_rev);
@@ -206,6 +207,9 @@ namespace Astroid {
 
     /* editor->start_editor_when_ready = true; */
 
+    switch_signature->signal_state_changed ().connect (
+        sigc::mem_fun (this, &EditMessage::switch_signature_changed));
+
     /* register keys {{{ */
     keys.title = "Edit mode";
     keys.register_key (Key (GDK_KEY_Return), { Key (GDK_KEY_KP_Enter) },
@@ -311,6 +315,19 @@ namespace Astroid {
           return true;
         });
 
+
+    keys.register_key ("S", "edit_message.toggle_signature",
+        "Toggle signature",
+        [&] (Key) {
+          auto iter = from_combo->get_active ();
+          auto row = *iter;
+          Account * a = row[from_columns.account];
+          if (a->has_signature) {
+            switch_signature->set_state (!switch_signature->get_state ());
+            switch_signature_manual_set = true;
+          }
+          return true;
+        });
 
     // }}}
   } // }}}
@@ -472,7 +489,7 @@ namespace Astroid {
 
   void EditMessage::set_from (Address a) {
     if (!accounts->is_me (a)) {
-      cerr << "em: from address is not a defined account." << endl;
+      log << error << "em: from address is not a defined account." << endl;
     }
 
     set_from (accounts->get_account_for_address (a));
@@ -485,6 +502,18 @@ namespace Astroid {
         break;
       }
     }
+
+    switch_signature->set_sensitive (a->has_signature);
+    if (a->has_signature && !switch_signature_manual_set) {
+      switch_signature->set_state (a->signature_default_on);
+    }
+  }
+
+
+  void EditMessage::switch_signature_changed (const Gtk::StateType &) {
+    switch_signature_manual_set = true;
+    prepare_message ();
+    read_edited_message ();
   }
 
   void EditMessage::read_edited_message () {
@@ -761,24 +790,6 @@ namespace Astroid {
 
     ComposeMessage * c = new ComposeMessage ();
 
-    /*
-    auto iter = from_combo->get_active ();
-    if (!iter) {
-      log << error << "em: error: no from account selected." << endl;
-      return NULL;
-    }
-    c->set_id (msg_id);
-    auto row = *iter;
-    c->set_from (row[from_columns.account]);
-    c->set_to (to);
-    c->set_cc (cc);
-    c->set_bcc (bcc);
-    c->set_subject (subject);
-
-    tmpfile.open (tmpfile_path.c_str(), fstream::in);
-    c->body << tmpfile.rdbuf();
-    tmpfile.close ();
-    */
     c->load_message (msg_id, tmpfile_path.c_str());
 
     c->set_references (references);
@@ -786,6 +797,12 @@ namespace Astroid {
 
     for (shared_ptr<ComposeMessage::Attachment> a : attachments) {
       c->add_attachment (a);
+    }
+
+    if (c->account->has_signature && switch_signature->get_state ()) {
+      c->include_signature = true;
+    } else {
+      c->include_signature = false;
     }
 
     c->build ();
