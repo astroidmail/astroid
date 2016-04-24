@@ -169,25 +169,9 @@ namespace Astroid {
     /* inline signatures are handled in ::build */
     if (include_signature && account->signature_attach) {
       shared_ptr<ComposeMessage::Attachment> sa (
-        new ComposeMessage::Attachment ());
+        new ComposeMessage::Attachment (account->signature_file));
 
-      std::ifstream s (account->signature_file.c_str ());
-      std::ostringstream sf;
-      sf << s.rdbuf ();
-      s.close ();
-
-      string ssf = sf.str ();
-      sa->contents = Glib::ByteArray::create ();
-      sa->contents->append ((guint8 *) "-- \n", 4);
-      sa->contents->append ((guint8 *) ssf.c_str (), ssf.size ());
-      sa->contents->append ((guint8 *) "\n", 1);
-      /* sa->contents->reference (); */
-
-      sa->name = "signature";
-      sa->content_type = "text/plain";
-      sa->dispostion_inline = true;
-      sa->valid = true;
-      sa->on_disk = false;
+      /* this could be an .vcf, so lets not try to be too smart here */
       add_attachment (sa);
     }
 
