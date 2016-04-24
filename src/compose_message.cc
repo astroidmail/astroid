@@ -87,7 +87,6 @@ namespace Astroid {
 
     /* attached signatures are handled in ::finalize */
     if (include_signature && !account->signature_attach) {
-      body_content += "-- \n";
       std::ifstream s (account->signature_file.c_str ());
       std::ostringstream sf;
       sf << s.rdbuf ();
