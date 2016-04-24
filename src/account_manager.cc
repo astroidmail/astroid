@@ -3,6 +3,7 @@
 # include <algorithm>
 
 # include <boost/property_tree/ptree.hpp>
+# include <boost/filesystem.hpp>
 
 # include "astroid.hh"
 # include "account_manager.hh"
@@ -13,6 +14,7 @@
 
 using namespace std;
 using boost::property_tree::ptree;
+namespace bfs = boost::filesystem;
 
 namespace Astroid {
     AccountManager::AccountManager () {
@@ -38,6 +40,23 @@ namespace Astroid {
       sort (a->additional_sent_tags.begin (), a->additional_sent_tags.end ());
 
       a->save_drafts_to = kv.second.get<string> ("save_drafts_to");
+
+      a->signature_file = kv.second.get<string> ("signature_file");
+      a->signature_default_on = kv.second.get<bool> ("signature_default_on");
+      a->signature_attach     = kv.second.get<bool> ("signature_attach");
+
+      if (a->signature_file.string ().size ()) {
+        /* if relative, assume relative to config dir */
+        if (!a->signature_file.is_absolute ()) {
+          a->signature_file = astroid->standard_paths ().config_dir / a->signature_file;
+        }
+
+
+        if (bfs::exists (a->signature_file) &&
+            bfs::is_regular_file (a->signature_file))
+          a->has_signature = true;
+      }
+
 
       log << info << "ac: setup account: " << a->id << " for " << a->name << " (default: " << a->isdefault << ")" << endl;
 

@@ -132,6 +132,9 @@ namespace Astroid {
       default_config.put ("accounts.charlie.save_drafts_to",
           "/home/root/Mail/drafts/");
 
+      default_config.put ("accounts.charlie.signature_file", "");
+      default_config.put ("accounts.charlie.signature_default_on", true);
+
       /* default searches, also only set if initial */
       default_config.put("startup.queries.inbox", "tag:inbox");
     }
@@ -338,6 +341,46 @@ namespace Astroid {
       changed = true;
 
       log << warn << "config: astroid now reads standard notmuch options from notmuch config, it is configured through: 'astroid.notmuch_config' and is now set to the default: ~/.notmuch-config. please validate!" << endl;
+    }
+
+    if (version < 5) {
+      /* check accounts signature */
+      ptree apt = config.get_child ("accounts");
+
+      for (auto &kv : apt) {
+        try {
+
+          ustring sto = kv.second.get<string> ("signature_file");
+
+        } catch (const boost::property_tree::ptree_bad_path &ex) {
+
+          ustring key = ustring::compose ("accounts.%1.signature_file", kv.first);
+          config.put (key.c_str (), "");
+        }
+
+        try {
+
+          ustring sto = kv.second.get<string> ("signature_default_on");
+
+        } catch (const boost::property_tree::ptree_bad_path &ex) {
+
+          ustring key = ustring::compose ("accounts.%1.signature_default_on", kv.first);
+          config.put (key.c_str (), true);
+        }
+
+        try {
+
+          ustring sto = kv.second.get<string> ("signature_attach");
+
+        } catch (const boost::property_tree::ptree_bad_path &ex) {
+
+          ustring key = ustring::compose ("accounts.%1.signature_attach", kv.first);
+          config.put (key.c_str (), false);
+        }
+
+      }
+
+      changed = true;
     }
 
     /* check deprecated keys (as of version 3) */

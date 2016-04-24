@@ -36,6 +36,7 @@ namespace Astroid {
 
       Gtk::ComboBox *from_combo, *encryption_combo,
         *reply_mode_combo;
+      Gtk::Switch   *switch_signature;
       Gtk::Revealer *fields_revealer;
       Gtk::Revealer *reply_revealer;
       Gtk::Revealer *encryption_revealer;
@@ -43,6 +44,9 @@ namespace Astroid {
       Editor * editor;
       bool editor_active = false;
       void activate_editor ();
+
+      void switch_signature_set ();
+      void reset_signature ();
 
       ustring msg_id;
 
