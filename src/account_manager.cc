@@ -45,7 +45,7 @@ namespace Astroid {
       a->signature_default_on = kv.second.get<bool> ("signature_default_on");
       a->signature_attach     = kv.second.get<bool> ("signature_attach");
 
-      if (a->signature_file.size ()) {
+      if (a->signature_file.string ().size ()) {
         /* if relative, assume relative to config dir */
         if (!a->signature_file.is_absolute ()) {
           a->signature_file = astroid->standard_paths ().config_dir / a->signature_file;
