@@ -27,7 +27,7 @@ Check out the [tour of how to install, configure and use astroid](https://github
 * (done)        syntax highlighting between triple-backtick tags (markdown style)
 * (done)        themable and configurable
 * (in progress) built-in crypto (gpg,..) support.
-* (only vim)    editors: embed vim or emacs (possibly ship a simple editor)
+*               editors: embed vim or emacs (or anything else that supports XEmbed)
 * (linux)       Support: Platforms supported by notmuch and other libraries, specifically: Linux, *BSD, Mac, Windows..
 
 ### more screenshots

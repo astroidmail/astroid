@@ -14,7 +14,7 @@ namespace Astroid {
 
     log << debug << "em: editor server name: " << server_name << endl;
 
-    /* gvim settings */
+    /* editor settings */
     editor_cmd  = em->editor_config.get <std::string>("cmd");
 
     /* gtk::socket:
@@ -62,12 +62,12 @@ namespace Astroid {
           server_name,
           editor_socket->get_id ());
 
-      log << info << "em: starting gvim: " << cmd << endl;
+      log << info << "em: starting editor: " << cmd << endl;
       Glib::spawn_command_line_async (cmd.c_str());
       editor_started = true;
     } else {
       start_editor_when_ready = true; // TODO: not thread-safe
-      log << debug << "em: gvim, waiting for socket.." << endl;
+      log << debug << "em: editor, waiting for socket.." << endl;
     }
 
   }
@@ -88,14 +88,14 @@ namespace Astroid {
   }
 
   void Plugin::plug_added () {
-    log << debug << "em: gvim connected" << endl;
+    log << debug << "em: editor connected" << endl;
 
     editor_ready = true;
     em->activate_editor ();
   }
 
   bool Plugin::plug_removed () {
-    log << debug << "em: gvim disconnected" << endl;
+    log << debug << "em: editor disconnected" << endl;
     editor_ready   = false;
     editor_started = false;
     em->editor_toggle (false);
