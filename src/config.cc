@@ -356,6 +356,18 @@ namespace Astroid {
       log << error << "config: option 'astroid.notmuch.sent_tags' is deprecated, it is moved to 'mail.sent_tags'." << endl;
     } catch (const boost::property_tree::ptree_bad_path &ex) { }
 
+    /* generalized editor */
+    try {
+      config.get<string> ("editor.cmd");
+
+    } catch (const boost::property_tree::ptree_bad_path &ex) {
+
+      log << error << "config: editor has been generalized, you can delete your old gvim.cmd and gvim.args and set editor.cmd in stead." << endl;
+
+      config.put<string> ("editor.cmd", "gvim -geom 10x10 --servername %2 --socketid %3 -f -c 'set ft=mail' '+set fileencoding=utf-8' '+set ff=unix' '+set enc=utf-8' %1");
+
+    }
+
     if (version < CONFIG_VERSION) {
       config.put ("astroid.config.version", CONFIG_VERSION);
       changed = true;
