@@ -12,7 +12,7 @@ namespace Astroid {
       virtual void start () = 0;
       virtual void stop () = 0;
 
-      bool start_editor_when_ready = false;
+      bool start_editor_when_ready = true;
 
   };
 }
