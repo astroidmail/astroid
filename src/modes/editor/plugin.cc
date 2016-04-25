@@ -15,8 +15,7 @@ namespace Astroid {
     log << debug << "em: editor server name: " << server_name << endl;
 
     /* gvim settings */
-    editor_cmd  = em->editor_config.get <std::string>("gvim.cmd");
-    editor_args = em->editor_config.get <std::string>("gvim.args");
+    editor_cmd  = em->editor_config.get <std::string>("cmd");
 
     /* gtk::socket:
      * http://stackoverflow.com/questions/13359699/pyside-embed-vim
@@ -50,9 +49,19 @@ namespace Astroid {
 
   void Plugin::start () {
     if (socket_ready) {
-      ustring cmd = ustring::compose ("%1 -geom 10x10 --servername %3 --socketid %4 %2 %5",
-          editor_cmd, editor_args, server_name, editor_socket->get_id (),
-          em->tmpfile_path.c_str());
+      /* the editor gets the following args:
+       *
+       * %1: file name
+       * %2: server name
+       * %3: socket id (or parent id)
+       *
+       */
+
+      ustring cmd = ustring::compose (editor_cmd,
+          em->tmpfile_path.c_str (),
+          server_name,
+          editor_socket->get_id ());
+
       log << info << "em: starting gvim: " << cmd << endl;
       Glib::spawn_command_line_async (cmd.c_str());
       editor_started = true;
