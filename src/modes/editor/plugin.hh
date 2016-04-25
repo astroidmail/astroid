@@ -23,8 +23,6 @@ namespace Astroid {
 
       void plug_added ();
       bool plug_removed ();
-      bool vim_started  = false;
-      bool vim_ready    = false;
 
       Gtk::Socket * editor_socket;
       void socket_realized ();

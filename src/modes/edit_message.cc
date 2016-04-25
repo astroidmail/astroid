@@ -570,16 +570,14 @@ namespace Astroid {
 
       fields_hide ();
 
-      if (!editor->started ()) {
-        editor->start ();
-      }
+      editor->start ();
 
     } else {
 
       editor_active = false;
 
       if (editor->started ()) {
-        editor->start ();
+        editor->stop ();
       }
 
       /*
@@ -600,6 +598,9 @@ namespace Astroid {
       fields_show ();
 
       read_edited_message ();
+
+      grab_modal ();
+      thread_view->grab_focus ();
     }
   }
 
