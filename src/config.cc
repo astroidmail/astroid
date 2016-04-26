@@ -273,6 +273,8 @@ namespace Astroid {
         write_back_config ();
       }
     }
+
+    /* read notmuch config */
     boost::property_tree::read_ini (
       config.get<std::string> ("astroid.notmuch_config"),
       notmuch_config);
@@ -357,16 +359,28 @@ namespace Astroid {
     } catch (const boost::property_tree::ptree_bad_path &ex) { }
 
     /* generalized editor */
-    try {
-      config.get<string> ("editor.cmd");
+    if (version < 4) {
+      try {
+        string gvim = config.get<string> ("editor.gvim.cmd");
+        string args = config.get<string> ("editor.gvim.args");
 
-    } catch (const boost::property_tree::ptree_bad_path &ex) {
+        string new_gvim = gvim + " -geom 10x10 --servername %2 --socketid %3 " + args + " %1";
 
-      log << error << "config: editor has been generalized, you can delete your old gvim.cmd and gvim.args and set editor.cmd in stead." << endl;
 
-      config.put<string> ("editor.cmd", "gvim -geom 10x10 --servername %2 --socketid %3 -f -c 'set ft=mail' '+set fileencoding=utf-8' '+set ff=unix' '+set enc=utf-8' %1");
+        log << warn << "config: editor has been generalized, editor.cmd replaces gvim.cmd and gvim.args." << endl;
 
+        config.put<string> ("editor.cmd", new_gvim);
+
+        changed = true;
+      } catch (const boost::property_tree::ptree_bad_path &ex) { }
     }
+
+    try {
+      string gvim = config.get<string> ("editor.gvim.cmd");
+      string args = config.get<string> ("editor.gvim.args");
+
+      log << warn << "editor.gvim.cmd and editor.gvim.args are replaced by editor.cmd, and may be removed." << endl;
+    } catch (const boost::property_tree::ptree_bad_path &ex) { }
 
     if (version < CONFIG_VERSION) {
       config.put ("astroid.config.version", CONFIG_VERSION);
