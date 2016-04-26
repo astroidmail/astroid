@@ -17,18 +17,18 @@
 
 Check out the [tour of how to install, configure and use astroid](https://github.com/gauteh/astroid/wiki). Brief instructions are provided [below](#acquiring-astroid).
 
-## main features include:
-* (done)        fully operatable by keyboard only - but accept mouse clicks
-*               lightweight.
-* (partly done) a graphical interface, inspired by sup. but allow buffers to be separeted and placed in several windows.
-* (done)        allow several simultaneous windows.
-* (done)        display html mail and some attachments inline.
-* (done)        render math using MathJax
-* (done)        syntax highlighting between triple-backtick tags (markdown style)
-* (done)        themable and configurable
-* (in progress) built-in crypto (gpg,..) support.
-*               editors: embed vim or emacs (or anything else that supports XEmbed)
-* (linux)       Support: Platforms supported by notmuch and other libraries, specifically: Linux, *BSD, Mac, Windows..
+## main features and goals include:
+* fully operatable by keyboard only - but accept mouse clicks
+* lightweight and fast!
+* graphical interface, inspired by sup. but allow buffers to be separeted and placed in several windows.
+* allow several simultaneous windows.
+* display html mail and some attachments inline.
+* render math using MathJax
+* syntax highlighting between triple-backtick tags (markdown style)
+* themable and configurable
+* built-in crypto (gpg,..) support (in progress).
+* editors: embed vim or emacs (or anything else that supports XEmbed)
+* and more...
 
 ### more screenshots
   <a href="https://raw.githubusercontent.com/gauteh/astroid/master/doc/astroid-thread-view.png">
