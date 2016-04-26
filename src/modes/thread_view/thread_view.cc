@@ -924,7 +924,7 @@ namespace Astroid {
 
       webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (av), "src",
           Gravatar::get_image_uri (se.email (), Gravatar::Default::RETRO, 48).c_str()
-          , &err);
+          , (err = NULL, &err));
 
       g_object_unref (av);
     }
