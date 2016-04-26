@@ -343,7 +343,7 @@ namespace Astroid {
       log << warn << "config: astroid now reads standard notmuch options from notmuch config, it is configured through: 'astroid.notmuch_config' and is now set to the default: ~/.notmuch-config. please validate!" << endl;
     }
 
-    if (version < 4) {
+    if (version < 5) {
       /* check accounts signature */
       ptree apt = config.get_child ("accounts");
 
