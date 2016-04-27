@@ -250,8 +250,8 @@ source = (
           Glob('src/modes/thread_view/*.cc', strings = True) +
           Glob('src/modes/editor/*.cc', strings = True) +
           Glob('src/actions/*.cc', strings = True) +
-          Glob('src/utils/*.cc', strings = True)
-
+          Glob('src/utils/*.cc', strings = True) +
+          Glob('src/utils/gmime/*.c', strings = True)
           )
 
 source.remove ('src/main.cc')
