@@ -181,6 +181,7 @@ url_stop_at_brace (const char *in, size_t so)
 gboolean
 url_addrspec_start (const char *in, const char *pos, const char *inend, urlmatch_t *match)
 {
+  (void) (inend);
 	register const char *inptr = pos;
 	
 	g_assert (*inptr == '@');
@@ -278,6 +279,7 @@ url_addrspec_end (const char *in, const char *pos, const char *inend, urlmatch_t
 gboolean
 url_file_start (const char *in, const char *pos, const char *inend, urlmatch_t *match)
 {
+  (void) (inend);
 	match->um_so = (pos - in);
 	
 	return TRUE;
@@ -310,6 +312,7 @@ url_file_end (const char *in, const char *pos, const char *inend, urlmatch_t *ma
 gboolean
 url_web_start (const char *in, const char *pos, const char *inend, urlmatch_t *match)
 {
+  (void) (inend);
 	match->um_so = (pos - in);
 	
 	return TRUE;

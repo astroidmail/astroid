@@ -110,6 +110,7 @@ g_mime_filter_html_bq_get_type (void)
 			sizeof (GMimeFilterHTMLBQ),
 			0,    /* n_preallocs */
 			(GInstanceInitFunc) g_mime_filter_html_bq_init,
+      NULL,
 		};
 
 		type = g_type_register_static (GMIME_TYPE_FILTER, "GMimeFilterHTMLBQ", &info, 0);
@@ -138,6 +139,7 @@ g_mime_filter_html_bq_class_init (GMimeFilterHTMLBQClass *klass)
 static void
 g_mime_filter_html_bq_init (GMimeFilterHTMLBQ *filter, GMimeFilterHTMLBQClass *klass)
 {
+  (void) (klass);
 	filter->scanner = url_scanner_new ();
 
 	filter->flags = 0;
@@ -330,6 +332,7 @@ static void
 html_convert (GMimeFilter *filter, char *in, size_t inlen, size_t prespace,
 	      char **out, size_t *outlen, size_t *outprespace, gboolean flush)
 {
+  (void) (prespace);
 	GMimeFilterHTMLBQ *html = (GMimeFilterHTMLBQ *) filter;
 	register char *inptr, *outptr;
 	char *start, *outend;
