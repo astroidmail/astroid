@@ -207,8 +207,10 @@ namespace Astroid {
 
     /* editor->start_editor_when_ready = true; */
 
-    switch_signature->signal_state_changed ().connect (
-        sigc::mem_fun (this, &EditMessage::switch_signature_changed));
+    switch_signature->property_active().signal_changed ().connect (
+        sigc::mem_fun (*this, &EditMessage::switch_signature_set));
+
+    reset_signature ();
 
     /* register keys {{{ */
     keys.title = "Edit mode";
@@ -252,10 +254,13 @@ namespace Astroid {
         [&] (Key) {
           /* cycle through from combo box */
           if (!message_sent && !sending_in_progress.load()) {
-            int i = from_combo->get_active_row_number ();
-            if (i >= (static_cast<int>(from_store->children().size())-1)) i = 0;
-            else i++;
-            from_combo->set_active (i);
+            if (from_store->children().size() > 1) {
+              int i = from_combo->get_active_row_number ();
+              if (i >= (static_cast<int>(from_store->children().size())-1)) i = 0;
+              else i++;
+              from_combo->set_active (i);
+              reset_signature ();
+            }
           }
 
           return true;
@@ -323,8 +328,7 @@ namespace Astroid {
           auto row = *iter;
           Account * a = row[from_columns.account];
           if (a->has_signature) {
-            switch_signature->set_state (!switch_signature->get_state ());
-            switch_signature_manual_set = true;
+            switch_signature->set_state (!switch_signature->get_active ());
           }
           return true;
         });
@@ -496,6 +500,8 @@ namespace Astroid {
   }
 
   void EditMessage::set_from (Account * a) {
+    int rn = from_combo->get_active_row_number ();
+
     for (Gtk::TreeRow row : from_store->children ()) {
       if (row[from_columns.account] == a) {
         from_combo->set_active (row);
@@ -503,15 +509,25 @@ namespace Astroid {
       }
     }
 
-    switch_signature->set_sensitive (a->has_signature);
-    if (a->has_signature && !switch_signature_manual_set) {
-      switch_signature->set_state (a->signature_default_on);
+    bool same_account = (rn == from_combo->get_active_row_number ());
+    log << debug << "same account: " << same_account << endl;
+    if (!same_account) {
+      reset_signature ();
     }
   }
 
+  void EditMessage::reset_signature () {
+    /* should not be run unless the account has been changed */
+    auto it = from_combo->get_active ();
+    Account * a = (*it)[from_columns.account];
 
-  void EditMessage::switch_signature_changed (const Gtk::StateType &) {
-    switch_signature_manual_set = true;
+    switch_signature->set_sensitive (a->has_signature);
+    switch_signature->set_state (a->has_signature && a->signature_default_on);
+  }
+
+
+  void EditMessage::switch_signature_set () {
+    log << debug << "got sig: " << switch_signature->get_active () << endl;
     prepare_message ();
     read_edited_message ();
   }
@@ -799,7 +815,7 @@ namespace Astroid {
       c->add_attachment (a);
     }
 
-    if (c->account->has_signature && switch_signature->get_state ()) {
+    if (c->account->has_signature && switch_signature->get_active ()) {
       c->include_signature = true;
     } else {
       c->include_signature = false;

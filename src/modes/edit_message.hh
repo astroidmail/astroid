@@ -45,8 +45,8 @@ namespace Astroid {
       bool editor_active = false;
       void activate_editor ();
 
-      void switch_signature_changed (const Gtk::StateType &);
-      bool switch_signature_manual_set = false;
+      void switch_signature_set ();
+      void reset_signature ();
 
       ustring msg_id;
 
