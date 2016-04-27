@@ -97,8 +97,8 @@ Also check out #astroid or #notmuch on irc.freenode.net.
   using [notmuch] as a backend.
 
   Some parts of the user interface and layout have been copied from or has been
-  inspired by the [Geary] mail client. One of the other notmuch email clients,
-  [ner], has also used for inspiration and code.
+  inspired by the [Geary] mail client. Also, some inspiration and code stems from
+  [ner], another notmuch email client.
 
 [sup]: http://supmua.org
 [notmuch]: http://notmuchmail.org/
