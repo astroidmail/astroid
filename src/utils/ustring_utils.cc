@@ -3,6 +3,7 @@
 # include <algorithm>
 
 # include "astroid.hh"
+# include "proto.hh"
 # include "ustring_utils.hh"
 # include "vector_utils.hh"
 
