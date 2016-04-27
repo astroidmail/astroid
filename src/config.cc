@@ -202,7 +202,7 @@ namespace Astroid {
     default_config.put ("thread_view.mathjax.enable", true);
 
     // MathJax.js will be added to this uri when the script is loaded
-    default_config.put ("thread_view.mathjax.uri_prefix", "https://cdn.mathjax.org/mathjax/latest/");
+    default_config.put ("thread_view.mathjax.uri_prefix", "https://cdn.mathjax.org/mathjax/2.6-latest/");
 
     // a comma-separated list of tags which mathjax is enabled for, if empty,
     // allow for all messages.
