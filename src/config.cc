@@ -134,6 +134,7 @@ namespace Astroid {
 
       default_config.put ("accounts.charlie.signature_file", "");
       default_config.put ("accounts.charlie.signature_default_on", true);
+      default_config.put ("accounts.charlie.signature_attach", false);
 
       /* default searches, also only set if initial */
       default_config.put("startup.queries.inbox", "tag:inbox");
