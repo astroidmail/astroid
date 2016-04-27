@@ -243,19 +243,23 @@ vfd.close ()
 
 env.Append (CPPPATH = 'src')
 source = (
-
           Glob('src/*.cc', strings = True) +
           Glob('src/modes/*.cc', strings = True) +
           Glob('src/modes/thread_index/*.cc', strings = True) +
           Glob('src/modes/thread_view/*.cc', strings = True) +
           Glob('src/modes/editor/*.cc', strings = True) +
           Glob('src/actions/*.cc', strings = True) +
-          Glob('src/utils/*.cc', strings = True) +
-          Glob('src/utils/gmime/*.c', strings = True)
+          Glob('src/utils/*.cc', strings = True)
           )
-
 source.remove ('src/main.cc')
-source_objs = [env.Object (s) for s in source]
+
+cenv = env.Clone ()
+cenv['CPPFLAGS'].remove ('-std=c++11')
+
+csource = (Glob('src/utils/gmime/*.c', strings = True))
+
+source_objs =   [env.Object (s) for s in source]
+source_objs +=  [cenv.Object (s) for s in csource]
 
 Export ('source')
 Export ('source_objs')
