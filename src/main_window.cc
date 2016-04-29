@@ -9,6 +9,7 @@
 # include "main_window.hh"
 # include "modes/mode.hh"
 # include "modes/thread_index/thread_index.hh"
+# include "modes/saved_searches.hh"
 # include "modes/help_mode.hh"
 # include "modes/edit_message.hh"
 # include "modes/log_view.hh"
@@ -219,6 +220,13 @@ namespace Astroid {
         "Search",
         [&] (Key) {
           enable_command (CommandBar::CommandMode::Search, "", NULL);
+          return true;
+        });
+
+    keys.register_key ("C-f", "main_window.show_saved_searches",
+        "Show saved searches",
+        [&] (Key) {
+          add_mode (new SavedSearches (this));
           return true;
         });
 
