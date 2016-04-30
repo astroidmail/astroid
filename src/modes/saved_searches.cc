@@ -97,6 +97,40 @@ namespace Astroid {
           return true;
         });
 
+    keys.register_key ("d",
+        "searches.delete",
+        "Delete saved query",
+        [&] (Key) {
+          Gtk::TreePath path;
+          Gtk::TreeViewColumn *c;
+          tv.get_cursor (path, c);
+
+          Gtk::TreeIter it = store->get_iter (path);
+          if (it) {
+            if (!(*it)[m_columns.m_col_saved]) return true;
+
+            auto row = *it;
+            ustring query = row[m_columns.m_col_query];
+
+            ptree s = load_searches ();
+            for (auto it = s.begin (); it != s.end ();) {
+              if (it->second.data() == query) {
+                log << info << "searches: deleting: " << query << endl;
+
+                it = s.erase (it);
+              } else {
+                it++;
+              }
+            }
+
+            write_back_searches (s);
+
+          }
+
+          return true;
+        });
+
+
     keys.register_key ("J",
         "searches.page_down",
         "Page down",
@@ -166,6 +200,12 @@ namespace Astroid {
 
     SavedSearches::m_reload.connect (
         sigc::mem_fun (this, &SavedSearches::reload));
+
+    astroid->actions->signal_thread_changed ().connect (
+        sigc::mem_fun (this, &SavedSearches::on_thread_changed));
+
+    astroid->actions->signal_refreshed ().connect (
+        sigc::mem_fun (this, &SavedSearches::reload));
   }
 
   void SavedSearches::reload () {
@@ -180,12 +220,13 @@ namespace Astroid {
     tv.set_cursor (path);
   }
 
-  void SavedSearches::add_query (ustring name, ustring query) {
+  void SavedSearches::add_query (ustring name, ustring query, bool saved) {
     auto iter = store->append();
     auto row  = *iter;
 
     row[m_columns.m_col_name] = name;
     row[m_columns.m_col_query] = query;
+    row[m_columns.m_col_saved] = saved;
 
     unsigned int total_messages, unread_messages;
 
@@ -210,6 +251,10 @@ namespace Astroid {
 
     row[m_columns.m_col_unread_messages] = ustring::compose ("(unread: %1)", unread_messages);
     row[m_columns.m_col_total_messages] = ustring::compose ("(total: %1)", total_messages);
+  }
+
+  void SavedSearches::on_thread_changed (Db *, ustring) {
+    refresh_stats ();
   }
 
   void SavedSearches::refresh_stats () {
@@ -271,7 +316,7 @@ namespace Astroid {
     row[m_columns.m_col_name] = "<b>Saved searches</b>";
     row[m_columns.m_col_description] = true;
 
-    searches = load_searches ();
+    ptree searches = load_searches ();
 
     /* load start up queries */
     for (auto &kv : searches) {
@@ -281,7 +326,7 @@ namespace Astroid {
       if (name == "none") name = "";
 
       log << info << "saved searches: got query: " << name << ": " << query << endl;
-      add_query (name, query);
+      add_query (name, query, true);
     }
   }
 
@@ -300,6 +345,7 @@ namespace Astroid {
   void SavedSearches::write_back_searches (ptree s) {
     log << info << "searches: writing back saved searches.." << endl;
     write_json (astroid->standard_paths().searches_file.c_str (), s);
+    m_reload ();
   }
 
   void SavedSearches::save_query (ustring q) {
@@ -308,8 +354,6 @@ namespace Astroid {
     ptree s = load_searches ();
     s.add ("none", q);
     write_back_searches (s);
-
-    m_reload ();
   }
 
   void SavedSearches::grab_modal () {

@@ -15,7 +15,7 @@ namespace Astroid {
 
       void load_startup_queries ();
       void load_saved_searches ();
-      void add_query (ustring, ustring);
+      void add_query (ustring, ustring, bool saved = false);
 
       void reload ();
       void refresh_stats ();
@@ -23,13 +23,12 @@ namespace Astroid {
       static void save_query (ustring query);
 
     private:
-      ptree searches;
-
       static ptree load_searches ();
       static void write_back_searches (ptree);
 
       static Glib::Dispatcher m_reload;
 
+      void on_thread_changed (Db *, ustring);
 
     protected:
       class ModelColumns : public Gtk::TreeModel::ColumnRecord
@@ -39,6 +38,7 @@ namespace Astroid {
           ModelColumns()
           {
             add (m_col_description);
+            add (m_col_saved);
             add (m_col_name);
             add (m_col_query);
             add (m_col_unread_messages);
@@ -46,6 +46,7 @@ namespace Astroid {
           }
 
           Gtk::TreeModelColumn<bool>          m_col_description;
+          Gtk::TreeModelColumn<bool>          m_col_saved;
           Gtk::TreeModelColumn<Glib::ustring> m_col_name;
           Gtk::TreeModelColumn<Glib::ustring> m_col_query;
           Gtk::TreeModelColumn<Glib::ustring> m_col_unread_messages;
