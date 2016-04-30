@@ -13,13 +13,6 @@ namespace Astroid {
       void grab_modal () override;
       void release_modal () override;
 
-      void load_startup_queries ();
-      void load_saved_searches ();
-      void add_query (ustring, ustring, bool saved = false);
-
-      void reload ();
-      void refresh_stats ();
-
       static void save_query (ustring query);
 
     private:
@@ -29,6 +22,12 @@ namespace Astroid {
       static Glib::Dispatcher m_reload;
 
       void on_thread_changed (Db *, ustring);
+      void load_startup_queries ();
+      void load_saved_searches ();
+      void add_query (ustring, ustring, bool saved = false);
+
+      void reload ();
+      void refresh_stats ();
 
     protected:
       class ModelColumns : public Gtk::TreeModel::ColumnRecord
