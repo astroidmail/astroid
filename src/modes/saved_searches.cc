@@ -259,6 +259,8 @@ namespace Astroid {
 
   void SavedSearches::refresh_stats () {
     for (auto row : store->children ()) {
+      if (row[m_columns.m_col_description]) continue;
+
       ustring query = row[m_columns.m_col_query];
 
       unsigned int total_messages, unread_messages;
