@@ -17,6 +17,7 @@ namespace Astroid {
       void load_saved_searches ();
       void add_query (ustring, ustring);
 
+      void reload ();
       void refresh_stats ();
 
       static void save_query (ustring query);
@@ -26,6 +27,8 @@ namespace Astroid {
 
       static ptree load_searches ();
       static void write_back_searches (ptree);
+
+      static Glib::Dispatcher m_reload;
 
 
     protected:

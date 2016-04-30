@@ -13,6 +13,7 @@ using boost::property_tree::ptree;
 using std::endl;
 
 namespace Astroid {
+  Glib::Dispatcher SavedSearches::m_reload;
 
   SavedSearches::SavedSearches (MainWindow * mw) : Mode (mw) {
     set_label ("Saved searches");
@@ -160,10 +161,23 @@ namespace Astroid {
 
     /* }}} */
 
+    reload ();
+    tv.set_cursor (Gtk::TreePath("1"));
+
+    SavedSearches::m_reload.connect (
+        sigc::mem_fun (this, &SavedSearches::reload));
+  }
+
+  void SavedSearches::reload () {
+    Gtk::TreePath path;
+    Gtk::TreeViewColumn *c;
+    tv.get_cursor (path, c);
+
+    store->clear ();
     load_startup_queries ();
     load_saved_searches ();
 
-    tv.set_cursor (Gtk::TreePath("1"));
+    tv.set_cursor (path);
   }
 
   void SavedSearches::add_query (ustring name, ustring query) {
@@ -294,6 +308,8 @@ namespace Astroid {
     ptree s = load_searches ();
     s.add ("none", q);
     write_back_searches (s);
+
+    m_reload ();
   }
 
   void SavedSearches::grab_modal () {
