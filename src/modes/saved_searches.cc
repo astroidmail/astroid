@@ -6,6 +6,10 @@
 # include "thread_index/thread_index.hh"
 # include "db.hh"
 
+# include <boost/property_tree/ptree.hpp>
+# include <boost/property_tree/json_parser.hpp>
+
+using boost::property_tree::ptree;
 using std::endl;
 
 namespace Astroid {
@@ -19,7 +23,16 @@ namespace Astroid {
     store = Gtk::ListStore::create (m_columns);
     tv.set_model (store);
 
-    tv.append_column ("Name", m_columns.m_col_name);
+    /* tv.append_column ("Name", m_columns.m_col_name); */
+
+    Gtk::CellRendererText * renderer_text = Gtk::manage (new Gtk::CellRendererText);
+    /* renderer_text->property_family().set_value ("monospace"); */
+    int cols_count = tv.append_column ("Name", *renderer_text);
+    Gtk::TreeViewColumn * pcolumn = tv.get_column (cols_count -1);
+    if (pcolumn) {
+      pcolumn->add_attribute (renderer_text->property_markup(), m_columns.m_col_name);
+    }
+
     tv.append_column ("Query", m_columns.m_col_query);
     tv.append_column ("Unread messages", m_columns.m_col_unread_messages);
     tv.append_column ("Total messages ", m_columns.m_col_total_messages);
@@ -45,9 +58,15 @@ namespace Astroid {
           tv.get_cursor (path, c);
 
           path.next ();
-          Gtk::TreeIter it = store->get_iter (path);
 
-          if (it) {
+          while (path) {
+            Gtk::TreeIter it = store->get_iter (path);
+            if (!it) return true;
+            if (!(*it)[m_columns.m_col_description]) break;
+            path.next ();
+          }
+
+          if (path) {
             tv.set_cursor (path);
           }
 
@@ -61,7 +80,16 @@ namespace Astroid {
           Gtk::TreePath path;
           Gtk::TreeViewColumn *c;
           tv.get_cursor (path, c);
-          path.prev ();
+
+          if (!path.prev ()) return true;
+
+          while (path) {
+            Gtk::TreeIter it = store->get_iter (path);
+            if (!it) return true;
+            if (!(*it)[m_columns.m_col_description]) break;
+            if (!path.prev ()) return true;
+          }
+
           if (path) {
             tv.set_cursor (path);
           }
@@ -125,7 +153,7 @@ namespace Astroid {
           ustring name  = row[m_columns.m_col_name];
 
           Mode * ti = new ThreadIndex (main_window, query, name);
-          main_window->add_mode (ti); 
+          main_window->add_mode (ti);
 
           return true;
         });
@@ -133,8 +161,9 @@ namespace Astroid {
     /* }}} */
 
     load_startup_queries ();
+    load_saved_searches ();
 
-    tv.set_cursor (Gtk::TreePath("0"));
+    tv.set_cursor (Gtk::TreePath("1"));
   }
 
   void SavedSearches::add_query (ustring name, ustring query) {
@@ -165,11 +194,50 @@ namespace Astroid {
     /* st = */ notmuch_query_count_messages_st (unread_q, &unread_messages); // destructive
     notmuch_query_destroy (unread_q);
 
-    row[m_columns.m_col_total_messages] = total_messages;
-    row[m_columns.m_col_unread_messages] = unread_messages;
+    row[m_columns.m_col_unread_messages] = ustring::compose ("(unread: %1)", unread_messages);
+    row[m_columns.m_col_total_messages] = ustring::compose ("(total: %1)", total_messages);
+  }
+
+  void SavedSearches::refresh_stats () {
+    for (auto row : store->children ()) {
+      ustring query = row[m_columns.m_col_query];
+
+      unsigned int total_messages, unread_messages;
+
+      /* get stats */
+      Db db;
+      notmuch_query_t * query_t =  notmuch_query_create (db.nm_db, query.c_str ());
+      for (ustring & t : db.excluded_tags) {
+        notmuch_query_add_tag_exclude (query_t, t.c_str());
+      }
+      notmuch_query_set_omit_excluded (query_t, NOTMUCH_EXCLUDE_TRUE);
+      /* st = */ notmuch_query_count_messages_st (query_t, &total_messages); // destructive
+      notmuch_query_destroy (query_t);
+
+      ustring unread_q_s = "(" + query + ") AND tag:unread";
+      notmuch_query_t * unread_q = notmuch_query_create (db.nm_db, unread_q_s.c_str());
+      for (ustring & t : db.excluded_tags) {
+        notmuch_query_add_tag_exclude (unread_q, t.c_str());
+      }
+      notmuch_query_set_omit_excluded (unread_q, NOTMUCH_EXCLUDE_TRUE);
+      /* st = */ notmuch_query_count_messages_st (unread_q, &unread_messages); // destructive
+      notmuch_query_destroy (unread_q);
+
+      row[m_columns.m_col_unread_messages] = ustring::compose ("(unread: %1)", unread_messages);
+      row[m_columns.m_col_total_messages] = ustring::compose ("(total: %1)", total_messages);
+    }
   }
 
   void SavedSearches::load_startup_queries () {
+    /* add description */
+    auto iter = store->append();
+    auto row  = *iter;
+
+    row[m_columns.m_col_name] = "<b>Startup queries</b>";
+    row[m_columns.m_col_description] = true;
+
+
+    /* load start up queries */
     ptree qpt = astroid->config ("startup.queries");
 
     for (const auto &kv : qpt) {
@@ -179,6 +247,53 @@ namespace Astroid {
       log << info << "saved searches: got query: " << name << ": " << query << endl;
       add_query (name, query);
     }
+  }
+
+  void SavedSearches::load_saved_searches () {
+    /* add description */
+    auto iter = store->append();
+    auto row  = *iter;
+
+    row[m_columns.m_col_name] = "<b>Saved searches</b>";
+    row[m_columns.m_col_description] = true;
+
+    searches = load_searches ();
+
+    /* load start up queries */
+    for (auto &kv : searches) {
+      ustring name = kv.first;
+      ustring query = kv.second.data();
+
+      if (name == "none") name = "";
+
+      log << info << "saved searches: got query: " << name << ": " << query << endl;
+      add_query (name, query);
+    }
+  }
+
+  ptree SavedSearches::load_searches () {
+    ptree s;
+
+    if (is_regular_file (astroid->standard_paths().searches_file))
+    {
+      log << info << "searches: loading saved searches.." << endl;
+      read_json (astroid->standard_paths().searches_file.c_str(), s);
+    }
+
+    return s;
+  }
+
+  void SavedSearches::write_back_searches (ptree s) {
+    log << info << "searches: writing back saved searches.." << endl;
+    write_json (astroid->standard_paths().searches_file.c_str (), s);
+  }
+
+  void SavedSearches::save_query (ustring q) {
+    log << info << "searches: adding query: " << q << endl;
+
+    ptree s = load_searches ();
+    s.add ("none", q);
+    write_back_searches (s);
   }
 
   void SavedSearches::grab_modal () {

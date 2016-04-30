@@ -77,6 +77,9 @@ namespace Astroid {
       }
     }
 
+    /* searches file */
+    std_paths.searches_file = std_paths.config_dir / path("searches");
+
     /* default data */
     char * data = getenv ("XDG_DATA_HOME");
     if (data == NULL) {
@@ -100,6 +103,7 @@ namespace Astroid {
     } else {
       std_paths.runtime_dir = path(runtime) / path("astroid");
     }
+
   }
 
   ptree Config::setup_default_config (bool initial) {
@@ -283,6 +287,7 @@ namespace Astroid {
       config.get<std::string> ("astroid.notmuch_config"),
       notmuch_config);
   }
+
 
   bool Config::check_config (ptree new_config) {
     bool changed = false;
