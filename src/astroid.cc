@@ -49,6 +49,10 @@ namespace Astroid {
     Glib::get_charset(charset);
     log << debug << "utf8: " << Glib::get_charset () << ", " << charset << endl;
 
+    if (!Glib::get_charset()) {
+      log << error << "astroid needs an UTF-8 locale! this is probably not going to work." << endl;
+    }
+
     /* user agent */
     user_agent = ustring::compose ("astroid/%1 (https://github.com/gauteh/astroid)", Astroid::version);
 

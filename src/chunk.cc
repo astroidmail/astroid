@@ -7,6 +7,7 @@
 
 # include <glib.h>
 # include <gmime/gmime.h>
+# include "utils/gmime/gmime-filter-html-bq.h"
 
 # include "astroid.hh"
 # include "message_thread.hh"
@@ -217,7 +218,8 @@ namespace Astroid {
         guint32 html_filter_flags = GMIME_FILTER_HTML_CONVERT_NL |
                                     GMIME_FILTER_HTML_CONVERT_SPACES |
                                     GMIME_FILTER_HTML_CONVERT_URLS |
-                                    GMIME_FILTER_HTML_CONVERT_ADDRESSES ;
+                                    GMIME_FILTER_HTML_CONVERT_ADDRESSES |
+                                    GMIME_FILTER_HTML_BQ_BLOCKQUOTE_CITATION ;
 
         /* convert encoding */
         GMimeContentEncoding enc = g_mime_data_wrapper_get_encoding (content);
@@ -246,7 +248,7 @@ namespace Astroid {
         if (html) {
 
           GMimeFilter * html_filter;
-          html_filter = g_mime_filter_html_new (html_filter_flags, cite_color);
+          html_filter = g_mime_filter_html_bq_new (html_filter_flags, cite_color);
           g_mime_stream_filter_add (GMIME_STREAM_FILTER(filter_stream),
                                   html_filter);
           g_object_unref (html_filter);

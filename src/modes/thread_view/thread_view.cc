@@ -18,7 +18,6 @@
 # include "chunk.hh"
 # include "db.hh"
 # include "utils/utils.hh"
-# include "utils/mail_quote.hh"
 # include "utils/address.hh"
 # include "utils/vector_utils.hh"
 # include "utils/gravatar.hh"
@@ -1091,7 +1090,6 @@ namespace Astroid {
         "id");
 
     ustring body = c->viewable_text (true);
-    MailQuotes::filter_quotes (body);
 
     if (code_is_on) {
       if (message->is_patch ()) {
