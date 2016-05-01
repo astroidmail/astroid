@@ -385,6 +385,9 @@ namespace Astroid {
 
     row[m_columns.m_col_name] = "<b>Search history</b>";
     row[m_columns.m_col_description] = true;
+
+    std::vector<std::pair<ustring, ustring>> history;
+
     for (auto &kv : searches.get_child ("history")) {
       ustring name = kv.first;
       ustring query = kv.second.data();
@@ -392,8 +395,13 @@ namespace Astroid {
       if (name == "none") name = "";
 
       log << debug << "saved searches, history: got query: " << name << ": " << query << endl;
-      add_query (name, query, false, true);
+      history.push_back (std::make_pair (name, query));
     }
+
+    for (auto it = history.rbegin (); it != history.rend (); ++it) {
+      add_query (it->first, it->second, false, true);
+    }
+
   }
 
   ptree SavedSearches::load_searches () {
