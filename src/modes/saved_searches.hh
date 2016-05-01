@@ -32,6 +32,8 @@ namespace Astroid {
       void reload ();
       void refresh_stats ();
 
+      int page_jump_rows;
+
     protected:
       class ModelColumns : public Gtk::TreeModel::ColumnRecord
       {

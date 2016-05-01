@@ -18,6 +18,8 @@ namespace Astroid {
   SavedSearches::SavedSearches (MainWindow * mw) : Mode (mw) {
     set_label ("Saved searches");
 
+    page_jump_rows = astroid->config("thread_index").get<int>("page_jump_rows");
+
     scroll.add (tv);
     pack_start (scroll);
 
@@ -192,8 +194,40 @@ namespace Astroid {
         "searches.page_down",
         "Page down",
         [&] (Key) {
-          auto adj = tv.get_vadjustment ();
-          adj->set_value (adj->get_value() + adj->get_step_increment ());
+          if (store->children().size() >= 2) {
+
+            Gtk::TreePath path;
+            Gtk::TreeViewColumn *c;
+            tv.get_cursor (path, c);
+
+            for (int i = 0; i < page_jump_rows; i++) {
+              if (!path) break;
+              path.next ();
+            }
+
+            /* skip headers */
+            while (path) {
+              Gtk::TreeIter it = store->get_iter (path);
+
+              if (!it) break; // we're at the end or something
+
+              if (!(*it)[m_columns.m_col_description]) break;
+
+              path.next ();
+            }
+
+            Gtk::TreeIter it = store->get_iter (path);
+
+            if (it) {
+              tv.set_cursor (path);
+            } else {
+              /* move to last */
+              auto it = store->children().end ();
+              auto p  = store->get_path (--it);
+              if (p) tv.set_cursor (p);
+            }
+          }
+
           return true;
         });
 
@@ -201,8 +235,34 @@ namespace Astroid {
         "searches.page_up",
         "Page up",
         [&] (Key) {
-          auto adj = tv.get_vadjustment ();
-          adj->set_value (adj->get_value() - adj->get_step_increment ());
+          Gtk::TreePath path;
+          Gtk::TreeViewColumn *c;
+          tv.get_cursor (path, c);
+          for (int i = 0; i < page_jump_rows; i++) {
+            if (!path) break;
+            path.prev ();
+          }
+
+          /* skip headers */
+          bool is_desc = true;
+          while (path) {
+            Gtk::TreeIter it = store->get_iter (path);
+            if (!it) break; // beyond first
+            if (!(*it)[m_columns.m_col_description]) {
+              is_desc = false;
+              break;
+            }
+            if (!path.prev ()) break; // probably at first
+          }
+
+          if (path && !is_desc) {
+            tv.set_cursor (path);
+          } else {
+            /* move to first */
+            auto p = Gtk::TreePath("1");
+            if (p) tv.set_cursor (p);
+          }
+
           return true;
         });
 
