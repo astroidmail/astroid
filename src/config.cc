@@ -235,6 +235,7 @@ namespace Astroid {
 
     /* saved searches */
     default_config.put ("saved_searches.save_history", true);
+    default_config.put ("saved_searches.history_lines_to_show", -1); /* -1 is all */
 
     return default_config;
   }

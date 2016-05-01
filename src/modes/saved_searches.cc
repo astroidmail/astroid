@@ -480,6 +480,10 @@ namespace Astroid {
       add_query (name, query, true);
     }
 
+    int history_lines = astroid->config ("saved_searches").get<int> ("history_lines_to_show");
+
+    if (history_lines == 0) return;
+
     /* load search history */
     iter = store->append();
     row  = *iter;
@@ -499,8 +503,14 @@ namespace Astroid {
       history.push_back (std::make_pair (name, query));
     }
 
+    int i = 0;
+
     for (auto it = history.rbegin (); it != history.rend (); ++it) {
+      if (!((history_lines < 0) || (i < history_lines))) break;
+
       add_query (it->first, it->second, false, true);
+
+      i++;
     }
 
   }
