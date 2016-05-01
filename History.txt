@@ -6,7 +6,8 @@
 * Signatures: Include per-account signatures (either included or
   attached).
 * Saved searches: Save a search with 'C-S', then browse saved searches
-  and stats with 'C-f'.
+  and stats with 'C-f'. You can also browse search history using Up
+  and Down in the search-bar.
 * All actions requiring write-access run in the background and wait for
   any reads to finish. All read operations need to wait for any ongoing
   write-operations to finish. All write-operations are therefore

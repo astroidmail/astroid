@@ -404,6 +404,27 @@ namespace Astroid {
 
   }
 
+  std::vector<ustring> SavedSearches::get_history () {
+    ptree searches = load_searches ();
+
+    /* load search history */
+    std::vector<ustring> history;
+
+    for (auto &kv : searches.get_child ("history")) {
+      ustring name = kv.first;
+      ustring query = kv.second.data();
+
+      if (name == "none") name = "";
+
+      log << debug << "saved searches, history: got query: " << name << ": " << query << endl;
+      history.push_back (query);
+    }
+
+    std::reverse (history.begin (), history.end ());
+
+    return history;
+  }
+
   ptree SavedSearches::load_searches () {
     ptree s;
 

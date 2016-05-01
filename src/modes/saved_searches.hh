@@ -16,6 +16,8 @@ namespace Astroid {
       static void save_query (ustring query);
       static void add_query_to_history (ustring query);
 
+      static std::vector<ustring> get_history ();
+
     private:
       static ptree load_searches ();
       static void write_back_searches (ptree);
