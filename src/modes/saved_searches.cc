@@ -105,6 +105,7 @@ namespace Astroid {
           Gtk::TreeViewColumn *c;
           tv.get_cursor (path, c);
 
+          bool changed = false;
           Gtk::TreeIter it = store->get_iter (path);
           if (it) {
 
@@ -114,7 +115,6 @@ namespace Astroid {
 
             if (row[m_columns.m_col_saved]) {
               ptree s = load_searches ().get_child ("saved");
-              bool changed = false;
 
               /* TODO: warning, this will delete the first occurence of the query */
               for (auto it = s.begin (); it != s.end ();) {
@@ -133,7 +133,6 @@ namespace Astroid {
 
             } else if (row[m_columns.m_col_history]) {
               ptree s = load_searches ().get_child ("history");
-              bool changed = false;
 
               /* TODO: warning, this will delete the first occurence of the query */
               for (auto it = s.begin (); it != s.end ();) {
@@ -149,6 +148,17 @@ namespace Astroid {
               }
 
               if (changed) write_back_searches (s);
+            }
+
+            if (changed) {
+              /* select new row */
+              path.prev ();
+              Gtk::TreeIter it = store->get_iter (path);
+              if (it) {
+                tv.set_cursor (path);
+              } else {
+                tv.set_cursor (Gtk::TreePath ("1"));
+              }
             }
 
 
