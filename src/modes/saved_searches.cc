@@ -107,25 +107,72 @@ namespace Astroid {
 
           Gtk::TreeIter it = store->get_iter (path);
           if (it) {
-            if (!(*it)[m_columns.m_col_saved]) return true;
 
             auto row = *it;
+            ustring name  = row[m_columns.m_col_name];
             ustring query = row[m_columns.m_col_query];
 
-            ptree s = load_searches ();
-            for (auto it = s.begin (); it != s.end ();) {
-              if (it->second.data() == query) {
-                log << info << "searches: deleting: " << query << endl;
+            if (row[m_columns.m_col_saved]) {
+              ptree s = load_searches ().get_child ("saved");
+              bool changed = false;
 
-                it = s.erase (it);
-              } else {
-                it++;
+              /* TODO: warning, this will delete the first occurence of the query */
+              for (auto it = s.begin (); it != s.end ();) {
+                if (it->second.data() == query) {
+                  log << info << "searches: deleting: " << name << ":" << query << endl;
+
+                  it = s.erase (it);
+                  changed = true;
+                  break;
+                } else {
+                  it++;
+                }
               }
+
+              if (changed) write_back_searches (s);
+
+            } else if (row[m_columns.m_col_history]) {
+              ptree s = load_searches ().get_child ("history");
+              bool changed = false;
+
+              /* TODO: warning, this will delete the first occurence of the query */
+              for (auto it = s.begin (); it != s.end ();) {
+                if (it->second.data() == query) {
+                  log << info << "searches: deleting: " << name << ":" << query << endl;
+
+                  it = s.erase (it);
+                  changed = true;
+                  break;
+                } else {
+                  it++;
+                }
+              }
+
+              if (changed) write_back_searches (s);
             }
 
-            write_back_searches (s);
 
           }
+
+          return true;
+        });
+
+    keys.register_key ("C",
+        "searches.clear_history",
+        "Clear search history",
+        [&] (Key) {
+
+          log << info << "searches: clearing search history.." << endl;
+
+          ptree s = load_searches ();
+          for (auto it = s.begin (); it != s.end ();) {
+            if (it->first == "history") {
+              it = s.erase (it);
+              break;
+            } else it++;
+          }
+
+          write_back_searches (s);
 
           return true;
         });
@@ -220,13 +267,14 @@ namespace Astroid {
     tv.set_cursor (path);
   }
 
-  void SavedSearches::add_query (ustring name, ustring query, bool saved) {
+  void SavedSearches::add_query (ustring name, ustring query, bool saved, bool history) {
     auto iter = store->append();
     auto row  = *iter;
 
     row[m_columns.m_col_name] = name;
     row[m_columns.m_col_query] = query;
     row[m_columns.m_col_saved] = saved;
+    row[m_columns.m_col_history] = history;
 
     unsigned int total_messages, unread_messages;
 
@@ -320,8 +368,8 @@ namespace Astroid {
 
     ptree searches = load_searches ();
 
-    /* load start up queries */
-    for (auto &kv : searches) {
+    /* load saved queries */
+    for (auto &kv : searches.get_child ("saved")) {
       ustring name = kv.first;
       ustring query = kv.second.data();
 
@@ -329,6 +377,22 @@ namespace Astroid {
 
       log << info << "saved searches: got query: " << name << ": " << query << endl;
       add_query (name, query, true);
+    }
+
+    /* load search history */
+    iter = store->append();
+    row  = *iter;
+
+    row[m_columns.m_col_name] = "<b>Search history</b>";
+    row[m_columns.m_col_description] = true;
+    for (auto &kv : searches.get_child ("history")) {
+      ustring name = kv.first;
+      ustring query = kv.second.data();
+
+      if (name == "none") name = "";
+
+      log << debug << "saved searches, history: got query: " << name << ": " << query << endl;
+      add_query (name, query, false, true);
     }
   }
 
@@ -339,6 +403,15 @@ namespace Astroid {
     {
       log << info << "searches: loading saved searches.." << endl;
       read_json (astroid->standard_paths().searches_file.c_str(), s);
+    }
+
+
+    if (s.count ("saved") == 0) {
+      s.put ("saved", "");
+    }
+
+    if (s.count ("history") == 0) {
+      s.put ("history", "");
     }
 
     return s;
@@ -354,8 +427,18 @@ namespace Astroid {
     log << info << "searches: adding query: " << q << endl;
 
     ptree s = load_searches ();
-    s.add ("none", q);
+    s.add ("saved.none", q);
     write_back_searches (s);
+  }
+
+  void SavedSearches::add_query_to_history (ustring q) {
+    bool save = astroid->config ("saved_searches").get<bool> ("save_history");
+
+    if (save) {
+      ptree s = load_searches ();
+      s.add ("history.none", q);
+      write_back_searches (s);
+    }
   }
 
   void SavedSearches::grab_modal () {

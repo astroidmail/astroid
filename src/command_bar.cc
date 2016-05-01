@@ -12,6 +12,7 @@
 # include "modes/mode.hh"
 # include "modes/thread_index/thread_index.hh"
 # include "modes/help_mode.hh"
+# include "modes/saved_searches.hh"
 # include "utils/utils.hh"
 # include "log.hh"
 # include "db.hh"
@@ -69,6 +70,9 @@ namespace Astroid {
       case CommandMode::Search:
         if (callback == NULL && (cmd.size() > 0)) {
           Mode * m = new ThreadIndex (main_window, cmd);
+
+          /* add to saved searches */
+          SavedSearches::add_query_to_history (cmd);
 
           main_window->add_mode (m);
         }
