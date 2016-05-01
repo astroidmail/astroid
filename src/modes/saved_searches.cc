@@ -99,6 +99,31 @@ namespace Astroid {
           return true;
         });
 
+    keys.register_key ("s",
+        "searches.save",
+        "Save recent query as saved search",
+        [&] (Key) {
+          Gtk::TreePath path;
+          Gtk::TreeViewColumn *c;
+          tv.get_cursor (path, c);
+
+          Gtk::TreeIter it = store->get_iter (path);
+          auto row = *it;
+
+          if (row[m_columns.m_col_history]) {
+            ustring query = row[m_columns.m_col_query];
+
+            log << "searches: saving query: " << query << endl;
+            save_query (query);
+
+          } else {
+            log << debug << "searches: entry not a recent search." << endl;
+            return true;
+          }
+
+          return true;
+        });
+
     keys.register_key ("d",
         "searches.delete",
         "Delete saved query",
@@ -116,7 +141,8 @@ namespace Astroid {
             ustring query = row[m_columns.m_col_query];
 
             if (row[m_columns.m_col_saved]) {
-              ptree s = load_searches ().get_child ("saved");
+              ptree sa = load_searches ();
+              ptree  s = sa.get_child ("saved");
 
               /* TODO: warning, this will delete the first occurence of the query */
               for (auto it = s.begin (); it != s.end ();) {
@@ -131,10 +157,13 @@ namespace Astroid {
                 }
               }
 
-              if (changed) write_back_searches (s);
+              sa.put_child ("saved", s);
+
+              if (changed) write_back_searches (sa);
 
             } else if (row[m_columns.m_col_history]) {
-              ptree s = load_searches ().get_child ("history");
+              ptree sa = load_searches ();
+              ptree  s = sa.get_child ("history");
 
               /* TODO: warning, this will delete the first occurence of the query */
               for (auto it = s.begin (); it != s.end ();) {
@@ -149,7 +178,9 @@ namespace Astroid {
                 }
               }
 
-              if (changed) write_back_searches (s);
+              sa.put_child ("history", s);
+
+              if (changed) write_back_searches (sa);
             }
 
             if (changed) {
