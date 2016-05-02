@@ -47,6 +47,7 @@ namespace Astroid {
       InternetAddressList * to ();
       InternetAddressList * cc ();
       InternetAddressList * bcc ();
+      InternetAddressList * other_to ();
 
       /* address list with all addresses in all headers beginning with to
        * and ending with from */
