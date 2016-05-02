@@ -237,6 +237,7 @@ namespace Astroid {
     default_config.put ("saved_searches.show_on_startup", true);
     default_config.put ("saved_searches.save_history", true);
     default_config.put ("saved_searches.history_lines_to_show", -1); /* -1 is all */
+    default_config.put ("saved_searches.history_lines", 1000); /* number of history lines to store */
 
     return default_config;
   }

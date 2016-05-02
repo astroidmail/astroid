@@ -550,11 +550,16 @@ namespace Astroid {
   void SavedSearches::destruct () {
     /* writing search history */
     bool save = astroid->config ("saved_searches").get<bool> ("save_history");
+    unsigned int maxh = astroid->config ("saved_searches").get<unsigned int>  ("history_lines");
 
     if (save) {
       log << debug << "searches: saving history.." << endl;
       ptree s = load_searches ();
       ptree h;
+
+      if (history.size () > maxh) {
+        history.erase (history.end () - maxh, history.end ());
+      }
 
       for (auto &k : history) {
         h.add ("none", k);
