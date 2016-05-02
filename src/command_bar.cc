@@ -548,6 +548,7 @@ namespace Astroid {
 
   void CommandBar::SearchCompletion::load_history () {
     history = SavedSearches::get_history ();
+    std::reverse (history.begin (), history.end ());
   }
 
   void CommandBar::SearchCompletion::load_tags (vector<ustring> _tags) {

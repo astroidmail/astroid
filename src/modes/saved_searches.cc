@@ -14,6 +14,7 @@ using std::endl;
 
 namespace Astroid {
   Glib::Dispatcher SavedSearches::m_reload;
+  std::vector<ustring> SavedSearches::history;
 
   SavedSearches::SavedSearches (MainWindow * mw) : Mode (mw) {
     set_label ("Saved searches");
@@ -162,25 +163,14 @@ namespace Astroid {
               if (changed) write_back_searches (sa);
 
             } else if (row[m_columns.m_col_history]) {
-              ptree sa = load_searches ();
-              ptree  s = sa.get_child ("history");
-
-              /* TODO: warning, this will delete the first occurence of the query */
-              for (auto it = s.begin (); it != s.end ();) {
-                if (it->second.data() == query) {
-                  log << info << "searches: deleting: " << name << ":" << query << endl;
-
-                  it = s.erase (it);
-                  changed = true;
+              log << info << "searches: deleting " << query << endl;
+              for (auto it = history.rbegin (); it != history.rend (); it++) {
+                if (*it == query) {
+                  history.erase (std::next(it).base ());
+                  m_reload ();
                   break;
-                } else {
-                  it++;
                 }
               }
-
-              sa.put_child ("history", s);
-
-              if (changed) write_back_searches (sa);
             }
 
             if (changed) {
@@ -207,15 +197,8 @@ namespace Astroid {
 
           log << info << "searches: clearing search history.." << endl;
 
-          ptree s = load_searches ();
-          for (auto it = s.begin (); it != s.end ();) {
-            if (it->first == "history") {
-              it = s.erase (it);
-              break;
-            } else it++;
-          }
-
-          write_back_searches (s);
+          history.clear ();
+          m_reload ();
 
           return true;
         });
@@ -491,24 +474,14 @@ namespace Astroid {
     row[m_columns.m_col_name] = "<b>Search history</b>";
     row[m_columns.m_col_description] = true;
 
-    std::vector<std::pair<ustring, ustring>> history;
 
-    for (auto &kv : searches.get_child ("history")) {
-      ustring name = kv.first;
-      ustring query = kv.second.data();
-
-      if (name == "none") name = "";
-
-      log << debug << "saved searches, history: got query: " << name << ": " << query << endl;
-      history.push_back (std::make_pair (name, query));
-    }
 
     int i = 0;
 
     for (auto it = history.rbegin (); it != history.rend (); ++it) {
       if (!((history_lines < 0) || (i < history_lines))) break;
 
-      add_query (it->first, it->second, false, true);
+      add_query ("", *it, false, true);
 
       i++;
     }
@@ -516,23 +489,6 @@ namespace Astroid {
   }
 
   std::vector<ustring> SavedSearches::get_history () {
-    ptree searches = load_searches ();
-
-    /* load search history */
-    std::vector<ustring> history;
-
-    for (auto &kv : searches.get_child ("history")) {
-      ustring name = kv.first;
-      ustring query = kv.second.data();
-
-      if (name == "none") name = "";
-
-      log << debug << "saved searches, history: got query: " << name << ": " << query << endl;
-      history.push_back (query);
-    }
-
-    std::reverse (history.begin (), history.end ());
-
     return history;
   }
 
@@ -572,11 +528,39 @@ namespace Astroid {
   }
 
   void SavedSearches::add_query_to_history (ustring q) {
+    history.push_back (q);
+    m_reload ();
+  }
+
+  void SavedSearches::init () {
+    ptree h = load_searches ().get_child ("history");
+    log << debug << "searches: loading history.." << endl;
+
+    for (auto &kv : h) {
+      ustring name = kv.first;
+      ustring query = kv.second.data();
+
+      if (name == "none") name = "";
+
+      log << debug << "saved searches, history: got query: " << name << ": " << query << endl;
+      history.push_back (query);
+    }
+  }
+
+  void SavedSearches::destruct () {
+    /* writing search history */
     bool save = astroid->config ("saved_searches").get<bool> ("save_history");
 
     if (save) {
+      log << debug << "searches: saving history.." << endl;
       ptree s = load_searches ();
-      s.add ("history.none", q);
+      ptree h;
+
+      for (auto &k : history) {
+        h.add ("none", k);
+      }
+
+      s.put_child ("history", h);
       write_back_searches (s);
     }
   }

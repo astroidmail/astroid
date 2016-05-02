@@ -24,6 +24,7 @@
 # include "main_window.hh"
 # include "modes/thread_index/thread_index.hh"
 # include "modes/edit_message.hh"
+# include "modes/saved_searches.hh"
 
 /* gmime */
 # include <gmime/gmime.h>
@@ -187,6 +188,9 @@ namespace Astroid {
       mailto->set_enabled (true);
       mailto->signal_activate ().connect (
           sigc::mem_fun (this, &Astroid::on_mailto_activate));
+
+      app->signal_shutdown().connect (sigc::mem_fun (this,
+            &Astroid::on_quit));
     }
 
     /* load config */
@@ -214,6 +218,7 @@ namespace Astroid {
     Date::init ();
     Db::init ();
     Keybindings::init ();
+    SavedSearches::init ();
 
     /* set up accounts */
     accounts = new AccountManager ();
@@ -256,6 +261,7 @@ namespace Astroid {
     /* set up static classes */
     Date::init ();
     Db::init ();
+    SavedSearches::init ();
 
     /* set up accounts */
     accounts = new AccountManager ();
@@ -274,15 +280,21 @@ namespace Astroid {
     return m_config->test;
   }
 
-  Astroid::~Astroid () {
+  void Astroid::on_quit () {
     /* clean up and exit */
+    SavedSearches::destruct ();
+
+    log << info << "astroid: goodbye!" << endl;
+  }
+
+  Astroid::~Astroid () {
+    /* this seems to only be run for tests */
     delete accounts;
     //if (contacts != NULL) delete contacts;
     delete m_config;
     delete poll;
     delete actions;
 
-    log << info << "astroid: goodbye!" << endl;
     log.del_out_stream (&cout);
   }
 
@@ -295,6 +307,12 @@ namespace Astroid {
     MainWindow * mw = new MainWindow (); // is freed / destroyed by application
 
     if (open_defaults) {
+      if (config ("saved_searches").get<bool>("show_on_startup")) {
+        Mode * s = new SavedSearches (mw);
+        s->invincible = true;
+        mw->add_mode (s);
+      }
+
       ptree qpt = config ("startup.queries");
 
       for (const auto &kv : qpt) {

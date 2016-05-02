@@ -18,9 +18,15 @@ namespace Astroid {
 
       static std::vector<ustring> get_history ();
 
+      /* called by astroid destructor to save search history */
+      static void init ();
+      static void destruct ();
+
     private:
       static ptree load_searches ();
       static void write_back_searches (ptree);
+
+      static std::vector<ustring> history;
 
       static Glib::Dispatcher m_reload;
 

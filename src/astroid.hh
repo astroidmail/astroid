@@ -51,6 +51,8 @@ namespace Astroid {
       void on_mailto_activate (const Glib::VariantBase &);
       refptr<Gio::SimpleAction> mailto;
       void send_mailto (MainWindow * mw, ustring);
+
+      void on_quit ();
   };
 
   /* globally available instance of our main Astroid-class */
