@@ -498,8 +498,54 @@ namespace Astroid {
     }
   }
 
+  InternetAddressList * Message::other_to () {
+    InternetAddressList * ret = internet_address_list_new ();
+    if (missing_content) {
+      Db db (Db::DATABASE_READ_ONLY);
+      db.on_message (mid, [&](notmuch_message_t * msg) {
+          const char *c;
+          c = notmuch_message_get_header (msg, "Delivered-To");
+          if (c != NULL && strlen(c)) {
+      		ustring s = c;
+            internet_address_list_append(ret, internet_address_list_parse_string (s.c_str()));
+          }
+          c = notmuch_message_get_header (msg, "Envelope-To");
+          if (c != NULL && strlen(c)) {
+      		ustring s = c;
+            internet_address_list_append(ret, internet_address_list_parse_string (s.c_str()));
+          }
+          c = notmuch_message_get_header (msg, "X-Original-To");
+          if (c != NULL && strlen(c)) {
+      		ustring s = c;
+            internet_address_list_append(ret, internet_address_list_parse_string (s.c_str()));
+          }
+        });
+      log << debug << "message: file value: " << ret << endl;
+    }
+	else {
+      const char *c;
+      c = g_mime_object_get_header (GMIME_OBJECT(message), "Delivered-To");
+      if (c != NULL && strlen(c)) {
+        ustring s = c;
+        internet_address_list_append(ret, internet_address_list_parse_string (s.c_str()));
+      }
+      c = g_mime_object_get_header (GMIME_OBJECT(message), "Envelope-To");
+      if (c != NULL && strlen(c)) {
+        ustring s = c;
+        internet_address_list_append(ret, internet_address_list_parse_string (s.c_str()));
+      }
+      c = g_mime_object_get_header (GMIME_OBJECT(message), "X-Original-To");
+      if (c != NULL && strlen(c)) {
+        ustring s = c;
+        internet_address_list_append(ret, internet_address_list_parse_string (s.c_str()));
+      }
+      log << debug << "message: cached value: " << ret << endl;
+	}
+    return ret;
+  }
+
   AddressList Message::all_to_from () {
-    return ( AddressList(to()) + AddressList(cc()) + AddressList(bcc()) + Address(sender) );
+    return ( AddressList(to()) + AddressList(cc()) + AddressList(bcc()) + Address(sender) + AddressList(other_to()) );
   }
 
   ustring Message::get_filename (ustring appendix) {
