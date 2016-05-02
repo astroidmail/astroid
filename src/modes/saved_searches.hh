@@ -40,6 +40,8 @@ namespace Astroid {
 
       int page_jump_rows;
 
+      void on_my_row_activated (const Gtk::TreeModel::Path &, Gtk::TreeViewColumn *);
+
     protected:
       class ModelColumns : public Gtk::TreeModel::ColumnRecord
       {

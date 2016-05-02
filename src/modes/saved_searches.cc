@@ -313,13 +313,14 @@ namespace Astroid {
 
           iter = store->get_iter (path);
           Gtk::ListStore::Row row = *iter;
-          /* return row[list_store->columns.thread]; */
 
-          ustring query = row[m_columns.m_col_query];
-          ustring name  = row[m_columns.m_col_name];
+          if (!row[m_columns.m_col_description]) {
+            ustring query = row[m_columns.m_col_query];
+            ustring name  = row[m_columns.m_col_name];
 
-          Mode * ti = new ThreadIndex (main_window, query, name);
-          main_window->add_mode (ti);
+            Mode * ti = new ThreadIndex (main_window, query, name);
+            main_window->add_mode (ti);
+          }
 
           return true;
         });
@@ -328,6 +329,9 @@ namespace Astroid {
 
     reload ();
     tv.set_cursor (Gtk::TreePath("1"));
+
+    tv.signal_row_activated ().connect (
+        sigc::mem_fun (this, &SavedSearches::on_my_row_activated));
 
     SavedSearches::m_reload.connect (
         sigc::mem_fun (this, &SavedSearches::reload));
@@ -338,6 +342,28 @@ namespace Astroid {
     astroid->actions->signal_refreshed ().connect (
         sigc::mem_fun (this, &SavedSearches::reload));
   }
+
+  void SavedSearches::on_my_row_activated (
+      const Gtk::TreeModel::Path &,
+      Gtk::TreeViewColumn *) {
+
+    Gtk::TreePath path;
+    Gtk::TreeViewColumn *c;
+    tv.get_cursor (path, c);
+    Gtk::TreeIter iter;
+
+    iter = store->get_iter (path);
+    Gtk::ListStore::Row row = *iter;
+
+    if (!row[m_columns.m_col_description]) {
+      ustring query = row[m_columns.m_col_query];
+      ustring name  = row[m_columns.m_col_name];
+
+      Mode * ti = new ThreadIndex (main_window, query, name);
+      main_window->add_mode (ti);
+    }
+  }
+
 
   void SavedSearches::reload () {
     Gtk::TreePath path;
