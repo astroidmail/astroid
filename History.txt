@@ -20,6 +20,7 @@
 * M. Dietrich: clock_format=year option to use clock format from this or
   previous year setting in thread-index.
 * M. Dietrich, G. Hope: Background color in thread-index configurable.
+* M. Dietrich: Use correct reply-to address for mailinglist-messages.
 * Gravatar is configurable.
 * #103: Drafts are saved on force close or quit by default.
 * C-v: duplicate and refine query.
