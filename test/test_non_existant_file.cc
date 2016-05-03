@@ -48,6 +48,7 @@ BOOST_AUTO_TEST_SUITE(Reading)
     /* test if file can be read now */
     Message * mm;
     BOOST_CHECK_NO_THROW (mm = new Message ("test/mail/test_mail/oos.eml"));
+    BOOST_CHECK ((AddressList (mm->other_to ()).str () == "ba@adsf.asd"));
     Astroid::log << test << "other: " << AddressList (mm->other_to ()).str () << endl;
     delete mm;
 

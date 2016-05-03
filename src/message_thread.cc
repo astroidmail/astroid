@@ -551,7 +551,7 @@ namespace Astroid {
   }
 
   AddressList Message::all_to_from () {
-    return ( AddressList(to()) + AddressList(cc()) + AddressList(bcc()) + Address(sender) + AddressList(other_to()) );
+    return ( AddressList(to()) + AddressList(cc()) + AddressList(bcc()) + AddressList(other_to()) + Address(sender) );
   }
 
   ustring Message::get_filename (ustring appendix) {
