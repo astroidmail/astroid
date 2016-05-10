@@ -190,13 +190,10 @@ static int
 citation_depth (const char *in, const char *inend)
 {
 	register const char *inptr = in;
-	int depth = 1;
-
-	if (*inptr++ != '>')
-		return 0;
+	int depth = 0;
 
 	/* check that it isn't an escaped From line */
-	if (!strncmp (inptr, "From", 4))
+	if (!strncmp (inptr, ">From", 5))
 		return 0;
 
 	while (inptr < inend && *inptr != '\n') {
@@ -369,25 +366,39 @@ html_convert (GMimeFilter *filter, char *in, size_t inlen, size_t prespace,
           char bq[33];
           int ldepth = html->prev_cit_depth > 999 ? 999 : html->prev_cit_depth;
 
-          g_snprintf (bq, 33, "<blockquote class=\"level_%03d\">", ldepth);
+          g_snprintf (bq, 31, "<blockquote class=\"level_%03d\">", ldepth);
 
-          outptr = check_size (filter, outptr, &outend, 33);
+          outptr = check_size (filter, outptr, &outend, 31);
           outptr = g_stpcpy (outptr, bq);
         }
 
         /* remove '>' */
-        while (*start == '>' && start < inend) start++;
+        while (*start == '>' && start < inptr) start++;
 
         /* remove leading space */
-        if (*start == ' ' && start < inend) start++;
+        if (*start == ' ' && start < inptr) start++;
 
+      } else if (html->prev_cit_depth > depth) {
+
+        /* close quotes */
+        while (html->prev_cit_depth > depth) {
+          outptr = check_size (filter, outptr, &outend, 14);
+          outptr = g_stpcpy (outptr, "</blockquote>");
+          html->prev_cit_depth--;
+        }
+
+        /* remove '>' */
+        while (*start == '>' && start < inptr) start++;
+
+        /* remove leading space */
+        if (*start == ' ' && start < inptr) start++;
 
       } else if (depth > 0) {
-        /* we are still at the same depth or lower: remove '>' */
-        while (*start == '>' && start < inend) start++;
+        /* we are still at the same depth: remove '>' */
+        while (*start == '>' && start < inptr) start++;
 
         /* remove leading space */
-        if (*start == ' ' && start < inend) start++;
+        if (*start == ' ' && start < inptr) start++;
 
 			} else if (*start == '>') {
 				/* >From line */
@@ -461,16 +472,8 @@ html_convert (GMimeFilter *filter, char *in, size_t inlen, size_t prespace,
 			outptr = writeln (filter, start, inptr, outptr, &outend);
 		}
 
-		if ((html->flags & GMIME_FILTER_HTML_BQ_BLOCKQUOTE_CITATION) &&
-        (depth < html->prev_cit_depth)) {
-      while (html->prev_cit_depth > depth) {
-        outptr = check_size (filter, outptr, &outend, 14);
-        outptr = g_stpcpy (outptr, "</blockquote>");
-        html->prev_cit_depth--;
-      }
-    }
-
-		if ((html->flags & GMIME_FILTER_HTML_MARK_CITATION) && depth > 0) {
+		if (!(html->flags & GMIME_FILTER_HTML_BQ_BLOCKQUOTE_CITATION) &&
+         (html->flags & GMIME_FILTER_HTML_MARK_CITATION) && (depth > 0)) {
 			outptr = check_size (filter, outptr, &outend, 8);
 			outptr = g_stpcpy (outptr, "</font>");
 		}

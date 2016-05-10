@@ -46,7 +46,11 @@ BOOST_AUTO_TEST_SUITE(Reading)
     system ("notmuch new");
 
     /* test if file can be read now */
-    BOOST_CHECK_NO_THROW (Message mm ("test/mail/test_mail/oos.eml"));
+    Message * mm;
+    BOOST_CHECK_NO_THROW (mm = new Message ("test/mail/test_mail/oos.eml"));
+    BOOST_CHECK ((AddressList (mm->other_to ()).str () == "ba@adsf.asd"));
+    Astroid::log << test << "other: " << AddressList (mm->other_to ()).str () << endl;
+    delete mm;
 
     /* remove it without updating notmuch */
     unlink ("test/mail/test_mail/oos.eml");
@@ -77,6 +81,7 @@ BOOST_AUTO_TEST_SUITE(Reading)
     Astroid::log << test << "to: " << AddressList (oos->to()).str() << endl;
     Astroid::log << test << "cc: " << AddressList (oos->cc()).str() << endl;
     Astroid::log << test << "bcc: " << AddressList (oos->bcc()).str() << endl;
+    Astroid::log << test << "other: " << AddressList (oos->other_to ()).str () << endl;
     Astroid::log << test << "date: " << oos->date () << endl;
 
     Astroid::log << test << "pretty date: " << oos->pretty_verbose_date() << endl;

@@ -77,6 +77,9 @@ namespace Astroid {
       }
     }
 
+    /* searches file */
+    std_paths.searches_file = std_paths.config_dir / path("searches");
+
     /* default data */
     char * data = getenv ("XDG_DATA_HOME");
     if (data == NULL) {
@@ -100,6 +103,7 @@ namespace Astroid {
     } else {
       std_paths.runtime_dir = path(runtime) / path("astroid");
     }
+
   }
 
   ptree Config::setup_default_config (bool initial) {
@@ -229,6 +233,12 @@ namespace Astroid {
     /* crypto */
     default_config.put ("crypto.gpg.path", "gpg2");
 
+    /* saved searches */
+    default_config.put ("saved_searches.show_on_startup", false);
+    default_config.put ("saved_searches.save_history", true);
+    default_config.put ("saved_searches.history_lines_to_show", 15); /* -1 is all */
+    default_config.put ("saved_searches.history_lines", 1000); /* number of history lines to store */
+
     return default_config;
   }
 
@@ -283,6 +293,7 @@ namespace Astroid {
       config.get<std::string> ("astroid.notmuch_config"),
       notmuch_config);
   }
+
 
   bool Config::check_config (ptree new_config) {
     bool changed = false;

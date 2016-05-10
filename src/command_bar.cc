@@ -12,6 +12,7 @@
 # include "modes/mode.hh"
 # include "modes/thread_index/thread_index.hh"
 # include "modes/help_mode.hh"
+# include "modes/saved_searches.hh"
 # include "utils/utils.hh"
 # include "log.hh"
 # include "db.hh"
@@ -69,6 +70,9 @@ namespace Astroid {
       case CommandMode::Search:
         if (callback == NULL && (cmd.size() > 0)) {
           Mode * m = new ThreadIndex (main_window, cmd);
+
+          /* add to saved searches */
+          SavedSearches::add_query_to_history (cmd);
 
           main_window->add_mode (m);
         }
@@ -166,6 +170,7 @@ namespace Astroid {
 
     /* set up completion */
     search_completion->load_tags (Db::tags);
+    search_completion->load_history ();
     entry.set_completion (search_completion);
     current_completion = search_completion;
   }
@@ -235,6 +240,68 @@ namespace Astroid {
           }
 
           return true;
+        }
+
+      case GDK_KEY_Up:
+        {
+          if (mode == CommandMode::Search) {
+            log << debug << "cb: next history" << endl;
+
+            refptr<SearchCompletion> s = refptr<SearchCompletion>::cast_dynamic (current_completion);
+
+            if (s->history.empty ()) return true;
+
+            /* save original */
+            if (s->orig_text == "") {
+              s->orig_text = entry.get_text ();
+            }
+
+            if (s->history.size() >= (s->history_pos+1)) {
+
+              s->history_pos++;
+              entry.set_text (s->history[s->history_pos -1]);
+            }
+
+            return true;
+          } else {
+            return false;
+          }
+        }
+
+      case GDK_KEY_Down:
+        {
+          if (mode == CommandMode::Search) {
+            log << debug << "cb: previous history" << endl;
+
+           refptr<SearchCompletion> s = refptr<SearchCompletion>::cast_dynamic (current_completion);
+
+            if (s->history.empty ()) return true;
+
+            if (s->history_pos > 0) {
+              s->history_pos--;
+              if (s->history_pos == 0) {
+                entry.set_text (s->orig_text);
+                s->orig_text = "";
+              } else {
+                entry.set_text (s->history[s->history_pos -1]);
+              }
+            }
+
+            return true;
+          } else {
+            return false;
+          }
+        }
+
+      default:
+        {
+          if (mode == CommandMode::Search) {
+            /* reset history browsing */
+            refptr<SearchCompletion> s = refptr<SearchCompletion>::cast_dynamic (current_completion);
+            s->orig_text = "";
+            s->history_pos = 0;
+          }
+          break;
         }
     }
 
@@ -477,6 +544,11 @@ namespace Astroid {
     set_popup_completion (true);
     set_popup_single_match (true);
     set_minimum_key_length (1);
+  }
+
+  void CommandBar::SearchCompletion::load_history () {
+    history = SavedSearches::get_history ();
+    std::reverse (history.begin (), history.end ());
   }
 
   void CommandBar::SearchCompletion::load_tags (vector<ustring> _tags) {

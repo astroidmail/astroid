@@ -160,6 +160,13 @@ namespace Astroid {
         public:
           SearchCompletion ();
 
+          /* original text when browsing through search history */
+          void load_history ();
+          ustring orig_text = "";
+          unsigned int history_pos;
+          std::vector <ustring> history;
+
+
           void load_tags (std::vector<ustring>);
           std::vector<ustring> tags; // must be sorted
 

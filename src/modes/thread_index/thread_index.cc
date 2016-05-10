@@ -15,6 +15,7 @@
 # include "thread_index_list_view.hh"
 # include "thread_index_list_cell_renderer.hh"
 # include "modes/thread_view/thread_view.hh"
+# include "modes/saved_searches.hh"
 # include "main_window.hh"
 
 using namespace std;
@@ -175,6 +176,15 @@ namespace Astroid {
           }
           if (newpath)
             list_view->set_cursor (newpath);
+
+          return true;
+        });
+
+    keys.register_key ("C-S",
+        "thread_index.save_query",
+        "Save query",
+        [&] (Key) {
+          SavedSearches::save_query (query_string);
 
           return true;
         });
