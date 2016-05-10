@@ -325,6 +325,17 @@ namespace Astroid {
           return true;
         });
 
+    keys.register_key ("!",
+        "searches.show_all_history",
+        "Show all history lines",
+        [&] (Key) {
+
+          show_all_history = true;
+          reload ();
+          return true;
+
+        });
+
     /* }}} */
 
     reload ();
@@ -491,7 +502,7 @@ namespace Astroid {
 
     int history_lines = astroid->config ("saved_searches").get<int> ("history_lines_to_show");
 
-    if (history_lines == 0) return;
+    if (!show_all_history && history_lines == 0) return;
 
     /* load search history */
     iter = store->append();
@@ -501,11 +512,11 @@ namespace Astroid {
     row[m_columns.m_col_description] = true;
 
 
-
     int i = 0;
 
     for (auto it = history.rbegin (); it != history.rend (); ++it) {
-      if (!((history_lines < 0) || (i < history_lines))) break;
+      if (!show_all_history && (!((history_lines < 0) || (i < history_lines))))
+        break;
 
       add_query ("", *it, false, true);
 
