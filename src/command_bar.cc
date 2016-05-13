@@ -171,6 +171,7 @@ namespace Astroid {
     /* set up completion */
     search_completion->load_tags (Db::tags);
     search_completion->load_history ();
+    search_completion->orig_text = "";
     entry.set_completion (search_completion);
     current_completion = search_completion;
   }
@@ -247,19 +248,17 @@ namespace Astroid {
           if (mode == CommandMode::Search) {
             log << debug << "cb: next history" << endl;
 
-            refptr<SearchCompletion> s = refptr<SearchCompletion>::cast_dynamic (current_completion);
-
-            if (s->history.empty ()) return true;
+            if (search_completion->history.empty ()) return true;
 
             /* save original */
-            if (s->orig_text == "") {
-              s->orig_text = entry.get_text ();
+            if (search_completion->orig_text == "") {
+              search_completion->orig_text = entry.get_text ();
             }
 
-            if (s->history.size() >= (s->history_pos+1)) {
+            if (search_completion->history.size() >= (search_completion->history_pos+1)) {
 
-              s->history_pos++;
-              entry.set_text (s->history[s->history_pos -1]);
+              search_completion->history_pos++;
+              entry.set_text (search_completion->history[search_completion->history_pos -1]);
             }
 
             return true;
@@ -273,17 +272,15 @@ namespace Astroid {
           if (mode == CommandMode::Search) {
             log << debug << "cb: previous history" << endl;
 
-           refptr<SearchCompletion> s = refptr<SearchCompletion>::cast_dynamic (current_completion);
+            if (search_completion->history.empty ()) return true;
 
-            if (s->history.empty ()) return true;
-
-            if (s->history_pos > 0) {
-              s->history_pos--;
-              if (s->history_pos == 0) {
-                entry.set_text (s->orig_text);
-                s->orig_text = "";
+            if (search_completion->history_pos > 0) {
+              search_completion->history_pos--;
+              if (search_completion->history_pos == 0) {
+                entry.set_text (search_completion->orig_text);
+                search_completion->orig_text = "";
               } else {
-                entry.set_text (s->history[s->history_pos -1]);
+                entry.set_text (search_completion->history[search_completion->history_pos -1]);
               }
             }
 
