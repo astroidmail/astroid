@@ -172,6 +172,7 @@ namespace Astroid {
     search_completion->load_tags (Db::tags);
     search_completion->load_history ();
     search_completion->orig_text = "";
+    search_completion->history_pos = 0;
     entry.set_completion (search_completion);
     current_completion = search_completion;
   }
