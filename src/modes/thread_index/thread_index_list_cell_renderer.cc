@@ -326,6 +326,8 @@ namespace Astroid {
       if (!first) tag_string += ", ";
       first = false;
 
+      if (len >= tags_len) break;
+
       unsigned char * tc = Crypto::get_md5_digest_char (t);
 
       /* blend color: 31587a*/
@@ -350,6 +352,8 @@ namespace Astroid {
       if (len + t.length () > static_cast<unsigned int>(tags_len)) {
         t = t.substr (0, (len + t.length () - tags_len));
       }
+
+      len += t.length ();
 
 
       tag_string += ustring::compose (
