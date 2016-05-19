@@ -54,7 +54,8 @@ namespace Astroid {
     subject_color_selected = ti.get<string> ("subject_color_selected");
     background_color_selected = ti.get<string> ("background_color_selected");
 
-    tags_color    = ti.get<string> ("tags_color");
+    tags_blend_color = ti.get<string> ("tags_blend_color");
+    tags_blend_weight = ti.get<double> ("tags_blend_weight");
 
   }
 
@@ -330,14 +331,23 @@ namespace Astroid {
 
       unsigned char * tc = Crypto::get_md5_digest_char (t);
 
-      /* blend color: 31587a*/
+      /* blend color: default 31587a*/
       unsigned char base[3] = { 0x31, 0x58, 0x7a };
+
+      Pango::Color pbase;
+      bool r = pbase.parse (tags_blend_color);
+      if (!r) {
+        log << error << "til cr: failed parsing blend color: " << tags_blend_color << endl;
+      } else {
+        base[0] = pbase.get_red ();
+        base[1] = pbase.get_green ();
+        base[2] = pbase.get_blue ();
+      }
+
       unsigned char blend[3];
 
-      double blend_weight = 2.0;
-
       for (int k = 0; k < 3; k++) {
-        blend[k] = (base[k] * blend_weight + tc[(16 - 3 + k)]) / (blend_weight + 1);
+        blend[k] = (base[k] + tc[(16 - 3 + k)] * tags_blend_weight) / (tags_blend_weight + 1);
       }
 
       std::ostringstream tc_str;

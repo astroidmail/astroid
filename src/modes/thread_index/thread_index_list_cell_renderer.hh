@@ -95,7 +95,8 @@ namespace Astroid {
       int tags_start;
       int tags_width;
       int tags_len = 80; // chars, configurable
-      ustring tags_color; // configurable
+      ustring tags_blend_color; // configurable, default: 31587a
+      double  tags_blend_weight; // configurable, default: 0.5
 
       int subject_start;
       ustring subject_color; // configurable
