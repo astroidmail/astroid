@@ -32,6 +32,7 @@ namespace Astroid {
 
     public:
       static ustring get_md5_digest (ustring str);
+      static unsigned char * get_md5_digest_char (ustring str);
   };
 
 }

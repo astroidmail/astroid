@@ -18,6 +18,7 @@
 # include "db.hh"
 # include "utils/utils.hh"
 # include "log.hh"
+# include "crypto.hh"
 
 using namespace std;
 using boost::property_tree::ptree;
@@ -317,13 +318,47 @@ namespace Astroid {
                     hidden_tags.end (),
                     back_inserter(tags));
 
-    ustring tag_string = VectorUtils::concat_tags (tags);
-    tag_string = tag_string.substr (0, tags_len);
+    ustring tag_string = "";
+    bool first = true;
+    int len = 0;
 
-    pango_layout->set_markup (ustring::compose (
-          "<span font_style=\"italic\"  color=\"%1\">%2</span>",
-          tags_color,
-          Glib::Markup::escape_text(tag_string)));
+    for (auto t : tags) {
+      if (!first) tag_string += ", ";
+      first = false;
+
+      unsigned char * tc = Crypto::get_md5_digest_char (t);
+
+      /* blend color: 31587a*/
+      unsigned char base[3] = { 0x31, 0x58, 0x7a };
+      unsigned char blend[3];
+
+      double blend_weight = 2.0;
+
+      for (int k = 0; k < 3; k++) {
+        blend[k] = (base[k] * blend_weight + tc[(16 - 3 + k)]) / (blend_weight + 1);
+      }
+
+      std::ostringstream tc_str;
+      tc_str << "#";
+
+      for (int k = 0; k < 3; k++) {
+        tc_str << std::hex << std::setfill('0') << std::setw(2) << ((int)blend[k]);
+      }
+
+      delete tc;
+
+      if (len + t.length () > static_cast<unsigned int>(tags_len)) {
+        t = t.substr (0, (len + t.length () - tags_len));
+      }
+
+
+      tag_string += ustring::compose (
+                  "<span font_style=\"italic\"  color=\"%1\">%2</span>",
+                  tc_str.str (),
+                  Glib::Markup::escape_text(t));
+    }
+
+    pango_layout->set_markup (tag_string);
 
     /* align in the middle */
     int w, h;
