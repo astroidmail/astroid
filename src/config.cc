@@ -165,8 +165,10 @@ namespace Astroid {
     default_config.put ("thread_index.cell.background_color_selected", "");
 
     default_config.put ("thread_index.cell.tags_length", 80);
-    default_config.put ("thread_index.cell.tags_blend_color", "#31587a");
-    default_config.put ("thread_index.cell.tags_blend_weight", 0.5);
+    default_config.put ("thread_index.cell.tags_blend_color", "#ffffff");
+    default_config.put ("thread_index.cell.tags_blend_weight", 1.0);
+    default_config.put ("thread_index.cell.tags_background_color", "#666666");
+    default_config.put ("thread_index.cell.tags_background_color_selected", "#666666");
     default_config.put ("thread_index.cell.hidden_tags", "attachment,flagged,unread");
 
 

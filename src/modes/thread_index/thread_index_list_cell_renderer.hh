@@ -95,8 +95,10 @@ namespace Astroid {
       int tags_start;
       int tags_width;
       int tags_len = 80; // chars, configurable
-      ustring tags_blend_color; // configurable, default: 31587a
-      double  tags_blend_weight; // configurable, default: 0.5
+      ustring tags_blend_color; // configurable
+      ustring tags_background_color;
+      ustring tags_background_color_selected;
+      double  tags_blend_weight; // configurable
 
       int subject_start;
       ustring subject_color; // configurable
@@ -118,7 +120,8 @@ namespace Astroid {
       int render_tags (
           const ::Cairo::RefPtr< ::Cairo::Context>&cr,
           Gtk::Widget &widget,
-          const Gdk::Rectangle &cell_area );
+          const Gdk::Rectangle &cell_area,
+          Gtk::CellRendererState flags );
 
       int render_date (
           const ::Cairo::RefPtr< ::Cairo::Context>&cr,

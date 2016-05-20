@@ -57,6 +57,9 @@ namespace Astroid {
     tags_blend_color = ti.get<string> ("tags_blend_color");
     tags_blend_weight = ti.get<double> ("tags_blend_weight");
 
+    tags_background_color = ti.get<string>("tags_background_color");
+    tags_background_color_selected = ti.get<string>("tags_background_color_selected");
+
   }
 
   void ThreadIndexListCellRenderer::render_vfunc (
@@ -111,7 +114,7 @@ namespace Astroid {
 
     render_authors (cr, widget, cell_area);
 
-    tags_width = render_tags (cr, widget, cell_area); // returns width
+    tags_width = render_tags (cr, widget, cell_area, flags); // returns width
     subject_start = tags_start + tags_width / Pango::SCALE + ((tags_width > 0) ? padding : 0);
 
     render_subject (cr, widget, cell_area, flags);
@@ -299,7 +302,8 @@ namespace Astroid {
   int ThreadIndexListCellRenderer::render_tags ( // {{{
       const ::Cairo::RefPtr< ::Cairo::Context>&cr,
       Gtk::Widget &widget,
-      const Gdk::Rectangle &cell_area ) {
+      const Gdk::Rectangle &cell_area,
+      Gtk::CellRendererState flags ) {
 
     Glib::RefPtr<Pango::Layout> pango_layout = widget.create_pango_layout ("");
 
@@ -324,15 +328,15 @@ namespace Astroid {
     int len = 0;
 
     for (auto t : tags) {
-      if (!first) tag_string += ", ";
+      if (!first) tag_string += ",";
       first = false;
 
       if (len >= tags_len) break;
 
       unsigned char * tc = Crypto::get_md5_digest_char (t);
 
-      /* blend color: default 31587a*/
-      unsigned char base[3] = { 0x31, 0x58, 0x7a };
+      /* blend color: default ffffff*/
+      unsigned char base[3] = { 0xff, 0xff, 0xff };
 
       Pango::Color pbase;
       bool r = pbase.parse (tags_blend_color);
@@ -365,11 +369,21 @@ namespace Astroid {
 
       len += t.length ();
 
+      /* TODO: get length of extra spacing and , into len */
+
+      ustring bg_color;
+
+      if ((flags & Gtk::CELL_RENDERER_SELECTED) != 0) {
+        bg_color = tags_background_color_selected;
+      } else {
+        bg_color = tags_background_color;
+      }
 
       tag_string += ustring::compose (
-                  "<span font_style=\"italic\"  color=\"%1\">%2</span>",
+                  "<span font_style=\"italic\" bgcolor=\"%3\" color=\"%1\"> %2 </span>",
                   tc_str.str (),
-                  Glib::Markup::escape_text(t));
+                  Glib::Markup::escape_text(t),
+                  bg_color );
     }
 
     pango_layout->set_markup (tag_string);
