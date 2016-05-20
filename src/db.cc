@@ -337,7 +337,7 @@ namespace Astroid {
     notmuch_query_set_omit_excluded (query, NOTMUCH_EXCLUDE_TRUE);
 
     unsigned int c;
-    /* notmuch_status_t st = */ notmuch_query_count_threads_st (query, &c);
+    notmuch_status_t st = notmuch_query_count_threads_st (query, &c);
 
     if (c > 1) {
       throw database_error ("db: got more than one thread for thread id.");
@@ -348,7 +348,7 @@ namespace Astroid {
 
     log << debug << "db: thread in query check: " << ((clock() - t0) * 1000.0 / CLOCKS_PER_SEC) << " ms." << endl;
 
-    if (c == 1) return true;
+    if (c == 1) return (st == NOTMUCH_STATUS_SUCCESS);
     else        return false;
 
   }
@@ -367,6 +367,10 @@ namespace Astroid {
     if ((st != NOTMUCH_STATUS_SUCCESS) || nm_threads == NULL) {
       notmuch_query_destroy (query);
       log << error << "db: could not find thread: " << thread_id << ", status: " << st << endl;
+
+      func (NULL);
+
+      return;
     }
 
     int c = 0;
