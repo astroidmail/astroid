@@ -134,7 +134,12 @@ namespace Astroid {
     notmuch_query_set_sort (nmquery, sort);
 
     /* slow */
-    /* notmuch_status_t st = */ notmuch_query_search_threads_st (nmquery, &threads);
+    notmuch_status_t st = notmuch_query_search_threads_st (nmquery, &threads);
+
+    if (st != NOTMUCH_STATUS_SUCCESS) {
+      log << error << "ql: could not get threads for query: " << query << endl;
+      run = false;
+    }
 
     loaded_threads = 0; // incremented in list_adder
     int i = 0;

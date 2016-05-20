@@ -19,7 +19,7 @@ Check out the [tour of how to install, configure and use astroid](https://github
 
 ## main features and goals include:
 * lightweight and fast!
-* fully operatable by keyboard.
+* fully operatable by [keyboard](https://github.com/gauteh/astroid/wiki/Customizing-key-bindings).
 * graphical interface, inspired by sup. but allow buffers to be separeted and placed in several windows.
 * allow several simultaneous windows.
 * display html mail and some attachments inline.

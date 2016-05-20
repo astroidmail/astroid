@@ -189,8 +189,6 @@ namespace Astroid {
       mailto->signal_activate ().connect (
           sigc::mem_fun (this, &Astroid::on_mailto_activate));
 
-      app->signal_shutdown().connect (sigc::mem_fun (this,
-            &Astroid::on_quit));
     }
 
     /* load config */
@@ -239,6 +237,8 @@ namespace Astroid {
       open_new_window ();
     }
     app->run ();
+
+    on_quit ();
 
     return 0;
   }
