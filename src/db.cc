@@ -407,6 +407,8 @@ namespace Astroid {
       notmuch_message_destroy (msg);
       log << error << "db: could not find message: " << mid << ", status: " << s << endl;
 
+      func (NULL);
+
       return;
     }
 
