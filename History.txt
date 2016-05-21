@@ -3,6 +3,7 @@
 * Thread-index: load all threads in the background.
 * Synchronize maildir flags if so configured in .notmuch-config.
 * General XEmbed support in editor: Emacs works.
+* Thread-view: Search email text using '/'
 * Signatures: Include per-account signatures (either included or
   attached).
 * Saved searches: Save a search with 'C-S', then browse saved searches

@@ -2475,15 +2475,29 @@ namespace Astroid {
           return true;
         });
 
-    keys.register_key (",", "thread_view.search",
+    keys.register_key ("/", "thread_view.search.search",
         "Search for text",
         sigc::mem_fun (this, &ThreadView::search));
 
 
-    keys.register_key (GDK_KEY_Escape, "thread_view.search_cancel",
+    keys.register_key (GDK_KEY_Escape, "thread_view.search.cancel",
         "Cancel current search",
         [&] (Key) {
           reset_search ();
+          return true;
+        });
+
+    keys.register_key ("N", "thread_view.search.next",
+        "Go to next match",
+        [&] (Key) {
+          next_search_match ();
+          return true;
+        });
+
+    keys.register_key ("P", "thread_view.search.previous",
+        "Go to previous match",
+        [&] (Key) {
+          prev_search_match ();
           return true;
         });
 
@@ -2638,6 +2652,57 @@ namespace Astroid {
         }
       }
     }
+
+    if (in_search && in_search_match) {
+      /* focus message in vertical center */
+
+      update_focus_to_center ();
+
+      in_search_match = false;
+    }
+  }
+
+  void ThreadView::update_focus_to_center () {
+    /* focus the message which is currently vertically centered */
+
+    if (edit_mode) return;
+
+    WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
+
+    auto adj = scroll.get_vadjustment ();
+    double scrolled = adj->get_value ();
+    double height   = adj->get_page_size (); // 0 when there is
+
+    if (height == 0) height = scroll.get_height ();
+
+    double center = scrolled + (height / 2);
+
+    for (auto &m : mthread->messages) {
+      ustring mid = "message_" + m->mid;
+
+      WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
+
+      double clientY = webkit_dom_element_get_offset_top (e);
+      double clientH = webkit_dom_element_get_client_height (e);
+
+      // log << debug << "y = " << clientY << endl;
+      // log << debug << "h = " << clientH << endl;
+
+      g_object_unref (e);
+
+      if ((clientY < center) && ((clientY + clientH) > center))
+      {
+        // log << debug << "message: " << m->date() << " now in view." << endl;
+
+        focused_message = m;
+
+        break;
+      }
+    }
+
+    g_object_unref (d);
+
+    update_focus_status ();
   }
 
   void ThreadView::update_focus_to_view () {
@@ -3360,7 +3425,16 @@ namespace Astroid {
 
   void ThreadView::reset_search () {
     /* reset */
+    if (in_search) {
+      /* reset search expanded state */
+      for (auto m : mthread->messages) {
+        state[m].search_expanded = false;
+      }
+    }
+
     in_search = false;
+    in_search_match = false;
+    search_q  = "";
     webkit_web_view_set_highlight_text_matches (webview, false);
     webkit_web_view_unmark_text_matches (webview);
   }
@@ -3369,23 +3443,58 @@ namespace Astroid {
     reset_search ();
 
     if (!k.empty ()) {
+
+      /* expand all messages, these should be closed - except the focused one
+       * when a search is cancelled */
+      for (auto m : mthread->messages) {
+        state[m].search_expanded = is_hidden (m);
+        toggle_hidden (m, ToggleShow);
+      }
+
       log << debug << "tv: searching for: " << k << endl;
       int n = webkit_web_view_mark_text_matches (webview, k.c_str (), false, 0);
-      if (n > 0) webkit_web_view_set_highlight_text_matches (webview, true);
 
       log << debug << "tv: search, found: " << n << " matches." << endl;
 
       in_search = (n > 0);
+
+      if (in_search) {
+        search_q = k;
+
+        webkit_web_view_set_highlight_text_matches (webview, true);
+
+        next_search_match ();
+
+      } else {
+        /* un-expand messages again */
+        for (auto m : mthread->messages) {
+          if (state[m].search_expanded) toggle_hidden (m, ToggleHide);
+          state[m].search_expanded = false;
+        }
+
+      }
     }
   }
 
   void ThreadView::next_search_match () {
     if (!in_search) return;
+    /* there does not seem to be a way to figure out which message currently
+     * contains the selected matched text, but when there is a scroll event
+     * the match is centered.
+     *
+     * the focusing is handled in on_scroll_vadjustment...
+     *
+     */
+
+    in_search_match = true;
+    webkit_web_view_search_text (webview, search_q.c_str (), false, true, true);
   }
 
   void ThreadView::prev_search_match () {
     if (!in_search) return;
 
+    in_search_match = true;
+    webkit_web_view_search_text (webview, search_q.c_str (), false, false, true);
   }
 
   /* }}} */
