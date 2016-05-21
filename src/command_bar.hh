@@ -22,6 +22,7 @@ namespace Astroid {
     public:
       enum CommandMode {
         Search = 0,
+        SearchText,
         //Generic,
         Tag,        /* apply or remove tags */
         DiffTag,    /* apply or remove tags using + or - */
@@ -192,5 +193,36 @@ namespace Astroid {
       };
 
       refptr<SearchCompletion> search_completion;
+
+      /********************
+       * SearchText completion
+       ********************/
+      void start_text_searching (ustring);
+
+      class SearchTextCompletion : public GenericCompletion {
+        public:
+          SearchTextCompletion ();
+
+          /* the search text completion maintains only the queries that have
+           * been done during this program execution, the state is not saved */
+
+          // tree model columns, for the EntryCompletion's filter model
+          class ModelColumns : public Gtk::TreeModel::ColumnRecord
+          {
+            public:
+
+              ModelColumns ()
+              { add(m_query); }
+
+              Gtk::TreeModelColumn<Glib::ustring> m_query;
+          };
+
+          ModelColumns m_columns;
+
+          void add_query (ustring);
+          bool on_match_selected(const Gtk::TreeModel::iterator& iter) override;
+      };
+
+      refptr<SearchTextCompletion> text_search_completion;
   };
 }

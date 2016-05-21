@@ -273,6 +273,16 @@ namespace Astroid {
       void on_message_changed (Db *, Message *, Message::MessageChangedEvent);
       void on_thread_updated (Db *, ustring);
 
+      /* search */
+      bool search (Key);
+      void on_search (ustring);
+      void reset_search ();
+
+      void next_search_match ();
+      void prev_search_match ();
+
+      bool in_search = false;
+
     public:
       /* the tv is ready */
       typedef sigc::signal <void> type_signal_ready;

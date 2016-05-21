@@ -45,6 +45,7 @@ namespace Astroid {
 
     tag_completion = refptr<TagCompletion> (new TagCompletion());
     search_completion = refptr<SearchCompletion> (new SearchCompletion());
+    text_search_completion = refptr<SearchTextCompletion> (new SearchTextCompletion ());
     difftag_completion = refptr<DiffTagCompletion> (new DiffTagCompletion ());
   }
 
@@ -86,6 +87,10 @@ namespace Astroid {
         break;
       */
 
+      case CommandMode::SearchText:
+        {
+          text_search_completion->add_query (cmd);
+        }
       case CommandMode::DiffTag:
       case CommandMode::Tag:
         {
@@ -127,6 +132,14 @@ namespace Astroid {
         }
         break;
 
+      case CommandMode::SearchText:
+        {
+          mode_label.set_text ("Find text");
+          entry.set_icon_from_icon_name ("edit-find-symbolic");
+
+          start_text_searching (cmd);
+        }
+        break;
       /*
       case CommandMode::Generic:
         {
@@ -175,6 +188,17 @@ namespace Astroid {
     search_completion->history_pos = 0;
     entry.set_completion (search_completion);
     current_completion = search_completion;
+  }
+
+  void CommandBar::start_text_searching (ustring searchstring) {
+    entry.set_text (searchstring);
+
+    /* set up completion */
+    search_completion->load_history ();
+    search_completion->orig_text = "";
+    search_completion->history_pos = 0;
+    entry.set_completion (text_search_completion);
+    current_completion = text_search_completion;
   }
 
   void CommandBar::start_tagging (ustring tagstring) {
@@ -663,6 +687,45 @@ namespace Astroid {
         entry->set_text (newt);
         entry->set_position (pos + completion.size());
       }
+    }
+
+    return true;
+  }
+
+  /********************
+   * SearchText Completion
+   ********************/
+
+  CommandBar::SearchTextCompletion::SearchTextCompletion ()
+  {
+    completion_model = Gtk::ListStore::create (m_columns);
+    set_model (completion_model);
+    set_text_column (m_columns.m_query);
+
+    //set_inline_completion (true);
+    set_popup_completion (true);
+    set_popup_single_match (true);
+    set_minimum_key_length (0);
+  }
+
+  void CommandBar::SearchTextCompletion::add_query (ustring c) {
+    if (!c.empty ()) {
+      auto row = *(completion_model->append ());
+      row[m_columns.m_query] = c;
+    }
+  }
+
+  bool CommandBar::SearchTextCompletion::on_match_selected (
+      const Gtk::TreeModel::iterator& iter) {
+    if (iter)
+    {
+      Gtk::Entry * entry = get_entry();
+
+      Gtk::TreeModel::Row row = *iter;
+      ustring completion = row[m_columns.m_query];
+
+      entry->set_text (completion);
+      entry->set_position (completion.size ());
     }
 
     return true;

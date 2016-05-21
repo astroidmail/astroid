@@ -2475,6 +2475,18 @@ namespace Astroid {
           return true;
         });
 
+    keys.register_key (",", "thread_view.search",
+        "Search for text",
+        sigc::mem_fun (this, &ThreadView::search));
+
+
+    keys.register_key (GDK_KEY_Escape, "thread_view.search_cancel",
+        "Cancel current search",
+        [&] (Key) {
+          reset_search ();
+          return true;
+        });
+
   }
 
   // }}}
@@ -3335,5 +3347,47 @@ namespace Astroid {
   }
 
   /* end MessageState }}} */
+
+  /* Searching {{{ */
+  bool ThreadView::search (Key) {
+    reset_search ();
+
+    main_window->enable_command (CommandBar::CommandMode::SearchText,
+        "", sigc::mem_fun (this, &ThreadView::on_search));
+
+    return true;
+  }
+
+  void ThreadView::reset_search () {
+    /* reset */
+    in_search = false;
+    webkit_web_view_set_highlight_text_matches (webview, false);
+    webkit_web_view_unmark_text_matches (webview);
+  }
+
+  void ThreadView::on_search (ustring k) {
+    reset_search ();
+
+    if (!k.empty ()) {
+      log << debug << "tv: searching for: " << k << endl;
+      int n = webkit_web_view_mark_text_matches (webview, k.c_str (), false, 0);
+      if (n > 0) webkit_web_view_set_highlight_text_matches (webview, true);
+
+      log << debug << "tv: search, found: " << n << " matches." << endl;
+
+      in_search = (n > 0);
+    }
+  }
+
+  void ThreadView::next_search_match () {
+    if (!in_search) return;
+  }
+
+  void ThreadView::prev_search_match () {
+    if (!in_search) return;
+
+  }
+
+  /* }}} */
 }
 
