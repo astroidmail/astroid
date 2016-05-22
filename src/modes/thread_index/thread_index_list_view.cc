@@ -412,22 +412,22 @@ namespace Astroid {
     /* set up for multi key handler */
     multi_keys.register_key ("N",
                              "thread_index.multi.mark_unread",
-                             "Mark unread",
+                             "Toggle unread",
                              bind (&ThreadIndexListView::multi_key_handler, this, MUnread, _1));
 
     multi_keys.register_key ("*",
                              "thread_index.multi.flag",
-                             "Flag",
+                             "Toggle flagged",
                              bind (&ThreadIndexListView::multi_key_handler, this, MFlag, _1));
 
     multi_keys.register_key ("a",
                              "thread_index.multi.archive",
-                             "Archive",
+                             "Toggle archive",
                              bind (&ThreadIndexListView::multi_key_handler, this, MArchive, _1));
 
     multi_keys.register_key ("S",
                              "thread_index.multi.mark_spam",
-                             "Mark spam",
+                             "Toggle spam",
                              bind (&ThreadIndexListView::multi_key_handler, this, MSpam, _1));
 
     multi_keys.register_key ("l",
@@ -438,7 +438,7 @@ namespace Astroid {
 
     multi_keys.register_key ("C-m",
                              "thread_index.multi.mute",
-                             "Mute",
+                             "Toggle mute",
                              bind (&ThreadIndexListView::multi_key_handler, this, MMute, _1));
 
     multi_keys.register_key ("t",
