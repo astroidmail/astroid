@@ -160,6 +160,21 @@ int main (int argc, char ** argv)
 }
 """
 
+nm_query_count_threads_st = """
+# include <notmuch.h>
+
+int main (int argc, char ** argv)
+{
+  notmuch_query_t * q;
+  unsigned int c;
+  notmuch_status_t st;
+
+  st = notmuch_query_count_threads_st (q, &c);
+
+  return 0;
+}
+"""
+
 # http://www.scons.org/doc/1.2.0/HTML/scons-user/x4076.html
 def check_notmuch (ctx, title, src):
   ctx.Message ("Checking for C function %s.." % title)
@@ -214,11 +229,15 @@ else:
 
 if conf.CheckNotmuch ('notmuch_query_search_threads_st',
                       nm_query_threads_st):
-  have_st = True
   env.AppendUnique (CPPFLAGS = [ '-DHAVE_QUERY_THREADS_ST' ])
 else:
-  have_st = False
   print "notmuch_query_*_st status versions are not available, some error checking is not possible - and tests will fail. consider upgrading notmuch to a version equal or later than 0.21."
+
+if conf.CheckNotmuch ('notmuch_query_count_threads_st',
+                      nm_query_threads_st):
+  env.AppendUnique (CPPFLAGS = [ '-DHAVE_QUERY_COUNT_THREADS_ST' ])
+else:
+  print "notmuch_query_*_count__st status versions are not available, some error checking is not possible - and tests will fail. consider upgrading notmuch to a version equal or later than 0.21."
 
 # external libraries
 env.ParseConfig ('pkg-config --libs --cflags glibmm-2.4')

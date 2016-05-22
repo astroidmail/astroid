@@ -339,7 +339,7 @@ namespace Astroid {
     unsigned int c = 0;
     notmuch_status_t st = NOTMUCH_STATUS_SUCCESS;
 
-# ifdef HAVE_QUERY_THREADS_ST
+# ifdef HAVE_QUERY_COUNT_THREADS_ST
     st = notmuch_query_count_threads_st (query, &c);
 # else
     c = notmuch_query_count_messages (query);

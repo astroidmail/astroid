@@ -221,7 +221,7 @@ namespace Astroid {
 
         unsigned int total_threads;
         notmuch_status_t st = NOTMUCH_STATUS_SUCCESS;
-# ifdef HAVE_QUERY_THREADS_ST
+# ifdef HAVE_QUERY_COUNT_THREADS_ST
         st = notmuch_query_count_threads_st (qry, &total_threads);
 # else
         total_threads = notmuch_query_count_threads (qry);
