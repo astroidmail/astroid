@@ -99,7 +99,6 @@ namespace Astroid {
       static std::vector<ustring> tags;
 
       void load_tags ();
-      void test_query ();
 
       static std::vector<ustring> sent_tags;
       static std::vector<ustring> draft_tags;

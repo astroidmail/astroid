@@ -398,6 +398,7 @@ namespace Astroid {
     row[m_columns.m_col_history] = history;
 
     unsigned int total_messages, unread_messages;
+    notmuch_status_t st = NOTMUCH_STATUS_SUCCESS;
 
     /* get stats */
     Db db;
@@ -406,8 +407,15 @@ namespace Astroid {
       notmuch_query_add_tag_exclude (query_t, t.c_str());
     }
     notmuch_query_set_omit_excluded (query_t, NOTMUCH_EXCLUDE_TRUE);
-    /* st = */ notmuch_query_count_messages_st (query_t, &total_messages); // destructive
+
+# ifdef HAVE_QUERY_THREADS_ST
+    st = notmuch_query_count_messages_st (query_t, &total_messages); // destructive
+# else
+    total_messages = notmuch_query_count_messages (query_t);
+# endif
     notmuch_query_destroy (query_t);
+
+    if (st != NOTMUCH_STATUS_SUCCESS) total_messages = 0;
 
     ustring unread_q_s = "(" + query + ") AND tag:unread";
     notmuch_query_t * unread_q = notmuch_query_create (db.nm_db, unread_q_s.c_str());
@@ -415,7 +423,12 @@ namespace Astroid {
       notmuch_query_add_tag_exclude (unread_q, t.c_str());
     }
     notmuch_query_set_omit_excluded (unread_q, NOTMUCH_EXCLUDE_TRUE);
-    /* st = */ notmuch_query_count_messages_st (unread_q, &unread_messages); // destructive
+# ifdef HAVE_QUERY_THREADS_ST
+    st = notmuch_query_count_messages_st (unread_q, &unread_messages); // destructive
+    if (st != NOTMUCH_STATUS_SUCCESS) unread_messages = 0;
+# else
+    unread_messages = notmuch_query_count_messages (unread_q);
+# endif
     notmuch_query_destroy (unread_q);
 
     row[m_columns.m_col_unread_messages] = ustring::compose ("(unread: %1)", unread_messages);
