@@ -32,6 +32,8 @@ namespace Astroid {
     queryloader.list_store = list_store;
 
     list_view  = Gtk::manage(new ThreadIndexListView (this, list_store));
+    queryloader.list_view = list_view;
+
     scroll     = Gtk::manage(new ThreadIndexScrolled (main_window, list_store, list_view));
 
     list_view->set_sort_type (queryloader.sort);

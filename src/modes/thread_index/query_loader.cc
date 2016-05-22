@@ -298,6 +298,13 @@ namespace Astroid {
       log << debug << "ql: updated: did not find thread, time used: " << ((clock() - t0) * 1000.0 / CLOCKS_PER_SEC) << " ms." << endl;
       if (in_query) {
         log << debug << "ql: new thread for query, adding.." << endl;
+
+        /* get current cursor path, if we are at first row and the new addition
+         * is before we should scroll up. */
+        Gtk::TreePath path;
+        Gtk::TreeViewColumn *c;
+        list_view->get_cursor (path, c);
+
         auto iter = list_store->prepend ();
         Gtk::ListStore::Row newrow = *iter;
 
@@ -318,6 +325,14 @@ namespace Astroid {
         if (list_store->children().size() == 1) {
           if (!in_destructor)
             first_thread_ready.emit ();
+        } else {
+
+          if (path == Gtk::TreePath ("0")) {
+            Gtk::TreePath addpath = list_store->get_path (iter);
+            if (addpath <= path) {
+              list_view->set_cursor (addpath);
+            }
+          }
         }
       }
     }

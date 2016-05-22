@@ -30,6 +30,7 @@ namespace Astroid {
       void refresh_stats (Db *);
 
       refptr<ThreadIndexListStore> list_store;
+      ThreadIndexListView * list_view;
 
       notmuch_sort_t sort;
       std::vector<ustring> sort_strings = { "oldest", "newest", "messageid", "unsorted" };
