@@ -679,8 +679,8 @@ namespace Astroid {
           return true;
         });
 
-    keys->register_key ("t", "thread_index.toggle_marked",
-        "Mark thread",
+    keys->register_key ("t", "thread_index.toggle_marked_next",
+        "Toggle mark thread and move to next",
         [&] (Key) {
           if (list_store->children().size() < 1)
             return true;
@@ -695,6 +695,59 @@ namespace Astroid {
           if (iter) {
             Gtk::ListStore::Row row = *iter;
             row[list_store->columns.marked] = !row[list_store->columns.marked];
+
+            /* move to next thread */
+            path.next ();
+            iter = list_store->get_iter (path);
+            if (iter) set_cursor (path);
+          }
+
+          return true;
+        });
+
+    keys->register_key (UnboundKey (), "thread_index.toggle_marked",
+        "Toggle mark thread",
+        [&] (Key) {
+          if (list_store->children().size() < 1)
+            return true;
+
+          Gtk::TreePath path;
+          Gtk::TreeViewColumn *c;
+          get_cursor (path, c);
+          Gtk::TreeIter iter;
+
+          iter = list_store->get_iter (path);
+
+          if (iter) {
+            Gtk::ListStore::Row row = *iter;
+            row[list_store->columns.marked] = !row[list_store->columns.marked];
+          }
+
+          return true;
+        });
+
+    keys->register_key (UnboundKey (), "thread_index.toggle_marked_previous",
+        "Toggle mark thread and move to previous",
+        [&] (Key) {
+          if (list_store->children().size() < 1)
+            return true;
+
+          Gtk::TreePath path;
+          Gtk::TreeViewColumn *c;
+          get_cursor (path, c);
+          Gtk::TreeIter iter;
+
+          iter = list_store->get_iter (path);
+
+          if (iter) {
+            Gtk::ListStore::Row row = *iter;
+            row[list_store->columns.marked] = !row[list_store->columns.marked];
+
+            /* move to previous */
+            path.prev ();
+            if (path) {
+              set_cursor (path);
+            }
           }
 
           return true;
