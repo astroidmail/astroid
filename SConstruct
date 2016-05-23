@@ -234,7 +234,7 @@ else:
   print "notmuch_query_*_st status versions are not available, some error checking is not possible - and tests will fail. consider upgrading notmuch to a version equal or later than 0.21."
 
 if conf.CheckNotmuch ('notmuch_query_count_threads_st',
-                      nm_query_threads_st):
+                      nm_query_count_threads_st):
   env.AppendUnique (CPPFLAGS = [ '-DHAVE_QUERY_COUNT_THREADS_ST' ])
 else:
   print "notmuch_query_*_count__st status versions are not available, some error checking is not possible - and tests will fail. consider upgrading notmuch to a version equal or later than 0.21."
