@@ -100,7 +100,7 @@ Also check out #astroid or #notmuch on irc.freenode.net.
   inspired by the [Geary] mail client. Also, some inspiration and code stems from
   [ner], another notmuch email client.
 
-[sup]: http://supmua.org
+[sup]: http://sup-heliotrope.github.io
 [notmuch]: http://notmuchmail.org/
 [Geary]: http://www.yorba.org/projects/geary/
 [gmime]: http://spruce.sourceforge.net/gmime/
