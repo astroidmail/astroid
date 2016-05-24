@@ -341,8 +341,9 @@ namespace Astroid {
 
 # ifdef HAVE_QUERY_COUNT_THREADS_ST
     st = notmuch_query_count_threads_st (query, &c);
+    if (st != NOTMUCH_STATUS_SUCCESS) c = 0;
 # else
-    c = notmuch_query_count_messages (query);
+    c = notmuch_query_count_threads (query);
 # endif
 
     if (c > 1) {

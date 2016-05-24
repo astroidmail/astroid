@@ -99,7 +99,7 @@ namespace Astroid {
       notmuch_query_add_tag_exclude (query_t, t.c_str());
     }
     notmuch_query_set_omit_excluded (query_t, NOTMUCH_EXCLUDE_TRUE);
-# ifdef HAVE_QUERY_THREADS_ST
+# ifdef HAVE_QUERY_COUNT_THREADS_ST
     st = notmuch_query_count_messages_st (query_t, &total_messages); // destructive
     if (st != NOTMUCH_STATUS_SUCCESS) total_messages = 0;
 # else
@@ -113,7 +113,7 @@ namespace Astroid {
       notmuch_query_add_tag_exclude (unread_q, t.c_str());
     }
     notmuch_query_set_omit_excluded (unread_q, NOTMUCH_EXCLUDE_TRUE);
-# ifdef HAVE_QUERY_THREADS_ST
+# ifdef HAVE_QUERY_COUNT_THREADS_ST
     st = notmuch_query_count_messages_st (unread_q, &unread_messages); // destructive
     if (st != NOTMUCH_STATUS_SUCCESS) unread_messages = 0;
 # else
