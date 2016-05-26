@@ -33,6 +33,8 @@ namespace Astroid {
     { GDK_KEY_Page_Up, "Page_Up" },
     { GDK_KEY_Page_Down, "Page_Down" },
     { GDK_KEY_Escape, "Esc" },
+    { GDK_KEY_equal, "Equal" },
+    { GDK_KEY_minus, "Minus" },
   };
 
   std::map<ustring, guint> Keybindings::keynames_to_keyval;
