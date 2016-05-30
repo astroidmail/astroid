@@ -35,10 +35,10 @@ def main(*options):
 	# pattern to look for:
 	pattern = re_compile("((->|\.)register_key *\([^;]*)")
 	# quite mode?
-	quiet = False
+	quiet = True
 	for option in options:
-		if '-q' == option:
-			quiet = True
+		if '-d' == option:
+			quiet = False
 	# detect src root
 	src_root = os.path.join(os.path.dirname(__file__), '../src')
 	if not quiet:
