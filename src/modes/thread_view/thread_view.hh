@@ -93,6 +93,7 @@ namespace Astroid {
       bool    _scroll_when_visible;
 
       void update_focus_to_view ();
+      void update_focus_to_center ();
       void update_focus_status ();
       ustring focus_next ();
       ustring focus_previous (bool focus_top = false);
@@ -116,6 +117,7 @@ namespace Astroid {
 
           /* the message was expanded as part of an
            * C-n or C-p command */
+          bool search_expanded  = false;
           bool scroll_expanded  = false;
           bool print_expanded   = false;
           bool marked           = false;
@@ -272,6 +274,18 @@ namespace Astroid {
       /* changed signals */
       void on_message_changed (Db *, Message *, Message::MessageChangedEvent);
       void on_thread_updated (Db *, ustring);
+
+      /* search */
+      bool search (Key);
+      void on_search (ustring);
+      void reset_search ();
+
+      void next_search_match ();
+      void prev_search_match ();
+
+      bool in_search = false;
+      bool in_search_match = false;
+      ustring search_q = "";
 
     public:
       /* the tv is ready */

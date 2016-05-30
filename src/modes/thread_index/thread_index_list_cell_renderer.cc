@@ -435,7 +435,7 @@ namespace Astroid {
 
         ustring an = get<0>(a);
 
-        an = an.substr (0, an.find_first_of (" @"));
+        an = an.substr (0, an.find_first_of (", @"));
 
         int tlen = static_cast<int>(an.size());
         if ((len + tlen) >= authors_len) {

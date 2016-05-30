@@ -98,9 +98,9 @@ Also check out #astroid or #notmuch on irc.freenode.net.
 
   Some parts of the user interface and layout have been copied from or has been
   inspired by the [Geary] mail client. Also, some inspiration and code stems from
-  [ner], another notmuch email client.
+  ner, another notmuch email client.
 
-[sup]: http://supmua.org
+[sup]: http://sup-heliotrope.github.io
 [notmuch]: http://notmuchmail.org/
 [Geary]: http://www.yorba.org/projects/geary/
 [gmime]: http://spruce.sourceforge.net/gmime/
@@ -113,7 +113,6 @@ Also check out #astroid or #notmuch on irc.freenode.net.
 [GTK+]: http://www.gtk.org/
 [glib]: https://developer.gnome.org/glib/
 [boost::property_tree]: http://www.boost.org/doc/libs/1_56_0/doc/html/property_tree.html
-[ner]: http://the-ner.org/
 
 ## licensing
 

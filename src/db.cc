@@ -337,7 +337,14 @@ namespace Astroid {
     notmuch_query_set_omit_excluded (query, NOTMUCH_EXCLUDE_TRUE);
 
     unsigned int c = 0;
-    notmuch_status_t st = notmuch_query_count_threads_st (query, &c);
+    notmuch_status_t st = NOTMUCH_STATUS_SUCCESS;
+
+# ifdef HAVE_QUERY_COUNT_THREADS_ST
+    st = notmuch_query_count_threads_st (query, &c);
+    if (st != NOTMUCH_STATUS_SUCCESS) c = 0;
+# else
+    c = notmuch_query_count_threads (query);
+# endif
 
     if (c > 1) {
       throw database_error ("db: got more than one thread for thread id.");
@@ -358,9 +365,14 @@ namespace Astroid {
     notmuch_query_t * query = notmuch_query_create (nm_db, query_s.c_str());
     notmuch_thread_t  * nm_thread;
     notmuch_threads_t * nm_threads;
-    notmuch_status_t st;
+    notmuch_status_t st = NOTMUCH_STATUS_SUCCESS;
 
+# ifdef HAVE_QUERY_THREADS_ST
+    /* available since notmuch 0.21 */
     st = notmuch_query_search_threads_st (query, &nm_threads);
+# else
+    nm_threads = notmuch_query_search_threads (query);
+# endif
 
     if ((st != NOTMUCH_STATUS_SUCCESS) || nm_threads == NULL) {
       notmuch_query_destroy (query);
@@ -416,31 +428,6 @@ namespace Astroid {
     /* free resources */
     notmuch_message_destroy (msg);
   }
-
-  void Db::test_query () { // {{{
-    log << info << "db: running test query.." << endl;
-    auto q = notmuch_query_create (nm_db, "label:inbox");
-
-    unsigned int c;
-    /* notmuch_status_t st = */ notmuch_query_count_messages_st (q, &c);
-
-    log << info << "query: " << notmuch_query_get_query_string (q) << ", approx: "
-         << c << " messages." << endl;
-
-    notmuch_messages_t * messages;
-    notmuch_message_t  * message;
-    notmuch_status_t st;
-
-    for (st = notmuch_query_search_messages_st (q, &messages);
-         (st == NOTMUCH_STATUS_SUCCESS) && notmuch_messages_valid (messages);
-         notmuch_messages_move_to_next (messages)) {
-      message = notmuch_messages_get (messages);
-
-      log << info << "thread:" << notmuch_message_get_thread_id (message) << ", message: " << notmuch_message_get_header (message, "Subject") << endl;
-
-      notmuch_message_destroy (message);
-    }
-  } // }}}
 
   ustring Db::sanitize_tag (ustring tag) {
     UstringUtils::trim (tag);

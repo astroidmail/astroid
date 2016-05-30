@@ -3,6 +3,7 @@
 * Thread-index: load all threads in the background.
 * Synchronize maildir flags if so configured in .notmuch-config.
 * General XEmbed support in editor: Emacs works.
+* Thread-view: Search email text using '/'
 * Signatures: Include per-account signatures (either included or
   attached).
 * Saved searches: Save a search with 'C-S', then browse saved searches
@@ -27,6 +28,9 @@
 * Gravatar is configurable.
 * #103: Drafts are saved on force close or quit by default.
 * C-v: duplicate and refine query.
+* Mark thread moves to next by default.
+* ti: set cursor to first thread if we are at first thread when new
+  addition is made.
 
 == v0.5 / 2016-02-06
 

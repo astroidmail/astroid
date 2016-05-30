@@ -92,12 +92,19 @@ namespace Astroid {
   void QueryLoader::refresh_stats (Db * db) {
     log << debug << "ql: refresh stats.." << endl;
 
+    notmuch_status_t st = NOTMUCH_STATUS_SUCCESS;
+
     notmuch_query_t * query_t =  notmuch_query_create (db->nm_db, query.c_str ());
     for (ustring & t : db->excluded_tags) {
       notmuch_query_add_tag_exclude (query_t, t.c_str());
     }
     notmuch_query_set_omit_excluded (query_t, NOTMUCH_EXCLUDE_TRUE);
-    /* st = */ notmuch_query_count_messages_st (query_t, &total_messages); // destructive
+# ifdef HAVE_QUERY_COUNT_THREADS_ST
+    st = notmuch_query_count_messages_st (query_t, &total_messages); // destructive
+    if (st != NOTMUCH_STATUS_SUCCESS) total_messages = 0;
+# else
+    total_messages = notmuch_query_count_messages (query_t);
+# endif
     notmuch_query_destroy (query_t);
 
     ustring unread_q_s = "(" + query + ") AND tag:unread";
@@ -106,7 +113,12 @@ namespace Astroid {
       notmuch_query_add_tag_exclude (unread_q, t.c_str());
     }
     notmuch_query_set_omit_excluded (unread_q, NOTMUCH_EXCLUDE_TRUE);
-    /* st = */ notmuch_query_count_messages_st (unread_q, &unread_messages); // destructive
+# ifdef HAVE_QUERY_COUNT_THREADS_ST
+    st = notmuch_query_count_messages_st (unread_q, &unread_messages); // destructive
+    if (st != NOTMUCH_STATUS_SUCCESS) unread_messages = 0;
+# else
+    unread_messages = notmuch_query_count_messages (unread_q);
+# endif
     notmuch_query_destroy (unread_q);
 
     if (!in_destructor) stats_ready.emit ();
@@ -134,7 +146,12 @@ namespace Astroid {
     notmuch_query_set_sort (nmquery, sort);
 
     /* slow */
-    notmuch_status_t st = notmuch_query_search_threads_st (nmquery, &threads);
+    notmuch_status_t st = NOTMUCH_STATUS_SUCCESS;
+# ifdef HAVE_QUERY_THREADS_ST
+    st = notmuch_query_search_threads_st (nmquery, &threads);
+# else
+    threads = notmuch_query_search_threads (nmquery);
+# endif
 
     if (st != NOTMUCH_STATUS_SUCCESS) {
       log << error << "ql: could not get threads for query: " << query << endl;
@@ -298,6 +315,13 @@ namespace Astroid {
       log << debug << "ql: updated: did not find thread, time used: " << ((clock() - t0) * 1000.0 / CLOCKS_PER_SEC) << " ms." << endl;
       if (in_query) {
         log << debug << "ql: new thread for query, adding.." << endl;
+
+        /* get current cursor path, if we are at first row and the new addition
+         * is before we should scroll up. */
+        Gtk::TreePath path;
+        Gtk::TreeViewColumn *c;
+        list_view->get_cursor (path, c);
+
         auto iter = list_store->prepend ();
         Gtk::ListStore::Row newrow = *iter;
 
@@ -318,6 +342,14 @@ namespace Astroid {
         if (list_store->children().size() == 1) {
           if (!in_destructor)
             first_thread_ready.emit ();
+        } else {
+
+          if (path == Gtk::TreePath ("0")) {
+            Gtk::TreePath addpath = list_store->get_path (iter);
+            if (addpath <= path) {
+              list_view->set_cursor (addpath);
+            }
+          }
         }
       }
     }

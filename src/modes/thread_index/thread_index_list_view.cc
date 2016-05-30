@@ -412,22 +412,22 @@ namespace Astroid {
     /* set up for multi key handler */
     multi_keys.register_key ("N",
                              "thread_index.multi.mark_unread",
-                             "Mark unread",
+                             "Toggle unread",
                              bind (&ThreadIndexListView::multi_key_handler, this, MUnread, _1));
 
     multi_keys.register_key ("*",
                              "thread_index.multi.flag",
-                             "Flag",
+                             "Toggle flagged",
                              bind (&ThreadIndexListView::multi_key_handler, this, MFlag, _1));
 
     multi_keys.register_key ("a",
                              "thread_index.multi.archive",
-                             "Archive",
+                             "Toggle archive",
                              bind (&ThreadIndexListView::multi_key_handler, this, MArchive, _1));
 
     multi_keys.register_key ("S",
                              "thread_index.multi.mark_spam",
-                             "Mark spam",
+                             "Toggle spam",
                              bind (&ThreadIndexListView::multi_key_handler, this, MSpam, _1));
 
     multi_keys.register_key ("l",
@@ -438,7 +438,7 @@ namespace Astroid {
 
     multi_keys.register_key ("C-m",
                              "thread_index.multi.mute",
-                             "Mute",
+                             "Toggle mute",
                              bind (&ThreadIndexListView::multi_key_handler, this, MMute, _1));
 
     multi_keys.register_key ("t",
@@ -679,8 +679,8 @@ namespace Astroid {
           return true;
         });
 
-    keys->register_key ("t", "thread_index.toggle_marked",
-        "Mark thread",
+    keys->register_key ("t", "thread_index.toggle_marked_next",
+        "Toggle mark thread and move to next",
         [&] (Key) {
           if (list_store->children().size() < 1)
             return true;
@@ -695,6 +695,59 @@ namespace Astroid {
           if (iter) {
             Gtk::ListStore::Row row = *iter;
             row[list_store->columns.marked] = !row[list_store->columns.marked];
+
+            /* move to next thread */
+            path.next ();
+            iter = list_store->get_iter (path);
+            if (iter) set_cursor (path);
+          }
+
+          return true;
+        });
+
+    keys->register_key (UnboundKey (), "thread_index.toggle_marked",
+        "Toggle mark thread",
+        [&] (Key) {
+          if (list_store->children().size() < 1)
+            return true;
+
+          Gtk::TreePath path;
+          Gtk::TreeViewColumn *c;
+          get_cursor (path, c);
+          Gtk::TreeIter iter;
+
+          iter = list_store->get_iter (path);
+
+          if (iter) {
+            Gtk::ListStore::Row row = *iter;
+            row[list_store->columns.marked] = !row[list_store->columns.marked];
+          }
+
+          return true;
+        });
+
+    keys->register_key (UnboundKey (), "thread_index.toggle_marked_previous",
+        "Toggle mark thread and move to previous",
+        [&] (Key) {
+          if (list_store->children().size() < 1)
+            return true;
+
+          Gtk::TreePath path;
+          Gtk::TreeViewColumn *c;
+          get_cursor (path, c);
+          Gtk::TreeIter iter;
+
+          iter = list_store->get_iter (path);
+
+          if (iter) {
+            Gtk::ListStore::Row row = *iter;
+            row[list_store->columns.marked] = !row[list_store->columns.marked];
+
+            /* move to previous */
+            path.prev ();
+            if (path) {
+              set_cursor (path);
+            }
           }
 
           return true;

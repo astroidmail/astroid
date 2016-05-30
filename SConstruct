@@ -145,16 +145,46 @@ int main (int argc, char ** argv)
 }
 """
 
+nm_query_threads_st = """
+# include <notmuch.h>
+
+int main (int argc, char ** argv)
+{
+  notmuch_query_t * q;
+  notmuch_threads_t * t;
+  notmuch_status_t st;
+
+  st = notmuch_query_search_threads_st (q, &t);
+
+  return 0;
+}
+"""
+
+nm_query_count_threads_st = """
+# include <notmuch.h>
+
+int main (int argc, char ** argv)
+{
+  notmuch_query_t * q;
+  unsigned int c;
+  notmuch_status_t st;
+
+  st = notmuch_query_count_threads_st (q, &c);
+
+  return 0;
+}
+"""
+
 # http://www.scons.org/doc/1.2.0/HTML/scons-user/x4076.html
-def check_notmuch_get_revision (ctx):
-  ctx.Message ("Checking for C function notmuch_database_get_revision()..")
-  result = ctx.TryCompile (nm_db_get_revision_test_src, '.cpp')
+def check_notmuch (ctx, title, src):
+  ctx.Message ("Checking for C function %s.." % title)
+  result = ctx.TryCompile (src, '.cpp')
   ctx.Result (result)
   return result
 
 conf = Configure(env, custom_tests = { 'CheckPKGConfig' : CheckPKGConfig,
                                        'CheckPKG' : CheckPKG,
-                                       'CheckNotmuchGetRev' : check_notmuch_get_revision})
+                                       'CheckNotmuch' : check_notmuch})
 
 
 if not conf.CheckPKGConfig('0.15.0'):
@@ -189,12 +219,25 @@ if not conf.CheckLibWithHeader ('notmuch', 'notmuch.h', 'c'):
   print "notmuch does not seem to be installed."
   Exit (1)
 
-if conf.CheckNotmuchGetRev ():
+if conf.CheckNotmuch ('notmuch_database_get_revision',
+                      nm_db_get_revision_test_src):
   have_get_rev = True
   env.AppendUnique (CPPFLAGS = [ '-DHAVE_NOTMUCH_GET_REV' ])
 else:
   have_get_rev = False
   print "notmuch_database_get_revision() not available. A recent notmuch with lastmod capabilities will result in easier updating of new threads and smoother polls."
+
+if conf.CheckNotmuch ('notmuch_query_search_threads_st',
+                      nm_query_threads_st):
+  env.AppendUnique (CPPFLAGS = [ '-DHAVE_QUERY_THREADS_ST' ])
+else:
+  print "notmuch_query_*_st status versions are not available, some error checking is not possible - and tests will fail. consider upgrading notmuch to a version equal or later than 0.21."
+
+if conf.CheckNotmuch ('notmuch_query_count_threads_st',
+                      nm_query_count_threads_st):
+  env.AppendUnique (CPPFLAGS = [ '-DHAVE_QUERY_COUNT_THREADS_ST' ])
+else:
+  print "notmuch_query_*_count__st status versions are not available, some error checking is not possible - and tests will fail. consider upgrading notmuch to a version equal or later than 0.21."
 
 # external libraries
 env.ParseConfig ('pkg-config --libs --cflags glibmm-2.4')
