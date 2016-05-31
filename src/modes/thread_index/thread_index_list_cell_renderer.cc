@@ -335,31 +335,32 @@ namespace Astroid {
 
       unsigned char * tc = Crypto::get_md5_digest_char (t);
 
-      /* blend color: default ffffff*/
-      unsigned char base[3] = { 0xff, 0xff, 0xff };
+      unsigned char upper[3] = { 0xf2, 0xf2, 0xf2 };
+      unsigned char lower[3] = { 0x33, 0x33, 0x33 };
+      unsigned char limit[3] = { 0x88, 0x88, 0x88 };
 
-      Pango::Color pbase;
-      bool r = pbase.parse (tags_blend_color);
-      if (!r) {
-        log << error << "til cr: failed parsing blend color: " << tags_blend_color << endl;
-      } else {
-        base[0] = pbase.get_red ();
-        base[1] = pbase.get_green ();
-        base[2] = pbase.get_blue ();
-      }
+      /*
+       * normalize the background tag color to be between upper and
+       * lower, then choose font color based on above or below limit
+       */
 
-      unsigned char blend[3];
+      unsigned char bg[3];
+      bool above = false;
 
       for (int k = 0; k < 3; k++) {
-        blend[k] = (base[k] + tc[(16 - 3 + k)] * tags_blend_weight) / (tags_blend_weight + 1);
+        bg[k] = tc[k] * (upper[k] - lower[k]) + lower[k];
+        if (bg[2-k] >= limit[2-k]) above = true;
+        else above = false;
       }
 
-      std::ostringstream tc_str;
-      tc_str << "#";
+      std::ostringstream bg_str;
+      bg_str << "#";
 
       for (int k = 0; k < 3; k++) {
-        tc_str << std::hex << std::setfill('0') << std::setw(2) << ((int)blend[k]);
+        bg_str << std::hex << std::setfill('0') << std::setw(2) << ((int)bg[k]);
       }
+
+      log << debug << "bg: " << bg_str.str () << endl;
 
       delete tc;
 
@@ -370,20 +371,18 @@ namespace Astroid {
       len += t.length ();
 
       /* TODO: get length of extra spacing and , into len */
-
-      ustring bg_color;
-
-      if ((flags & Gtk::CELL_RENDERER_SELECTED) != 0) {
-        bg_color = tags_background_color_selected;
+      ustring fc;
+      if (!above) {
+        fc = "#ffffff";
       } else {
-        bg_color = tags_background_color;
+        fc = "#000000";
       }
 
       tag_string += ustring::compose (
                   "<span font_style=\"italic\" bgcolor=\"%3\" color=\"%1\"> %2 </span>",
-                  tc_str.str (),
+                  fc,
                   Glib::Markup::escape_text(t),
-                  bg_color );
+                  bg_str.str () );
     }
 
     pango_layout->set_markup (tag_string);
