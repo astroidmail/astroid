@@ -335,12 +335,13 @@ namespace Astroid {
 
       unsigned char * tc = Crypto::get_md5_digest_char (t);
 
-      unsigned char upper[3] = { 0xf2, 0xf2, 0xf2 };
+      unsigned char upper[3] = { 0xe5, 0xe5, 0xe5 };
       unsigned char lower[3] = { 0x33, 0x33, 0x33 };
 
       /*
        * normalize the background tag color to be between upper and
-       * lower, then choose font color based on above or below limit
+       * lower, then choose light or dark font color depending on
+       * lightness of background color.
        */
 
       unsigned char bg[3];
@@ -351,7 +352,7 @@ namespace Astroid {
 
       float lum = (bg[0] * .21 + bg[1] * .72 + bg[2] * .07) / 255.0;
       /* float avg = (bg[0] + bg[1] + bg[2]) / (3 * 255.0); */
-      
+
 
       std::ostringstream bg_str;
       bg_str << "#";
@@ -375,11 +376,11 @@ namespace Astroid {
       if (lum > 0.5) {
         fc = "#000000";
       } else {
-        fc = "#ffffff";
+        fc = "#f2f2f2";
       }
 
       tag_string += ustring::compose (
-                  "<span font_style=\"italic\" bgcolor=\"%3\" color=\"%1\"> %2 </span>",
+                  "<span bgcolor=\"%3\" color=\"%1\"> %2 </span>",
                   fc,
                   Glib::Markup::escape_text(t),
                   bg_str.str () );
