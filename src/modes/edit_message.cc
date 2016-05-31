@@ -734,8 +734,8 @@ namespace Astroid {
     Glib::RefPtr<Gtk::IconTheme> theme = Gtk::IconTheme::get_default();
     Glib::RefPtr<Gdk::Pixbuf> pixbuf = theme->load_icon (
         "mail-send",
-        42,
-        Gtk::ICON_LOOKUP_USE_BUILTIN );
+        Notebook::icon_size,
+        Gtk::ICON_LOOKUP_USE_BUILTIN | Gtk::ICON_LOOKUP_FORCE_SIZE);
     message_sending_status_icon.set (pixbuf);
 
     main_window->notebook.add_widget (&message_sending_status_icon);
@@ -761,8 +761,8 @@ namespace Astroid {
 
       pixbuf = theme->load_icon (
           "gtk-apply",
-          42,
-          Gtk::ICON_LOOKUP_USE_BUILTIN );
+          Notebook::icon_size,
+          Gtk::ICON_LOOKUP_USE_BUILTIN | Gtk::ICON_LOOKUP_FORCE_SIZE);
 
       /* delete draft */
       if (draft_msg) {
@@ -777,8 +777,8 @@ namespace Astroid {
 
       pixbuf = theme->load_icon (
          "error",
-          42,
-          Gtk::ICON_LOOKUP_USE_BUILTIN );
+          Notebook::icon_size,
+          Gtk::ICON_LOOKUP_USE_BUILTIN | Gtk::ICON_LOOKUP_FORCE_SIZE);
     }
 
     message_sending_status_icon.set (pixbuf);

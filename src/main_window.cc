@@ -21,12 +21,14 @@ using namespace std;
 
 namespace Astroid {
   atomic<uint> MainWindow::nextid (0);
+  int          Notebook::icon_size = 42;
 
   Notebook::Notebook () {
     set_scrollable (true);
 
     set_action_widget (&icons, Gtk::PACK_END);
     icons.show_all ();
+    icon_size = icons.get_height ();
 
     astroid->poll->signal_poll_state ().connect (
         sigc::mem_fun (this, &Notebook::poll_state_changed));
