@@ -337,7 +337,6 @@ namespace Astroid {
 
       unsigned char upper[3] = { 0xf2, 0xf2, 0xf2 };
       unsigned char lower[3] = { 0x33, 0x33, 0x33 };
-      unsigned char limit[3] = { 0x88, 0x88, 0x88 };
 
       /*
        * normalize the background tag color to be between upper and
@@ -345,13 +344,14 @@ namespace Astroid {
        */
 
       unsigned char bg[3];
-      bool above = false;
 
       for (int k = 0; k < 3; k++) {
         bg[k] = tc[k] * (upper[k] - lower[k]) + lower[k];
-        if (bg[2-k] >= limit[2-k]) above = true;
-        else above = false;
       }
+
+      float lum = (bg[0] * .21 + bg[1] * .72 + bg[2] * .07) / 255.0;
+      /* float avg = (bg[0] + bg[1] + bg[2]) / (3 * 255.0); */
+      
 
       std::ostringstream bg_str;
       bg_str << "#";
@@ -372,10 +372,10 @@ namespace Astroid {
 
       /* TODO: get length of extra spacing and , into len */
       ustring fc;
-      if (!above) {
-        fc = "#ffffff";
-      } else {
+      if (lum > 0.5) {
         fc = "#000000";
+      } else {
+        fc = "#ffffff";
       }
 
       tag_string += ustring::compose (
