@@ -31,6 +31,8 @@
 * Mark thread moves to next by default.
 * ti: set cursor to first thread if we are at first thread when new
   addition is made.
+* build: --disable-libsass: do not depend on libsass, but use a sass
+  compiler at build time (-scss-compiler=sassc).
 
 == v0.5 / 2016-02-06
 
