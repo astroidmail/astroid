@@ -95,10 +95,8 @@ namespace Astroid {
       int tags_start;
       int tags_width;
       int tags_len = 80; // chars, configurable
-      ustring tags_blend_color; // configurable
-      ustring tags_background_color;
-      ustring tags_background_color_selected;
-      double  tags_blend_weight; // configurable
+      Pango::Color tags_upper_color;
+      Pango::Color tags_lower_color;
 
       int subject_start;
       ustring subject_color; // configurable

@@ -54,11 +54,21 @@ namespace Astroid {
     subject_color_selected = ti.get<string> ("subject_color_selected");
     background_color_selected = ti.get<string> ("background_color_selected");
 
-    tags_blend_color = ti.get<string> ("tags_blend_color");
-    tags_blend_weight = ti.get<double> ("tags_blend_weight");
+    ustring _tags_upper_color = ti.get<string> ("tags_upper_color");
+    ustring _tags_lower_color = ti.get<string> ("tags_lower_color");
 
-    tags_background_color = ti.get<string>("tags_background_color");
-    tags_background_color_selected = ti.get<string>("tags_background_color_selected");
+    bool r = false;
+    r = tags_upper_color.parse (_tags_upper_color);
+    if (!r) {
+      log << error << "ti: failed parsing tags_upper_color" << endl;
+      tags_upper_color.parse ("#e5e5e5");
+    }
+
+    r = tags_lower_color.parse (_tags_lower_color);
+    if (!r) {
+      log << error << "ti: failed parsing tags_lower_color" << endl;
+      tags_lower_color.parse ("#e5e5e5");
+    }
 
   }
 
@@ -303,7 +313,7 @@ namespace Astroid {
       const ::Cairo::RefPtr< ::Cairo::Context>&cr,
       Gtk::Widget &widget,
       const Gdk::Rectangle &cell_area,
-      Gtk::CellRendererState flags ) {
+      Gtk::CellRendererState /* flags */ ) {
 
     Glib::RefPtr<Pango::Layout> pango_layout = widget.create_pango_layout ("");
 
@@ -328,20 +338,32 @@ namespace Astroid {
     int len = 0;
 
     for (auto t : tags) {
-      if (!first) tag_string += ",";
+      if (!first) {
+        tag_string += ",";
+        len++;
+      }
       first = false;
 
       if (len >= tags_len) break;
 
       unsigned char * tc = Crypto::get_md5_digest_char (t);
 
-      unsigned char upper[3] = { 0xe5, 0xe5, 0xe5 };
-      unsigned char lower[3] = { 0x33, 0x33, 0x33 };
+      unsigned char upper[3] = {
+        (unsigned char) tags_upper_color.get_red (),
+        (unsigned char) tags_upper_color.get_green (),
+        (unsigned char) tags_upper_color.get_blue (),
+        };
+
+      unsigned char lower[3] = {
+        (unsigned char) tags_lower_color.get_red (),
+        (unsigned char) tags_lower_color.get_green (),
+        (unsigned char) tags_lower_color.get_blue (),
+        };
 
       /*
        * normalize the background tag color to be between upper and
        * lower, then choose light or dark font color depending on
-       * lightness of background color.
+       * luminocity of background color.
        */
 
       unsigned char bg[3];
@@ -353,7 +375,6 @@ namespace Astroid {
       float lum = (bg[0] * .21 + bg[1] * .72 + bg[2] * .07) / 255.0;
       /* float avg = (bg[0] + bg[1] + bg[2]) / (3 * 255.0); */
 
-
       std::ostringstream bg_str;
       bg_str << "#";
 
@@ -361,17 +382,15 @@ namespace Astroid {
         bg_str << std::hex << std::setfill('0') << std::setw(2) << ((int)bg[k]);
       }
 
-      log << debug << "bg: " << bg_str.str () << endl;
 
       delete tc;
 
       if (len + t.length () > static_cast<unsigned int>(tags_len)) {
-        t = t.substr (0, (len + t.length () - tags_len));
+        t = t.substr (0, (len + t.length () + 2 - tags_len));
       }
 
-      len += t.length ();
+      len += t.length () + 2;
 
-      /* TODO: get length of extra spacing and , into len */
       ustring fc;
       if (lum > 0.5) {
         fc = "#000000";
