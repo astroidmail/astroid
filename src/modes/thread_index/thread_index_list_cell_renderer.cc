@@ -325,7 +325,7 @@ namespace Astroid {
 
     for (auto t : tags) {
       if (!first) {
-        tag_string += ",";
+        tag_string += " ";
         len++;
       }
       first = false;
