@@ -335,6 +335,7 @@ namespace Astroid {
 
     ustring tag_string = "";
     bool first = true;
+    bool broken = false;
     int len = 0;
 
     for (auto t : tags) {
@@ -344,7 +345,9 @@ namespace Astroid {
       }
       first = false;
 
+      broken = true;
       if (len >= tags_len) break;
+      broken = false;
 
       unsigned char * tc = Crypto::get_md5_digest_char (t);
 
@@ -385,8 +388,9 @@ namespace Astroid {
 
       delete tc;
 
-      if (len + t.length () > static_cast<unsigned int>(tags_len)) {
+      if ((len + t.length () + 2) > static_cast<unsigned int>(tags_len)) {
         t = t.substr (0, (len + t.length () + 2 - tags_len));
+        t += "..";
       }
 
       len += t.length () + 2;
@@ -403,6 +407,10 @@ namespace Astroid {
                   fc,
                   Glib::Markup::escape_text(t),
                   bg_str.str () );
+    }
+
+    if (broken) {
+      tag_string += "..";
     }
 
     pango_layout->set_markup (tag_string);
