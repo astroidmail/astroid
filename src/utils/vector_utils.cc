@@ -4,6 +4,7 @@
 # include "astroid.hh"
 # include "vector_utils.hh"
 # include "ustring_utils.hh"
+# include "utils.hh"
 
 using namespace std;
 
@@ -55,6 +56,29 @@ namespace Astroid {
 
   ustring VectorUtils::concat_tags (vector<ustring> tags) {
     return concat (tags, ", ", stop_ons_tags);
+  }
+
+  ustring VectorUtils::concat_tags_color (vector<ustring> tags) {
+    ustring tag_string = "";
+    bool first = true;
+
+    for (auto t : tags) {
+      if (!first) {
+        tag_string += ",";
+      }
+      first = false;
+
+      auto colors = Utils::get_tag_color (t);
+
+      tag_string += ustring::compose (
+                  "<span style=\"background-color: %3; color: %1 !important; white-space: pre;\"> %2 </span>",
+                  colors.first,
+                  Glib::Markup::escape_text(t),
+                  colors.second );
+    }
+
+
+    return tag_string;
   }
 }
 
