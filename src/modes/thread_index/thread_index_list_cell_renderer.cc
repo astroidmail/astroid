@@ -73,6 +73,7 @@ namespace Astroid {
       padding = char_width;
 
       content_height  = calculate_height (widget);
+      line_height     = content_height + line_spacing;
       height_set = true;
 
       left_icons_size  = content_height - (2 * left_icons_padding);
@@ -171,14 +172,14 @@ namespace Astroid {
       Glib::RefPtr<Gdk::Pixbuf> pixbuf = theme->load_icon (
           "object-select-symbolic",
           left_icons_size,
-          Gtk::ICON_LOOKUP_USE_BUILTIN );
+          Gtk::ICON_LOOKUP_USE_BUILTIN  | Gtk::ICON_LOOKUP_FORCE_SIZE);
 
 
       marked_icon = pixbuf->scale_simple (left_icons_size, left_icons_size,
           Gdk::INTERP_BILINEAR);
     }
 
-    int y = cell_area.get_y() + left_icons_padding;
+    int y = cell_area.get_y() + left_icons_padding + line_spacing / 2;
     int x = cell_area.get_x();
 
     Gdk::Cairo::set_source_pixbuf (cr, marked_icon, x, y);
@@ -198,13 +199,13 @@ namespace Astroid {
       Glib::RefPtr<Gdk::Pixbuf> pixbuf = theme->load_icon (
           "starred-symbolic",
           left_icons_size,
-          Gtk::ICON_LOOKUP_USE_BUILTIN );
+          Gtk::ICON_LOOKUP_USE_BUILTIN  | Gtk::ICON_LOOKUP_FORCE_SIZE);
 
       flagged_icon = pixbuf->scale_simple (left_icons_size, left_icons_size,
           Gdk::INTERP_BILINEAR);
     }
 
-    int y = cell_area.get_y() + left_icons_padding;
+    int y = cell_area.get_y() + left_icons_padding + line_spacing / 2;
     int x = cell_area.get_x() + left_icons_width + left_icons_padding;
 
     Gdk::Cairo::set_source_pixbuf (cr, flagged_icon, x, y);
@@ -225,14 +226,14 @@ namespace Astroid {
       Glib::RefPtr<Gdk::Pixbuf> pixbuf = theme->load_icon (
           "mail-attachment-symbolic",
           left_icons_size,
-          Gtk::ICON_LOOKUP_USE_BUILTIN );
+          Gtk::ICON_LOOKUP_USE_BUILTIN | Gtk::ICON_LOOKUP_FORCE_SIZE);
 
 
       attachment_icon = pixbuf->scale_simple (left_icons_size, left_icons_size,
           Gdk::INTERP_BILINEAR);
     }
 
-    int y = cell_area.get_y() + left_icons_padding;
+    int y = cell_area.get_y() + left_icons_padding + line_spacing / 2;
     int x = cell_area.get_x() + (2 * (left_icons_width + left_icons_padding));
 
     Gdk::Cairo::set_source_pixbuf (cr, attachment_icon, x, y);
@@ -286,7 +287,7 @@ namespace Astroid {
     /* align in the middle */
     int w, h;
     pango_layout->get_size (w, h);
-    int y = max(0,(content_height / 2) - ((h / Pango::SCALE) / 2));
+    int y = max(0,(line_height / 2) - ((h / Pango::SCALE) / 2));
 
     cr->move_to (cell_area.get_x() + subject_start, cell_area.get_y() + y);
     pango_layout->show_in_cairo_context (cr);
@@ -359,7 +360,7 @@ namespace Astroid {
     /* align in the middle */
     int w, h;
     pango_layout->get_size (w, h);
-    int y = max(0,(content_height / 2) - ((h / Pango::SCALE) / 2));
+    int y = max(0,(line_height / 2) - ((h / Pango::SCALE) / 2));
 
     cr->move_to (cell_area.get_x() + tags_start, cell_area.get_y() + y);
     pango_layout->show_in_cairo_context (cr);
@@ -387,7 +388,7 @@ namespace Astroid {
     /* align in the middle */
     int w, h;
     pango_layout->get_size (w, h);
-    int y = max(0,(content_height / 2) - ((h / Pango::SCALE) / 2));
+    int y = max(0,(line_height / 2) - ((h / Pango::SCALE) / 2));
 
     /* update subject start */
     //subject_start = date_start + (w / Pango::SCALE) + padding;
@@ -421,7 +422,7 @@ namespace Astroid {
     /* align in the middle */
     int w, h;
     pango_layout->get_size (w, h);
-    int y = max(0,(content_height / 2) - ((h / Pango::SCALE) / 2));
+    int y = max(0,(line_height / 2) - ((h / Pango::SCALE) / 2));
 
     /* update subject start */
     //subject_start = date_start + (w / Pango::SCALE) + padding;
@@ -519,7 +520,7 @@ namespace Astroid {
     /* align in the middle */
     int w, h;
     pango_layout->get_size (w, h);
-    int y = max(0,(content_height / 2) - ((h / Pango::SCALE) / 2));
+    int y = max(0,(line_height / 2) - ((h / Pango::SCALE) / 2));
 
     /* update subject start */
     //subject_start = date_start + (w / Pango::SCALE) + padding;
@@ -531,7 +532,7 @@ namespace Astroid {
 
   /* cellrenderer overloads {{{ */
   int ThreadIndexListCellRenderer::get_height () {
-    if (height_set) return (content_height + line_spacing);
+    if (height_set) return line_height;
     else return 0;
   }
 

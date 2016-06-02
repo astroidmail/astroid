@@ -67,6 +67,7 @@ namespace Astroid {
       bool height_set = false;
 
     private:
+      int line_height; // content_height + line_spacing
       int content_height;
       int line_spacing = 2; // configurable
 
