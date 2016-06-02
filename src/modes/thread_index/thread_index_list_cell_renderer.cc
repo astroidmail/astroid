@@ -54,22 +54,6 @@ namespace Astroid {
     subject_color_selected = ti.get<string> ("subject_color_selected");
     background_color_selected = ti.get<string> ("background_color_selected");
 
-    ustring _tags_upper_color = ti.get<string> ("tags_upper_color");
-    ustring _tags_lower_color = ti.get<string> ("tags_lower_color");
-
-    bool r = false;
-    r = tags_upper_color.parse (_tags_upper_color);
-    if (!r) {
-      log << error << "ti: failed parsing tags_upper_color" << endl;
-      tags_upper_color.parse ("#e5e5e5");
-    }
-
-    r = tags_lower_color.parse (_tags_lower_color);
-    if (!r) {
-      log << error << "ti: failed parsing tags_lower_color" << endl;
-      tags_lower_color.parse ("#e5e5e5");
-    }
-
   }
 
   void ThreadIndexListCellRenderer::render_vfunc (
@@ -349,44 +333,8 @@ namespace Astroid {
       if (len >= tags_len) break;
       broken = false;
 
-      unsigned char * tc = Crypto::get_md5_digest_char (t);
+      auto colors = Utils::get_tag_color (t);
 
-      unsigned char upper[3] = {
-        (unsigned char) tags_upper_color.get_red (),
-        (unsigned char) tags_upper_color.get_green (),
-        (unsigned char) tags_upper_color.get_blue (),
-        };
-
-      unsigned char lower[3] = {
-        (unsigned char) tags_lower_color.get_red (),
-        (unsigned char) tags_lower_color.get_green (),
-        (unsigned char) tags_lower_color.get_blue (),
-        };
-
-      /*
-       * normalize the background tag color to be between upper and
-       * lower, then choose light or dark font color depending on
-       * luminocity of background color.
-       */
-
-      unsigned char bg[3];
-
-      for (int k = 0; k < 3; k++) {
-        bg[k] = tc[k] * (upper[k] - lower[k]) + lower[k];
-      }
-
-      float lum = (bg[0] * .21 + bg[1] * .72 + bg[2] * .07) / 255.0;
-      /* float avg = (bg[0] + bg[1] + bg[2]) / (3 * 255.0); */
-
-      std::ostringstream bg_str;
-      bg_str << "#";
-
-      for (int k = 0; k < 3; k++) {
-        bg_str << std::hex << std::setfill('0') << std::setw(2) << ((int)bg[k]);
-      }
-
-
-      delete tc;
 
       if ((len + t.length () + 2) > static_cast<unsigned int>(tags_len)) {
         t = t.substr (0, (len + t.length () + 2 - tags_len));
@@ -395,18 +343,11 @@ namespace Astroid {
 
       len += t.length () + 2;
 
-      ustring fc;
-      if (lum > 0.5) {
-        fc = "#000000";
-      } else {
-        fc = "#f2f2f2";
-      }
-
       tag_string += ustring::compose (
                   "<span bgcolor=\"%3\" color=\"%1\"> %2 </span>",
-                  fc,
+                  colors.first,
                   Glib::Markup::escape_text(t),
-                  bg_str.str () );
+                  colors.second );
     }
 
     if (broken) {

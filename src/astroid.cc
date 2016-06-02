@@ -17,6 +17,7 @@
 # include "actions/action_manager.hh"
 # include "actions/action.hh"
 # include "utils/date_utils.hh"
+# include "utils/utils.hh"
 # include "log.hh"
 # include "poll.hh"
 
@@ -214,6 +215,7 @@ namespace Astroid {
 
     /* set up static classes */
     Date::init ();
+    Utils::init ();
     Db::init ();
     Keybindings::init ();
     SavedSearches::init ();
@@ -260,6 +262,7 @@ namespace Astroid {
 
     /* set up static classes */
     Date::init ();
+    Utils::init ();
     Db::init ();
     SavedSearches::init ();
 

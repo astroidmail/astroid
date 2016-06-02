@@ -1,7 +1,41 @@
 # include "utils.hh"
+# include "log.hh"
+# include "crypto.hh"
+
+# include <string>
+# include <iostream>
+# include <iomanip>
+
 # include <glib.h>
+# include <boost/property_tree/ptree.hpp>
+
+using boost::property_tree::ptree;
+using std::endl;
 
 namespace Astroid {
+  Pango::Color Utils::tags_upper_color;
+  Pango::Color Utils::tags_lower_color;
+
+  void Utils::init () {
+    ptree ti = astroid->config ("thread_index.cell");
+
+    ustring _tags_upper_color = ti.get<std::string> ("tags_upper_color");
+    ustring _tags_lower_color = ti.get<std::string> ("tags_lower_color");
+
+    bool r = false;
+    r = tags_upper_color.parse (_tags_upper_color);
+    if (!r) {
+      log << error << "ti: failed parsing tags_upper_color" << endl;
+      tags_upper_color.parse ("#e5e5e5");
+    }
+
+    r = tags_lower_color.parse (_tags_lower_color);
+    if (!r) {
+      log << error << "ti: failed parsing tags_lower_color" << endl;
+      tags_lower_color.parse ("#e5e5e5");
+    }
+
+  }
 
   ustring Utils::format_size (int sz) {
 
@@ -28,5 +62,54 @@ namespace Astroid {
     return _f;
   }
 
+  std::pair<ustring, ustring> Utils::get_tag_color (ustring t) {
+    unsigned char * tc = Crypto::get_md5_digest_char (t);
+
+    unsigned char upper[3] = {
+      (unsigned char) tags_upper_color.get_red (),
+      (unsigned char) tags_upper_color.get_green (),
+      (unsigned char) tags_upper_color.get_blue (),
+      };
+
+    unsigned char lower[3] = {
+      (unsigned char) tags_lower_color.get_red (),
+      (unsigned char) tags_lower_color.get_green (),
+      (unsigned char) tags_lower_color.get_blue (),
+      };
+
+    /*
+     * normalize the background tag color to be between upper and
+     * lower, then choose light or dark font color depending on
+     * luminocity of background color.
+     */
+
+    unsigned char bg[3];
+
+    for (int k = 0; k < 3; k++) {
+      bg[k] = tc[k] * (upper[k] - lower[k]) + lower[k];
+    }
+
+    float lum = (bg[0] * .21 + bg[1] * .72 + bg[2] * .07) / 255.0;
+    /* float avg = (bg[0] + bg[1] + bg[2]) / (3 * 255.0); */
+
+    std::ostringstream bg_str;
+    bg_str << "#";
+
+    for (int k = 0; k < 3; k++) {
+      bg_str << std::hex << std::setfill('0') << std::setw(2) << ((int)bg[k]);
+    }
+
+
+    delete tc;
+
+    ustring fc;
+    if (lum > 0.5) {
+      fc = "#000000";
+    } else {
+      fc = "#f2f2f2";
+    }
+
+    return std::make_pair (fc, bg_str.str ());
+  }
 }
 
