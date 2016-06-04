@@ -58,23 +58,54 @@ namespace Astroid {
     return concat (tags, ", ", stop_ons_tags);
   }
 
-  ustring VectorUtils::concat_tags_color (vector<ustring> tags) {
+  ustring VectorUtils::concat_tags_color (
+      vector<ustring> tags,
+      bool pango,
+      int maxlen ) {
+
     ustring tag_string = "";
     bool first = true;
+    bool broken = false;
+    int len = 0;
 
     for (auto t : tags) {
+
       if (!first) {
         tag_string += " ";
+      } else first = false;
+
+      if (maxlen > 0) {
+        broken = true;
+        if (len >= maxlen) break;
+        broken = false;
+
+        if ((len + t.length () + 2) > static_cast<unsigned int>(maxlen)) {
+          t = t.substr (0, (len + t.length () + 2 - maxlen));
+          t += "..";
+        }
+
+        len += t.length () + 2;
       }
-      first = false;
 
       auto colors = Utils::get_tag_color (t);
+      if (pango) {
+        tag_string += ustring::compose (
+                    "<span bgcolor=\"%3\" color=\"%1\"> %2 </span>",
+                    colors.first,
+                    Glib::Markup::escape_text(t),
+                    colors.second );
 
-      tag_string += ustring::compose (
-                  "<span style=\"background-color: %3; color: %1 !important; white-space: pre;\"> %2 </span>",
-                  colors.first,
-                  Glib::Markup::escape_text(t),
-                  colors.second );
+      } else {
+        tag_string += ustring::compose (
+                    "<span style=\"background-color: %3; color: %1 !important; white-space: pre;\"> %2 </span>",
+                    colors.first,
+                    Glib::Markup::escape_text(t),
+                    colors.second );
+      }
+    }
+
+    if (broken) {
+      tag_string += "..";
     }
 
 

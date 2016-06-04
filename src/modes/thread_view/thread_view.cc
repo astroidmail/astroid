@@ -640,7 +640,7 @@ namespace Astroid {
 
     if (!wk_loaded || !ready) return;
 
-    ustring tags_s = VectorUtils::concat_tags_color (m->tags);
+    ustring tags_s = VectorUtils::concat_tags_color (m->tags, false, 0);
     GError *err;
     ustring mid = "message_" + m->mid;
 
@@ -891,7 +891,7 @@ namespace Astroid {
     }
 
     if (m->in_notmuch) {
-      ustring tags_s = VectorUtils::concat_tags_color (m->tags);
+      ustring tags_s = VectorUtils::concat_tags_color (m->tags, false, 0);
 
 
       header += create_header_row ("Tags", tags_s, false, false, true);

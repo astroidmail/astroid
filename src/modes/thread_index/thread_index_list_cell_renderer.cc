@@ -318,42 +318,7 @@ namespace Astroid {
                     hidden_tags.end (),
                     back_inserter(tags));
 
-    ustring tag_string = "";
-    bool first = true;
-    bool broken = false;
-    int len = 0;
-
-    for (auto t : tags) {
-      if (!first) {
-        tag_string += " ";
-        len++;
-      }
-      first = false;
-
-      broken = true;
-      if (len >= tags_len) break;
-      broken = false;
-
-      auto colors = Utils::get_tag_color (t);
-
-
-      if ((len + t.length () + 2) > static_cast<unsigned int>(tags_len)) {
-        t = t.substr (0, (len + t.length () + 2 - tags_len));
-        t += "..";
-      }
-
-      len += t.length () + 2;
-
-      tag_string += ustring::compose (
-                  "<span bgcolor=\"%3\" color=\"%1\"> %2 </span>",
-                  colors.first,
-                  Glib::Markup::escape_text(t),
-                  colors.second );
-    }
-
-    if (broken) {
-      tag_string += "..";
-    }
+    ustring tag_string = VectorUtils::concat_tags_color (tags, true, tags_len);
 
     pango_layout->set_markup (tag_string);
 
