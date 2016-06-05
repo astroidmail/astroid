@@ -74,6 +74,8 @@ namespace Astroid {
         tag_string += " ";
       } else first = false;
 
+      auto colors = Utils::get_tag_color (t);
+
       if (maxlen > 0) {
         broken = true;
         if (len >= maxlen) break;
@@ -87,7 +89,6 @@ namespace Astroid {
         len += t.length () + 2;
       }
 
-      auto colors = Utils::get_tag_color (t);
       if (pango) {
         tag_string += ustring::compose (
                     "<span bgcolor=\"%3\" color=\"%1\"> %2 </span>",
