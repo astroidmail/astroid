@@ -18,6 +18,7 @@
 # include "db.hh"
 # include "utils/utils.hh"
 # include "log.hh"
+# include "crypto.hh"
 
 using namespace std;
 using boost::property_tree::ptree;
@@ -53,8 +54,6 @@ namespace Astroid {
     subject_color_selected = ti.get<string> ("subject_color_selected");
     background_color_selected = ti.get<string> ("background_color_selected");
 
-    tags_color    = ti.get<string> ("tags_color");
-
   }
 
   void ThreadIndexListCellRenderer::render_vfunc (
@@ -74,6 +73,7 @@ namespace Astroid {
       padding = char_width;
 
       content_height  = calculate_height (widget);
+      line_height     = content_height + line_spacing;
       height_set = true;
 
       left_icons_size  = content_height - (2 * left_icons_padding);
@@ -109,7 +109,7 @@ namespace Astroid {
 
     render_authors (cr, widget, cell_area);
 
-    tags_width = render_tags (cr, widget, cell_area); // returns width
+    tags_width = render_tags (cr, widget, cell_area, flags); // returns width
     subject_start = tags_start + tags_width / Pango::SCALE + ((tags_width > 0) ? padding : 0);
 
     render_subject (cr, widget, cell_area, flags);
@@ -172,14 +172,14 @@ namespace Astroid {
       Glib::RefPtr<Gdk::Pixbuf> pixbuf = theme->load_icon (
           "object-select-symbolic",
           left_icons_size,
-          Gtk::ICON_LOOKUP_USE_BUILTIN );
+          Gtk::ICON_LOOKUP_USE_BUILTIN  | Gtk::ICON_LOOKUP_FORCE_SIZE);
 
 
       marked_icon = pixbuf->scale_simple (left_icons_size, left_icons_size,
           Gdk::INTERP_BILINEAR);
     }
 
-    int y = cell_area.get_y() + left_icons_padding;
+    int y = cell_area.get_y() + left_icons_padding + line_spacing / 2;
     int x = cell_area.get_x();
 
     Gdk::Cairo::set_source_pixbuf (cr, marked_icon, x, y);
@@ -199,13 +199,13 @@ namespace Astroid {
       Glib::RefPtr<Gdk::Pixbuf> pixbuf = theme->load_icon (
           "starred-symbolic",
           left_icons_size,
-          Gtk::ICON_LOOKUP_USE_BUILTIN );
+          Gtk::ICON_LOOKUP_USE_BUILTIN  | Gtk::ICON_LOOKUP_FORCE_SIZE);
 
       flagged_icon = pixbuf->scale_simple (left_icons_size, left_icons_size,
           Gdk::INTERP_BILINEAR);
     }
 
-    int y = cell_area.get_y() + left_icons_padding;
+    int y = cell_area.get_y() + left_icons_padding + line_spacing / 2;
     int x = cell_area.get_x() + left_icons_width + left_icons_padding;
 
     Gdk::Cairo::set_source_pixbuf (cr, flagged_icon, x, y);
@@ -226,14 +226,14 @@ namespace Astroid {
       Glib::RefPtr<Gdk::Pixbuf> pixbuf = theme->load_icon (
           "mail-attachment-symbolic",
           left_icons_size,
-          Gtk::ICON_LOOKUP_USE_BUILTIN );
+          Gtk::ICON_LOOKUP_USE_BUILTIN | Gtk::ICON_LOOKUP_FORCE_SIZE);
 
 
       attachment_icon = pixbuf->scale_simple (left_icons_size, left_icons_size,
           Gdk::INTERP_BILINEAR);
     }
 
-    int y = cell_area.get_y() + left_icons_padding;
+    int y = cell_area.get_y() + left_icons_padding + line_spacing / 2;
     int x = cell_area.get_x() + (2 * (left_icons_width + left_icons_padding));
 
     Gdk::Cairo::set_source_pixbuf (cr, attachment_icon, x, y);
@@ -287,7 +287,7 @@ namespace Astroid {
     /* align in the middle */
     int w, h;
     pango_layout->get_size (w, h);
-    int y = max(0,(content_height / 2) - ((h / Pango::SCALE) / 2));
+    int y = max(0,(line_height / 2) - ((h / Pango::SCALE) / 2));
 
     cr->move_to (cell_area.get_x() + subject_start, cell_area.get_y() + y);
     pango_layout->show_in_cairo_context (cr);
@@ -297,7 +297,8 @@ namespace Astroid {
   int ThreadIndexListCellRenderer::render_tags ( // {{{
       const ::Cairo::RefPtr< ::Cairo::Context>&cr,
       Gtk::Widget &widget,
-      const Gdk::Rectangle &cell_area ) {
+      const Gdk::Rectangle &cell_area,
+      Gtk::CellRendererState /* flags */ ) {
 
     Glib::RefPtr<Pango::Layout> pango_layout = widget.create_pango_layout ("");
 
@@ -317,18 +318,14 @@ namespace Astroid {
                     hidden_tags.end (),
                     back_inserter(tags));
 
-    ustring tag_string = VectorUtils::concat_tags (tags);
-    tag_string = tag_string.substr (0, tags_len);
+    ustring tag_string = VectorUtils::concat_tags_color (tags, true, tags_len);
 
-    pango_layout->set_markup (ustring::compose (
-          "<span font_style=\"italic\"  color=\"%1\">%2</span>",
-          tags_color,
-          Glib::Markup::escape_text(tag_string)));
+    pango_layout->set_markup (tag_string);
 
     /* align in the middle */
     int w, h;
     pango_layout->get_size (w, h);
-    int y = max(0,(content_height / 2) - ((h / Pango::SCALE) / 2));
+    int y = max(0,(line_height / 2) - ((h / Pango::SCALE) / 2));
 
     cr->move_to (cell_area.get_x() + tags_start, cell_area.get_y() + y);
     pango_layout->show_in_cairo_context (cr);
@@ -356,7 +353,7 @@ namespace Astroid {
     /* align in the middle */
     int w, h;
     pango_layout->get_size (w, h);
-    int y = max(0,(content_height / 2) - ((h / Pango::SCALE) / 2));
+    int y = max(0,(line_height / 2) - ((h / Pango::SCALE) / 2));
 
     /* update subject start */
     //subject_start = date_start + (w / Pango::SCALE) + padding;
@@ -390,7 +387,7 @@ namespace Astroid {
     /* align in the middle */
     int w, h;
     pango_layout->get_size (w, h);
-    int y = max(0,(content_height / 2) - ((h / Pango::SCALE) / 2));
+    int y = max(0,(line_height / 2) - ((h / Pango::SCALE) / 2));
 
     /* update subject start */
     //subject_start = date_start + (w / Pango::SCALE) + padding;
@@ -488,7 +485,7 @@ namespace Astroid {
     /* align in the middle */
     int w, h;
     pango_layout->get_size (w, h);
-    int y = max(0,(content_height / 2) - ((h / Pango::SCALE) / 2));
+    int y = max(0,(line_height / 2) - ((h / Pango::SCALE) / 2));
 
     /* update subject start */
     //subject_start = date_start + (w / Pango::SCALE) + padding;
@@ -500,7 +497,7 @@ namespace Astroid {
 
   /* cellrenderer overloads {{{ */
   int ThreadIndexListCellRenderer::get_height () {
-    if (height_set) return (content_height + line_spacing);
+    if (height_set) return line_height;
     else return 0;
   }
 

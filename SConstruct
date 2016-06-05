@@ -11,6 +11,15 @@ AddOption ("--release", action="store", dest="release", default="git", help="Mak
 AddOption ("--enable-debug", action="store", dest="debug", default=None, help="Enable the -g flag for debugging (default: true when release is git)")
 AddOption ("--prefix", action="store", dest="prefix", default = '/usr/local', help="Directory to install astroid under")
 
+AddOption ("--disable-libsass", action='store_true', dest='disable_libsass',
+    default = False, help = "Disable libsass and the dependency on libsass, requires a scss compiler")
+AddOption ('--scss-compiler', action='store', dest='scss_compiler',
+    default = 'sassc', help = 'SCSS compiler to use when not using libsass')
+
+
+disable_libsass = GetOption ("disable_libsass")
+scss = GetOption ('scss_compiler')
+
 prefix = GetOption ("prefix")
 
 release = GetOption("release")
@@ -207,13 +216,25 @@ if not conf.CheckPKG('webkitgtk-3.0'):
   print "webkitgtk not found."
   Exit (1)
 
-if conf.CheckLibWithHeader ('libsass', 'sass_context.h', 'c'):
-  env.AppendUnique (CPPFLAGS = [ '-DSASSCTX_SASS_CONTEXT_H' ])
-elif conf.CheckLibWithHeader ('libsass', 'sass/context.h', 'c'):
-  env.AppendUnique (CPPFLAGS = [ '-DSASSCTX_CONTEXT_H' ])
+if not disable_libsass:
+  if conf.CheckLibWithHeader ('libsass', 'sass_context.h', 'c'):
+    env.AppendUnique (CPPFLAGS = [ '-DSASSCTX_SASS_CONTEXT_H' ])
+  elif conf.CheckLibWithHeader ('libsass', 'sass/context.h', 'c'):
+    env.AppendUnique (CPPFLAGS = [ '-DSASSCTX_CONTEXT_H' ])
+  else:
+    print "libsass must be installed: could not find header file. you can disable libsass with --disable-libsass, however, that requires a SCSS compiler like 'sassc'."
+    Exit (1)
+
 else:
-  print "libsass must be installed: could not find header file."
-  Exit (1)
+
+  print "warning: libsass is disabled, will generate SCSS at build time using: '%s'.." % scss
+  env.AppendUnique (CPPFLAGS = [ '-DDISABLE_LIBSASS' ])
+
+  scssbld = Builder (action = '%s $SOURCE $TARGET' % scss)
+  env.Append (BUILDERS = { 'Css': scssbld })
+
+  css = env.Css ('ui/thread-view.css', 'ui/thread-view.scss')
+
 
 if not conf.CheckLibWithHeader ('notmuch', 'notmuch.h', 'c'):
   print "notmuch does not seem to be installed."
@@ -313,6 +334,9 @@ env = conf.Finish ()
 astroid = env.Program (source = ['src/main.cc', source_objs], target = 'astroid')
 build = env.Alias ('build', 'astroid')
 
+if disable_libsass:
+  env.Depends ('astroid', css)
+
 Export ('env')
 Export ('astroid')
 
@@ -339,9 +363,14 @@ idir_app        = os.path.join (prefix, 'share/applications')
 
 inst_bin = env.Install (idir_bin, astroid)
 inst_shr = env.Install (idir_ui,  Glob ('ui/*.glade') +
-                                  Glob ('ui/*.scss') +
                                   Glob ('ui/*.png') +
                                   Glob ('ui/*.html'))
+
+if disable_libsass:
+  inst_shr += env.Install (idir_ui, Glob ('ui/*.css'))
+else:
+  inst_shr += env.Install (idir_ui, Glob ('ui/*.scss'))
+
 inst_app = env.Install (idir_app, 'ui/astroid.desktop')
 
 env.Alias ('install', inst_bin)

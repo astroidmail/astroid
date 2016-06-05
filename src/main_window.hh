@@ -21,6 +21,9 @@ namespace Astroid {
       void add_widget (Gtk::Widget *);
       void remove_widget (Gtk::Widget *);
 
+      /* height of action widget */
+      static int icon_size;
+
     private:
       Gtk::HBox icons;
       Gtk::Spinner poll_spinner;

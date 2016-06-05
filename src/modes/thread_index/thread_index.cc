@@ -97,6 +97,9 @@ namespace Astroid {
                   set_label (get_label ());
                   queryloader.refine_query (query_string);
 
+                  /* add to saved searches */
+                  SavedSearches::add_query_to_history (query_string);
+
                   /* select first */
                   list_view->set_cursor (Gtk::TreePath("0"));
 

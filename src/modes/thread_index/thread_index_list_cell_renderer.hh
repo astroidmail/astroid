@@ -67,6 +67,7 @@ namespace Astroid {
       bool height_set = false;
 
     private:
+      int line_height; // content_height + line_spacing
       int content_height;
       int line_spacing = 2; // configurable
 
@@ -95,7 +96,6 @@ namespace Astroid {
       int tags_start;
       int tags_width;
       int tags_len = 80; // chars, configurable
-      ustring tags_color; // configurable
 
       int subject_start;
       ustring subject_color; // configurable
@@ -117,7 +117,8 @@ namespace Astroid {
       int render_tags (
           const ::Cairo::RefPtr< ::Cairo::Context>&cr,
           Gtk::Widget &widget,
-          const Gdk::Rectangle &cell_area );
+          const Gdk::Rectangle &cell_area,
+          Gtk::CellRendererState flags );
 
       int render_date (
           const ::Cairo::RefPtr< ::Cairo::Context>&cr,

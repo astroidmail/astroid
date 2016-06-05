@@ -70,13 +70,14 @@ namespace Astroid {
 # endif
     }
 
-    lock_guard<mutex> grd (m_lines);
+    unique_lock<mutex> grd (m_lines);
     lines.push (LogLine (_next_level, time_str.str (), _next_line.str()));
 
     _next_line.str (string());
     _next_line.clear ();
 
 
+    grd.unlock ();
     d_flush (); // flush lines to log views
 
     // locked once in <<LogLevel and once in <<endl

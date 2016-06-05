@@ -640,11 +640,7 @@ namespace Astroid {
 
     if (!wk_loaded || !ready) return;
 
-    ustring tags_s = VectorUtils::concat_tags (m->tags);
-
-    ustring tags_s_c = ustring::compose ("<span style=\"color:#31587a !important\">%1</span>",
-        header_row_value (tags_s, true));
-
+    ustring tags_s = VectorUtils::concat_tags_color (m->tags, false, 0);
     GError *err;
     ustring mid = "message_" + m->mid;
 
@@ -656,7 +652,7 @@ namespace Astroid {
         WEBKIT_DOM_NODE (div_message),
         ".header_container .tags");
 
-    webkit_dom_html_element_set_inner_html (tags, header_row_value(tags_s, true).c_str(), (err = NULL, &err));
+    webkit_dom_html_element_set_inner_html (tags, tags_s.c_str (), (err = NULL, &err));
 
     g_object_unref (tags);
 
@@ -664,7 +660,7 @@ namespace Astroid {
         WEBKIT_DOM_NODE (div_message),
         ".header_container .header div#Tags .value");
 
-    webkit_dom_html_element_set_inner_html (tags, tags_s_c.c_str (), (err = NULL, &err));
+    webkit_dom_html_element_set_inner_html (tags, tags_s.c_str (), (err = NULL, &err));
 
     g_object_unref (tags);
     g_object_unref (div_message);
@@ -895,19 +891,17 @@ namespace Astroid {
     }
 
     if (m->in_notmuch) {
-      ustring tags_s = VectorUtils::concat_tags (m->tags);
+      ustring tags_s = VectorUtils::concat_tags_color (m->tags, false, 0);
 
-      ustring tags_s_c = ustring::compose ("<span style=\"color:#31587a !important\">%1</span>",
-          Glib::Markup::escape_text(tags_s));
 
-      header += create_header_row ("Tags", tags_s_c, false, false, true);
+      header += create_header_row ("Tags", tags_s, false, false, true);
 
 
       WebKitDOMHTMLElement * tags = DomUtils::select (
           WEBKIT_DOM_NODE (div_message),
           ".header_container .tags");
 
-      webkit_dom_html_element_set_inner_html (tags, Glib::Markup::escape_text(tags_s).c_str(), (err = NULL, &err));
+      webkit_dom_html_element_set_inner_html (tags,tags_s.c_str(), (err = NULL, &err));
 
       g_object_unref (tags);
     }
