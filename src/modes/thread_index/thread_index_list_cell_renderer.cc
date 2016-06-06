@@ -298,7 +298,7 @@ namespace Astroid {
       const ::Cairo::RefPtr< ::Cairo::Context>&cr,
       Gtk::Widget &widget,
       const Gdk::Rectangle &cell_area,
-      Gtk::CellRendererState /* flags */ ) {
+      Gtk::CellRendererState flags) {
 
     Glib::RefPtr<Pango::Layout> pango_layout = widget.create_pango_layout ("");
 
@@ -318,7 +318,20 @@ namespace Astroid {
                     hidden_tags.end (),
                     back_inserter(tags));
 
-    ustring tag_string = VectorUtils::concat_tags_color (tags, true, tags_len);
+    Gdk::Color bg;
+
+    if ((flags & Gtk::CELL_RENDERER_SELECTED) != 0) {
+      bg = Gdk::Color (background_color_selected);
+      cr->set_source_rgb (bg.get_red_p(), bg.get_green_p(), bg.get_blue_p());
+    } else {
+      bg.set_grey_p (1.);
+    }
+
+    unsigned char cv[3] = { (unsigned char) bg.get_red (),
+                            (unsigned char) bg.get_green (),
+                            (unsigned char) bg.get_blue () };
+
+    ustring tag_string = VectorUtils::concat_tags_color (tags, true, tags_len, cv);
 
     pango_layout->set_markup (tag_string);
 

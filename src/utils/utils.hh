@@ -18,7 +18,8 @@ namespace Astroid {
       static ustring safe_fname (ustring fname);
 
       /* get tag color */
-      static std::pair<ustring, ustring> get_tag_color (ustring);
+      static std::pair<ustring, ustring> get_tag_color (ustring, unsigned char canvascolor[3]);
+      static float        tags_alpha;
       static Pango::Color tags_upper_color;
       static Pango::Color tags_lower_color;
 
