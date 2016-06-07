@@ -217,9 +217,6 @@ namespace Astroid {
     /* code prettify */
     default_config.put ("thread_view.code_prettify.enable", true);
 
-    // run_prettify.js will be added to this uri when the script is loaded
-    default_config.put ("thread_view.code_prettify.uri_prefix", "https://google-code-prettify.googlecode.com/svn/loader/");
-
     // a comma-separeted list of tags which code_prettify is enabled for, if empty,
     // allow for all messages.
     default_config.put ("thread_view.code_prettify.for_tags", "");

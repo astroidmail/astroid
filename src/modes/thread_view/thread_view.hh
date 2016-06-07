@@ -68,7 +68,7 @@ namespace Astroid {
 
       bool    enable_code_prettify;
       std::vector<ustring> code_prettify_only_tags;
-      ustring code_prettify_prefix; // add run_prettify.js to this
+      ustring code_prettify_uri = "https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js";
       ustring code_prettify_code_tag;
       bool    enable_code_prettify_for_patches;
       ustring code_start_tag = "<code class=\"prettyprint\">";
