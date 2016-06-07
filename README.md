@@ -1,7 +1,5 @@
 # astroid mua
 
-[![Join the chat at https://gitter.im/gauteh/astroid](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/gauteh/astroid?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-
   A graphical threads-with-tags mail user agent inspired by [sup] and
   [notmuch]. Written in C++ using [GTK+], [WebKit] and [gmime].
 
