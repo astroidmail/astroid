@@ -77,7 +77,7 @@ very welcome. Information on how to
 [contribute](https://github.com/gauteh/astroid/wiki/Contributing) to astroid
 can be found in the wiki.
 
-You can usually find us at [#astroid](irc://irc.freenode.net/#astroid)([web](https://webchat.freenode.net/?channels=#astroid)) or [#notmuch](irc://irc.freenode.net/#notmuch)([web](https://webchat.freenode.net/?channels=#notmuch)) at irc.freenode.net.
+You can usually find us at <a href="irc://irc.freenode.net/#astroid">#astroid</a> ([web](https://webchat.freenode.net/?channels=#astroid)) or <a href="irc://irc.freenode.net/#notmuch">#notmuch</a> ([web](https://webchat.freenode.net/?channels=#notmuch)) at irc.freenode.net.
 
 ## acknowledgements
 
