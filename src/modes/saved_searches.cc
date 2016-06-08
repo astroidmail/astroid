@@ -497,7 +497,7 @@ namespace Astroid {
       ustring name = kv.first;
       ustring query = kv.second.data();
 
-      log << info << "saved searches: got query: " << name << ": " << query << endl;
+      /* log << info << "saved searches: got query: " << name << ": " << query << endl; */
       add_query (name, query);
     }
   }
@@ -519,7 +519,7 @@ namespace Astroid {
 
       if (name == "none") name = "";
 
-      log << info << "saved searches: got query: " << name << ": " << query << endl;
+      /* log << info << "saved searches: got query: " << name << ": " << query << endl; */
       add_query (name, query, true);
     }
 
@@ -602,7 +602,7 @@ namespace Astroid {
 
       if (name == "none") name = "";
 
-      log << debug << "saved searches, history: got query: " << name << ": " << query << endl;
+      /* log << debug << "saved searches, history: got query: " << name << ": " << query << endl; */
       history.push_back (query);
     }
   }
