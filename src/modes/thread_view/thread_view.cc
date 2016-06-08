@@ -51,7 +51,6 @@ namespace Astroid {
 
     enable_code_prettify = config.get<bool> ("code_prettify.enable");
     enable_code_prettify_for_patches = config.get<bool> ("code_prettify.enable_for_patches");
-    code_prettify_prefix = config.get<string> ("code_prettify.uri_prefix");
 
     ustring cp_only_tags = config.get<string> ("code_prettify.for_tags");
     if (cp_only_tags.length() > 0) {
@@ -240,7 +239,7 @@ namespace Astroid {
     }
 
     if (enable_code_prettify) {
-      allowed_uris.push_back (code_prettify_prefix);
+      allowed_uris.push_back (code_prettify_uri.substr (0, code_prettify_uri.rfind ("/")));
     }
 
     // TODO: show cid type images and inline-attachments
@@ -530,8 +529,6 @@ namespace Astroid {
               code_is_on = true;
 
               WebKitDOMElement * me = webkit_dom_document_create_element (d, "SCRIPT", (err = NULL, &err));
-
-              ustring code_prettify_uri = code_prettify_prefix + "run_prettify.js";
 
               webkit_dom_element_set_attribute (me, "type", "text/javascript",
                   (err = NULL, &err));

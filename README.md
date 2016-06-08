@@ -1,16 +1,5 @@
 # astroid mua
 
-[![Join the chat at https://gitter.im/gauteh/astroid](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/gauteh/astroid?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-
-  A graphical threads-with-tags mail user agent inspired by [sup] and
-  [notmuch]. Written in C++ using [GTK+], [WebKit] and [gmime].
-
-  <a href="https://raw.githubusercontent.com/gauteh/astroid/master/doc/astroid-full-window.png">
-    <img src="https://raw.githubusercontent.com/gauteh/astroid/master/doc/astroid-full-window.png">
-  </a>
-
-  ([more screenshots below](#more-screenshots))
-
 # getting started
 
 > Astroid is a Mail User Agent. As such, all Astroid provides is a graphical interface to your email. Thus, Astroid enables you to launch actions that rely on the performance of other programs to actually fetch, sync, index, search and send your email. A [suggested setup](https://github.com/gauteh/astroid/wiki/Astroid-in-your-general-mail-setup) is described in the wiki.
@@ -88,7 +77,7 @@ very welcome. Information on how to
 [contribute](https://github.com/gauteh/astroid/wiki/Contributing) to astroid
 can be found in the wiki.
 
-Also check out #astroid or #notmuch on irc.freenode.net.
+You can usually find us at <a href="irc://irc.freenode.net/#astroid">#astroid</a> ([web](https://webchat.freenode.net/?channels=#astroid)) or <a href="irc://irc.freenode.net/#notmuch">#notmuch</a> ([web](https://webchat.freenode.net/?channels=#notmuch)) at irc.freenode.net.
 
 ## acknowledgements
 
