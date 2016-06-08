@@ -105,9 +105,6 @@ namespace Astroid {
 
     bg_str << std::hex << std::setfill('0') << std::setw(2) << (int) (tags_alpha * 255);
 
-    log << debug << bg_str.str() << endl;
-
-
     delete tc;
 
     ustring fc;
