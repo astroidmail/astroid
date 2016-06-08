@@ -22,6 +22,7 @@ namespace Astroid {
   //class Contacts;
   class Log;
   class Poll;
+  class PluginManager;
 
   /* message and thread */
   class Message;

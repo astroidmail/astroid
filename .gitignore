@@ -19,6 +19,10 @@ core*
 
 compile_commands.json
 
+*.gir
+*.typelib
+girmain
+
 # generated from tests run in a chroot
 tmp-*
 

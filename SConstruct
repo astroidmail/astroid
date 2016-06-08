@@ -204,6 +204,12 @@ if not conf.CheckPKG('gtkmm-3.0 >= 3.10'):
   print 'gtkmm-3.0 >= 3.10 not found.'
   Exit(1)
 
+if not conf.CheckPKG('libpeas-1.0'):
+  print 'libpeas-1.0 not found.'
+  Exit (1)
+else:
+  env.ParseConfig ('pkg-config --libs --cflags libpeas-1.0')
+
 if not conf.CheckPKG('glibmm-2.4'):
   print "glibmm-2.4 not found."
   Exit (1)
@@ -291,6 +297,8 @@ env.AppendUnique (CPPFLAGS = ['-Wall', '-std=c++11', '-pthread'] )
 if debug:
   env.AppendUnique (CPPFLAGS = ['-g', '-Wextra', '-DDEBUG'])
 
+env = conf.Finish ()
+
 ## write config file
 print ("writing src/build_config.hh..")
 vfd = open ('src/build_config.hh', 'w')
@@ -313,7 +321,8 @@ source = (
           Glob('src/modes/thread_view/*.cc', strings = True) +
           Glob('src/modes/editor/*.cc', strings = True) +
           Glob('src/actions/*.cc', strings = True) +
-          Glob('src/utils/*.cc', strings = True)
+          Glob('src/utils/*.cc', strings = True) +
+          Glob('src/plugin/*.cc', strings = True)
           )
 source.remove ('src/main.cc')
 
@@ -325,17 +334,23 @@ csource = (Glob('src/utils/gmime/*.c', strings = True))
 source_objs =   [env.Object (s) for s in source]
 source_objs +=  [cenv.Object (s) for s in csource]
 
+## GIR for libpeas plugins
+girsource = (Glob ('src/plugin/*.c', strings = True))
+girm      = cenv.Program (source = girsource, target = 'girmain')
+
+source_objs +=  [cenv.Object (s) for s in girsource if s != 'src/plugin/gir_main.c']
+
 Export ('source')
 Export ('source_objs')
 Export ('debug')
-
-env = conf.Finish ()
 
 astroid = env.Program (source = ['src/main.cc', source_objs], target = 'astroid')
 build = env.Alias ('build', 'astroid')
 
 if disable_libsass:
   env.Depends ('astroid', css)
+
+env.Depends ('astroid', girm)
 
 Export ('env')
 Export ('astroid')

@@ -37,6 +37,8 @@ namespace Astroid {
       /* actions */
       ActionManager * actions;
 
+      PluginManager * plugin_manager;
+
       /* poll */
       Poll * poll;
 

@@ -18,6 +18,7 @@
 # include "actions/action.hh"
 # include "utils/date_utils.hh"
 # include "utils/utils.hh"
+# include "plugin/manager.hh"
 # include "log.hh"
 # include "poll.hh"
 
@@ -63,6 +64,7 @@ namespace Astroid {
   }
 
   int Astroid::main (int argc, char **argv) {
+
     /* options */
     namespace po = boost::program_options;
     po::options_description desc ("options");
@@ -72,7 +74,8 @@ namespace Astroid {
       ( "new-config,n", "make new default config, then exit")
       ( "test-config,t", "use test config (same as used when tests are run), only makes sense from the source root")
       ( "mailto,m", po::value<ustring>(), "compose mail with mailto url or address")
-      ( "no-auto-poll", "do not poll automatically");
+      ( "no-auto-poll", "do not poll automatically")
+      ( "disable-plugins", "disable plugins");
 
     po::variables_map vm;
 
@@ -140,6 +143,8 @@ namespace Astroid {
 
       no_auto_poll = true;
     }
+
+    bool disable_plugins = vm.count ("disable-plugins");
 
     bool domailto = false;
     ustring mailtourl;
@@ -223,6 +228,9 @@ namespace Astroid {
     /* set up accounts */
     accounts = new AccountManager ();
 
+    /* set up plugins */
+    plugin_manager = new PluginManager (disable_plugins, in_test ());
+
     /* set up contacts */
     //contacts = new Contacts ();
 
@@ -269,6 +277,9 @@ namespace Astroid {
     /* set up accounts */
     accounts = new AccountManager ();
 
+    /* set up plugins */
+    plugin_manager = new PluginManager (false, true);
+
     /* set up contacts */
     //contacts = new Contacts ();
 
@@ -311,7 +322,7 @@ namespace Astroid {
 
     if (open_defaults) {
       if (config ("saved_searches").get<bool>("show_on_startup")) {
-        Mode * s = new SavedSearches (mw);
+        Mode * s = (Mode *) new SavedSearches (mw);
         s->invincible = true;
         mw->add_mode (s);
       }
