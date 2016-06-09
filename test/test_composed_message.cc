@@ -24,12 +24,14 @@ BOOST_AUTO_TEST_SUITE(Composing)
   {
     using Astroid::ComposeMessage;
     using Astroid::Message;
+    using Astroid::log;
     setup ();
 
     ComposeMessage * c = new ComposeMessage ();
 
     ustring bdy = "This is test: æøå.\n > testing\ntesting\n...";
 
+    log << test << "cm: writing utf-8 text to message body: " << bdy << endl;
     c->body << bdy;
 
     c->build ();
