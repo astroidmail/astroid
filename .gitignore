@@ -19,3 +19,6 @@ core*
 
 compile_commands.json
 
+# generated from tests run in a chroot
+tmp-*
+

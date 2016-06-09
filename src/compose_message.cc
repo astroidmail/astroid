@@ -327,7 +327,16 @@ namespace Astroid {
   }
 
   ustring ComposeMessage::write_tmp () {
-    char * temporaryFilePath = strdup("/tmp/astroid-compose-XXXXXX");
+    char * temporaryFilePath;
+
+    if (!bfs::is_directory ("/tmp")) {
+      /* this fails if /tmp does not exist, typically in a chroot */
+      log << warn << "cm: /tmp is not a directory, writing tmp files to current directory." << endl;
+      temporaryFilePath = strdup("tmp-astroid-compose-XXXXXX");
+    } else {
+      temporaryFilePath = strdup("/tmp/astroid-compose-XXXXXX");
+    }
+
     int fd = mkstemp(temporaryFilePath);
     message_file = temporaryFilePath;
     free(temporaryFilePath);
