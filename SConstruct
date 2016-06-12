@@ -16,9 +16,13 @@ AddOption ("--disable-libsass", action='store_true', dest='disable_libsass',
 AddOption ('--scss-compiler', action='store', dest='scss_compiler',
     default = 'sassc', help = 'SCSS compiler to use when not using libsass')
 
+AddOption ("--disable-plugins", action = 'store_true', dest = 'disable_plugins',
+    default = False, help = "Disable plugins")
 
 disable_libsass = GetOption ("disable_libsass")
 scss = GetOption ('scss_compiler')
+
+disable_plugins = GetOption ("disable_plugins")
 
 prefix = GetOption ("prefix")
 
@@ -204,12 +208,6 @@ if not conf.CheckPKG('gtkmm-3.0 >= 3.10'):
   print 'gtkmm-3.0 >= 3.10 not found.'
   Exit(1)
 
-if not conf.CheckPKG('libpeas-1.0'):
-  print 'libpeas-1.0 not found.'
-  Exit (1)
-else:
-  env.ParseConfig ('pkg-config --libs --cflags libpeas-1.0')
-
 if not conf.CheckPKG('glibmm-2.4'):
   print "glibmm-2.4 not found."
   Exit (1)
@@ -241,6 +239,20 @@ else:
 
   css = env.Css ('ui/thread-view.css', 'ui/thread-view.scss')
 
+if disable_plugins:
+  print "warning: plugins are disabled."
+  env.AppendUnique (CPPFLAGS = [ '-DDISABLE_PLUGINS' ])
+
+else:
+  if not conf.CheckPKG('libpeas-1.0'):
+    print 'libpeas-1.0 not found.'
+    Exit (1)
+  else:
+    env.ParseConfig ('pkg-config --libs --cflags libpeas-1.0')
+
+  if not conf.CheckPKG('gobject-introspection-1.0'):
+    print 'gobject-introspection-1.0 not found.'
+    Exit (1)
 
 if not conf.CheckLibWithHeader ('notmuch', 'notmuch.h', 'c'):
   print "notmuch does not seem to be installed."
@@ -321,9 +333,12 @@ source = (
           Glob('src/modes/thread_view/*.cc', strings = True) +
           Glob('src/modes/editor/*.cc', strings = True) +
           Glob('src/actions/*.cc', strings = True) +
-          Glob('src/utils/*.cc', strings = True) +
-          Glob('src/plugin/*.cc', strings = True)
+          Glob('src/utils/*.cc', strings = True)
           )
+
+if not disable_plugins:
+  source += Glob('src/plugin/*.cc', strings = True)
+
 source.remove ('src/main.cc')
 
 cenv = env.Clone ()
@@ -335,10 +350,46 @@ source_objs =   [env.Object (s) for s in source]
 source_objs +=  [cenv.Object (s) for s in csource]
 
 ## GIR for libpeas plugins
-girsource = (Glob ('src/plugin/*.c', strings = True))
-girm      = cenv.Program (source = girsource, target = 'girmain')
+def add_gobject_introspection(env, gi_name, version,
+                              sources, includepaths, program,
+                              pkgs, includes):
 
-source_objs +=  [cenv.Object (s) for s in girsource if s != 'src/plugin/gir_main.c']
+  # borrowed from:
+  # http://fossies.org/linux/privat/mypaint-1.2.0.tar.gz/mypaint-1.2.0/brushlib/SConscript?m=t
+  pkgs = ' '.join('--pkg=%s' % dep for dep in pkgs)
+  program = program[0] # there should be only one Node in the list
+
+  # Strip the library path to get the library name
+  prgname = os.path.basename (program.get_path ())
+  prgname = os.path.splitext (prgname)[0]
+
+  includeflags = ' '.join(['-I%s' % s for s in includepaths])
+  gi_includes = ' '.join(['--include=%s' % s for s in includes])
+
+  scanner_cmd = """LD_LIBRARY_PATH=./ g-ir-scanner -o $TARGET --warn-all \
+      --namespace=%(gi_name)s --nsversion=%(version)s --add-include-path=./ \
+      %(pkgs)s %(includeflags)s %(gi_includes)s \
+      --program=./%(prgname)s $SOURCES""" % locals()
+
+  gir_file = env.Command("%s-%s.gir" % (gi_name, version), sources, scanner_cmd)
+  env.Depends(gir_file, program)
+  typelib_file = env.Command("%s-%s.typelib" % (gi_name, version), gir_file,
+                         "g-ir-compiler --includedir=./ -o $TARGET $SOURCE")
+
+  return (gir_file, typelib_file)
+
+
+if not disable_plugins:
+  girsource = (Glob ('src/plugin/*.c', strings = True))
+  girm      = cenv.Program (source = girsource, target = 'girmain')
+
+  source_objs +=  [cenv.Object (s) for s in girsource if s != 'src/plugin/gir_main.c']
+
+  ## generate GIR and typelib
+  gir, typelib = add_gobject_introspection (env, "Astroid", "0.1",
+     girsource + Glob('src/plugin/*.h', strings = True), ['src/'], girm, ['gobject-introspection-1.0'], [])
+
+
 
 Export ('source')
 Export ('source_objs')
@@ -350,7 +401,10 @@ build = env.Alias ('build', 'astroid')
 if disable_libsass:
   env.Depends ('astroid', css)
 
-env.Depends ('astroid', girm)
+if not disable_plugins:
+  env.Depends ('astroid', girm)
+  env.Depends ('astroid', gir)
+  env.Depends ('astroid', typelib)
 
 Export ('env')
 Export ('astroid')
