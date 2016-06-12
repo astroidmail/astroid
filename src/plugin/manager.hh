@@ -13,11 +13,12 @@ namespace Astroid {
 
       void refresh ();
 
-    private:
-      bool disabled, test;
-
       PeasEngine * engine;
       PeasExtensionSet * astroid_extensions;
+      PeasExtensionSet * thread_index_extensions;
+
+    private:
+      bool disabled, test;
 
   };
 }

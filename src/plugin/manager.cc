@@ -7,6 +7,7 @@
 # include "build_config.hh"
 
 # include "astroid_activatable.h"
+# include "thread_index_activatable.h"
 
 using std::endl;
 
@@ -35,6 +36,7 @@ namespace Astroid {
     }
 
     astroid_extensions = peas_extension_set_new (engine, ASTROID_TYPE_ACTIVATABLE, NULL);
+    thread_index_extensions = peas_extension_set_new (engine, ASTROID_THREADINDEX_TYPE_ACTIVATABLE, NULL);
 
     refresh ();
   }
@@ -65,11 +67,12 @@ namespace Astroid {
 
         PeasExtension * pe = peas_extension_set_get_extension (astroid_extensions, p);
 
-        AstroidActivatable * ae = ASTROID_ACTIVATABLE ( pe );
-        astroid_activatable_activate (ae);
+        astroid_activatable_activate (ASTROID_ACTIVATABLE(pe));
+        /* AstroidActivatable * ae = ASTROID_ACTIVATABLE ( pe ); */
+        /* astroid_activatable_activate (ae); */
 
-        char * k = astroid_activatable_ask (ae, "hello test");
-        log << debug << "got: " << k << endl;
+        /* char * k = astroid_activatable_ask (ae, "hello test"); */
+        /* log << debug << "got: " << k << endl; */
 
       } else {
         log << error << "plugins: failed loading: " << peas_plugin_info_get_name (p) << endl;
