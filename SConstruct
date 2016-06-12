@@ -367,14 +367,14 @@ def add_gobject_introspection(env, gi_name, version,
   gi_includes = ' '.join(['--include=%s' % s for s in includes])
 
   scanner_cmd = """LD_LIBRARY_PATH=./ g-ir-scanner -o $TARGET --warn-all \
-      --namespace=%(gi_name)s --nsversion=%(version)s --add-include-path=./ \
-      %(pkgs)s %(includeflags)s %(gi_includes)s \
+      --namespace=%(gi_name)s  --include=GObject-2.0 --nsversion=%(version)s \
+      %(pkgs)s %(includeflags)s  \
       --program=./%(prgname)s $SOURCES""" % locals()
 
   gir_file = env.Command("%s-%s.gir" % (gi_name, version), sources, scanner_cmd)
   env.Depends(gir_file, program)
   typelib_file = env.Command("%s-%s.typelib" % (gi_name, version), gir_file,
-                         "g-ir-compiler --includedir=./ -o $TARGET $SOURCE")
+                         "g-ir-compiler -o $TARGET $SOURCE")
 
   return (gir_file, typelib_file)
 
