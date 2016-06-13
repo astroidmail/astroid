@@ -336,7 +336,7 @@ namespace Astroid {
                               (unsigned char) bg.get_green (),
                               (unsigned char) bg.get_blue () };
 
-      ustring tag_string = VectorUtils::concat_tags_color (tags, true, tags_len, cv);
+      tag_string = VectorUtils::concat_tags_color (tags, true, tags_len, cv);
     }
 
     pango_layout->set_markup (tag_string);
