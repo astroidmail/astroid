@@ -231,7 +231,7 @@ namespace Astroid {
       };
 
     if (enable_gravatar) {
-      allowed_uris.push_back ("http://www.gravatar.com/avatar/");
+      allowed_uris.push_back ("https://www.gravatar.com/avatar/");
     }
 
     if (enable_mathjax) {
