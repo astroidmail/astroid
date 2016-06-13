@@ -35,6 +35,7 @@ namespace Astroid {
 
     engine = peas_engine_get_default ();
     peas_engine_enable_loader (engine, "python3");
+    peas_engine_enable_loader (engine, "lua5.1");
 
     bfs::path plugin_dir = astroid->standard_paths().plugin_dir;
 
