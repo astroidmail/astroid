@@ -20,6 +20,7 @@ namespace Astroid {
     bfs::path runtime_dir;
     bfs::path config_file;
     bfs::path searches_file;
+    bfs::path plugin_dir;
   };
 
   class Config {
