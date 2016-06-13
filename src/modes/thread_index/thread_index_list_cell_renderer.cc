@@ -19,6 +19,7 @@
 # include "utils/utils.hh"
 # include "log.hh"
 # include "crypto.hh"
+# include "plugin/manager.hh"
 
 using namespace std;
 using boost::property_tree::ptree;
@@ -318,20 +319,25 @@ namespace Astroid {
                     hidden_tags.end (),
                     back_inserter(tags));
 
-    Gdk::Color bg;
+    ustring tag_string;
 
-    if ((flags & Gtk::CELL_RENDERER_SELECTED) != 0) {
-      bg = Gdk::Color (background_color_selected);
-      cr->set_source_rgb (bg.get_red_p(), bg.get_green_p(), bg.get_blue_p());
-    } else {
-      bg.set_grey_p (1.);
+    /* first try plugin */
+    if (!astroid->plugin_manager->thread_index_format_tags (tags, tag_string)) {
+      Gdk::Color bg;
+
+      if ((flags & Gtk::CELL_RENDERER_SELECTED) != 0) {
+        bg = Gdk::Color (background_color_selected);
+        cr->set_source_rgb (bg.get_red_p(), bg.get_green_p(), bg.get_blue_p());
+      } else {
+        bg.set_grey_p (1.);
+      }
+
+      unsigned char cv[3] = { (unsigned char) bg.get_red (),
+                              (unsigned char) bg.get_green (),
+                              (unsigned char) bg.get_blue () };
+
+      ustring tag_string = VectorUtils::concat_tags_color (tags, true, tags_len, cv);
     }
-
-    unsigned char cv[3] = { (unsigned char) bg.get_red (),
-                            (unsigned char) bg.get_green (),
-                            (unsigned char) bg.get_blue () };
-
-    ustring tag_string = VectorUtils::concat_tags_color (tags, true, tags_len, cv);
 
     pango_layout->set_markup (tag_string);
 

@@ -48,7 +48,6 @@ astroid_activatable_default_init (AstroidActivatableInterface *iface)
 void
 astroid_activatable_activate (AstroidActivatable * activatable)
 {
-  g_printf ("astroid_activatable_activate\n");
 	AstroidActivatableInterface *iface;
 
 	g_return_if_fail (ASTROID_IS_ACTIVATABLE (activatable));

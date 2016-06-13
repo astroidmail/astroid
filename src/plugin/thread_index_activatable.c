@@ -18,21 +18,20 @@ astroid_threadindex_activatable_default_init (AstroidThreadIndexActivatableInter
 	static gboolean initialized = FALSE;
 
 	if (!initialized) {
-    g_printf ("initializing astroid threadindex activatable..\n");
 		/**
 		 * AstroidThreadIndexActivatable:window:
 		 *
 		 * The window property contains the gtr window for this
 		 * #AstroidActivatable instance.
 		 */
-		g_object_interface_install_property (iface,
-                           g_param_spec_object ("listview",
-                                                "listview",
-                                                "The ThreadIndex listview",
-                                                GTK_TYPE_TREE_VIEW,
-                                                G_PARAM_READWRITE |
-                                                G_PARAM_CONSTRUCT_ONLY |
-                                                G_PARAM_STATIC_STRINGS));
+		/* g_object_interface_install_property (iface, */
+                           /* g_param_spec_object ("listview", */
+                                                /* "listview", */
+                                                /* "The ThreadIndex listview", */
+                                                /* GTK_TYPE_TREE_VIEW, */
+                                                /* G_PARAM_READWRITE | */
+                                                /* G_PARAM_CONSTRUCT_ONLY | */
+                                                /* G_PARAM_STATIC_STRINGS)); */
 
 		initialized = TRUE;
 	}
@@ -91,5 +90,25 @@ astroid_threadindex_activatable_update_state (AstroidThreadIndexActivatable * ac
 	iface = ASTROID_THREADINDEX_ACTIVATABLE_GET_IFACE (activatable);
 	if (iface->update_state)
 		iface->update_state (activatable);
+}
+
+/**
+ * astroid_threadindex_activatable_format_tags:
+ * @activatable: A #AstroidThreadIndexActivatable.
+ * @tags: (element-type utf8) (transfer none): List of #utf8.
+ *
+ */
+char *
+astroid_threadindex_activatable_format_tags (AstroidThreadIndexActivatable * activatable, GList * tags)
+{
+	AstroidThreadIndexActivatableInterface *iface;
+
+	if (!ASTROID_IS_THREADINDEX_ACTIVATABLE (activatable)) return NULL;
+
+	iface = ASTROID_THREADINDEX_ACTIVATABLE_GET_IFACE (activatable);
+	if (iface->format_tags)
+		return iface->format_tags (activatable, tags);
+
+  return NULL;
 }
 
