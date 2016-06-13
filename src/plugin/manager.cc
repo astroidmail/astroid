@@ -156,5 +156,24 @@ namespace Astroid {
 
     return false;
   }
+
+  std::vector<ustring> PluginManager::get_allowed_uris () {
+    std::vector<ustring> uris;
+
+    if (disabled) return uris;
+
+    for (PeasPluginInfo * p : astroid_plugins) {
+      PeasExtension * pe = peas_extension_set_get_extension (astroid_extensions, p);
+
+      GList * muris = astroid_activatable_get_allowed_uris (ASTROID_ACTIVATABLE(pe));
+
+      if (muris != NULL) {
+        std::vector<ustring> _muris = Glib::ListHandler<ustring>::list_to_vector (muris, Glib::OWNERSHIP_NONE);
+        uris.insert (uris.end (), _muris.begin (), _muris.end ());
+      }
+    }
+
+    return uris;
+  }
 }
 

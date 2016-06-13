@@ -28,5 +28,8 @@ class BasicPlugin (GObject.Object, Astroid.Activatable):
 
   def do_get_avatar_uri (self, email, tpe, size):
     print ("getting avatar uri", email, tpe, size)
-    return ""
+    return "https://assets-cdn.github.com/images/modules/site/infinity-ill-small.png"
+
+  def do_get_allowed_uris (self):
+    return ["asdf", "https://assets-cdn.github.com/images/modules/site/"]
 

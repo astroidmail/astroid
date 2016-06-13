@@ -23,7 +23,8 @@ namespace Astroid {
       std::vector<PeasPluginInfo *>  astroid_plugins;
       std::vector<PeasPluginInfo *>  thread_index_plugins;
 
-      /* single end point plugins */
+      /* single end-point plugins */
+      std::vector<ustring> get_allowed_uris ();
       bool get_avatar_uri (ustring email, ustring type, int size, ustring &out);
 
       /* thread index */
