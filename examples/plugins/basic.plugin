@@ -1,0 +1,11 @@
+[Plugin]
+Module=basic
+Depends=
+Loader=python3
+Name=basic plugin
+Description=plugin
+Authors=Gaute Hope
+Copyright=
+Website=
+Help=
+Hidden=false
