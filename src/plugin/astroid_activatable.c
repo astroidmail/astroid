@@ -114,3 +114,25 @@ char * astroid_activatable_ask (AstroidActivatable * activatable, char *c) {
     return 0;
 }
 
+/**
+ * astroid_activatable_get_avatar_uri:
+ * @activatable: A #AstroidThreadIndexActivatable.
+ * @email: A #utf8.
+ * @type:  A #string.
+ * @size:  A #int.
+ *
+ */
+char *
+astroid_activatable_get_avatar_uri (AstroidActivatable * activatable, const char * email, const char * type, int size)
+{
+	AstroidActivatableInterface *iface;
+
+	if (!ASTROID_IS_ACTIVATABLE (activatable)) return NULL;
+
+	iface = ASTROID_ACTIVATABLE_GET_IFACE (activatable);
+	if (iface->get_avatar_uri)
+		return iface->get_avatar_uri (activatable, email, type, size);
+
+  return NULL;
+}
+

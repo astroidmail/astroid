@@ -26,3 +26,7 @@ class BasicPlugin (GObject.Object, Astroid.Activatable):
 
     return n
 
+  def do_get_avatar_uri (self, email, tpe, size):
+    print ("getting avatar uri", email, tpe, size)
+    return ""
+

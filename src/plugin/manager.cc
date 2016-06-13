@@ -139,5 +139,22 @@ namespace Astroid {
 
     return false;
   }
+
+  bool PluginManager::get_avatar_uri (ustring email, ustring type, int size, ustring &out) {
+    if (disabled) return false;
+
+    for (PeasPluginInfo * p : astroid_plugins) {
+      PeasExtension * pe = peas_extension_set_get_extension (astroid_extensions, p);
+
+      char * uri = astroid_activatable_get_avatar_uri (ASTROID_ACTIVATABLE(pe), email.c_str (), type.c_str (), size);
+
+      if (uri != NULL) {
+        out = ustring (uri);
+        return true;
+      }
+    }
+
+    return false;
+  }
 }
 
