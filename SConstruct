@@ -435,6 +435,10 @@ inst_shr = env.Install (idir_ui,  Glob ('ui/*.glade') +
                                   Glob ('ui/*.png') +
                                   Glob ('ui/*.html'))
 
+if not disable_plugins:
+  inst_shr += env.Install (os.path.join (prefix, 'share/gir-1.0'), gir)
+  inst_bin += env.Install (os.path.join (prefix, 'lib/girepository-1.0'), typelib)
+
 if disable_libsass:
   inst_shr += env.Install (idir_ui, Glob ('ui/*.css'))
 else:
