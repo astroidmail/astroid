@@ -44,6 +44,16 @@ namespace Astroid {
       prefix_p = prefix_p / bfs::path ("share/astroid/plugins");
       log << debug << "plugins: adding path: " << prefix_p.c_str () << endl;
       peas_engine_prepend_search_path (engine, prefix_p.c_str (), NULL);
+
+    } else {
+      char * g = getenv ("GI_TYPELIB_PATH");
+      if (g == NULL) {
+        log << LogLevel::test << "plugins: setting GI_TYPELIB_PATH: " << bfs::current_path ().c_str () << endl;
+        setenv ("GI_TYPELIB_PATH", bfs::current_path ().c_str (), 1);
+      } else {
+        log << error << "plugins: GI_TYPELIB_PATH already set, not touching.." << endl;
+      }
+
     }
 
     /* adding local plugins */
