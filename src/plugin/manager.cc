@@ -22,14 +22,14 @@ namespace bfs = boost::filesystem;
 
 namespace Astroid {
   PluginManager::PluginManager (bool _disabled, bool _test) {
-    log << info << "plugin: starting manager.." << endl;
+    log << info << "plugins: starting manager.." << endl;
 
 
     disabled = _disabled;
     test     = _test;
 
     if (disabled) {
-      log << info << "plugin: disabled." << endl;
+      log << info << "plugins: disabled." << endl;
       return;
     }
 
@@ -63,6 +63,8 @@ namespace Astroid {
   }
 
   void PluginManager::refresh () {
+    if (disabled) return;
+
     log << debug << "plugins: refreshing.." << endl;
     peas_engine_rescan_plugins (engine);
 
@@ -111,6 +113,8 @@ namespace Astroid {
   }
 
   bool PluginManager::thread_index_format_tags (std::vector<ustring> tags, ustring &out) {
+    if (disabled) return false;
+
     for (PeasPluginInfo * p : thread_index_plugins) {
       PeasExtension * pe = peas_extension_set_get_extension (thread_index_extensions, p);
 
