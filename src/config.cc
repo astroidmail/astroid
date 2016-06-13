@@ -80,6 +80,9 @@ namespace Astroid {
     /* searches file */
     std_paths.searches_file = std_paths.config_dir / path("searches");
 
+    /* plugin dir */
+    std_paths.plugin_dir = std_paths.config_dir / path ("plugins");
+
     /* default data */
     char * data = getenv ("XDG_DATA_HOME");
     if (data == NULL) {
