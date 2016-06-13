@@ -4,6 +4,8 @@
 # include "crypto.hh"
 # include "log.hh"
 
+# include "plugin/manager.hh"
+
 # include <iomanip>
 # include <iostream>
 
@@ -35,17 +37,23 @@ namespace Astroid {
       enum Default def,
       int size)
   {
-    ustring hash = Crypto::get_md5_digest (addr.c_str ());
+    ustring uri;
 
-    ustring uri = ustring::compose (
-          "https://www.gravatar.com/avatar/%1?d=%2&s=%3",
-          hash,
-          Gravatar::DefaultStr[def],
-          size);
+    if (astroid->plugin_manager->get_avatar_uri (addr, Gravatar::DefaultStr[def], size, uri)) {
+      return uri;
+    } else {
+      ustring hash = Crypto::get_md5_digest (addr.c_str ());
 
-    log << debug << "gravatar: for: " << addr << ", uri: " << uri << endl;
+      uri = ustring::compose (
+            "https://www.gravatar.com/avatar/%1?d=%2&s=%3",
+            hash,
+            Gravatar::DefaultStr[def],
+            size);
 
-    return uri;
+      log << debug << "gravatar: for: " << addr << ", uri: " << uri << endl;
+
+      return uri;
+    }
   }
 }
 
