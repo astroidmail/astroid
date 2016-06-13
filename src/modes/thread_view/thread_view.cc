@@ -21,6 +21,7 @@
 # include "utils/address.hh"
 # include "utils/vector_utils.hh"
 # include "utils/gravatar.hh"
+# include "plugin/manager.hh"
 # include "actions/action.hh"
 # include "actions/tag_action.hh"
 # include "modes/mode.hh"
@@ -240,6 +241,13 @@ namespace Astroid {
 
     if (enable_code_prettify) {
       allowed_uris.push_back (code_prettify_uri.substr (0, code_prettify_uri.rfind ("/")));
+    }
+
+    /* get plugin allowed uris */
+    std::vector<ustring> puris = astroid->plugin_manager->get_allowed_uris ();
+    if (puris.size() > 0) {
+      log << debug << "tv: plugin allowed uris: " << VectorUtils::concat_tags (puris) << endl;
+      allowed_uris.insert (allowed_uris.end (), puris.begin (), puris.end ());
     }
 
     // TODO: show cid type images and inline-attachments

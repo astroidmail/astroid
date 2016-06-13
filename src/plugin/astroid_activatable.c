@@ -136,3 +136,22 @@ astroid_activatable_get_avatar_uri (AstroidActivatable * activatable, const char
   return NULL;
 }
 
+/**
+ * astroid_activatable_get_allowed_uris:
+ * @activatable: A #AstroidThreadIndexActivatable.
+ *
+ * Returns: (element-type utf8) (transfer full): List of #utf8.
+ */
+GList *
+astroid_activatable_get_allowed_uris (AstroidActivatable * activatable)
+{
+	AstroidActivatableInterface *iface;
+
+	if (!ASTROID_IS_ACTIVATABLE (activatable)) return NULL;
+
+	iface = ASTROID_ACTIVATABLE_GET_IFACE (activatable);
+	if (iface->get_allowed_uris)
+		return iface->get_allowed_uris (activatable);
+
+  return NULL;
+}
