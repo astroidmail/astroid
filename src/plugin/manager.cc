@@ -1,15 +1,22 @@
 # include <libpeas/peas.h>
 # include <glibmm.h>
 # include <vector>
+# include <cstdlib>
+
+# include <boost/filesystem.hpp>
 
 # include "manager.hh"
+# include "astroid.hh"
+# include "config.hh"
 # include "log.hh"
 # include "build_config.hh"
+# include "utils/vector_utils.hh"
 
 # include "astroid_activatable.h"
 # include "thread_index_activatable.h"
 
 using std::endl;
+namespace bfs = boost::filesystem;
 
 /* remember to set GI_TYPELIB_PATH=$(pwd) when testing */
 
@@ -29,11 +36,19 @@ namespace Astroid {
     engine = peas_engine_get_default ();
     peas_engine_enable_loader (engine, "python3");
 
+    bfs::path plugin_dir = astroid->standard_paths().plugin_dir;
 
-    if (test) {
-      log << debug << "plugin: adding test path" << endl;
-      peas_engine_prepend_search_path (engine, "/home/gaute/dev/mail/notm/astroid/test/test_home/plugins", NULL);
+    /* add installed location */
+    if (!test) {
+      bfs::path prefix_p (PREFIX);
+      prefix_p = prefix_p / bfs::path ("share/astroid/plugins");
+      log << debug << "plugins: adding path: " << prefix_p.c_str () << endl;
+      peas_engine_prepend_search_path (engine, prefix_p.c_str (), NULL);
     }
+
+    /* adding local plugins */
+    log << debug << "plugin: adding path: " << plugin_dir.c_str () << endl;
+    peas_engine_prepend_search_path (engine, plugin_dir.c_str (), NULL);
 
     astroid_extensions = peas_extension_set_new (engine, ASTROID_TYPE_ACTIVATABLE, NULL);
     thread_index_extensions = peas_extension_set_new (engine, ASTROID_THREADINDEX_TYPE_ACTIVATABLE, NULL);
@@ -53,7 +68,7 @@ namespace Astroid {
 
     const GList * ps = peas_engine_get_plugin_list (engine);
 
-    log << debug << "plugins: found " << g_list_length ((GList *)ps) << " plugins." << endl;
+    log << debug << "plugins: found " << g_list_length ((GList *) ps) << " plugins." << endl;
 
     for (; ps != NULL; ps = ps->next) {
       auto p = (PeasPluginInfo *) ps->data;
@@ -67,41 +82,47 @@ namespace Astroid {
 
         PeasExtension * pe = peas_extension_set_get_extension (astroid_extensions, p);
 
-        astroid_activatable_activate (ASTROID_ACTIVATABLE(pe));
-        /* AstroidActivatable * ae = ASTROID_ACTIVATABLE ( pe ); */
-        /* astroid_activatable_activate (ae); */
+        /* start all astroidactivatable plugins directly */
+        if (ASTROID_IS_ACTIVATABLE (pe)) {
 
-        /* char * k = astroid_activatable_ask (ae, "hello test"); */
-        /* log << debug << "got: " << k << endl; */
+          log << debug << "plugins: activating main plugins.." << endl;
+          astroid_activatable_activate (ASTROID_ACTIVATABLE(pe));
+
+          char buf[120] = "hello test";
+          const char * k = astroid_activatable_ask (ASTROID_ACTIVATABLE (pe), buf);
+          log << debug << "got: " << k << endl;
+
+          astroid_plugins.push_back (p);
+        }
+
+        pe = peas_extension_set_get_extension (thread_index_extensions, p);
+
+        if (ASTROID_IS_THREADINDEX_ACTIVATABLE( pe)) {
+          log << debug << "plugins: activating threadindex plugin.." << endl;
+          astroid_threadindex_activatable_activate (ASTROID_THREADINDEX_ACTIVATABLE(pe));
+
+          thread_index_plugins.push_back (p);
+        }
 
       } else {
         log << error << "plugins: failed loading: " << peas_plugin_info_get_name (p) << endl;
       }
+    }
+  }
 
+  bool PluginManager::thread_index_format_tags (std::vector<ustring> tags, ustring &out) {
+    for (PeasPluginInfo * p : thread_index_plugins) {
+      PeasExtension * pe = peas_extension_set_get_extension (thread_index_extensions, p);
+
+      char * tgs = astroid_threadindex_activatable_format_tags (ASTROID_THREADINDEX_ACTIVATABLE(pe), Glib::ListHandler<ustring>::vector_to_list (tags).data ());
+
+      if (tgs != NULL) {
+        out = ustring (tgs);
+        return true;
+      }
     }
 
-    /*
-    peas_extension_set_call (astroid_extensions, "activate");
-
-    GValue a = G_VALUE_INIT;
-    g_value_init (&a, G_TYPE_STRING);
-    g_value_set_static_string (&a, "hello there..");
-
-
-    peas_extension_set_call (astroid_extensions, "ask", &a);
-
-    log << debug  << "got: " << g_value_get_string (&a) << endl;
-    */
-
-    /* std::vector<PeasPluginInfo> plugins = Glib::ListHandler<PeasPluginInfo>::list_to_vector (ps, Glib::OWNERSHIP_NONE); */
-
-
-    /* GPluginPlugin * p = gplugin_manager_find_plugin ("astroid"); */
-
-    /* GError *err = NULL; */
-    /* bool e = gplugin_manager_load_plugin (p, &err); */
-
-
+    return false;
   }
 }
 

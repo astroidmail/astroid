@@ -5,6 +5,9 @@
 
 # include "astroid.hh"
 
+# include "astroid_activatable.h"
+# include "thread_index_activatable.h"
+
 namespace Astroid {
   class PluginManager {
     public:
@@ -16,6 +19,12 @@ namespace Astroid {
       PeasEngine * engine;
       PeasExtensionSet * astroid_extensions;
       PeasExtensionSet * thread_index_extensions;
+
+      std::vector<PeasPluginInfo *>  astroid_plugins;
+      std::vector<PeasPluginInfo *>  thread_index_plugins;
+
+      /* single end point plugins */
+      bool thread_index_format_tags (std::vector<ustring> tags, ustring &out);
 
     private:
       bool disabled, test;
