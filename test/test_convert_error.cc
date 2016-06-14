@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_SUITE(Reading)
 
 
     /* test writing out */
-    std::string name = tmpnam (NULL);
+    std::string name = "test/mail/test_mail/tmp-reply-convert-error";
     Astroid::log << Astroid::test << "writing to tmp file " << name << endl;
     std::fstream tmpfile (name, std::fstream::out);
 
