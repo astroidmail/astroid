@@ -297,6 +297,7 @@ namespace Astroid {
   void Astroid::on_quit () {
     /* clean up and exit */
     SavedSearches::destruct ();
+    if (plugin_manager) delete plugin_manager;
 
     log << info << "astroid: goodbye!" << endl;
   }
