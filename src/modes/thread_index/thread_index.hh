@@ -9,6 +9,7 @@
 
 # include "modes/paned_mode.hh"
 # include "query_loader.hh"
+# include "plugin/manager.hh"
 
 namespace Astroid {
 
@@ -32,6 +33,8 @@ namespace Astroid {
       ustring query_string;
 
       virtual ustring get_label () override;
+
+      PluginManager::ThreadIndexExtension * plugins;
 
     private:
       void on_stats_ready ();

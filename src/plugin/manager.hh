@@ -4,9 +4,11 @@
 # include <vector>
 
 # include "astroid.hh"
+# include "proto.hh"
 
 # include "astroid_activatable.h"
 # include "thread_index_activatable.h"
+
 
 namespace Astroid {
   class PluginManager {
@@ -18,7 +20,6 @@ namespace Astroid {
 
       PeasEngine * engine;
       PeasExtensionSet * astroid_extensions;
-      PeasExtensionSet * thread_index_extensions;
 
       std::vector<PeasPluginInfo *>  astroid_plugins;
       std::vector<PeasPluginInfo *>  thread_index_plugins;
@@ -28,10 +29,21 @@ namespace Astroid {
       bool get_avatar_uri (ustring email, ustring type, int size, ustring &out);
 
       /* thread index */
-      bool thread_index_format_tags (std::vector<ustring> tags, ustring &out);
+      class ThreadIndexExtension {
+        private:
+          ThreadIndex * thread_index;
+          PeasEngine  * engine;
+          PeasExtensionSet * thread_index_extensions;
 
+        public:
+          ThreadIndexExtension (ThreadIndex * ti);
 
-    private:
+          bool format_tags (std::vector<ustring> tags, ustring &out);
+      };
+
+      friend class ThreadIndexExtension;
+
+    protected:
       bool disabled, test;
 
   };
