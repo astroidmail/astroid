@@ -14,6 +14,7 @@
 
 # include <notmuch.h>
 
+# include "thread_index.hh"
 # include "thread_index_list_cell_renderer.hh"
 # include "db.hh"
 # include "utils/utils.hh"
@@ -26,10 +27,12 @@ using boost::property_tree::ptree;
 
 namespace Astroid {
 
-  ThreadIndexListCellRenderer::ThreadIndexListCellRenderer () {
+  ThreadIndexListCellRenderer::ThreadIndexListCellRenderer (ThreadIndex * _ti) {
     ptree ti = astroid->config ("thread_index.cell");
     hidden_tags = VectorUtils::split_and_trim (ti.get<string> ("hidden_tags"), ",");
     std::sort (hidden_tags.begin (), hidden_tags.end ());
+
+    thread_index = _ti;
 
     /* load font settings */
     font_desc_string = ti.get<string> ("font_description");
@@ -322,7 +325,7 @@ namespace Astroid {
     ustring tag_string;
 
     /* first try plugin */
-    if (!astroid->plugin_manager->thread_index_format_tags (tags, tag_string)) {
+    if (!thread_index->plugins->format_tags (tags, tag_string)) {
       Gdk::Color bg;
 
       if ((flags & Gtk::CELL_RENDERER_SELECTED) != 0) {

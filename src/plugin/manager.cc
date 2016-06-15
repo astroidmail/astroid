@@ -15,6 +15,8 @@
 # include "astroid_activatable.h"
 # include "thread_index_activatable.h"
 
+# include "modes/thread_index/thread_index.hh"
+
 using std::endl;
 namespace bfs = boost::filesystem;
 
@@ -62,7 +64,6 @@ namespace Astroid {
     peas_engine_prepend_search_path (engine, plugin_dir.c_str (), NULL);
 
     astroid_extensions = peas_extension_set_new (engine, ASTROID_TYPE_ACTIVATABLE, NULL);
-    thread_index_extensions = peas_extension_set_new (engine, ASTROID_THREADINDEX_TYPE_ACTIVATABLE, NULL);
 
     refresh ();
   }
@@ -93,29 +94,32 @@ namespace Astroid {
       if (e) {
         log << debug << "plugins: loaded: " << peas_plugin_info_get_name (p) << endl;
 
-        PeasExtension * pe = peas_extension_set_get_extension (astroid_extensions, p);
+        if (peas_engine_provides_extension (engine, p, ASTROID_TYPE_ACTIVATABLE)) {
+          PeasExtension * pe = peas_extension_set_get_extension (astroid_extensions, p);
 
-        /* start all astroidactivatable plugins directly */
-        if (ASTROID_IS_ACTIVATABLE (pe)) {
+          /* start all astroidactivatable plugins directly */
+          if (ASTROID_IS_ACTIVATABLE (pe)) {
 
-          log << debug << "plugins: activating main plugins.." << endl;
-          astroid_activatable_activate (ASTROID_ACTIVATABLE(pe));
+            log << debug << "plugins: activating main plugins.." << endl;
+            astroid_activatable_activate (ASTROID_ACTIVATABLE(pe));
 
-          char buf[120] = "hello test";
-          const char * k = astroid_activatable_ask (ASTROID_ACTIVATABLE (pe), buf);
-          log << debug << "got: " << k << endl;
+            char buf[120] = "hello test";
+            const char * k = astroid_activatable_ask (ASTROID_ACTIVATABLE (pe), buf);
+            log << debug << "got: " << k << endl;
 
-          astroid_plugins.push_back (p);
-        }
+            astroid_plugins.push_back (p);
+          }
 
-        pe = peas_extension_set_get_extension (thread_index_extensions, p);
-
-        if (ASTROID_IS_THREADINDEX_ACTIVATABLE( pe)) {
-          log << debug << "plugins: activating threadindex plugin.." << endl;
-          astroid_threadindex_activatable_activate (ASTROID_THREADINDEX_ACTIVATABLE(pe));
+        } else if (peas_engine_provides_extension (engine, p, ASTROID_THREADINDEX_TYPE_ACTIVATABLE)) {
+          log << debug << "plugins: registering threadindex plugin.." << endl;
+          /* astroid_threadindex_activatable_activate (ASTROID_THREADINDEX_ACTIVATABLE(pe)); */
 
           thread_index_plugins.push_back (p);
+
+        } else {
+          log << error << "plugin: " << peas_plugin_info_get_name (p) << " does not implement any known extension." << endl;
         }
+
 
       } else {
         log << error << "plugins: failed loading: " << peas_plugin_info_get_name (p) << endl;
@@ -123,10 +127,30 @@ namespace Astroid {
     }
   }
 
-  bool PluginManager::thread_index_format_tags (std::vector<ustring> tags, ustring &out) {
-    if (disabled) return false;
+  PluginManager::ThreadIndexExtension::ThreadIndexExtension (ThreadIndex * ti) {
+    thread_index  = ti;
+    engine        = astroid->plugin_manager->engine;
 
-    for (PeasPluginInfo * p : thread_index_plugins) {
+    /* loading extensions for each plugin */
+    thread_index_extensions = peas_extension_set_new (engine, ASTROID_THREADINDEX_TYPE_ACTIVATABLE, NULL);
+
+    for ( PeasPluginInfo *p : astroid->plugin_manager->thread_index_plugins) {
+
+      log << debug << "plugins: activating: " << peas_plugin_info_get_name (p) << endl;
+
+      PeasExtension * pe = peas_extension_set_get_extension (thread_index_extensions, p);
+
+      if (ASTROID_IS_THREADINDEX_ACTIVATABLE( pe)) {
+        log << debug << "plugins: activating threadindex plugin.." << endl;
+        astroid_threadindex_activatable_activate (ASTROID_THREADINDEX_ACTIVATABLE(pe));
+      }
+    }
+  }
+
+  bool PluginManager::ThreadIndexExtension::format_tags (std::vector<ustring> tags, ustring &out) {
+    if (astroid->plugin_manager->disabled) return false;
+
+    for (PeasPluginInfo * p : astroid->plugin_manager->thread_index_plugins) {
       PeasExtension * pe = peas_extension_set_get_extension (thread_index_extensions, p);
 
       char * tgs = astroid_threadindex_activatable_format_tags (ASTROID_THREADINDEX_ACTIVATABLE(pe), Glib::ListHandler<ustring>::vector_to_list (tags).data ());

@@ -17,6 +17,7 @@
 # include "modes/thread_view/thread_view.hh"
 # include "modes/saved_searches.hh"
 # include "main_window.hh"
+# include "plugin/manager.hh"
 
 using namespace std;
 
@@ -49,6 +50,8 @@ namespace Astroid {
         sigc::mem_fun (this, &ThreadIndex::on_first_thread_ready));
 
     queryloader.start (query_string);
+
+    plugins = new PluginManager::ThreadIndexExtension (this);
 
     /* register keys {{{ */
     keys.set_prefix ("Thread Index", "thread_index");
@@ -255,6 +258,8 @@ namespace Astroid {
 
   ThreadIndex::~ThreadIndex () {
     log << debug << "ti: deconstruct." << endl;
+
+    delete plugins;
 
     if (thread_view_loaded) {
       delete thread_view; // apparently not done by Gtk::manage

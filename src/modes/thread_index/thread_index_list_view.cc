@@ -110,7 +110,7 @@ namespace Astroid {
 
     /* add thread column */
     renderer =
-      Gtk::manage ( new ThreadIndexListCellRenderer () );
+      Gtk::manage ( new ThreadIndexListCellRenderer (thread_index) );
     int cols_count = append_column ("Thread", *renderer);
     Gtk::TreeViewColumn * column = get_column (cols_count - 1);
 
