@@ -127,6 +127,10 @@ namespace Astroid {
     }
   }
 
+  /* ********************
+   * ThreadIndexExtension
+   * ********************/
+
   PluginManager::ThreadIndexExtension::ThreadIndexExtension (ThreadIndex * ti) {
     thread_index  = ti;
     engine        = astroid->plugin_manager->engine;
@@ -163,6 +167,10 @@ namespace Astroid {
 
     return false;
   }
+
+  /* ************************
+   * General plugin functions
+   * ************************/
 
   bool PluginManager::get_avatar_uri (ustring email, ustring type, int size, ustring &out) {
     if (disabled) return false;
