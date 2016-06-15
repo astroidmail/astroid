@@ -71,6 +71,11 @@ namespace Astroid {
   PluginManager::~PluginManager () {
     if (!disabled) {
       log << debug << "plugins: uninit." << endl;
+      for (PeasPluginInfo * p : astroid_plugins) {
+        PeasExtension * pe = peas_extension_set_get_extension (astroid_extensions, p);
+        astroid_activatable_deactivate (ASTROID_ACTIVATABLE(pe));
+
+      }
     }
   }
 
@@ -112,7 +117,6 @@ namespace Astroid {
 
         } else if (peas_engine_provides_extension (engine, p, ASTROID_THREADINDEX_TYPE_ACTIVATABLE)) {
           log << debug << "plugins: registering threadindex plugin.." << endl;
-          /* astroid_threadindex_activatable_activate (ASTROID_THREADINDEX_ACTIVATABLE(pe)); */
 
           thread_index_plugins.push_back (p);
 
@@ -140,15 +144,28 @@ namespace Astroid {
 
     for ( PeasPluginInfo *p : astroid->plugin_manager->thread_index_plugins) {
 
-      log << debug << "plugins: activating: " << peas_plugin_info_get_name (p) << endl;
+      log << debug << "plugins: activating threadindex plugin: " << peas_plugin_info_get_name (p) << endl;
 
       PeasExtension * pe = peas_extension_set_get_extension (thread_index_extensions, p);
 
       if (ASTROID_IS_THREADINDEX_ACTIVATABLE( pe)) {
-        log << debug << "plugins: activating threadindex plugin.." << endl;
         astroid_threadindex_activatable_activate (ASTROID_THREADINDEX_ACTIVATABLE(pe));
       }
     }
+  }
+
+  PluginManager::ThreadIndexExtension::~ThreadIndexExtension () {
+    for ( PeasPluginInfo *p : astroid->plugin_manager->thread_index_plugins) {
+
+      log << debug << "plugins: deactivating: " << peas_plugin_info_get_name (p) << endl;
+      PeasExtension * pe = peas_extension_set_get_extension (thread_index_extensions, p);
+
+      if (ASTROID_IS_THREADINDEX_ACTIVATABLE( pe)) {
+        astroid_threadindex_activatable_deactivate (ASTROID_THREADINDEX_ACTIVATABLE(pe));
+      }
+    }
+
+    g_object_unref (thread_index_extensions);
   }
 
   bool PluginManager::ThreadIndexExtension::format_tags (std::vector<ustring> tags, ustring &out) {

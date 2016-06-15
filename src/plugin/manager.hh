@@ -37,6 +37,7 @@ namespace Astroid {
 
         public:
           ThreadIndexExtension (ThreadIndex * ti);
+          ~ThreadIndexExtension ();
 
           bool format_tags (std::vector<ustring> tags, ustring &out);
       };
