@@ -16,8 +16,9 @@ astroid_activatable_default_init (AstroidActivatableInterface *iface)
 {
 	static gboolean initialized = FALSE;
 
+  (void)(iface); /* unused */
+
 	if (!initialized) {
-    g_printf ("initializing astroid activatable..\n");
 		/**
 		 * AstroidActivatable:window:
 		 *
@@ -94,64 +95,3 @@ astroid_activatable_update_state (AstroidActivatable * activatable)
 		iface->update_state (activatable);
 }
 
-/**
- * astroid_activatable_ask:
- * @activatable: A #AstroidActivatable.
- * @c: A #char* : inout
- *
- * Triggers an update of the extension internal state to take into account
- * state changes in the window, due to some event or user action.
- */
-char * astroid_activatable_ask (AstroidActivatable * activatable, char *c) {
-	AstroidActivatableInterface *iface;
-
-	if (!ASTROID_IS_ACTIVATABLE (activatable)) return 0;
-
-	iface = ASTROID_ACTIVATABLE_GET_IFACE (activatable);
-	if (iface->ask)
-		return iface->ask (activatable, c);
-  else
-    return 0;
-}
-
-/**
- * astroid_activatable_get_avatar_uri:
- * @activatable: A #AstroidThreadIndexActivatable.
- * @email: A #utf8.
- * @type:  A #string.
- * @size:  A #int.
- *
- */
-char *
-astroid_activatable_get_avatar_uri (AstroidActivatable * activatable, const char * email, const char * type, int size)
-{
-	AstroidActivatableInterface *iface;
-
-	if (!ASTROID_IS_ACTIVATABLE (activatable)) return NULL;
-
-	iface = ASTROID_ACTIVATABLE_GET_IFACE (activatable);
-	if (iface->get_avatar_uri)
-		return iface->get_avatar_uri (activatable, email, type, size);
-
-  return NULL;
-}
-
-/**
- * astroid_activatable_get_allowed_uris:
- * @activatable: A #AstroidThreadIndexActivatable.
- *
- * Returns: (element-type utf8) (transfer full): List of #utf8.
- */
-GList *
-astroid_activatable_get_allowed_uris (AstroidActivatable * activatable)
-{
-	AstroidActivatableInterface *iface;
-
-	if (!ASTROID_IS_ACTIVATABLE (activatable)) return NULL;
-
-	iface = ASTROID_ACTIVATABLE_GET_IFACE (activatable);
-	if (iface->get_allowed_uris)
-		return iface->get_allowed_uris (activatable);
-
-  return NULL;
-}

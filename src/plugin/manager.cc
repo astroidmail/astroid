@@ -14,8 +14,10 @@
 
 # include "astroid_activatable.h"
 # include "thread_index_activatable.h"
+# include "thread_view_activatable.h"
 
 # include "modes/thread_index/thread_index.hh"
+# include "modes/thread_view/thread_view.hh"
 
 using std::endl;
 namespace bfs = boost::filesystem;
@@ -108,10 +110,6 @@ namespace Astroid {
             log << debug << "plugins: activating main plugins.." << endl;
             astroid_activatable_activate (ASTROID_ACTIVATABLE(pe));
 
-            char buf[120] = "hello test";
-            const char * k = astroid_activatable_ask (ASTROID_ACTIVATABLE (pe), buf);
-            log << debug << "got: " << k << endl;
-
             astroid_plugins.push_back (p);
           }
 
@@ -119,6 +117,10 @@ namespace Astroid {
           log << debug << "plugins: registering threadindex plugin.." << endl;
 
           thread_index_plugins.push_back (p);
+
+        } else if (peas_engine_provides_extension (engine, p, ASTROID_THREADVIEW_TYPE_ACTIVATABLE)) {
+          log << debug << "plugins: registering threadview plugin.." << endl;
+          thread_view_plugins.push_back (p);
 
         } else {
           log << error << "plugin: " << peas_plugin_info_get_name (p) << " does not implement any known extension." << endl;
@@ -204,16 +206,49 @@ namespace Astroid {
   }
 
   /* ************************
-   * General plugin functions
+   * ThreadViewExtension
    * ************************/
+  PluginManager::ThreadViewExtension::ThreadViewExtension (ThreadView * tv) {
+    thread_view  = tv;
 
-  bool PluginManager::get_avatar_uri (ustring email, ustring type, int size, ustring &out) {
-    if (disabled) return false;
+    /* loading extensions for each plugin */
+    extensions = peas_extension_set_new (engine, ASTROID_THREADVIEW_TYPE_ACTIVATABLE, "thread_view", tv->gobj (), "web_view", tv->webview, NULL);
 
-    for (PeasPluginInfo * p : astroid_plugins) {
-      PeasExtension * pe = peas_extension_set_get_extension (astroid_extensions, p);
+    for ( PeasPluginInfo *p : astroid->plugin_manager->thread_view_plugins) {
 
-      char * uri = astroid_activatable_get_avatar_uri (ASTROID_ACTIVATABLE(pe), email.c_str (), type.c_str (), size);
+      log << debug << "plugins: activating threadview plugin: " << peas_plugin_info_get_name (p) << endl;
+
+      PeasExtension * pe = peas_extension_set_get_extension (extensions, p);
+
+      if (ASTROID_IS_THREADVIEW_ACTIVATABLE( pe)) {
+        astroid_threadview_activatable_activate (ASTROID_THREADVIEW_ACTIVATABLE(pe));
+      }
+    }
+
+    active = true;
+  }
+
+  void PluginManager::ThreadViewExtension::deactivate () {
+    active = false;
+
+    for ( PeasPluginInfo *p : astroid->plugin_manager->thread_view_plugins) {
+
+      log << debug << "plugins: deactivating: " << peas_plugin_info_get_name (p) << endl;
+      PeasExtension * pe = peas_extension_set_get_extension (extensions, p);
+
+      if (ASTROID_IS_THREADVIEW_ACTIVATABLE( pe)) {
+        astroid_threadview_activatable_deactivate (ASTROID_THREADVIEW_ACTIVATABLE(pe));
+      }
+    }
+  }
+
+  bool PluginManager::ThreadViewExtension::get_avatar_uri (ustring email, ustring type, int size, ustring &out) {
+    if (!active || astroid->plugin_manager->disabled) return false;
+
+    for (PeasPluginInfo * p : astroid->plugin_manager->thread_view_plugins) {
+      PeasExtension * pe = peas_extension_set_get_extension (extensions, p);
+
+      char * uri = astroid_threadview_activatable_get_avatar_uri (ASTROID_THREADVIEW_ACTIVATABLE(pe), email.c_str (), type.c_str (), size);
 
       if (uri != NULL) {
         out = ustring (uri);
@@ -224,15 +259,15 @@ namespace Astroid {
     return false;
   }
 
-  std::vector<ustring> PluginManager::get_allowed_uris () {
+  std::vector<ustring> PluginManager::ThreadViewExtension::get_allowed_uris () {
     std::vector<ustring> uris;
 
-    if (disabled) return uris;
+    if (!active || astroid->plugin_manager->disabled) return uris;
 
-    for (PeasPluginInfo * p : astroid_plugins) {
-      PeasExtension * pe = peas_extension_set_get_extension (astroid_extensions, p);
+    for (PeasPluginInfo * p : astroid->plugin_manager->thread_view_plugins) {
+      PeasExtension * pe = peas_extension_set_get_extension (extensions, p);
 
-      GList * muris = astroid_activatable_get_allowed_uris (ASTROID_ACTIVATABLE(pe));
+      GList * muris = astroid_threadview_activatable_get_allowed_uris (ASTROID_THREADVIEW_ACTIVATABLE(pe));
 
       if (muris != NULL) {
         std::vector<ustring> _muris = Glib::ListHandler<ustring>::list_to_vector (muris, Glib::OWNERSHIP_NONE);

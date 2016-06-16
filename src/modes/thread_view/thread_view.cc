@@ -178,6 +178,9 @@ namespace Astroid {
 
     show_all_children ();
 
+    /* load plugins */
+    plugins = new PluginManager::ThreadViewExtension (this);
+
     astroid->actions->signal_thread_updated ().connect (
         sigc::mem_fun (this, &ThreadView::on_thread_updated));
   }
@@ -190,7 +193,16 @@ namespace Astroid {
     //g_object_unref (webview); // probably garbage collected since it has a parent widget
     //g_object_unref (websettings);
     if (container) g_object_unref (container);
-  } // }}}
+  }
+
+  void ThreadView::close (bool force) {
+    plugins->deactivate ();
+    delete plugins;
+
+    Mode::close (force);
+  }
+
+  // }}}
 
   /* navigation requests {{{ */
   extern "C" void ThreadView_resource_request_starting (
@@ -245,7 +257,7 @@ namespace Astroid {
     }
 
     /* get plugin allowed uris */
-    std::vector<ustring> puris = astroid->plugin_manager->get_allowed_uris ();
+    std::vector<ustring> puris = plugins->get_allowed_uris ();
     if (puris.size() > 0) {
       log << debug << "tv: plugin allowed uris: " << VectorUtils::concat_tags (puris) << endl;
       allowed_uris.insert (allowed_uris.end (), puris.begin (), puris.end ());
@@ -924,9 +936,14 @@ namespace Astroid {
           WEBKIT_DOM_NODE (div_message),
           ".avatar"));
 
+      ustring uri = "";
+      if (!plugins->get_avatar_uri (se.email (), Gravatar::DefaultStr[Gravatar::Default::RETRO], 48, uri)) {
+        uri = Gravatar::get_image_uri (se.email (),Gravatar::Default::RETRO , 48);
+      }
+
       webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (av), "src",
-          Gravatar::get_image_uri (se.email (), Gravatar::Default::RETRO, 48).c_str()
-          , (err = NULL, &err));
+          uri.c_str (),
+          (err = NULL, &err));
 
       g_object_unref (av);
     }

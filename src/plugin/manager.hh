@@ -6,9 +6,6 @@
 # include "astroid.hh"
 # include "proto.hh"
 
-# include "astroid_activatable.h"
-# include "thread_index_activatable.h"
-
 namespace Astroid {
   class PluginManager {
     public:
@@ -22,10 +19,7 @@ namespace Astroid {
 
       std::vector<PeasPluginInfo *>  astroid_plugins;
       std::vector<PeasPluginInfo *>  thread_index_plugins;
-
-      /* single end-point plugins */
-      std::vector<ustring> get_allowed_uris ();
-      bool get_avatar_uri (ustring email, ustring type, int size, ustring &out);
+      std::vector<PeasPluginInfo *>  thread_view_plugins;
 
       /* thread index */
       class Extension {
@@ -53,7 +47,22 @@ namespace Astroid {
           bool format_tags (std::vector<ustring> tags, ustring &out);
       };
 
+      class ThreadViewExtension : public Extension {
+        private:
+          ThreadView * thread_view;
+
+        public:
+          ThreadViewExtension (ThreadView * ti);
+
+          void deactivate () override;
+
+          std::vector<ustring> get_allowed_uris ();
+          bool get_avatar_uri (ustring email, ustring type, int size, ustring &out);
+
+      };
+
       friend class ThreadIndexExtension;
+      friend class ThreadViewExtension;
       friend class Extension;
 
     protected:
