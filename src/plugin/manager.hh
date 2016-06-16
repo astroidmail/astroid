@@ -21,7 +21,6 @@ namespace Astroid {
       std::vector<PeasPluginInfo *>  thread_index_plugins;
       std::vector<PeasPluginInfo *>  thread_view_plugins;
 
-      /* thread index */
       class Extension {
         protected:
           PeasEngine        * engine;
