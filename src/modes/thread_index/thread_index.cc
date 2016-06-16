@@ -256,10 +256,15 @@ namespace Astroid {
 
   }
 
+  void ThreadIndex::close (bool force) {
+    plugins->deactivate ();
+    delete plugins;
+
+    Mode::close (force);
+  }
+
   ThreadIndex::~ThreadIndex () {
     log << debug << "ti: deconstruct." << endl;
-
-    delete plugins;
 
     if (thread_view_loaded) {
       delete thread_view; // apparently not done by Gtk::manage

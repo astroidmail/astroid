@@ -1,15 +1,18 @@
 import gi
 gi.require_version ('Astroid', '0.1')
+gi.require_version ('Gtk', '3.0')
 from gi.repository import GObject, Gtk, Astroid
 
 print ("tagformat: plugin loading..")
 
 class TagFormatPlugin (GObject.Object, Astroid.ThreadIndexActivatable):
-  object = GObject.property (type=GObject.Object)
-  # listview = GObject.property (type = Gtk.TreeView)
+  thread_index  = GObject.property (type = Gtk.Box)
 
   def do_activate (self):
     print ('tagformat: activate')
+    self.label = Gtk.Label ("Hullu!")
+    self.thread_index.pack_end (self.label, True, True, 5)
+
 
   def do_deactivate (self):
     print ('tagformat: deactivate')
