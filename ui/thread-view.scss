@@ -317,7 +317,7 @@ hr {
     image-rendering: optimizeQuality;
 }
 
-.avatar[src^=file], .avatar[src^=http] {
+.avatar[src^=file], .avatar[src^=http], .avatar[src^=data] {
     display: inline;
     width: 48px;
     height: 48px;
