@@ -1,11 +1,1 @@
-[Plugin]
-Module=tagformat
-Depends=
-Loader=python3
-Name=tagformat
-Description=plugin
-Authors=Gaute Hope
-Copyright=
-Website=
-Help=
-Hidden=false
+../../test/test_home/plugins/tagformat.plugin
