@@ -229,6 +229,7 @@ namespace Astroid {
       {
         home_uri,
         "data:image/png;base64",
+        "data:image/jpeg;base64",
       };
 
     if (enable_gravatar) {
@@ -259,6 +260,7 @@ namespace Astroid {
           }) != allowed_uris.end ())
     {
 
+      /* log << debug << "tv: request: allowed: " << uri << endl; */
       return; // yes
 
     } else {
