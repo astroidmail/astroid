@@ -12,6 +12,7 @@
 # include "modes/mode.hh"
 # include "message_thread.hh"
 # include "theme.hh"
+# include "plugin/manager.hh"
 
 # include "web_inspector.hh"
 
@@ -80,6 +81,10 @@ namespace Astroid {
       bool enable_gravatar;
 
       Theme theme;
+
+      PluginManager::ThreadViewExtension * plugins;
+
+      void close (bool = false) override;
 
     private:
       ThreadViewInspector thread_view_inspector;
@@ -177,10 +182,11 @@ namespace Astroid {
 
       bool element_action (ElementAction);
 
-    private:
       /* webkit (using C api) */
       WebKitWebView     * webview;
       WebKitWebSettings * websettings;
+
+    private:
       WebKitDOMHTMLDivElement * container = NULL;
 
       std::atomic<bool> wk_loaded;
