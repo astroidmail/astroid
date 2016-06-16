@@ -24,14 +24,12 @@ astroid_threadindex_activatable_default_init (AstroidThreadIndexActivatableInter
 		 * The window property contains the gtr window for this
 		 * #AstroidActivatable instance.
 		 */
-		/* g_object_interface_install_property (iface, */
-                           /* g_param_spec_object ("listview", */
-                                                /* "listview", */
-                                                /* "The ThreadIndex listview", */
-                                                /* GTK_TYPE_TREE_VIEW, */
-                                                /* G_PARAM_READWRITE | */
-                                                /* G_PARAM_CONSTRUCT_ONLY | */
-                                                /* G_PARAM_STATIC_STRINGS)); */
+		g_object_interface_install_property (iface,
+                           g_param_spec_object ("thread_index",
+                                                "thread_index",
+                                                "The ThreadIndex box",
+                                                GTK_TYPE_BOX,
+                                                G_PARAM_READWRITE));
 
 		initialized = TRUE;
 	}

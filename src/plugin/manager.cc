@@ -132,53 +132,71 @@ namespace Astroid {
   }
 
   /* ********************
+   * Extension
+   * ********************/
+  PluginManager::Extension::Extension () {
+    engine        = astroid->plugin_manager->engine;
+
+  }
+
+  PluginManager::Extension::~Extension () {
+    /* make sure all extensions have been deactivated in subclass destructor */
+    log << debug << "extension: destruct." << endl;
+    g_object_unref (extensions);
+  }
+
+  /* ********************
    * ThreadIndexExtension
    * ********************/
 
   PluginManager::ThreadIndexExtension::ThreadIndexExtension (ThreadIndex * ti) {
     thread_index  = ti;
-    engine        = astroid->plugin_manager->engine;
 
     /* loading extensions for each plugin */
-    thread_index_extensions = peas_extension_set_new (engine, ASTROID_THREADINDEX_TYPE_ACTIVATABLE, NULL);
+    extensions = peas_extension_set_new (engine, ASTROID_THREADINDEX_TYPE_ACTIVATABLE, "thread_index", ti->gobj (), NULL);
 
     for ( PeasPluginInfo *p : astroid->plugin_manager->thread_index_plugins) {
 
       log << debug << "plugins: activating threadindex plugin: " << peas_plugin_info_get_name (p) << endl;
 
-      PeasExtension * pe = peas_extension_set_get_extension (thread_index_extensions, p);
+      PeasExtension * pe = peas_extension_set_get_extension (extensions, p);
 
       if (ASTROID_IS_THREADINDEX_ACTIVATABLE( pe)) {
         astroid_threadindex_activatable_activate (ASTROID_THREADINDEX_ACTIVATABLE(pe));
       }
     }
+
+    active = true;
   }
 
-  PluginManager::ThreadIndexExtension::~ThreadIndexExtension () {
+  void PluginManager::ThreadIndexExtension::deactivate () {
+    active = false;
+
     for ( PeasPluginInfo *p : astroid->plugin_manager->thread_index_plugins) {
 
       log << debug << "plugins: deactivating: " << peas_plugin_info_get_name (p) << endl;
-      PeasExtension * pe = peas_extension_set_get_extension (thread_index_extensions, p);
+      PeasExtension * pe = peas_extension_set_get_extension (extensions, p);
 
       if (ASTROID_IS_THREADINDEX_ACTIVATABLE( pe)) {
         astroid_threadindex_activatable_deactivate (ASTROID_THREADINDEX_ACTIVATABLE(pe));
       }
     }
-
-    g_object_unref (thread_index_extensions);
   }
 
   bool PluginManager::ThreadIndexExtension::format_tags (std::vector<ustring> tags, ustring &out) {
-    if (astroid->plugin_manager->disabled) return false;
+    if (!active || astroid->plugin_manager->disabled) return false;
 
     for (PeasPluginInfo * p : astroid->plugin_manager->thread_index_plugins) {
-      PeasExtension * pe = peas_extension_set_get_extension (thread_index_extensions, p);
+      PeasExtension * pe = peas_extension_set_get_extension (extensions, p);
 
-      char * tgs = astroid_threadindex_activatable_format_tags (ASTROID_THREADINDEX_ACTIVATABLE(pe), Glib::ListHandler<ustring>::vector_to_list (tags).data ());
+      if (pe) {
 
-      if (tgs != NULL) {
-        out = ustring (tgs);
-        return true;
+        char * tgs = astroid_threadindex_activatable_format_tags (ASTROID_THREADINDEX_ACTIVATABLE(pe), Glib::ListHandler<ustring>::vector_to_list (tags).data ());
+
+        if (tgs != NULL) {
+          out = ustring (tgs);
+          return true;
+        }
       }
     }
 
