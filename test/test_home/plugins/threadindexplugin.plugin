@@ -1,8 +1,8 @@
 [Plugin]
-Module=tagformat
+Module=threadindexplugin
 Depends=
 Loader=python3
-Name=tagformat
+Name=threadindexplugin
 Description=plugin
 Authors=Gaute Hope
 Copyright=

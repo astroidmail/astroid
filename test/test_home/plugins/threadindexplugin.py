@@ -3,9 +3,9 @@ gi.require_version ('Astroid', '0.1')
 gi.require_version ('Gtk', '3.0')
 from gi.repository import GObject, Gtk, Astroid
 
-print ("tagformat: plugin loading..")
+print ("threadindexplugin: plugin loading..")
 
-class TagFormatPlugin (GObject.Object, Astroid.ThreadIndexActivatable):
+class ThreadIndexPlugin (GObject.Object, Astroid.ThreadIndexActivatable):
   thread_index  = GObject.property (type = Gtk.Box)
 
   def do_activate (self):
