@@ -18,7 +18,11 @@
 # include "actions/action.hh"
 # include "utils/date_utils.hh"
 # include "utils/utils.hh"
-# include "plugin/manager.hh"
+
+# ifndef DISABLE_PLUGINS
+  # include "plugin/manager.hh"
+# endif
+
 # include "log.hh"
 # include "poll.hh"
 
@@ -75,7 +79,11 @@ namespace Astroid {
       ( "test-config,t", "use test config (same as used when tests are run), only makes sense from the source root")
       ( "mailto,m", po::value<ustring>(), "compose mail with mailto url or address")
       ( "no-auto-poll", "do not poll automatically")
+# ifndef DISABLE_PLUGINS
       ( "disable-plugins", "disable plugins");
+# else
+      ;
+# endif
 
     po::variables_map vm;
 
@@ -144,7 +152,9 @@ namespace Astroid {
       no_auto_poll = true;
     }
 
+# ifndef DISABLE_PLUGINS
     bool disable_plugins = vm.count ("disable-plugins");
+# endif
 
     bool domailto = false;
     ustring mailtourl;
@@ -228,8 +238,10 @@ namespace Astroid {
     /* set up accounts */
     accounts = new AccountManager ();
 
+# ifndef DISABLE_PLUGINS
     /* set up plugins */
     plugin_manager = new PluginManager (disable_plugins, in_test ());
+# endif
 
     /* set up contacts */
     //contacts = new Contacts ();
@@ -277,8 +289,10 @@ namespace Astroid {
     /* set up accounts */
     accounts = new AccountManager ();
 
+# ifndef DISABLE_PLUGINS
     /* set up plugins */
     plugin_manager = new PluginManager (false, true);
+# endif
 
     /* set up contacts */
     //contacts = new Contacts ();
@@ -297,7 +311,10 @@ namespace Astroid {
   void Astroid::on_quit () {
     /* clean up and exit */
     SavedSearches::destruct ();
+
+# ifndef DISABLE_PLUGINS
     if (plugin_manager) delete plugin_manager;
+# endif
 
     log << info << "astroid: goodbye!" << endl;
   }

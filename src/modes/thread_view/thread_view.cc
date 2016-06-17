@@ -21,7 +21,9 @@
 # include "utils/address.hh"
 # include "utils/vector_utils.hh"
 # include "utils/gravatar.hh"
-# include "plugin/manager.hh"
+# ifndef DISABLE_PLUGINS
+  # include "plugin/manager.hh"
+# endif
 # include "actions/action.hh"
 # include "actions/tag_action.hh"
 # include "modes/mode.hh"
@@ -178,8 +180,10 @@ namespace Astroid {
 
     show_all_children ();
 
+# ifndef DISABLE_PLUGINS
     /* load plugins */
     plugins = new PluginManager::ThreadViewExtension (this);
+# endif
 
     astroid->actions->signal_thread_updated ().connect (
         sigc::mem_fun (this, &ThreadView::on_thread_updated));
@@ -196,8 +200,10 @@ namespace Astroid {
   }
 
   void ThreadView::close (bool force) {
+# ifndef DISABLE_PLUGINS
     plugins->deactivate ();
     delete plugins;
+# endif
 
     Mode::close (force);
   }
@@ -256,12 +262,14 @@ namespace Astroid {
       allowed_uris.push_back (code_prettify_uri.substr (0, code_prettify_uri.rfind ("/")));
     }
 
+# ifndef DISABLE_PLUGINS
     /* get plugin allowed uris */
     std::vector<ustring> puris = plugins->get_allowed_uris ();
     if (puris.size() > 0) {
       log << debug << "tv: plugin allowed uris: " << VectorUtils::concat_tags (puris) << endl;
       allowed_uris.insert (allowed_uris.end (), puris.begin (), puris.end ());
     }
+# endif
 
     // TODO: show cid type images and inline-attachments
 
@@ -937,9 +945,13 @@ namespace Astroid {
           ".avatar"));
 
       ustring uri = "";
+# ifndef DISABLE_PLUGINS
       if (!plugins->get_avatar_uri (se.email (), Gravatar::DefaultStr[Gravatar::Default::RETRO], 48, uri)) {
+# endif
         uri = Gravatar::get_image_uri (se.email (),Gravatar::Default::RETRO , 48);
+# ifndef DISABLE_PLUGINS
       }
+# endif
 
       webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (av), "src",
           uri.c_str (),

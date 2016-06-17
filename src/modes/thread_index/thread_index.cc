@@ -17,7 +17,9 @@
 # include "modes/thread_view/thread_view.hh"
 # include "modes/saved_searches.hh"
 # include "main_window.hh"
-# include "plugin/manager.hh"
+# ifndef DISABLE_PLUGINS
+  # include "plugin/manager.hh"
+# endif
 
 using namespace std;
 
@@ -51,7 +53,9 @@ namespace Astroid {
 
     queryloader.start (query_string);
 
+# ifndef DISABLE_PLUGINS
     plugins = new PluginManager::ThreadIndexExtension (this);
+# endif
 
     /* register keys {{{ */
     keys.set_prefix ("Thread Index", "thread_index");
@@ -257,8 +261,10 @@ namespace Astroid {
   }
 
   void ThreadIndex::close (bool force) {
+# ifndef DISABLE_PLUGINS
     plugins->deactivate ();
     delete plugins;
+# endif
 
     Mode::close (force);
   }

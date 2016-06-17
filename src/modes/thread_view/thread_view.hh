@@ -12,7 +12,9 @@
 # include "modes/mode.hh"
 # include "message_thread.hh"
 # include "theme.hh"
-# include "plugin/manager.hh"
+# ifndef DISABLE_PLUGINS
+  # include "plugin/manager.hh"
+# endif
 
 # include "web_inspector.hh"
 
@@ -82,7 +84,9 @@ namespace Astroid {
 
       Theme theme;
 
+# ifndef DISABLE_PLUGINS
       PluginManager::ThreadViewExtension * plugins;
+# endif
 
       void close (bool = false) override;
 
