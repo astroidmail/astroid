@@ -144,7 +144,7 @@ namespace Astroid {
   PluginManager::Extension::~Extension () {
     /* make sure all extensions have been deactivated in subclass destructor */
     log << debug << "extension: destruct." << endl;
-    g_object_unref (extensions);
+    if (extensions) g_object_unref (extensions);
   }
 
   /* ********************
@@ -153,6 +153,8 @@ namespace Astroid {
 
   PluginManager::ThreadIndexExtension::ThreadIndexExtension (ThreadIndex * ti) {
     thread_index  = ti;
+
+    if (astroid->plugin_manager->disabled) return;
 
     /* loading extensions for each plugin */
     extensions = peas_extension_set_new (engine, ASTROID_THREADINDEX_TYPE_ACTIVATABLE, "thread_index", ti->gobj (), NULL);
@@ -210,6 +212,8 @@ namespace Astroid {
    * ************************/
   PluginManager::ThreadViewExtension::ThreadViewExtension (ThreadView * tv) {
     thread_view  = tv;
+
+    if (astroid->plugin_manager->disabled) return;
 
     /* loading extensions for each plugin */
     extensions = peas_extension_set_new (engine, ASTROID_THREADVIEW_TYPE_ACTIVATABLE, "thread_view", tv->gobj (), "web_view", tv->webview, NULL);
