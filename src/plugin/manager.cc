@@ -58,8 +58,10 @@ namespace Astroid {
       } else {
         log << error << "plugins: GI_TYPELIB_PATH already set, not touching.." << endl;
       }
-
     }
+
+    /* set env ASTROID_CONFIG for plugins */
+    setenv ("ASTROID_CONFIG", astroid->standard_paths().config_file.c_str (), 1);
 
     /* adding local plugins */
     log << debug << "plugin: adding path: " << plugin_dir.c_str () << endl;
