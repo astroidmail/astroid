@@ -24,7 +24,7 @@ struct _AstroidThreadIndexActivatableInterface
 	void (*deactivate) (AstroidThreadIndexActivatable * activatable);
 	void (*update_state) (AstroidThreadIndexActivatable * activatable);
 
-  char* (*format_tags) (AstroidThreadIndexActivatable * activatable, GList * tags);
+  char* (*format_tags) (AstroidThreadIndexActivatable * activatable, const char *bg, GList * tags);
 };
 
 GType astroid_threadindex_activatable_get_type (void) G_GNUC_CONST;
@@ -35,7 +35,7 @@ void astroid_threadindex_activatable_deactivate (AstroidThreadIndexActivatable *
 
 void astroid_threadindex_activatable_update_state (AstroidThreadIndexActivatable *activatable);
 
-char * astroid_threadindex_activatable_format_tags (AstroidThreadIndexActivatable * activatable, GList * tags);
+char * astroid_threadindex_activatable_format_tags (AstroidThreadIndexActivatable * activatable, const char * bg, GList * tags);
 
 
 G_END_DECLS

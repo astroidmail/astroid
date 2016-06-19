@@ -326,18 +326,19 @@ namespace Astroid {
 
     ustring tag_string;
 
+    Gdk::Color bg;
+
+    if ((flags & Gtk::CELL_RENDERER_SELECTED) != 0) {
+      bg = Gdk::Color (background_color_selected);
+      cr->set_source_rgb (bg.get_red_p(), bg.get_green_p(), bg.get_blue_p());
+    } else {
+      bg.set_grey_p (1.);
+    }
+
     /* first try plugin */
 # ifndef DISABLE_PLUGINS
-    if (!thread_index->plugins->format_tags (tags, tag_string)) {
+    if (!thread_index->plugins->format_tags (tags, bg.to_string (), tag_string)) {
 # endif
-      Gdk::Color bg;
-
-      if ((flags & Gtk::CELL_RENDERER_SELECTED) != 0) {
-        bg = Gdk::Color (background_color_selected);
-        cr->set_source_rgb (bg.get_red_p(), bg.get_green_p(), bg.get_blue_p());
-      } else {
-        bg.set_grey_p (1.);
-      }
 
       unsigned char cv[3] = { (unsigned char) bg.get_red (),
                               (unsigned char) bg.get_green (),
