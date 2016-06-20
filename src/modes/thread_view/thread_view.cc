@@ -939,13 +939,17 @@ namespace Astroid {
     {
       ustring uri = "";
       auto se = Address(m->sender);
-# ifndef DISABLE_PLUGINS
+# ifdef DISABLE_PLUGINS
+      if (false) {
+# else
       if (plugins->get_avatar_uri (se.email (), Gravatar::DefaultStr[Gravatar::Default::RETRO], 48, uri)) {
-        ; // all fine, use plugins avatar
-      } else
 # endif
-      if (enable_gravatar) {
-        uri = Gravatar::get_image_uri (se.email (),Gravatar::Default::RETRO , 48);
+        ; // all fine, use plugins avatar
+      }
+      else {
+        if (enable_gravatar) {
+          uri = Gravatar::get_image_uri (se.email (),Gravatar::Default::RETRO , 48);
+        }
       }
 
       if (uri.length() > 0) {
