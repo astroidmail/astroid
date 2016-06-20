@@ -60,7 +60,7 @@ namespace Astroid {
          << setw(2) << setfill('0') << now_tm->tm_sec << ")";
 
 
-    lock_guard<mutex> grd_s (m_outstreams);
+    unique_lock<mutex> grd_s (m_outstreams);
     for (auto &o : out_streams) {
       *o << "[" << level_string (_next_level) << "] "
          << time_str.str() << ": "
@@ -69,6 +69,7 @@ namespace Astroid {
       *o << flush;
 # endif
     }
+    grd_s.unlock ();
 
     unique_lock<mutex> grd (m_lines);
     lines.push (LogLine (_next_level, time_str.str (), _next_line.str()));

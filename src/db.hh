@@ -125,12 +125,16 @@ namespace Astroid {
       static bfs::path path_db;
 
     private:
-      /* we can have as many read-only db's open as we want, but only one
-       * read-write at the same time. there can also not be any other
-       * read-only db's open when there is a read-write open.
+      /*
+       *  + We can have as many read-only db's open as we want.
        *
-       * if you open one read-only db, and try to open a read-write in the
-       * same thread without closing the read-only there will be a deadlock.
+       *  + There can only be one read-write db open at the time.
+       *
+       *  + It is not possible to have read-only db's open when there is a
+       *    read-only db open.
+       *
+       * If you open one read-only db, and try to open a read-write db in the
+       * same thread without closing the read-only db there will be a deadlock.
        *
        */
 
