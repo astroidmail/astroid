@@ -936,28 +936,34 @@ namespace Astroid {
     }
 
     /* avatar */
-    if (enable_gravatar) {
-      auto se = Address(m->sender);
-
-      WebKitDOMHTMLImageElement * av = WEBKIT_DOM_HTML_IMAGE_ELEMENT (
-          DomUtils::select (
-          WEBKIT_DOM_NODE (div_message),
-          ".avatar"));
-
+    {
       ustring uri = "";
-# ifndef DISABLE_PLUGINS
-      if (!plugins->get_avatar_uri (se.email (), Gravatar::DefaultStr[Gravatar::Default::RETRO], 48, uri)) {
+      auto se = Address(m->sender);
+# ifdef DISABLE_PLUGINS
+      if (false) {
+# else
+      if (plugins->get_avatar_uri (se.email (), Gravatar::DefaultStr[Gravatar::Default::RETRO], 48, uri)) {
 # endif
-        uri = Gravatar::get_image_uri (se.email (),Gravatar::Default::RETRO , 48);
-# ifndef DISABLE_PLUGINS
+        ; // all fine, use plugins avatar
       }
-# endif
+      else {
+        if (enable_gravatar) {
+          uri = Gravatar::get_image_uri (se.email (),Gravatar::Default::RETRO , 48);
+        }
+      }
 
-      webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (av), "src",
-          uri.c_str (),
-          (err = NULL, &err));
+      if (uri.length() > 0) {
+        WebKitDOMHTMLImageElement * av = WEBKIT_DOM_HTML_IMAGE_ELEMENT (
+            DomUtils::select (
+            WEBKIT_DOM_NODE (div_message),
+            ".avatar"));
 
-      g_object_unref (av);
+        webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (av), "src",
+            uri.c_str (),
+            (err = NULL, &err));
+
+        g_object_unref (av);
+      }
     }
 
     /* insert header html*/
