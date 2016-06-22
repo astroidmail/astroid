@@ -1,5 +1,6 @@
 # include <iostream>
 # include <memory>
+# include <boost/algorithm/string/replace.hpp>
 
 # include "astroid.hh"
 # include "db.hh"
@@ -47,7 +48,8 @@ namespace Astroid {
       std::ostringstream quoted;
 
       ustring quoting_a = ustring::compose (astroid->config ().get<string> ("mail.forward.quote_line"),
-          Address(msg->sender.raw()).fail_safe_name(), msg->pretty_verbose_date());
+          boost::replace_all_copy (string(Address(msg->sender.raw()).fail_safe_name()), "%", "%%"),
+          boost::replace_all_copy (string(msg->pretty_verbose_date()), "%", "%%"));
 
       /* date format */
       Glib::DateTime dt = Glib::DateTime::create_now_local (msg->received_time);
