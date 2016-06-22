@@ -49,6 +49,10 @@ namespace Astroid {
       ustring quoting_a = ustring::compose (astroid->config ().get<string> ("mail.forward.quote_line"),
           Address(msg->sender.raw()).fail_safe_name(), msg->pretty_verbose_date());
 
+      /* date format */
+      Glib::DateTime dt = Glib::DateTime::create_now_local (msg->received_time);
+      quoting_a = dt.format (quoting_a);
+
       quoted  << quoting_a.raw ()
               << endl;
 
