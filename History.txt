@@ -46,6 +46,8 @@
   addition is made.
 * build: --disable-libsass: do not depend on libsass, but use a sass
   compiler at build time (-scss-compiler=sassc).
+* Quote lines for reply and forward are formatted with
+  Glib::DateTime::format().
 
 == v0.5 / 2016-02-06
 
