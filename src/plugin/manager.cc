@@ -189,7 +189,11 @@ namespace Astroid {
     }
   }
 
-  bool PluginManager::ThreadIndexExtension::format_tags (std::vector<ustring> tags, ustring bg, ustring &out) {
+  bool PluginManager::ThreadIndexExtension::format_tags (
+      std::vector<ustring> tags,
+      ustring bg,
+      bool selected,
+      ustring &out) {
     if (!active || astroid->plugin_manager->disabled) return false;
 
     for (PeasPluginInfo * p : astroid->plugin_manager->thread_index_plugins) {
@@ -197,7 +201,7 @@ namespace Astroid {
 
       if (pe) {
 
-        char * tgs = astroid_threadindex_activatable_format_tags (ASTROID_THREADINDEX_ACTIVATABLE(pe), bg.c_str (), Glib::ListHandler<ustring>::vector_to_list (tags).data ());
+        char * tgs = astroid_threadindex_activatable_format_tags (ASTROID_THREADINDEX_ACTIVATABLE(pe), bg.c_str (), Glib::ListHandler<ustring>::vector_to_list (tags).data (), selected);
 
         if (tgs != NULL) {
           out = ustring (tgs);
