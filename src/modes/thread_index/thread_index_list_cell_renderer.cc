@@ -337,7 +337,7 @@ namespace Astroid {
 
     /* first try plugin */
 # ifndef DISABLE_PLUGINS
-    if (!thread_index->plugins->format_tags (tags, bg.to_string (), tag_string)) {
+    if (!thread_index->plugins->format_tags (tags, bg.to_string (), (flags & Gtk::CELL_RENDERER_SELECTED) != 0, tag_string)) {
 # endif
 
       unsigned char cv[3] = { (unsigned char) bg.get_red (),

@@ -43,7 +43,7 @@ namespace Astroid {
 
           void deactivate () override;
 
-          bool format_tags (std::vector<ustring> tags, ustring bg, ustring &out);
+          bool format_tags (std::vector<ustring> tags, ustring bg, bool selected, ustring &out);
       };
 
       class ThreadViewExtension : public Extension {

@@ -17,7 +17,7 @@ class ThreadIndexPlugin (GObject.Object, Astroid.ThreadIndexActivatable):
   def do_deactivate (self):
     print ('tagformat: deactivate')
 
-  def do_format_tags (self, bg, tags):
+  def do_format_tags (self, bg, tags, selected):
 
     from IPython import embed
     # embed ()

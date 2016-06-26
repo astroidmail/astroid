@@ -95,10 +95,11 @@ astroid_threadindex_activatable_update_state (AstroidThreadIndexActivatable * ac
  * @activatable: A #AstroidThreadIndexActivatable.
  * @bg : A #utf8.
  * @tags: (element-type utf8) (transfer none): List of #utf8.
+ * @selected: A #bool.
  *
  */
 char *
-astroid_threadindex_activatable_format_tags (AstroidThreadIndexActivatable * activatable, const char * bg, GList * tags)
+astroid_threadindex_activatable_format_tags (AstroidThreadIndexActivatable * activatable, const char * bg, GList * tags, bool selected)
 {
 	AstroidThreadIndexActivatableInterface *iface;
 
@@ -106,7 +107,7 @@ astroid_threadindex_activatable_format_tags (AstroidThreadIndexActivatable * act
 
 	iface = ASTROID_THREADINDEX_ACTIVATABLE_GET_IFACE (activatable);
 	if (iface->format_tags)
-		return iface->format_tags (activatable, bg, tags);
+		return iface->format_tags (activatable, bg, tags, selected);
 
   return NULL;
 }
