@@ -86,6 +86,11 @@ namespace Astroid {
     answer_yes_no (false);
   }
 
+  void Mode::pre_close () {
+    /* allow sub-modes to clean up anything when we are sure that the
+     * mode will be closed */
+  }
+
   void Mode::close (bool force) {
     /* close current page */
     using std::endl;

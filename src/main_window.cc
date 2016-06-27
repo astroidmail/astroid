@@ -399,6 +399,7 @@ namespace Astroid {
         set_active (c - 1);
       }
 
+      ((Mode*) notebook.get_nth_page (c))->pre_close ();
       notebook.remove_page (c); // this should free the widget (?)
     } else {
       log << warn << "mw: attempt to remove negative page" << endl;

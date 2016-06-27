@@ -199,13 +199,11 @@ namespace Astroid {
     if (container) g_object_unref (container);
   }
 
-  void ThreadView::close (bool force) {
+  void ThreadView::pre_close () {
 # ifndef DISABLE_PLUGINS
     plugins->deactivate ();
     delete plugins;
 # endif
-
-    Mode::close (force);
   }
 
   // }}}
