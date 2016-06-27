@@ -133,58 +133,67 @@ namespace Astroid {
           Gtk::TreeViewColumn *c;
           tv.get_cursor (path, c);
 
-          bool changed = false;
           Gtk::TreeIter it = store->get_iter (path);
           if (it) {
 
             auto row = *it;
             ustring name  = row[m_columns.m_col_name];
             ustring query = row[m_columns.m_col_query];
+            bool issaved  = row[m_columns.m_col_saved];
+            bool ishistory = row[m_columns.m_col_history];
 
-            if (row[m_columns.m_col_saved]) {
-              ptree sa = load_searches ();
-              ptree  s = sa.get_child ("saved");
+            ask_yes_no ("Do you want to delete the selected query?", [&, name, query, issaved, ishistory] (bool yes) {
 
-              /* TODO: warning, this will delete the first occurence of the query */
-              for (auto it = s.begin (); it != s.end ();) {
-                if (it->second.data() == query) {
-                  log << info << "searches: deleting: " << name << ":" << query << endl;
+                log << debug << "yes" << endl;
 
-                  it = s.erase (it);
-                  changed = true;
-                  break;
-                } else {
-                  it++;
+                if (yes) {
+
+                  bool changed = false;
+
+                  if (issaved) {
+                    ptree sa = load_searches ();
+                    ptree  s = sa.get_child ("saved");
+
+                    /* TODO: warning, this will delete the first occurence of the query */
+                    for (auto it = s.begin (); it != s.end ();) {
+                      if (it->second.data() == query) {
+                        log << info << "searches: deleting: " << name << ":" << query << endl;
+
+                        it = s.erase (it);
+                        changed = true;
+                        break;
+                      } else {
+                        it++;
+                      }
+                    }
+
+                    sa.put_child ("saved", s);
+
+                    if (changed) write_back_searches (sa);
+
+                  } else if (ishistory) {
+                    log << info << "searches: deleting " << query << endl;
+                    for (auto it = history.rbegin (); it != history.rend (); it++) {
+                      if (*it == query) {
+                        history.erase (std::next(it).base ());
+                        m_reload ();
+                        break;
+                      }
+                    }
+                  }
+
+                  if (changed) {
+                    /* select new row */
+                    path.prev ();
+                    Gtk::TreeIter it = store->get_iter (path);
+                    if (it) {
+                      tv.set_cursor (path);
+                    } else {
+                      tv.set_cursor (Gtk::TreePath ("1"));
+                    }
+                  }
                 }
-              }
-
-              sa.put_child ("saved", s);
-
-              if (changed) write_back_searches (sa);
-
-            } else if (row[m_columns.m_col_history]) {
-              log << info << "searches: deleting " << query << endl;
-              for (auto it = history.rbegin (); it != history.rend (); it++) {
-                if (*it == query) {
-                  history.erase (std::next(it).base ());
-                  m_reload ();
-                  break;
-                }
-              }
-            }
-
-            if (changed) {
-              /* select new row */
-              path.prev ();
-              Gtk::TreeIter it = store->get_iter (path);
-              if (it) {
-                tv.set_cursor (path);
-              } else {
-                tv.set_cursor (Gtk::TreePath ("1"));
-              }
-            }
-
-
+            });
           }
 
           return true;
@@ -197,8 +206,12 @@ namespace Astroid {
 
           log << info << "searches: clearing search history.." << endl;
 
-          history.clear ();
-          m_reload ();
+          ask_yes_no ("Do you want to clear the search history?", [&] (bool yes) {
+              if (yes) {
+                history.clear ();
+                m_reload ();
+              }
+            });
 
           return true;
         });
