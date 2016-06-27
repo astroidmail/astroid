@@ -35,7 +35,7 @@ namespace Astroid {
       ustring query_string;
 
       virtual ustring get_label () override;
-      void close (bool = false) override;
+      void pre_close () override;
 
 # ifndef DISABLE_PLUGINS
       PluginManager::ThreadIndexExtension * plugins;

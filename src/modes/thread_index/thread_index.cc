@@ -260,13 +260,11 @@ namespace Astroid {
 
   }
 
-  void ThreadIndex::close (bool force) {
+  void ThreadIndex::pre_close () {
 # ifndef DISABLE_PLUGINS
     plugins->deactivate ();
     delete plugins;
 # endif
-
-    Mode::close (force);
   }
 
   ThreadIndex::~ThreadIndex () {

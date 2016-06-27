@@ -88,7 +88,7 @@ namespace Astroid {
       PluginManager::ThreadViewExtension * plugins;
 # endif
 
-      void close (bool = false) override;
+      void pre_close () override;
 
     private:
       ThreadViewInspector thread_view_inspector;
