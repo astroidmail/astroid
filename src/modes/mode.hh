@@ -18,6 +18,7 @@ namespace Astroid {
 
       std::atomic<bool> invincible;
       virtual void close (bool = false);
+      virtual void pre_close ();
 
     private:
       ustring label;
