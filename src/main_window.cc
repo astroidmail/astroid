@@ -112,22 +112,25 @@ namespace Astroid {
     /* register keys {{{ */
     keys.title = "MainWindow";
 
-    keys.register_key ("q", { Key ("Q") },
+    keys.register_key ("q",
         "main_window.quit_ask",
         "Quit astroid",
-        [&] (Key k) {
-          if (k.key == GDK_KEY_q) {
-            if (astroid->app->get_windows().size () > 1) {
-              /* other windows, just close this one */
-              quit ();
-            } else {
-              Mode * m = (Mode *) notebook.get_children()[notebook.get_current_page ()];
-              m->ask_yes_no ("Really quit?", [&](bool yes){ if (yes) quit (); });
-            }
-          } else if (k.key == GDK_KEY_Q) {
+        [&] (Key) {
+          if (astroid->app->get_windows().size () > 1) {
+            /* other windows, just close this one */
             quit ();
+          } else {
+            Mode * m = (Mode *) notebook.get_children()[notebook.get_current_page ()];
+            m->ask_yes_no ("Really quit?", [&](bool yes){ if (yes) quit (); });
           }
+          return true;
+        });
 
+    keys.register_key ("Q",
+        "main_window.quit",
+        "Quit astroid (without asking)",
+        [&] (Key) {
+          quit ();
           return true;
         });
 
