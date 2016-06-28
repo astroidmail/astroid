@@ -72,6 +72,14 @@ namespace Astroid {
 
   }
 
+  void Plugin::focus () {
+    grab_focus ();
+    if (!editor_focused) {
+      child_focus (Gtk::DIR_TAB_FORWARD);
+      editor_focused = true;
+    }
+  }
+
   void Plugin::stop () {
     log << error << "editor: don't know how to stop editor!" << endl;
   }
@@ -98,6 +106,7 @@ namespace Astroid {
     log << debug << "em: editor disconnected" << endl;
     editor_ready   = false;
     editor_started = false;
+    editor_focused = false;
     em->editor_toggle (false);
 
     return true;
