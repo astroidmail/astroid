@@ -669,7 +669,7 @@ namespace Astroid {
 
     if (editor->ready ()) {
 
-      editor->child_focus (Gtk::DIR_TAB_FORWARD);
+      editor->focus ();
 
     } else {
 
