@@ -201,13 +201,15 @@ namespace Astroid {
 
     db->on_message (message_id,
         [&] (notmuch_message_t * nm_msg) {
-          const char * tidc = notmuch_message_get_thread_id (nm_msg);
-          ustring tid;
-          if (tidc != NULL) {
-            tid = ustring(tidc);
+          if (nm_msg != NULL) {
+            const char * tidc = notmuch_message_get_thread_id (nm_msg);
+            ustring tid;
+            if (tidc != NULL) {
+              tid = ustring(tidc);
 
-            emit_thread_changed (db, tid);
+              emit_thread_changed (db, tid);
 
+            }
           }
       });
   }

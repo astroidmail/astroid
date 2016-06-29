@@ -92,15 +92,22 @@ namespace Astroid {
   void Message::refresh (Db * db) {
     db->on_message (mid, [&](notmuch_message_t * msg)
       {
-        const char * fn = notmuch_message_get_filename (msg);
-        if (fn != NULL) {
-          fname = ustring (fn);
+        if (msg != NULL) {
+          const char * fn = notmuch_message_get_filename (msg);
+          if (fn != NULL) {
+            fname = ustring (fn);
+          } else {
+            fname = "";
+            has_file = false;
+          }
+
+          load_tags (msg);
         } else {
           fname = "";
           has_file = false;
+          in_notmuch = false;
+          missing_content = true;
         }
-
-        load_tags (msg);
       });
   }
 
