@@ -276,6 +276,7 @@ namespace Astroid {
       /* mode */
       virtual void grab_modal () override;
       virtual void release_modal () override;
+      bool on_key_press_event (GdkEventKey *event) override;
 
     private:
       Keybindings multi_keys;

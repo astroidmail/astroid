@@ -1880,6 +1880,11 @@ namespace Astroid {
 
   /* end rendering }}} */
 
+  bool ThreadView::on_key_press_event (GdkEventKey * event) {
+    if (!ready.load ()) return true;
+    else return Mode::on_key_press_event (event);
+  }
+
   void ThreadView::register_keys () { // {{{
     keys.title = "Thread View";
 
