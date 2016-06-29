@@ -372,11 +372,8 @@ html_convert (GMimeFilter *filter, char *in, size_t inlen, size_t prespace,
           outptr = g_stpcpy (outptr, bq);
         }
 
-        /* remove '>' */
-        while (*start == '>' && start < inptr) start++;
-
-        /* remove leading space */
-        if (*start == ' ' && start < inptr) start++;
+        /* remove '>' and leading space */
+        while ((*start == '>' || *start == ' ') && start < inptr) start++;
 
       } else if (html->prev_cit_depth > depth) {
 
@@ -387,18 +384,13 @@ html_convert (GMimeFilter *filter, char *in, size_t inlen, size_t prespace,
           html->prev_cit_depth--;
         }
 
-        /* remove '>' */
-        while (*start == '>' && start < inptr) start++;
-
-        /* remove leading space */
-        if (*start == ' ' && start < inptr) start++;
+        /* remove '>' and leading space */
+        while ((*start == '>' || *start == ' ') && start < inptr) start++;
 
       } else if (depth > 0) {
         /* we are still at the same depth: remove '>' */
-        while (*start == '>' && start < inptr) start++;
-
-        /* remove leading space */
-        if (*start == ' ' && start < inptr) start++;
+        /* remove '>' and leading space */
+        while ((*start == '>' || *start == ' ') && start < inptr) start++;
 
       } else if (*start == '>') {
         /* >From line */
