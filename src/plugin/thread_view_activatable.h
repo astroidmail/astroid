@@ -1,6 +1,7 @@
 # pragma once
 
 # include <glib-object.h>
+# include <gmime/gmime.h>
 
 G_BEGIN_DECLS
 
@@ -24,7 +25,7 @@ struct _AstroidThreadViewActivatableInterface
 	void (*deactivate) (AstroidThreadViewActivatable * activatable);
 	void (*update_state) (AstroidThreadViewActivatable * activatable);
 
-  char* (*get_avatar_uri) (AstroidThreadViewActivatable * activatable, const char * email, const char * type, int size);
+  char* (*get_avatar_uri) (AstroidThreadViewActivatable * activatable, const char * email, const char * type, int size, GMimeMessage * message);
   GList* (*get_allowed_uris) (AstroidThreadViewActivatable * activatable);
 };
 
@@ -37,7 +38,7 @@ void astroid_threadview_activatable_deactivate (AstroidThreadViewActivatable *ac
 void astroid_threadview_activatable_update_state (AstroidThreadViewActivatable *activatable);
 
 
-char * astroid_threadview_activatable_get_avatar_uri (AstroidThreadViewActivatable * activatable, const char *email, const char * type, int size);
+char * astroid_threadview_activatable_get_avatar_uri (AstroidThreadViewActivatable * activatable, const char *email, const char * type, int size, GMimeMessage * message);
 GList * astroid_threadview_activatable_get_allowed_uris (AstroidThreadViewActivatable * activatable);
 
 G_END_DECLS

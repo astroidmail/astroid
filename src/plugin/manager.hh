@@ -56,7 +56,7 @@ namespace Astroid {
           void deactivate () override;
 
           std::vector<ustring> get_allowed_uris ();
-          bool get_avatar_uri (ustring email, ustring type, int size, ustring &out);
+          bool get_avatar_uri (ustring email, ustring type, int size, refptr<Message> m, ustring &out);
 
       };
 

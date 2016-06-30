@@ -11,6 +11,7 @@
 # include "log.hh"
 # include "build_config.hh"
 # include "utils/vector_utils.hh"
+# include "message_thread.hh"
 
 # include "astroid_activatable.h"
 # include "thread_index_activatable.h"
@@ -252,13 +253,13 @@ namespace Astroid {
     }
   }
 
-  bool PluginManager::ThreadViewExtension::get_avatar_uri (ustring email, ustring type, int size, ustring &out) {
+  bool PluginManager::ThreadViewExtension::get_avatar_uri (ustring email, ustring type, int size, refptr<Message> m, ustring &out) {
     if (!active || astroid->plugin_manager->disabled) return false;
 
     for (PeasPluginInfo * p : astroid->plugin_manager->thread_view_plugins) {
       PeasExtension * pe = peas_extension_set_get_extension (extensions, p);
 
-      char * uri = astroid_threadview_activatable_get_avatar_uri (ASTROID_THREADVIEW_ACTIVATABLE(pe), email.c_str (), type.c_str (), size);
+      char * uri = astroid_threadview_activatable_get_avatar_uri (ASTROID_THREADVIEW_ACTIVATABLE(pe), email.c_str (), type.c_str (), size, m->message);
 
       if (uri != NULL) {
         out = ustring (uri);

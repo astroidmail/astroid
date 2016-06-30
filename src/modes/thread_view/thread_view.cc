@@ -940,7 +940,7 @@ namespace Astroid {
 # ifdef DISABLE_PLUGINS
       if (false) {
 # else
-      if (plugins->get_avatar_uri (se.email (), Gravatar::DefaultStr[Gravatar::Default::RETRO], 48, uri)) {
+      if (plugins->get_avatar_uri (se.email (), Gravatar::DefaultStr[Gravatar::Default::RETRO], 48, m, uri)) {
 # endif
         ; // all fine, use plugins avatar
       } else {

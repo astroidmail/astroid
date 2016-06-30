@@ -105,10 +105,12 @@ astroid_threadview_activatable_update_state (AstroidThreadViewActivatable * acti
  * @email: A #utf8.
  * @type:  A #string.
  * @size:  A #int.
+ * @message: A #GMime.Message.
  *
+ * Returns: (transfer none): A #string.
  */
 char *
-astroid_threadview_activatable_get_avatar_uri (AstroidThreadViewActivatable * activatable, const char * email, const char * type, int size)
+astroid_threadview_activatable_get_avatar_uri (AstroidThreadViewActivatable * activatable, const char * email, const char * type, int size, GMimeMessage * message)
 {
 	AstroidThreadViewActivatableInterface *iface;
 
@@ -116,7 +118,7 @@ astroid_threadview_activatable_get_avatar_uri (AstroidThreadViewActivatable * ac
 
 	iface = ASTROID_THREADVIEW_ACTIVATABLE_GET_IFACE (activatable);
 	if (iface->get_avatar_uri)
-		return iface->get_avatar_uri (activatable, email, type, size);
+		return iface->get_avatar_uri (activatable, email, type, size, message);
 
   return NULL;
 }
@@ -125,7 +127,7 @@ astroid_threadview_activatable_get_avatar_uri (AstroidThreadViewActivatable * ac
  * astroid_activatable_get_allowed_uris:
  * @activatable: A #AstroidThreadViewActivatable.
  *
- * Returns: (element-type utf8) (transfer full): List of #utf8.
+ * Returns: (element-type string) (transfer container): List of #string.
  */
 GList *
 astroid_threadview_activatable_get_allowed_uris (AstroidThreadViewActivatable * activatable)
