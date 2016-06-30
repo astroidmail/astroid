@@ -367,7 +367,7 @@ def add_gobject_introspection(env, gi_name, version,
   gi_includes = ' '.join(['--include=%s' % s for s in includes])
 
   scanner_cmd = """LD_LIBRARY_PATH=./ g-ir-scanner -o $TARGET --warn-all \
-      --namespace=%(gi_name)s  --include=GObject-2.0 --nsversion=%(version)s \
+      --namespace=%(gi_name)s  --include=GObject-2.0 --include=GMime-2.6 --nsversion=%(version)s \
       %(pkgs)s %(includeflags)s  \
       --program=./%(prgname)s $SOURCES""" % locals()
 
@@ -387,7 +387,7 @@ if not disable_plugins:
 
   ## generate GIR and typelib
   gir, typelib = add_gobject_introspection (env, "Astroid", "0.1",
-     girsource + Glob('src/plugin/*.h', strings = True), ['src/'], girm, ['gobject-introspection-1.0'], [])
+     girsource + Glob('src/plugin/*.h', strings = True), ['src/'], girm, ['gobject-introspection-1.0', 'gmime-2.6'], [])
 
 
 
