@@ -666,7 +666,19 @@ namespace Astroid {
     if (!wk_loaded || !ready) return;
 
     unsigned char cv[] = { 0xff, 0xff, 0xff };
-    ustring tags_s = VectorUtils::concat_tags_color (m->tags, false, 0, cv);
+
+    ustring tags_s;
+
+# ifndef DISABLE_PLUGINS
+    if (!plugins->format_tags (m->tags, "#ffffff", false, tags_s)) {
+#  endif
+
+      tags_s = VectorUtils::concat_tags_color (m->tags, false, 0, cv);
+
+# ifndef DISABLE_PLUGINS
+    }
+# endif
+
     GError *err;
     ustring mid = "message_" + m->mid;
 
@@ -918,8 +930,15 @@ namespace Astroid {
 
     if (m->in_notmuch) {
       unsigned char cv[] = { 0xff, 0xff, 0xff };
-      ustring tags_s = VectorUtils::concat_tags_color (m->tags, false, 0, cv);
+      ustring tags_s;
 
+# ifndef DISABLE_PLUGINS
+      if (!plugins->format_tags (m->tags, "#ffffff", false, tags_s)) {
+#  endif
+        tags_s = VectorUtils::concat_tags_color (m->tags, false, 0, cv);
+# ifndef DISABLE_PLUGINS
+      }
+# endif
 
       header += create_header_row ("Tags", tags_s, false, false, true);
 

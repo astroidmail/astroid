@@ -143,3 +143,25 @@ astroid_threadview_activatable_get_allowed_uris (AstroidThreadViewActivatable * 
   return NULL;
 }
 
+/**
+ * astroid_threadview_activatable_format_tags:
+ * @activatable: A #AstroidThreadViewActivatable.
+ * @bg : A #utf8.
+ * @tags: (element-type utf8) (transfer none): List of #utf8.
+ * @selected: A #bool.
+ *
+ */
+char *
+astroid_threadview_activatable_format_tags (AstroidThreadViewActivatable * activatable, const char * bg, GList * tags, bool selected)
+{
+	AstroidThreadViewActivatableInterface *iface;
+
+	if (!ASTROID_IS_THREADVIEW_ACTIVATABLE (activatable)) return NULL;
+
+	iface = ASTROID_THREADVIEW_ACTIVATABLE_GET_IFACE (activatable);
+	if (iface->format_tags)
+		return iface->format_tags (activatable, bg, tags, selected);
+
+  return NULL;
+}
+
