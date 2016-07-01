@@ -57,6 +57,7 @@ namespace Astroid {
 
           std::vector<ustring> get_allowed_uris ();
           bool get_avatar_uri (ustring email, ustring type, int size, refptr<Message> m, ustring &out);
+          bool format_tags (std::vector<ustring> tags, ustring bg, bool selected, ustring &out);
 
       };
 

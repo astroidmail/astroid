@@ -104,6 +104,10 @@ namespace Astroid {
       if (e) {
         log << debug << "plugins: loaded: " << peas_plugin_info_get_name (p) << endl;
 
+        bool found = false;
+
+        /* a plugin might implement more than one extension */
+
         if (peas_engine_provides_extension (engine, p, ASTROID_TYPE_ACTIVATABLE)) {
           PeasExtension * pe = peas_extension_set_get_extension (astroid_extensions, p);
 
@@ -116,16 +120,24 @@ namespace Astroid {
             astroid_plugins.push_back (p);
           }
 
-        } else if (peas_engine_provides_extension (engine, p, ASTROID_THREADINDEX_TYPE_ACTIVATABLE)) {
+          found = true;
+        }
+
+        if (peas_engine_provides_extension (engine, p, ASTROID_THREADINDEX_TYPE_ACTIVATABLE)) {
           log << debug << "plugins: registering threadindex plugin.." << endl;
 
           thread_index_plugins.push_back (p);
+          found = true;
+        }
 
-        } else if (peas_engine_provides_extension (engine, p, ASTROID_THREADVIEW_TYPE_ACTIVATABLE)) {
+        if (peas_engine_provides_extension (engine, p, ASTROID_THREADVIEW_TYPE_ACTIVATABLE)) {
           log << debug << "plugins: registering threadview plugin.." << endl;
-          thread_view_plugins.push_back (p);
 
-        } else {
+          thread_view_plugins.push_back (p);
+          found = true;
+        }
+
+        if (!found) {
           log << error << "plugin: " << peas_plugin_info_get_name (p) << " does not implement any known extension." << endl;
         }
 
@@ -287,6 +299,30 @@ namespace Astroid {
     }
 
     return uris;
+  }
+
+  bool PluginManager::ThreadViewExtension::format_tags (
+      std::vector<ustring> tags,
+      ustring bg,
+      bool selected,
+      ustring &out) {
+    if (!active || astroid->plugin_manager->disabled) return false;
+
+    for (PeasPluginInfo * p : astroid->plugin_manager->thread_view_plugins) {
+      PeasExtension * pe = peas_extension_set_get_extension (extensions, p);
+
+      if (pe) {
+
+        char * tgs = astroid_threadview_activatable_format_tags (ASTROID_THREADVIEW_ACTIVATABLE(pe), bg.c_str (), Glib::ListHandler<ustring>::vector_to_list (tags).data (), selected);
+
+        if (tgs != NULL) {
+          out = ustring (tgs);
+          return true;
+        }
+      }
+    }
+
+    return false;
   }
 }
 

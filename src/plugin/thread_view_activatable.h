@@ -1,5 +1,6 @@
 # pragma once
 
+# include <stdbool.h>
 # include <glib-object.h>
 # include <gmime/gmime.h>
 
@@ -27,6 +28,8 @@ struct _AstroidThreadViewActivatableInterface
 
   char* (*get_avatar_uri) (AstroidThreadViewActivatable * activatable, const char * email, const char * type, int size, GMimeMessage * message);
   GList* (*get_allowed_uris) (AstroidThreadViewActivatable * activatable);
+
+  char* (*format_tags) (AstroidThreadViewActivatable * activatable, const char *bg, GList * tags, bool selected);
 };
 
 GType astroid_threadview_activatable_get_type (void) G_GNUC_CONST;
@@ -40,6 +43,8 @@ void astroid_threadview_activatable_update_state (AstroidThreadViewActivatable *
 
 char * astroid_threadview_activatable_get_avatar_uri (AstroidThreadViewActivatable * activatable, const char *email, const char * type, int size, GMimeMessage * message);
 GList * astroid_threadview_activatable_get_allowed_uris (AstroidThreadViewActivatable * activatable);
+
+char * astroid_threadview_activatable_format_tags (AstroidThreadViewActivatable * activatable, const char * bg, GList * tags, bool selected);
 
 G_END_DECLS
 
