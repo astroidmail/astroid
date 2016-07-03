@@ -66,6 +66,10 @@ namespace Astroid {
       log << error << "crypto: failed to decrypt message." << endl;
     } else {
       decrypted = true;
+
+      GMimeSignatureList * sig = g_mime_decrypt_result_get_signatures (res);
+      issigned = g_mime_signature_list_length (sig) > 0;
+      g_object_unref (sig);
     }
 
 
