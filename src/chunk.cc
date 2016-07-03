@@ -23,12 +23,15 @@ namespace Astroid {
 
   std::atomic<uint> Chunk::nextid (0);
 
-  Chunk::Chunk (GMimeObject * mp, bool encrypted, bool _signed) : mime_object (mp) {
+  Chunk::Chunk (GMimeObject * mp, bool encrypted, bool _signed, Crypto * _cr) : mime_object (mp) {
     using std::endl;
     id = nextid++;
 
     isencrypted = encrypted;
     issigned    = _signed;
+    crypt       = _cr;
+
+    if (crypt  != NULL) g_object_ref (crypt);
 
     if (mp == NULL) {
       log << error << "chunk (" << id << "): got NULL mime_object." << endl;

@@ -28,7 +28,7 @@ namespace Astroid {
 
     private:
       bool create_gpg_context ();
-      GMimeCryptoContext * gpgctx;
+      GMimeCryptoContext * gpgctx = NULL;
       ustring protocol;
       ustring gpgpath;
 
