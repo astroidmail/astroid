@@ -16,6 +16,7 @@
 # include "main_window.hh"
 # include "message_thread.hh"
 # include "chunk.hh"
+# include "crypto.hh"
 # include "db.hh"
 # include "utils/utils.hh"
 # include "utils/address.hh"
@@ -1184,15 +1185,41 @@ namespace Astroid {
 
       ustring content;
 
+      ustring sign_string;
+      if (c->issigned) {
+
+        Crypto * cr = c->crypt;
+
+        if (cr->verified) {
+          sign_string += "Signature verification succeeded.";
+        } else {
+          sign_string += "Signature verification failed!";
+        }
+
+        for (int i = 0; i < g_mime_signature_list_length (cr->slist); i++) {
+          GMimeSignature * s = g_mime_signature_list_get_signature (cr->slist, i);
+          GMimeCertificate * ce = g_mime_signature_get_certificate (s);
+
+          ustring name = ce->name;
+          if (ce->email) name = name + " (" + ce->email + ")";
+
+          sign_string += ustring::compose (
+              "<br />Signed by: %1 [%2]",
+              name,
+              ce->keyid);
+
+          g_object_unref (ce);
+          g_object_unref (s);
+
+        }
+      }
+
       if (c->isencrypted && !c->issigned) {
-        /* set_info (m, "This message is encrypted"); */
         content = "Encrypted.";
       } else if (c->isencrypted && c->issigned) {
-        /* set_info (m, "This message is signed and encrypted"); */
-        content = "Signed and Encrypted.";
+        content = "Signed and Encrypted <br/>" + sign_string;
       } else if (c->issigned) {
-        /* set_info (m, "This message is signed"); */
-        content = "Signed.";
+        content = sign_string;
       }
 
       WebKitDOMHTMLElement * message_cont =

@@ -6,7 +6,7 @@
 # include "proto.hh"
 
 namespace Astroid {
-  class Crypto {
+  class Crypto : public Glib::Object {
     public:
       Crypto (ustring protocol);
       ~Crypto ();
@@ -25,12 +25,15 @@ namespace Astroid {
       bool decrypt_tried = false;
 
       GMimeDecryptResult * decrypt_res = NULL;
+      GMimeSignatureList * slist = NULL;
 
     private:
       bool create_gpg_context ();
       GMimeCryptoContext * gpgctx = NULL;
       ustring protocol;
       ustring gpgpath;
+
+      bool verify_signature_list (GMimeSignatureList *);
 
     public:
       static ustring get_md5_digest (ustring str);
