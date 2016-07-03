@@ -1200,7 +1200,7 @@ namespace Astroid {
           GMimeSignature * s = g_mime_signature_list_get_signature (cr->slist, i);
           GMimeCertificate * ce = g_mime_signature_get_certificate (s);
 
-          ustring name = ce->name;
+          ustring name = (ce->name ? ce->name : "");
           if (ce->email) name = name + " (" + ce->email + ")";
 
           sign_string += ustring::compose (

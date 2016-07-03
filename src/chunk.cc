@@ -120,39 +120,37 @@ namespace Astroid {
         crypt = new Crypto (protocol);
         if (!crypt->ready) {
           log << error << "chunk: no crypto ready." << endl;
-        } else {
+        } 
+      }
+        
+      if (GMIME_IS_MULTIPART_ENCRYPTED (mime_object) && crypt->ready) {
+          log << warn << "chunk: is encrypted." << endl;
+          isencrypted = true;
 
-          if (GMIME_IS_MULTIPART_ENCRYPTED (mime_object)) {
-              log << warn << "chunk: is encrypted." << endl;
-              isencrypted = true;
-
-              if (total != 2) {
-                log << error << "chunk: encrypted message with not exactly 2 parts." << endl;
-                return;
-              }
-
-              GMimeObject * k = crypt->decrypt_and_verify (mime_object);
-
-              if (k != NULL) {
-                auto c = refptr<Chunk>(new Chunk(k, true, crypt->verify_tried, crypt));
-                kids.push_back (c);
-              }
-
-          } else if (GMIME_IS_MULTIPART_SIGNED (mime_object)) {
-              log << warn << "chunk: is signed." << endl;
-
-              /* only show first part */
-              GMimeObject * mo = g_mime_multipart_get_part (
-                  (GMimeMultipart *) mime_object,
-                  0);
-
-              crypt->verify_signature (mime_object);
-
-              auto c = refptr<Chunk>(new Chunk(mo, false, true, crypt));
-              kids.push_back (c);
-
+          if (total != 2) {
+            log << error << "chunk: encrypted message with not exactly 2 parts." << endl;
+            return;
           }
-        }
+
+          GMimeObject * k = crypt->decrypt_and_verify (mime_object);
+
+          if (k != NULL) {
+            auto c = refptr<Chunk>(new Chunk(k, true, crypt->verify_tried, crypt));
+            kids.push_back (c);
+          }
+
+      } else if (GMIME_IS_MULTIPART_SIGNED (mime_object) && crypt->ready) {
+          log << warn << "chunk: is signed." << endl;
+
+          /* only show first part */
+          GMimeObject * mo = g_mime_multipart_get_part (
+              (GMimeMultipart *) mime_object,
+              0);
+
+          crypt->verify_signature (mime_object);
+
+          auto c = refptr<Chunk>(new Chunk(mo, false, true, crypt));
+          kids.push_back (c);
 
       } else {
 
