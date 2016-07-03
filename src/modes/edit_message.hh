@@ -34,9 +34,10 @@ namespace Astroid {
 
       Gtk::Box * box_message;
 
-      Gtk::ComboBox *from_combo, *encryption_combo,
-        *reply_mode_combo;
+      Gtk::ComboBox *from_combo, *reply_mode_combo;
       Gtk::Switch   *switch_signature;
+      Gtk::Switch   *switch_encrypt;
+      Gtk::Switch   *switch_sign;
       Gtk::Revealer *fields_revealer;
       Gtk::Revealer *reply_revealer;
       Gtk::Revealer *encryption_revealer;
@@ -77,25 +78,6 @@ namespace Astroid {
 
       void set_from (Account *);
       void set_from (Address);
-
-      /* encryption settings */
-      enum Encryption {
-        Enc_None,
-        Enc_Sign,
-        Enc_Encrypt,
-        Enc_SignAndEncrypt,
-      };
-
-      class EncryptionColumns : public Gtk::TreeModel::ColumnRecord {
-        public:
-          EncryptionColumns () { add (encryption_string); add (encryption); }
-
-          Gtk::TreeModelColumn<ustring> encryption_string;
-          Gtk::TreeModelColumn<int> encryption;
-      };
-
-      EncryptionColumns enc_columns;
-      refptr<Gtk::ListStore> enc_store;
 
       bool check_fields ();
       bool send_message ();

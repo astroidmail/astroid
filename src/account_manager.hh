@@ -15,7 +15,6 @@ namespace Astroid {
       ustring id;
       ustring name;
       ustring email;
-      ustring gpgkey;
       ustring sendmail;
 
       bool isdefault;
@@ -29,6 +28,9 @@ namespace Astroid {
       bool      signature_default_on;
       bool      signature_attach;
       bool      has_signature = false;
+
+      ustring gpgkey;
+      bool has_gpg = false;
 
       ustring full_address ();
 
