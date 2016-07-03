@@ -106,33 +106,46 @@ namespace Astroid {
 
       int total = g_mime_multipart_get_count ((GMimeMultipart *) mime_object);
 
-      if (GMIME_IS_MULTIPART_ENCRYPTED (mime_object)) {
-          log << warn << "chunk: is encrypted." << endl;
-          isencrypted = true;
+      if (GMIME_IS_MULTIPART_ENCRYPTED (mime_object) || GMIME_IS_MULTIPART_SIGNED (mime_object)) {
 
-          if (total != 2) {
-            log << error << "chunk: encrypted message with not exactly 2 parts." << endl;
-            return;
-          }
+        if (GMIME_IS_MULTIPART_ENCRYPTED (mime_object)) {
+            log << warn << "chunk: is encrypted." << endl;
+            isencrypted = true;
 
-          const char *protocol = g_mime_content_type_get_parameter (content_type, "protocol");
-          Crypto cr (protocol);
-
-          if (cr.ready) {
-            GMimeObject * k = cr.decrypt_and_verify (mime_object);
-
-            if (k != NULL) {
-              auto c = refptr<Chunk>(new Chunk(k));
-              c->isencrypted = true;
-              kids.push_back (c);
+            if (total != 2) {
+              log << error << "chunk: encrypted message with not exactly 2 parts." << endl;
+              return;
             }
-          }
 
-          /*
-      } else if (GMIME_IS_MULTIPART_SIGNED (mime_object)) {
-          log << warn << "chunk: is signed." << endl;
-          issigned = true;
-          */
+            const char *protocol = g_mime_content_type_get_parameter (content_type, "protocol");
+            Crypto cr (protocol);
+
+            if (cr.ready) {
+              GMimeObject * k = cr.decrypt_and_verify (mime_object);
+
+              if (k != NULL) {
+                auto c = refptr<Chunk>(new Chunk(k));
+                c->isencrypted = true;
+                c->issigned    = cr.issigned;
+                kids.push_back (c);
+              }
+            }
+
+        }
+
+        if (GMIME_IS_MULTIPART_SIGNED (mime_object)) {
+            log << warn << "chunk: is signed." << endl;
+
+            /* only show first part */
+            GMimeObject * mo = g_mime_multipart_get_part (
+                (GMimeMultipart *) mime_object,
+                0);
+
+            auto c = refptr<Chunk>(new Chunk(mo));
+            c->issigned = true;
+            kids.push_back (c);
+
+        }
 
       } else {
 
