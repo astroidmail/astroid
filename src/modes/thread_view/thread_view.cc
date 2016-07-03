@@ -1214,8 +1214,15 @@ namespace Astroid {
       WebKitDOMDOMTokenList * class_list =
         webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(body_container));
 
-      webkit_dom_dom_token_list_add (class_list, "encrypted",
-          (err = NULL, &err));
+      if (c->isencrypted) {
+        webkit_dom_dom_token_list_add (class_list, "encrypted",
+            (err = NULL, &err));
+      }
+
+      if (c->issigned) {
+        webkit_dom_dom_token_list_add (class_list, "signed",
+            (err = NULL, &err));
+      }
 
       g_object_unref (class_list);
 
@@ -1712,6 +1719,25 @@ namespace Astroid {
       // add the attachment table
       webkit_dom_node_append_child (WEBKIT_DOM_NODE (attachment_container),
           WEBKIT_DOM_NODE (attachment_table), (err = NULL, &err));
+
+
+      if (c->issigned || c->isencrypted) {
+        /* add encryption or signed tag to attachment */
+        WebKitDOMDOMTokenList * class_list =
+          webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(attachment_table));
+
+        if (c->isencrypted) {
+          webkit_dom_dom_token_list_add (class_list, "encrypted",
+              (err = NULL, &err));
+        }
+
+        if (c->issigned) {
+          webkit_dom_dom_token_list_add (class_list, "signed",
+              (err = NULL, &err));
+        }
+
+        g_object_unref (class_list);
+      }
 
       g_object_unref (img);
       g_object_unref (info_fname);
