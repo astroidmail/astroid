@@ -633,6 +633,27 @@ body.nohide .email .compressed_note > span {
     color: #666;
 }
 
+#encrypt_container {
+    display: none;
+}
+
+.email > .email_container > .body > .encrypt_container {
+    display: block;
+    vertical-align: middle;
+    text-align: center;
+    padding-bottom: 5px;
+    padding-top: 5px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    background-color: yellow;
+    border: 1px solid black;
+}
+
+.encrypted {
+  display: block;
+  border: 2px dashed gray;
+}
+
 #sibling_container {
     display: none;
 }

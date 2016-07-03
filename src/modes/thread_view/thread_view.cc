@@ -1161,8 +1161,69 @@ namespace Astroid {
         body.c_str(),
         (err = NULL, &err));
 
+    /* check encryption */
+    //
+    //  <div id="encrypt_template" class=encrypt_container">
+    //      <div class="message"></div>
+    //  </div>
+    if (c->isencrypted || c->issigned) {
+      WebKitDOMHTMLElement * encrypt_container =
+        DomUtils::clone_select (WEBKIT_DOM_NODE(d), "#encrypt_template");
+
+      webkit_dom_element_remove_attribute (WEBKIT_DOM_ELEMENT (encrypt_container),
+          "id");
+
+      // add to message state
+      MessageState::Element e (MessageState::ElementType::Encryption, c->id);
+      state[message].elements.push_back (e);
+      log << debug << "tv: added encrypt: " << state[message].elements.size() << endl;
+
+      webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (encrypt_container),
+        "id", e.element_id().c_str(),
+        (err = NULL, &err));
+
+      ustring content;
+
+      if (c->isencrypted && !c->issigned) {
+        /* set_info (m, "This message is encrypted"); */
+        content = "Encrypted.";
+      } else if (c->isencrypted && c->issigned) {
+        /* set_info (m, "This message is signed and encrypted"); */
+        content = "Signed and Encrypted.";
+      } else if (c->issigned) {
+        /* set_info (m, "This message is signed"); */
+        content = "Signed.";
+      }
+
+      WebKitDOMHTMLElement * message_cont =
+        DomUtils::select (WEBKIT_DOM_NODE (encrypt_container), ".message");
+
+      webkit_dom_html_element_set_inner_html (
+          message_cont,
+          content.c_str(),
+          (err = NULL, &err));
+
+
+      webkit_dom_node_append_child (WEBKIT_DOM_NODE (span_body),
+          WEBKIT_DOM_NODE (encrypt_container), (err = NULL, &err));
+
+      g_object_unref (message_cont);
+      g_object_unref (encrypt_container);
+
+      /* add encryption tag to encrypted part */
+      WebKitDOMDOMTokenList * class_list =
+        webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(body_container));
+
+      webkit_dom_dom_token_list_add (class_list, "encrypted",
+          (err = NULL, &err));
+
+      g_object_unref (class_list);
+
+    }
+
     webkit_dom_node_append_child (WEBKIT_DOM_NODE (span_body),
         WEBKIT_DOM_NODE (body_container), (err = NULL, &err));
+
 
     g_object_unref (body_container);
     g_object_unref (d);
@@ -1271,7 +1332,6 @@ namespace Astroid {
     log << debug << "create sibling part: " << sibling->id << endl;
     //
     //  <div id="sibling_template" class=sibling_container">
-    //      <div class="top_border"></div>
     //      <div class="message"></div>
     //  </div>
 
@@ -1284,7 +1344,7 @@ namespace Astroid {
     webkit_dom_element_remove_attribute (WEBKIT_DOM_ELEMENT (sibling_container),
         "id");
 
-    // add attachment to message state
+    // add to message state
     MessageState::Element e (MessageState::ElementType::Part, sibling->id);
     state[message].elements.push_back (e);
     log << debug << "tv: added sibling: " << state[message].elements.size() << endl;
