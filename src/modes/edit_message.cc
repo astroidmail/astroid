@@ -190,6 +190,12 @@ namespace Astroid {
     switch_signature->property_active().signal_changed ().connect (
         sigc::mem_fun (*this, &EditMessage::switch_signature_set));
 
+    switch_encrypt->property_active().signal_changed ().connect (
+        sigc::mem_fun (*this, &EditMessage::switch_signature_set));
+
+    switch_sign->property_active().signal_changed ().connect (
+        sigc::mem_fun (*this, &EditMessage::switch_signature_set));
+
     reset_signature ();
 
     /* register keys {{{ */
