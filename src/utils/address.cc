@@ -122,10 +122,9 @@ namespace Astroid {
     }
   }
 
-  AddressList::AddressList (ustring str) :
-    AddressList (internet_address_list_parse_string (str.c_str ()))
+  AddressList::AddressList (ustring str) 
   {
-
+    if (!str.empty ()) AddressList (internet_address_list_parse_string (str.c_str ()));
   }
 
   AddressList::AddressList (Address a) {
