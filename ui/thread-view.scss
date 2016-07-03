@@ -654,6 +654,11 @@ body.nohide .email .compressed_note > span {
   border: 2px dashed gray;
 }
 
+.signed {
+  display: block;
+  border: 2px dashed blue;
+}
+
 #sibling_container {
     display: none;
 }
