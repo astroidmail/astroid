@@ -17,7 +17,7 @@ namespace Astroid {
       static std::atomic<uint> nextid;
 
     public:
-      Chunk (GMimeObject *, bool encrypted = false, bool _signed = false);
+      Chunk (GMimeObject *, bool encrypted = false, bool _signed = false, Crypto * _cr = NULL);
       ~Chunk ();
 
       int id;
