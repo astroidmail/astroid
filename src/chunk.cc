@@ -19,6 +19,8 @@
 # include "config.hh"
 # include "crypto.hh"
 
+using std::endl;
+
 namespace Astroid {
 
   std::atomic<uint> Chunk::nextid (0);
@@ -31,7 +33,7 @@ namespace Astroid {
     issigned    = _signed;
     crypt       = _cr;
 
-    if (crypt  != NULL) g_object_ref (crypt);
+    if (crypt != NULL) crypt->reference ();
 
     if (mp == NULL) {
       log << error << "chunk (" << id << "): got NULL mime_object." << endl;
@@ -114,41 +116,42 @@ namespace Astroid {
 
       if (GMIME_IS_MULTIPART_ENCRYPTED (mime_object) || GMIME_IS_MULTIPART_SIGNED (mime_object)) {
 
-        if (GMIME_IS_MULTIPART_ENCRYPTED (mime_object)) {
-            log << warn << "chunk: is encrypted." << endl;
-            isencrypted = true;
+        const char *protocol = g_mime_content_type_get_parameter (content_type, "protocol");
+        crypt = new Crypto (protocol);
+        if (!crypt->ready) {
+          log << error << "chunk: no crypto ready." << endl;
+        } else {
 
-            if (total != 2) {
-              log << error << "chunk: encrypted message with not exactly 2 parts." << endl;
-              return;
-            }
+          if (GMIME_IS_MULTIPART_ENCRYPTED (mime_object)) {
+              log << warn << "chunk: is encrypted." << endl;
+              isencrypted = true;
 
-            const char *protocol = g_mime_content_type_get_parameter (content_type, "protocol");
-            crypt = new Crypto (protocol);
+              if (total != 2) {
+                log << error << "chunk: encrypted message with not exactly 2 parts." << endl;
+                return;
+              }
 
-            if (crypt->ready) {
               GMimeObject * k = crypt->decrypt_and_verify (mime_object);
 
               if (k != NULL) {
-                auto c = refptr<Chunk>(new Chunk(k, true, crypt->verified));
+                auto c = refptr<Chunk>(new Chunk(k, true, crypt->verify_tried, crypt));
                 kids.push_back (c);
               }
-            }
 
-        }
+          } else if (GMIME_IS_MULTIPART_SIGNED (mime_object)) {
+              log << warn << "chunk: is signed." << endl;
 
-        if (GMIME_IS_MULTIPART_SIGNED (mime_object)) {
-            log << warn << "chunk: is signed." << endl;
+              /* only show first part */
+              GMimeObject * mo = g_mime_multipart_get_part (
+                  (GMimeMultipart *) mime_object,
+                  0);
 
-            /* only show first part */
-            GMimeObject * mo = g_mime_multipart_get_part (
-                (GMimeMultipart *) mime_object,
-                0);
+              crypt->verify_signature (mime_object);
 
-            auto c = refptr<Chunk>(new Chunk(mo, false, true));
-            c->issigned = true;
-            kids.push_back (c);
+              auto c = refptr<Chunk>(new Chunk(mo, false, true, crypt));
+              kids.push_back (c);
 
+          }
         }
 
       } else {
@@ -162,7 +165,7 @@ namespace Astroid {
               (GMimeMultipart *) mime_object,
               i);
 
-          auto c = refptr<Chunk>(new Chunk(mo, isencrypted, issigned));
+          auto c = refptr<Chunk>(new Chunk(mo, isencrypted, issigned, crypt));
           kids.push_back (c);
         }
 
@@ -649,10 +652,11 @@ namespace Astroid {
   }
 
   Chunk::~Chunk () {
+    log << debug << "chunk: deconstruct." << endl;
     // these should not be unreffed.
     // g_object_unref (mime_object);
     // g_object_unref (content_type);
-    if (crypt != NULL) delete crypt;
+    if (crypt != NULL) crypt->unreference ();
   }
 }
 

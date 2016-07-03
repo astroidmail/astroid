@@ -41,15 +41,13 @@ namespace Astroid {
   }
 
   Crypto::~Crypto () {
-    if (decrypt_res) g_object_unref (decrypt_res);
-    g_object_unref (gpgctx);
+    log << debug << "crypto: deconstruct." << endl;
   }
 
   GMimeObject * Crypto::decrypt_and_verify (GMimeObject * part) {
     using std::endl;
     log << debug << "crypto: decrypting and verifiying.." << endl;
     decrypt_tried = true;
-    verify_tried = true;
 
     if (!GMIME_IS_MULTIPART_ENCRYPTED (part)) {
       log << error << "crypto: part is not encrypted." << endl;
@@ -67,9 +65,9 @@ namespace Astroid {
     } else {
       decrypted = true;
 
-      GMimeSignatureList * sig = g_mime_decrypt_result_get_signatures (decrypt_res);
-      verified = g_mime_signature_list_length (sig) > 0;
-      g_object_unref (sig);
+      slist = g_mime_decrypt_result_get_signatures (decrypt_res);
+      verify_tried = (slist != NULL);
+      verified = verify_signature_list (slist);
     }
 
     log << error << "crypto: successfully decrypted message." << endl;
@@ -81,13 +79,24 @@ namespace Astroid {
 
     verify_tried = true;
 
-    GMimeSignatureList * sig = g_mime_multipart_signed_verify (GMIME_MULTIPART_SIGNED(mo), gpgctx, &err);
+    slist = g_mime_multipart_signed_verify (GMIME_MULTIPART_SIGNED(mo), gpgctx, &err);
 
-    bool res = (sig != NULL);
+    verified = verify_signature_list (slist);
 
-    verified = res;
+    return verified;
+  }
 
-    g_object_unref (sig);
+  bool Crypto::verify_signature_list (GMimeSignatureList * list) {
+    if (list == NULL) return false;
+
+    bool res = g_mime_signature_list_length (list) > 0;
+
+    for (int i = 0; i < g_mime_signature_list_length (list); i++) {
+      GMimeSignature * s = g_mime_signature_list_get_signature (list, i);
+
+      res &= g_mime_signature_get_status (s) == GMIME_SIGNATURE_STATUS_GOOD;
+    }
+
     return res;
   }
 
