@@ -633,6 +633,14 @@ body.nohide .email .compressed_note > span {
     color: #666;
 }
 
+.attachment .encrypted {
+  border: 1px dashed gray !important;
+}
+
+.attachment .signed {
+  border: 1px dashed blue !important;
+}
+
 #encrypt_container {
     display: none;
 }
