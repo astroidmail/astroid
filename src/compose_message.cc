@@ -14,6 +14,7 @@
 # include "account_manager.hh"
 # include "log.hh"
 # include "chunk.hh"
+# include "crypto.hh"
 # include "actions/action_manager.hh"
 # include "actions/onmessage.hh"
 
@@ -231,6 +232,31 @@ namespace Astroid {
       }
 
       g_object_unref(multipart);
+    }
+
+    /* encryption */
+    if (encrypt || sign) {
+      GMimeObject * content = g_mime_message_get_mime_part (message);
+
+      Crypto cy ("application/pgp-encrypted");
+
+      bool res = false;
+
+      if (encrypt) {
+
+        GMimeMultipartEncrypted * e_content = NULL;
+        res = cy.encrypt (content, sign, account->gpgkey, from, to, &e_content);
+
+        g_mime_message_set_mime_part (message, (GMimeObject *) e_content);
+
+      } else {
+        /* only sign */
+
+        GMimeMultipartSigned * s_content = NULL;
+        res = cy.sign (content, account->gpgkey, &s_content);
+
+        g_mime_message_set_mime_part (message, (GMimeObject *) s_content);
+      }
     }
   }
 

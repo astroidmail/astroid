@@ -9,8 +9,10 @@
 # include "log.hh"
 # include "config.hh"
 # include "crypto.hh"
+# include "utils/address.hh"
 
 /* interface to cryto, based on libnotmuch interface */
+using std::endl;
 
 namespace Astroid {
   Crypto::Crypto (ustring _protocol) {
@@ -71,6 +73,72 @@ namespace Astroid {
     return dp;
   }
 
+  bool Crypto::encrypt (GMimeObject * mo, bool sign, ustring userid, InternetAddress * from, ustring to, GMimeMultipartEncrypted ** out)
+  {
+
+    /* build receipients */
+    AddressList recp (to);
+    recp += Address (from);
+
+    GPtrArray * recpa = g_ptr_array_sized_new (recp.size ());
+
+    std::vector<ustring> ur;
+
+    for (Address &a : recp.addresses) {
+      ur.push_back (a.email ());
+    }
+
+    for (ustring &u : ur) {
+      g_ptr_array_add (recpa, (gpointer) u.c_str ());
+    }
+
+    *out = g_mime_multipart_encrypted_new ();
+
+    GError *err = NULL;
+
+    int r = g_mime_multipart_encrypted_encrypt (
+        *out,
+        mo,
+        gpgctx,
+        sign,
+        userid.c_str (),
+        GMIME_DIGEST_ALGO_DEFAULT,
+        recpa,
+        &err);
+
+
+    g_ptr_array_free (recpa, false);
+
+    if (r == 0) {
+      log << debug << "crypto: successfully encrypted message." << endl;
+    } else {
+      log << debug << "crypto: failed to encrypt message: " << err->message << endl;
+    }
+
+    return (r == 0);
+  }
+
+  bool Crypto::sign (GMimeObject * mo, ustring userid, GMimeMultipartSigned ** out) {
+    *out = g_mime_multipart_signed_new ();
+
+    GError *err = NULL;
+
+    int r = g_mime_multipart_signed_sign (
+        *out,
+        mo,
+        gpgctx,
+        userid.c_str (),
+        GMIME_DIGEST_ALGO_DEFAULT,
+        &err);
+
+    if (r == 0) {
+      log << debug << "crypto: successfully signed message." << endl;
+    } else {
+      log << debug << "crypto: failed to sign message: " << err->message << endl;
+    }
+
+    return (r == 0);
+  }
 
   bool Crypto::create_gpg_context () {
     gpgctx = g_mime_gpg_context_new (NULL, gpgpath.length() ? gpgpath.c_str () : "gpg");
