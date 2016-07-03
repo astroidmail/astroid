@@ -20,10 +20,11 @@ namespace Astroid {
       bool sign (GMimeObject * mo, ustring userid, GMimeMultipartSigned ** s);
 
       bool decrypted = false;
-      bool issigned  = false;
-      bool verified  = false;
+      bool verified  = false; /* signature ok */
       bool verify_tried  = false;
       bool decrypt_tried = false;
+
+      GMimeDecryptResult * decrypt_res = NULL;
 
     private:
       bool create_gpg_context ();

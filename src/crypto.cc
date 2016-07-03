@@ -41,6 +41,7 @@ namespace Astroid {
   }
 
   Crypto::~Crypto () {
+    if (decrypt_res) g_object_unref (decrypt_res);
     g_object_unref (gpgctx);
   }
 
@@ -56,25 +57,38 @@ namespace Astroid {
     }
 
     GError *err = NULL;
-    GMimeDecryptResult * res = NULL;
 
     GMimeMultipartEncrypted * ep = GMIME_MULTIPART_ENCRYPTED (part);
     GMimeObject * dp = g_mime_multipart_encrypted_decrypt
-	(ep, gpgctx, &res, &err);
+	(ep, gpgctx, &decrypt_res, &err);
 
     if (dp == NULL) {
       log << error << "crypto: failed to decrypt message." << endl;
     } else {
       decrypted = true;
 
-      GMimeSignatureList * sig = g_mime_decrypt_result_get_signatures (res);
-      issigned = g_mime_signature_list_length (sig) > 0;
+      GMimeSignatureList * sig = g_mime_decrypt_result_get_signatures (decrypt_res);
+      verified = g_mime_signature_list_length (sig) > 0;
       g_object_unref (sig);
     }
 
-
     log << error << "crypto: successfully decrypted message." << endl;
     return dp;
+  }
+
+  bool Crypto::verify_signature (GMimeObject * mo) {
+    GError * err = NULL;
+
+    verify_tried = true;
+
+    GMimeSignatureList * sig = g_mime_multipart_signed_verify (GMIME_MULTIPART_SIGNED(mo), gpgctx, &err);
+
+    bool res = (sig != NULL);
+
+    verified = res;
+
+    g_object_unref (sig);
+    return res;
   }
 
   bool Crypto::encrypt (GMimeObject * mo, bool sign, ustring userid, InternetAddress * from, ustring to, GMimeMultipartEncrypted ** out)

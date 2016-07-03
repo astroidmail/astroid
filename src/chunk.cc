@@ -23,9 +23,12 @@ namespace Astroid {
 
   std::atomic<uint> Chunk::nextid (0);
 
-  Chunk::Chunk (GMimeObject * mp) : mime_object (mp) {
+  Chunk::Chunk (GMimeObject * mp, bool encrypted, bool _signed) : mime_object (mp) {
     using std::endl;
     id = nextid++;
+
+    isencrypted = encrypted;
+    issigned    = _signed;
 
     if (mp == NULL) {
       log << error << "chunk (" << id << "): got NULL mime_object." << endl;
@@ -118,15 +121,13 @@ namespace Astroid {
             }
 
             const char *protocol = g_mime_content_type_get_parameter (content_type, "protocol");
-            Crypto cr (protocol);
+            crypt = new Crypto (protocol);
 
-            if (cr.ready) {
-              GMimeObject * k = cr.decrypt_and_verify (mime_object);
+            if (crypt->ready) {
+              GMimeObject * k = crypt->decrypt_and_verify (mime_object);
 
               if (k != NULL) {
-                auto c = refptr<Chunk>(new Chunk(k));
-                c->isencrypted = true;
-                c->issigned    = cr.issigned;
+                auto c = refptr<Chunk>(new Chunk(k, true, crypt->verified));
                 kids.push_back (c);
               }
             }
@@ -141,7 +142,7 @@ namespace Astroid {
                 (GMimeMultipart *) mime_object,
                 0);
 
-            auto c = refptr<Chunk>(new Chunk(mo));
+            auto c = refptr<Chunk>(new Chunk(mo, false, true));
             c->issigned = true;
             kids.push_back (c);
 
@@ -158,7 +159,8 @@ namespace Astroid {
               (GMimeMultipart *) mime_object,
               i);
 
-          kids.push_back (refptr<Chunk>(new Chunk(mo)));
+          auto c = refptr<Chunk>(new Chunk(mo, isencrypted, issigned));
+          kids.push_back (c);
         }
 
         if (alternative) {
@@ -647,6 +649,7 @@ namespace Astroid {
     // these should not be unreffed.
     // g_object_unref (mime_object);
     // g_object_unref (content_type);
+    if (crypt != NULL) delete crypt;
   }
 }
 
