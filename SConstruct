@@ -244,15 +244,15 @@ if disable_plugins:
   env.AppendUnique (CPPFLAGS = [ '-DDISABLE_PLUGINS' ])
 
 else:
+  if not conf.CheckPKG('gobject-introspection-1.0'):
+    print 'gobject-introspection-1.0 not found.'
+    Exit (1)
+
   if not conf.CheckPKG('libpeas-1.0'):
     print 'libpeas-1.0 not found.'
     Exit (1)
   else:
     env.ParseConfig ('pkg-config --libs --cflags libpeas-1.0')
-
-  if not conf.CheckPKG('gobject-introspection-1.0'):
-    print 'gobject-introspection-1.0 not found.'
-    Exit (1)
 
 if not conf.CheckLibWithHeader ('notmuch', 'notmuch.h', 'c'):
   print "notmuch does not seem to be installed."
