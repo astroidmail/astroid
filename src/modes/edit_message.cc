@@ -332,10 +332,13 @@ namespace Astroid {
           Account * a = row[from_columns.account];
 
           if (a->has_gpg) {
-            if (!switch_encrypt->get_active ()) {
+            if (!switch_encrypt->get_active () && !switch_sign->get_active ()) {
               switch_encrypt->set_active (true);
-            } else if (!switch_sign->get_active ()) {
+            } else if (switch_encrypt->get_active () && !switch_sign->get_active ()) {
               switch_sign->set_active (true);
+            } else if (switch_encrypt->get_active () && switch_sign->get_active ()) {
+              switch_sign->set_active (true);
+              switch_encrypt->set_active (false);
             } else  {
               switch_sign->set_active (false);
               switch_encrypt->set_active (false);
