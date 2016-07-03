@@ -20,6 +20,7 @@ namespace Astroid {
       bool sign (GMimeObject * mo, ustring userid, GMimeMultipartSigned ** s);
 
       bool decrypted = false;
+      bool issigned  = false;
       bool verified  = false;
       bool verify_tried  = false;
       bool decrypt_tried = false;
