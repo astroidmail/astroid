@@ -334,11 +334,13 @@ namespace Astroid {
           if (a->has_gpg) {
             if (!switch_encrypt->get_active () && !switch_sign->get_active ()) {
               switch_encrypt->set_active (true);
-            } else if (switch_encrypt->get_active () && !switch_sign->get_active ()) {
               switch_sign->set_active (true);
-            } else if (switch_encrypt->get_active () && switch_sign->get_active ()) {
-              switch_sign->set_active (true);
+            } else if (switch_encrypt->get_active() && switch_sign->get_active ()) {
               switch_encrypt->set_active (false);
+              switch_sign->set_active (true);
+            } else if (!switch_encrypt->get_active () && switch_sign->get_active ()) {
+              switch_sign->set_active (false);
+              switch_encrypt->set_active (true);
             } else  {
               switch_sign->set_active (false);
               switch_encrypt->set_active (false);
