@@ -124,10 +124,10 @@ astroid_threadview_activatable_get_avatar_uri (AstroidThreadViewActivatable * ac
 }
 
 /**
- * astroid_activatable_get_allowed_uris:
+ * astroid_threadview_activatable_get_allowed_uris:
  * @activatable: A #AstroidThreadViewActivatable.
  *
- * Returns: (element-type string) (transfer container): List of #string.
+ * Returns: (element-type utf8) (transfer container): List of allowed uris.
  */
 GList *
 astroid_threadview_activatable_get_allowed_uris (AstroidThreadViewActivatable * activatable)
