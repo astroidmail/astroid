@@ -1202,11 +1202,12 @@ namespace Astroid {
 
           ustring name = (ce->name ? ce->name : "");
           if (ce->email) name = name + " (" + ce->email + ")";
+          ustring keyid = (ce->keyid ? ce->keyid : "");
 
           sign_string += ustring::compose (
               "<br />Signed by: %1 [%2]",
               name,
-              ce->keyid);
+              keyid);
 
           g_object_unref (ce);
           g_object_unref (s);
