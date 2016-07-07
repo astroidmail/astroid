@@ -1245,11 +1245,21 @@ namespace Astroid {
       if (c->isencrypted) {
         webkit_dom_dom_token_list_add (class_list, "encrypted",
             (err = NULL, &err));
+
+        if (!c->crypt->decrypted) {
+          webkit_dom_dom_token_list_add (class_list, "decrypt_failed",
+              (err = NULL, &err));
+        }
       }
 
       if (c->issigned) {
         webkit_dom_dom_token_list_add (class_list, "signed",
             (err = NULL, &err));
+
+        if (!c->crypt->verified) {
+          webkit_dom_dom_token_list_add (class_list, "verify_failed",
+              (err = NULL, &err));
+        }
       }
 
       g_object_unref (class_list);
