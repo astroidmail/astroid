@@ -634,11 +634,11 @@ body.nohide .email .compressed_note > span {
 }
 
 .attachment .encrypted {
-  border: 1px dashed gray !important;
+  border: 1px dashed green !important;
 }
 
 .attachment .signed {
-  border: 1px dashed blue !important;
+  border: 1px dashed orange !important;
 }
 
 #encrypt_container {
@@ -659,12 +659,14 @@ body.nohide .email .compressed_note > span {
 
 .encrypted {
   display: block;
-  border: 2px dashed gray;
+  border: 1px dashed green;
+  padding: 10px;
 }
 
 .signed {
   display: block;
-  border: 2px dashed blue;
+  border: 1px dashed orange;
+  padding: 10px;
 }
 
 #sibling_container {
