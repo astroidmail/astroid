@@ -61,8 +61,11 @@ namespace Astroid {
 	(ep, gpgctx, &decrypt_res, &err);
 
     if (dp == NULL) {
-      log << error << "crypto: failed to decrypt message." << endl;
+      log << error << "crypto: failed to decrypt message: " << err->message << endl;
+      decrypted = false;
+
     } else {
+      log << info << "crypto: successfully decrypted message." << endl;
       decrypted = true;
 
       slist = g_mime_decrypt_result_get_signatures (decrypt_res);
@@ -70,7 +73,6 @@ namespace Astroid {
       verified = verify_signature_list (slist);
     }
 
-    log << error << "crypto: successfully decrypted message." << endl;
     return dp;
   }
 

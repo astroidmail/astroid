@@ -137,10 +137,15 @@ namespace Astroid {
           if (k != NULL) {
             auto c = refptr<Chunk>(new Chunk(k, true, crypt->verify_tried, crypt));
             kids.push_back (c);
+          } else {
+            /* will be displayed as failed decrypted part */
+            viewable = true;
+
           }
 
       } else if (GMIME_IS_MULTIPART_SIGNED (mime_object) && crypt->ready) {
           log << warn << "chunk: is signed." << endl;
+          issigned = true;
 
           /* only show first part */
           GMimeObject * mo = g_mime_multipart_get_part (
@@ -209,6 +214,10 @@ namespace Astroid {
 
   ustring Chunk::viewable_text (bool html = true) {
     using std::endl;
+
+    if (isencrypted && !crypt->decrypted) {
+      return "Failed decryption.";
+    }
 
     GMimeStream * content_stream = NULL;
 
