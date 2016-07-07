@@ -116,13 +116,15 @@ namespace Astroid {
 
       if (GMIME_IS_MULTIPART_ENCRYPTED (mime_object) || GMIME_IS_MULTIPART_SIGNED (mime_object)) {
 
-        const char *protocol = g_mime_content_type_get_parameter (content_type, "protocol");
+        ustring protocol = "";
+        const char * _protocol = g_mime_content_type_get_parameter (content_type, "protocol");
+        if (_protocol != NULL) protocol = _protocol;
         crypt = new Crypto (protocol);
         if (!crypt->ready) {
           log << error << "chunk: no crypto ready." << endl;
-        } 
+        }
       }
-        
+
       if (GMIME_IS_MULTIPART_ENCRYPTED (mime_object) && crypt->ready) {
           log << warn << "chunk: is encrypted." << endl;
           isencrypted = true;
