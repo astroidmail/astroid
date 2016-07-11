@@ -2034,11 +2034,16 @@ namespace Astroid {
           return false;
         });
 
-    keys.register_key ("o", "thread_view.open",
+    /*
+     *
+     * This can be achieved using Enter
+
+    keys.register_key ("O", "thread_view.open",
         "Open attachment or message",
         [&] (Key) {
           return element_action (EOpen);
         });
+    */
 
     keys.register_key ("e", "thread_view.expand",
         "Toggle expand",
@@ -2236,7 +2241,8 @@ namespace Astroid {
         });
 
 
-    keys.register_key ("C-f", "thread_view.flat",
+    keys.register_key ("C-F",
+        "thread_view.flat",
         "Toggle flat or indented view of messages",
         [&] (Key) {
           indent_messages = !indent_messages;
@@ -2418,7 +2424,7 @@ namespace Astroid {
           return true;
         });
 
-    keys.register_key ("+",
+    keys.register_key (";",
           "thread_view.multi",
           "Apply action to marked threads",
           [&] (Key k) {
@@ -2481,7 +2487,7 @@ namespace Astroid {
           return true;
         });
 
-    keys.register_key ("l",
+    keys.register_key ("+",
         "thread_view.tag_message",
         "Tag message",
         [&] (Key) {
@@ -2534,7 +2540,8 @@ namespace Astroid {
           return true;
         });
 
-    keys.register_key ("/", "thread_view.search.search",
+    keys.register_key ("C-f",
+        "thread_view.search.search",
         "Search for text",
         sigc::mem_fun (this, &ThreadView::search));
 
