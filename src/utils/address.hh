@@ -50,9 +50,9 @@ namespace Astroid {
   class AddressList {
     public:
       AddressList ();
+      AddressList (ustring);
       AddressList (InternetAddressList *);
       AddressList (Address);
-      AddressList (ustring);
 
       std::vector<Address> addresses;
       ustring str ();
