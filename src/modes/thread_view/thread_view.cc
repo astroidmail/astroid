@@ -1186,6 +1186,8 @@ namespace Astroid {
       ustring content;
 
       ustring sign_string;
+      ustring enc_string;
+
       if (c->issigned) {
 
         Crypto * cr = c->crypt;
@@ -1215,13 +1217,32 @@ namespace Astroid {
         }
       }
 
-      if (c->isencrypted && !c->issigned) {
-        content = "Encrypted.";
-      } else if (c->isencrypted && c->issigned) {
-        content = "Signed and Encrypted <br/>" + sign_string;
-      } else if (c->issigned) {
-        content = sign_string;
+      if (c->isencrypted) {
+        Crypto * cr = c->crypt;
+
+        if (c->issigned) enc_string = "Signed and Encrypted";
+        else             enc_string = "Encrypted";
+
+        GMimeCertificateList * rlist = cr->rlist;
+        for (int i = 0; i < g_mime_certificate_list_length (rlist); i++) {
+
+          GMimeCertificate * ce = g_mime_certificate_list_get_certificate (rlist, i);
+
+          const char * c = NULL;
+          ustring fp = (c = g_mime_certificate_get_fingerprint (ce), c ? c : "");
+          ustring nm = (c = g_mime_certificate_get_name (ce), c ? c : "");
+          ustring em = (c = g_mime_certificate_get_email (ce), c ? c : "");
+          ustring ky = (c = g_mime_certificate_get_key_id (ce), c ? c : "");
+
+          enc_string += ustring::compose ("<br /> Encrypted for: %1 (%2) [%3/%4]",
+              nm, em, fp, ky);
+        }
+
+        if (c->issigned) enc_string += "<br />";
+
       }
+
+      content = enc_string + sign_string;
 
       WebKitDOMHTMLElement * message_cont =
         DomUtils::select (WEBKIT_DOM_NODE (encrypt_container), ".message");

@@ -29,6 +29,7 @@ namespace Astroid {
 
       GMimeDecryptResult * decrypt_res = NULL;
       GMimeSignatureList * slist = NULL;
+      GMimeCertificateList * rlist = NULL;
 
     private:
       bool create_gpg_context ();

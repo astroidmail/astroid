@@ -69,7 +69,22 @@ namespace Astroid {
       log << info << "crypto: successfully decrypted message." << endl;
       decrypted = true;
 
+      rlist = g_mime_decrypt_result_get_recipients (decrypt_res);
       slist = g_mime_decrypt_result_get_signatures (decrypt_res);
+
+      for (int i = 0; i < g_mime_certificate_list_length (rlist); i++) {
+
+        GMimeCertificate * ce = g_mime_certificate_list_get_certificate (rlist, i);
+
+        const char * c = NULL;
+        ustring fp = (c = g_mime_certificate_get_fingerprint (ce), c ? c : "");
+        ustring nm = (c = g_mime_certificate_get_name (ce), c ? c : "");
+        ustring em = (c = g_mime_certificate_get_email (ce), c ? c : "");
+        ustring key = (c = g_mime_certificate_get_key_id (ce), c ? c : "");
+
+        log << debug << "cr: encrypted for: " << nm << "(" << em << ") [" << fp << "] [" << key << "]" << endl;
+      }
+
       verify_tried = (slist != NULL);
       verified = verify_signature_list (slist);
     }
@@ -118,9 +133,12 @@ namespace Astroid {
       ur.push_back (a.email ());
     }
 
+    log << debug << "cr: encrypting for: ";
     for (ustring &u : ur) {
       g_ptr_array_add (recpa, (gpointer) u.c_str ());
+      log << u << " ";
     }
+    log << endl;
 
     *out = g_mime_multipart_encrypted_new ();
 
