@@ -106,8 +106,6 @@ namespace Astroid {
       } else {
         Gdk::RGBA bg (colors.second.substr (0, 7));
         bg.set_alpha (Utils::tags_alpha);
-        log << debug << colors.second << endl;
-        log << debug << bg.to_string () << endl;
 
         tag_string += ustring::compose (
                     "<span style=\"background-color: rgba(%3, %4, %5, %6); color: %1 !important; white-space: pre;\"> %2 </span>",

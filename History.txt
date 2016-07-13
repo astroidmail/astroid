@@ -2,6 +2,11 @@
 
 * Use any editor (general XEmbed support in edit-message window): Emacs works.
 
+* Plugins: Python and Lua plugins can now be made, parts of ThreadIndex
+and ThreadView are exposed allowing extesion of the user interface and advanced customization. Check out the plugins available at GitHub.
+
+* Repository moved to github.com/astroidmail.
+
 * Thread-view: Search email text using '/'
 
 * Synchronize maildir flags if so configured in .notmuch-config.

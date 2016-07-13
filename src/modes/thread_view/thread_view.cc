@@ -16,6 +16,7 @@
 # include "main_window.hh"
 # include "message_thread.hh"
 # include "chunk.hh"
+# include "crypto.hh"
 # include "db.hh"
 # include "utils/utils.hh"
 # include "utils/address.hh"
@@ -1161,8 +1162,134 @@ namespace Astroid {
         body.c_str(),
         (err = NULL, &err));
 
+    /* check encryption */
+    //
+    //  <div id="encrypt_template" class=encrypt_container">
+    //      <div class="message"></div>
+    //  </div>
+    if (c->isencrypted || c->issigned) {
+      WebKitDOMHTMLElement * encrypt_container =
+        DomUtils::clone_select (WEBKIT_DOM_NODE(d), "#encrypt_template");
+
+      webkit_dom_element_remove_attribute (WEBKIT_DOM_ELEMENT (encrypt_container),
+          "id");
+
+      // add to message state
+      MessageState::Element e (MessageState::ElementType::Encryption, c->id);
+      state[message].elements.push_back (e);
+      log << debug << "tv: added encrypt: " << state[message].elements.size() << endl;
+
+      webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (encrypt_container),
+        "id", e.element_id().c_str(),
+        (err = NULL, &err));
+
+      ustring content;
+
+      ustring sign_string;
+      ustring enc_string;
+
+      if (c->issigned) {
+
+        Crypto * cr = c->crypt;
+
+        if (cr->verified) {
+          sign_string += "Signature verification succeeded.";
+        } else {
+          sign_string += "Signature verification failed!";
+        }
+
+        for (int i = 0; i < g_mime_signature_list_length (cr->slist); i++) {
+          GMimeSignature * s = g_mime_signature_list_get_signature (cr->slist, i);
+          GMimeCertificate * ce = g_mime_signature_get_certificate (s);
+
+          ustring name = (ce->name ? ce->name : "");
+          if (ce->email) name = name + " (" + ce->email + ")";
+          ustring keyid = (ce->keyid ? ce->keyid : "");
+
+          sign_string += ustring::compose (
+              "<br />Signed by: %1 [%2]",
+              name,
+              keyid);
+
+          g_object_unref (ce);
+          g_object_unref (s);
+
+        }
+      }
+
+      if (c->isencrypted) {
+        Crypto * cr = c->crypt;
+
+        if (c->issigned) enc_string = "Signed and Encrypted";
+        else             enc_string = "Encrypted";
+
+        GMimeCertificateList * rlist = cr->rlist;
+        for (int i = 0; i < g_mime_certificate_list_length (rlist); i++) {
+
+          GMimeCertificate * ce = g_mime_certificate_list_get_certificate (rlist, i);
+
+          const char * c = NULL;
+          ustring fp = (c = g_mime_certificate_get_fingerprint (ce), c ? c : "");
+          ustring nm = (c = g_mime_certificate_get_name (ce), c ? c : "");
+          ustring em = (c = g_mime_certificate_get_email (ce), c ? c : "");
+          ustring ky = (c = g_mime_certificate_get_key_id (ce), c ? c : "");
+
+          enc_string += ustring::compose ("<br /> Encrypted for: %1 (%2) [%3/%4]",
+              nm, em, fp, ky);
+        }
+
+        if (c->issigned) enc_string += "<br />";
+
+      }
+
+      content = enc_string + sign_string;
+
+      WebKitDOMHTMLElement * message_cont =
+        DomUtils::select (WEBKIT_DOM_NODE (encrypt_container), ".message");
+
+      webkit_dom_html_element_set_inner_html (
+          message_cont,
+          content.c_str(),
+          (err = NULL, &err));
+
+
+      webkit_dom_node_append_child (WEBKIT_DOM_NODE (span_body),
+          WEBKIT_DOM_NODE (encrypt_container), (err = NULL, &err));
+
+      g_object_unref (message_cont);
+      g_object_unref (encrypt_container);
+
+      /* add encryption tag to encrypted part */
+      WebKitDOMDOMTokenList * class_list =
+        webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(body_container));
+
+      if (c->isencrypted) {
+        webkit_dom_dom_token_list_add (class_list, "encrypted",
+            (err = NULL, &err));
+
+        if (!c->crypt->decrypted) {
+          webkit_dom_dom_token_list_add (class_list, "decrypt_failed",
+              (err = NULL, &err));
+        }
+      }
+
+      if (c->issigned) {
+        webkit_dom_dom_token_list_add (class_list, "signed",
+            (err = NULL, &err));
+
+        if (!c->crypt->verified) {
+          webkit_dom_dom_token_list_add (class_list, "verify_failed",
+              (err = NULL, &err));
+        }
+      }
+
+      g_object_unref (class_list);
+
+    }
+
     webkit_dom_node_append_child (WEBKIT_DOM_NODE (span_body),
         WEBKIT_DOM_NODE (body_container), (err = NULL, &err));
+
 
     g_object_unref (body_container);
     g_object_unref (d);
@@ -1271,7 +1398,6 @@ namespace Astroid {
     log << debug << "create sibling part: " << sibling->id << endl;
     //
     //  <div id="sibling_template" class=sibling_container">
-    //      <div class="top_border"></div>
     //      <div class="message"></div>
     //  </div>
 
@@ -1284,7 +1410,7 @@ namespace Astroid {
     webkit_dom_element_remove_attribute (WEBKIT_DOM_ELEMENT (sibling_container),
         "id");
 
-    // add attachment to message state
+    // add to message state
     MessageState::Element e (MessageState::ElementType::Part, sibling->id);
     state[message].elements.push_back (e);
     log << debug << "tv: added sibling: " << state[message].elements.size() << endl;
@@ -1652,6 +1778,25 @@ namespace Astroid {
       // add the attachment table
       webkit_dom_node_append_child (WEBKIT_DOM_NODE (attachment_container),
           WEBKIT_DOM_NODE (attachment_table), (err = NULL, &err));
+
+
+      if (c->issigned || c->isencrypted) {
+        /* add encryption or signed tag to attachment */
+        WebKitDOMDOMTokenList * class_list =
+          webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(attachment_table));
+
+        if (c->isencrypted) {
+          webkit_dom_dom_token_list_add (class_list, "encrypted",
+              (err = NULL, &err));
+        }
+
+        if (c->issigned) {
+          webkit_dom_dom_token_list_add (class_list, "signed",
+              (err = NULL, &err));
+        }
+
+        g_object_unref (class_list);
+      }
 
       g_object_unref (img);
       g_object_unref (info_fname);

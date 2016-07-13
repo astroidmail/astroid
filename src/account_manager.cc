@@ -28,7 +28,6 @@ namespace Astroid {
 
       a->name  = kv.second.get<string> ("name");
       a->email = kv.second.get<string> ("email");
-      a->gpgkey = kv.second.get<string> ("gpgkey");
       a->sendmail = kv.second.get<string> ("sendmail");
 
       a->isdefault = kv.second.get<bool> ("default");
@@ -55,6 +54,12 @@ namespace Astroid {
         if (bfs::exists (a->signature_file) &&
             bfs::is_regular_file (a->signature_file))
           a->has_signature = true;
+      }
+
+      a->gpgkey = kv.second.get<string> ("gpgkey");
+      if (!a->gpgkey.empty()) {
+        a->has_gpg = true;
+        a->always_gpg_sign = kv.second.get<bool> ("always_gpg_sign");
       }
 
 

@@ -136,7 +136,8 @@ namespace Astroid {
             Address,
             Part,
             Attachment,
-            MimeMessage
+            MimeMessage,
+            Encryption,
           };
 
           struct Element {

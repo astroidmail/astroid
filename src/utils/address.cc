@@ -122,10 +122,16 @@ namespace Astroid {
     }
   }
 
-  AddressList::AddressList (ustring str) :
-    AddressList (internet_address_list_parse_string (str.c_str ()))
+  AddressList::AddressList (ustring _str)
   {
+    if (!_str.empty ())  {
+      InternetAddressList * list = internet_address_list_parse_string (_str.c_str ());
 
+      for (int i = 0; i < internet_address_list_length (list); i++) {
+        InternetAddress * a = internet_address_list_get_address (list, i);
+        addresses.push_back (Address (a));
+      }
+    }
   }
 
   AddressList::AddressList (Address a) {
@@ -179,6 +185,10 @@ namespace Astroid {
     a += b;
 
     return a;
+  }
+
+  int AddressList::size () {
+    return addresses.size ();
   }
 
   void AddressList::remove_me () {
