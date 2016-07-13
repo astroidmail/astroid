@@ -17,8 +17,9 @@ using std::endl;
 namespace Astroid {
   Crypto::Crypto (ustring _protocol) {
     using std::endl;
-    ptree config = astroid->config ("crypto");
+    config = astroid->config ("crypto");
     gpgpath = ustring (config.get<std::string> ("gpg.path"));
+    auto_key_retrieve = config.get<bool> ("gpg.auto_key_retrieve");
 
     log << debug << "crypto: gpg: " << gpgpath << endl;
 
@@ -178,6 +179,7 @@ namespace Astroid {
 
     g_mime_gpg_context_set_use_agent ((GMimeGpgContext *) gpgctx, TRUE);
     g_mime_gpg_context_set_always_trust ((GMimeGpgContext *) gpgctx, FALSE);
+    g_mime_gpg_context_set_auto_key_retrieve ((GMimeGpgContext *) gpgctx, auto_key_retrieve);
 
     return true;
   }
