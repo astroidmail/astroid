@@ -68,6 +68,7 @@ namespace Astroid {
     return str;
   }
 
+  /* http://stackoverflow.com/a/15372760/377927 */
   ustring UstringUtils::replace (ustring subject, const ustring& search,
                           const ustring& replace) {
     size_t pos = 0;
