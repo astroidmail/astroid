@@ -196,7 +196,7 @@ namespace Astroid {
     }
 
     g_mime_gpg_context_set_use_agent ((GMimeGpgContext *) gpgctx, TRUE);
-    g_mime_gpg_context_set_always_trust ((GMimeGpgContext *) gpgctx, FALSE);
+    g_mime_gpg_context_set_always_trust ((GMimeGpgContext *) gpgctx, TRUE);
     g_mime_gpg_context_set_auto_key_retrieve ((GMimeGpgContext *) gpgctx, auto_key_retrieve);
 
     return true;
