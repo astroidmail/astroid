@@ -4,6 +4,7 @@
 # include <boost/property_tree/ptree.hpp>
 
 # include "astroid.hh"
+# include "utils/address.hh"
 # include "proto.hh"
 
 using boost::property_tree::ptree;
@@ -18,8 +19,12 @@ namespace Astroid {
       bool isgpg = false;
 
       GMimeObject * decrypt_and_verify (GMimeObject * mo);
+
       bool verify_signature (GMimeObject * mo);
+
       bool encrypt (GMimeObject * mo, bool sign, ustring userid, InternetAddress * from, ustring to, GMimeMultipartEncrypted ** e);
+      bool encrypt (GMimeObject * mo, bool sign, ustring userid, InternetAddress * from, AddressList to, GMimeMultipartEncrypted ** e);
+
       bool sign (GMimeObject * mo, ustring userid, GMimeMultipartSigned ** s);
 
       bool decrypted = false;

@@ -64,6 +64,7 @@ namespace Astroid {
       AddressList  operator+ (const AddressList &) const;
 
       void remove_me ();
+      void remove_duplicates ();
   };
 
 }

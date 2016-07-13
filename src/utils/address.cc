@@ -207,5 +207,10 @@ namespace Astroid {
     }
 
   }
+
+  void AddressList::remove_duplicates () {
+    std::sort (addresses.begin (), addresses.end (), [](Address i, Address j) { return i.email () < j.email (); });
+    addresses.erase (std::unique (addresses.begin (), addresses.end (), [](Address i, Address j) { return i.email () == j.email (); }), addresses.end ());
+  }
 }
 

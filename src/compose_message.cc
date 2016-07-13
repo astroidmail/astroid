@@ -17,6 +17,7 @@
 # include "crypto.hh"
 # include "actions/action_manager.hh"
 # include "actions/onmessage.hh"
+# include "utils/address.hh"
 
 using namespace std;
 namespace bfs = boost::filesystem;
@@ -245,7 +246,7 @@ namespace Astroid {
       if (encrypt) {
 
         GMimeMultipartEncrypted * e_content = NULL;
-        res = cy.encrypt (content, sign, account->gpgkey, from, to, &e_content);
+        res = cy.encrypt (content, sign, account->gpgkey, from, AddressList (to) + AddressList (cc) + AddressList (bcc), &e_content);
 
         g_mime_message_set_mime_part (message, (GMimeObject *) e_content);
 

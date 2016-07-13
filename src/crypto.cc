@@ -121,10 +121,15 @@ namespace Astroid {
 
   bool Crypto::encrypt (GMimeObject * mo, bool sign, ustring userid, InternetAddress * from, ustring to, GMimeMultipartEncrypted ** out)
   {
+    return encrypt (mo, sign, userid, from, AddressList (to), out);
+  }
+
+  bool Crypto::encrypt (GMimeObject * mo, bool sign, ustring userid, InternetAddress * from, AddressList to, GMimeMultipartEncrypted ** out)
+  {
 
     /* build receipients */
-    AddressList recp (to);
-    recp += Address (from);
+    AddressList recp  = to + Address (from);
+    recp.remove_duplicates ();
 
     GPtrArray * recpa = g_ptr_array_sized_new (recp.size ());
 
