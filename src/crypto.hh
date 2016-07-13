@@ -31,6 +31,7 @@ namespace Astroid {
       bool verified  = false; /* signature ok */
       bool verify_tried  = false;
       bool decrypt_tried = false;
+      ustring decrypt_error = "";
 
       GMimeDecryptResult * decrypt_res = NULL;
       GMimeSignatureList * slist = NULL;

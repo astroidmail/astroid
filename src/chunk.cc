@@ -142,6 +142,7 @@ namespace Astroid {
           } else {
             /* will be displayed as failed decrypted part */
             viewable = true;
+            preferred = true;
 
           }
 
@@ -214,11 +215,20 @@ namespace Astroid {
     //       https://dkg.fifthhorseman.net/notes/inline-pgp-harmful/
   }
 
-  ustring Chunk::viewable_text (bool html = true) {
+  ustring Chunk::viewable_text (bool html = true, bool verbose) {
     using std::endl;
 
     if (isencrypted && !crypt->decrypted) {
-      return "Failed decryption.";
+      if (verbose) {
+      /* replace newlines */
+      ustring err = UstringUtils::replace (crypt->decrypt_error, "\n", "<br />");
+
+
+      return "Failed decryption: <br /><br /><div class=\"gpg_error\">" + err + "</div>";
+
+      } else {
+        return ""; // for reply
+      }
     }
 
     GMimeStream * content_stream = NULL;

@@ -67,5 +67,15 @@ namespace Astroid {
 
     return str;
   }
+
+  ustring UstringUtils::replace (ustring subject, const ustring& search,
+                          const ustring& replace) {
+    size_t pos = 0;
+    while((pos = subject.find(search, pos)) != std::string::npos) {
+         subject.replace(pos, search.length(), replace);
+         pos += replace.length();
+    }
+    return subject;
+  }
 }
 

@@ -1053,7 +1053,7 @@ namespace Astroid {
       /* preview */
       log << debug << "tv: make preview.." << endl;
 
-      ustring bp = m->viewable_text (false);
+      ustring bp = m->viewable_text (false, false);
       if (static_cast<int>(bp.size()) > MAX_PREVIEW_LEN)
         bp = bp.substr(0, MAX_PREVIEW_LEN - 3) + "...";
 
@@ -1144,7 +1144,7 @@ namespace Astroid {
     webkit_dom_element_remove_attribute (WEBKIT_DOM_ELEMENT (body_container),
         "id");
 
-    ustring body = c->viewable_text (true);
+    ustring body = c->viewable_text (true, true);
 
     if (code_is_on) {
       if (message->is_patch ()) {
@@ -1182,6 +1182,14 @@ namespace Astroid {
       webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (encrypt_container),
         "id", e.element_id().c_str(),
         (err = NULL, &err));
+
+      WebKitDOMDOMTokenList * class_list_e =
+        webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(encrypt_container));
+
+      webkit_dom_dom_token_list_add (class_list_e, "signed",
+          (err = NULL, &err));
+
+      g_object_unref (class_list_e);
 
       ustring content;
 
@@ -1264,22 +1272,28 @@ namespace Astroid {
         if (c->issigned) enc_string = "Signed and Encrypted";
         else             enc_string = "Encrypted";
 
-        GMimeCertificateList * rlist = cr->rlist;
-        for (int i = 0; i < g_mime_certificate_list_length (rlist); i++) {
+        if (cr->decrypted) {
 
-          GMimeCertificate * ce = g_mime_certificate_list_get_certificate (rlist, i);
+          GMimeCertificateList * rlist = cr->rlist;
+          for (int i = 0; i < g_mime_certificate_list_length (rlist); i++) {
 
-          const char * c = NULL;
-          ustring fp = (c = g_mime_certificate_get_fingerprint (ce), c ? c : "");
-          ustring nm = (c = g_mime_certificate_get_name (ce), c ? c : "");
-          ustring em = (c = g_mime_certificate_get_email (ce), c ? c : "");
-          ustring ky = (c = g_mime_certificate_get_key_id (ce), c ? c : "");
+            GMimeCertificate * ce = g_mime_certificate_list_get_certificate (rlist, i);
 
-          enc_string += ustring::compose ("<br /> Encrypted for: %1 (%2) [%3/%4]",
-              nm, em, fp, ky);
+            const char * c = NULL;
+            ustring fp = (c = g_mime_certificate_get_fingerprint (ce), c ? c : "");
+            ustring nm = (c = g_mime_certificate_get_name (ce), c ? c : "");
+            ustring em = (c = g_mime_certificate_get_email (ce), c ? c : "");
+            ustring ky = (c = g_mime_certificate_get_key_id (ce), c ? c : "");
+
+            enc_string += ustring::compose ("<br /> Encrypted for: %1 (%2) [%3/%4]",
+                nm, em, fp, ky);
+          }
+
+          if (c->issigned) enc_string += "<br />";
+
+        } else {
+          enc_string += " (failed decryption)";
         }
-
-        if (c->issigned) enc_string += "<br />";
 
       }
 

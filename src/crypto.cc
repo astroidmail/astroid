@@ -110,6 +110,7 @@ namespace Astroid {
     if (dp == NULL) {
       log << error << "crypto: failed to decrypt message: " << err->message << endl;
       decrypted = false;
+      decrypt_error = err->message;
 
     } else {
       log << info << "crypto: successfully decrypted message." << endl;
