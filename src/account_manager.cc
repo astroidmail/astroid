@@ -57,8 +57,10 @@ namespace Astroid {
       }
 
       a->gpgkey = kv.second.get<string> ("gpgkey");
-      if (!a->gpgkey.empty())
+      if (!a->gpgkey.empty()) {
         a->has_gpg = true;
+        a->always_gpg_sign = kv.second.get<bool> ("always_gpg_sign");
+      }
 
 
       log << info << "ac: setup account: " << a->id << " for " << a->name << " (default: " << a->isdefault << ")" << endl;
