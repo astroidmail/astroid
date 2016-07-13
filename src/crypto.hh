@@ -1,9 +1,12 @@
 # pragma once
 
 # include <gmime/gmime.h>
+# include <boost/property_tree/ptree.hpp>
 
 # include "astroid.hh"
 # include "proto.hh"
+
+using boost::property_tree::ptree;
 
 namespace Astroid {
   class Crypto : public Glib::Object {
@@ -32,6 +35,8 @@ namespace Astroid {
       GMimeCryptoContext * gpgctx = NULL;
       ustring protocol;
       ustring gpgpath;
+      bool    auto_key_retrieve = false;
+      ptree config;
 
       bool verify_signature_list (GMimeSignatureList *);
 
