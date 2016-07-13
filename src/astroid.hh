@@ -2,6 +2,7 @@
 
 # include <vector>
 # include <string>
+# include <fstream>
 
 # include <boost/property_tree/ptree.hpp>
 
@@ -55,6 +56,8 @@ namespace Astroid {
       void on_mailto_activate (const Glib::VariantBase &);
       refptr<Gio::SimpleAction> mailto;
       void send_mailto (MainWindow * mw, ustring);
+
+      std::ofstream logf;
 
       void on_quit ();
   };

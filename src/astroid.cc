@@ -79,6 +79,8 @@ namespace Astroid {
       ( "test-config,t", "use test config (same as used when tests are run), only makes sense from the source root")
       ( "mailto,m", po::value<ustring>(), "compose mail with mailto url or address")
       ( "no-auto-poll", "do not poll automatically")
+      ( "log,l", po::value<ustring>(), "log to file")
+      ( "append-log,a", "append to log file")
 # ifndef DISABLE_PLUGINS
       ( "disable-plugins", "disable plugins");
 # else
@@ -106,6 +108,22 @@ namespace Astroid {
       cout << desc << endl;
       exit (0);
 
+    }
+
+    if (vm.count ("log")) {
+      ustring lfile = vm["log"].as<ustring> ();
+      if (vm.count ("append-log")) {
+        logf.open (lfile, std::ofstream::out | std::ofstream::app);
+      } else {
+        logf.open (lfile, std::ofstream::out);
+      }
+      if (logf.good ()) {
+        log.add_out_stream (&logf);
+        log << info << "logging to: " << lfile << endl;
+      } else {
+        if (logf.is_open ()) logf.close ();
+        log << error << "could not open: " << lfile << " for logging.." << endl;
+      }
     }
 
     /* make new config {{{ */
@@ -315,6 +333,11 @@ namespace Astroid {
 # ifndef DISABLE_PLUGINS
     if (plugin_manager) delete plugin_manager;
 # endif
+
+    if (logf.is_open()) {
+      log.del_out_stream (&logf);
+      logf.close ();
+    }
 
     log << info << "astroid: goodbye!" << endl;
   }

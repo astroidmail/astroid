@@ -15,7 +15,7 @@ export GI_TYPELIB_PATH=$ASTROID_DIR
 
 pushd $ASTROID_DIR
 
-unbuffer ./astroid $* | tee ~/.config/astroid/log
+unbuffer ./astroid -l ~/.config/astroid/log $*
 
 popd
 
