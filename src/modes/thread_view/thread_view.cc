@@ -1202,14 +1202,55 @@ namespace Astroid {
           GMimeSignature * s = g_mime_signature_list_get_signature (cr->slist, i);
           GMimeCertificate * ce = g_mime_signature_get_certificate (s);
 
-          ustring name = (ce->name ? ce->name : "");
-          if (ce->email) name = name + " (" + ce->email + ")";
-          ustring keyid = (ce->keyid ? ce->keyid : "");
+          const char * c = NULL;
+          ustring fp = (c = g_mime_certificate_get_fingerprint (ce), c ? c : "");
+          ustring nm = (c = g_mime_certificate_get_name (ce), c ? c : "");
+          ustring em = (c = g_mime_certificate_get_email (ce), c ? c : "");
+          ustring ky = (c = g_mime_certificate_get_key_id (ce), c ? c : "");
+
+          ustring gd;
+          ustring err = "";
+          switch (g_mime_signature_get_status (s)) {
+            case GMIME_SIGNATURE_STATUS_GOOD:
+              gd = "Good";
+              break;
+
+            case GMIME_SIGNATURE_STATUS_BAD:
+              gd = "Bad";
+              // fall through
+
+            case GMIME_SIGNATURE_STATUS_ERROR:
+              if (gd.empty ()) gd = "Erroneous";
+
+              GMimeSignatureError e = g_mime_signature_get_errors (s);
+              if (e & GMIME_SIGNATURE_ERROR_EXPSIG) err += "expired,";
+              if (e & GMIME_SIGNATURE_ERROR_NO_PUBKEY) err += "no-pub-key,";
+              if (e & GMIME_SIGNATURE_ERROR_EXPKEYSIG) err += "expired-key-sig,";
+              if (e & GMIME_SIGNATURE_ERROR_REVKEYSIG) err += "revoked-key-sig,";
+              if (e & GMIME_SIGNATURE_ERROR_UNSUPP_ALGO) err += "unsupported-algo,";
+              if (!err.empty ()) {
+                err = err.substr (0, err.size () -1);
+                err = "[Error: " + err + "]";
+              }
+              break;
+          }
+
+          GMimeCertificateTrust t = g_mime_certificate_get_trust (ce);
+          ustring trust = "";
+          switch (t) {
+            case GMIME_CERTIFICATE_TRUST_NONE: trust = "none"; break;
+            case GMIME_CERTIFICATE_TRUST_NEVER: trust = "never"; break;
+            case GMIME_CERTIFICATE_TRUST_UNDEFINED: trust = "undefined"; break;
+            case GMIME_CERTIFICATE_TRUST_MARGINAL: trust = "marginal"; break;
+            case GMIME_CERTIFICATE_TRUST_FULLY: trust = "fully"; break;
+            case GMIME_CERTIFICATE_TRUST_ULTIMATE: trust = "ultimate"; break;
+          }
+
 
           sign_string += ustring::compose (
-              "<br />Signed by: %1 [%2]",
-              name,
-              keyid);
+              "<br />%1 signature by: %2 (%3) [%4] [trust: %5] %6",
+              gd, nm, em, ky, trust, err);
+
 
           g_object_unref (ce);
           g_object_unref (s);

@@ -62,14 +62,34 @@ namespace Astroid {
     GMimeObject * dp = g_mime_multipart_encrypted_decrypt
 	(ep, gpgctx, &decrypt_res, &err);
 
-    if (dp == NULL) {
-      log << error << "crypto: failed to decrypt message: " << err->message << endl;
-      decrypted = false;
+    /* GMimeDecryptResult and GMimeCertificates
+     *
+     * Only the certificates of the signature are fully populated, the certificates
+     * listed in GMimeDecryptResult->recipients are only a list of the alleged
+     * key ids of the receivers. These can be spoofed by the sender, or normally set to
+     * 0x0 if the receivers should be anonymous (-R for gpg).
+     *
+     * It is not possible not have a certificate entry for a receiver, so it is always
+     * possible to see how many recipients there are for a message.
+     *
+     * For decrypted messages the certificate only has the key_id field set, the rest
+     * of the information has to be fetched manually (note that the key_id is for the
+     * subkey that supports encryption - E). When the rest of the information is fetched
+     * from an available public key we cannot be sure that this is really the recipient.
+     *
+     *
+     * Encryption and Decryption:
+     *
+     * The option always_trust on the gpg context must be set if the local key is not
+     * trusted (or considered valid). Otherwise it is not used for encryption-target.
+     *
+     * There is some confusion about the term 'trust' here since it normally means whether
+     * you trust the keys signing of other keys, in this case it means 'is the key valid'
+     * 'or is the key really the one from the recipient'.
+     *
+     */
 
-    } else {
-      log << info << "crypto: successfully decrypted message." << endl;
-      decrypted = true;
-
+    if (decrypt_res) {
       rlist = g_mime_decrypt_result_get_recipients (decrypt_res);
       slist = g_mime_decrypt_result_get_signatures (decrypt_res);
 
@@ -85,10 +105,20 @@ namespace Astroid {
 
         log << debug << "cr: encrypted for: " << nm << "(" << em << ") [" << fp << "] [" << key << "]" << endl;
       }
+    }
+
+    if (dp == NULL) {
+      log << error << "crypto: failed to decrypt message: " << err->message << endl;
+      decrypted = false;
+
+    } else {
+      log << info << "crypto: successfully decrypted message." << endl;
+      decrypted = true;
 
       verify_tried = (slist != NULL);
       verified = verify_signature_list (slist);
     }
+
 
     return dp;
   }
