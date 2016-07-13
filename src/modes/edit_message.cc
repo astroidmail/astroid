@@ -332,17 +332,17 @@ namespace Astroid {
 
           if (a->has_gpg) {
             if (!switch_encrypt->get_active () && !switch_sign->get_active ()) {
-              switch_encrypt->set_active (true);
-              switch_sign->set_active (true);
-            } else if (switch_encrypt->get_active() && switch_sign->get_active ()) {
               switch_encrypt->set_active (false);
               switch_sign->set_active (true);
-            } else if (!switch_encrypt->get_active () && switch_sign->get_active ()) {
-              switch_sign->set_active (false);
+            } else if (!switch_encrypt->get_active() && switch_sign->get_active ()) {
               switch_encrypt->set_active (true);
+              switch_sign->set_active (true);
+            } else if (switch_encrypt->get_active () && switch_sign->get_active ()) {
+              switch_encrypt->set_active (true);
+              switch_sign->set_active (false);
             } else  {
-              switch_sign->set_active (false);
               switch_encrypt->set_active (false);
+              switch_sign->set_active (false);
             }
           }
 
@@ -543,6 +543,9 @@ namespace Astroid {
     encryption_revealer->set_reveal_child (a->has_gpg);
     switch_sign->set_sensitive (a->has_gpg);
     switch_encrypt->set_sensitive (a->has_gpg);
+
+    switch_encrypt->set_state (false);
+    switch_sign->set_state (a->has_gpg && a->always_gpg_sign);
   }
 
 

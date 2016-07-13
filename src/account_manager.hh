@@ -31,6 +31,7 @@ namespace Astroid {
 
       ustring gpgkey;
       bool has_gpg = false;
+      bool always_gpg_sign = false;
 
       ustring full_address ();
 
