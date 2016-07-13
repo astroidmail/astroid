@@ -37,6 +37,7 @@ namespace Astroid {
       ustring protocol;
       ustring gpgpath;
       bool    auto_key_retrieve = false;
+      bool    always_trust = false;
       ptree config;
 
       bool verify_signature_list (GMimeSignatureList *);
