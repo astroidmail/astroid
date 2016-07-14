@@ -22,10 +22,10 @@ namespace Astroid {
 
       bool verify_signature (GMimeObject * mo);
 
-      bool encrypt (GMimeObject * mo, bool sign, ustring userid, InternetAddress * from, ustring to, GMimeMultipartEncrypted ** e);
-      bool encrypt (GMimeObject * mo, bool sign, ustring userid, InternetAddress * from, AddressList to, GMimeMultipartEncrypted ** e);
+      bool encrypt (GMimeObject * mo, bool sign, ustring userid, InternetAddress * from, ustring to, GMimeMultipartEncrypted ** e, GError **);
+      bool encrypt (GMimeObject * mo, bool sign, ustring userid, InternetAddress * from, AddressList to, GMimeMultipartEncrypted ** e, GError **);
 
-      bool sign (GMimeObject * mo, ustring userid, GMimeMultipartSigned ** s);
+      bool sign (GMimeObject * mo, ustring userid, GMimeMultipartSigned ** s, GError **);
 
       bool decrypted = false;
       bool verified  = false; /* signature ok */

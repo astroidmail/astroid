@@ -150,12 +150,12 @@ namespace Astroid {
     return res;
   }
 
-  bool Crypto::encrypt (GMimeObject * mo, bool sign, ustring userid, InternetAddress * from, ustring to, GMimeMultipartEncrypted ** out)
+  bool Crypto::encrypt (GMimeObject * mo, bool sign, ustring userid, InternetAddress * from, ustring to, GMimeMultipartEncrypted ** out, GError ** err)
   {
-    return encrypt (mo, sign, userid, from, AddressList (to), out);
+    return encrypt (mo, sign, userid, from, AddressList (to), out, err);
   }
 
-  bool Crypto::encrypt (GMimeObject * mo, bool sign, ustring userid, InternetAddress * from, AddressList to, GMimeMultipartEncrypted ** out)
+  bool Crypto::encrypt (GMimeObject * mo, bool sign, ustring userid, InternetAddress * from, AddressList to, GMimeMultipartEncrypted ** out, GError ** err)
   {
 
     /* build receipients */
@@ -179,8 +179,6 @@ namespace Astroid {
 
     *out = g_mime_multipart_encrypted_new ();
 
-    GError *err = NULL;
-
     int r = g_mime_multipart_encrypted_encrypt (
         *out,
         mo,
@@ -189,7 +187,7 @@ namespace Astroid {
         userid.c_str (),
         GMIME_DIGEST_ALGO_DEFAULT,
         recpa,
-        &err);
+        err);
 
 
     g_ptr_array_free (recpa, false);
@@ -197,16 +195,14 @@ namespace Astroid {
     if (r == 0) {
       log << debug << "crypto: successfully encrypted message." << endl;
     } else {
-      log << debug << "crypto: failed to encrypt message: " << err->message << endl;
+      log << debug << "crypto: failed to encrypt message: " << (*err)->message << endl;
     }
 
     return (r == 0);
   }
 
-  bool Crypto::sign (GMimeObject * mo, ustring userid, GMimeMultipartSigned ** out) {
+  bool Crypto::sign (GMimeObject * mo, ustring userid, GMimeMultipartSigned ** out, GError ** err) {
     *out = g_mime_multipart_signed_new ();
-
-    GError *err = NULL;
 
     int r = g_mime_multipart_signed_sign (
         *out,
@@ -214,12 +210,12 @@ namespace Astroid {
         gpgctx,
         userid.c_str (),
         GMIME_DIGEST_ALGO_DEFAULT,
-        &err);
+        err);
 
     if (r == 0) {
       log << debug << "crypto: successfully signed message." << endl;
     } else {
-      log << debug << "crypto: failed to sign message: " << err->message << endl;
+      log << debug << "crypto: failed to sign message: " << (*err)->message << endl;
     }
 
     return (r == 0);

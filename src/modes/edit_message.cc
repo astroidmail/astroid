@@ -558,12 +558,20 @@ namespace Astroid {
   void EditMessage::read_edited_message () {
     /* make message */
     draft_saved = false; // we expect changes to have been made
+    warning_str = "";
+    info_str = "";
 
     ComposeMessage * c = make_message ();
 
     if (c == NULL) {
       log << error << "err: could not make message." << endl;
       return;
+    }
+
+    if (c->encrypt || c->sign) {
+      if (!c->encryption_success) {
+        warning_str = "Failed encrypting: " + UstringUtils::replace (c->encryption_error, "\n", "<br />");
+      }
     }
 
     /* set account selector to from address email */
@@ -741,10 +749,21 @@ namespace Astroid {
     }
 
     /* load body */
-    editor_toggle (false);
+    editor_toggle (false); // resets warning and info
+
+    info_str = "sending message..";
+    on_tv_ready ();
+
     ComposeMessage * c = make_message ();
 
     if (c == NULL) return false;
+
+    if (c->encrypt || c->sign) {
+      if (!c->encryption_success) {
+        warning_str = "Cannot send, failed encrypting: " + UstringUtils::replace (c->encryption_error, "\n", "<br />");
+        return false;
+      }
+    }
 
     c->message_sent().connect (
         sigc::mem_fun (this, &EditMessage::send_message_finished));

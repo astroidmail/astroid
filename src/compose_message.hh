@@ -84,6 +84,10 @@ namespace Astroid {
       ustring write_tmp (); // write message to tmpfile
       void write (ustring); // write message to some file
 
+      /* encryption */
+      bool encryption_success = false;
+      ustring encryption_error = "";
+
     private:
       ustring message_file;
       bfs::path save_to;
