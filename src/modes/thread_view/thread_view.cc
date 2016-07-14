@@ -1186,10 +1186,7 @@ namespace Astroid {
       WebKitDOMDOMTokenList * class_list_e =
         webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(encrypt_container));
 
-      webkit_dom_dom_token_list_add (class_list_e, "signed",
-          (err = NULL, &err));
 
-      g_object_unref (class_list_e);
 
       ustring content;
 
@@ -1311,34 +1308,44 @@ namespace Astroid {
       webkit_dom_node_append_child (WEBKIT_DOM_NODE (span_body),
           WEBKIT_DOM_NODE (encrypt_container), (err = NULL, &err));
 
-      g_object_unref (message_cont);
       g_object_unref (encrypt_container);
+      g_object_unref (message_cont);
 
       /* add encryption tag to encrypted part */
       WebKitDOMDOMTokenList * class_list =
         webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(body_container));
 
       if (c->isencrypted) {
+        webkit_dom_dom_token_list_add (class_list_e, "encrypted",
+            (err = NULL, &err));
         webkit_dom_dom_token_list_add (class_list, "encrypted",
             (err = NULL, &err));
 
         if (!c->crypt->decrypted) {
+          webkit_dom_dom_token_list_add (class_list_e, "decrypt_failed",
+              (err = NULL, &err));
           webkit_dom_dom_token_list_add (class_list, "decrypt_failed",
               (err = NULL, &err));
         }
       }
 
       if (c->issigned) {
+        webkit_dom_dom_token_list_add (class_list_e, "signed",
+            (err = NULL, &err));
+
         webkit_dom_dom_token_list_add (class_list, "signed",
             (err = NULL, &err));
 
         if (!c->crypt->verified) {
+          webkit_dom_dom_token_list_add (class_list_e, "verify_failed",
+              (err = NULL, &err));
           webkit_dom_dom_token_list_add (class_list, "verify_failed",
               (err = NULL, &err));
         }
       }
 
       g_object_unref (class_list);
+      g_object_unref (class_list_e);
 
     }
 

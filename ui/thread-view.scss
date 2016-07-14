@@ -653,11 +653,26 @@ body.nohide .email .compressed_note > span {
     padding-top: 5px;
     margin-top: 5px;
     margin-bottom: 5px;
-    background-color: #53a653;
     border: 1px solid black;
 }
 
-.encrypted {
+.encrypt_container.encrypted, .encrypt_container.encrypted.signed {
+  background-color: #53a653;
+}
+
+.encrypt_container.signed {
+  background-color: #ffb240;
+}
+
+.encrypt_container.verify_failed, .encrypt_container.decrypt_failed {
+  background-color: red;
+}
+
+.body_part.encrypted.decrypt_failed {
+  border-left: 0px;
+}
+
+.body_part.encrypted, .body_part.encrypted.signed {
   display: block;
   border-left: 5px solid #53a653;
   padding: 10px;
@@ -669,7 +684,11 @@ body.nohide .email .compressed_note > span {
   margin-left: 5px;
 }
 
-.signed {
+.body_part.signed.verify_failed {
+  border-left: 0px;
+}
+
+.body_part.signed {
   display: block;
   border-left: 5px solid #ffb240;
   padding: 10px;
