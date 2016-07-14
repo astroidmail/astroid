@@ -1188,10 +1188,10 @@ namespace Astroid {
 
 
 
-      ustring content;
+      ustring content = "";
 
-      ustring sign_string;
-      ustring enc_string;
+      ustring sign_string = "";
+      ustring enc_string  = "";
 
       if (c->issigned) {
 
@@ -1213,7 +1213,7 @@ namespace Astroid {
           ustring em = (c = g_mime_certificate_get_email (ce), c ? c : "");
           ustring ky = (c = g_mime_certificate_get_key_id (ce), c ? c : "");
 
-          ustring gd;
+          ustring gd = "";
           ustring err = "";
           switch (g_mime_signature_get_status (s)) {
             case GMIME_SIGNATURE_STATUS_GOOD:
@@ -1253,7 +1253,7 @@ namespace Astroid {
 
 
           sign_string += ustring::compose (
-              "<br />%1 signature from: %2 (%3) [%4] [trust: %5] %6",
+              "<br />%1 signature from: %2 (%3) [0x%4] [trust: %5] %6",
               gd, nm, em, ky, trust, err);
 
 
@@ -1282,8 +1282,8 @@ namespace Astroid {
             ustring em = (c = g_mime_certificate_get_email (ce), c ? c : "");
             ustring ky = (c = g_mime_certificate_get_key_id (ce), c ? c : "");
 
-            enc_string += ustring::compose ("<br /> Encrypted for: %1 (%2) [%3/%4]",
-                nm, em, fp, ky);
+            enc_string += ustring::compose ("<br /> Encrypted for: %1 (%2) [0x%3]",
+                nm, em, ky);
           }
 
           if (c->issigned) enc_string += "<br /><br />";
@@ -1307,9 +1307,6 @@ namespace Astroid {
 
       webkit_dom_node_append_child (WEBKIT_DOM_NODE (span_body),
           WEBKIT_DOM_NODE (encrypt_container), (err = NULL, &err));
-
-      g_object_unref (encrypt_container);
-      g_object_unref (message_cont);
 
       /* add encryption tag to encrypted part */
       WebKitDOMDOMTokenList * class_list =
@@ -1346,12 +1343,13 @@ namespace Astroid {
 
       g_object_unref (class_list);
       g_object_unref (class_list_e);
+      g_object_unref (encrypt_container);
+      g_object_unref (message_cont);
 
     }
 
     webkit_dom_node_append_child (WEBKIT_DOM_NODE (span_body),
         WEBKIT_DOM_NODE (body_container), (err = NULL, &err));
-
 
     g_object_unref (body_container);
     g_object_unref (d);
