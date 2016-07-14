@@ -54,6 +54,14 @@
   $focused-solid: #4a90d9 !global;
 }
 
+@if not(global-variable-exists(encrypted)) {
+  $encrypted: #4cbf4c !global;
+}
+
+@if not(global-variable-exists(signed)) {
+  $signed: #cccc66 !global;
+}
+
 @media print {
 
     body {
@@ -642,26 +650,34 @@ body.nohide .email .compressed_note > span {
 }
 
 #encrypt_container {
-    display: none;
+  display: none;
 }
 
 .email > .email_container > .body > .encrypt_container {
-    display: block;
-    vertical-align: middle;
-    text-align: center;
-    padding-bottom: 5px;
-    padding-top: 5px;
-    margin-top: 5px;
-    margin-bottom: 5px;
-    border: 1px solid black;
+  display: block;
+  vertical-align: middle;
+  text-align: center;
+  padding-bottom: 5px;
+  padding-top: 5px;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  border: 1px solid black;
+  color: #333333;
+}
+
+.email > .email_container > .body > .encrypt_container > .message > span.header {
+  color: black; 
+  font-weight: bold;
+  margin-bottom: 2px;
+  display: block;
 }
 
 .encrypt_container.encrypted, .encrypt_container.encrypted.signed {
-  background-color: #53a653;
+  background-color: $encrypted;
 }
 
 .encrypt_container.signed {
-  background-color: #ffb240;
+  background-color: $signed;
 }
 
 .encrypt_container.verify_failed, .encrypt_container.decrypt_failed {
@@ -674,7 +690,7 @@ body.nohide .email .compressed_note > span {
 
 .body_part.encrypted, .body_part.encrypted.signed {
   display: block;
-  border-left: 5px solid #53a653;
+  border-left: 5px solid $encrypted;
   padding: 10px;
 }
 
@@ -690,7 +706,7 @@ body.nohide .email .compressed_note > span {
 
 .body_part.signed {
   display: block;
-  border-left: 5px solid #ffb240;
+  border-left: 5px solid $signed;
   padding: 10px;
 }
 

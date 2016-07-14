@@ -1198,9 +1198,9 @@ namespace Astroid {
         Crypto * cr = c->crypt;
 
         if (cr->verified) {
-          sign_string += "Signature verification succeeded.";
+          sign_string += "<span class=\"header\">Signature verification succeeded.</span>";
         } else {
-          sign_string += "Signature verification failed!";
+          sign_string += "<span class=\"header\">Signature verification failed!</span>";
         }
 
         for (int i = 0; i < g_mime_signature_list_length (cr->slist); i++) {
@@ -1253,7 +1253,7 @@ namespace Astroid {
 
 
           sign_string += ustring::compose (
-              "<br />%1 signature by: %2 (%3) [%4] [trust: %5] %6",
+              "<br />%1 signature from: %2 (%3) [%4] [trust: %5] %6",
               gd, nm, em, ky, trust, err);
 
 
@@ -1266,8 +1266,8 @@ namespace Astroid {
       if (c->isencrypted) {
         Crypto * cr = c->crypt;
 
-        if (c->issigned) enc_string = "Signed and Encrypted";
-        else             enc_string = "Encrypted";
+        if (c->issigned) enc_string = "<span class=\"header\">Signed and Encrypted.</span>";
+        else             enc_string = "<span class=\"header\">Encrypted.</span>";
 
         if (cr->decrypted) {
 
@@ -1286,10 +1286,10 @@ namespace Astroid {
                 nm, em, fp, ky);
           }
 
-          if (c->issigned) enc_string += "<br />";
+          if (c->issigned) enc_string += "<br /><br />";
 
         } else {
-          enc_string += " (failed decryption)";
+          enc_string += "Encrypted: Failed decryption.";
         }
 
       }
