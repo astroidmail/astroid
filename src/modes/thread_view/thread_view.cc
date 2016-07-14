@@ -1177,7 +1177,7 @@ namespace Astroid {
       // add to message state
       MessageState::Element e (MessageState::ElementType::Encryption, c->id);
       state[message].elements.push_back (e);
-      log << debug << "tv: added encrypt: " << state[message].elements.size() << endl;
+      log << debug << "tv: added encrypt: " << c->id << endl;
 
       webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (encrypt_container),
         "id", e.element_id().c_str(),
