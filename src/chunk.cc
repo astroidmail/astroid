@@ -91,6 +91,21 @@ namespace Astroid {
 
       log << debug << "chunk: is part (viewable: " << viewable << ", attachment: " << attachment << ") " << endl;
 
+      /* TODO: check for inline PGP encryption, though it may be unsafe:
+       *       https://dkg.fifthhorseman.net/notes/inline-pgp-harmful/
+       *
+       * One way to do this is by converting the inline PGP to PGP/MIME:
+       *
+       * Fetch the encrypted part out of the message, make a multipart and
+       * add the parts of the inline message there, making the encrypted part
+       * a multipartencrypted. Then add this multipart as child, and make this
+       * part unviwable and not attachment.
+       *
+       * That should preserve the information about what parts are encrypted,
+       * and which are not.
+       *
+       */
+
     } else if GMIME_IS_MESSAGE_PART (mime_object) {
       log << debug << "chunk: message part" << endl;
 
@@ -115,6 +130,8 @@ namespace Astroid {
       int total = g_mime_multipart_get_count ((GMimeMultipart *) mime_object);
 
       if (GMIME_IS_MULTIPART_ENCRYPTED (mime_object) || GMIME_IS_MULTIPART_SIGNED (mime_object)) {
+
+        /* inline PGP is handled in GMIME_IS_PART () above */
 
         ustring protocol = "";
         const char * _protocol = g_mime_content_type_get_parameter (content_type, "protocol");
@@ -211,8 +228,6 @@ namespace Astroid {
       mime_message = true;
     }
 
-    // TODO: check for inline PGP encryption, also its unsafe:
-    //       https://dkg.fifthhorseman.net/notes/inline-pgp-harmful/
   }
 
   ustring Chunk::viewable_text (bool html = true, bool verbose) {
@@ -377,6 +392,7 @@ namespace Astroid {
         log << error << "could not convert chunk to utf-8, contents: " << sstr.str() << endl;
         throw ex;
       }
+
 
       return b;
     } else {

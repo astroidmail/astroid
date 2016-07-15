@@ -11,7 +11,6 @@
 # include "crypto.hh"
 # include "utils/address.hh"
 
-/* interface to cryto, based on libnotmuch interface */
 using std::endl;
 
 namespace Astroid {
