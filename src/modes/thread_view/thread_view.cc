@@ -1197,10 +1197,18 @@ namespace Astroid {
 
         Crypto * cr = c->crypt;
 
-        if (cr->verified) {
-          sign_string += "<span class=\"header\">Signature verification succeeded.</span>";
+        if (!cr->inline_pgp) {
+          if (cr->verified) {
+            sign_string += "<span class=\"header\">Signature verification succeeded.</span>";
+          } else {
+            sign_string += "<span class=\"header\">Signature verification failed!</span>";
+          }
         } else {
-          sign_string += "<span class=\"header\">Signature verification failed!</span>";
+          if (cr->verified) {
+            sign_string += "<span class=\"header\">Signature (inline) verification succeeded.</span>";
+          } else {
+            sign_string += "<span class=\"header\">Signature (inline) verification failed!</span>";
+          }
         }
 
         for (int i = 0; i < g_mime_signature_list_length (cr->slist); i++) {
@@ -1271,8 +1279,13 @@ namespace Astroid {
       if (c->isencrypted) {
         Crypto * cr = c->crypt;
 
-        if (c->issigned) enc_string = "<span class=\"header\">Signed and Encrypted.</span>";
-        else             enc_string = "<span class=\"header\">Encrypted.</span>";
+        if (!cr->inline_pgp) {
+          if (c->issigned) enc_string = "<span class=\"header\">Signed and Encrypted.</span>";
+          else             enc_string = "<span class=\"header\">Encrypted.</span>";
+        } else {
+          if (c->issigned) enc_string = "<span class=\"header\">Signed and Encrypted (inline PGP).</span>";
+          else             enc_string = "<span class=\"header\">Encrypted (inline PGP).</span>";
+        }
 
         if (cr->decrypted) {
 

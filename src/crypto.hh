@@ -33,6 +33,8 @@ namespace Astroid {
       bool decrypt_tried = false;
       ustring decrypt_error = "";
 
+      bool inline_pgp = false;
+
       GMimeDecryptResult * decrypt_res = NULL;
       GMimeSignatureList * slist = NULL;
       GMimeCertificateList * rlist = NULL;
@@ -48,6 +50,8 @@ namespace Astroid {
       bool verify_signature_list (GMimeSignatureList *);
 
     public:
+      static GMimeMultipart * split_inline_pgp (refptr<Glib::ByteArray>);
+
       static ustring get_md5_digest (ustring str);
       static unsigned char * get_md5_digest_char (ustring str);
   };

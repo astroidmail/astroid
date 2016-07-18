@@ -91,8 +91,7 @@ namespace Astroid {
 
       log << debug << "chunk: is part (viewable: " << viewable << ", attachment: " << attachment << ") " << endl;
 
-      /* TODO: check for inline PGP encryption, though it may be unsafe:
-       *       https://dkg.fifthhorseman.net/notes/inline-pgp-harmful/
+      /* Check for inline PGP encryption
        *
        * One way to do this is by converting the inline PGP to PGP/MIME:
        *
@@ -105,6 +104,57 @@ namespace Astroid {
        * and which are not.
        *
        */
+
+      if (viewable && g_mime_content_type_is_type (content_type, "text", "plain")) {
+        /* fast check if this includes inline PGP content */
+        auto bytes = contents ();
+        if (bytes->size () > 0) {
+          std::string c = std::string(reinterpret_cast<char*> (bytes->get_data ()));
+
+          if (c.find ("BEGIN PGP") != std::string::npos) {
+            if (c.find ("BEGIN PGP MESSAGE") != std::string::npos) {
+              log << warn << "chunk: mime part looks like encrypted inline PGP message, will try to process.." << endl;
+
+              crypt = new Crypto ("application/pgp-encrypted");
+
+              GMimeMultipart * mp = crypt->split_inline_pgp (bytes);
+
+              if (mp == NULL) {
+                log << error << "chunk: could not process inline PGP." << endl;
+              } else {
+                crypt->inline_pgp = true;
+                auto ch = refptr<Chunk> (new Chunk ((GMimeObject *) mp, false, false, crypt));
+
+                /* mark self as unviewable, make kids visible */
+                viewable = false;
+
+                kids.push_back (ch);
+              }
+
+            } else if (c.find ("BEGIN PGP SIGNED MESSAGE") != std::string::npos) {
+
+              log << warn << "chunk: mime part looks like signed inline PGP message, will try to process.." << endl;
+
+              crypt = new Crypto ("application/pgp-signature");
+
+              GMimeMultipart * mp = crypt->split_inline_pgp (bytes);
+
+              if (mp == NULL) {
+                log << error << "chunk: could not process inline PGP." << endl;
+              } else {
+                crypt->inline_pgp = true;
+                auto ch = refptr<Chunk> (new Chunk ((GMimeObject *) mp, false, false, crypt));
+
+                /* mark self as unviewable, make kids visible */
+                viewable = false;
+
+                kids.push_back (ch);
+              }
+
+            }
+          }
+        }
+      }
 
     } else if GMIME_IS_MESSAGE_PART (mime_object) {
       log << debug << "chunk: message part" << endl;
@@ -136,7 +186,7 @@ namespace Astroid {
         ustring protocol = "";
         const char * _protocol = g_mime_content_type_get_parameter (content_type, "protocol");
         if (_protocol != NULL) protocol = _protocol;
-        crypt = new Crypto (protocol);
+        if (crypt == NULL) crypt = new Crypto (protocol);
         if (!crypt->ready) {
           log << error << "chunk: no crypto ready." << endl;
         }
