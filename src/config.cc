@@ -258,6 +258,7 @@ namespace Astroid {
       log << info << "cf: test config, loading defaults." << endl;
       config = setup_default_config (true);
       config.put ("poll.interval", 0);
+      config.put ("accounts.charlie.gpgkey", "gaute@astroidmail.bar");
       std::string test_nmcfg_path = path(current_path() / path ("test/mail/test_config")).string();
       boost::property_tree::read_ini (test_nmcfg_path, notmuch_config);
       return;

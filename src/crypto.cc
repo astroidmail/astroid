@@ -221,15 +221,29 @@ namespace Astroid {
   }
 
   bool Crypto::create_gpg_context () {
-    gpgctx = g_mime_gpg_context_new (NULL, gpgpath.length() ? gpgpath.c_str () : "gpg");
+
+    if (!astroid->in_test ()) {
+
+      gpgctx = g_mime_gpg_context_new (NULL, gpgpath.length() ? gpgpath.c_str () : "gpg");
+      g_mime_gpg_context_set_use_agent ((GMimeGpgContext *) gpgctx, TRUE);
+      g_mime_gpg_context_set_always_trust ((GMimeGpgContext *) gpgctx, always_trust);
+      g_mime_gpg_context_set_auto_key_retrieve ((GMimeGpgContext *) gpgctx, auto_key_retrieve);
+
+    } else {
+
+      log << debug << "crypto: in test" << endl;
+      gpgctx = g_mime_gpg_context_new (NULL, "gpg");
+      g_mime_gpg_context_set_use_agent ((GMimeGpgContext *) gpgctx, TRUE);
+      g_mime_gpg_context_set_always_trust ((GMimeGpgContext *) gpgctx, TRUE);
+      g_mime_gpg_context_set_auto_key_retrieve ((GMimeGpgContext *) gpgctx, FALSE);
+
+    }
+
     if (! gpgctx) {
       log << error << "crypto: failed to create gpg context." << std::endl;
       return false;
     }
 
-    g_mime_gpg_context_set_use_agent ((GMimeGpgContext *) gpgctx, TRUE);
-    g_mime_gpg_context_set_always_trust ((GMimeGpgContext *) gpgctx, always_trust);
-    g_mime_gpg_context_set_auto_key_retrieve ((GMimeGpgContext *) gpgctx, auto_key_retrieve);
 
     return true;
   }

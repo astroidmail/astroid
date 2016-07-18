@@ -1,5 +1,6 @@
 import os
 import subprocess
+from subprocess import Popen
 
 def unitTestAction(target, source, env):
   '''
@@ -20,6 +21,9 @@ def unitTestAction(target, source, env):
   config = os.path.abspath(os.path.join (os.path.curdir, 'test/mail/test_config'))
   myenv['NOTMUCH_CONFIG'] = config
 
+  # setup gpg
+  setupGPG (myenv)
+
   app = str(source[0].abspath)
   process = subprocess.Popen (app, shell = True, env = myenv)
   process.wait ()
@@ -28,6 +32,30 @@ def unitTestAction(target, source, env):
     open(str(target[0]),'w').write("PASSED\n")
   else:
     return 1
+
+def setupGPG (env):
+  home = os.path.join (os.path.curdir, 'test/test_home')
+  gpgh = os.path.abspath(os.path.join (home, 'gnupg'))
+  env['GNUPGHOME'] = gpgh
+  env['GPG_AGENT_INFO'] = ''
+
+  if not os.path.exists (os.path.join (gpgh, '.ready')):
+    print "test: setting up gpg environment in: " + gpgh
+    if not os.path.exists (gpgh): os.mkdir (gpgh)
+
+    os.chmod (gpgh, 0700)
+
+    # make some keys
+    Popen ("gpg --batch --gen-key ../../foo1.key", env = env, shell = True, cwd = gpgh).wait ()
+    Popen ("gpg --batch --gen-key ../../foo2.key", env = env, shell = True, cwd = gpgh).wait ()
+
+    # import
+    Popen ("gpg --batch --always-trust --import one.pub", env = env, shell = True, cwd = gpgh).wait ()
+
+    Popen ("gpg --batch --always-trust --import two.pub", env = env, shell = True, cwd = gpgh).wait ()
+
+  open (os.path.join (gpgh, '.ready'), 'w').write ('ready')
+
 
 def unitTestActionString(target, source, env):
   '''

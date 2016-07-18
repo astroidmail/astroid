@@ -63,6 +63,11 @@ if 'clean_test' in COMMAND_LINE_TARGETS:
   if os.path.exists ("./test/mail/test_mail/.notmuch"):
     shutil.rmtree ("./test/mail/test_mail/.notmuch")
 
+  # remove gpg
+  print "cleaning out gnupg dir.."
+  if os.path.exists ("./test/test_home/gnupg"):
+    shutil.rmtree ("./test/test_home/gnupg")
+
   exit ()
 
 # Verbose / Non-verbose output{{{
