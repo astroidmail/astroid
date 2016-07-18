@@ -240,11 +240,10 @@ namespace Astroid {
           ComposeMessage * c = make_message ();
           ustring tmpf = c->write_tmp ();
 
-          main_window->add_mode (new RawMessage (main_window, tmpf.c_str()));
+          main_window->add_mode (new RawMessage (main_window, tmpf.c_str(), true));
+          /* tmp file deleted by RawMessage */
 
           delete c;
-
-          unlink (tmpf.c_str());
 
           return true;
         });

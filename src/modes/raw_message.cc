@@ -1,5 +1,6 @@
 # include <iostream>
 # include <fstream>
+# include <boost/filesystem.hpp>
 
 # include "astroid.hh"
 # include "raw_message.hh"
@@ -7,6 +8,7 @@
 # include "log.hh"
 
 using namespace std;
+namespace bfs = boost::filesystem;
 
 namespace Astroid {
   RawMessage::RawMessage (MainWindow * mw) : Mode (mw) {
@@ -25,7 +27,7 @@ namespace Astroid {
 
     show_all_children ();
 
-    keys.title = "Raw message";
+    keys.title = "Raw message"; // {{{
     keys.register_key ("j", { Key (GDK_KEY_Down) },
         "raw.down",
         "Move down",
@@ -81,9 +83,16 @@ namespace Astroid {
           adj->set_value (adj->get_upper());
           return true;
         });
+    // }}}
   }
 
-  RawMessage::RawMessage (MainWindow * mw, const char * fname) : RawMessage (mw) {
+  RawMessage::RawMessage (MainWindow * mw, const char * fname, bool _delete)
+      : RawMessage (mw)
+
+  {
+    delete_on_close = _delete;
+    this->fname = fname;
+
     stringstream l ("Raw message: ");
     l << fname;
     set_label (l.str());
@@ -95,7 +104,24 @@ namespace Astroid {
     refptr<Gtk::TextBuffer> buf = tv.get_buffer ();
     stringstream s;
     s << f.rdbuf ();
-    buf->set_text (s.str());
+    std::string _in = s.str ();
+
+    int len    = _in.size ();
+    gchar * in = (gchar *) _in.c_str ();
+
+    /* convert */
+    gsize read, written;
+    GError * err = NULL;
+    gchar * out = g_convert_with_fallback (in, len, "UTF-8", "ASCII", NULL,
+                                           &read, &written, &err);
+
+    if (out != NULL) {
+      buf->set_text ( out, out+written);
+    } else {
+      log << error << "raw: could not convert: " << in << endl;
+    }
+
+    g_free (out);
   }
 
   RawMessage::RawMessage (MainWindow *mw, refptr<Message> _msg) : RawMessage (mw) {
@@ -107,10 +133,34 @@ namespace Astroid {
     log << info << "rm: loading message.. " << endl;
 
     refptr<Gtk::TextBuffer> buf = tv.get_buffer ();
-    stringstream s;
-    s << msg->raw_contents ()->get_data ();
-    buf->set_text (s.str ());
+
+    auto c = msg->raw_contents ();
+    gchar * in = (gchar *) c->get_data ();
+    int len    = c->size ();
+
+    /* convert */
+    gsize read, written;
+    GError * err = NULL;
+    gchar * out = g_convert_with_fallback (in, len, "UTF-8", "ASCII", NULL,
+                                           &read, &written, &err);
+
+    if (out != NULL) {
+      buf->set_text ( out, out+written);
+    } else {
+      log << error << "raw: could not convert: " << in << endl;
+    }
+
+    g_free (out);
   }
+
+  RawMessage::~RawMessage () {
+    if (delete_on_close) {
+      if (bfs::exists (fname)) {
+        unlink (fname.c_str ());
+      }
+    }
+  }
+
 
   void RawMessage::grab_modal () {
     add_modal_grab ();
