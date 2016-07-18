@@ -185,9 +185,10 @@ namespace Astroid {
 
   void Db::release_ro_lock () {
     log << debug << "db: ro: waiting for lock to close.." << endl;
-    std::lock_guard<std::mutex> lk (db_open);
+    std::unique_lock<std::mutex> lk (db_open);
     log << debug << "db: ro: closing.." << endl;
     read_only_dbs_open--;
+    lk.unlock ();
     dbs_open.notify_all ();
   }
 
