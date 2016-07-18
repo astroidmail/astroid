@@ -261,6 +261,8 @@ namespace Astroid {
         g_mime_message_set_mime_part (message, (GMimeObject *) s_content);
       }
 
+      g_object_unref (content);
+
       if (!encryption_success) {
         encryption_error = err->message;
         log << error << "cm: failed encrypting or signing: " << encryption_error << endl;
