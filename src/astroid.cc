@@ -61,7 +61,7 @@ namespace Astroid {
     }
 
     /* user agent */
-    user_agent = ustring::compose ("astroid/%1 (https://github.com/gauteh/astroid)", Astroid::version);
+    user_agent = ustring::compose ("astroid/%1 (https://github.com/astroidmail/astroid)", Astroid::version);
 
     /* gmime settings */
     g_mime_init (0); // utf-8 is default
