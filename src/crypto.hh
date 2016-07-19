@@ -42,7 +42,6 @@ namespace Astroid {
       GMimeCryptoContext * gpgctx = NULL;
       ustring protocol;
       ustring gpgpath;
-      bool    auto_key_retrieve = false;
       bool    always_trust = false;
       ptree config;
 

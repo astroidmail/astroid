@@ -18,7 +18,6 @@ namespace Astroid {
     using std::endl;
     config = astroid->config ("crypto");
     gpgpath = ustring (config.get<std::string> ("gpg.path"));
-    auto_key_retrieve = config.get<bool> ("gpg.auto_key_retrieve");
     always_trust = config.get<bool> ("gpg.always_trust");
 
     log << debug << "crypto: gpg: " << gpgpath << endl;
@@ -227,7 +226,6 @@ namespace Astroid {
       gpgctx = g_mime_gpg_context_new (NULL, gpgpath.length() ? gpgpath.c_str () : "gpg");
       g_mime_gpg_context_set_use_agent ((GMimeGpgContext *) gpgctx, TRUE);
       g_mime_gpg_context_set_always_trust ((GMimeGpgContext *) gpgctx, always_trust);
-      g_mime_gpg_context_set_auto_key_retrieve ((GMimeGpgContext *) gpgctx, auto_key_retrieve);
 
     } else {
 
@@ -235,7 +233,6 @@ namespace Astroid {
       gpgctx = g_mime_gpg_context_new (NULL, "gpg");
       g_mime_gpg_context_set_use_agent ((GMimeGpgContext *) gpgctx, TRUE);
       g_mime_gpg_context_set_always_trust ((GMimeGpgContext *) gpgctx, TRUE);
-      g_mime_gpg_context_set_auto_key_retrieve ((GMimeGpgContext *) gpgctx, FALSE);
 
     }
 
