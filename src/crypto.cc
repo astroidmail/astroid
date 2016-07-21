@@ -346,7 +346,6 @@ namespace Astroid {
             g_object_unref(contentStream);
 
             g_mime_multipart_add (m, GMIME_OBJECT(em));
-            g_object_unref (em);
 
             last_part = e;
             b = e;
@@ -368,17 +367,20 @@ namespace Astroid {
             e = c.find ("\n", e);
             if (e == std::string::npos) e = c.size ()-1;
 
-            b = c.find ("\n", b + 1); // end of BEGIN PGP SIGNED MESSAGE
-            size_t hb = c.find ("Hash:", b); hb = c.find ("\n", hb); hb = c.find ("\n", hb+1);
+            size_t hb = c.find ("Hash:", b); 
+
             if (hb != std::string::npos) b = hb;
 
             std::string prt = c.substr (b, sb - b);
             GMimeMultipart * em = GMIME_MULTIPART(g_mime_multipart_signed_new ());
+            GMimeMultipartSigned *sem  = (GMimeMultipartSigned *) em;
             g_mime_object_set_content_type_parameter ((GMimeObject *) em, "protocol", "application/pgp-signature");
+            /* g_mime_object_set_content_type_parameter ((GMimeObject *) em, "micalg", "pgp-sha1"); */
 
             /* add message */
             GMimeStream * contentStream = g_mime_stream_mem_new_with_buffer(prt.c_str(), prt.size());
-            GMimePart * messagePart = g_mime_part_new_with_type ("text", "plain");
+            /* GMimePart * messagePart = g_mime_part_new_with_type ("text", "plain"); */
+            GMimePart * messagePart = g_mime_part_new ();
 
             /* g_mime_object_set_content_type_parameter ((GMimeObject *) messagePart, "charset", astroid->config().get<string>("editor.charset").c_str()); */
 
@@ -400,9 +402,9 @@ namespace Astroid {
             messagePart = g_mime_part_new_with_type ("application", "pgp-signature");
 
 
-            contentWrapper = g_mime_data_wrapper_new_with_stream(contentStream, GMIME_CONTENT_ENCODING_7BIT);
+            contentWrapper = g_mime_data_wrapper_new_with_stream(contentStream, GMIME_CONTENT_ENCODING_DEFAULT);
 
-            g_mime_part_set_content_encoding (messagePart, GMIME_CONTENT_ENCODING_7BIT);
+            g_mime_part_set_content_encoding (messagePart, GMIME_CONTENT_ENCODING_DEFAULT);
             g_mime_part_set_content_object (messagePart, contentWrapper);
 
             g_mime_multipart_add (em, GMIME_OBJECT (messagePart));
@@ -411,8 +413,18 @@ namespace Astroid {
             g_object_unref(contentWrapper);
             g_object_unref(contentStream);
 
-            g_mime_multipart_add (m, GMIME_OBJECT(em));
+            GMimeStream * ps = g_mime_stream_mem_new ();
+            g_mime_object_write_to_stream (GMIME_OBJECT (em), ps);
+            g_mime_stream_seek (ps, 0, GMIME_STREAM_SEEK_SET);
+
+            GMimeParser * p = g_mime_parser_new_with_stream (ps);
+            GMimeObject * pem = g_mime_parser_construct_part (p);
+
+            g_mime_multipart_add (m, GMIME_OBJECT(pem));
             g_object_unref (em);
+            g_object_unref (pem);
+            g_object_unref (p);
+            g_object_unref (ps);
 
             last_part = e;
             b = e;
@@ -437,6 +449,7 @@ namespace Astroid {
     log << debug << "crypto: adding remaining part: " << c.substr (last_part, c.size () - last_part -1) << endl;
     if (last_part < c.size ()) add_part (last_part, c.size ());
 
+    log << debug << "crypto: resulting content: " << g_mime_object_to_string (GMIME_OBJECT(m)) << endl;
     return m;
   }
 
