@@ -1,9 +1,14 @@
 ==
 
-* Use any editor (general XEmbed support in edit-message window): Emacs works.
+* Use any editor (general XEmbed support in edit-message window): Emacs
+  works.
 
 * Plugins: Python and Lua plugins can now be made, parts of ThreadIndex
-and ThreadView are exposed allowing extesion of the user interface and advanced customization. Check out the plugins available at GitHub.
+  and ThreadView are exposed allowing extesion of the user interface and
+  advanced customization. Check out the plugins available at GitHub.
+
+* Crypto: GPG encryption and signing is added. Decryption and and
+  signature status is shown in greater detail.
 
 * Repository moved to github.com/astroidmail.
 
