@@ -1205,39 +1205,44 @@ namespace Astroid {
 
         for (int i = 0; i < g_mime_signature_list_length (cr->slist); i++) {
           GMimeSignature * s = g_mime_signature_list_get_signature (cr->slist, i);
-          GMimeCertificate * ce = g_mime_signature_get_certificate (s);
+          GMimeCertificate * ce = NULL;
+          if (s) ce = g_mime_signature_get_certificate (s);
 
-          const char * c = NULL;
-          ustring fp = (c = g_mime_certificate_get_fingerprint (ce), c ? c : "");
-          ustring nm = (c = g_mime_certificate_get_name (ce), c ? c : "");
-          ustring em = (c = g_mime_certificate_get_email (ce), c ? c : "");
-          ustring ky = (c = g_mime_certificate_get_key_id (ce), c ? c : "");
-
+          ustring nm, em, ky;
           ustring gd = "";
           ustring err = "";
-          switch (g_mime_signature_get_status (s)) {
-            case GMIME_SIGNATURE_STATUS_GOOD:
-              gd = "Good";
-              break;
+          if (ce) {
+            const char * c = NULL;
+            nm = (c = g_mime_certificate_get_name (ce), c ? c : "");
+            em = (c = g_mime_certificate_get_email (ce), c ? c : "");
+            ky = (c = g_mime_certificate_get_key_id (ce), c ? c : "");
 
-            case GMIME_SIGNATURE_STATUS_BAD:
-              gd = "Bad";
-              // fall through
+            switch (g_mime_signature_get_status (s)) {
+              case GMIME_SIGNATURE_STATUS_GOOD:
+                gd = "Good";
+                break;
 
-            case GMIME_SIGNATURE_STATUS_ERROR:
-              if (gd.empty ()) gd = "Erroneous";
+              case GMIME_SIGNATURE_STATUS_BAD:
+                gd = "Bad";
+                // fall through
 
-              GMimeSignatureError e = g_mime_signature_get_errors (s);
-              if (e & GMIME_SIGNATURE_ERROR_EXPSIG) err += "expired,";
-              if (e & GMIME_SIGNATURE_ERROR_NO_PUBKEY) err += "no-pub-key,";
-              if (e & GMIME_SIGNATURE_ERROR_EXPKEYSIG) err += "expired-key-sig,";
-              if (e & GMIME_SIGNATURE_ERROR_REVKEYSIG) err += "revoked-key-sig,";
-              if (e & GMIME_SIGNATURE_ERROR_UNSUPP_ALGO) err += "unsupported-algo,";
-              if (!err.empty ()) {
-                err = err.substr (0, err.size () -1);
-                err = "[Error: " + err + "]";
-              }
-              break;
+              case GMIME_SIGNATURE_STATUS_ERROR:
+                if (gd.empty ()) gd = "Erroneous";
+
+                GMimeSignatureError e = g_mime_signature_get_errors (s);
+                if (e & GMIME_SIGNATURE_ERROR_EXPSIG) err += "expired,";
+                if (e & GMIME_SIGNATURE_ERROR_NO_PUBKEY) err += "no-pub-key,";
+                if (e & GMIME_SIGNATURE_ERROR_EXPKEYSIG) err += "expired-key-sig,";
+                if (e & GMIME_SIGNATURE_ERROR_REVKEYSIG) err += "revoked-key-sig,";
+                if (e & GMIME_SIGNATURE_ERROR_UNSUPP_ALGO) err += "unsupported-algo,";
+                if (!err.empty ()) {
+                  err = err.substr (0, err.size () -1);
+                  err = "[Error: " + err + "]";
+                }
+                break;
+            }
+          } else {
+            err = "[Error: Could not get certificate]";
           }
 
           GMimeCertificateTrust t = g_mime_certificate_get_trust (ce);
