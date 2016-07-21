@@ -15,8 +15,9 @@ Check out the [tour of how to install, configure and use astroid](https://github
 * render math using MathJax
 * syntax highlighting between triple-backtick tags (markdown style)
 * [themable and configurable](https://github.com/gauteh/astroid/wiki/Customizing-the-user-interface)
-* built-in crypto (gpg,..) support (in progress).
+* built-in crypto (PGP/MIME) support.
 * editors: [embed vim or emacs](https://github.com/gauteh/astroid/wiki/Customizing-editor) (or anything else that supports XEmbed)
+* python og lua plugins.
 * and more...
 
 ### more screenshots
