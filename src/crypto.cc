@@ -259,7 +259,9 @@ namespace Astroid {
     size_t last_part = 0;
 
     auto add_part = [&] (size_t start, size_t end) {
-      std::string prt = c.substr (start, end - start);
+      if ((start - end) < 1) return;
+
+      std::string prt = c.substr (start, end - start - 1);
 
       GMimeStream * contentStream = g_mime_stream_mem_new_with_buffer(prt.c_str(), prt.size());
       GMimePart * messagePart = g_mime_part_new_with_type ("text", "plain");
@@ -366,8 +368,11 @@ namespace Astroid {
             e = c.find ("\n", e);
             if (e == std::string::npos) e = c.size ()-1;
 
-            b = c.find ("\n", b + 1);
-            std::string prt = c.substr (b, sb - b); 
+            b = c.find ("\n", b + 1); // end of BEGIN PGP SIGNED MESSAGE
+            size_t hb = c.find ("Hash:", b); hb = c.find ("\n", hb); hb = c.find ("\n", hb+1);
+            if (hb != std::string::npos) b = hb;
+
+            std::string prt = c.substr (b, sb - b);
             GMimeMultipart * em = GMIME_MULTIPART(g_mime_multipart_signed_new ());
             g_mime_object_set_content_type_parameter ((GMimeObject *) em, "protocol", "application/pgp-signature");
 
