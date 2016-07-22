@@ -15,9 +15,9 @@ Check out the [tour of how to install, configure and use astroid](https://github
 * render math using MathJax
 * syntax highlighting between triple-backtick tags (markdown style)
 * [themable and configurable](https://github.com/gauteh/astroid/wiki/Customizing-the-user-interface)
-* built-in crypto (PGP/MIME) support.
+* built-in [crypto (PGP/MIME) support](https://github.com/astroidmail/astroid/wiki/Signing%2C-Encrypting-and-Decrypting).
 * editors: [embed vim or emacs](https://github.com/gauteh/astroid/wiki/Customizing-editor) (or anything else that supports XEmbed)
-* python og lua plugins.
+* python og lua [plugins](https://github.com/astroidmail/astroid/wiki/Plugins).
 * and more...
 
 ### more screenshots
