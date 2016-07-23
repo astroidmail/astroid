@@ -181,7 +181,8 @@ namespace Astroid {
           return true;
         });
 
-    keys.register_key ("b", "main_window.next_page",
+    keys.register_key ("l", { "b" },
+        "main_window.next_page",
         "Next page",
         [&] (Key)
         {
@@ -193,7 +194,8 @@ namespace Astroid {
           return true;
         });
 
-    keys.register_key ("B", "main_window.previous_page",
+    keys.register_key ("h", { "B" },
+        "main_window.previous_page",
         "Previous page",
         [&] (Key) {
           if (notebook.get_current_page() == 0)
@@ -254,21 +256,22 @@ namespace Astroid {
         "Jump to page 0",
         bind (&MainWindow::jump_to_page, this, _1, 0));
 
-    keys.register_key ("x", "main_window.close_page",
+    keys.register_key ("C-w", "main_window.close_page",
         "Close mode (or window if other windows are open)",
         [&] (Key) {
           close_page ();
           return true;
         });
 
-    keys.register_key ("X", "main_window.close_page_force",
+    keys.register_key ("C-W", "main_window.close_page_force",
         "Force close mode (or window if other windows are open)",
         [&] (Key) {
           close_page (true);
           return true;
         });
 
-    keys.register_key ("F", "main_window.search",
+    keys.register_key ("o",
+        "main_window.search",
         "Search",
         [&] (Key) {
           enable_command (CommandBar::CommandMode::Search, "", NULL);
@@ -334,7 +337,7 @@ namespace Astroid {
           return true;
         });
 
-    keys.register_key ("O", "main_window.open_new_window",
+    keys.register_key ("C-o", "main_window.open_new_window",
         "Open new main window",
         [&] (Key) {
           astroid->open_new_window ();

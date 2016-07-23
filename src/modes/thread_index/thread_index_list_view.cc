@@ -430,7 +430,7 @@ namespace Astroid {
                              "Toggle spam",
                              bind (&ThreadIndexListView::multi_key_handler, this, MSpam, _1));
 
-    multi_keys.register_key ("l",
+    multi_keys.register_key ("+",
                              "thread_index.multi.tag",
                              "Tag",
                              bind (&ThreadIndexListView::multi_key_handler, this, MTag, _1));
@@ -446,7 +446,7 @@ namespace Astroid {
                              "Toggle marked",
                              bind (&ThreadIndexListView::multi_key_handler, this, MToggle, _1));
 
-    keys->register_key ("+",
+    keys->register_key (";",
           "thread_index.multi",
           "Apply action to marked threads",
           [&] (Key k) {
@@ -823,7 +823,8 @@ namespace Astroid {
           return true;
         });
 
-    keys->register_key ("l", "thread_index.label",
+    keys->register_key ("+",
+        "thread_index.tag",
         "Edit tags for thread",
         [&] (Key) {
           auto thread = get_current_thread ();

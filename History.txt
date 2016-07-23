@@ -40,6 +40,7 @@
 * Modify tags on single message, they are updated in thread-view and
   thread-index.
 
+* Keybindings modified to be more common #171.
 * scss: fix #82: make all variables global.
 * C-d / C-u / Page in thread-index: Page and move cursor in thread
   index.

@@ -93,7 +93,7 @@ namespace Astroid {
           return true;
         });
 
-    keys.register_key ("v", "thread_index.refine_query", "Refine query",
+    keys.register_key ("O", "thread_index.refine_query", "Refine query",
         [&] (Key) {
           if (!invincible) {
             main_window->enable_command (CommandBar::CommandMode::Search,
