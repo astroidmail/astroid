@@ -65,8 +65,10 @@
 @media print {
 
     body {
-        font-size: 12pt !important;
         background-color: white !important;
+    }
+    body, .email {
+        font-size: 11px !important;
     }
     .avatar, .button, .starred {
         display: none !important;
