@@ -91,7 +91,8 @@ namespace Astroid {
     builder->get_widget ("box_message", box_message);
 
     builder->get_widget ("from_combo", from_combo);
-    builder->get_widget ("encryption_combo", encryption_combo);
+    builder->get_widget ("switch_encrypt", switch_encrypt);
+    builder->get_widget ("switch_sign", switch_sign);
     builder->get_widget ("reply_mode_combo", reply_mode_combo);
     builder->get_widget ("fields_revealer", fields_revealer);
     builder->get_widget ("reply_revealer", reply_revealer);
@@ -171,28 +172,7 @@ namespace Astroid {
         sigc::mem_fun (this, &EditMessage::on_from_combo_key_press));
         */
 
-    /* encryption combobox */
-    enc_store = Gtk::ListStore::create (enc_columns);
-    encryption_combo->set_model (enc_store);
 
-    auto row = *(enc_store->append());
-    row[enc_columns.encryption_string] = "None";
-    row[enc_columns.encryption] = Enc_None;
-    row = *(enc_store->append());
-    row[enc_columns.encryption_string] = "Sign";
-    row[enc_columns.encryption] = Enc_Sign;
-    row = *(enc_store->append());
-    row[enc_columns.encryption_string] = "Encrypt";
-    row[enc_columns.encryption] = Enc_Encrypt;
-    row = *(enc_store->append());
-    row[enc_columns.encryption_string] = "Sign and encrypt";
-    row[enc_columns.encryption] = Enc_SignAndEncrypt;
-
-    encryption_combo->set_active (0);
-    encryption_combo->pack_start (enc_columns.encryption_string);
-
-    // TODO: encryption is not yet implemented.
-    encryption_revealer->set_reveal_child (false);
 
     show_all_children ();
 
@@ -208,6 +188,12 @@ namespace Astroid {
     /* editor->start_editor_when_ready = true; */
 
     switch_signature->property_active().signal_changed ().connect (
+        sigc::mem_fun (*this, &EditMessage::switch_signature_set));
+
+    switch_encrypt->property_active().signal_changed ().connect (
+        sigc::mem_fun (*this, &EditMessage::switch_signature_set));
+
+    switch_sign->property_active().signal_changed ().connect (
         sigc::mem_fun (*this, &EditMessage::switch_signature_set));
 
     reset_signature ();
@@ -240,11 +226,10 @@ namespace Astroid {
           ComposeMessage * c = make_message ();
           ustring tmpf = c->write_tmp ();
 
-          main_window->add_mode (new RawMessage (main_window, tmpf.c_str()));
+          main_window->add_mode (new RawMessage (main_window, tmpf.c_str(), true));
+          /* tmp file deleted by RawMessage */
 
           delete c;
-
-          unlink (tmpf.c_str());
 
           return true;
         });
@@ -330,6 +315,37 @@ namespace Astroid {
           if (a->has_signature) {
             switch_signature->set_state (!switch_signature->get_active ());
           }
+          return true;
+        });
+
+    keys.register_key ("E", "edit_message.toggle_encrypt",
+        "Toggle encryption and signature",
+        [&] (Key) {
+
+          auto iter = from_combo->get_active ();
+          if (!iter) {
+            return true;
+          }
+
+          auto row = *iter;
+          Account * a = row[from_columns.account];
+
+          if (a->has_gpg) {
+            if (!switch_encrypt->get_active () && !switch_sign->get_active ()) {
+              switch_encrypt->set_active (false);
+              switch_sign->set_active (true);
+            } else if (!switch_encrypt->get_active() && switch_sign->get_active ()) {
+              switch_encrypt->set_active (true);
+              switch_sign->set_active (true);
+            } else if (switch_encrypt->get_active () && switch_sign->get_active ()) {
+              switch_encrypt->set_active (true);
+              switch_sign->set_active (false);
+            } else  {
+              switch_encrypt->set_active (false);
+              switch_sign->set_active (false);
+            }
+          }
+
           return true;
         });
 
@@ -523,6 +539,13 @@ namespace Astroid {
 
     switch_signature->set_sensitive (a->has_signature);
     switch_signature->set_state (a->has_signature && a->signature_default_on);
+
+    encryption_revealer->set_reveal_child (a->has_gpg);
+    switch_sign->set_sensitive (a->has_gpg);
+    switch_encrypt->set_sensitive (a->has_gpg);
+
+    switch_encrypt->set_state (false);
+    switch_sign->set_state (a->has_gpg && a->always_gpg_sign);
   }
 
 
@@ -535,12 +558,20 @@ namespace Astroid {
   void EditMessage::read_edited_message () {
     /* make message */
     draft_saved = false; // we expect changes to have been made
+    warning_str = "";
+    info_str = "";
 
     ComposeMessage * c = make_message ();
 
     if (c == NULL) {
       log << error << "err: could not make message." << endl;
       return;
+    }
+
+    if (c->encrypt || c->sign) {
+      if (!c->encryption_success) {
+        warning_str = "Failed encrypting: " + UstringUtils::replace (c->encryption_error, "\n", "<br />");
+      }
     }
 
     /* set account selector to from address email */
@@ -669,7 +700,7 @@ namespace Astroid {
 
     if (editor->ready ()) {
 
-      editor->child_focus (Gtk::DIR_TAB_FORWARD);
+      editor->focus ();
 
     } else {
 
@@ -718,10 +749,21 @@ namespace Astroid {
     }
 
     /* load body */
-    editor_toggle (false);
+    editor_toggle (false); // resets warning and info
+
+    info_str = "sending message..";
+    on_tv_ready ();
+
     ComposeMessage * c = make_message ();
 
     if (c == NULL) return false;
+
+    if (c->encrypt || c->sign) {
+      if (!c->encryption_success) {
+        warning_str = "Cannot send, failed encrypting: " + UstringUtils::replace (c->encryption_error, "\n", "<br />");
+        return false;
+      }
+    }
 
     c->message_sent().connect (
         sigc::mem_fun (this, &EditMessage::send_message_finished));
@@ -819,6 +861,11 @@ namespace Astroid {
       c->include_signature = true;
     } else {
       c->include_signature = false;
+    }
+
+    if (c->account->has_gpg) {
+      c->encrypt = switch_encrypt->get_active ();
+      c->sign    = switch_sign->get_active ();
     }
 
     c->build ();

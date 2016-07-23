@@ -86,6 +86,54 @@ namespace Astroid {
     vbox.pack_start (command, false, true, 0);
     vbox.pack_start (notebook, Gtk::PACK_EXPAND_WIDGET, 0);
 
+    /* set up yes-no asker */
+    rev_yes_no = Gtk::manage (new Gtk::Revealer ());
+    rev_yes_no->set_transition_type (Gtk::REVEALER_TRANSITION_TYPE_SLIDE_UP);
+
+    Gtk::Box * rh = Gtk::manage(new Gtk::Box(Gtk::ORIENTATION_HORIZONTAL));
+
+    label_yes_no = Gtk::manage (new Gtk::Label ());
+    rh->pack_start (*label_yes_no, true, true, 5);
+    label_yes_no->set_halign (Gtk::ALIGN_START);
+
+    /* buttons */
+    Gtk::Button * yes = Gtk::manage (new Gtk::Button("_Yes"));
+    Gtk::Button * no  = Gtk::manage (new Gtk::Button("_No"));
+
+    yes->set_use_underline (true);
+    no->set_use_underline (true);
+
+    rh->pack_start (*yes, false, true, 5);
+    rh->pack_start (*no, false, true, 5);
+
+    rev_yes_no->set_margin_top (0);
+    rh->set_margin_bottom (5);
+
+    rev_yes_no->add (*rh);
+    rev_yes_no->set_reveal_child (false);
+    vbox.pack_end (*rev_yes_no, false, true, 0);
+
+    yes->signal_clicked().connect (sigc::mem_fun (this, &MainWindow::on_yes));
+    no->signal_clicked().connect (sigc::mem_fun (this, &MainWindow::on_no));
+
+    /* multi key handler */
+    rev_multi = Gtk::manage (new Gtk::Revealer ());
+    rev_multi->set_transition_type (Gtk::REVEALER_TRANSITION_TYPE_SLIDE_UP);
+
+    Gtk::Box * rh_ = Gtk::manage(new Gtk::Box(Gtk::ORIENTATION_HORIZONTAL));
+
+    label_multi = Gtk::manage (new Gtk::Label ());
+    rh_->pack_start (*label_multi, true, true, 5);
+    label_multi->set_halign (Gtk::ALIGN_START);
+
+    rev_multi->set_margin_top (0);
+    rh->set_margin_bottom (5);
+
+    rev_multi->add (*rh_);
+    rev_multi->set_reveal_child (false);
+    vbox.pack_end (*rev_multi, false, true, 0);
+
+
     add (vbox);
 
     show_all_children ();
@@ -112,26 +160,29 @@ namespace Astroid {
     /* register keys {{{ */
     keys.title = "MainWindow";
 
-    keys.register_key ("q", { Key ("Q") },
+    keys.register_key ("q",
         "main_window.quit_ask",
         "Quit astroid",
-        [&] (Key k) {
-          if (k.key == GDK_KEY_q) {
-            if (astroid->app->get_windows().size () > 1) {
-              /* other windows, just close this one */
-              quit ();
-            } else {
-              Mode * m = (Mode *) notebook.get_children()[notebook.get_current_page ()];
-              m->ask_yes_no ("Really quit?", [&](bool yes){ if (yes) quit (); });
-            }
-          } else if (k.key == GDK_KEY_Q) {
+        [&] (Key) {
+          if (astroid->app->get_windows().size () > 1) {
+            /* other windows, just close this one */
             quit ();
+          } else {
+            ask_yes_no ("Really quit?", [&](bool yes){ if (yes) quit (); });
           }
-
           return true;
         });
 
-    keys.register_key ("b", "main_window.next_page",
+    keys.register_key ("Q",
+        "main_window.quit",
+        "Quit astroid (without asking)",
+        [&] (Key) {
+          quit ();
+          return true;
+        });
+
+    keys.register_key ("l", { "b" },
+        "main_window.next_page",
         "Next page",
         [&] (Key)
         {
@@ -143,7 +194,8 @@ namespace Astroid {
           return true;
         });
 
-    keys.register_key ("B", "main_window.previous_page",
+    keys.register_key ("h", { "B" },
+        "main_window.previous_page",
         "Previous page",
         [&] (Key) {
           if (notebook.get_current_page() == 0)
@@ -204,21 +256,22 @@ namespace Astroid {
         "Jump to page 0",
         bind (&MainWindow::jump_to_page, this, _1, 0));
 
-    keys.register_key ("x", "main_window.close_page",
+    keys.register_key ("C-w", "main_window.close_page",
         "Close mode (or window if other windows are open)",
         [&] (Key) {
           close_page ();
           return true;
         });
 
-    keys.register_key ("X", "main_window.close_page_force",
+    keys.register_key ("C-W", "main_window.close_page_force",
         "Force close mode (or window if other windows are open)",
         [&] (Key) {
           close_page (true);
           return true;
         });
 
-    keys.register_key ("F", "main_window.search",
+    keys.register_key ("o",
+        "main_window.search",
         "Search",
         [&] (Key) {
           enable_command (CommandBar::CommandMode::Search, "", NULL);
@@ -284,7 +337,7 @@ namespace Astroid {
           return true;
         });
 
-    keys.register_key ("O", "main_window.open_new_window",
+    keys.register_key ("C-o", "main_window.open_new_window",
         "Open new main window",
         [&] (Key) {
           astroid->open_new_window ();
@@ -361,12 +414,74 @@ namespace Astroid {
 
   void MainWindow::quit () {
     log << info << "mw: quit." << endl;
+    in_quit = true;
+
     astroid->app->remove_window (*this);
     remove_all_modes ();
     close ();
   }
 
+  void MainWindow::on_yes () {
+    answer_yes_no (true);
+  }
+
+  void MainWindow::on_no () {
+    answer_yes_no (false);
+  }
+
+
+  bool MainWindow::mode_key_handler (GdkEventKey * event) {
+    if (yes_no_waiting) {
+      switch (event->keyval) {
+        case GDK_KEY_Y:
+        case GDK_KEY_y:
+          answer_yes_no (true);
+          return true;
+
+        case GDK_KEY_Escape:
+        case GDK_KEY_N:
+        case GDK_KEY_n:
+          answer_yes_no (false);
+          return true;
+      }
+
+      /* swallow all other keys */
+      return true;
+
+    } else if (multi_waiting) {
+      bool res = false;
+
+      switch (event->keyval) {
+        case GDK_KEY_Escape:
+          {
+            res = true;
+          }
+          break;
+
+        default:
+          {
+            res = multi_keybindings.handle (event);
+          }
+          break;
+      }
+
+      /* close rev */
+      multi_waiting = !res;
+
+      if (res) {
+        rev_multi->set_reveal_child (false);
+        multi_keybindings.clear ();
+      }
+
+      return true; // swallow all keys
+    }
+
+    return false;
+  }
+
   bool MainWindow::on_key_press (GdkEventKey * event) {
+    if (mode_key_handler (event)) return true;
+
     if (is_command) {
       command.command_handle_event (event);
       return true;
@@ -387,18 +502,84 @@ namespace Astroid {
     set_active (n);
   }
 
+  void MainWindow::ask_yes_no (
+      ustring question,
+      std::function <void (bool)> closure)
+  {
+    using std::endl;
+    log << info << "mw: " << question << endl;
+
+    if (yes_no_waiting || multi_waiting) {
+      log << warn << "mw: already waiting for answer to previous question, discarding this one." << endl;
+      return;
+    }
+
+    yes_no_waiting = true;
+    yes_no_closure = closure;
+
+    rev_yes_no->set_reveal_child (true);
+    label_yes_no->set_text (question + " [y/n]");
+  }
+
+  void MainWindow::answer_yes_no (bool yes) {
+    using std::endl;
+    rev_yes_no->set_reveal_child (false);
+
+    if (yes) {
+      log << info << "mw: yes-no: got yes!" << endl;
+    } else {
+      log << info << "mw: yes-no: got no :/" << endl;
+    }
+
+    if (yes_no_waiting) {
+      if (yes_no_closure != NULL) {
+        yes_no_closure (yes);
+      }
+    }
+
+    yes_no_closure = NULL;
+    yes_no_waiting = false;
+  }
+
+  bool MainWindow::multi_key (Keybindings & kb, Key /* k */)
+  {
+    using std::endl;
+    log << info << "mw: starting multi key." << endl;
+
+    if (yes_no_waiting || multi_waiting) {
+      log << warn << "mw: already waiting for answer to previous question, discarding this one." << endl;
+      return true;
+    }
+
+    multi_waiting = true;
+    multi_keybindings = kb;
+
+    rev_multi->set_reveal_child (true);
+    label_multi->set_text (kb.short_help ());
+
+    return true;
+  }
+
   void MainWindow::del_mode (int c) {
     // log << debug << "mw: del mode: " << c << endl;
-    if (c >= 0) {
-      if (c == 0) {
-        set_active (c + 1);
-      } else {
-        set_active (c - 1);
-      }
+    if (notebook.get_n_pages() > 1) {
+      if (c >= 0) {
+        if (c == 0) {
+          set_active (c + 1);
+        } else {
+          set_active (c - 1);
+        }
 
-      notebook.remove_page (c); // this should free the widget (?)
+        ((Mode*) notebook.get_nth_page (c))->pre_close ();
+        notebook.remove_page (c); // this should free the widget (?)
+      } else {
+        log << warn << "mw: attempt to remove negative page" << endl;
+      }
     } else {
-      log << warn << "mw: attempt to remove negative page" << endl;
+      if (!in_quit && astroid->app->get_windows().size () > 1) {
+        log << debug << "mw: other windows available, closing this one." << endl;
+        quit ();
+      }
     }
   }
 

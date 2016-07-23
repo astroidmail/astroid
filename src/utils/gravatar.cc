@@ -38,7 +38,7 @@ namespace Astroid {
     ustring hash = Crypto::get_md5_digest (addr.c_str ());
 
     ustring uri = ustring::compose (
-          "http://www.gravatar.com/avatar/%1?d=%2&s=%3",
+          "https://www.gravatar.com/avatar/%1?d=%2&s=%3",
           hash,
           Gravatar::DefaultStr[def],
           size);

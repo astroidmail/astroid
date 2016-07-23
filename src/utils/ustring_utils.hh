@@ -20,6 +20,8 @@ namespace Astroid {
       static void trim_left (ustring &);
       static void trim_right (ustring &);
       static ustring random_alphanumeric (int);
+      static ustring replace (ustring subject, const ustring& search,
+                          const ustring& replace);
   };
 }
 

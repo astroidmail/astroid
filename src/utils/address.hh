@@ -50,12 +50,13 @@ namespace Astroid {
   class AddressList {
     public:
       AddressList ();
+      AddressList (ustring);
       AddressList (InternetAddressList *);
       AddressList (Address);
-      AddressList (ustring);
 
       std::vector<Address> addresses;
       ustring str ();
+      int size ();
 
       AddressList& operator+= (const Address &);
       AddressList& operator+= (const AddressList &);
@@ -63,6 +64,7 @@ namespace Astroid {
       AddressList  operator+ (const AddressList &) const;
 
       void remove_me ();
+      void remove_duplicates ();
   };
 
 }

@@ -17,6 +17,9 @@
 # include "modes/thread_view/thread_view.hh"
 # include "modes/saved_searches.hh"
 # include "main_window.hh"
+# ifndef DISABLE_PLUGINS
+  # include "plugin/manager.hh"
+# endif
 
 using namespace std;
 
@@ -49,6 +52,10 @@ namespace Astroid {
         sigc::mem_fun (this, &ThreadIndex::on_first_thread_ready));
 
     queryloader.start (query_string);
+
+# ifndef DISABLE_PLUGINS
+    plugins = new PluginManager::ThreadIndexExtension (this);
+# endif
 
     /* register keys {{{ */
     keys.set_prefix ("Thread Index", "thread_index");
@@ -86,7 +93,7 @@ namespace Astroid {
           return true;
         });
 
-    keys.register_key ("v", "thread_index.refine_query", "Refine query",
+    keys.register_key ("O", "thread_index.refine_query", "Refine query",
         [&] (Key) {
           if (!invincible) {
             main_window->enable_command (CommandBar::CommandMode::Search,
@@ -251,6 +258,13 @@ namespace Astroid {
       grab_modal ();
     }
 
+  }
+
+  void ThreadIndex::pre_close () {
+# ifndef DISABLE_PLUGINS
+    plugins->deactivate ();
+    delete plugins;
+# endif
   }
 
   ThreadIndex::~ThreadIndex () {

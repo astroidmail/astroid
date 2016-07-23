@@ -2,6 +2,7 @@
 # include <vector>
 
 # include "astroid.hh"
+# include "log.hh"
 # include "vector_utils.hh"
 # include "ustring_utils.hh"
 # include "utils.hh"
@@ -61,7 +62,9 @@ namespace Astroid {
   ustring VectorUtils::concat_tags_color (
       vector<ustring> tags,
       bool pango,
-      int maxlen ) {
+      int maxlen,
+      unsigned char canvascolor[3]
+      ) {
 
     ustring tag_string = "";
     bool first = true;
@@ -71,10 +74,14 @@ namespace Astroid {
     for (auto t : tags) {
 
       if (!first) {
-        tag_string += " ";
+        if (pango) {
+          tag_string += "<span size=\"xx-small\"> </span>";
+        } else {
+          tag_string += " ";
+        }
       } else first = false;
 
-      auto colors = Utils::get_tag_color (t);
+      auto colors = Utils::get_tag_color (t, canvascolor);
 
       if (maxlen > 0) {
         broken = true;
@@ -97,11 +104,18 @@ namespace Astroid {
                     colors.second );
 
       } else {
+        Gdk::RGBA bg (colors.second.substr (0, 7));
+        bg.set_alpha (Utils::tags_alpha);
+
         tag_string += ustring::compose (
-                    "<span style=\"background-color: %3; color: %1 !important; white-space: pre;\"> %2 </span>",
+                    "<span style=\"background-color: rgba(%3, %4, %5, %6); color: %1 !important; white-space: pre;\"> %2 </span>",
                     colors.first,
                     Glib::Markup::escape_text(t),
-                    colors.second );
+                    bg.get_red () * 255 ,
+                    bg.get_green () * 255 ,
+                    bg.get_blue () * 255,
+                    bg.get_alpha ()
+                    );
       }
     }
 

@@ -192,6 +192,8 @@ citation_depth (const char *in, const char *inend)
 	register const char *inptr = in;
 	int depth = 0;
 
+  if (in >= inend) return 0;
+
 	/* check that it isn't an escaped From line */
 	if (!strncmp (inptr, ">From", 5))
 		return 0;
@@ -373,10 +375,10 @@ html_convert (GMimeFilter *filter, char *in, size_t inlen, size_t prespace,
         }
 
         /* remove '>' */
-        while (*start == '>' && start < inptr) start++;
+        while (start < inptr && *start == '>' ) start++;
 
         /* remove leading space */
-        if (*start == ' ' && start < inptr) start++;
+        if (start < inptr && *start == ' ') start++;
 
       } else if (html->prev_cit_depth > depth) {
 
@@ -388,19 +390,19 @@ html_convert (GMimeFilter *filter, char *in, size_t inlen, size_t prespace,
         }
 
         /* remove '>' */
-        while (*start == '>' && start < inptr) start++;
+        while (start < inptr && *start == '>') start++;
 
         /* remove leading space */
-        if (*start == ' ' && start < inptr) start++;
+        if (start < inptr && *start == ' ') start++;
 
       } else if (depth > 0) {
         /* we are still at the same depth: remove '>' */
-        while (*start == '>' && start < inptr) start++;
+        while (start < inptr && *start == '>') start++;
 
         /* remove leading space */
-        if (*start == ' ' && start < inptr) start++;
+        if (start < inptr && *start == ' ') start++;
 
-			} else if (*start == '>') {
+			} else if (start < inptr && *start == '>') {
 				/* >From line */
 				start++;
 			}

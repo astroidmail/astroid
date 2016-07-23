@@ -2,7 +2,7 @@
 #
 # this uses bear to make compile_commands.json for for SCons
 #
-# https://github.com/gauteh/astroid/issues/14
+# https://github.com/astroidmail/astroid/issues/14
 #
 # run from root source directory.
 

@@ -18,6 +18,8 @@ namespace Astroid {
       void start () override;
       void stop () override;
 
+      void focus () override;
+
     protected:
       EditMessage * em;
 
@@ -30,6 +32,8 @@ namespace Astroid {
 
       bool editor_ready = false;
       bool editor_started = false;
+
+      bool editor_focused = false;
 
       /* socket and server */
       ustring server_name;

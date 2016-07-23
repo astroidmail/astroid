@@ -39,6 +39,8 @@ testEnv.addUnitTest ('test_generic', ['test_generic.cc', source_objs])
 composed_files = Glob('test_composed*.cc')
 testEnv.addUnitTest ('test_composed', [composed_files, source_objs])
 
+testEnv.addUnitTest ('test_crypto', ['test_crypto.cc', source_objs])
+
 testEnv.addUnitTest ('test_non_existant_file', ['test_non_existant_file.cc', source_objs])
 
 testEnv.addUnitTest ('test_open_db', ['test_open_db.cc', source_objs])

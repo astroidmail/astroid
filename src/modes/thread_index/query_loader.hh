@@ -27,7 +27,7 @@ namespace Astroid {
       unsigned int total_messages;
       unsigned int unread_messages;
 
-      void refresh_stats (Db *);
+      void refresh_stats ();
 
       refptr<ThreadIndexListStore> list_store;
       ThreadIndexListView * list_view;
@@ -36,6 +36,10 @@ namespace Astroid {
       std::vector<ustring> sort_strings = { "oldest", "newest", "messageid", "unsorted" };
 
       Glib::Dispatcher first_thread_ready;
+
+      Glib::Dispatcher make_stats;
+      bool waiting_stats = false;
+
       Glib::Dispatcher stats_ready;
 
       bool loading ();

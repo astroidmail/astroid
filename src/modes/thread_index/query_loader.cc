@@ -44,6 +44,9 @@ namespace Astroid {
     queue_has_data.connect (
         sigc::mem_fun (this, &QueryLoader::to_list_adder));
 
+    make_stats.connect (
+        sigc::mem_fun (this, &QueryLoader::refresh_stats));
+
     astroid->actions->signal_thread_changed ().connect (
         sigc::mem_fun (this, &QueryLoader::on_thread_changed));
 
@@ -89,13 +92,14 @@ namespace Astroid {
     reload ();
   }
 
-  void QueryLoader::refresh_stats (Db * db) {
+  void QueryLoader::refresh_stats () {
     log << debug << "ql: refresh stats.." << endl;
+    Db db (Db::DATABASE_READ_ONLY);
 
     notmuch_status_t st = NOTMUCH_STATUS_SUCCESS;
 
-    notmuch_query_t * query_t =  notmuch_query_create (db->nm_db, query.c_str ());
-    for (ustring & t : db->excluded_tags) {
+    notmuch_query_t * query_t =  notmuch_query_create (db.nm_db, query.c_str ());
+    for (ustring & t : db.excluded_tags) {
       notmuch_query_add_tag_exclude (query_t, t.c_str());
     }
     notmuch_query_set_omit_excluded (query_t, NOTMUCH_EXCLUDE_TRUE);
@@ -108,8 +112,8 @@ namespace Astroid {
     notmuch_query_destroy (query_t);
 
     ustring unread_q_s = "(" + query + ") AND tag:unread";
-    notmuch_query_t * unread_q = notmuch_query_create (db->nm_db, unread_q_s.c_str());
-    for (ustring & t : db->excluded_tags) {
+    notmuch_query_t * unread_q = notmuch_query_create (db.nm_db, unread_q_s.c_str());
+    for (ustring & t : db.excluded_tags) {
       notmuch_query_add_tag_exclude (unread_q, t.c_str());
     }
     notmuch_query_set_omit_excluded (unread_q, NOTMUCH_EXCLUDE_TRUE);
@@ -122,16 +126,18 @@ namespace Astroid {
     notmuch_query_destroy (unread_q);
 
     if (!in_destructor) stats_ready.emit ();
+
+    waiting_stats = false;
   }
 
   void QueryLoader::loader () {
     std::lock_guard<std::mutex> loader_lk (loader_m);
 
+    make_stats ();
+
     /* important: we cannot safely output debug info from this thread */
 
     Db db (Db::DATABASE_READ_ONLY);
-
-    refresh_stats (&db);
 
     /* set up query */
     notmuch_query_t * nmquery;
@@ -272,6 +278,7 @@ namespace Astroid {
      */
 
     bool found = false;
+    bool changed = false;
     fwditer = list_store->get_iter ("0");
 
     Gtk::ListStore::Row row;
@@ -309,6 +316,8 @@ namespace Astroid {
         path = list_store->get_path (fwditer);
         list_store->erase (fwditer);
       }
+
+      changed = true;
 
     } else {
       /* thread has possibly been added to the current query */
@@ -351,10 +360,15 @@ namespace Astroid {
             }
           }
         }
+
+        changed = true;
       }
     }
 
-    refresh_stats (db);
+    if (changed && !waiting_stats) {
+      waiting_stats = true;
+      make_stats.emit ();
+    }
   }
 }
 

@@ -1,4 +1,5 @@
 # include <iostream>
+# include <boost/algorithm/string/replace.hpp>
 
 # include "astroid.hh"
 # include "db.hh"
@@ -37,7 +38,19 @@ namespace Astroid {
     ostringstream quoted;
 
     ustring quoting_a = ustring::compose (astroid->config ().get<string> ("mail.reply.quote_line"),
-        Address(msg->sender.raw()).fail_safe_name(), msg->pretty_verbose_date());
+        boost::replace_all_copy (string(Address(msg->sender.raw()).fail_safe_name()), "%", "%%"),
+        boost::replace_all_copy (string(msg->pretty_verbose_date()), "%", "%%"));
+
+
+    /* quote string can also be formatted using date formats:
+     * https://developer.gnome.org/glibmm/stable/classGlib_1_1DateTime.html#a820ed73fbf469a24f86f417540873339
+     *
+     * note that the format specifiers in the docs use a leading '\' this should
+     * be a leading '%'.
+     *
+     */
+    Glib::DateTime dt = Glib::DateTime::create_now_local (msg->received_time);
+    quoting_a = dt.format (quoting_a);
 
     quoted  << quoting_a.raw ()
             << endl;

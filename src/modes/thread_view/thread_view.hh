@@ -12,6 +12,9 @@
 # include "modes/mode.hh"
 # include "message_thread.hh"
 # include "theme.hh"
+# ifndef DISABLE_PLUGINS
+  # include "plugin/manager.hh"
+# endif
 
 # include "web_inspector.hh"
 
@@ -81,6 +84,12 @@ namespace Astroid {
 
       Theme theme;
 
+# ifndef DISABLE_PLUGINS
+      PluginManager::ThreadViewExtension * plugins;
+# endif
+
+      void pre_close () override;
+
     private:
       ThreadViewInspector thread_view_inspector;
 
@@ -127,7 +136,8 @@ namespace Astroid {
             Address,
             Part,
             Attachment,
-            MimeMessage
+            MimeMessage,
+            Encryption,
           };
 
           struct Element {
@@ -177,10 +187,11 @@ namespace Astroid {
 
       bool element_action (ElementAction);
 
-    private:
       /* webkit (using C api) */
       WebKitWebView     * webview;
       WebKitWebSettings * websettings;
+
+    private:
       WebKitDOMHTMLDivElement * container = NULL;
 
       std::atomic<bool> wk_loaded;
@@ -266,6 +277,7 @@ namespace Astroid {
       /* mode */
       virtual void grab_modal () override;
       virtual void release_modal () override;
+      bool on_key_press_event (GdkEventKey *event) override;
 
     private:
       Keybindings multi_keys;

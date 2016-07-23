@@ -80,6 +80,9 @@ namespace Astroid {
     /* searches file */
     std_paths.searches_file = std_paths.config_dir / path("searches");
 
+    /* plugin dir */
+    std_paths.plugin_dir = std_paths.config_dir / path ("plugins");
+
     /* default data */
     char * data = getenv ("XDG_DATA_HOME");
     if (data == NULL) {
@@ -126,6 +129,7 @@ namespace Astroid {
       default_config.put ("accounts.charlie.name", "Charlie Root");
       default_config.put ("accounts.charlie.email", "root@localhost");
       default_config.put ("accounts.charlie.gpgkey", "");
+      default_config.put ("accounts.charlie.always_gpg_sign", false);
       default_config.put ("accounts.charlie.sendmail", "msmtp -t");
       default_config.put ("accounts.charlie.default", true);
       default_config.put ("accounts.charlie.save_sent", false);
@@ -167,6 +171,7 @@ namespace Astroid {
     default_config.put ("thread_index.cell.tags_length", 80);
     default_config.put ("thread_index.cell.tags_upper_color", "#e5e5e5");
     default_config.put ("thread_index.cell.tags_lower_color", "#333333");
+    default_config.put ("thread_index.cell.tags_alpha", "0.5");
     default_config.put ("thread_index.cell.hidden_tags", "attachment,flagged,unread");
 
 
@@ -230,6 +235,7 @@ namespace Astroid {
 
     /* crypto */
     default_config.put ("crypto.gpg.path", "gpg2");
+    default_config.put ("crypto.gpg.always_trust", true);
 
     /* saved searches */
     default_config.put ("saved_searches.show_on_startup", false);
@@ -251,6 +257,7 @@ namespace Astroid {
       log << info << "cf: test config, loading defaults." << endl;
       config = setup_default_config (true);
       config.put ("poll.interval", 0);
+      config.put ("accounts.charlie.gpgkey", "gaute@astroidmail.bar");
       std::string test_nmcfg_path = path(current_path() / path ("test/mail/test_config")).string();
       boost::property_tree::read_ini (test_nmcfg_path, notmuch_config);
       return;
@@ -353,41 +360,54 @@ namespace Astroid {
       log << warn << "config: astroid now reads standard notmuch options from notmuch config, it is configured through: 'astroid.notmuch_config' and is now set to the default: ~/.notmuch-config. please validate!" << endl;
     }
 
-    if (version < 5) {
+    if (version < 6) {
       /* check accounts signature */
       ptree apt = config.get_child ("accounts");
 
       for (auto &kv : apt) {
-        try {
+        if (version < 5) {
+          try {
 
-          ustring sto = kv.second.get<string> ("signature_file");
+            ustring sto = kv.second.get<string> ("signature_file");
 
-        } catch (const boost::property_tree::ptree_bad_path &ex) {
+          } catch (const boost::property_tree::ptree_bad_path &ex) {
 
-          ustring key = ustring::compose ("accounts.%1.signature_file", kv.first);
-          config.put (key.c_str (), "");
+            ustring key = ustring::compose ("accounts.%1.signature_file", kv.first);
+            config.put (key.c_str (), "");
+          }
+
+          try {
+
+            ustring sto = kv.second.get<string> ("signature_default_on");
+
+          } catch (const boost::property_tree::ptree_bad_path &ex) {
+
+            ustring key = ustring::compose ("accounts.%1.signature_default_on", kv.first);
+            config.put (key.c_str (), true);
+          }
+
+          try {
+
+            ustring sto = kv.second.get<string> ("signature_attach");
+
+          } catch (const boost::property_tree::ptree_bad_path &ex) {
+
+            ustring key = ustring::compose ("accounts.%1.signature_attach", kv.first);
+            config.put (key.c_str (), false);
+          }
         }
 
-        try {
+        if (version < 6) {
+          try {
 
-          ustring sto = kv.second.get<string> ("signature_default_on");
+            ustring sto = kv.second.get<string> ("always_gpg_sign");
 
-        } catch (const boost::property_tree::ptree_bad_path &ex) {
+          } catch (const boost::property_tree::ptree_bad_path &ex) {
 
-          ustring key = ustring::compose ("accounts.%1.signature_default_on", kv.first);
-          config.put (key.c_str (), true);
+            ustring key = ustring::compose ("accounts.%1.always_gpg_sign", kv.first);
+            config.put (key.c_str (), false);
+          }
         }
-
-        try {
-
-          ustring sto = kv.second.get<string> ("signature_attach");
-
-        } catch (const boost::property_tree::ptree_bad_path &ex) {
-
-          ustring key = ustring::compose ("accounts.%1.signature_attach", kv.first);
-          config.put (key.c_str (), false);
-        }
-
       }
 
       changed = true;

@@ -18,6 +18,11 @@
 # include "actions/action.hh"
 # include "utils/date_utils.hh"
 # include "utils/utils.hh"
+
+# ifndef DISABLE_PLUGINS
+  # include "plugin/manager.hh"
+# endif
+
 # include "log.hh"
 # include "poll.hh"
 
@@ -56,13 +61,14 @@ namespace Astroid {
     }
 
     /* user agent */
-    user_agent = ustring::compose ("astroid/%1 (https://github.com/gauteh/astroid)", Astroid::version);
+    user_agent = ustring::compose ("astroid/%1 (https://github.com/astroidmail/astroid)", Astroid::version);
 
     /* gmime settings */
     g_mime_init (0); // utf-8 is default
   }
 
   int Astroid::main (int argc, char **argv) {
+
     /* options */
     namespace po = boost::program_options;
     po::options_description desc ("options");
@@ -72,7 +78,14 @@ namespace Astroid {
       ( "new-config,n", "make new default config, then exit")
       ( "test-config,t", "use test config (same as used when tests are run), only makes sense from the source root")
       ( "mailto,m", po::value<ustring>(), "compose mail with mailto url or address")
-      ( "no-auto-poll", "do not poll automatically");
+      ( "no-auto-poll", "do not poll automatically")
+      ( "log,l", po::value<ustring>(), "log to file")
+      ( "append-log,a", "append to log file")
+# ifndef DISABLE_PLUGINS
+      ( "disable-plugins", "disable plugins");
+# else
+      ;
+# endif
 
     po::variables_map vm;
 
@@ -95,6 +108,22 @@ namespace Astroid {
       cout << desc << endl;
       exit (0);
 
+    }
+
+    if (vm.count ("log")) {
+      ustring lfile = vm["log"].as<ustring> ();
+      if (vm.count ("append-log")) {
+        logf.open (lfile, std::ofstream::out | std::ofstream::app);
+      } else {
+        logf.open (lfile, std::ofstream::out);
+      }
+      if (logf.good ()) {
+        log.add_out_stream (&logf);
+        log << info << "logging to: " << lfile << endl;
+      } else {
+        if (logf.is_open ()) logf.close ();
+        log << error << "could not open: " << lfile << " for logging.." << endl;
+      }
     }
 
     /* make new config {{{ */
@@ -140,6 +169,10 @@ namespace Astroid {
 
       no_auto_poll = true;
     }
+
+# ifndef DISABLE_PLUGINS
+    bool disable_plugins = vm.count ("disable-plugins");
+# endif
 
     bool domailto = false;
     ustring mailtourl;
@@ -223,6 +256,11 @@ namespace Astroid {
     /* set up accounts */
     accounts = new AccountManager ();
 
+# ifndef DISABLE_PLUGINS
+    /* set up plugins */
+    plugin_manager = new PluginManager (disable_plugins, in_test ());
+# endif
+
     /* set up contacts */
     //contacts = new Contacts ();
 
@@ -269,6 +307,11 @@ namespace Astroid {
     /* set up accounts */
     accounts = new AccountManager ();
 
+# ifndef DISABLE_PLUGINS
+    /* set up plugins */
+    plugin_manager = new PluginManager (false, true);
+# endif
+
     /* set up contacts */
     //contacts = new Contacts ();
 
@@ -286,6 +329,15 @@ namespace Astroid {
   void Astroid::on_quit () {
     /* clean up and exit */
     SavedSearches::destruct ();
+
+# ifndef DISABLE_PLUGINS
+    if (plugin_manager) delete plugin_manager;
+# endif
+
+    if (logf.is_open()) {
+      log.del_out_stream (&logf);
+      logf.close ();
+    }
 
     log << info << "astroid: goodbye!" << endl;
   }
@@ -311,7 +363,7 @@ namespace Astroid {
 
     if (open_defaults) {
       if (config ("saved_searches").get<bool>("show_on_startup")) {
-        Mode * s = new SavedSearches (mw);
+        Mode * s = (Mode *) new SavedSearches (mw);
         s->invincible = true;
         mw->add_mode (s);
       }

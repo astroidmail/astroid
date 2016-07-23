@@ -1,0 +1,21 @@
+#! /bin/bash
+#
+# example launch script that sets up the GIR path and launches
+# astorid from the source root directory, unbuffered, and logging to
+# ~/.config/astroid/log
+#
+# symlink this to somewhere on your path.
+#
+
+ASTROID_DIR=$(readlink -f $0)
+ASTROID_DIR=$(dirname $ASTROID_DIR)/..
+
+# GIR
+export GI_TYPELIB_PATH=$ASTROID_DIR
+
+pushd $ASTROID_DIR
+
+unbuffer ./astroid -l ~/.config/astroid/log $*
+
+popd
+

@@ -16,11 +16,15 @@
 # include "main_window.hh"
 # include "message_thread.hh"
 # include "chunk.hh"
+# include "crypto.hh"
 # include "db.hh"
 # include "utils/utils.hh"
 # include "utils/address.hh"
 # include "utils/vector_utils.hh"
 # include "utils/gravatar.hh"
+# ifndef DISABLE_PLUGINS
+  # include "plugin/manager.hh"
+# endif
 # include "actions/action.hh"
 # include "actions/tag_action.hh"
 # include "modes/mode.hh"
@@ -177,6 +181,11 @@ namespace Astroid {
 
     show_all_children ();
 
+# ifndef DISABLE_PLUGINS
+    /* load plugins */
+    plugins = new PluginManager::ThreadViewExtension (this);
+# endif
+
     astroid->actions->signal_thread_updated ().connect (
         sigc::mem_fun (this, &ThreadView::on_thread_updated));
   }
@@ -189,7 +198,16 @@ namespace Astroid {
     //g_object_unref (webview); // probably garbage collected since it has a parent widget
     //g_object_unref (websettings);
     if (container) g_object_unref (container);
-  } // }}}
+  }
+
+  void ThreadView::pre_close () {
+# ifndef DISABLE_PLUGINS
+    plugins->deactivate ();
+    delete plugins;
+# endif
+  }
+
+  // }}}
 
   /* navigation requests {{{ */
   extern "C" void ThreadView_resource_request_starting (
@@ -228,10 +246,11 @@ namespace Astroid {
       {
         home_uri,
         "data:image/png;base64",
+        "data:image/jpeg;base64",
       };
 
     if (enable_gravatar) {
-      allowed_uris.push_back ("http://www.gravatar.com/avatar/");
+      allowed_uris.push_back ("https://www.gravatar.com/avatar/");
     }
 
     if (enable_mathjax) {
@@ -242,6 +261,15 @@ namespace Astroid {
       allowed_uris.push_back (code_prettify_uri.substr (0, code_prettify_uri.rfind ("/")));
     }
 
+# ifndef DISABLE_PLUGINS
+    /* get plugin allowed uris */
+    std::vector<ustring> puris = plugins->get_allowed_uris ();
+    if (puris.size() > 0) {
+      log << debug << "tv: plugin allowed uris: " << VectorUtils::concat_tags (puris) << endl;
+      allowed_uris.insert (allowed_uris.end (), puris.begin (), puris.end ());
+    }
+# endif
+
     // TODO: show cid type images and inline-attachments
 
     /* is this request allowed */
@@ -251,6 +279,7 @@ namespace Astroid {
           }) != allowed_uris.end ())
     {
 
+      /* log << debug << "tv: request: allowed: " << uri << endl; */
       return; // yes
 
     } else {
@@ -637,7 +666,20 @@ namespace Astroid {
 
     if (!wk_loaded || !ready) return;
 
-    ustring tags_s = VectorUtils::concat_tags_color (m->tags, false, 0);
+    unsigned char cv[] = { 0xff, 0xff, 0xff };
+
+    ustring tags_s;
+
+# ifndef DISABLE_PLUGINS
+    if (!plugins->format_tags (m->tags, "#ffffff", false, tags_s)) {
+#  endif
+
+      tags_s = VectorUtils::concat_tags_color (m->tags, false, 0, cv);
+
+# ifndef DISABLE_PLUGINS
+    }
+# endif
+
     GError *err;
     ustring mid = "message_" + m->mid;
 
@@ -888,8 +930,16 @@ namespace Astroid {
     }
 
     if (m->in_notmuch) {
-      ustring tags_s = VectorUtils::concat_tags_color (m->tags, false, 0);
+      unsigned char cv[] = { 0xff, 0xff, 0xff };
+      ustring tags_s;
 
+# ifndef DISABLE_PLUGINS
+      if (!plugins->format_tags (m->tags, "#ffffff", false, tags_s)) {
+#  endif
+        tags_s = VectorUtils::concat_tags_color (m->tags, false, 0, cv);
+# ifndef DISABLE_PLUGINS
+      }
+# endif
 
       header += create_header_row ("Tags", tags_s, false, false, true);
 
@@ -904,19 +954,33 @@ namespace Astroid {
     }
 
     /* avatar */
-    if (enable_gravatar) {
+    {
+      ustring uri = "";
       auto se = Address(m->sender);
+# ifdef DISABLE_PLUGINS
+      if (false) {
+# else
+      if (plugins->get_avatar_uri (se.email (), Gravatar::DefaultStr[Gravatar::Default::RETRO], 48, m, uri)) {
+# endif
+        ; // all fine, use plugins avatar
+      } else {
+        if (enable_gravatar) {
+          uri = Gravatar::get_image_uri (se.email (),Gravatar::Default::RETRO , 48);
+        }
+      }
 
-      WebKitDOMHTMLImageElement * av = WEBKIT_DOM_HTML_IMAGE_ELEMENT (
-          DomUtils::select (
-          WEBKIT_DOM_NODE (div_message),
-          ".avatar"));
+      if (!uri.empty ()) {
+        WebKitDOMHTMLImageElement * av = WEBKIT_DOM_HTML_IMAGE_ELEMENT (
+            DomUtils::select (
+            WEBKIT_DOM_NODE (div_message),
+            ".avatar"));
 
-      webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (av), "src",
-          Gravatar::get_image_uri (se.email (), Gravatar::Default::RETRO, 48).c_str()
-          , (err = NULL, &err));
+        webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (av), "src",
+            uri.c_str (),
+            (err = NULL, &err));
 
-      g_object_unref (av);
+        g_object_unref (av);
+      }
     }
 
     /* insert header html*/
@@ -989,7 +1053,7 @@ namespace Astroid {
       /* preview */
       log << debug << "tv: make preview.." << endl;
 
-      ustring bp = m->viewable_text (false);
+      ustring bp = m->viewable_text (false, false);
       if (static_cast<int>(bp.size()) > MAX_PREVIEW_LEN)
         bp = bp.substr(0, MAX_PREVIEW_LEN - 3) + "...";
 
@@ -1080,7 +1144,7 @@ namespace Astroid {
     webkit_dom_element_remove_attribute (WEBKIT_DOM_ELEMENT (body_container),
         "id");
 
-    ustring body = c->viewable_text (true);
+    ustring body = c->viewable_text (true, true);
 
     if (code_is_on) {
       if (message->is_patch ()) {
@@ -1097,6 +1161,197 @@ namespace Astroid {
         body_container,
         body.c_str(),
         (err = NULL, &err));
+
+    /* check encryption */
+    //
+    //  <div id="encrypt_template" class=encrypt_container">
+    //      <div class="message"></div>
+    //  </div>
+    if (c->isencrypted || c->issigned) {
+      WebKitDOMHTMLElement * encrypt_container =
+        DomUtils::clone_select (WEBKIT_DOM_NODE(d), "#encrypt_template");
+
+      webkit_dom_element_remove_attribute (WEBKIT_DOM_ELEMENT (encrypt_container),
+          "id");
+
+      // add to message state
+      MessageState::Element e (MessageState::ElementType::Encryption, c->id);
+      state[message].elements.push_back (e);
+      log << debug << "tv: added encrypt: " << c->id << endl;
+
+      webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (encrypt_container),
+        "id", e.element_id().c_str(),
+        (err = NULL, &err));
+
+      WebKitDOMDOMTokenList * class_list_e =
+        webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(encrypt_container));
+
+
+
+      ustring content = "";
+
+      ustring sign_string = "";
+      ustring enc_string  = "";
+
+      if (c->issigned) {
+
+        Crypto * cr = c->crypt;
+
+        if (cr->verified) {
+          sign_string += "<span class=\"header\">Signature verification succeeded.</span>";
+        } else {
+          sign_string += "<span class=\"header\">Signature verification failed!</span>";
+        }
+
+        for (int i = 0; i < g_mime_signature_list_length (cr->slist); i++) {
+          GMimeSignature * s = g_mime_signature_list_get_signature (cr->slist, i);
+          GMimeCertificate * ce = NULL;
+          if (s) ce = g_mime_signature_get_certificate (s);
+
+          ustring nm, em, ky;
+          ustring gd = "";
+          ustring err = "";
+          if (ce) {
+            const char * c = NULL;
+            nm = (c = g_mime_certificate_get_name (ce), c ? c : "");
+            em = (c = g_mime_certificate_get_email (ce), c ? c : "");
+            ky = (c = g_mime_certificate_get_key_id (ce), c ? c : "");
+
+            switch (g_mime_signature_get_status (s)) {
+              case GMIME_SIGNATURE_STATUS_GOOD:
+                gd = "Good";
+                break;
+
+              case GMIME_SIGNATURE_STATUS_BAD:
+                gd = "Bad";
+                // fall through
+
+              case GMIME_SIGNATURE_STATUS_ERROR:
+                if (gd.empty ()) gd = "Erroneous";
+
+                GMimeSignatureError e = g_mime_signature_get_errors (s);
+                if (e & GMIME_SIGNATURE_ERROR_EXPSIG) err += "expired,";
+                if (e & GMIME_SIGNATURE_ERROR_NO_PUBKEY) err += "no-pub-key,";
+                if (e & GMIME_SIGNATURE_ERROR_EXPKEYSIG) err += "expired-key-sig,";
+                if (e & GMIME_SIGNATURE_ERROR_REVKEYSIG) err += "revoked-key-sig,";
+                if (e & GMIME_SIGNATURE_ERROR_UNSUPP_ALGO) err += "unsupported-algo,";
+                if (!err.empty ()) {
+                  err = err.substr (0, err.size () -1);
+                  err = "[Error: " + err + "]";
+                }
+                break;
+            }
+          } else {
+            err = "[Error: Could not get certificate]";
+          }
+
+          GMimeCertificateTrust t = g_mime_certificate_get_trust (ce);
+          ustring trust = "";
+          switch (t) {
+            case GMIME_CERTIFICATE_TRUST_NONE: trust = "none"; break;
+            case GMIME_CERTIFICATE_TRUST_NEVER: trust = "never"; break;
+            case GMIME_CERTIFICATE_TRUST_UNDEFINED: trust = "undefined"; break;
+            case GMIME_CERTIFICATE_TRUST_MARGINAL: trust = "marginal"; break;
+            case GMIME_CERTIFICATE_TRUST_FULLY: trust = "fully"; break;
+            case GMIME_CERTIFICATE_TRUST_ULTIMATE: trust = "ultimate"; break;
+          }
+
+
+          sign_string += ustring::compose (
+              "<br />%1 signature from: %2 (%3) [0x%4] [trust: %5] %6",
+              gd, nm, em, ky, trust, err);
+
+
+          g_object_unref (ce);
+          g_object_unref (s);
+
+        }
+      }
+
+      if (c->isencrypted) {
+        Crypto * cr = c->crypt;
+
+        if (c->issigned) enc_string = "<span class=\"header\">Signed and Encrypted.</span>";
+        else             enc_string = "<span class=\"header\">Encrypted.</span>";
+
+        if (cr->decrypted) {
+
+          GMimeCertificateList * rlist = cr->rlist;
+          for (int i = 0; i < g_mime_certificate_list_length (rlist); i++) {
+
+            GMimeCertificate * ce = g_mime_certificate_list_get_certificate (rlist, i);
+
+            const char * c = NULL;
+            ustring fp = (c = g_mime_certificate_get_fingerprint (ce), c ? c : "");
+            ustring nm = (c = g_mime_certificate_get_name (ce), c ? c : "");
+            ustring em = (c = g_mime_certificate_get_email (ce), c ? c : "");
+            ustring ky = (c = g_mime_certificate_get_key_id (ce), c ? c : "");
+
+            enc_string += ustring::compose ("<br /> Encrypted for: %1 (%2) [0x%3]",
+                nm, em, ky);
+          }
+
+          if (c->issigned) enc_string += "<br /><br />";
+
+        } else {
+          enc_string += "Encrypted: Failed decryption.";
+        }
+
+      }
+
+      content = enc_string + sign_string;
+
+      WebKitDOMHTMLElement * message_cont =
+        DomUtils::select (WEBKIT_DOM_NODE (encrypt_container), ".message");
+
+      webkit_dom_html_element_set_inner_html (
+          message_cont,
+          content.c_str(),
+          (err = NULL, &err));
+
+
+      webkit_dom_node_append_child (WEBKIT_DOM_NODE (span_body),
+          WEBKIT_DOM_NODE (encrypt_container), (err = NULL, &err));
+
+      /* add encryption tag to encrypted part */
+      WebKitDOMDOMTokenList * class_list =
+        webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(body_container));
+
+      if (c->isencrypted) {
+        webkit_dom_dom_token_list_add (class_list_e, "encrypted",
+            (err = NULL, &err));
+        webkit_dom_dom_token_list_add (class_list, "encrypted",
+            (err = NULL, &err));
+
+        if (!c->crypt->decrypted) {
+          webkit_dom_dom_token_list_add (class_list_e, "decrypt_failed",
+              (err = NULL, &err));
+          webkit_dom_dom_token_list_add (class_list, "decrypt_failed",
+              (err = NULL, &err));
+        }
+      }
+
+      if (c->issigned) {
+        webkit_dom_dom_token_list_add (class_list_e, "signed",
+            (err = NULL, &err));
+
+        webkit_dom_dom_token_list_add (class_list, "signed",
+            (err = NULL, &err));
+
+        if (!c->crypt->verified) {
+          webkit_dom_dom_token_list_add (class_list_e, "verify_failed",
+              (err = NULL, &err));
+          webkit_dom_dom_token_list_add (class_list, "verify_failed",
+              (err = NULL, &err));
+        }
+      }
+
+      g_object_unref (class_list);
+      g_object_unref (class_list_e);
+      g_object_unref (encrypt_container);
+      g_object_unref (message_cont);
+
+    }
 
     webkit_dom_node_append_child (WEBKIT_DOM_NODE (span_body),
         WEBKIT_DOM_NODE (body_container), (err = NULL, &err));
@@ -1208,7 +1463,6 @@ namespace Astroid {
     log << debug << "create sibling part: " << sibling->id << endl;
     //
     //  <div id="sibling_template" class=sibling_container">
-    //      <div class="top_border"></div>
     //      <div class="message"></div>
     //  </div>
 
@@ -1221,7 +1475,7 @@ namespace Astroid {
     webkit_dom_element_remove_attribute (WEBKIT_DOM_ELEMENT (sibling_container),
         "id");
 
-    // add attachment to message state
+    // add to message state
     MessageState::Element e (MessageState::ElementType::Part, sibling->id);
     state[message].elements.push_back (e);
     log << debug << "tv: added sibling: " << state[message].elements.size() << endl;
@@ -1590,6 +1844,25 @@ namespace Astroid {
       webkit_dom_node_append_child (WEBKIT_DOM_NODE (attachment_container),
           WEBKIT_DOM_NODE (attachment_table), (err = NULL, &err));
 
+
+      if (c->issigned || c->isencrypted) {
+        /* add encryption or signed tag to attachment */
+        WebKitDOMDOMTokenList * class_list =
+          webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(attachment_table));
+
+        if (c->isencrypted) {
+          webkit_dom_dom_token_list_add (class_list, "encrypted",
+              (err = NULL, &err));
+        }
+
+        if (c->issigned) {
+          webkit_dom_dom_token_list_add (class_list, "signed",
+              (err = NULL, &err));
+        }
+
+        g_object_unref (class_list);
+      }
+
       g_object_unref (img);
       g_object_unref (info_fname);
       g_object_unref (info_fsize);
@@ -1836,6 +2109,11 @@ namespace Astroid {
 
   /* end rendering }}} */
 
+  bool ThreadView::on_key_press_event (GdkEventKey * event) {
+    if (!ready.load ()) return true;
+    else return Mode::on_key_press_event (event);
+  }
+
   void ThreadView::register_keys () { // {{{
     keys.title = "Thread View";
 
@@ -1966,11 +2244,16 @@ namespace Astroid {
           return false;
         });
 
-    keys.register_key ("o", "thread_view.open",
+    /*
+     *
+     * This can be achieved using Enter
+
+    keys.register_key ("O", "thread_view.open",
         "Open attachment or message",
         [&] (Key) {
           return element_action (EOpen);
         });
+    */
 
     keys.register_key ("e", "thread_view.expand",
         "Toggle expand",
@@ -2168,7 +2451,8 @@ namespace Astroid {
         });
 
 
-    keys.register_key ("C-f", "thread_view.flat",
+    keys.register_key ("C-F",
+        "thread_view.flat",
         "Toggle flat or indented view of messages",
         [&] (Key) {
           indent_messages = !indent_messages;
@@ -2350,7 +2634,7 @@ namespace Astroid {
           return true;
         });
 
-    keys.register_key ("+",
+    keys.register_key (";",
           "thread_view.multi",
           "Apply action to marked threads",
           [&] (Key k) {
@@ -2413,7 +2697,7 @@ namespace Astroid {
           return true;
         });
 
-    keys.register_key ("l",
+    keys.register_key ("+",
         "thread_view.tag_message",
         "Tag message",
         [&] (Key) {
@@ -2466,7 +2750,8 @@ namespace Astroid {
           return true;
         });
 
-    keys.register_key ("/", "thread_view.search.search",
+    keys.register_key ("C-f",
+        "thread_view.search.search",
         "Search for text",
         sigc::mem_fun (this, &ThreadView::search));
 

@@ -1,0 +1,11 @@
+[Plugin]
+Module=threadindexplugin
+Depends=
+Loader=python3
+Name=threadindexplugin
+Description=plugin
+Authors=Gaute Hope
+Copyright=
+Website=
+Help=
+Hidden=false

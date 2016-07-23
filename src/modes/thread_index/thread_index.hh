@@ -9,6 +9,9 @@
 
 # include "modes/paned_mode.hh"
 # include "query_loader.hh"
+# ifndef DISABLE_PLUGINS
+  # include "plugin/manager.hh"
+# endif
 
 namespace Astroid {
 
@@ -32,6 +35,11 @@ namespace Astroid {
       ustring query_string;
 
       virtual ustring get_label () override;
+      void pre_close () override;
+
+# ifndef DISABLE_PLUGINS
+      PluginManager::ThreadIndexExtension * plugins;
+# endif
 
     private:
       void on_stats_ready ();

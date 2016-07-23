@@ -1,6 +1,16 @@
-==
+== v0.6 / 2016-07-23
 
-* Use any editor (general XEmbed support in edit-message window): Emacs works.
+* Use any editor (general XEmbed support in edit-message window): Emacs
+  works.
+
+* Plugins: Python and Lua plugins can now be made, parts of ThreadIndex
+  and ThreadView are exposed allowing extesion of the user interface and
+  advanced customization. Check out the plugins available at GitHub.
+
+* Crypto: GPG encryption and signing is added. Decryption and and
+  signature status is shown in greater detail.
+
+* Repository moved to github.com/astroidmail.
 
 * Thread-view: Search email text using '/'
 
@@ -30,6 +40,7 @@
 * Modify tags on single message, they are updated in thread-view and
   thread-index.
 
+* Keybindings modified to be more common #171.
 * scss: fix #82: make all variables global.
 * C-d / C-u / Page in thread-index: Page and move cursor in thread
   index.
@@ -46,6 +57,8 @@
   addition is made.
 * build: --disable-libsass: do not depend on libsass, but use a sass
   compiler at build time (-scss-compiler=sassc).
+* Quote lines for reply and forward are formatted with
+  Glib::DateTime::format().
 
 == v0.5 / 2016-02-06
 

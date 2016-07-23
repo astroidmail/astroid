@@ -51,6 +51,8 @@ namespace Astroid {
       void set_references (ustring);
 
       bool include_signature = false;
+      bool encrypt = false;
+      bool sign    = false;
 
       struct Attachment {
         public:
@@ -81,6 +83,10 @@ namespace Astroid {
       void send_threaded ();
       ustring write_tmp (); // write message to tmpfile
       void write (ustring); // write message to some file
+
+      /* encryption */
+      bool encryption_success = false;
+      ustring encryption_error = "";
 
     private:
       ustring message_file;

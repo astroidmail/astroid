@@ -2,6 +2,7 @@
 
 # include <vector>
 # include <string>
+# include <fstream>
 
 # include <boost/property_tree/ptree.hpp>
 
@@ -37,6 +38,10 @@ namespace Astroid {
       /* actions */
       ActionManager * actions;
 
+# ifndef DISABLE_PLUGINS
+      PluginManager * plugin_manager;
+# endif
+
       /* poll */
       Poll * poll;
 
@@ -51,6 +56,8 @@ namespace Astroid {
       void on_mailto_activate (const Glib::VariantBase &);
       refptr<Gio::SimpleAction> mailto;
       void send_mailto (MainWindow * mw, ustring);
+
+      std::ofstream logf;
 
       void on_quit ();
   };

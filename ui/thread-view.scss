@@ -1,4 +1,4 @@
-/* ui-version: 2 (do not change when modifying theme for yourself) */
+/* ui-version: 3 (do not change when modifying theme for yourself) */
 /* Variables */
 @if not(global-variable-exists(background-color)) {
   $background-color: #ccc !global;
@@ -52,6 +52,14 @@
 
 @if not(global-variable-exists(focused-solid)) {
   $focused-solid: #4a90d9 !global;
+}
+
+@if not(global-variable-exists(encrypted)) {
+  $encrypted: #99cc66 !global;
+}
+
+@if not(global-variable-exists(signed)) {
+  $signed: #cccc66 !global;
 }
 
 @media print {
@@ -318,7 +326,7 @@ hr {
     image-rendering: optimizeQuality;
 }
 
-.avatar[src^=file], .avatar[src^=http] {
+.avatar[src^=file], .avatar[src^=http], .avatar[src^=data] {
     display: inline;
     width: 48px;
     height: 48px;
@@ -632,6 +640,75 @@ body.nohide .email .compressed_note > span {
 }
 .email > .attachment_container > .attachment .info > :not(.filename) {
     color: #666;
+}
+
+.attachment .encrypted {
+  border: 1px dashed green !important;
+}
+
+.attachment .signed {
+  border: 1px dashed orange !important;
+}
+
+#encrypt_container {
+  display: none;
+}
+
+.email > .email_container > .body > .encrypt_container {
+  display: block;
+  vertical-align: middle;
+  text-align: center;
+  padding-bottom: 5px;
+  padding-top: 5px;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  border: 1px solid black;
+  color: #333333;
+}
+
+.email > .email_container > .body > .encrypt_container > .message > span.header {
+  color: black; 
+  font-weight: bold;
+  margin-bottom: 2px;
+  display: block;
+}
+
+.encrypt_container.encrypted, .encrypt_container.encrypted.signed {
+  background-color: $encrypted;
+}
+
+.encrypt_container.signed {
+  background-color: $signed;
+}
+
+.encrypt_container.verify_failed, .encrypt_container.decrypt_failed {
+  background-color: red;
+}
+
+.body_part.encrypted.decrypt_failed {
+  border-left: 0px;
+}
+
+.body_part.encrypted, .body_part.encrypted.signed {
+  display: block;
+  border-left: 5px solid $encrypted;
+  padding: 10px;
+}
+
+.gpg_error {
+  border-left: 5px solid red;
+  padding-left: 5px;
+  margin-left: 5px;
+}
+
+.body_part.signed.verify_failed {
+  border-left: 0px;
+}
+
+.body_part.signed {
+  display: block;
+  border-left: 5px solid $signed;
+  padding: 10px;
 }
 
 #sibling_container {

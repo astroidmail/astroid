@@ -8,6 +8,7 @@
 # include <gmime/gmime.h>
 
 # include "astroid.hh"
+# include "crypto.hh"
 # include "proto.hh"
 
 namespace Astroid {
@@ -16,7 +17,7 @@ namespace Astroid {
       static std::atomic<uint> nextid;
 
     public:
-      Chunk (GMimeObject *);
+      Chunk (GMimeObject *, bool encrypted = false, bool _signed = false, Crypto * _cr = NULL);
       ~Chunk ();
 
       int id;
@@ -28,7 +29,7 @@ namespace Astroid {
 
       ustring get_content_type ();
 
-      ustring viewable_text (bool);
+      ustring viewable_text (bool, bool verbose = false);
 
       std::vector<refptr<Chunk>> kids;
       std::vector<refptr<Chunk>> siblings;
@@ -43,7 +44,6 @@ namespace Astroid {
       bool mime_message = false;
       bool isencrypted  = false;
       bool issigned     = false;
-      bool signature  = false;
 
       refptr<Message> get_mime_message ();
 
@@ -53,6 +53,8 @@ namespace Astroid {
       };
 
       GMimeContentType * preferred_type = viewable_types["plain"];
+
+      Crypto * crypt = NULL;
 
       /* attachment specific stuff */
       ustring get_filename ();

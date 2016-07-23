@@ -15,6 +15,7 @@ using std::endl;
 namespace Astroid {
   Pango::Color Utils::tags_upper_color;
   Pango::Color Utils::tags_lower_color;
+  float        Utils::tags_alpha;
 
   void Utils::init () {
     ptree ti = astroid->config ("thread_index.cell");
@@ -35,6 +36,9 @@ namespace Astroid {
       tags_lower_color.parse ("#e5e5e5");
     }
 
+    tags_alpha = ti.get<float> ("tags_alpha");
+    if (tags_alpha > 1) tags_alpha = 1;
+    if (tags_alpha < 0) tags_alpha = 0;
   }
 
   ustring Utils::format_size (int sz) {
@@ -62,7 +66,7 @@ namespace Astroid {
     return _f;
   }
 
-  std::pair<ustring, ustring> Utils::get_tag_color (ustring t) {
+  std::pair<ustring, ustring> Utils::get_tag_color (ustring t, unsigned char cv[3]) {
     unsigned char * tc = Crypto::get_md5_digest_char (t);
 
     unsigned char upper[3] = {
@@ -89,7 +93,7 @@ namespace Astroid {
       bg[k] = tc[k] * (upper[k] - lower[k]) + lower[k];
     }
 
-    float lum = (bg[0] * .21 + bg[1] * .72 + bg[2] * .07) / 255.0;
+    float lum = ((bg[0] * tags_alpha + (1-tags_alpha) * cv[0] ) * .2126 + (bg[1] * tags_alpha + (1-tags_alpha) * cv[1]) * .7152 + (bg[2] * tags_alpha + (1-tags_alpha) * cv[0]) * .0722) / 255.0;
     /* float avg = (bg[0] + bg[1] + bg[2]) / (3 * 255.0); */
 
     std::ostringstream bg_str;
@@ -99,6 +103,7 @@ namespace Astroid {
       bg_str << std::hex << std::setfill('0') << std::setw(2) << ((int)bg[k]);
     }
 
+    bg_str << std::hex << std::setfill('0') << std::setw(2) << (int) (tags_alpha * 255);
 
     delete tc;
 

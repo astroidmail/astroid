@@ -14,8 +14,10 @@
 # include "account_manager.hh"
 # include "log.hh"
 # include "chunk.hh"
+# include "crypto.hh"
 # include "actions/action_manager.hh"
 # include "actions/onmessage.hh"
+# include "utils/address.hh"
 
 using namespace std;
 namespace bfs = boost::filesystem;
@@ -232,6 +234,40 @@ namespace Astroid {
 
       g_object_unref(multipart);
     }
+
+    /* encryption */
+    encryption_success = false;
+    encryption_error = "";
+    GError * err = NULL;
+
+    if (encrypt || sign) {
+      GMimeObject * content = g_mime_message_get_mime_part (message);
+
+      Crypto cy ("application/pgp-encrypted");
+
+      if (encrypt) {
+
+        GMimeMultipartEncrypted * e_content = NULL;
+        encryption_success = cy.encrypt (content, sign, account->gpgkey, from, AddressList (to) + AddressList (cc) + AddressList (bcc), &e_content, &err);
+
+        g_mime_message_set_mime_part (message, (GMimeObject *) e_content);
+
+      } else {
+        /* only sign */
+
+        GMimeMultipartSigned * s_content = NULL;
+        encryption_success = cy.sign (content, account->gpgkey, &s_content, &err);
+
+        g_mime_message_set_mime_part (message, (GMimeObject *) s_content);
+      }
+
+      g_object_unref (content);
+
+      if (!encryption_success) {
+        encryption_error = err->message;
+        log << error << "cm: failed encrypting or signing: " << encryption_error << endl;
+      }
+    }
   }
 
   void ComposeMessage::add_attachment (shared_ptr<Attachment> a) {
@@ -327,7 +363,16 @@ namespace Astroid {
   }
 
   ustring ComposeMessage::write_tmp () {
-    char * temporaryFilePath = strdup("/tmp/astroid-compose-XXXXXX");
+    char * temporaryFilePath;
+
+    if (!bfs::is_directory ("/tmp")) {
+      /* this fails if /tmp does not exist, typically in a chroot */
+      log << warn << "cm: /tmp is not a directory, writing tmp files to current directory." << endl;
+      temporaryFilePath = strdup("tmp-astroid-compose-XXXXXX");
+    } else {
+      temporaryFilePath = strdup("/tmp/astroid-compose-XXXXXX");
+    }
+
     int fd = mkstemp(temporaryFilePath);
     message_file = temporaryFilePath;
     free(temporaryFilePath);

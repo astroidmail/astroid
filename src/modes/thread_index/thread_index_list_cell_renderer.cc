@@ -14,21 +14,27 @@
 
 # include <notmuch.h>
 
+# include "thread_index.hh"
 # include "thread_index_list_cell_renderer.hh"
 # include "db.hh"
 # include "utils/utils.hh"
 # include "log.hh"
 # include "crypto.hh"
+# ifndef DISABLE_PLUGINS
+  # include "plugin/manager.hh"
+# endif
 
 using namespace std;
 using boost::property_tree::ptree;
 
 namespace Astroid {
 
-  ThreadIndexListCellRenderer::ThreadIndexListCellRenderer () {
+  ThreadIndexListCellRenderer::ThreadIndexListCellRenderer (ThreadIndex * _ti) {
     ptree ti = astroid->config ("thread_index.cell");
     hidden_tags = VectorUtils::split_and_trim (ti.get<string> ("hidden_tags"), ",");
     std::sort (hidden_tags.begin (), hidden_tags.end ());
+
+    thread_index = _ti;
 
     /* load font settings */
     font_desc_string = ti.get<string> ("font_description");
@@ -298,7 +304,7 @@ namespace Astroid {
       const ::Cairo::RefPtr< ::Cairo::Context>&cr,
       Gtk::Widget &widget,
       const Gdk::Rectangle &cell_area,
-      Gtk::CellRendererState /* flags */ ) {
+      Gtk::CellRendererState flags) {
 
     Glib::RefPtr<Pango::Layout> pango_layout = widget.create_pango_layout ("");
 
@@ -318,7 +324,30 @@ namespace Astroid {
                     hidden_tags.end (),
                     back_inserter(tags));
 
-    ustring tag_string = VectorUtils::concat_tags_color (tags, true, tags_len);
+    ustring tag_string;
+
+    Gdk::Color bg;
+
+    if ((flags & Gtk::CELL_RENDERER_SELECTED) != 0) {
+      bg = Gdk::Color (background_color_selected);
+      cr->set_source_rgb (bg.get_red_p(), bg.get_green_p(), bg.get_blue_p());
+    } else {
+      bg.set_grey_p (1.);
+    }
+
+    /* first try plugin */
+# ifndef DISABLE_PLUGINS
+    if (!thread_index->plugins->format_tags (tags, bg.to_string (), (flags & Gtk::CELL_RENDERER_SELECTED) != 0, tag_string)) {
+# endif
+
+      unsigned char cv[3] = { (unsigned char) bg.get_red (),
+                              (unsigned char) bg.get_green (),
+                              (unsigned char) bg.get_blue () };
+
+      tag_string = VectorUtils::concat_tags_color (tags, true, tags_len, cv);
+# ifndef DISABLE_PLUGINS
+    }
+# endif
 
     pango_layout->set_markup (tag_string);
 

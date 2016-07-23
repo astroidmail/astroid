@@ -128,11 +128,12 @@ namespace Astroid {
 
   void ActionManager::emitter () {
     /* runs on gui thread */
-    std::lock_guard<std::mutex> lk (toemit_m);
     Db db (Db::DATABASE_READ_ONLY);
     while (!toemit.empty ()) {
+      std::unique_lock<std::mutex> lk (toemit_m);
       refptr<Action> a = toemit.front ();
       toemit.pop ();
+      lk.unlock ();
 
       a->emit (&db);
     }
@@ -200,13 +201,15 @@ namespace Astroid {
 
     db->on_message (message_id,
         [&] (notmuch_message_t * nm_msg) {
-          const char * tidc = notmuch_message_get_thread_id (nm_msg);
-          ustring tid;
-          if (tidc != NULL) {
-            tid = ustring(tidc);
+          if (nm_msg != NULL) {
+            const char * tidc = notmuch_message_get_thread_id (nm_msg);
+            ustring tid;
+            if (tidc != NULL) {
+              tid = ustring(tidc);
 
-            emit_thread_changed (db, tid);
+              emit_thread_changed (db, tid);
 
+            }
           }
       });
   }

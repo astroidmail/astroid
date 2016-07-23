@@ -20,6 +20,7 @@ namespace Astroid {
     bfs::path runtime_dir;
     bfs::path config_file;
     bfs::path searches_file;
+    bfs::path plugin_dir;
   };
 
   class Config {
@@ -47,7 +48,7 @@ namespace Astroid {
       ptree config;
       ptree notmuch_config;
 
-      const int CONFIG_VERSION = 5;
+      const int CONFIG_VERSION = 6;
 
     private:
       ptree setup_default_config (bool);
