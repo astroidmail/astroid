@@ -21,7 +21,7 @@ See COPYING.GPL-3.0+
 ------------------------------------------------------------------------
 
 This program includes `src/compose_message.cc`, an adaptation of Ner’s
-`src/compose_view.cc` under [the GPLv3 or any later version](https://github.com/gauteh/astroid/pull/44#issuecomment-215941539).
+`src/compose_view.cc` under [the GPLv3 or any later version](https://github.com/astroidmail/astroid/pull/44#issuecomment-215941539).
 
     Copyright (c) 2010 Michael Forney
 

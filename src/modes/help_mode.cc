@@ -102,7 +102,7 @@ namespace Astroid {
     "\n"
     "Gaute Hope &lt;<a href=\"mailto:eg@gaute.vetsj.com\">eg@gaute.vetsj.com</a>&gt; (c) 2014"
     " (<i>Licenced under the GNU GPL v3</i>)\n"
-    "<a href=\"https://github.com/gauteh/astroid\">https://github.com/gauteh/astroid</a> | <a href=\"mailto:astroidmail@googlegroups.com\">astroidmail@googlegroups.com</a>\n"
+    "<a href=\"https://github.com/astroidmail/astroid\">https://github.com/astroidmail/astroid</a> | <a href=\"mailto:astroidmail@googlegroups.com\">astroidmail@googlegroups.com</a>\n"
     "\n", Astroid::version);
 
     ustring help = header + generate_help (m);
