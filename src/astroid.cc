@@ -327,6 +327,8 @@ namespace Astroid {
   }
 
   void Astroid::on_quit () {
+    log << debug << "astroid: quitting.." << endl;
+
     /* clean up and exit */
     if (actions) actions->close ();
     SavedSearches::destruct ();

@@ -159,6 +159,7 @@ namespace Astroid {
   }
 
   void ActionManager::close () {
+    log << debug << "actions: cleaning up remaining actions.." << endl;
     emit = false;
 
     std::unique_lock<std::mutex> lk (actions_m);
