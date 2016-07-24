@@ -35,6 +35,7 @@ namespace Astroid {
     { GDK_KEY_Escape, "Esc" },
     { GDK_KEY_equal, "Equal" },
     { GDK_KEY_minus, "Minus" },
+    { GDK_KEY_space, "Space" },
   };
 
   std::map<ustring, guint> Keybindings::keynames_to_keyval;

@@ -2244,16 +2244,11 @@ namespace Astroid {
           return false;
         });
 
-    /*
-     *
-     * This can be achieved using Enter
-
-    keys.register_key ("O", "thread_view.open",
+    keys.register_key (Key(GDK_KEY_space), "thread_view.open",
         "Open attachment or message",
         [&] (Key) {
           return element_action (EOpen);
         });
-    */
 
     keys.register_key ("e", "thread_view.expand",
         "Toggle expand",
@@ -2789,121 +2784,119 @@ namespace Astroid {
       return true;
     }
 
-    if (!edit_mode) {
-      if (is_hidden (focused_message)) {
-        if (a == EEnter) {
+    if (!edit_mode && is_hidden (focused_message)) {
+      if (a == EEnter) {
+        toggle_hidden ();
+      } else if (a == ESave) {
+        /* save message to */
+        focused_message->save ();
+      }
+
+    } else {
+      if (state[focused_message].current_element == 0) {
+        if (!edit_mode && a == EEnter) {
+          /* nothing selected, closing message */
           toggle_hidden ();
         } else if (a == ESave) {
           /* save message to */
           focused_message->save ();
         }
-
       } else {
-        if (state[focused_message].current_element == 0) {
-          if (a == EEnter) {
-            /* nothing selected, closing message */
-            toggle_hidden ();
-          } else if (a == ESave) {
-            /* save message to */
-            focused_message->save ();
-          }
-        } else {
-          switch (state[focused_message].elements[state[focused_message].current_element].type) {
-            case MessageState::ElementType::Attachment:
-              {
-                if (a == EEnter || a == EOpen) {
-                  /* open attachment */
+        switch (state[focused_message].elements[state[focused_message].current_element].type) {
+          case MessageState::ElementType::Attachment:
+            {
+              if ((!edit_mode && a == EEnter) || a == EOpen) {
+                /* open attachment */
 
-                  refptr<Chunk> c = focused_message->get_chunk_by_id (
-                      state[focused_message].elements[state[focused_message].current_element].id);
+                refptr<Chunk> c = focused_message->get_chunk_by_id (
+                    state[focused_message].elements[state[focused_message].current_element].id);
 
-                  if (c) {
+                if (c) {
+                  c->open ();
+                } else {
+                  log << error << "tv: could not find chunk for element." << endl;
+                }
+
+              } else if (a == ESave) {
+                /* save attachment */
+                refptr<Chunk> c = focused_message->get_chunk_by_id (
+                    state[focused_message].elements[state[focused_message].current_element].id);
+
+                if (c) {
+                  c->save ();
+                } else {
+                  log << error << "tv: could not find chunk for element." << endl;
+                }
+              }
+            }
+            break;
+          case MessageState::ElementType::Part:
+            {
+              if ((!edit_mode && a == EEnter) || a == EOpen) {
+                /* open part */
+
+                refptr<Chunk> c = focused_message->get_chunk_by_id (
+                    state[focused_message].elements[state[focused_message].current_element].id);
+
+                if (c) {
+                  if (open_html_part_external) {
                     c->open ();
                   } else {
-                    log << error << "tv: could not find chunk for element." << endl;
+                    /* show part internally */
+
+                    display_part (focused_message, c, state[focused_message].elements[state[focused_message].current_element]);
+
                   }
-
-                } else if (a == ESave) {
-                  /* save attachment */
-                  refptr<Chunk> c = focused_message->get_chunk_by_id (
-                      state[focused_message].elements[state[focused_message].current_element].id);
-
-                  if (c) {
-                    c->save ();
-                  } else {
-                    log << error << "tv: could not find chunk for element." << endl;
-                  }
-                }
-              }
-              break;
-            case MessageState::ElementType::Part:
-              {
-                if (a == EEnter || a == EOpen) {
-                  /* open part */
-
-                  refptr<Chunk> c = focused_message->get_chunk_by_id (
-                      state[focused_message].elements[state[focused_message].current_element].id);
-
-                  if (c) {
-                    if (open_html_part_external) {
-                      c->open ();
-                    } else {
-                      /* show part internally */
-
-                      display_part (focused_message, c, state[focused_message].elements[state[focused_message].current_element]);
-
-                    }
-                  } else {
-                    log << error << "tv: could not find chunk for element." << endl;
-                  }
-
-                } else if (a == ESave) {
-                  /* save part */
-                  refptr<Chunk> c = focused_message->get_chunk_by_id (
-                      state[focused_message].elements[state[focused_message].current_element].id);
-
-                  if (c) {
-                    c->save ();
-                  } else {
-                    log << error << "tv: could not find chunk for element." << endl;
-                  }
+                } else {
+                  log << error << "tv: could not find chunk for element." << endl;
                 }
 
-              }
-              break;
+              } else if (a == ESave) {
+                /* save part */
+                refptr<Chunk> c = focused_message->get_chunk_by_id (
+                    state[focused_message].elements[state[focused_message].current_element].id);
 
-            case MessageState::ElementType::MimeMessage:
-              {
-                if (a == EEnter || a == EOpen) {
-                  /* open part */
-                  refptr<Chunk> c = focused_message->get_chunk_by_id (
-                      state[focused_message].elements[state[focused_message].current_element].id);
-
-                  refptr<MessageThread> mt = refptr<MessageThread> (new MessageThread ());
-                  mt->add_message (c);
-
-                  ThreadView * tv = new ThreadView (main_window);
-                  tv->load_message_thread (mt);
-
-                  main_window->add_mode (tv);
-
-                } else if (a == ESave) {
-                  /* save part */
-                  refptr<Chunk> c = focused_message->get_chunk_by_id (
-                      state[focused_message].elements[state[focused_message].current_element].id);
-
-                  if (c) {
-                    c->save ();
-                  } else {
-                    log << error << "tv: could not find chunk for element." << endl;
-                  }
+                if (c) {
+                  c->save ();
+                } else {
+                  log << error << "tv: could not find chunk for element." << endl;
                 }
               }
-              break;
 
-            default:
-              break;
-          }
+            }
+            break;
+
+          case MessageState::ElementType::MimeMessage:
+            {
+              if ((!edit_mode && a == EEnter) || a == EOpen) {
+                /* open part */
+                refptr<Chunk> c = focused_message->get_chunk_by_id (
+                    state[focused_message].elements[state[focused_message].current_element].id);
+
+                refptr<MessageThread> mt = refptr<MessageThread> (new MessageThread ());
+                mt->add_message (c);
+
+                ThreadView * tv = new ThreadView (main_window);
+                tv->load_message_thread (mt);
+
+                main_window->add_mode (tv);
+
+              } else if (a == ESave) {
+                /* save part */
+                refptr<Chunk> c = focused_message->get_chunk_by_id (
+                    state[focused_message].elements[state[focused_message].current_element].id);
+
+                if (c) {
+                  c->save ();
+                } else {
+                  log << error << "tv: could not find chunk for element." << endl;
+                }
+              }
+            }
+            break;
+
+          default:
+            break;
         }
       }
     }
