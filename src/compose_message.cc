@@ -134,7 +134,11 @@ namespace Astroid {
     cto = internet_address_list_to_string (msg.bcc(), false);
     if (cto) set_bcc (cto);
 
+    set_references (msg.references);
+    set_inreplyto (msg.inreplyto);
+
     set_subject (msg.subject);
+
     body << msg.viewable_text (false);
 
   }

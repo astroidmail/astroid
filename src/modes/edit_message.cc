@@ -68,6 +68,9 @@ namespace Astroid {
       add_attachment (new ComposeMessage::Attachment (c));
     }
 
+    inreplyto = msg->inreplyto;
+    references = msg->references;
+
     /* write msg to new tmpfile */
     msg->save_to (tmpfile_path.c_str ());
 
@@ -580,6 +583,8 @@ namespace Astroid {
     to = c->to;
     cc = c->cc;
     bcc = c->bcc;
+    references = c->references;
+    inreplyto = c->inreplyto;
     subject = c->subject;
     body = ustring(c->body.str());
 
