@@ -328,6 +328,7 @@ namespace Astroid {
 
   void Astroid::on_quit () {
     /* clean up and exit */
+    if (actions) actions->close ();
     SavedSearches::destruct ();
 
 # ifndef DISABLE_PLUGINS

@@ -15,11 +15,11 @@ namespace Astroid {
   class ActionManager {
     public:
       ActionManager ();
-      ~ActionManager ();
 
       void doit (refptr<Action>);
       void doit (refptr<Action>, bool);
       void undo ();
+      void close ();
 
     private:
       bool run = false;
@@ -37,6 +37,9 @@ namespace Astroid {
 
       Glib::Dispatcher emit_ready;
       void emitter ();
+
+      /* used when closing: do not emit signals when closing */
+      bool emit = true;
 
     public:
 

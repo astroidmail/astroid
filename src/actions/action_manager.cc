@@ -84,7 +84,7 @@ namespace Astroid {
           doneactions.push_back (a);
         }
 
-        toemit.push (a);
+        if (emit) toemit.push (a);
       }
 
       lk.unlock ();
@@ -128,14 +128,16 @@ namespace Astroid {
 
   void ActionManager::emitter () {
     /* runs on gui thread */
-    Db db (Db::DATABASE_READ_ONLY);
-    while (!toemit.empty ()) {
-      std::unique_lock<std::mutex> lk (toemit_m);
-      refptr<Action> a = toemit.front ();
-      toemit.pop ();
-      lk.unlock ();
+    if (emit) {
+      Db db (Db::DATABASE_READ_ONLY);
+      while (!toemit.empty ()) {
+        std::unique_lock<std::mutex> lk (toemit_m);
+        refptr<Action> a = toemit.front ();
+        toemit.pop ();
+        lk.unlock ();
 
-      a->emit (&db);
+        a->emit (&db);
+      }
     }
   }
 
@@ -156,13 +158,18 @@ namespace Astroid {
     action_worker_t = std::thread (&ActionManager::action_worker, this);
   }
 
-  ActionManager::~ActionManager () {
+  void ActionManager::close () {
+    emit = false;
+
     std::unique_lock<std::mutex> lk (actions_m);
+
+    /* action worker are now waiting after the while (run) */
     run = false;
     lk.unlock ();
     actions_cv.notify_one ();
     action_worker_t.join ();
   }
+
 
   /* signals */
   ActionManager::type_signal_thread_updated
