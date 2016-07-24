@@ -194,42 +194,54 @@ namespace Astroid {
           continue;
         }
 
-        GMimeStream * file_stream;
+        if (a->is_mime_message) {
 
-        if (a->on_disk) {
+          GMimeMessagePart * mp = g_mime_message_part_new_with_message ("rfc822", (GMimeMessage*) a->message);
+          g_mime_multipart_add (multipart, (GMimeObject *) mp);
 
-          file_stream = g_mime_stream_file_new (fopen(a->fname.c_str(), "r"));
+          g_object_unref (mp);
 
         } else {
 
-          file_stream = g_mime_stream_mem_new_with_byte_array (a->contents->gobj());
-          g_mime_stream_mem_set_owner (GMIME_STREAM_MEM (file_stream), false);
+          GMimeStream * file_stream;
 
+          if (a->on_disk) {
+
+            file_stream = g_mime_stream_file_new (fopen(a->fname.c_str(), "r"));
+
+          } else {
+
+            file_stream = g_mime_stream_mem_new_with_byte_array (a->contents->gobj());
+            g_mime_stream_mem_set_owner (GMIME_STREAM_MEM (file_stream), false);
+
+          }
+
+          GMimeDataWrapper * data = g_mime_data_wrapper_new_with_stream (file_stream,
+              GMIME_CONTENT_ENCODING_DEFAULT);
+
+          GMimeContentType * contentType = g_mime_content_type_new_from_string (a->content_type.c_str());
+
+          GMimePart * part =
+            g_mime_part_new_with_type(g_mime_content_type_get_media_type (contentType),
+            g_mime_content_type_get_media_subtype (contentType));
+          g_mime_part_set_content_object (part, data);
+          g_mime_part_set_filename (part, a->name.c_str());
+
+          if (a->dispostion_inline) {
+            g_mime_object_set_disposition (GMIME_OBJECT(part), "inline");
+          } else {
+            g_mime_part_set_content_encoding (part, GMIME_CONTENT_ENCODING_BASE64);
+          }
+
+
+          g_mime_multipart_add (multipart, (GMimeObject*) part);
+
+          g_object_unref (part);
+          g_object_unref (contentType);
+          g_object_unref (file_stream);
+          g_object_unref (data);
         }
 
-        GMimeDataWrapper * data = g_mime_data_wrapper_new_with_stream (file_stream,
-            GMIME_CONTENT_ENCODING_DEFAULT);
-
-        GMimeContentType * contentType = g_mime_content_type_new_from_string (a->content_type.c_str());
-
-        GMimePart * part =
-          g_mime_part_new_with_type(g_mime_content_type_get_media_type (contentType),
-          g_mime_content_type_get_media_subtype (contentType));
-        g_mime_part_set_content_object (part, data);
-        g_mime_part_set_filename (part, a->name.c_str());
-
-        if (a->is_mime_message || a->dispostion_inline) {
-          g_mime_object_set_disposition (GMIME_OBJECT(part), "inline");
-        } else {
-          g_mime_part_set_content_encoding (part, GMIME_CONTENT_ENCODING_BASE64);
-        }
-
-        g_mime_multipart_add (multipart, (GMimeObject*) part);
-
-        g_object_unref (part);
-        g_object_unref (contentType);
-        g_object_unref (file_stream);
-        g_object_unref (data);
       }
 
       g_object_unref(multipart);
@@ -464,14 +476,16 @@ namespace Astroid {
     on_disk = false;
     is_mime_message = true;
 
-    contents = msg->raw_contents ();
     content_type = "message/rfc822";
+    message = (GMimeObject*) msg->message;
+    g_object_ref (message);
 
     valid = true;
   }
 
   ComposeMessage::Attachment::~Attachment () {
     log << debug << "cm: at: deconstruct" << endl;
+    if (message) g_object_unref (message);
   }
 
 }
