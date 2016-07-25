@@ -12,6 +12,9 @@
 * Show pane-focus with blue bar at top, swap focus with M-space. The
   keybinding is now located at 'pane.swap_focus'.
 
+* Add optional drop-down terminal ('|') which has session-persistent
+  working directory. Will silently be disabled if VTE is missing.
+
 == v0.7 / 2017-01-02
 
 * Messages are marked unread after a delay (default 2 sec) in

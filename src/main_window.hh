@@ -7,11 +7,17 @@
 # include <gtkmm/window.h>
 # include <gtkmm/notebook.h>
 
+# include <vte/vte.h>
+
 # include "proto.hh"
 # include "command_bar.hh"
 # include "modes/mode.hh"
 # include "modes/keybindings.hh"
 # include "actions/action_manager.hh"
+
+extern "C" {
+  void mw_on_terminal_child_exit (VteTerminal *, gint, gpointer);
+}
 
 namespace Astroid {
   class Notebook : public Gtk::Notebook {
@@ -45,10 +51,16 @@ namespace Astroid {
       Gtk::Box vbox;
       Notebook notebook;
 
+      typedef enum _active {
+        Window,
+        Command,
+        Terminal,
+      } Active;
+
       /* command bar */
       CommandBar command;
 
-      bool is_command = false;
+      Active active_mode = Window;
       void enable_command (CommandBar::CommandMode, ustring,
           std::function<void(ustring)>);
       void enable_command (CommandBar::CommandMode, ustring, ustring,
@@ -56,6 +68,16 @@ namespace Astroid {
       void disable_command ();
       void on_command_mode_changed ();
 
+      /* terminal */
+      void enable_terminal ();
+      void disable_terminal ();
+      void on_terminal_child_exit (VteTerminal *, gint);
+
+    private:
+      Gtk::Revealer * rev_terminal;
+      GtkWidget *     vte_term;
+
+    public:
       /* actions */
       ActionManager * actions;
 

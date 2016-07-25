@@ -236,6 +236,10 @@ if not conf.CheckPKG('webkitgtk-3.0'):
   print "webkitgtk not found."
   Exit (1)
 
+if not conf.CheckPKG ('vte-2.91'):
+  print ("vte3 not found.")
+  Exit (1)
+
 if not disable_libsass:
   if conf.CheckLibWithHeader ('libsass', 'sass_context.h', 'c'):
     env.AppendUnique (CPPFLAGS = [ '-DSASSCTX_SASS_CONTEXT_H' ])
@@ -303,6 +307,7 @@ env.ParseConfig ('pkg-config --libs --cflags gmime-2.6')
 env.ParseConfig ('pkg-config --libs --cflags webkitgtk-3.0')
 if not disable_libsass:
   env.ParseConfig ('pkg-config --libs --cflags libsass')
+env.ParseConfig ('pkg-config --libs --cflags vte-2.91')
 
 if not conf.CheckLib ('boost_filesystem', language = 'c++'):
   print "boost_filesystem does not seem to be installed."
