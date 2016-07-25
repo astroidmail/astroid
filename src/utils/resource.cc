@@ -14,10 +14,15 @@ namespace Astroid {
     path prefix = path(PREFIX) / path ("share/astroid");
 
     path local_p = def;
-    path prefix_p = prefix / local_p;
+    char * adir = getenv ("ASTROID_DIR");
+    if (adir != NULL) {
+      local_p = path(adir) / def;
+    }
+
+    path prefix_p = prefix / def;
 
     /* if this resource is user-configurable, check there first */
-    path user_p = astroid->standard_paths ().config_dir / local_p;
+    path user_p = astroid->standard_paths ().config_dir / def;
 
     if (astroid->in_test ()) {
       if (!exists (local_p)) {

@@ -8,14 +8,10 @@
 #
 
 ASTROID_DIR=$(readlink -f $0)
-ASTROID_DIR=$(dirname $ASTROID_DIR)/..
+export ASTROID_DIR=$(dirname $ASTROID_DIR)/..
 
 # GIR
 export GI_TYPELIB_PATH=$ASTROID_DIR
 
-pushd $ASTROID_DIR
-
-unbuffer ./astroid -l ~/.config/astroid/log $*
-
-popd
+unbuffer $ASTROID_DIR/astroid -l ~/.config/astroid/log $*
 
