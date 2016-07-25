@@ -1,6 +1,8 @@
 ==
 
 * Open element with 'Space', also in editor.
+* Yank raw or decoded message or element to primary clipboard with 'Y'
+  or 'y', useful for applying patches.
 
 == v0.6 / 2016-07-23
 

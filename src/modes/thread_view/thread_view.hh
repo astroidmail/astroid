@@ -183,6 +183,8 @@ namespace Astroid {
         EOpen,
         ESave,
         EDelete,
+        EYankRaw,
+        EYank,
       } ElementAction;
 
       bool element_action (ElementAction);

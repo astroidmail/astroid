@@ -2772,6 +2772,20 @@ namespace Astroid {
           return true;
         });
 
+    keys.register_key ("y", "thread_view.yank",
+        "Yank current element or message text to primary clipboard",
+        [&] (Key) {
+          element_action (EYank);
+          return true;
+        });
+
+    keys.register_key ("Y", "thread_view.yank_raw",
+        "Yank raw content of current element or message to primary clipboard",
+        [&] (Key) {
+          element_action (EYankRaw);
+          return true;
+        });
+
   }
 
   // }}}
@@ -2800,103 +2814,161 @@ namespace Astroid {
         } else if (a == ESave) {
           /* save message to */
           focused_message->save ();
+        } else if (a == EYankRaw) {
+          auto cp = Gtk::Clipboard::get (GDK_SELECTION_PRIMARY);
+          ustring t;
+
+          auto d = focused_message->raw_contents ();
+          if (d->size () == 0) {
+            t = "";
+          } else {
+            char * dd = (char*) d->get_data ();
+            t = dd;
+          }
+
+          cp->set_text (t);
+
+        } else if (a == EYank) {
+
+          auto cp = Gtk::Clipboard::get (GDK_SELECTION_PRIMARY);
+          ustring t;
+
+          t = focused_message->viewable_text (false, true);
+
+          cp->set_text (t);
         }
+
       } else {
-        switch (state[focused_message].elements[state[focused_message].current_element].type) {
-          case MessageState::ElementType::Attachment:
-            {
-              if ((!edit_mode && a == EEnter) || a == EOpen) {
-                /* open attachment */
+        if (a == EYankRaw) {
 
-                refptr<Chunk> c = focused_message->get_chunk_by_id (
-                    state[focused_message].elements[state[focused_message].current_element].id);
+          refptr<Chunk> c = focused_message->get_chunk_by_id (
+              state[focused_message].elements[state[focused_message].current_element].id);
+          auto cp = Gtk::Clipboard::get (GDK_SELECTION_PRIMARY);
+          ustring t;
 
-                if (c) {
-                  c->open ();
-                } else {
-                  log << error << "tv: could not find chunk for element." << endl;
-                }
+          auto d = c->contents ();
+          if (d->size () == 0) {
+            t = "";
+          } else {
+            char * dd = (char*) d->get_data ();
+            t = dd;
+          }
 
-              } else if (a == ESave) {
-                /* save attachment */
-                refptr<Chunk> c = focused_message->get_chunk_by_id (
-                    state[focused_message].elements[state[focused_message].current_element].id);
+          cp->set_text (t);
 
-                if (c) {
-                  c->save ();
-                } else {
-                  log << error << "tv: could not find chunk for element." << endl;
-                }
-              }
-            }
-            break;
-          case MessageState::ElementType::Part:
-            {
-              if ((!edit_mode && a == EEnter) || a == EOpen) {
-                /* open part */
+        } else if (a == EYank) {
 
-                refptr<Chunk> c = focused_message->get_chunk_by_id (
-                    state[focused_message].elements[state[focused_message].current_element].id);
+          refptr<Chunk> c = focused_message->get_chunk_by_id (
+              state[focused_message].elements[state[focused_message].current_element].id);
+          auto cp = Gtk::Clipboard::get (GDK_SELECTION_PRIMARY);
+          ustring t;
 
-                if (c) {
-                  if (open_html_part_external) {
+          if (c->viewable) {
+            t = c->viewable_text (false, false);
+          } else {
+            log << error << "tv: cannot yank text of non-viewable part" << endl;
+          }
+
+          cp->set_text (t);
+
+        } else {
+
+          switch (state[focused_message].elements[state[focused_message].current_element].type) {
+            case MessageState::ElementType::Attachment:
+              {
+                if ((!edit_mode && a == EEnter) || a == EOpen) {
+                  /* open attachment */
+
+                  refptr<Chunk> c = focused_message->get_chunk_by_id (
+                      state[focused_message].elements[state[focused_message].current_element].id);
+
+                  if (c) {
                     c->open ();
                   } else {
-                    /* show part internally */
-
-                    display_part (focused_message, c, state[focused_message].elements[state[focused_message].current_element]);
-
+                    log << error << "tv: could not find chunk for element." << endl;
                   }
-                } else {
-                  log << error << "tv: could not find chunk for element." << endl;
-                }
 
-              } else if (a == ESave) {
-                /* save part */
-                refptr<Chunk> c = focused_message->get_chunk_by_id (
-                    state[focused_message].elements[state[focused_message].current_element].id);
+                } else if (a == ESave) {
+                  /* save attachment */
+                  refptr<Chunk> c = focused_message->get_chunk_by_id (
+                      state[focused_message].elements[state[focused_message].current_element].id);
 
-                if (c) {
-                  c->save ();
-                } else {
-                  log << error << "tv: could not find chunk for element." << endl;
+                  if (c) {
+                    c->save ();
+                  } else {
+                    log << error << "tv: could not find chunk for element." << endl;
+                  }
                 }
               }
+              break;
+            case MessageState::ElementType::Part:
+              {
+                if ((!edit_mode && a == EEnter) || a == EOpen) {
+                  /* open part */
 
-            }
-            break;
+                  refptr<Chunk> c = focused_message->get_chunk_by_id (
+                      state[focused_message].elements[state[focused_message].current_element].id);
 
-          case MessageState::ElementType::MimeMessage:
-            {
-              if ((!edit_mode && a == EEnter) || a == EOpen) {
-                /* open part */
-                refptr<Chunk> c = focused_message->get_chunk_by_id (
-                    state[focused_message].elements[state[focused_message].current_element].id);
+                  if (c) {
+                    if (open_html_part_external) {
+                      c->open ();
+                    } else {
+                      /* show part internally */
 
-                refptr<MessageThread> mt = refptr<MessageThread> (new MessageThread ());
-                mt->add_message (c);
+                      display_part (focused_message, c, state[focused_message].elements[state[focused_message].current_element]);
 
-                ThreadView * tv = new ThreadView (main_window);
-                tv->load_message_thread (mt);
+                    }
+                  } else {
+                    log << error << "tv: could not find chunk for element." << endl;
+                  }
 
-                main_window->add_mode (tv);
+                } else if (a == ESave) {
+                  /* save part */
+                  refptr<Chunk> c = focused_message->get_chunk_by_id (
+                      state[focused_message].elements[state[focused_message].current_element].id);
 
-              } else if (a == ESave) {
-                /* save part */
-                refptr<Chunk> c = focused_message->get_chunk_by_id (
-                    state[focused_message].elements[state[focused_message].current_element].id);
+                  if (c) {
+                    c->save ();
+                  } else {
+                    log << error << "tv: could not find chunk for element." << endl;
+                  }
+                }
 
-                if (c) {
-                  c->save ();
-                } else {
-                  log << error << "tv: could not find chunk for element." << endl;
+              }
+              break;
+
+            case MessageState::ElementType::MimeMessage:
+              {
+                if ((!edit_mode && a == EEnter) || a == EOpen) {
+                  /* open part */
+                  refptr<Chunk> c = focused_message->get_chunk_by_id (
+                      state[focused_message].elements[state[focused_message].current_element].id);
+
+                  refptr<MessageThread> mt = refptr<MessageThread> (new MessageThread ());
+                  mt->add_message (c);
+
+                  ThreadView * tv = new ThreadView (main_window);
+                  tv->load_message_thread (mt);
+
+                  main_window->add_mode (tv);
+
+                } else if (a == ESave) {
+                  /* save part */
+                  refptr<Chunk> c = focused_message->get_chunk_by_id (
+                      state[focused_message].elements[state[focused_message].current_element].id);
+
+                  if (c) {
+                    c->save ();
+                  } else {
+                    log << error << "tv: could not find chunk for element." << endl;
+                  }
                 }
               }
-            }
-            break;
+              break;
 
-          default:
-            break;
+            default:
+              break;
+          }
         }
       }
     }
