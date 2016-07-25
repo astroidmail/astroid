@@ -4,6 +4,8 @@
 # include <gtkmm/widget.h>
 # include <gtkmm/notebook.h>
 
+# include <vte/vte.h>
+
 # include "astroid.hh"
 # include "poll.hh"
 # include "main_window.hh"
@@ -18,6 +20,12 @@
 # include "actions/action_manager.hh"
 
 using namespace std;
+
+extern "C" {
+  void mw_on_terminal_child_exit (VteTerminal * t, gint a, gpointer mw) {
+    ((Astroid::MainWindow *) mw)->on_terminal_child_exit (t, a);
+  }
+}
 
 namespace Astroid {
   atomic<uint> MainWindow::nextid (0);
@@ -138,6 +146,11 @@ namespace Astroid {
     rev_multi->set_reveal_child (false);
     vbox.pack_end (*rev_multi, false, true, 0);
 
+    /* terminal */
+    rev_terminal = Gtk::manage (new Gtk::Revealer ());
+    rev_terminal->set_transition_type (Gtk::REVEALER_TRANSITION_TYPE_SLIDE_UP);
+    rev_terminal->set_reveal_child (false);
+    vbox.pack_end (*rev_terminal, false, true, 0);
 
     add (vbox);
 
@@ -350,6 +363,13 @@ namespace Astroid {
           return true;
         });
 
+    keys.register_key ("|", "main_window.open_terminal",
+        "Open terminal",
+        [&] (Key) {
+          enable_terminal ();
+          return true;
+        });
+
     // }}}
   }
 
@@ -393,14 +413,14 @@ namespace Astroid {
   void MainWindow::enable_command (CommandBar::CommandMode m, ustring title, ustring cmd, function<void(ustring)> f) {
     ungrab_active ();
     command.enable_command (m, title, cmd, f);
-    is_command = true;
+    active_mode = Command;
     command.add_modal_grab ();
   }
 
   void MainWindow::enable_command (CommandBar::CommandMode m, ustring cmd, function<void(ustring)> f) {
     ungrab_active ();
     command.enable_command (m, cmd, f);
-    is_command = true;
+    active_mode = Command;
     command.add_modal_grab ();
   }
 
@@ -408,7 +428,7 @@ namespace Astroid {
     // hides itself
     command.remove_modal_grab();
     set_active (current);
-    is_command = false;
+    active_mode = Window;
   }
 
   void MainWindow::on_command_mode_changed () {
@@ -416,6 +436,76 @@ namespace Astroid {
       disable_command ();
     }
   }
+
+  /* Terminal {{{ */
+  void MainWindow::enable_terminal () {
+    rev_terminal->set_reveal_child (true);
+    ungrab_active ();
+    active_mode = Terminal;
+
+    vte_term = vte_terminal_new ();
+    gtk_container_add (GTK_CONTAINER(rev_terminal->gobj ()), vte_term);
+    rev_terminal->show_all ();
+
+    GError * err = NULL;
+
+    vte_terminal_set_size (VTE_TERMINAL (vte_term), 1, 10);
+
+    /* start shell */
+    GPid pid;
+    /* GCancellable * c = g_cancellable_new (); */
+
+    char * shell = vte_get_user_shell ();
+
+    char * args[2] = { shell, NULL };
+    char * envs[1] = { NULL };
+
+    LOG (info) << "mw: starting terminal..: " << shell;
+
+    vte_terminal_spawn_sync (VTE_TERMINAL(vte_term),
+        VTE_PTY_DEFAULT,
+        bfs::current_path ().c_str(),
+        args,
+        envs,
+        G_SPAWN_DEFAULT,
+        NULL,
+        NULL,
+        &pid,
+        NULL,
+        (err = NULL, &err));
+
+
+    gtk_widget_grab_focus (vte_term);
+    gtk_grab_add (vte_term);
+
+    if (err) {
+      LOG (error) << "mw: terminal: " << err->message;
+      disable_terminal ();
+    } else {
+      LOG (debug) << "mw: terminal started.";
+      g_signal_connect (vte_term, "child-exited",
+          G_CALLBACK (mw_on_terminal_child_exit),
+          (gpointer) this);
+
+    }
+  }
+
+  void MainWindow::disable_terminal () {
+    LOG (info) << "mw: disabling terminal..";
+    rev_terminal->set_reveal_child (false);
+    set_active (current);
+    active_mode = Window;
+    gtk_grab_remove (vte_term);
+
+    gtk_widget_destroy (vte_term);
+  }
+
+  void MainWindow::on_terminal_child_exit (VteTerminal *, gint) {
+    LOG (info) << "mw: terminal exited.";
+    disable_terminal ();
+  }
+
+  // }}}
 
   void MainWindow::quit () {
     LOG (info) << "mw: quit: " << id;
@@ -485,6 +575,9 @@ namespace Astroid {
       }
 
       return true; // swallow all keys
+
+    } else if (active_mode == Terminal) {
+      return true;
     }
 
     return false;
@@ -493,7 +586,7 @@ namespace Astroid {
   bool MainWindow::on_key_press (GdkEventKey * event) {
     if (mode_key_handler (event)) return true;
 
-    if (is_command) {
+    if (active_mode == Command) {
       command.command_handle_event (event);
       return true;
     }
