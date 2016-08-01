@@ -346,11 +346,12 @@ namespace Astroid {
   }
 
   Astroid::~Astroid () {
-    /* this seems to only be run for tests */
+    /* this is only run for tests */
     delete accounts;
-    //if (contacts != NULL) delete contacts;
     delete m_config;
     delete poll;
+
+    if (actions) actions->close ();
     delete actions;
 
     log.del_out_stream (&cout);
