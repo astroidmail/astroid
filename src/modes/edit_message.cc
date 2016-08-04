@@ -117,13 +117,10 @@ namespace Astroid {
     hostname[1023] = 0;
     gethostname (hostname, 1022);
 
-    int pid = getpid ();
-
     msg_time = time(0);
     ustring _mid = UstringUtils::random_alphanumeric (10);
 
-    _mid = ustring::compose ("%2-astroid-%1-%3-%5@%4", id,
-        msg_time, _mid, hostname, pid);
+    _mid = ustring::compose ("%1.astroid.%2@%3", msg_time, _mid, hostname);
 
     if (msg_id == "") {
       msg_id = _mid;

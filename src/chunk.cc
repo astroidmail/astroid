@@ -436,7 +436,7 @@ namespace Astroid {
     refptr<Glib::ByteArray> cnt = contents ();
     size_t sz = cnt->size ();
 
-    log << info << "chunk: file size: " << sz << " (time used to calculate: " << ( (clock () - t0) * 1000.0 / CLOCKS_PER_SEC ) << " ms.)" << std::endl;
+    log << info << "chunk: file size: " << sz << " (time used to calculate: " << ( (clock () - t0) * 1000.0 / CLOCKS_PER_SEC ) << " s.)" << std::endl;
 
     return sz;
   }
@@ -470,7 +470,7 @@ namespace Astroid {
 
     g_object_unref (mem);
 
-    log << info << "chunk: contents: loaded " << data->size () << " bytes in " << ( (clock () - t0) * 1000.0 / CLOCKS_PER_SEC ) << " ms." << std::endl;
+    log << info << "chunk: contents: loaded " << data->size () << " bytes in " << ( (clock () - t0) * 1000.0 / CLOCKS_PER_SEC ) << " s." << std::endl;
 
     return data;
   }
