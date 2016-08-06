@@ -883,11 +883,6 @@ namespace Astroid {
 
     log << info << "em: tmpfile: " << tmpfile_path << endl;
 
-    if (!is_directory(astroid->standard_paths ().runtime_dir)) {
-      log << warn << "em: making runtime dir.." << endl;
-      create_directories (astroid->standard_paths ().runtime_dir);
-    }
-
     if (is_regular_file (tmpfile_path)) {
       log << error << "em: error: tmpfile already exists!" << endl;
       throw runtime_error ("em: tmpfile already exists!");
