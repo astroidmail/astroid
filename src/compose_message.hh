@@ -28,7 +28,7 @@ namespace Astroid {
 
   typedef std::unique_ptr<void, GLibDeleter> GLibPointer;
 
-  class ComposeMessage {
+  class ComposeMessage : public sigc::trackable {
     public:
       ComposeMessage  ();
       ~ComposeMessage ();
@@ -82,6 +82,7 @@ namespace Astroid {
       void finalize (); // call before sending
       bool send (bool = true);
       void send_threaded ();
+      bool cancel_sending ();
       ustring write_tmp (); // write message to tmpfile
       void write (ustring); // write message to some file
 
@@ -93,6 +94,17 @@ namespace Astroid {
       ustring message_file;
       bfs::path save_to;
       bool      dryrun;
+
+      /* sendmail process */
+      int pid;
+      int stdin;
+      int stdout;
+      int stderr;
+      refptr<Glib::IOChannel> ch_stdout;
+      refptr<Glib::IOChannel> ch_stderr;
+
+      bool log_out (Glib::IOCondition);
+      bool log_err (Glib::IOCondition);
 
     public:
       /* message sent */

@@ -238,6 +238,16 @@ namespace Astroid {
           return true;
         });
 
+    keys.register_key ("C-c", "edit_message.cancel",
+        "Cancel sending message (unreliable)",
+        [&] (Key) {
+          if (!message_sent && sending_in_progress.load ()) {
+            sending_message->cancel_sending ();
+          }
+
+          return true;
+        });
+
     keys.register_key ("V", "edit_message.view_raw",
         "View raw message",
         [&] (Key) {

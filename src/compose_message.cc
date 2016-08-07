@@ -1,5 +1,6 @@
 # include <iostream>
 # include <sys/time.h>
+# include <sys/wait.h>
 
 # include <boost/filesystem.hpp>
 # include <gmime/gmime.h>
@@ -308,6 +309,22 @@ namespace Astroid {
     attachments.push_back (a);
   }
 
+  bool ComposeMessage::cancel_sending () {
+    if (pid > 0) {
+      log << warn << "cm: cancel sendmail pid: " << pid << endl;
+
+      int r = kill (pid, SIGKILL);
+
+      if (r == 0) {
+        log << warn << "cm: sendmail killed." << endl;
+      } else {
+        log << error << "cm: could not kill sendmail." << endl;
+      }
+    }
+
+    return true;
+  }
+
   void ComposeMessage::send_threaded ()
   {
     log << info << "cm: sending (threaded).." << endl;
@@ -326,16 +343,50 @@ namespace Astroid {
         log << warn << "cm: sending message from account: " << account->full_address () << endl;
 
       ustring send_command = account->sendmail;
+      vector<string> args = Glib::shell_parse_argv (send_command);
+      try {
+        Glib::spawn_async_with_pipes ("",
+                          args,
+                          Glib::SPAWN_DO_NOT_REAP_CHILD |
+                          Glib::SPAWN_SEARCH_PATH,
+                          sigc::slot <void> (),
+                          &pid,
+                          &stdin,
+                          &stdout,
+                          &stderr
+                          );
+      } catch (Glib::SpawnError &ex) {
+        if (output)
+          log << error << "cm: could not send message!" << endl;
+        message_sent_result = false;
+        d_message_sent ();
+        pid = 0;
+        return false;
+      }
 
-      FILE * sendMailPipe = popen(send_command.c_str(), "w");
+      /* connect channels */
+      Glib::signal_io().connect (sigc::mem_fun (this, &ComposeMessage::log_out), stdout, Glib::IO_IN | Glib::IO_HUP);
+      Glib::signal_io().connect (sigc::mem_fun (this, &ComposeMessage::log_err), stderr, Glib::IO_IN | Glib::IO_HUP);
+
+      ch_stdout = Glib::IOChannel::create_from_fd (stdout);
+      ch_stderr = Glib::IOChannel::create_from_fd (stderr);
+
+      FILE * sendMailPipe = fdopen (stdin, "w");
+
+      /* write message to sendmail */
       GMimeStream * sendMailStream = g_mime_stream_file_new(sendMailPipe);
       g_mime_stream_file_set_owner(GMIME_STREAM_FILE(sendMailStream), false);
       g_mime_object_write_to_stream(GMIME_OBJECT(message), sendMailStream);
       g_mime_stream_flush (sendMailStream);
 
       g_object_unref(sendMailStream);
+      fclose (sendMailPipe);
 
-      int status = pclose(sendMailPipe);
+      /* wait for sendmail to finish */
+
+      int status;
+      waitpid (pid, &status, 0);
+      g_spawn_close_pid (pid);
 
       if (status == 0)
       {
@@ -351,6 +402,7 @@ namespace Astroid {
           write (save_to.c_str());
         }
 
+        pid = 0;
         message_sent_result = true;
         d_message_sent ();
         return true;
@@ -360,6 +412,7 @@ namespace Astroid {
           log << error << "cm: could not send message!" << endl;
         message_sent_result = false;
         d_message_sent ();
+        pid = 0;
         return false;
       }
     } else {
@@ -370,8 +423,48 @@ namespace Astroid {
       write (fname);
       message_sent_result = false;
       d_message_sent ();
+      pid = 0;
       return false;
     }
+  }
+
+  bool ComposeMessage::log_out (Glib::IOCondition cond) {
+    if (cond == Glib::IO_HUP) {
+      ch_stdout.clear();
+      return false;
+    }
+
+    if ((cond & Glib::IO_IN) == 0) {
+      log << error << "cm: invalid fifo response" << endl;
+    } else {
+      Glib::ustring buf;
+
+      ch_stdout->read_line(buf);
+      if (*(--buf.end()) == '\n') buf.erase (--buf.end());
+
+      log << debug << "sendmail: " << buf << endl;
+
+    }
+    return true;
+  }
+
+  bool ComposeMessage::log_err (Glib::IOCondition cond) {
+    if (cond == Glib::IO_HUP) {
+      ch_stderr.clear();
+      return false;
+    }
+
+    if ((cond & Glib::IO_IN) == 0) {
+      log << error << "cm: invalid fifo response" << endl;
+    } else {
+      Glib::ustring buf;
+
+      ch_stderr->read_line(buf);
+      if (*(--buf.end()) == '\n') buf.erase (--buf.end());
+
+      log << warn << "sendmail: " << buf << endl;
+    }
+    return true;
   }
 
   /* signals */
