@@ -71,7 +71,9 @@ namespace Astroid {
     }
     grd_s.unlock ();
 
+
     unique_lock<mutex> grd (m_lines);
+    bool emit = lines.empty (); // avoid sending too many d_flush ()'es
     lines.push (LogLine (_next_level, time_str.str (), _next_line.str()));
 
     _next_line.str (string());
@@ -79,12 +81,12 @@ namespace Astroid {
 
 
     grd.unlock ();
-    d_flush (); // flush lines to log views
 
     // locked once in <<LogLevel and once in <<endl
     m_log.unlock ();
     m_log.unlock ();
 
+    if (emit) d_flush.emit (); // flush lines to log views
     return *this;
   }
 
