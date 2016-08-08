@@ -849,7 +849,7 @@ namespace Astroid {
       fields_show ();
 
       pixbuf = theme->load_icon (
-         "error",
+         "dialog-error",
           Notebook::icon_size,
           Gtk::ICON_LOOKUP_USE_BUILTIN | Gtk::ICON_LOOKUP_FORCE_SIZE);
     }
