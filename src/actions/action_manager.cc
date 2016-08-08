@@ -129,13 +129,14 @@ namespace Astroid {
   void ActionManager::emitter () {
     /* runs on gui thread */
     if (emit) {
-      Db db (Db::DATABASE_READ_ONLY);
       while (!toemit.empty ()) {
         std::unique_lock<std::mutex> lk (toemit_m);
+
         refptr<Action> a = toemit.front ();
         toemit.pop ();
         lk.unlock ();
 
+        Db db (Db::DATABASE_READ_ONLY);
         a->emit (&db);
       }
     }
