@@ -28,12 +28,17 @@ namespace Astroid {
 
     set_action_widget (&icons, Gtk::PACK_END);
     icons.show_all ();
-    icon_size = icons.get_height ();
 
     astroid->poll->signal_poll_state ().connect (
         sigc::mem_fun (this, &Notebook::poll_state_changed));
+    signal_size_allocate ().connect (
+        sigc::mem_fun (this, &Notebook::on_my_size_allocate));
 
     poll_state_changed (astroid->poll->get_poll_state());
+  }
+
+  void Notebook::on_my_size_allocate (Gtk::Allocation &) {
+    icon_size = icons.get_height ();
   }
 
   void Notebook::poll_state_changed (bool state) {

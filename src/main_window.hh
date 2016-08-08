@@ -30,6 +30,8 @@ namespace Astroid {
       bool spinner_on = false;
 
       void poll_state_changed (bool);
+
+      void on_my_size_allocate (Gtk::Allocation &);
   };
 
   class MainWindow : public Gtk::Window {
