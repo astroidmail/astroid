@@ -2786,6 +2786,17 @@ namespace Astroid {
           return true;
         });
 
+    keys.register_key ("C-y", "thread_view.yank_mid",
+        "Yank the Message-ID of the focused message to primary clipboard",
+        [&] (Key) {
+          auto cp = Gtk::Clipboard::get (GDK_SELECTION_PRIMARY);
+          cp->set_text (focused_message->mid);
+
+          log << info << "tv: " << focused_message->mid << " copied to primary clipboard." << endl;
+
+          return true;
+        });
+
   }
 
   // }}}
