@@ -95,3 +95,42 @@ astroid_activatable_update_state (AstroidActivatable * activatable)
 		iface->update_state (activatable);
 }
 
+/**
+ * astroid_activatable_get_user_agent:
+ * @activatable: A #AstroidActivatable.
+ *
+ * Returns: (transfer none): A #string.
+ */
+const char *
+astroid_activatable_get_user_agent (AstroidActivatable * activatable)
+{
+	AstroidActivatableInterface *iface;
+
+	if (!ASTROID_IS_ACTIVATABLE (activatable)) return NULL;
+
+	iface = ASTROID_ACTIVATABLE_GET_IFACE (activatable);
+	if (iface->get_user_agent)
+		return iface->get_user_agent (activatable);
+
+  return NULL;
+}
+
+/**
+ * astroid_activatable_generate_mid:
+ * @activatable: A #AstroidActivatable.
+ *
+ * Returns: (transfer none): A #string.
+ */
+const char *
+astroid_activatable_generate_mid (AstroidActivatable * activatable)
+{
+	AstroidActivatableInterface *iface;
+
+	if (!ASTROID_IS_ACTIVATABLE (activatable)) return NULL;
+
+	iface = ASTROID_ACTIVATABLE_GET_IFACE (activatable);
+	if (iface->generate_mid)
+		return iface->generate_mid (activatable);
+
+  return NULL;
+}

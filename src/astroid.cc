@@ -259,6 +259,7 @@ namespace Astroid {
 # ifndef DISABLE_PLUGINS
     /* set up plugins */
     plugin_manager = new PluginManager (disable_plugins, in_test ());
+    plugin_manager->astroid_extension = new PluginManager::AstroidExtension (this);
 # endif
 
     /* set up contacts */
@@ -334,6 +335,7 @@ namespace Astroid {
     SavedSearches::destruct ();
 
 # ifndef DISABLE_PLUGINS
+    if (plugin_manager->astroid_extension) delete plugin_manager->astroid_extension;
     if (plugin_manager) delete plugin_manager;
 # endif
 

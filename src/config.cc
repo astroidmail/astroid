@@ -189,7 +189,7 @@ namespace Astroid {
     default_config.put ("mail.sent_tags", "sent");
     default_config.put ("mail.message_id_fqdn", ""); // custom fqdn for the message id: default: local hostname
     default_config.put ("mail.message_id_user", ""); // custom user for the message id: default: 'astroid'
-    default_config.put ("mail.send_user_agent", false);
+    default_config.put ("mail.user_agent", "default");
 
     /* polling */
     default_config.put ("poll.interval", Poll::DEFAULT_POLL_INTERVAL); // seconds

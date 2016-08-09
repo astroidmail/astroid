@@ -8,7 +8,8 @@
 
 * Make id:Message-ID urls clickable.
 
-* Make Message-ID customizable, and User-Agent optional.
+* Make Message-ID customizable, and User-Agent optional. These may also
+  be customized with a plugin.
 
 == v0.6 / 2016-07-23
 

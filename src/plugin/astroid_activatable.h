@@ -24,6 +24,9 @@ struct _AstroidActivatableInterface
 	void (*deactivate) (AstroidActivatable * activatable);
 	void (*update_state) (AstroidActivatable * activatable);
 
+  const char * (*get_user_agent) (AstroidActivatable * activatable);
+  const char * (*generate_mid) (AstroidActivatable * activatable);
+
 };
 
 GType astroid_activatable_get_type (void) G_GNUC_CONST;
@@ -33,6 +36,9 @@ void astroid_activatable_activate (AstroidActivatable *activatable);
 void astroid_activatable_deactivate (AstroidActivatable *activatable);
 
 void astroid_activatable_update_state (AstroidActivatable *activatable);
+
+const char * astroid_activatable_get_user_agent (AstroidActivatable * activatable);
+const char * astroid_activatable_generate_mid (AstroidActivatable * activatable);
 
 G_END_DECLS
 

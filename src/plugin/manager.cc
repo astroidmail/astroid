@@ -68,20 +68,10 @@ namespace Astroid {
     log << debug << "plugin: adding path: " << plugin_dir.c_str () << endl;
     peas_engine_prepend_search_path (engine, plugin_dir.c_str (), NULL);
 
-    astroid_extensions = peas_extension_set_new (engine, ASTROID_TYPE_ACTIVATABLE, NULL);
-
     refresh ();
   }
 
   PluginManager::~PluginManager () {
-    if (!disabled) {
-      log << debug << "plugins: uninit." << endl;
-      for (PeasPluginInfo * p : astroid_plugins) {
-        PeasExtension * pe = peas_extension_set_get_extension (astroid_extensions, p);
-        astroid_activatable_deactivate (ASTROID_ACTIVATABLE(pe));
-
-      }
-    }
   }
 
   void PluginManager::refresh () {
@@ -109,17 +99,9 @@ namespace Astroid {
         /* a plugin might implement more than one extension */
 
         if (peas_engine_provides_extension (engine, p, ASTROID_TYPE_ACTIVATABLE)) {
-          PeasExtension * pe = peas_extension_set_get_extension (astroid_extensions, p);
+          log << debug << "plugins: registering astroid plugin.." << endl;
 
-          /* start all astroidactivatable plugins directly */
-          if (ASTROID_IS_ACTIVATABLE (pe)) {
-
-            log << debug << "plugins: activating main plugins.." << endl;
-            astroid_activatable_activate (ASTROID_ACTIVATABLE(pe));
-
-            astroid_plugins.push_back (p);
-          }
-
+          astroid_plugins.push_back (p);
           found = true;
         }
 
@@ -153,13 +135,85 @@ namespace Astroid {
    * ********************/
   PluginManager::Extension::Extension () {
     engine        = astroid->plugin_manager->engine;
-
   }
 
   PluginManager::Extension::~Extension () {
     /* make sure all extensions have been deactivated in subclass destructor */
     log << debug << "extension: destruct." << endl;
     if (extensions) g_object_unref (extensions);
+  }
+
+  /* ********************
+   * AstroidExtension
+   * ********************/
+  PluginManager::AstroidExtension::AstroidExtension (Astroid * a) {
+    astroid = a;
+
+    if (astroid->plugin_manager->disabled) return;
+
+    /* loading extensions for each plugin */
+    extensions = peas_extension_set_new (engine, ASTROID_TYPE_ACTIVATABLE, NULL);
+
+    for ( PeasPluginInfo *p : astroid->plugin_manager->astroid_plugins) {
+
+      log << debug << "plugins: activating astroid plugin: " << peas_plugin_info_get_name (p) << endl;
+
+      PeasExtension * pe = peas_extension_set_get_extension (extensions, p);
+
+      if (ASTROID_IS_ACTIVATABLE( pe)) {
+        astroid_activatable_activate (ASTROID_ACTIVATABLE(pe));
+      }
+    }
+
+    active = true;
+  }
+
+  void PluginManager::AstroidExtension::deactivate () {
+    active = false;
+
+    for ( PeasPluginInfo *p : astroid->plugin_manager->astroid_plugins) {
+
+      log << debug << "plugins: deactivating: " << peas_plugin_info_get_name (p) << endl;
+      PeasExtension * pe = peas_extension_set_get_extension (extensions, p);
+
+      if (ASTROID_IS_ACTIVATABLE( pe)) {
+        astroid_activatable_deactivate (ASTROID_ACTIVATABLE(pe));
+      }
+    }
+  }
+
+  bool PluginManager::AstroidExtension::get_user_agent (ustring &out) {
+    if (!active || astroid->plugin_manager->disabled) return false;
+
+    for (PeasPluginInfo * p : astroid->plugin_manager->astroid_plugins) {
+      PeasExtension * pe = peas_extension_set_get_extension (extensions, p);
+
+      const char * ua = astroid_activatable_get_user_agent (ASTROID_ACTIVATABLE(pe));
+
+      if (ua != NULL) {
+        out = ustring (ua);
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  bool PluginManager::AstroidExtension::generate_mid (ustring &out) {
+    if (!active || astroid->plugin_manager->disabled) return false;
+
+    for (PeasPluginInfo * p : astroid->plugin_manager->astroid_plugins) {
+      PeasExtension * pe = peas_extension_set_get_extension (extensions, p);
+
+      const char * ua = astroid_activatable_generate_mid (ASTROID_ACTIVATABLE(pe));
+
+      if (ua != NULL) {
+        out = ustring (ua);
+        return true;
+      }
+    }
+
+    return false;
   }
 
   /* ********************

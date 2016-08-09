@@ -18,6 +18,8 @@
 # include "actions/action_manager.hh"
 # include "actions/onmessage.hh"
 # include "utils/address.hh"
+# include "utils/ustring_utils.hh"
+# include "plugin/manager.hh"
 
 using namespace std;
 namespace bfs = boost::filesystem;
@@ -156,8 +158,22 @@ namespace Astroid {
     */
 
     /* set user agent */
-    if (astroid->config ().get<bool> ("mail.send_user_agent")) {
-      g_mime_object_set_header (GMIME_OBJECT(message), "User-Agent", astroid->user_agent.c_str());
+    ustring ua = "";
+
+# ifndef DISABLE_PLUGINS
+    if (!astroid->plugin_manager->astroid_extension->get_user_agent (ua)) {
+# endif
+
+      ua = astroid->config ().get<string> ("mail.user_agent");
+      UstringUtils::trim (ua);
+
+      if (ua == "default") ua = astroid->user_agent;
+# ifndef DISABLE_PLUGINS
+    }
+# endif
+
+    if (!ua.empty ()) {
+      g_mime_object_set_header (GMIME_OBJECT(message), "User-Agent", ua.c_str());
     }
 
 

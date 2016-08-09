@@ -15,7 +15,6 @@ namespace Astroid {
       void refresh ();
 
       PeasEngine * engine;
-      PeasExtensionSet * astroid_extensions;
 
       std::vector<PeasPluginInfo *>  astroid_plugins;
       std::vector<PeasPluginInfo *>  thread_index_plugins;
@@ -33,6 +32,21 @@ namespace Astroid {
 
           virtual void deactivate () = 0;
       };
+
+      class AstroidExtension : public Extension {
+        private:
+          Astroid * astroid;
+
+        public:
+          AstroidExtension (Astroid * a);
+
+          void deactivate () override;
+
+          bool get_user_agent (ustring &);
+          bool generate_mid (ustring &);
+      };
+
+      AstroidExtension * astroid_extension; // set up from Astroid
 
       class ThreadIndexExtension : public Extension {
         private:
@@ -63,6 +77,7 @@ namespace Astroid {
 
       friend class ThreadIndexExtension;
       friend class ThreadViewExtension;
+      friend class AstroidExtension;
       friend class Extension;
 
     protected:
