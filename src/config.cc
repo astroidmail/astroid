@@ -187,6 +187,9 @@ namespace Astroid {
     default_config.put ("mail.forward.quote_line", "Forwarding %1's message of %2:"); // %1 = author, %2 = pretty_verbose_date
     default_config.put ("mail.forward.disposition", "inline");
     default_config.put ("mail.sent_tags", "sent");
+    default_config.put ("mail.message_id_fqdn", ""); // custom fqdn for the message id: default: local hostname
+    default_config.put ("mail.message_id_user", ""); // custom user for the message id: default: 'astroid'
+    default_config.put ("mail.send_user_agent", false);
 
     /* polling */
     default_config.put ("poll.interval", Poll::DEFAULT_POLL_INTERVAL); // seconds

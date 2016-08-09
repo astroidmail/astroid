@@ -156,7 +156,9 @@ namespace Astroid {
     */
 
     /* set user agent */
-    g_mime_object_set_header (GMIME_OBJECT(message), "User-Agent", astroid->user_agent.c_str());
+    if (astroid->config ().get<bool> ("mail.send_user_agent")) {
+      g_mime_object_set_header (GMIME_OBJECT(message), "User-Agent", astroid->user_agent.c_str());
+    }
 
 
     /* add date to the message */
