@@ -6,6 +6,8 @@
 
 * Yank the Message-ID to the primary clipboard with C-y.
 
+* Make id:Message-ID urls clickable.
+
 == v0.6 / 2016-07-23
 
 * Use any editor (general XEmbed support in edit-message window): Emacs

@@ -275,6 +275,16 @@ url_addrspec_end (const char *in, const char *pos, const char *inend, urlmatch_t
 	return TRUE;
 }
 
+gboolean url_id_end (const char *in, const char *pos, const char *inend, urlmatch_t *match) {
+  char * alpha = (char*) pos;
+
+  while (alpha < inend) {
+    if (*alpha == '@') return url_addrspec_end (in, alpha, inend, match);
+    alpha++;
+  }
+
+  return FALSE;
+}
 
 gboolean
 url_file_start (const char *in, const char *pos, const char *inend, urlmatch_t *match)

@@ -43,6 +43,7 @@ G_GNUC_INTERNAL gboolean url_web_start (const char *in, const char *pos, const c
 G_GNUC_INTERNAL gboolean url_web_end (const char *in, const char *pos, const char *inend, urlmatch_t *match);
 G_GNUC_INTERNAL gboolean url_addrspec_start (const char *in, const char *pos, const char *inend, urlmatch_t *match);
 G_GNUC_INTERNAL gboolean url_addrspec_end (const char *in, const char *pos, const char *inend, urlmatch_t *match);
+G_GNUC_INTERNAL gboolean url_id_end (const char *in, const char *pos, const char *inend, urlmatch_t *match);
 
 typedef struct {
 	char *pattern;

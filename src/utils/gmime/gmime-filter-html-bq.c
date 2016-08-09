@@ -68,6 +68,7 @@ static struct {
 	{ CONVERT_WEB_URLS, { "nntp://",   "",        url_web_start,      url_web_end      } },
 	{ CONVERT_WEB_URLS, { "telnet://", "",        url_web_start,      url_web_end      } },
 	{ CONVERT_WEB_URLS, { "webcal://", "",        url_web_start,      url_web_end      } },
+	{ CONVERT_WEB_URLS, { "id:",	   "",        url_web_start,	  url_id_end	   } }, // custom notmuch Message-ID url
 	{ CONVERT_WEB_URLS, { "mailto:",   "",        url_web_start,      url_web_end      } },
 	{ CONVERT_WEB_URLS, { "callto:",   "",        url_web_start,      url_web_end      } },
 	{ CONVERT_WEB_URLS, { "h323:",     "",        url_web_start,      url_web_end      } },

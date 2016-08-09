@@ -376,13 +376,12 @@ namespace Astroid {
 
         main_window->add_mode (new EditMessage (main_window, uri));
 
-      } else if (scheme == "id") {
-        /* TODO: open thread (doesnt work yet) */
+      } else if (scheme == "id" || scheme == "mid" ) {
         main_window->add_mode (new ThreadIndex (main_window, uri));
 
-      } else if (scheme == "http" || scheme == "https" || scheme == "ftp")
-      {
+      } else if (scheme == "http" || scheme == "https" || scheme == "ftp") {
         open_link (uri);
+
       } else {
 
         log << error << "tv: unknown uri scheme. not opening." << endl;
