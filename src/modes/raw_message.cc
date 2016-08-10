@@ -103,6 +103,10 @@ namespace Astroid {
 
     refptr<Gtk::TextBuffer> buf = tv.get_buffer ();
     stringstream s;
+
+    /* add filenames */
+    s << "Filename: " << fname << endl << endl;
+
     s << f.rdbuf ();
     std::string _in = s.str ();
 
@@ -135,8 +139,16 @@ namespace Astroid {
     refptr<Gtk::TextBuffer> buf = tv.get_buffer ();
 
     auto c = msg->raw_contents ();
-    gchar * in = (gchar *) c->get_data ();
-    int len    = c->size ();
+
+    stringstream s;
+
+    /* add filenames */
+    s << "Filename: " << msg->fname << endl << endl;
+
+    s << c->get_data ();
+    std::string _in = s.str ();
+    int len    = _in.size ();
+    gchar * in = (gchar *) _in.c_str ();
 
     /* convert */
     gsize read, written;
