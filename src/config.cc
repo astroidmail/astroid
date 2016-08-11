@@ -276,7 +276,7 @@ namespace Astroid {
 
     if (!is_directory(std_paths.runtime_dir)) {
       log << warn << "cf: making runtime dir.." << endl;
-      create_directories (astroid->standard_paths ().runtime_dir);
+      create_directories (std_paths.runtime_dir);
     }
 
     if (!is_regular_file (std_paths.config_file)) {
