@@ -900,6 +900,11 @@ namespace Astroid {
     /* build header */
     insert_header_address (header, "From", Address(m->sender), true);
 
+    AddressList reply_to (m->reply_to);
+    if (reply_to.size () > 0) {
+      insert_header_address_list (header, "Reply-To", reply_to, false);
+    }
+
     insert_header_address_list (header, "To", AddressList(m->to()), false);
 
     if (internet_address_list_length (m->cc()) > 0) {
