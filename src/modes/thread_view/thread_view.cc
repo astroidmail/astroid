@@ -898,11 +898,13 @@ namespace Astroid {
       DomUtils::select (WEBKIT_DOM_NODE(div_message), "div.email_container");
 
     /* build header */
-    insert_header_address (header, "From", Address(m->sender), true);
+    Address sender (m->sender);
+    insert_header_address (header, "From", sender, true);
 
-    AddressList reply_to (m->reply_to);
-    if (reply_to.size () > 0) {
-      insert_header_address_list (header, "Reply-To", reply_to, false);
+    if (m->reply_to.size () > 0) {
+      Address reply_to (m->reply_to);
+      if (reply_to.email () != sender.email())
+        insert_header_address (header, "Reply-To", reply_to, false);
     }
 
     insert_header_address_list (header, "To", AddressList(m->to()), false);
