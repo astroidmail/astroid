@@ -42,9 +42,9 @@ namespace Astroid {
       InternetAddress * get_iaddr ();
 
     private:
-      ustring _name;
-      ustring _email;
-      bool _valid;
+      ustring _name   = "";
+      ustring _email  = "";
+      bool _valid     = false;
   };
 
   class AddressList {
