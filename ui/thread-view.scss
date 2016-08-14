@@ -34,15 +34,15 @@
 }
 
 @if not(global-variable-exists(font-mono)) {
-  $font-mono: "Input Mono", "Inconsolata", monospace !global;
+  $font-mono: monospace !global;
 }
 
 @if not(global-variable-exists(font-sans)) {
-  $font-sans: "Input Sans", "Roboto", sans-serif !global;
+  $font-sans: sans-serif !global;
 }
 
 @if not(global-variable-exists(font-family-default)) {
-  $font-family-default: $font-mono !global;
+  $font-family-default: $font-sans !global;
 }
 
 /* Colours */
