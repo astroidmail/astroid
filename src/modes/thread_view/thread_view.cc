@@ -2383,6 +2383,48 @@ namespace Astroid {
           return true;
         });
 
+    keys.register_key (Key (GDK_KEY_Tab), "thread_view.next_unread",
+        "Focus the next unread message",
+        [&] (Key) {
+          bool foundme = false;
+
+          for (auto &m : mthread->messages) {
+            if (foundme && has (m->tags, ustring("unread"))) {
+              focused_message = m;
+              scroll_to_message (focused_message);
+              break;
+            }
+
+            if (m == focused_message) {
+              foundme = true;
+            }
+          }
+
+          return true;
+        });
+
+    keys.register_key (Key (false, false, (guint) GDK_KEY_ISO_Left_Tab),
+        "thread_view.previous_unread",
+        "Focus the previous unread message",
+        [&] (Key) {
+          bool foundme = false;
+
+          for (auto mi = mthread->messages.rbegin (); 
+              mi != mthread->messages.rend (); mi++) {
+            if (foundme && has ((*mi)->tags, ustring("unread"))) {
+              focused_message = *mi;
+              scroll_to_message (focused_message);
+              break;
+            }
+
+            if (*mi == focused_message) {
+              foundme = true;
+            }
+          }
+
+          return true;
+        });
+
     keys.register_key ("r", "thread_view.reply",
         "Reply to current message",
         [&] (Key) {
@@ -2627,20 +2669,6 @@ namespace Astroid {
           return true;
         });
 
-    keys.register_key ("N",
-        "thread_view.toggle_unread",
-        "Toggle the unread tag on the message",
-        [&] (Key) {
-          if (!edit_mode && focused_message) {
-
-            main_window->actions->doit (refptr<Action>(new ToggleAction (refptr<NotmuchTaggable>(new NotmuchMessage(focused_message)), "unread")));
-            state[focused_message].unread_checked = true;
-
-          }
-
-          return true;
-        });
-
     keys.register_key (Key (GDK_KEY_semicolon),
           "thread_view.multi",
           "Apply action to marked threads",
@@ -2656,6 +2684,20 @@ namespace Astroid {
 
             return true;
           });
+
+    keys.register_key ("N",
+        "thread_view.toggle_unread",
+        "Toggle the unread tag on the message",
+        [&] (Key) {
+          if (!edit_mode && focused_message) {
+
+            main_window->actions->doit (refptr<Action>(new ToggleAction (refptr<NotmuchTaggable>(new NotmuchMessage(focused_message)), "unread")));
+            state[focused_message].unread_checked = true;
+
+          }
+
+          return true;
+        });
 
     keys.register_key ("C-P",
         "thread_view.print",
@@ -3281,7 +3323,7 @@ namespace Astroid {
 
     if (!edit_mode && focused_message && focused_message->in_notmuch) {
 
-      if (!state[focused_message].unread_checked) {
+      if (!state[focused_message].unread_checked && !is_hidden(focused_message)) {
 
         chrono::duration<double> elapsed = chrono::steady_clock::now() - focus_time;
 
