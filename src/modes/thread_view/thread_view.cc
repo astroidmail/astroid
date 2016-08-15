@@ -3,6 +3,7 @@
 # include <atomic>
 # include <vector>
 # include <algorithm>
+# include <chrono>
 
 # include <gtkmm.h>
 # include <webkit/webkit.h>
@@ -27,6 +28,7 @@
 # endif
 # include "actions/action.hh"
 # include "actions/tag_action.hh"
+# include "actions/toggle_action.hh"
 # include "modes/mode.hh"
 # include "modes/reply_message.hh"
 # include "modes/forward_message.hh"
@@ -64,6 +66,7 @@ namespace Astroid {
     code_prettify_code_tag = config.get<string> ("code_prettify.code_tag");
 
     enable_gravatar = config.get<bool>("gravatar.enable");
+    unread_delay = config.get<int>("mark_unread_delay");
 
     ready = false;
 
@@ -646,11 +649,8 @@ namespace Astroid {
          * - messages have been added
          * - messages have been removed
          *
-         * TODO:
+         * if anything happens before the webview is ready it will not be shown.
          *
-         * if anything happens before the webview is ready it will not be shown,
-         * however, we don't want the unread tag to be removed before we get the
-         * chance to scroll to and expand the correct messages.
          */
 
         for (auto &m : mthread->messages) {
@@ -771,17 +771,9 @@ namespace Astroid {
 
     scroll_to_message (focused_message, true);
 
-    /* remove unread status:
-     *
-     * we do this here so that messages are can be exanded if they are unread,
-     * before the tag is removed.
-     *
-     * TODO: it would be better to remove the unread tag once a message is focused
-     *       or focused for say 2 seconds.
-     *
-     */
-    if (mthread->in_notmuch && mthread->thread->has_tag ("unread")) {
-      main_window->actions->doit (refptr<Action>(new TagAction(mthread->thread, {}, {"unread"})), false);
+    if (unread_delay > 0) {
+      Glib::signal_timeout ().connect (
+          sigc::mem_fun (this, &ThreadView::unread_check), std::max (80., (unread_delay * 1000.) / 2));
     }
 
     emit_ready ();
@@ -2635,6 +2627,20 @@ namespace Astroid {
           return true;
         });
 
+    keys.register_key ("N",
+        "thread_view.toggle_unread",
+        "Toggle the unread tag on the message",
+        [&] (Key) {
+          if (!edit_mode && focused_message) {
+
+            main_window->actions->doit (refptr<Action>(new ToggleAction (refptr<NotmuchTaggable>(new NotmuchMessage(focused_message)), "unread")));
+            state[focused_message].unread_checked = true;
+
+          }
+
+          return true;
+        });
+
     keys.register_key (Key (GDK_KEY_semicolon),
           "thread_view.multi",
           "Apply action to marked threads",
@@ -2746,6 +2752,9 @@ namespace Astroid {
                 } else {
                   main_window->actions->doit (refptr<Action>(new TagAction (refptr<NotmuchTaggable>(new NotmuchMessage(focused_message)), add, rem)));
                 }
+
+                /* make sure that the unread tag is not modified after manually editing tags */
+                state[focused_message].unread_checked = true;
 
               });
           return true;
@@ -3262,6 +3271,31 @@ namespace Astroid {
     }
 
     g_object_unref (d);
+
+    /* update focus time for unread counter */
+    focus_time = chrono::steady_clock::now ();
+  }
+
+  bool ThreadView::unread_check () {
+    if (!ready) return false; // disconnect
+
+    if (!edit_mode && focused_message && focused_message->in_notmuch) {
+
+      if (!state[focused_message].unread_checked) {
+
+        chrono::duration<double> elapsed = chrono::steady_clock::now() - focus_time;
+
+        if (elapsed.count () > unread_delay) {
+          if (has (focused_message->tags, ustring("unread"))) {
+
+            main_window->actions->doit (refptr<Action>(new TagAction (refptr<NotmuchTaggable>(new NotmuchMessage(focused_message)), {}, { "unread" })), false);
+            state[focused_message].unread_checked = true;
+          }
+        }
+      }
+    }
+
+    return true;
   }
 
   ustring ThreadView::focus_next_element (bool force_change) {

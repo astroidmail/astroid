@@ -62,6 +62,10 @@ namespace Astroid {
       bool edit_mode = false;
       bool show_remote_images = false;
 
+      int unread_delay = 2;
+      std::chrono::time_point<std::chrono::steady_clock> focus_time;
+      bool unread_check ();
+
       /* resources */
       bool    enable_mathjax;
       ustring mathjax_uri_prefix;
@@ -130,6 +134,7 @@ namespace Astroid {
           bool scroll_expanded  = false;
           bool print_expanded   = false;
           bool marked           = false;
+          bool unread_checked   = false;
 
           enum ElementType {
             Empty,
