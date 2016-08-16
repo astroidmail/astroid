@@ -66,7 +66,7 @@ namespace Astroid {
     code_prettify_code_tag = config.get<string> ("code_prettify.code_tag");
 
     enable_gravatar = config.get<bool>("gravatar.enable");
-    unread_delay = config.get<int>("mark_unread_delay");
+    unread_delay = config.get<double>("mark_unread_delay");
 
     ready = false;
 

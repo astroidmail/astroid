@@ -237,7 +237,7 @@ namespace Astroid {
     default_config.put ("thread_view.gravatar.enable", true);
 
     /* mark unread */
-    default_config.put ("thread_view.mark_unread_delay", 2);
+    default_config.put ("thread_view.mark_unread_delay", .5);
 
     /* crypto */
     default_config.put ("crypto.gpg.path", "gpg2");

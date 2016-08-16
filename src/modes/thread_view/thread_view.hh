@@ -62,7 +62,7 @@ namespace Astroid {
       bool edit_mode = false;
       bool show_remote_images = false;
 
-      int unread_delay = 2;
+      double unread_delay = .5;
       std::chrono::time_point<std::chrono::steady_clock> focus_time;
       bool unread_check ();
 
