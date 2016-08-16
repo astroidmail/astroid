@@ -3,7 +3,7 @@ mail/*.setup
 mail/test_config
 mail/test_mail/.notmuch
 
-test_*
+/test_*
 !test_home
 
 !*.c

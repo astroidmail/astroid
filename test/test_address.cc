@@ -5,9 +5,11 @@
 # include "test_common.hh"
 
 # include "utils/address.hh"
+# include "message_thread.hh"
 
 using Astroid::Address;
 using Astroid::AddressList;
+using Astroid::Message;
 
 BOOST_AUTO_TEST_SUITE(TestAddressA)
 
@@ -45,6 +47,25 @@ BOOST_AUTO_TEST_SUITE(TestAddressA)
 
     AddressList al (a);
     BOOST_CHECK ("\"Mütter, A\" <a.b@c.com>" == al.str());
+
+    teardown ();
+  }
+
+  BOOST_AUTO_TEST_CASE(utf8_isspace)
+  {
+    setup ();
+
+    using Astroid::log;
+
+    Message m ("test/mail/test_mail/isspace-fail-utf-8.eml");
+    log << test << m.sender << endl;
+
+    Address ma (m.sender);
+    ustring b = ma.fail_safe_name ();
+    log << test << "address: " << b << endl;
+
+    Address testspace (" Hey", "");
+    BOOST_CHECK ("Hey" == testspace.fail_safe_name ());
 
     teardown ();
   }

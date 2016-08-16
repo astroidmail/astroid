@@ -52,7 +52,9 @@ BOOST_AUTO_TEST_SUITE(PGPEncryption)
     log << test << "cm: writing utf-8 text to message body: " << bdy << endl;
     c->body << bdy;
 
+    log << test << "build:" << endl;
     c->build ();
+    log << test << "finalize:" << endl;
     c->finalize ();
     ustring fn = c->write_tmp ();
 
@@ -153,7 +155,10 @@ BOOST_AUTO_TEST_SUITE(PGPEncryption)
 
     c->body << bdy;
 
+    log << test << "build:" << endl;
     c->build ();
+
+    log << test << "finalize:" << endl;
     c->finalize ();
 
     BOOST_CHECK_MESSAGE (c->encryption_success == false, "encryption should fail");
