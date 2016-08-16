@@ -311,6 +311,7 @@ namespace Astroid {
 # ifndef DISABLE_PLUGINS
     /* set up plugins */
     plugin_manager = new PluginManager (false, true);
+    plugin_manager->astroid_extension = new PluginManager::AstroidExtension (this);
 # endif
 
     /* set up contacts */
