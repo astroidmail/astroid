@@ -33,9 +33,9 @@ namespace Astroid {
       ComposeMessage  ();
       ~ComposeMessage ();
 
-      GMimeMessage    * message;
-      Account         * account;
-      InternetAddress * from;
+      GMimeMessage    * message = NULL;
+      Account         * account = NULL;
+      InternetAddress * from    = NULL;
 
       ustring to, cc, bcc, id, subject, references, inreplyto;
 

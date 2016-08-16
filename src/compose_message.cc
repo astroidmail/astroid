@@ -91,7 +91,7 @@ namespace Astroid {
     std::string body_content(body.str());
 
     /* attached signatures are handled in ::finalize */
-    if (include_signature && !account->signature_attach) {
+    if (include_signature && account && !account->signature_attach) {
       std::ifstream s (account->signature_file.c_str ());
       std::ostringstream sf;
       sf << s.rdbuf ();
@@ -191,7 +191,7 @@ namespace Astroid {
     g_mime_message_set_message_id(message, id.c_str());
 
     /* inline signatures are handled in ::build */
-    if (include_signature && account->signature_attach) {
+    if (include_signature && account && account->signature_attach) {
       shared_ptr<ComposeMessage::Attachment> sa (
         new ComposeMessage::Attachment (account->signature_file));
 
