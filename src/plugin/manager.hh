@@ -22,8 +22,8 @@ namespace Astroid {
 
       class Extension {
         protected:
-          PeasEngine        * engine;
-          PeasExtensionSet  * extensions;
+          PeasEngine        * engine = NULL;
+          PeasExtensionSet  * extensions = NULL;
           bool active = false;
 
         public:
