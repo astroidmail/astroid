@@ -2,7 +2,6 @@
 # include <vector>
 
 # include "astroid.hh"
-# include "log.hh"
 # include "vector_utils.hh"
 # include "ustring_utils.hh"
 # include "utils.hh"

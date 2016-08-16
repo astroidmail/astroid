@@ -7,7 +7,6 @@
 
 # include "astroid.hh"
 # include "config.hh"
-# include "log.hh"
 # include "utils/resource.hh"
 
 # ifndef DISABLE_LIBSASS
@@ -38,7 +37,7 @@ namespace Astroid {
   Theme::Theme () {
     using bfs::path;
     using std::endl;
-    log << debug << "theme: loading.." << endl;
+    LOG (debug) << "theme: loading..";
 
     /* load html and css (from scss) */
     if (!theme_loaded) {
@@ -46,7 +45,7 @@ namespace Astroid {
 
       if (!check_theme_version (tv_html)) {
 
-        log << error << "tv: html file version does not match!" << endl;
+        LOG (error) << "tv: html file version does not match!";
 
       }
 
@@ -54,7 +53,7 @@ namespace Astroid {
       path tv_scss = Resource (true, thread_view_scss_f).get_path ();
       if (!check_theme_version (tv_scss)) {
 
-        log << error << "tv: scss file version does not match!" << endl;
+        LOG (error) << "tv: scss file version does not match!";
 
       }
 # else
@@ -62,7 +61,7 @@ namespace Astroid {
 
       if (!check_theme_version (tv_css)) {
 
-        log << error << "tv: css file version does not match!" << endl;
+        LOG (error) << "tv: css file version does not match!";
 
       }
 # endif
@@ -100,7 +99,7 @@ namespace Astroid {
      */
     using std::endl;
 
-    log << info << "theme: processing: " << scsspath << endl;
+    LOG (info) << "theme: processing: " << scsspath;
 
     struct Sass_File_Context* file_ctx = sass_make_file_context(scsspath);
     struct Sass_Options* options = sass_file_context_get_options(file_ctx);
@@ -115,7 +114,7 @@ namespace Astroid {
     if (status != 0) {
       const char * err = sass_context_get_error_message (context);
       ustring erru (err);
-      log << error << "theme: error processing: " << erru << endl;
+      LOG (error) << "theme: error processing: " << erru;
 
       throw runtime_error (
           ustring::compose ("theme: could not process scss: %1", erru).c_str ());
@@ -138,7 +137,7 @@ namespace Astroid {
     int version;
     f >> vline >> vline >> version;
 
-    log << debug << "tv: testing version: " << version << std::endl;
+    LOG (debug) << "tv: testing version: " << version;
 
     f.close ();
 

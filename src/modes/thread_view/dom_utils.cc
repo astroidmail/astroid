@@ -1,9 +1,9 @@
 # include "dom_utils.hh"
+# include "astroid.hh"
 
 # include <string>
 # include <gio/gio.h>
 # include <webkit/webkit.h>
-# include "log.hh"
 
 using std::endl;
 
@@ -61,7 +61,7 @@ namespace Astroid {
     }
 
     if (gerr != NULL)
-      log << error << "tv: clone_s_s_err: " << gerr->message << endl;
+      LOG (error) << "tv: clone_s_s_err: " << gerr->message;
 
     return e;
   }

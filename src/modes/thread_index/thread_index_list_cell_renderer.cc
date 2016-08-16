@@ -18,7 +18,6 @@
 # include "thread_index_list_cell_renderer.hh"
 # include "db.hh"
 # include "utils/utils.hh"
-# include "log.hh"
 # include "crypto.hh"
 # ifndef DISABLE_PLUGINS
   # include "plugin/manager.hh"
@@ -47,7 +46,7 @@ namespace Astroid {
 
     /* https://developer.gnome.org/pangomm/stable/classPango_1_1FontDescription.html#details */
     if (font_description.get_size () == 0) {
-      log << warn << "thread_index.cell.font_description: no size specified, expect weird behaviour." << endl;
+      LOG (warn) << "thread_index.cell.font_description: no size specified, expect weird behaviour.";
     }
 
     line_spacing  = ti.get<int> ("line_spacing");
@@ -137,7 +136,7 @@ namespace Astroid {
   }
 
   ThreadIndexListCellRenderer::~ThreadIndexListCellRenderer () {
-    log << debug << "til cr: deconstruct." << endl;
+    LOG (debug) << "til cr: deconstruct.";
   }
 
   void ThreadIndexListCellRenderer::render_background ( // {{{

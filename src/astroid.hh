@@ -5,6 +5,10 @@
 # include <fstream>
 
 # include <boost/property_tree/ptree.hpp>
+# include <boost/log/trivial.hpp>
+
+# define LOG(x) BOOST_LOG_TRIVIAL(x)
+# define warn warning
 
 # include <gtkmm.h>
 # include <glibmm.h>

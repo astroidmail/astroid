@@ -6,7 +6,6 @@
 # include "action_manager.hh"
 # include "action.hh"
 # include "db.hh"
-# include "log.hh"
 
 using namespace std;
 
@@ -94,11 +93,11 @@ namespace Astroid {
   }
 
   void ActionManager::undo () {
-    log << info << "actions: undo" << endl;
+    LOG (info) << "actions: undo";
     std::unique_lock<std::mutex> lk (actions_m);
 
     if (!actions.empty ()) {
-      log << info << "actions: action still in queue, removing.." << endl;
+      LOG (info) << "actions: action still in queue, removing..";
 
       /* get last action queued and remove before it is done */
       refptr<Action> a = actions.back ();
@@ -109,11 +108,11 @@ namespace Astroid {
 
     } else {
       if (doneactions.empty ()) {
-        log << "actions: no more actions to undo." << endl;
+        LOG (debug) << "actions: no more actions to undo.";
         return;
       }
 
-      log << info << "actions: undoing already processed actions.." << endl;
+      LOG (info) << "actions: undoing already processed actions..";
 
       /* get last action added and undo it */
       refptr<Action> a = doneactions.back ();
@@ -143,7 +142,7 @@ namespace Astroid {
   }
 
   ActionManager::ActionManager () {
-    log << info << "global actions: set up." << endl;
+    LOG (info) << "global actions: set up.";
 
     /* set up GUI thread dispatcher for out-of-thread
      * signals */
@@ -160,7 +159,7 @@ namespace Astroid {
   }
 
   void ActionManager::close () {
-    log << debug << "actions: cleaning up remaining actions.." << endl;
+    LOG (debug) << "actions: cleaning up remaining actions..";
     emit = false;
 
     std::unique_lock<std::mutex> lk (actions_m);
@@ -181,7 +180,7 @@ namespace Astroid {
   }
 
   void ActionManager::emit_thread_updated (Db * db, ustring thread_id) {
-    log << info << "actions: emitted updated and changed signal for thread: " << thread_id << endl;
+    LOG (info) << "actions: emitted updated and changed signal for thread: " << thread_id;
     m_signal_thread_updated.emit (db, thread_id);
     m_signal_thread_changed.emit (db, thread_id);
   }
@@ -193,7 +192,7 @@ namespace Astroid {
   }
 
   void ActionManager::emit_thread_changed (Db * db, ustring thread_id) {
-    log << info << "actions: emitted changed signal for thread: " << thread_id << endl;
+    LOG (info) << "actions: emitted changed signal for thread: " << thread_id;
     m_signal_thread_changed.emit (db, thread_id);
   }
 
@@ -205,7 +204,7 @@ namespace Astroid {
   }
 
   void ActionManager::emit_message_updated (Db * db, ustring message_id) {
-    log << info << "actions: emitted updated signal for message: " << message_id << endl;
+    LOG (info) << "actions: emitted updated signal for message: " << message_id;
     m_signal_message_updated.emit (db, message_id);
 
     db->on_message (message_id,
@@ -231,7 +230,7 @@ namespace Astroid {
   }
 
   void ActionManager::emit_refreshed () {
-    log << info << "actions: emitted refreshed signal." << endl;
+    LOG (info) << "actions: emitted refreshed signal.";
     m_signal_refreshed.emit ();
   }
 }

@@ -8,7 +8,6 @@
 # include "manager.hh"
 # include "astroid.hh"
 # include "config.hh"
-# include "log.hh"
 # include "build_config.hh"
 # include "utils/vector_utils.hh"
 # include "message_thread.hh"
@@ -27,14 +26,14 @@ namespace bfs = boost::filesystem;
 
 namespace Astroid {
   PluginManager::PluginManager (bool _disabled, bool _test) {
-    log << info << "plugins: starting manager.." << endl;
+    LOG (info) << "plugins: starting manager..";
 
 
     disabled = _disabled;
     test     = _test;
 
     if (disabled) {
-      log << info << "plugins: disabled." << endl;
+      LOG (info) << "plugins: disabled.";
       return;
     }
 
@@ -48,16 +47,16 @@ namespace Astroid {
     if (!test) {
       bfs::path prefix_p (PREFIX);
       prefix_p = prefix_p / bfs::path ("share/astroid/plugins");
-      log << debug << "plugins: adding path: " << prefix_p.c_str () << endl;
+      LOG (debug) << "plugins: adding path: " << prefix_p.c_str ();
       peas_engine_prepend_search_path (engine, prefix_p.c_str (), NULL);
 
     } else {
       char * g = getenv ("GI_TYPELIB_PATH");
       if (g == NULL) {
-        log << LogLevel::test << "plugins: setting GI_TYPELIB_PATH: " << bfs::current_path ().c_str () << endl;
+        LOG (warn) << "plugins: setting GI_TYPELIB_PATH: " << bfs::current_path ().c_str ();
         setenv ("GI_TYPELIB_PATH", bfs::current_path ().c_str (), 1);
       } else {
-        log << error << "plugins: GI_TYPELIB_PATH already set, not touching.." << endl;
+        LOG (error) << "plugins: GI_TYPELIB_PATH already set, not touching..";
       }
     }
 
@@ -65,7 +64,7 @@ namespace Astroid {
     setenv ("ASTROID_CONFIG", astroid->standard_paths().config_file.c_str (), 1);
 
     /* adding local plugins */
-    log << debug << "plugin: adding path: " << plugin_dir.c_str () << endl;
+    LOG (debug) << "plugin: adding path: " << plugin_dir.c_str ();
     peas_engine_prepend_search_path (engine, plugin_dir.c_str (), NULL);
 
     refresh ();
@@ -77,55 +76,55 @@ namespace Astroid {
   void PluginManager::refresh () {
     if (disabled) return;
 
-    log << debug << "plugins: refreshing.." << endl;
+    LOG (debug) << "plugins: refreshing..";
     peas_engine_rescan_plugins (engine);
 
     const GList * ps = peas_engine_get_plugin_list (engine);
 
-    log << debug << "plugins: found " << g_list_length ((GList *) ps) << " plugins." << endl;
+    LOG (debug) << "plugins: found " << g_list_length ((GList *) ps) << " plugins.";
 
     for (; ps != NULL; ps = ps->next) {
       auto p = (PeasPluginInfo *) ps->data;
 
-      log << debug << "plugins: loading: " << peas_plugin_info_get_name (p) << endl;
+      LOG (debug) << "plugins: loading: " << peas_plugin_info_get_name (p);
 
       bool e = peas_engine_load_plugin (engine, p);
 
       if (e) {
-        log << debug << "plugins: loaded: " << peas_plugin_info_get_name (p) << endl;
+        LOG (debug) << "plugins: loaded: " << peas_plugin_info_get_name (p);
 
         bool found = false;
 
         /* a plugin might implement more than one extension */
 
         if (peas_engine_provides_extension (engine, p, ASTROID_TYPE_ACTIVATABLE)) {
-          log << debug << "plugins: registering astroid plugin.." << endl;
+          LOG (debug) << "plugins: registering astroid plugin..";
 
           astroid_plugins.push_back (p);
           found = true;
         }
 
         if (peas_engine_provides_extension (engine, p, ASTROID_THREADINDEX_TYPE_ACTIVATABLE)) {
-          log << debug << "plugins: registering threadindex plugin.." << endl;
+          LOG (debug) << "plugins: registering threadindex plugin..";
 
           thread_index_plugins.push_back (p);
           found = true;
         }
 
         if (peas_engine_provides_extension (engine, p, ASTROID_THREADVIEW_TYPE_ACTIVATABLE)) {
-          log << debug << "plugins: registering threadview plugin.." << endl;
+          LOG (debug) << "plugins: registering threadview plugin..";
 
           thread_view_plugins.push_back (p);
           found = true;
         }
 
         if (!found) {
-          log << error << "plugin: " << peas_plugin_info_get_name (p) << " does not implement any known extension." << endl;
+          LOG (error) << "plugin: " << peas_plugin_info_get_name (p) << " does not implement any known extension.";
         }
 
 
       } else {
-        log << error << "plugins: failed loading: " << peas_plugin_info_get_name (p) << endl;
+        LOG (error) << "plugins: failed loading: " << peas_plugin_info_get_name (p);
       }
     }
   }
@@ -139,7 +138,7 @@ namespace Astroid {
 
   PluginManager::Extension::~Extension () {
     /* make sure all extensions have been deactivated in subclass destructor */
-    log << debug << "extension: destruct." << endl;
+    LOG (debug) << "extension: destruct.";
     if (extensions) g_object_unref (extensions);
   }
 
@@ -156,7 +155,7 @@ namespace Astroid {
 
     for ( PeasPluginInfo *p : astroid->plugin_manager->astroid_plugins) {
 
-      log << debug << "plugins: activating astroid plugin: " << peas_plugin_info_get_name (p) << endl;
+      LOG (debug) << "plugins: activating astroid plugin: " << peas_plugin_info_get_name (p);
 
       PeasExtension * pe = peas_extension_set_get_extension (extensions, p);
 
@@ -173,7 +172,7 @@ namespace Astroid {
 
     for ( PeasPluginInfo *p : astroid->plugin_manager->astroid_plugins) {
 
-      log << debug << "plugins: deactivating: " << peas_plugin_info_get_name (p) << endl;
+      LOG (debug) << "plugins: deactivating: " << peas_plugin_info_get_name (p);
       PeasExtension * pe = peas_extension_set_get_extension (extensions, p);
 
       if (ASTROID_IS_ACTIVATABLE( pe)) {
@@ -230,7 +229,7 @@ namespace Astroid {
 
     for ( PeasPluginInfo *p : astroid->plugin_manager->thread_index_plugins) {
 
-      log << debug << "plugins: activating threadindex plugin: " << peas_plugin_info_get_name (p) << endl;
+      LOG (debug) << "plugins: activating threadindex plugin: " << peas_plugin_info_get_name (p);
 
       PeasExtension * pe = peas_extension_set_get_extension (extensions, p);
 
@@ -247,7 +246,7 @@ namespace Astroid {
 
     for ( PeasPluginInfo *p : astroid->plugin_manager->thread_index_plugins) {
 
-      log << debug << "plugins: deactivating: " << peas_plugin_info_get_name (p) << endl;
+      LOG (debug) << "plugins: deactivating: " << peas_plugin_info_get_name (p);
       PeasExtension * pe = peas_extension_set_get_extension (extensions, p);
 
       if (ASTROID_IS_THREADINDEX_ACTIVATABLE( pe)) {
@@ -293,7 +292,7 @@ namespace Astroid {
 
     for ( PeasPluginInfo *p : astroid->plugin_manager->thread_view_plugins) {
 
-      log << debug << "plugins: activating threadview plugin: " << peas_plugin_info_get_name (p) << endl;
+      LOG (debug) << "plugins: activating threadview plugin: " << peas_plugin_info_get_name (p);
 
       PeasExtension * pe = peas_extension_set_get_extension (extensions, p);
 
@@ -310,7 +309,7 @@ namespace Astroid {
 
     for ( PeasPluginInfo *p : astroid->plugin_manager->thread_view_plugins) {
 
-      log << debug << "plugins: deactivating: " << peas_plugin_info_get_name (p) << endl;
+      LOG (debug) << "plugins: deactivating: " << peas_plugin_info_get_name (p);
       PeasExtension * pe = peas_extension_set_get_extension (extensions, p);
 
       if (ASTROID_IS_THREADVIEW_ACTIVATABLE( pe)) {

@@ -1,7 +1,6 @@
 # include "saved_searches.hh"
 # include "astroid.hh"
 # include "config.hh"
-# include "log.hh"
 # include "main_window.hh"
 # include "thread_index/thread_index.hh"
 # include "db.hh"
@@ -114,11 +113,11 @@ namespace Astroid {
           if (row[m_columns.m_col_history]) {
             ustring query = row[m_columns.m_col_query];
 
-            log << "searches: saving query: " << query << endl;
+            LOG (info) << "searches: saving query: " << query;
             save_query (query);
 
           } else {
-            log << debug << "searches: entry not a recent search." << endl;
+            LOG (debug) << "searches: entry not a recent search.";
             return true;
           }
 
@@ -144,7 +143,7 @@ namespace Astroid {
 
             ask_yes_no ("Do you want to delete the selected query?", [&, name, query, issaved, ishistory] (bool yes) {
 
-                log << debug << "yes" << endl;
+                LOG (debug) << "yes";
 
                 if (yes) {
 
@@ -157,7 +156,7 @@ namespace Astroid {
                     /* TODO: warning, this will delete the first occurence of the query */
                     for (auto it = s.begin (); it != s.end ();) {
                       if (it->second.data() == query) {
-                        log << info << "searches: deleting: " << name << ":" << query << endl;
+                        LOG (info) << "searches: deleting: " << name << ":" << query;
 
                         it = s.erase (it);
                         changed = true;
@@ -172,7 +171,7 @@ namespace Astroid {
                     if (changed) write_back_searches (sa);
 
                   } else if (ishistory) {
-                    log << info << "searches: deleting " << query << endl;
+                    LOG (info) << "searches: deleting " << query;
                     for (auto it = history.rbegin (); it != history.rend (); it++) {
                       if (*it == query) {
                         history.erase (std::next(it).base ());
@@ -204,7 +203,7 @@ namespace Astroid {
         "Clear search history",
         [&] (Key) {
 
-          log << info << "searches: clearing search history.." << endl;
+          LOG (info) << "searches: clearing search history..";
 
           ask_yes_no ("Do you want to clear the search history?", [&] (bool yes) {
               if (yes) {
@@ -510,7 +509,7 @@ namespace Astroid {
       ustring name = kv.first;
       ustring query = kv.second.data();
 
-      /* log << info << "saved searches: got query: " << name << ": " << query << endl; */
+      /* LOG (info) << "saved searches: got query: " << name << ": " << query; */
       add_query (name, query);
     }
   }
@@ -532,7 +531,7 @@ namespace Astroid {
 
       if (name == "none") name = "";
 
-      /* log << info << "saved searches: got query: " << name << ": " << query << endl; */
+      /* LOG (info) << "saved searches: got query: " << name << ": " << query; */
       add_query (name, query, true);
     }
 
@@ -570,7 +569,7 @@ namespace Astroid {
 
     if (is_regular_file (astroid->standard_paths().searches_file))
     {
-      log << info << "searches: loading saved searches.." << endl;
+      LOG (info) << "searches: loading saved searches..";
       read_json (astroid->standard_paths().searches_file.c_str(), s);
     }
 
@@ -587,13 +586,13 @@ namespace Astroid {
   }
 
   void SavedSearches::write_back_searches (ptree s) {
-    log << info << "searches: writing back saved searches.." << endl;
+    LOG (info) << "searches: writing back saved searches..";
     write_json (astroid->standard_paths().searches_file.c_str (), s);
     m_reload ();
   }
 
   void SavedSearches::save_query (ustring q) {
-    log << info << "searches: adding query: " << q << endl;
+    LOG (info) << "searches: adding query: " << q;
 
     ptree s = load_searches ();
     s.add ("saved.none", q);
@@ -607,7 +606,7 @@ namespace Astroid {
 
   void SavedSearches::init () {
     ptree h = load_searches ().get_child ("history");
-    log << debug << "searches: loading history.." << endl;
+    LOG (debug) << "searches: loading history..";
 
     for (auto &kv : h) {
       ustring name = kv.first;
@@ -615,7 +614,7 @@ namespace Astroid {
 
       if (name == "none") name = "";
 
-      /* log << debug << "saved searches, history: got query: " << name << ": " << query << endl; */
+      /* LOG (debug) << "saved searches, history: got query: " << name << ": " << query; */
       history.push_back (query);
     }
   }
@@ -626,7 +625,7 @@ namespace Astroid {
     unsigned int maxh = astroid->config ("saved_searches").get<unsigned int>  ("history_lines");
 
     if (save) {
-      log << debug << "searches: saving history.." << endl;
+      LOG (debug) << "searches: saving history..";
       ptree s = load_searches ();
       ptree h;
 

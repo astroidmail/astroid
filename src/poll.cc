@@ -7,7 +7,6 @@
 # include "astroid.hh"
 # include "poll.hh"
 # include "db.hh"
-# include "log.hh"
 # include "config.hh"
 # include "actions/action_manager.hh"
 # include "utils/vector_utils.hh"
@@ -20,14 +19,14 @@ namespace Astroid {
   const int Poll::DEFAULT_POLL_INTERVAL = 60;
 
   Poll::Poll (bool _auto_polling_enabled) {
-    log << info << "poll: setting up." << endl;
+    LOG (info) << "poll: setting up.";
 
     auto_polling_enabled = _auto_polling_enabled;
 
     poll_state = false;
 
     poll_interval = astroid->config ().get<int> ("poll.interval");
-    log << debug << "poll: interval: " << poll_interval << endl;
+    LOG (debug) << "poll: interval: " << poll_interval;
 
     // check every 1 seconds if periodic poll has changed
     Glib::signal_timeout ().connect (
@@ -40,7 +39,7 @@ namespace Astroid {
       poll ();
 
     } else {
-      log << info << "poll: periodic polling disabled." << endl;
+      LOG (info) << "poll: periodic polling disabled.";
     }
 
     d_poll_state.connect (sigc::mem_fun (this, &Poll::poll_state_dispatch));
@@ -51,7 +50,7 @@ namespace Astroid {
       chrono::duration<double> elapsed = chrono::steady_clock::now() - last_poll;
 
       if (elapsed.count () >= poll_interval) {
-        log << info << "poll: periodic poll.." << endl;
+        LOG (info) << "poll: periodic poll..";
         poll ();
       }
     }
@@ -60,10 +59,10 @@ namespace Astroid {
   }
 
   void Poll::toggle_auto_poll () {
-    log << info << "poll: toggle auto poll: " << !auto_polling_enabled << endl;
+    LOG (info) << "poll: toggle auto poll: " << !auto_polling_enabled;
 
     if (poll_interval <= 0) {
-      log << warn << "poll: poll_interval = 0, setting to default: " << DEFAULT_POLL_INTERVAL << endl;
+      LOG (warn) << "poll: poll_interval = 0, setting to default: " << DEFAULT_POLL_INTERVAL;
       poll_interval = DEFAULT_POLL_INTERVAL;
     }
 
@@ -71,7 +70,7 @@ namespace Astroid {
   }
 
   bool Poll::poll () {
-    log << debug << "poll: requested.." << endl;
+    LOG (debug) << "poll: requested..";
 
     // set this here as well to avoid lots of checks
     last_poll = chrono::steady_clock::now ();
@@ -84,7 +83,7 @@ namespace Astroid {
       return true;
 
     } else {
-      log << warn << "poll: already in progress." << endl;
+      LOG (warn) << "poll: already in progress.";
 
       return false;
     }
@@ -98,16 +97,16 @@ namespace Astroid {
 
     path poll_script_uri = astroid->standard_paths().config_dir / path(poll_script);
 
-    log << info << "poll: polling: " << poll_script_uri.c_str () << endl;
+    LOG (info) << "poll: polling: " << poll_script_uri.c_str ();
 
 # ifdef HAVE_NOTMUCH_GET_REV
     Db db (Db::DbMode::DATABASE_READ_ONLY);
     before_poll_revision = db.get_revision ();
-    log << debug << "poll: revision before poll: " << before_poll_revision << endl;
+    LOG (debug) << "poll: revision before poll: " << before_poll_revision;
 # endif
 
     if (!is_regular_file (poll_script_uri)) {
-      log << error << "poll: poll script does not exist or is not a regular file." << endl;
+      LOG (error) << "poll: poll script does not exist or is not a regular file.";
 
       m_dopoll.unlock ();
       set_poll_state (false);
@@ -126,7 +125,7 @@ namespace Astroid {
                         &stderr
                         );
     } catch (Glib::SpawnError &ex) {
-      log << error << "poll: exception while running poll script: " <<  ex.what () << endl;
+      LOG (error) << "poll: exception while running poll script: " <<  ex.what ();
       set_poll_state (false);
       m_dopoll.unlock ();
       return;
@@ -148,14 +147,14 @@ namespace Astroid {
     }
 
     if ((cond & Glib::IO_IN) == 0) {
-      log << error << "poll: invalid fifo response" << endl;
+      LOG (error) << "poll: invalid fifo response";
     } else {
       Glib::ustring buf;
 
       ch_stdout->read_line(buf);
       if (*(--buf.end()) == '\n') buf.erase (--buf.end());
 
-      log << debug << "poll script: " << buf << endl;
+      LOG (debug) << "poll script: " << buf;
 
     }
     return true;
@@ -168,14 +167,14 @@ namespace Astroid {
     }
 
     if ((cond & Glib::IO_IN) == 0) {
-      log << error << "poll: invalid fifo response" << endl;
+      LOG (error) << "poll: invalid fifo response";
     } else {
       Glib::ustring buf;
 
       ch_stderr->read_line(buf);
       if (*(--buf.end()) == '\n') buf.erase (--buf.end());
 
-      log << warn << "poll script: " << buf << endl;
+      LOG (warn) << "poll script: " << buf;
     }
     return true;
   }
@@ -185,13 +184,13 @@ namespace Astroid {
     last_poll = chrono::steady_clock::now ();
 
     if (child_status != 0) {
-      log << error << "poll: poll script did not exit successfully." << endl;
+      LOG (error) << "poll: poll script did not exit successfully.";
     }
 
     // TODO:
     // - use lastmod to figure out how many messages have been added or changed
     //   during poll.
-    log << info << "poll: done (time: " << elapsed.count() << " s) (child status: " << child_status << ")" << endl;
+    LOG (info) << "poll: done (time: " << elapsed.count() << " s) (child status: " << child_status << ")";
     set_poll_state (false);
 
     /* close process */
@@ -209,7 +208,7 @@ namespace Astroid {
       Db db (Db::DbMode::DATABASE_READ_ONLY);
 
       unsigned long revnow = db.get_revision ();
-      log << debug << "poll: revision after poll: " << revnow << endl;
+      LOG (debug) << "poll: revision after poll: " << revnow;
 
       if (revnow > last_good_before_poll_revision) {
 
@@ -227,7 +226,7 @@ namespace Astroid {
         total_threads = notmuch_query_count_threads (qry);
 # endif
 
-        log << info << "poll: " << total_threads << " threads changed, updating.." << endl;
+        LOG (info) << "poll: " << total_threads << " threads changed, updating..";
 
         if (st == NOTMUCH_STATUS_SUCCESS && total_threads > 0) {
           notmuch_threads_t * threads;
@@ -275,7 +274,7 @@ namespace Astroid {
   }
 
   void Poll::emit_poll_state (bool state) {
-    log << info << "poll: emitted poll state: " << state << endl;
+    LOG (info) << "poll: emitted poll state: " << state;
 
     m_signal_poll_state.emit (state);
   }

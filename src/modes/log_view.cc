@@ -1,9 +1,10 @@
 # include "astroid.hh"
-# include "log.hh"
+# include <boost/log/trivial.hpp>
 
 # include "log_view.hh"
 
 using namespace std;
+namespace logging = boost::log;
 
 namespace Astroid {
   LogView::LogView (MainWindow * mw) : Mode (mw) {
@@ -30,8 +31,8 @@ namespace Astroid {
 
     show_all_children ();
 
-    log.add_log_view (this);
-    log << debug << "log window ready." << endl;
+    // TODO: add
+    LOG (debug) << "log window ready.";
 
     keys.title = "Log view";
     keys.register_key ("j", { Key (GDK_KEY_Down) },
@@ -112,10 +113,11 @@ namespace Astroid {
   }
 
   LogView::~LogView () {
-    log.del_log_view (this);
+    // TODO: remove
   }
 
-  void LogView::log_line (LogLevel lvl, ustring time_str, ustring s) {
+  void LogView::log_line (logging::trivial::severity_level lvl, ustring time_str, ustring s) {
+# if 0
     auto iter = store->append();
     auto row  = *iter;
 
@@ -125,11 +127,11 @@ namespace Astroid {
         time_str,
         Glib::Markup::escape_text(s));
 
-    if (lvl == error) {
+    if (lvl == logging::trivial::error) {
       row[m_columns.m_col_str] = "<span color=\"red\">" + l + "</span>";
-    } else if (lvl == warn) {
+    } else if (lvl == logging::trivial::warning) {
       row[m_columns.m_col_str] = "<span color=\"pink\">" + l + "</span>";
-    } else if (lvl == info) {
+    } else if (lvl == logging::trivial::info) {
       row[m_columns.m_col_str] = l;
     } else {
       /* debug */
@@ -139,6 +141,7 @@ namespace Astroid {
     auto path = store->get_path (iter);
     tv.scroll_to_row (path);
     tv.set_cursor (path);
+# endif
   }
 
   void LogView::grab_modal () {

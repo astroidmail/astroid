@@ -1,6 +1,5 @@
 # include "cmd.hh"
 # include "astroid.hh"
-# include "log.hh"
 # include "vector_utils.hh"
 # include "config.hh"
 
@@ -25,7 +24,7 @@ namespace Astroid {
   }
 
   int Cmd::run () {
-    log << info << "cmd: running: " << cmd << endl;
+    LOG (info) << "cmd: running: " << cmd;
     string _stdout;
     string _stderr;
     int exit;
@@ -35,13 +34,13 @@ namespace Astroid {
 
     if (!_stdout.empty ()) {
       for (auto &l : VectorUtils::split_and_trim (_stdout, "\n")) {
-        if (!l.empty ()) log << debug << "cmd: " << prefix << l << endl;
+        if (!l.empty ()) LOG (debug) << "cmd: " << prefix << l;
       }
     }
 
     if (!_stderr.empty ()) {
       for (auto &l : VectorUtils::split_and_trim (_stderr, "\n")) {
-        if (!l.empty ()) log << error << "cmd: " << prefix << l << endl;
+        if (!l.empty ()) LOG (error) << "cmd: " << prefix << l;
       }
     }
 

@@ -20,7 +20,6 @@ namespace Astroid {
   class AccountManager;
   class Account;
   //class Contacts;
-  class Log;
   class Poll;
   class PluginManager;
 

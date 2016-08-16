@@ -4,7 +4,6 @@
 # include <functional>
 
 # include "db.hh"
-# include "log.hh"
 # include "modes/paned_mode.hh"
 # include "main_window.hh"
 # include "thread_index.hh"
@@ -50,7 +49,7 @@ namespace Astroid {
   }
 
   ThreadIndexScrolled::~ThreadIndexScrolled () {
-    log << debug << "tis: deconstruct." << endl;
+    LOG (debug) << "tis: deconstruct.";
   }
 
   void ThreadIndexScrolled::grab_modal () {
@@ -79,7 +78,7 @@ namespace Astroid {
   }
 
   ThreadIndexListStore::~ThreadIndexListStore () {
-    log << debug << "tils: deconstuct." << endl;
+    LOG (debug) << "tils: deconstuct.";
   }
 
 
@@ -209,7 +208,7 @@ namespace Astroid {
     try {
       css->load_from_data (css_data);
     } catch (Gtk::CssProviderError &e) {
-      log << error << "ti: attempted to set background image: " << no_mail_img.c_str () << ": " << e.what () << endl;
+      LOG (error) << "ti: attempted to set background image: " << no_mail_img.c_str () << ": " << e.what ();
     }
 
     auto screen = Gdk::Screen::get_default ();
@@ -221,7 +220,7 @@ namespace Astroid {
   }
 
   ThreadIndexListView::~ThreadIndexListView () {
-    log << debug << "tilv: deconstruct." << endl;
+    LOG (debug) << "tilv: deconstruct.";
   }
 
   bool ThreadIndexListView::redraw () {
@@ -245,7 +244,7 @@ namespace Astroid {
     ThreadIndexListCellRenderer * r =
       (ThreadIndexListCellRenderer*) renderer;
 
-    //log << debug << "setting thread.." << r <<  endl;
+    //LOG (debug) << "setting thread.." << r;
     if (iter) {
 
       Gtk::ListStore::Row row = *iter;
@@ -834,7 +833,7 @@ namespace Astroid {
             main_window->enable_command (CommandBar::CommandMode::Tag,
                 tag_list,
                 [&,thread](ustring tgs) {
-                  log << debug << "ti: got tags: " << tgs << endl;
+                  LOG (debug) << "ti: got tags: " << tgs;
 
                   vector<ustring> tags = VectorUtils::split_and_trim (tgs, ",");
 
@@ -864,7 +863,7 @@ namespace Astroid {
 
                   if (add.size () == 0 &&
                       rem.size () == 0) {
-                    log << debug << "ti: nothing to do." << endl;
+                    LOG (debug) << "ti: nothing to do.";
                   } else {
                     main_window->actions->doit (refptr<Action>(new TagAction (thread, add, rem)));
                   }
@@ -931,7 +930,7 @@ namespace Astroid {
   bool ThreadIndexListView::multi_key_handler (
       ThreadIndexListView::multi_key_action maction,
       Key) {
-    log << debug << "tl: m k h" << endl;
+    LOG (debug) << "tl: m k h";
 
     Gtk::TreePath path;
     Gtk::TreeIter fwditer;
@@ -993,7 +992,7 @@ namespace Astroid {
                 main_window->enable_command (CommandBar::CommandMode::DiffTag,
                     "",
                     [&, threads](ustring tgs) {
-                      log << debug << "ti: got difftags: " << tgs << endl;
+                      LOG (debug) << "ti: got difftags: " << tgs;
 
                       refptr<Action> ma = refptr<DiffTagAction> (DiffTagAction::create (threads, tgs));
                       if (ma) {
@@ -1109,7 +1108,7 @@ namespace Astroid {
       case Open:
         {
           if (thread) {
-            log << info << "ti_list: loading: " << thread->thread_id << endl;
+            LOG (info) << "ti_list: loading: " << thread->thread_id;
 
             thread_index->open_thread (thread, true);
           }
@@ -1119,7 +1118,7 @@ namespace Astroid {
       case OpenNewWindow:
         {
           if (thread) {
-            log << info << "ti_list: loading: " << thread->thread_id << endl;
+            LOG (info) << "ti_list: loading: " << thread->thread_id;
 
             thread_index->open_thread (thread, true, true);
           }
@@ -1135,7 +1134,7 @@ namespace Astroid {
     auto thread = get_current_thread ();
 
     if (thread) {
-      log << info << "ti_list: loading: " << thread->thread_id << endl;
+      LOG (info) << "ti_list: loading: " << thread->thread_id;
 
       /* open message in new tab  */
       thread_index->open_thread (thread, true);

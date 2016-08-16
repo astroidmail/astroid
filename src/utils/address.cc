@@ -1,6 +1,5 @@
 # include "address.hh"
 # include "astroid.hh"
-# include "log.hh"
 
 # include <gmime/gmime.h>
 
@@ -23,7 +22,7 @@ namespace Astroid {
     _valid = true;
 
     if (internet_address_list_length (list) > 1) {
-      log << error << "address: more than one address in list!" << endl;
+      LOG (error) << "address: more than one address in list!";
       _valid = false;
       _email = full_address;
       g_object_unref (list);
@@ -31,7 +30,7 @@ namespace Astroid {
     }
 
     if (internet_address_list_length (list) < 1) {
-      log << error << "address: no address in string." << endl;
+      LOG (error) << "address: no address in string.";
       _email = full_address;
       _valid = false;
       g_object_unref (list);
@@ -41,7 +40,7 @@ namespace Astroid {
     InternetAddress * address = internet_address_list_get_address (
         list, 0);
     if (address == NULL) {
-      log << error << "address: no address in string." << endl;
+      LOG (error) << "address: no address in string.";
       _email = full_address;
       _valid = false;
       g_object_unref (list);

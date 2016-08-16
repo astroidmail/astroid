@@ -1,5 +1,4 @@
 # include "utils.hh"
-# include "log.hh"
 # include "crypto.hh"
 
 # include <string>
@@ -26,13 +25,13 @@ namespace Astroid {
     bool r = false;
     r = tags_upper_color.parse (_tags_upper_color);
     if (!r) {
-      log << error << "ti: failed parsing tags_upper_color" << endl;
+      LOG (error) << "ti: failed parsing tags_upper_color";
       tags_upper_color.parse ("#e5e5e5");
     }
 
     r = tags_lower_color.parse (_tags_lower_color);
     if (!r) {
-      log << error << "ti: failed parsing tags_lower_color" << endl;
+      LOG (error) << "ti: failed parsing tags_lower_color";
       tags_lower_color.parse ("#e5e5e5");
     }
 

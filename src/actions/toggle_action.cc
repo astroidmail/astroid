@@ -2,7 +2,6 @@
 # include <vector>
 # include <algorithm>
 
-# include "log.hh"
 # include "action.hh"
 # include "db.hh"
 
@@ -29,28 +28,13 @@ namespace Astroid {
     bool res = true;
 
     for (auto &tagged : taggables) {
-      log << debug << "toggle_action: " << tagged->str () << ", add: ";
+      LOG (debug) << "toggle_action: " << tagged->str ();
 
       if (find (tagged->tags.begin(), tagged->tags.end(), toggle_tag) != tagged->tags.end ()) {
         remove.push_back (toggle_tag);
       } else {
         add.push_back (toggle_tag);
       }
-
-      for_each (add.begin(),
-                add.end(),
-                [&](ustring t) {
-                  log << t << ", ";
-                });
-
-      log << "remove: ";
-      for_each (remove.begin(),
-                remove.end(),
-                [&](ustring t) {
-                  log << t << ", ";
-                });
-
-      log << endl;
 
 
       for_each (add.begin(),

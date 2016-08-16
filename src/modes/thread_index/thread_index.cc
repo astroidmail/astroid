@@ -8,7 +8,6 @@
 # include <notmuch.h>
 
 # include "astroid.hh"
-# include "log.hh"
 # include "db.hh"
 # include "modes/paned_mode.hh"
 # include "thread_index.hh"
@@ -134,7 +133,7 @@ namespace Astroid {
             queryloader.sort = static_cast<notmuch_sort_t> (s);
           }
 
-          log << info << "ti: sorting by: " << queryloader.sort_strings[static_cast<int>(queryloader.sort)] << endl;
+          LOG (info) << "ti: sorting by: " << queryloader.sort_strings[static_cast<int>(queryloader.sort)];
 
           list_view->set_sort_type (queryloader.sort);
           queryloader.reload ();
@@ -204,7 +203,7 @@ namespace Astroid {
   }
 
   void ThreadIndex::on_stats_ready () {
-    log << debug << "ti: got refresh stats." << endl;
+    LOG (debug) << "ti: got refresh stats.";
     set_label (get_label ());
     list_view->update_bg_image ();
   }
@@ -222,7 +221,7 @@ namespace Astroid {
   }
 
   void ThreadIndex::open_thread (refptr<NotmuchThread> thread, bool new_tab, bool new_window) {
-    log << debug << "ti: open thread: " << thread->thread_id << " (" << new_tab << ")" << endl;
+    LOG (debug) << "ti: open thread: " << thread->thread_id << " (" << new_tab << ")";
     ThreadView * tv;
 
     new_tab = new_tab & !new_window; // only open new tab if not opening new window
@@ -236,7 +235,7 @@ namespace Astroid {
       main_window->add_mode (tv);
     } else {
       if (!thread_view_loaded) {
-        log << debug << "ti: init paned tv" << endl;
+        LOG (debug) << "ti: init paned tv";
         thread_view = Gtk::manage(new ThreadView (main_window));
         thread_view_loaded = true;
       }
@@ -268,7 +267,7 @@ namespace Astroid {
   }
 
   ThreadIndex::~ThreadIndex () {
-    log << debug << "ti: deconstruct." << endl;
+    LOG (debug) << "ti: deconstruct.";
 
     if (thread_view_loaded) {
       delete thread_view; // apparently not done by Gtk::manage

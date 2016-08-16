@@ -5,7 +5,6 @@
 # include "astroid.hh"
 # include "raw_message.hh"
 # include "message_thread.hh"
-# include "log.hh"
 
 using namespace std;
 namespace bfs = boost::filesystem;
@@ -98,7 +97,7 @@ namespace Astroid {
     set_label (l.str());
 
     /* load message source */
-    log << info << "rm: loading message from file: " << fname << endl;
+    LOG (info) << "rm: loading message from file: " << fname;
 
     refptr<Gtk::TextBuffer> buf = tv.get_buffer ();
     stringstream s;
@@ -123,7 +122,7 @@ namespace Astroid {
     if (out != NULL) {
       s.write (out, written);
     } else {
-      log << error << "raw: could not convert: " << fbuf << endl;
+      LOG (error) << "raw: could not convert: " << fbuf;
       s << "Error: Could not convert input to UTF-8.";
     }
 
@@ -140,7 +139,7 @@ namespace Astroid {
     set_label ("Raw message: " + msg->subject);
 
     /* load message source */
-    log << info << "rm: loading message.. " << endl;
+    LOG (info) << "rm: loading message.. ";
 
     refptr<Gtk::TextBuffer> buf = tv.get_buffer ();
 
@@ -162,7 +161,7 @@ namespace Astroid {
     if (out != NULL) {
       s.write (out, written);
     } else {
-      log << error << "raw: could not convert: " << in << endl;
+      LOG (error) << "raw: could not convert: " << in;
       s << "Error: Could not convert input to UTF-8.";
     }
 

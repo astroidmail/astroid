@@ -2,9 +2,10 @@
 
 # include "proto.hh"
 # include "astroid.hh"
+# include <boost/log/trivial.hpp>
+namespace logging = boost::log;
 
 # include "mode.hh"
-# include "log.hh"
 
 namespace Astroid {
   class LogView : public Mode {
@@ -12,7 +13,7 @@ namespace Astroid {
       LogView (MainWindow *);
       ~LogView ();
 
-      void log_line (LogLevel, ustring, ustring);
+      void log_line (logging::trivial::severity_level, ustring, ustring);
 
       void grab_modal () override;
       void release_modal () override;

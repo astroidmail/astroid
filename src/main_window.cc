@@ -70,7 +70,7 @@ namespace Astroid {
 
     actions = astroid->actions;
 
-    log << debug << "mw: init, id: " << id << endl;
+    LOG (debug) << "mw: init, id: " << id;
 
     set_title ("");
     set_default_size (1200, 800);
@@ -359,7 +359,7 @@ namespace Astroid {
       pg--;
     }
 
-    log << debug << "mw: swapping to page: " << pg << endl;
+    LOG (debug) << "mw: swapping to page: " << pg;
 
     if (notebook.get_current_page () != pg) {
       set_active (pg);
@@ -418,7 +418,7 @@ namespace Astroid {
   }
 
   void MainWindow::quit () {
-    log << info << "mw: quit." << endl;
+    LOG (info) << "mw: quit.";
     in_quit = true;
 
     astroid->app->remove_window (*this);
@@ -512,10 +512,10 @@ namespace Astroid {
       std::function <void (bool)> closure)
   {
     using std::endl;
-    log << info << "mw: " << question << endl;
+    LOG (info) << "mw: " << question;
 
     if (yes_no_waiting || multi_waiting) {
-      log << warn << "mw: already waiting for answer to previous question, discarding this one." << endl;
+      LOG (warn) << "mw: already waiting for answer to previous question, discarding this one.";
       return;
     }
 
@@ -531,9 +531,9 @@ namespace Astroid {
     rev_yes_no->set_reveal_child (false);
 
     if (yes) {
-      log << info << "mw: yes-no: got yes!" << endl;
+      LOG (info) << "mw: yes-no: got yes!";
     } else {
-      log << info << "mw: yes-no: got no :/" << endl;
+      LOG (info) << "mw: yes-no: got no :/";
     }
 
     if (yes_no_waiting) {
@@ -549,10 +549,10 @@ namespace Astroid {
   bool MainWindow::multi_key (Keybindings & kb, Key /* k */)
   {
     using std::endl;
-    log << info << "mw: starting multi key." << endl;
+    LOG (info) << "mw: starting multi key.";
 
     if (yes_no_waiting || multi_waiting) {
-      log << warn << "mw: already waiting for answer to previous question, discarding this one." << endl;
+      LOG (warn) << "mw: already waiting for answer to previous question, discarding this one.";
       return true;
     }
 
@@ -566,7 +566,7 @@ namespace Astroid {
   }
 
   void MainWindow::del_mode (int c) {
-    // log << debug << "mw: del mode: " << c << endl;
+    // LOG (debug) << "mw: del mode: " << c;
     if (notebook.get_n_pages() > 1) {
       if (c >= 0) {
         if (c == 0) {
@@ -578,11 +578,11 @@ namespace Astroid {
         ((Mode*) notebook.get_nth_page (c))->pre_close ();
         notebook.remove_page (c); // this should free the widget (?)
       } else {
-        log << warn << "mw: attempt to remove negative page" << endl;
+        LOG (warn) << "mw: attempt to remove negative page";
       }
     } else {
       if (!in_quit && astroid->app->get_windows().size () > 1) {
-        log << debug << "mw: other windows available, closing this one." << endl;
+        LOG (debug) << "mw: other windows available, closing this one.";
         quit ();
       }
     }
@@ -611,7 +611,7 @@ namespace Astroid {
   void MainWindow::ungrab_active () {
     if (current >= 0) {
       if (notebook.get_n_pages() > current) {
-        //log << debug << "mw: release modal, from: " << current << endl;
+        //LOG (debug) << "mw: release modal, from: " << current;
         ((Mode*) notebook.get_nth_page (current))->release_modal();
         active = false;
       }
@@ -623,17 +623,17 @@ namespace Astroid {
   }
 
   void MainWindow::grab_active (int n) {
-    //log << debug << "mw: set active: " << n << ", current: " << current << endl;
+    //LOG (debug) << "mw: set active: " << n << ", current: " << current;
 
     ungrab_active ();
 
-    //log << debug << "mw: grab modal to: " << n << endl;
+    //LOG (debug) << "mw: grab modal to: " << n;
 
     if (has_focus() || (get_focus() && get_focus()->has_focus())) {
       /* we have focus */
       ((Mode*) notebook.get_nth_page (n))->grab_modal();
     } else {
-      log << debug << "mw: does not have focus, will not grab modal." << endl;
+      LOG (debug) << "mw: does not have focus, will not grab modal.";
     }
 
     current = n;
@@ -643,7 +643,7 @@ namespace Astroid {
   }
 
   void MainWindow::set_active (int n) {
-    //log << debug << "mw: set active: " << n << ", current: " << current << endl;
+    //LOG (debug) << "mw: set active: " << n << ", current: " << current;
 
     if (n >= 0 && n <= notebook.get_n_pages()-1) {
 
@@ -654,19 +654,19 @@ namespace Astroid {
       grab_active (n);
 
     } else {
-      // log << debug << "mw: set active: page is out of range: " << n << endl;
+      // LOG (debug) << "mw: set active: page is out of range: " << n;
       on_update_title ();
     }
   }
 
   bool MainWindow::on_my_focus_in_event (GdkEventFocus * /* event */) {
     if (active) set_active (current);
-    //log << debug << "mw: focus-in: " << id << endl;
+    //LOG (debug) << "mw: focus-in: " << id;
     return false;
   }
 
   bool MainWindow::on_my_focus_out_event (GdkEventFocus * /* event */) {
-    //log << debug << "mw: focus-out: " << id << endl;
+    //LOG (debug) << "mw: focus-out: " << id;
     if ((current < notebook.get_n_pages ()) && (current >= 0))
       ((Mode*) notebook.get_nth_page (current))->release_modal();
     return false;

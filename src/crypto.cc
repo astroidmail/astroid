@@ -6,12 +6,9 @@
 # include <boost/algorithm/string.hpp>
 
 # include "astroid.hh"
-# include "log.hh"
 # include "config.hh"
 # include "crypto.hh"
 # include "utils/address.hh"
-
-using std::endl;
 
 namespace Astroid {
   Crypto::Crypto (ustring _protocol) {
@@ -20,7 +17,7 @@ namespace Astroid {
     gpgpath = ustring (config.get<std::string> ("gpg.path"));
     always_trust = config.get<bool> ("gpg.always_trust");
 
-    log << debug << "crypto: gpg: " << gpgpath << endl;
+    LOG (debug) << "crypto: gpg: " << gpgpath;
 
     protocol = _protocol.lowercase ();
 
@@ -31,7 +28,7 @@ namespace Astroid {
       create_gpg_context ();
 
     } else {
-      log << error << "crypto: unsupported protocol: " << protocol << endl;
+      LOG (error) << "crypto: unsupported protocol: " << protocol;
       ready = false;
       return;
     }
@@ -41,16 +38,16 @@ namespace Astroid {
   }
 
   Crypto::~Crypto () {
-    log << debug << "crypto: deconstruct." << endl;
+    LOG (debug) << "crypto: deconstruct.";
   }
 
   GMimeObject * Crypto::decrypt_and_verify (GMimeObject * part) {
     using std::endl;
-    log << debug << "crypto: decrypting and verifiying.." << endl;
+    LOG (debug) << "crypto: decrypting and verifiying..";
     decrypt_tried = true;
 
     if (!GMIME_IS_MULTIPART_ENCRYPTED (part)) {
-      log << error << "crypto: part is not encrypted." << endl;
+      LOG (error) << "crypto: part is not encrypted.";
       return NULL;
     }
 
@@ -101,17 +98,17 @@ namespace Astroid {
         ustring em = (c = g_mime_certificate_get_email (ce), c ? c : "");
         ustring key = (c = g_mime_certificate_get_key_id (ce), c ? c : "");
 
-        log << debug << "cr: encrypted for: " << nm << "(" << em << ") [" << fp << "] [" << key << "]" << endl;
+        LOG (debug) << "cr: encrypted for: " << nm << "(" << em << ") [" << fp << "] [" << key << "]";
       }
     }
 
     if (dp == NULL) {
-      log << error << "crypto: failed to decrypt message: " << err->message << endl;
+      LOG (error) << "crypto: failed to decrypt message: " << err->message;
       decrypted = false;
       decrypt_error = err->message;
 
     } else {
-      log << info << "crypto: successfully decrypted message." << endl;
+      LOG (info) << "crypto: successfully decrypted message.";
       decrypted = true;
 
       verify_tried = (slist != NULL);
@@ -168,12 +165,11 @@ namespace Astroid {
       ur.push_back (a.email ());
     }
 
-    log << debug << "cr: encrypting for: ";
+    LOG (debug) << "cr: encrypting for: ";
     for (ustring &u : ur) {
       g_ptr_array_add (recpa, (gpointer) u.c_str ());
-      log << u << " ";
+      LOG (debug) << " ";
     }
-    log << endl;
 
     *out = g_mime_multipart_encrypted_new ();
 
@@ -191,9 +187,9 @@ namespace Astroid {
     g_ptr_array_free (recpa, false);
 
     if (r == 0) {
-      log << debug << "crypto: successfully encrypted message." << endl;
+      LOG (debug) << "crypto: successfully encrypted message.";
     } else {
-      log << debug << "crypto: failed to encrypt message: " << (*err)->message << endl;
+      LOG (debug) << "crypto: failed to encrypt message: " << (*err)->message;
     }
 
     return (r == 0);
@@ -211,9 +207,9 @@ namespace Astroid {
         err);
 
     if (r == 0) {
-      log << debug << "crypto: successfully signed message." << endl;
+      LOG (debug) << "crypto: successfully signed message.";
     } else {
-      log << debug << "crypto: failed to sign message: " << (*err)->message << endl;
+      LOG (debug) << "crypto: failed to sign message: " << (*err)->message;
     }
 
     return (r == 0);
@@ -229,7 +225,7 @@ namespace Astroid {
 
     } else {
 
-      log << debug << "crypto: in test" << endl;
+      LOG (debug) << "crypto: in test";
       gpgctx = g_mime_gpg_context_new (NULL, "gpg");
       g_mime_gpg_context_set_use_agent ((GMimeGpgContext *) gpgctx, TRUE);
       g_mime_gpg_context_set_always_trust ((GMimeGpgContext *) gpgctx, TRUE);
@@ -237,7 +233,7 @@ namespace Astroid {
     }
 
     if (! gpgctx) {
-      log << error << "crypto: failed to create gpg context." << std::endl;
+      LOG (error) << "crypto: failed to create gpg context.";
       return false;
     }
 

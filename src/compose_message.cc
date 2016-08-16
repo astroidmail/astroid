@@ -13,7 +13,6 @@
 # include "compose_message.hh"
 # include "message_thread.hh"
 # include "account_manager.hh"
-# include "log.hh"
 # include "chunk.hh"
 # include "crypto.hh"
 # include "actions/action_manager.hh"
@@ -27,7 +26,7 @@ namespace bfs = boost::filesystem;
 
 namespace Astroid {
   ComposeMessage::ComposeMessage () {
-    log << debug << "cm: initialize.." << endl;
+    LOG (debug) << "cm: initialize..";
     message = g_mime_message_new (true);
 
     d_message_sent.connect (
@@ -39,7 +38,7 @@ namespace Astroid {
 
     //if (message_file != "") unlink(message_file.c_str());
 
-    log << debug << "cm: deinitialized." << endl;
+    LOG (debug) << "cm: deinitialized.";
   }
 
   void ComposeMessage::set_from (Account *a) {
@@ -86,7 +85,7 @@ namespace Astroid {
   }
 
   void ComposeMessage::build () {
-    log << debug << "cm: build.." << endl;
+    LOG (debug) << "cm: build..";
 
     std::string body_content(body.str());
 
@@ -123,7 +122,7 @@ namespace Astroid {
 
     Account * from = astroid->accounts->get_account_for_address (msg.sender);
     if (from == NULL) {
-      log << warn << "cm: warning: unknown sending address, using default." << endl;
+      LOG (warn) << "cm: warning: unknown sending address, using default.";
       from = &(astroid->accounts->accounts[astroid->accounts->default_account]);
     }
     set_from (from);
@@ -209,7 +208,7 @@ namespace Astroid {
       for (shared_ptr<Attachment> &a : attachments)
       {
         if (!a->valid) {
-          log << error << "cm: invalid attachment: " << a->name << endl;
+          LOG (error) << "cm: invalid attachment: " << a->name;
           // in practice this cannot happen since EditMessage will
           // not add an invalid attachment. In the case that it would
           // be added, there would be no way for the user to delete it
@@ -300,7 +299,7 @@ namespace Astroid {
 
       if (!encryption_success) {
         encryption_error = err->message;
-        log << error << "cm: failed encrypting or signing: " << encryption_error << endl;
+        LOG (error) << "cm: failed encrypting or signing: " << encryption_error;
       }
     }
   }
@@ -311,14 +310,14 @@ namespace Astroid {
 
   bool ComposeMessage::cancel_sending () {
     if (pid > 0) {
-      log << warn << "cm: cancel sendmail pid: " << pid << endl;
+      LOG (warn) << "cm: cancel sendmail pid: " << pid;
 
       int r = kill (pid, SIGKILL);
 
       if (r == 0) {
-        log << warn << "cm: sendmail killed." << endl;
+        LOG (warn) << "cm: sendmail killed.";
       } else {
-        log << error << "cm: could not kill sendmail." << endl;
+        LOG (error) << "cm: could not kill sendmail.";
       }
     }
 
@@ -327,7 +326,7 @@ namespace Astroid {
 
   void ComposeMessage::send_threaded ()
   {
-    log << info << "cm: sending (threaded).." << endl;
+    LOG (info) << "cm: sending (threaded)..";
     Glib::Threads::Thread::create (
         [&] () {
           this->send (true);
@@ -340,7 +339,7 @@ namespace Astroid {
     /* Send the message */
     if (!dryrun) {
       if (output)
-        log << warn << "cm: sending message from account: " << account->full_address () << endl;
+        LOG (warn) << "cm: sending message from account: " << account->full_address ();
 
       ustring send_command = account->sendmail;
       vector<string> args = Glib::shell_parse_argv (send_command);
@@ -357,7 +356,7 @@ namespace Astroid {
                           );
       } catch (Glib::SpawnError &ex) {
         if (output)
-          log << error << "cm: could not send message!" << endl;
+          LOG (error) << "cm: could not send message!";
         message_sent_result = false;
         d_message_sent ();
         pid = 0;
@@ -391,13 +390,13 @@ namespace Astroid {
       if (status == 0)
       {
         if (output)
-          log << warn << "cm: message sent successfully!" << endl;
+          LOG (warn) << "cm: message sent successfully!";
 
         if (account->save_sent) {
           using bfs::path;
           save_to = path(account->save_sent_to) / path(id + ":2,");
           if (output)
-            log << info << "cm: saving message to: " << save_to << endl;
+            LOG (info) << "cm: saving message to: " << save_to;
 
           write (save_to.c_str());
         }
@@ -409,7 +408,7 @@ namespace Astroid {
 
       } else {
         if (output)
-          log << error << "cm: could not send message!" << endl;
+          LOG (error) << "cm: could not send message!";
         message_sent_result = false;
         d_message_sent ();
         pid = 0;
@@ -418,7 +417,7 @@ namespace Astroid {
     } else {
       ustring fname = "/tmp/" + id;
       if (output)
-        log << warn << "cm: sending disabled in config, message written to: " << fname << endl;
+        LOG (warn) << "cm: sending disabled in config, message written to: " << fname;
 
       write (fname);
       message_sent_result = false;
@@ -435,14 +434,14 @@ namespace Astroid {
     }
 
     if ((cond & Glib::IO_IN) == 0) {
-      log << error << "cm: invalid fifo response" << endl;
+      LOG (error) << "cm: invalid fifo response";
     } else {
       Glib::ustring buf;
 
       ch_stdout->read_line(buf);
       if (*(--buf.end()) == '\n') buf.erase (--buf.end());
 
-      log << debug << "sendmail: " << buf << endl;
+      LOG (debug) << "sendmail: " << buf;
 
     }
     return true;
@@ -455,14 +454,14 @@ namespace Astroid {
     }
 
     if ((cond & Glib::IO_IN) == 0) {
-      log << error << "cm: invalid fifo response" << endl;
+      LOG (error) << "cm: invalid fifo response";
     } else {
       Glib::ustring buf;
 
       ch_stderr->read_line(buf);
       if (*(--buf.end()) == '\n') buf.erase (--buf.end());
 
-      log << warn << "sendmail: " << buf << endl;
+      LOG (warn) << "sendmail: " << buf;
     }
     return true;
   }
@@ -483,7 +482,7 @@ namespace Astroid {
     if (!dryrun && message_sent_result && account->save_sent) {
       astroid->actions->doit (refptr<Action> (
             new AddSentMessage (save_to.c_str (), account->additional_sent_tags)));
-      log << info << "cm: sent message added to db." << endl;
+      LOG (info) << "cm: sent message added to db.";
     }
 
     emit_message_sent (message_sent_result);
@@ -494,7 +493,7 @@ namespace Astroid {
 
     if (!bfs::is_directory ("/tmp")) {
       /* this fails if /tmp does not exist, typically in a chroot */
-      log << warn << "cm: /tmp is not a directory, writing tmp files to current directory." << endl;
+      LOG (warn) << "cm: /tmp is not a directory, writing tmp files to current directory.";
       temporaryFilePath = strdup("tmp-astroid-compose-XXXXXX");
     } else {
       temporaryFilePath = strdup("/tmp/astroid-compose-XXXXXX");
@@ -510,7 +509,7 @@ namespace Astroid {
 
     g_object_unref(stream);
 
-    log << info << "cm: wrote tmp file: " << message_file << endl;
+    LOG (info) << "cm: wrote tmp file: " << message_file;
 
     return message_file;
   }
@@ -524,7 +523,7 @@ namespace Astroid {
 
     g_object_unref(stream);
 
-    log << debug << "cm: wrote file: " << fname << endl;
+    LOG (debug) << "cm: wrote file: " << fname;
   }
 
   ComposeMessage::Attachment::Attachment () {
@@ -532,7 +531,7 @@ namespace Astroid {
   }
 
   ComposeMessage::Attachment::Attachment (bfs::path p) {
-    log << debug << "cm: at: construct from file." << endl;
+    LOG (debug) << "cm: at: construct from file.";
     fname   = p;
     on_disk = true;
 
@@ -546,7 +545,7 @@ namespace Astroid {
 
     if (error)
     {
-      log << error << "cm: could not query file information." << endl;
+      LOG (error) << "cm: could not query file information.";
       valid = false;
       g_object_unref (file);
       g_object_unref (file_info);
@@ -554,7 +553,7 @@ namespace Astroid {
     }
     if (g_file_info_get_file_type(file_info) != G_FILE_TYPE_REGULAR)
     {
-      log << error << "cm: attached file is not a regular file." << endl;
+      LOG (error) << "cm: attached file is not a regular file.";
       valid = false;
       g_object_unref (file);
       g_object_unref (file_info);
@@ -569,7 +568,7 @@ namespace Astroid {
   }
 
   ComposeMessage::Attachment::Attachment (refptr<Chunk> c) {
-    log << debug << "cm: at: construct from chunk." << endl;
+    LOG (debug) << "cm: at: construct from chunk.";
     name = c->get_filename ();
     on_disk = false;
 
@@ -586,7 +585,7 @@ namespace Astroid {
   }
 
   ComposeMessage::Attachment::Attachment (refptr<Message> msg) {
-    log << debug << "cm: at: construct from message." << endl;
+    LOG (debug) << "cm: at: construct from message.";
     name = msg->subject;
     on_disk = false;
     is_mime_message = true;
@@ -599,7 +598,7 @@ namespace Astroid {
   }
 
   ComposeMessage::Attachment::~Attachment () {
-    log << debug << "cm: at: deconstruct" << endl;
+    LOG (debug) << "cm: at: deconstruct";
     if (message) g_object_unref (message);
   }
 

@@ -4,7 +4,6 @@
 
 # include "plugin.hh"
 # include "modes/edit_message.hh"
-# include "log.hh"
 
 using std::endl;
 
@@ -12,7 +11,7 @@ namespace Astroid {
   Plugin::Plugin (EditMessage * _em, ustring _server) : server_name (_server) {
     em = _em;
 
-    log << debug << "em: editor server name: " << server_name << endl;
+    LOG (debug) << "em: editor server name: " << server_name;
 
     /* editor settings */
     editor_cmd  = em->editor_config.get <std::string>("cmd");
@@ -62,12 +61,12 @@ namespace Astroid {
           server_name,
           editor_socket->get_id ());
 
-      log << info << "em: starting editor: " << cmd << endl;
+      LOG (info) << "em: starting editor: " << cmd;
       Glib::spawn_command_line_async (cmd.c_str());
       editor_started = true;
     } else {
       start_editor_when_ready = true; // TODO: not thread-safe
-      log << debug << "em: editor, waiting for socket.." << endl;
+      LOG (debug) << "em: editor, waiting for socket..";
     }
 
   }
@@ -81,12 +80,12 @@ namespace Astroid {
   }
 
   void Plugin::stop () {
-    log << error << "editor: don't know how to stop editor!" << endl;
+    LOG (error) << "editor: don't know how to stop editor!";
   }
 
   void Plugin::socket_realized ()
   {
-    log << debug << "em: socket realized." << endl;
+    LOG (debug) << "em: socket realized.";
     socket_ready = true;
 
     if (start_editor_when_ready) {
@@ -96,14 +95,14 @@ namespace Astroid {
   }
 
   void Plugin::plug_added () {
-    log << debug << "em: editor connected" << endl;
+    LOG (debug) << "em: editor connected";
 
     editor_ready = true;
     em->activate_editor ();
   }
 
   bool Plugin::plug_removed () {
-    log << debug << "em: editor disconnected" << endl;
+    LOG (debug) << "em: editor disconnected";
     editor_ready   = false;
     editor_started = false;
     editor_focused = false;

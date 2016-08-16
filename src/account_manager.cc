@@ -8,7 +8,6 @@
 # include "astroid.hh"
 # include "account_manager.hh"
 # include "config.hh"
-# include "log.hh"
 # include "utils/ustring_utils.hh"
 # include "utils/vector_utils.hh"
 
@@ -18,7 +17,7 @@ namespace bfs = boost::filesystem;
 
 namespace Astroid {
     AccountManager::AccountManager () {
-    log << info << "ac: initializing accounts.." << endl;
+    LOG (info) << "ac: initializing accounts..";
 
     ptree apt = astroid->config ("accounts");
 
@@ -63,13 +62,13 @@ namespace Astroid {
       }
 
 
-      log << info << "ac: setup account: " << a->id << " for " << a->name << " (default: " << a->isdefault << ")" << endl;
+      LOG (info) << "ac: setup account: " << a->id << " for " << a->name << " (default: " << a->isdefault << ")";
 
       accounts.push_back (*a);
     }
 
     if (accounts.size () == 0) {
-      log << error << "ac: no accounts defined!" << endl;
+      LOG (error) << "ac: no accounts defined!";
       throw runtime_error ("ac: no account defined!");
     }
 
@@ -80,7 +79,7 @@ namespace Astroid {
                                }) - accounts.begin());
 
     if (default_account >= static_cast<int>(accounts.size())) {
-      log << warn << "ac: no default account set, using first." << endl;
+      LOG (warn) << "ac: no default account set, using first.";
       default_account = 0;
       accounts[0].isdefault = true;
     }
@@ -98,12 +97,12 @@ namespace Astroid {
       }
     }
 
-    log << error << "ac: error: could not figure out which account: " << address.full_address() << " belongs to." << endl;
+    LOG (error) << "ac: error: could not figure out which account: " << address.full_address() << " belongs to.";
     return NULL;
   }
 
   AccountManager::~AccountManager () {
-    log << info << "ac: deinitializing." << endl;
+    LOG (info) << "ac: deinitializing.";
   }
 
   bool AccountManager::is_me (Address &a) {

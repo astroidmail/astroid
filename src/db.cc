@@ -15,9 +15,9 @@
 # include <notmuch.h>
 
 # include "db.hh"
+# include "astroid.hh"
 # include "utils/utils.hh"
 # include "utils/address.hh"
-# include "log.hh"
 # include "actions/action_manager.hh"
 # include "message_thread.hh"
 
@@ -43,7 +43,7 @@ namespace Astroid {
 
     const char * home = getenv ("HOME");
     if (home == NULL) {
-      log << error << "db: error: HOME variable not set." << endl;
+      LOG (error) << "db: error: HOME variable not set.";
       throw invalid_argument ("db: error: HOME environment variable not set.");
     }
 
@@ -85,11 +85,11 @@ namespace Astroid {
     }
 
     float diff = (clock () - start) * 1000.0 / CLOCKS_PER_SEC;
-    log << debug << "db: open time: " << diff << " ms." << endl;
+    LOG (debug) << "db: open time: " << diff << " ms.";
   }
 
   bool Db::open_db_write (bool block) {
-    log << info << "db: open db read-write." << endl;
+    LOG (info) << "db: open db read-write.";
 
     /* lock will wait for all read-onlys to close, lk will not be released before
      * db is closed */
@@ -110,9 +110,9 @@ namespace Astroid {
         &nm_db);
 
       if (s == NOTMUCH_STATUS_XAPIAN_EXCEPTION) {
-        log << error << "db: error: could not open db r/w, waited " <<
+        LOG (error) << "db: error: could not open db r/w, waited " <<
                 time << " of maximum " <<
-                db_write_open_timeout << " seconds." << endl;
+                db_write_open_timeout << " seconds.";
 
         chrono::seconds duration (db_write_open_delay);
         this_thread::sleep_for (duration);
@@ -124,7 +124,7 @@ namespace Astroid {
     } while (block && (s == NOTMUCH_STATUS_XAPIAN_EXCEPTION) && (time <= db_write_open_timeout));
 
     if (s != NOTMUCH_STATUS_SUCCESS) {
-      log << error << "db: error: failed opening database for writing, have you configured the notmuch database path correctly?" << endl;
+      LOG (error) << "db: error: failed opening database for writing, have you configured the notmuch database path correctly?";
 
       release_rw_lock (rw_lock);
       throw database_error ("failed to open database for writing");
@@ -146,7 +146,7 @@ namespace Astroid {
         &nm_db);
 
     if (s != NOTMUCH_STATUS_SUCCESS) {
-      log << error << "db: error: failed opening database for reading, have you configured the notmuch database path correctly?" << endl;
+      LOG (error) << "db: error: failed opening database for reading, have you configured the notmuch database path correctly?";
 
       throw database_error ("failed to open database (read-only)");
 
@@ -160,33 +160,33 @@ namespace Astroid {
   std::unique_lock<std::mutex> Db::acquire_rw_lock () {
     /* lock will wait for all read-onlys to close, lk will not be released before
      * db is closed */
-    log << debug << "db: rw-s: waiting for rw lock.. (r-o open: " << read_only_dbs_open << ")" << endl;
+    LOG (debug) << "db: rw-s: waiting for rw lock.. (r-o open: " << read_only_dbs_open << ")";
     std::unique_lock<std::mutex> rwl (db_open);
     dbs_open.wait (rwl, [] { return (read_only_dbs_open == 0); });
-    log << debug << "db: rw-s lock acquired." << endl;
+    LOG (debug) << "db: rw-s lock acquired.";
 
     return rwl;
   }
 
   void Db::release_rw_lock (std::unique_lock<std::mutex> &rwl) {
-    log << debug << "db: rw-s: releasing lock." << endl;
+    LOG (debug) << "db: rw-s: releasing lock.";
     rwl.unlock ();
     dbs_open.notify_all ();
   }
 
   void Db::acquire_ro_lock () {
-    log << info << "db: open db read-only, waiting for lock.." << endl;
+    LOG (info) << "db: open db read-only, waiting for lock..";
 
     /* will block if there is an read-write db open */
     std::lock_guard<std::mutex> lk (db_open);
     read_only_dbs_open++;
-    log << debug << "db: read-only got lock." << endl;
+    LOG (debug) << "db: read-only got lock.";
   }
 
   void Db::release_ro_lock () {
-    log << debug << "db: ro: waiting for lock to close.." << endl;
+    LOG (debug) << "db: ro: waiting for lock to close..";
     std::unique_lock<std::mutex> lk (db_open);
-    log << debug << "db: ro: closing.." << endl;
+    LOG (debug) << "db: ro: closing..";
     read_only_dbs_open--;
     lk.unlock ();
     dbs_open.notify_all ();
@@ -197,13 +197,13 @@ namespace Astroid {
       closed = true;
 
       if (nm_db != NULL) {
-        log << info << "db: closing db." << endl;
+        LOG (info) << "db: closing db.";
         notmuch_database_close (nm_db);
         nm_db = NULL;
       }
 
       if (mode == DATABASE_READ_WRITE) {
-        log << debug << "db: rw: releasing lock." << endl;
+        LOG (debug) << "db: rw: releasing lock.";
         release_rw_lock (rw_lock);
       } else {
         release_ro_lock ();
@@ -242,7 +242,7 @@ namespace Astroid {
 
     notmuch_tags_destroy (nm_tags);
 
-    log << info << "db: loaded " << tags.size () << " tags." << endl;
+    LOG (info) << "db: loaded " << tags.size () << " tags.";
   }
 
   bool Db::remove_message (ustring fname) {
@@ -251,7 +251,7 @@ namespace Astroid {
 
     if ((s != NOTMUCH_STATUS_SUCCESS) && (s != NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID))
     {
-      log << error << "db: error removing message: " << s << endl;
+      LOG (error) << "db: error removing message: " << s;
       throw database_error ("db: could not remove message from database.");
     }
 
@@ -266,10 +266,10 @@ namespace Astroid {
         &msg);
 
     if ((s != NOTMUCH_STATUS_SUCCESS) && (s != NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID)) {
-      log << error << "db: error adding message: " << s << endl;
+      LOG (error) << "db: error adding message: " << s;
 
       if (s == NOTMUCH_STATUS_FILE_ERROR) {
-        log << error << "db: file seems to have been moved, ignoring - probably a race condition with some syncing program." << endl;
+        LOG (error) << "db: file seems to have been moved, ignoring - probably a race condition with some syncing program.";
         return "";
       } else {
         throw database_error ("db: could not add message to database.");
@@ -299,7 +299,7 @@ namespace Astroid {
   }
 
   ustring Db::add_sent_message (ustring fname, vector<ustring> additional_sent_tags) {
-    log << info << "db: adding sent message: " << fname << endl;
+    LOG (info) << "db: adding sent message: " << fname;
     additional_sent_tags.insert (additional_sent_tags.end (), sent_tags.begin (), sent_tags.end ());
     additional_sent_tags.erase (unique (additional_sent_tags.begin (),
           additional_sent_tags.end ()),
@@ -310,7 +310,7 @@ namespace Astroid {
   }
 
   ustring Db::add_draft_message (ustring fname) {
-    log << info << "db: adding draft message: " << fname << endl;
+    LOG (info) << "db: adding draft message: " << fname;
     return add_message_with_tags (fname, draft_tags);
   }
 
@@ -329,7 +329,7 @@ namespace Astroid {
 
     time_t t0 = clock ();
 
-    log << debug << "db: checking if thread: " << thread_id << " matches query: " << query_in << endl;
+    LOG (debug) << "db: checking if thread: " << thread_id << " matches query: " << query_in;
 
     notmuch_query_t * query = notmuch_query_create (nm_db, query_s.c_str());
     for (ustring &t : excluded_tags) {
@@ -354,7 +354,7 @@ namespace Astroid {
     /* free resources */
     notmuch_query_destroy (query);
 
-    log << debug << "db: thread in query check: " << ((clock() - t0) * 1000.0 / CLOCKS_PER_SEC) << " ms." << endl;
+    LOG (debug) << "db: thread in query check: " << ((clock() - t0) * 1000.0 / CLOCKS_PER_SEC) << " ms.";
 
     return (st == NOTMUCH_STATUS_SUCCESS) && (c == 1);
   }
@@ -377,7 +377,7 @@ namespace Astroid {
 
     if ((st != NOTMUCH_STATUS_SUCCESS) || nm_threads == NULL) {
       notmuch_query_destroy (query);
-      log << error << "db: could not find thread: " << thread_id << ", status: " << st << endl;
+      LOG (error) << "db: could not find thread: " << thread_id << ", status: " << st;
 
       func (NULL);
 
@@ -388,7 +388,7 @@ namespace Astroid {
     for ( ; notmuch_threads_valid (nm_threads);
          notmuch_threads_move_to_next (nm_threads)) {
       if (c > 0) {
-        log << error << "db: got more than one thread for thread id." << endl;
+        LOG (error) << "db: got more than one thread for thread id.";
         throw invalid_argument ("db: got more than one thread for thread id.");
       }
 
@@ -398,7 +398,7 @@ namespace Astroid {
     }
 
     if (c < 1) {
-      log << error << "db: could not find thread: " << thread_id << endl;
+      LOG (error) << "db: could not find thread: " << thread_id;
       throw invalid_argument ("db: could not find thread!");
     }
 
@@ -416,7 +416,7 @@ namespace Astroid {
 
     if (msg == NULL || s != NOTMUCH_STATUS_SUCCESS) {
       notmuch_message_destroy (msg);
-      log << error << "db: could not find message: " << mid << ", status: " << s << endl;
+      LOG (error) << "db: could not find message: " << mid << ", status: " << s;
 
       func (NULL);
 
@@ -438,7 +438,7 @@ namespace Astroid {
 
   bool Db::check_tag (ustring tag) {
     if (tag.empty()) {
-      log << error << "nmt: invalid tag, empty." << endl;
+      LOG (error) << "nmt: invalid tag, empty.";
       return false;
     }
 
@@ -446,13 +446,13 @@ namespace Astroid {
 
     for (const ustring &c : invalid_chars) {
       if (tag.find (c) != ustring::npos) {
-        log << error << "nmt: invalid char in tag: " << c << endl;
+        LOG (error) << "nmt: invalid char in tag: " << c;
         return false;
       }
     }
 
     if (tag.size() > NOTMUCH_TAG_MAX) {
-      log << error << "nmt: error: maximum tag length is: " << NOTMUCH_TAG_MAX << endl;
+      LOG (error) << "nmt: error: maximum tag length is: " << NOTMUCH_TAG_MAX;
       return false;
     }
 
@@ -467,7 +467,7 @@ namespace Astroid {
   NotmuchThread::NotmuchThread (notmuch_thread_t * t) {
     const char * ti = notmuch_thread_get_thread_id (t);
     if (ti == NULL) {
-      log << error << "nmt: got NULL thread id." << endl;
+      LOG (error) << "nmt: got NULL thread id.";
       throw database_error ("nmt: NULL thread_id");
     }
 
@@ -477,7 +477,7 @@ namespace Astroid {
   }
 
   NotmuchThread::~NotmuchThread () {
-    //log << debug << "nmt: deconstruct." << endl;
+    //LOG (debug) << "nmt: deconstruct.";
   }
 
   void NotmuchThread::refresh (Db * db) {
@@ -564,7 +564,7 @@ namespace Astroid {
       if (auths != NULL) {
         astr = auths;
       } else {
-        /* log << error << "nmt: got NULL for authors!" << endl; */
+        /* LOG (error) << "nmt: got NULL for authors!"; */
       }
 
       std::vector<ustring> maths = VectorUtils::split_and_trim (astr, ",|\\|");
@@ -593,7 +593,7 @@ namespace Astroid {
       if (ac != NULL) {
         a = Address(ustring (ac)).fail_safe_name ();
       } else {
-        /* log << error << "nmt: got NULL for author!" << endl; */
+        /* LOG (error) << "nmt: got NULL for author!"; */
         continue;
       }
 
@@ -642,10 +642,10 @@ namespace Astroid {
 
   /* tag actions */
   bool NotmuchThread::add_tag (Db * db, ustring tag) {
-    log << debug << "nm (" << thread_id << "): add tag: " << tag << endl;
+    LOG (debug) << "nm (" << thread_id << "): add tag: " << tag;
     tag = Db::sanitize_tag (tag);
     if (!Db::check_tag (tag)) {
-      log << debug << "nm (" << thread_id << "): error, invalid tag: " << tag << endl;
+      LOG (debug) << "nm (" << thread_id << "): error, invalid tag: " << tag;
       return false;
     }
 
@@ -676,7 +676,7 @@ namespace Astroid {
             if (s == NOTMUCH_STATUS_SUCCESS) {
               res &= true;
             } else {
-              log << error << "nm: could not add tag: " << tag << " to thread: " << thread_id << endl;
+              LOG (error) << "nm: could not add tag: " << tag << " to thread: " << thread_id;
               res = false;
               return;
             }
@@ -703,10 +703,10 @@ namespace Astroid {
   }
 
   bool NotmuchThread::remove_tag (Db * db, ustring tag) {
-    log << debug << "nm (" << thread_id << "): remove tag: " << tag << endl;
+    LOG (debug) << "nm (" << thread_id << "): remove tag: " << tag;
     tag = Db::sanitize_tag (tag);
     if (!Db::check_tag (tag)) {
-      log << debug << "nm (" << thread_id << "): error, invalid tag: " << tag << endl;
+      LOG (debug) << "nm (" << thread_id << "): error, invalid tag: " << tag;
       return false;
     }
 
@@ -738,7 +738,7 @@ namespace Astroid {
             if (s == NOTMUCH_STATUS_SUCCESS) {
               res &= true;
             } else {
-              log << error << "nm: could not remove tag: " << tag << " from thread: " << thread_id << endl;
+              LOG (error) << "nm: could not remove tag: " << tag << " from thread: " << thread_id;
               res = false;
               return;
             }
@@ -753,7 +753,7 @@ namespace Astroid {
 
           res = true;
         } else {
-          log << warn << "nm: thread does not have tag." << endl;
+          LOG (warn) << "nm: thread does not have tag.";
           res = false;
         }
       });
@@ -780,10 +780,10 @@ namespace Astroid {
 
   /* tag actions */
   bool NotmuchMessage::add_tag (Db * db, ustring tag) {
-    log << debug << "nm (" << mid << "): add tag: " << tag << endl;
+    LOG (debug) << "nm (" << mid << "): add tag: " << tag;
     tag = Db::sanitize_tag (tag);
     if (!Db::check_tag (tag)) {
-      log << debug << "nm (" << mid << "): error, invalid tag: " << tag << endl;
+      LOG (debug) << "nm (" << mid << "): error, invalid tag: " << tag;
       return false;
     }
 
@@ -800,7 +800,7 @@ namespace Astroid {
         if (s == NOTMUCH_STATUS_SUCCESS) {
           res &= true;
         } else {
-          log << error << "nm: could not add tag: " << tag << " to message: " << mid << endl;
+          LOG (error) << "nm: could not add tag: " << tag << " to message: " << mid;
           res = false;
           return;
         }
@@ -823,10 +823,10 @@ namespace Astroid {
   }
 
   bool NotmuchMessage::remove_tag (Db * db, ustring tag) {
-    log << debug << "nm (" << mid << "): remove tag: " << tag << endl;
+    LOG (debug) << "nm (" << mid << "): remove tag: " << tag;
     tag = Db::sanitize_tag (tag);
     if (!Db::check_tag (tag)) {
-      log << debug << "nm (" << mid << "): error, invalid tag: " << tag << endl;
+      LOG (debug) << "nm (" << mid << "): error, invalid tag: " << tag;
       return false;
     }
 
@@ -843,7 +843,7 @@ namespace Astroid {
         if (s == NOTMUCH_STATUS_SUCCESS) {
           res &= true;
         } else {
-          log << error << "nm: could not remove tag: " << tag << " from message: " << mid << endl;
+          LOG (error) << "nm: could not remove tag: " << tag << " from message: " << mid;
           res = false;
           return;
         }

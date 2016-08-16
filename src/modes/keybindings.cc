@@ -7,8 +7,6 @@
 # include "utils/ustring_utils.hh"
 # include "utils/vector_utils.hh"
 
-# include "log.hh"
-
 using std::function;
 using std::vector;
 using std::endl;
@@ -54,7 +52,7 @@ namespace Astroid {
       path bindings_file = astroid->standard_paths ().config_dir / path (user_bindings_file);
 
       if (exists(bindings_file)) {
-        log << info << "keybindings: loading user bindings from: " << bindings_file.c_str () << endl;
+        LOG (info) << "keybindings: loading user bindings from: " << bindings_file.c_str ();
 
         /* the bindings file has the format:
          *
@@ -107,7 +105,7 @@ namespace Astroid {
           /* check if this is a run line */
           fnd = line.find (".run");
           if (fnd != std::string::npos) {
-            log << debug << "ky: parsing run-hook: " << line << endl;
+            LOG (debug) << "ky: parsing run-hook: " << line;
 
             /* get full name */
             ustring name = line.substr (0, fnd + 4);
@@ -116,18 +114,18 @@ namespace Astroid {
             fnd = line.find ("(", fnd);
 
             if (fnd == std::string::npos) {
-              log << error <<  "ky: invalid 'run'-specification: no '('" << endl;
+              LOG (error) <<  "ky: invalid 'run'-specification: no '('";
               continue;
             }
 
             std::size_t rfnd = line.rfind ("=");
             if (rfnd == std::string::npos) {
-              log << error << "ky: invalid 'run'-specification: no '='" << endl;
+              LOG (error) << "ky: invalid 'run'-specification: no '='";
               continue;
             }
 
             if (rfnd < fnd) {
-              log << error << "ky: invalid 'run'-specification:  '=' before '('" << endl;
+              LOG (error) << "ky: invalid 'run'-specification:  '=' before '('";
               continue;
             }
 
@@ -136,12 +134,12 @@ namespace Astroid {
 
             rfnd = line.rfind (")", rfnd);
             if (rfnd == std::string::npos) {
-              log << error << "ky: invalid 'run'-specfication: no ')'" << endl;
+              LOG (error) << "ky: invalid 'run'-specfication: no ')'";
               continue;
             }
 
             if (rfnd < fnd) {
-              log << error << "ky: invalid 'run'-specification: ')' before '('" << endl;
+              LOG (error) << "ky: invalid 'run'-specification: ')' before '('";
               continue;
             }
 
@@ -150,7 +148,7 @@ namespace Astroid {
 
             Key k (keyspec);
 
-            log << debug << "ky: run: " << name << "(" << k.str () << "): " << target << endl;
+            LOG (debug) << "ky: run: " << name << "(" << k.str () << "): " << target;
 
             k.name = name;
             k.allow_duplicate_name = true;
@@ -167,11 +165,11 @@ namespace Astroid {
             line = line.substr (0, fnd);
           }
 
-          log << debug << "ky: parsing line: " << line << endl;
+          LOG (debug) << "ky: parsing line: " << line;
           vector<ustring> parts = VectorUtils::split_and_trim (line, "=");
 
           if (parts.size () != 2) {
-            log << error << "ky: user bindings: too many parts in: " << line << endl;
+            LOG (error) << "ky: user bindings: too many parts in: " << line;
             continue;
           }
 
@@ -302,7 +300,7 @@ namespace Astroid {
      * name  name used for configurable keys
      */
 
-    /* log << debug << "key: registering key: " << name << ": " << k.str () << endl; */
+    /* LOG (debug) << "key: registering key: " << name << ": " << k.str (); */
 
     /* check if these are user configured */
     auto res = find_if (user_bindings.begin (),
@@ -346,13 +344,13 @@ namespace Astroid {
       }
 
       if (k.unbound) {
-        log << info << "key: binding unbound target: " << k.name << endl;
+        LOG (info) << "key: binding unbound target: " << k.name;
         k.unbound = false;
       }
     }
 
     if (k.unbound) {
-      /* log << info << "key: unbound key: " << name << " does not have a key associated." << endl; */
+      /* LOG (info) << "key: unbound key: " << name << " does not have a key associated."; */
       return;
     }
 
@@ -370,9 +368,9 @@ namespace Astroid {
               return mk.first.name == k.name;
             }) != keys.end ()) {
 
-        log << error << ustring::compose (
+        LOG (error) << ustring::compose (
               "key: %1, there is a key with name %2 registered already",
-              k.str (), k.name) << endl;
+              k.str (), k.name);
         throw duplicatekey_error (ustring::compose (
               "key: %1, there is a key with name %2 registered already",
               k.str (), k.name).c_str ());
@@ -383,7 +381,7 @@ namespace Astroid {
 
     auto r = keys.insert (KeyBinding (k, t));
     if (!r.second) {
-      /* log << debug << "user def: " << k.userdefined << endl; */
+      /* LOG (debug) << "user def: " << k.userdefined; */
       if (!r.first->first.userdefined && k.userdefined) {
         /* default key, removing and replacing with user defined. target of
          * default key will be unreachable.
@@ -392,7 +390,7 @@ namespace Astroid {
             "key: %1 (%2) already exists in map with name: %3, overwriting.",
             k.str (), k.name, r.first->first.name);
 
-        log << warn << wrr << endl;
+        LOG (warn) << wrr;
 
         keys.erase (r.first);
         r = keys.insert (KeyBinding (k, t));
@@ -402,7 +400,7 @@ namespace Astroid {
             "key: %1 (%2) is already user-configured in map with name: %3",
             k.str (), k.name, r.first->first.name);
 
-        log << error << err << endl;
+        LOG (error) << err;
 
         throw duplicatekey_error (err.c_str());
 
@@ -411,7 +409,7 @@ namespace Astroid {
             "key: %1 (%2) is user-configured in map with name: %3, will try aliases.",
             k.str (), k.name, r.first->first.name);
 
-        log << warn << err << endl;
+        LOG (warn) << err;
         has_master = false;
       }
     }
@@ -425,7 +423,7 @@ namespace Astroid {
 
     for (auto & ka : aliases) {
 
-      /* log << debug << "key: alias: " << ka.str () <<  "(" << ka.key << ")" << endl; */
+      /* LOG (debug) << "key: alias: " << ka.str () <<  "(" << ka.key << ")"; */
 
       ka.name = k.name;
       ka.help = k.help;
@@ -446,7 +444,7 @@ namespace Astroid {
               "key alias: %1 (%2) already exists in map with name: %3, overwriting.",
               k.str (), k.name, r.first->first.name);
 
-          log << warn << wrr << endl;
+          LOG (warn) << wrr;
 
           keys.erase (r.first);
           r = keys.insert (KeyBinding (k, t));
@@ -461,7 +459,7 @@ namespace Astroid {
               "key alias: %1 (%2) is already user-configured in map with name: %3",
               k.str (), k.name, r.first->first.name);
 
-          log << error << err << endl;
+          LOG (error) << err;
 
           throw duplicatekey_error (err.c_str());
         } else {
@@ -469,7 +467,7 @@ namespace Astroid {
               "key alias: %1 (%2) is user-configured in map with name: %3, will try other aliases.",
               k.str (), k.name, r.first->first.name);
 
-          log << warn << err << endl;
+          LOG (warn) << err;
         }
       } else {
         if (has_master) has_aliases = true;
@@ -501,7 +499,7 @@ namespace Astroid {
         b != user_run_bindings.end ()) {
 
       /* b is now a matching binding */
-      log << info << "ky: run, binding: " << name << "(" << b->first.str () << ") (userdefined: " << b->first.userdefined << ") to: " << b->second << endl;
+      LOG (info) << "ky: run, binding: " << name << "(" << b->first.str () << ") (userdefined: " << b->first.userdefined << ") to: " << b->second;
 
       register_key (b->first,
                     b->first.name,
@@ -522,7 +520,7 @@ namespace Astroid {
 
     if (s != keys.end ()) {
       if (loghandle)
-        log << debug << "ky: " << title << ", handling: " << s->first.str () << " (" << s->first.name << ")" << endl;
+        LOG (debug) << "ky: " << title << ", handling: " << s->first.str () << " (" << s->first.name << ")";
 
       if (s->first.isalias) {
         auto m = keys.find (*(s->first.master_key));
@@ -532,7 +530,7 @@ namespace Astroid {
       }
     } else {
       if (loghandle)
-        log << debug << "ky: " << title << ",  unknown key: " << ek.str () << endl;
+        LOG (debug) << "ky: " << title << ",  unknown key: " << ek.str ();
     }
 
     return false;
@@ -571,7 +569,7 @@ namespace Astroid {
     vector<ustring> spec_parts = VectorUtils::split_and_trim (spec, "-");
 
     if (spec_parts.size () > 3) {
-      log << error << "key spec invalid: " << spec << endl;
+      LOG (error) << "key spec invalid: " << spec;
       throw keyspec_error ("invalid length of spec");
     }
 
@@ -588,7 +586,7 @@ namespace Astroid {
       /* one modifier */
       char M = spec_parts[0][0];
       if (!((M == 'C') || (M == 'M'))) {
-        log << error << "key spec invalid: " << spec << endl;
+        LOG (error) << "key spec invalid: " << spec;
         throw keyspec_error ("invalid modifier in key spec");
       }
 
@@ -605,20 +603,20 @@ namespace Astroid {
       char M = spec_parts[1][0];
 
       if (!((M == 'C') || (M == 'M'))) {
-        log << error << "key spec invalid: " << spec << endl;
+        LOG (error) << "key spec invalid: " << spec;
         throw keyspec_error ("invalid modifier in key spec");
       }
 
       if (M == 'C') {
         if (ctrl) {
-          log << error << "key spec invalid: " << spec << endl;
+          LOG (error) << "key spec invalid: " << spec;
           throw keyspec_error ("modifier already specified");
         }
         ctrl = true;
       }
       if (M == 'M') {
         if (meta) {
-          log << error << "key spec invalid: " << spec << endl;
+          LOG (error) << "key spec invalid: " << spec;
           throw keyspec_error ("modifier already specified");
         }
         meta = true;

@@ -3,7 +3,6 @@
 
 # include "astroid.hh"
 # include "db.hh"
-# include "log.hh"
 # include "edit_message.hh"
 # include "reply_message.hh"
 
@@ -21,7 +20,7 @@ namespace Astroid {
   {
     msg = _msg;
 
-    log << info << "re: reply to: " << msg->mid << endl;
+    LOG (info) << "re: reply to: " << msg->mid;
 
     /* set subject */
     if (!(msg->subject.find_first_of ("Re:") == 0)) {
@@ -217,10 +216,10 @@ namespace Astroid {
 
   void ReplyMessage::on_message_sent_attempt_received (bool res) {
     if (res) {
-      log << info << "re: message successfully sent, adding replied tag to original." << endl;
+      LOG (info) << "re: message successfully sent, adding replied tag to original.";
 
       if (!msg->in_notmuch) {
-        log << warn << "re: message not in notmuch." << endl;
+        LOG (warn) << "re: message not in notmuch.";
         return;
       }
 

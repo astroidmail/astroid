@@ -12,21 +12,18 @@
 # include "astroid.hh"
 # include "message_thread.hh"
 # include "chunk.hh"
-# include "log.hh"
 # include "utils/utils.hh"
 # include "utils/ustring_utils.hh"
 # include "utils/vector_utils.hh"
 # include "config.hh"
 # include "crypto.hh"
 
-using std::endl;
 
 namespace Astroid {
 
   std::atomic<uint> Chunk::nextid (0);
 
   Chunk::Chunk (GMimeObject * mp, bool encrypted, bool _signed, refptr<Crypto> _cr) : mime_object (mp) {
-    using std::endl;
     id = nextid++;
 
     isencrypted = encrypted;
@@ -34,16 +31,16 @@ namespace Astroid {
     crypt       = _cr;
 
     if (mp == NULL) {
-      log << error << "chunk (" << id << "): got NULL mime_object." << endl;
+      LOG (error) << "chunk (" << id << "): got NULL mime_object.";
       throw std::logic_error ("chunk: got NULL mime_object");
     }
 
     content_type = g_mime_object_get_content_type (mime_object);
 
     if (content_type) {
-      log << debug << "chunk (" << id << "): content-type: " << g_mime_content_type_to_string (content_type) << endl;
+      LOG (debug) << "chunk (" << id << "): content-type: " << g_mime_content_type_to_string (content_type);
     } else {
-      log << warn << "chunk (" << id << "): content-type not specified, could be mime-message." << endl;
+      LOG (warn) << "chunk (" << id << "): content-type not specified, could be mime-message.";
     }
 
     if (GMIME_IS_PART (mime_object)) {
@@ -55,7 +52,7 @@ namespace Astroid {
       const char * cid = g_mime_part_get_content_id ((GMimePart *) mime_object);
       if (cid != NULL) {
         content_id = ustring(cid);
-        log << debug << "chunk: part, id: " << content_id << endl;
+        LOG (debug) << "chunk: part, id: " << content_id;
       }
 
       if (content_type != NULL) {
@@ -83,11 +80,11 @@ namespace Astroid {
           g_mime_content_type_get_media_type (preferred_type),
           g_mime_content_type_get_media_subtype (preferred_type)))
       {
-        log << debug << "chunk: preferred." << endl;
+        LOG (debug) << "chunk: preferred.";
         preferred = true;
       }
 
-      log << debug << "chunk: is part (viewable: " << viewable << ", attachment: " << attachment << ") " << endl;
+      LOG (debug) << "chunk: is part (viewable: " << viewable << ", attachment: " << attachment << ") ";
 
       /* TODO: check for inline PGP encryption, though it may be unsafe:
        *       https://dkg.fifthhorseman.net/notes/inline-pgp-harmful/
@@ -105,14 +102,14 @@ namespace Astroid {
        */
 
     } else if GMIME_IS_MESSAGE_PART (mime_object) {
-      log << debug << "chunk: message part" << endl;
+      LOG (debug) << "chunk: message part";
 
       /* contains a GMimeMessage with a potential substructure */
       GMimeMessage * msg = g_mime_message_part_get_message ((GMimeMessagePart *) mime_object);
       kids.push_back (refptr<Chunk>(new Chunk((GMimeObject *) msg)));
 
     } else if GMIME_IS_MESSAGE_PARTIAL (mime_object) {
-      log << debug << "chunk: partial" << endl;
+      LOG (debug) << "chunk: partial";
 
       GMimeMessage * msg = g_mime_message_partial_reconstruct_message (
           (GMimeMessagePartial **) &mime_object,
@@ -123,7 +120,7 @@ namespace Astroid {
 
 
     } else if GMIME_IS_MULTIPART (mime_object) {
-      log << debug << "chunk: multi part" << endl;
+      LOG (debug) << "chunk: multi part";
 
       int total = g_mime_multipart_get_count ((GMimeMultipart *) mime_object);
 
@@ -136,16 +133,16 @@ namespace Astroid {
         if (_protocol != NULL) protocol = _protocol;
         crypt = refptr<Crypto> (new Crypto (protocol));
         if (!crypt->ready) {
-          log << error << "chunk: no crypto ready." << endl;
+          LOG (error) << "chunk: no crypto ready.";
         }
       }
 
       if (GMIME_IS_MULTIPART_ENCRYPTED (mime_object) && crypt->ready) {
-          log << warn << "chunk: is encrypted." << endl;
+          LOG (warn) << "chunk: is encrypted.";
           isencrypted = true;
 
           if (total != 2) {
-            log << error << "chunk: encrypted message with not exactly 2 parts." << endl;
+            LOG (error) << "chunk: encrypted message with not exactly 2 parts.";
             return;
           }
 
@@ -162,7 +159,7 @@ namespace Astroid {
           }
 
       } else if (GMIME_IS_MULTIPART_SIGNED (mime_object) && crypt->ready) {
-          log << warn << "chunk: is signed." << endl;
+          LOG (warn) << "chunk: is signed.";
           issigned = true;
 
           /* only show first part */
@@ -178,7 +175,7 @@ namespace Astroid {
       } else {
 
         bool alternative = (g_mime_content_type_is_type (content_type, "multipart", "alternative"));
-        log << debug << "chunk: alternative: " << alternative << endl;
+        LOG (debug) << "chunk: alternative: " << alternative;
 
 
         for (int i = 0; i < total; i++) {
@@ -200,7 +197,7 @@ namespace Astroid {
                     kids.end(),
                     [&] (refptr<Chunk> cc) {
                       if (c != cc) {
-                        log << debug << "chunk: multipart: added sibling" << endl;
+                        LOG (debug) << "chunk: multipart: added sibling";
                         c->siblings.push_back (cc);
                       }
                     }
@@ -210,7 +207,7 @@ namespace Astroid {
                     g_mime_content_type_get_media_type (preferred_type),
                     g_mime_content_type_get_media_subtype (preferred_type)))
                 {
-                  log << debug << "chunk: multipart: preferred." << endl;
+                  LOG (debug) << "chunk: multipart: preferred.";
                   c->preferred = true;
                 }
               }
@@ -218,10 +215,10 @@ namespace Astroid {
         }
       }
 
-      log << debug << "chunk: multi part end" << endl;
+      LOG (debug) << "chunk: multi part end";
 
     } else if GMIME_IS_MESSAGE (mime_object) {
-      log << debug << "chunk: mime message" << endl;
+      LOG (debug) << "chunk: mime message";
 
       mime_message = true;
     }
@@ -229,8 +226,6 @@ namespace Astroid {
   }
 
   ustring Chunk::viewable_text (bool html = true, bool verbose) {
-    using std::endl;
-
     if (isencrypted && !crypt->decrypted) {
       if (verbose) {
       /* replace newlines */
@@ -247,11 +242,11 @@ namespace Astroid {
     GMimeStream * content_stream = NULL;
 
     if (GMIME_IS_PART(mime_object)) {
-      log << debug << "chunk: body: part" << endl;
+      LOG (debug) << "chunk: body: part";
 
 
       if (g_mime_content_type_is_type (content_type, "text", "plain")) {
-        log << debug << "chunk: plain text (out html: " << html << ")" << endl;
+        LOG (debug) << "chunk: plain text (out html: " << html << ")";
 
         GMimeDataWrapper * content = g_mime_part_get_content_object (
             (GMimePart *) mime_object);
@@ -277,7 +272,7 @@ namespace Astroid {
         /* convert encoding */
         GMimeContentEncoding enc = g_mime_data_wrapper_get_encoding (content);
         if (enc) {
-          log << debug << "enc: " << g_mime_content_encoding_to_string(enc) << endl;
+          LOG (debug) << "enc: " << g_mime_content_encoding_to_string(enc);
         }
 
         GMimeFilter * filter = g_mime_filter_basic_new(enc, false);
@@ -286,7 +281,7 @@ namespace Astroid {
 
         if (charset)
         {
-          log << debug << "charset: " << charset << endl;
+          LOG (debug) << "charset: " << charset;
           if (std::string(charset) == "utf-8") {
             charset = "UTF-8";
           }
@@ -295,7 +290,7 @@ namespace Astroid {
           g_mime_stream_filter_add(GMIME_STREAM_FILTER(filter_stream), filter);
           g_object_unref(filter);
         } else {
-          log << warn << "charset: not defined." << endl;
+          LOG (warn) << "charset: not defined.";
         }
 
         if (html) {
@@ -321,7 +316,7 @@ namespace Astroid {
         content_stream = filter_stream;
 
       } else if (g_mime_content_type_is_type (content_type, "text", "html")) {
-        log << debug << "chunk: html text" << endl;
+        LOG (debug) << "chunk: html text";
 
         GMimeDataWrapper * content = g_mime_part_get_content_object (
             (GMimePart *) mime_object);
@@ -334,7 +329,7 @@ namespace Astroid {
         /* convert encoding */
         GMimeContentEncoding enc = g_mime_data_wrapper_get_encoding (content);
         if (enc) {
-          log << debug << "enc: " << g_mime_content_encoding_to_string(enc) << endl;
+          LOG (debug) << "enc: " << g_mime_content_encoding_to_string(enc);
         }
 
         GMimeFilter * filter = g_mime_filter_basic_new(enc, false);
@@ -343,7 +338,7 @@ namespace Astroid {
 
         if (charset)
         {
-          log << debug << "charset: " << charset << endl;
+          LOG (debug) << "charset: " << charset;
           if (std::string(charset) == "utf-8") {
             charset = "UTF-8";
           }
@@ -352,7 +347,7 @@ namespace Astroid {
           g_mime_stream_filter_add(GMIME_STREAM_FILTER(filter_stream), filter);
           g_object_unref(filter);
         } else {
-          log << warn << "charset: not defined" << endl;
+          LOG (warn) << "charset: not defined";
         }
 
 
@@ -387,7 +382,7 @@ namespace Astroid {
       try {
         b = sstr.str();
       } catch (Glib::ConvertError &ex) {
-        log << error << "could not convert chunk to utf-8, contents: " << sstr.str() << endl;
+        LOG (error) << "could not convert chunk to utf-8, contents: " << sstr.str();
         throw ex;
       }
 
@@ -395,7 +390,7 @@ namespace Astroid {
       return b;
     } else {
       return ustring ("Error: Non-viewable part!");
-      log << error << "chunk: tried to display non-viewable part." << endl;
+      LOG (error) << "chunk: tried to display non-viewable part.";
       //throw runtime_error ("chunk: tried to display non-viewable part.");
     }
   }
@@ -434,7 +429,7 @@ namespace Astroid {
     refptr<Glib::ByteArray> cnt = contents ();
     size_t sz = cnt->size ();
 
-    log << info << "chunk: file size: " << sz << " (time used to calculate: " << ( (clock () - t0) * 1000.0 / CLOCKS_PER_SEC ) << " s.)" << std::endl;
+    LOG (info) << "chunk: file size: " << sz << " (time used to calculate: " << ( (clock () - t0) * 1000.0 / CLOCKS_PER_SEC ) << " s.)";
 
     return sz;
   }
@@ -468,14 +463,13 @@ namespace Astroid {
 
     g_object_unref (mem);
 
-    log << info << "chunk: contents: loaded " << data->size () << " bytes in " << ( (clock () - t0) * 1000.0 / CLOCKS_PER_SEC ) << " s." << std::endl;
+    LOG (info) << "chunk: contents: loaded " << data->size () << " bytes in " << ( (clock () - t0) * 1000.0 / CLOCKS_PER_SEC ) << " s.";
 
     return data;
   }
 
   bool Chunk::save_to (std::string filename, bool overwrite) {
     /* saves chunk to file name, if filename is dir, own name */
-    using std::endl;
     using bfs::path;
 
     path to (filename.c_str());
@@ -501,19 +495,19 @@ namespace Astroid {
       to /= path (fname.c_str ());
     }
 
-    log << info << "chunk: saving to: " << to << endl;
+    LOG (info) << "chunk: saving to: " << to;
 
     if (exists (to)) {
       if (!overwrite) {
-        log << error << "chunk: save: file already exists! not writing." << endl;
+        LOG (error) << "chunk: save: file already exists! not writing.";
         return false;
       } else {
-        log << warn << "chunk: save: file already exists: overwriting." << endl;
+        LOG (warn) << "chunk: save: file already exists: overwriting.";
       }
     }
 
     if (!exists(to.parent_path ()) || !is_directory (to.parent_path())) {
-      log << error << "chunk: save: parent path does not exist or is not a directory." << endl;
+      LOG (error) << "chunk: save: parent path does not exist or is not a directory.";
       return false;
     }
 
@@ -553,14 +547,14 @@ namespace Astroid {
 
   void Chunk::open () {
     using bfs::path;
-    log << info << "chunk: " << get_filename () << ", opening.." << std::endl;
+    LOG (info) << "chunk: " << get_filename () << ", opening..";
 
     path tf = astroid->standard_paths().cache_dir;
 
     ustring tmp_fname = ustring::compose("%1-%2", UstringUtils::random_alphanumeric (10), Utils::safe_fname(get_filename ()));
     tf /= path (tmp_fname.c_str());
 
-    log << debug << "chunk: saving to tmp path: " << tf.c_str() << std::endl;
+    LOG (debug) << "chunk: saving to tmp path: " << tf.c_str();
     save_to (tf.c_str());
 
     ustring tf_p (tf.c_str());
@@ -572,11 +566,10 @@ namespace Astroid {
   }
 
   void Chunk::do_open (ustring tf) {
-    using std::endl;
     ustring external_cmd = astroid->config().get<std::string> ("attachment.external_open_cmd");
 
     std::vector<std::string> args = { external_cmd.c_str(), tf.c_str () };
-    log << debug << "chunk: spawning: " << args[0] << ", " << args[1] << endl;
+    LOG (debug) << "chunk: spawning: " << args[0] << ", " << args[1];
     std::string stdout;
     std::string stderr;
     int    exitcode;
@@ -591,28 +584,28 @@ namespace Astroid {
                         );
 
     } catch (Glib::SpawnError &ex) {
-      log << error << "chunk: exception while opening attachment: " <<  ex.what () << endl;
-      log << info << "chunk: deleting tmp file: " << tf << endl;
+      LOG (error) << "chunk: exception while opening attachment: " <<  ex.what ();
+      LOG (info) << "chunk: deleting tmp file: " << tf;
       unlink (tf.c_str());
     }
 
     ustring ustdout = ustring(stdout);
     for (ustring &l : VectorUtils::split_and_trim (ustdout, ustring("\n"))) {
 
-      log << debug << l << endl;
+      LOG (debug) << l;
     }
 
     ustring ustderr = ustring(stderr);
     for (ustring &l : VectorUtils::split_and_trim (ustderr, ustring("\n"))) {
 
-      log << debug << l << endl;
+      LOG (debug) << l;
     }
 
     if (exitcode != 0) {
-      log << error << "chunk: chunk script exited with code: " << exitcode << endl;
+      LOG (error) << "chunk: chunk script exited with code: " << exitcode;
     }
 
-    log << info << "chunk: deleting tmp file: " << tf << endl;
+    LOG (info) << "chunk: deleting tmp file: " << tf;
     unlink (tf.c_str());
   }
 
@@ -641,8 +634,7 @@ namespace Astroid {
   }
 
   void Chunk::save () {
-    using std::endl;
-    log << info << "chunk: " << get_filename () << ", saving.." << endl;
+    LOG (info) << "chunk: " << get_filename () << ", saving..";
     Gtk::FileChooserDialog dialog ("Save attachment to folder..",
         Gtk::FILE_CHOOSER_ACTION_SAVE);
 
@@ -658,7 +650,7 @@ namespace Astroid {
       case (Gtk::RESPONSE_OK):
         {
           std::string fname = dialog.get_filename ();
-          log << info << "chunk: saving attachment to: " << fname << endl;
+          LOG (info) << "chunk: saving attachment to: " << fname;
 
           /* the dialog asks whether to overwrite or not */
           save_to (fname, true);
@@ -668,14 +660,14 @@ namespace Astroid {
 
       default:
         {
-          log << debug << "chunk: save: cancelled." << endl;
+          LOG (debug) << "chunk: save: cancelled.";
         }
     }
   }
 
   refptr<Message> Chunk::get_mime_message () {
     if (!mime_message) {
-      log << error << "chunk: this is not a mime message." << std::endl;
+      LOG (error) << "chunk: this is not a mime message.";
       throw std::runtime_error ("chunk: not a mime message");
     }
 
@@ -685,7 +677,7 @@ namespace Astroid {
   }
 
   Chunk::~Chunk () {
-    log << debug << "chunk: deconstruct." << endl;
+    LOG (debug) << "chunk: deconstruct.";
     // these should not be unreffed.
     // g_object_unref (mime_object);
     // g_object_unref (content_type);

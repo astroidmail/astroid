@@ -14,7 +14,6 @@
 # include "modes/help_mode.hh"
 # include "modes/saved_searches.hh"
 # include "utils/utils.hh"
-# include "log.hh"
 # include "db.hh"
 
 using namespace std;
@@ -64,7 +63,7 @@ namespace Astroid {
   void CommandBar::on_entry_activated () {
     /* handle input */
     ustring cmd = get_text ();
-    log << debug << "cb: cmd (in mode: " << mode << "): " << cmd << endl;
+    LOG (debug) << "cb: cmd (in mode: " << mode << "): " << cmd;
     set_search_mode (false); // emits changed -> disables search
 
     switch (mode) {
@@ -222,7 +221,7 @@ namespace Astroid {
 
   /*
   void CommandBar::handle_command (ustring cmd) {
-    log << debug << "cb: command: " << cmd << endl;
+    LOG (debug) << "cb: command: " << cmd;
 
     UstringUtils::utokenizer tok (cmd);
 
@@ -242,11 +241,11 @@ namespace Astroid {
 
         ustring thread_id = *it;
 
-        log << info << "cb: toggle archive on thread: " << thread_id << endl;
+        LOG (info) << "cb: toggle archive on thread: " << thread_id;
       }
 
     } else {
-      log << error  << "cb: unknown command: " << cmd << endl;
+      LOG (error)  << "cb: unknown command: " << cmd;
     }
   }
   */
@@ -271,7 +270,7 @@ namespace Astroid {
       case GDK_KEY_Up:
         {
           if (mode == CommandMode::Search) {
-            log << debug << "cb: next history" << endl;
+            LOG (debug) << "cb: next history";
 
             if (search_completion->history.empty ()) return true;
 
@@ -295,7 +294,7 @@ namespace Astroid {
       case GDK_KEY_Down:
         {
           if (mode == CommandMode::Search) {
-            log << debug << "cb: previous history" << endl;
+            LOG (debug) << "cb: previous history";
 
             if (search_completion->history.empty ()) return true;
 
@@ -349,7 +348,7 @@ namespace Astroid {
 
   /* get the next match in the list and use it to complete */
   void CommandBar::GenericCompletion::match_next () {
-    /* log << debug << "cb: completion: taking next match" << endl; */
+    /* LOG (debug) << "cb: completion: taking next match"; */
 
     Gtk::TreeIter fwditer = completion_model->get_iter ("0");
 
@@ -445,7 +444,7 @@ namespace Astroid {
     c = c.substr (outpos, endpos);
     UstringUtils::trim_left (c);
 
-    /* log << debug << "cursor: " << cursor << ", outpos: " << outpos << ", in: " << in << ", o: " << c <<  endl; */
+    /* LOG (debug) << "cursor: " << cursor << ", outpos: " << outpos << ", in: " << in << ", o: " << c; */
     return c;
   }
 
@@ -490,7 +489,7 @@ namespace Astroid {
       ustring_sz pos;
       ustring key = get_partial_tag (t, pos);
 
-      log << debug << "match selected: " << t << ", key: " << key << ", pos: " << pos << endl;
+      LOG (debug) << "match selected: " << t << ", key: " << key << ", pos: " << pos;
 
       /* pos is positioned at beginning of tag, after delimiter */
       if (pos == ustring::npos) pos = 0;
@@ -610,7 +609,7 @@ namespace Astroid {
     ustring_sz endpos = c.find_first_of (") ", outpos); // break completion on these chars
     if (endpos != ustring::npos) {
       if (endpos < static_cast<ustring_sz>(cursor)) {
-        //log << debug << "break between tag and cursor" << endl;
+        //LOG (debug) << "break between tag and cursor";
         return false;
       }
     } else {
@@ -623,7 +622,7 @@ namespace Astroid {
 
     out = c;
 
-    // log << debug << "cursor: " << cursor << ", outpos: " << outpos << ", in: " << in << ", o: " << c <<  endl;
+    // LOG (debug) << "cursor: " << cursor << ", outpos: " << outpos << ", in: " << in << ", o: " << c;
 
     return true;
   }
@@ -671,7 +670,7 @@ namespace Astroid {
       ustring_sz    pos;
       bool in_tag_search = get_partial_tag (t, key, pos);
 
-      //log << debug << "match selected: " << t << ", in_tag: " << in_tag_search << ", key: " << key << ", pos: " << pos << endl;
+      //LOG (debug) << "match selected: " << t << ", in_tag: " << in_tag_search << ", key: " << key << ", pos: " << pos;
 
       if (in_tag_search) {
 

@@ -25,7 +25,6 @@
 # include "utils/utils.hh"
 # include "utils/ustring_utils.hh"
 # include "utils/resource.hh"
-# include "log.hh"
 # include "actions/onmessage.hh"
 
 # include "editor/plugin.hh"
@@ -49,7 +48,7 @@ namespace Astroid {
   EditMessage::EditMessage (MainWindow * mw, refptr<Message> msg) :
     EditMessage (mw) {
     /* load draft */
-    log << info << "em: loading draft from: " << msg->fname << endl;
+    LOG (info) << "em: loading draft from: " << msg->fname;
 
     /* if this is a previously saved draft: use it, otherwise make new draft
      * based on original message */
@@ -145,7 +144,7 @@ namespace Astroid {
       msg_id = _mid;
     }
 
-    log << info << "em: msg id: " << msg_id << endl;
+    LOG (info) << "em: msg id: " << msg_id;
 
     make_tmpfile ();
 
@@ -292,7 +291,7 @@ namespace Astroid {
         [&] (Key) {
           if (sending_in_progress.load ()) {
             /* block closing the window while sending */
-            log << error << "em: message is being sent, it cannot be saved as draft anymore." << endl;
+            LOG (error) << "em: message is being sent, it cannot be saved as draft anymore.";
           } else {
 
             bool r;
@@ -312,13 +311,13 @@ namespace Astroid {
         "Delete draft",
         [&] (Key) {
           if (!draft_msg) {
-            log << debug << "em: not a draft." << endl;
+            LOG (debug) << "em: not a draft.";
             return true;
           }
 
           if (sending_in_progress.load ()) {
             /* block closing the window while sending */
-            log << error << "em: message is being sent, cannot delete draft now. it will be deleted upon successfully sent message." << endl;
+            LOG (error) << "em: message is being sent, cannot delete draft now. it will be deleted upon successfully sent message.";
           } else if (!message_sent) {
             ask_yes_no ("Do you want to delete this draft and close it? (any changes will be lost)",
                 [&](bool yes) {
@@ -382,7 +381,7 @@ namespace Astroid {
   } // }}}
 
   EditMessage::~EditMessage () {
-    log << debug << "em: deconstruct." << endl;
+    LOG (debug) << "em: deconstruct.";
 
     if (status_icon_visible) {
       main_window->notebook.remove_widget (&message_sending_status_icon);
@@ -403,10 +402,10 @@ namespace Astroid {
     } else if (!force && !message_sent && !draft_saved) {
       ask_yes_no ("Do you want to close this message? (unsaved changes will be lost)", [&](bool yes){ if (yes) { Mode::close (force); } });
     } else if (force && !message_sent && !draft_saved && save_draft_on_force_quit) {
-      log << warn << "em: force quit, trying to save draft.." << endl;
+      LOG (warn) << "em: force quit, trying to save draft..";
       bool r = save_draft ();
       if (!r) {
-        log << error << "em: cannot save draft! check account config. changes will be lost." << endl;
+        LOG (error) << "em: cannot save draft! check account config. changes will be lost.";
       }
       Mode::close (force);
     } else {
@@ -417,7 +416,7 @@ namespace Astroid {
 
   /* drafts */
   bool EditMessage::save_draft () {
-    log << info << "em: saving draft.." << endl;
+    LOG (info) << "em: saving draft..";
     draft_saved = false;
     ComposeMessage * c = make_message ();
     ustring fname;
@@ -429,7 +428,7 @@ namespace Astroid {
 
       path ddir = path(c->account->save_drafts_to.c_str ());
       if (!is_directory(ddir)) {
-        log << error << "em: no draft directory specified!" << endl;
+        LOG (error) << "em: no draft directory specified!";
         warning_str = "draft could not be saved, no suitable draft directory for account specified.";
         /* move to key handler:
          * warning_str = "draft could not be saved!"; */
@@ -449,7 +448,7 @@ namespace Astroid {
 
     c->write (fname);
 
-    log << info << "em: saved draft to: " << fname << endl;
+    LOG (info) << "em: saved draft to: " << fname;
 
     if (add_to_notmuch) {
       astroid->actions->doit (refptr<Action> (
@@ -469,12 +468,12 @@ namespace Astroid {
       draft_saved = true; /* avoid saving on exit */
 
     } else {
-      log << warn << "em: not a draft, not deleting." << endl;
+      LOG (warn) << "em: not a draft, not deleting.";
     }
   }
 
   void EditMessage::delete_draft (refptr<Message> draft_msg) {
-    log << info << "em: deleting draft." << endl;
+    LOG (info) << "em: deleting draft.";
     path fname = path(draft_msg->fname.c_str());
 
     if (is_regular_file (fname)) {
@@ -508,11 +507,11 @@ namespace Astroid {
   }
 
   void EditMessage::prepare_message () {
-    log << debug << "em: preparing message from fields.." << endl;
+    LOG (debug) << "em: preparing message from fields..";
 
     auto iter = from_combo->get_active ();
     if (!iter) {
-      log << warn << "em: error: no from account selected." << endl;
+      LOG (warn) << "em: error: no from account selected.";
       return;
     }
 
@@ -533,12 +532,12 @@ namespace Astroid {
     tmpfile << body.raw();
 
     tmpfile.close ();
-    log << debug << "em: prepare message done." << endl;
+    LOG (debug) << "em: prepare message done.";
   }
 
   void EditMessage::set_from (Address a) {
     if (!accounts->is_me (a)) {
-      log << error << "em: from address is not a defined account." << endl;
+      LOG (error) << "em: from address is not a defined account.";
     }
 
     set_from (accounts->get_account_for_address (a));
@@ -555,7 +554,7 @@ namespace Astroid {
     }
 
     bool same_account = (rn == from_combo->get_active_row_number ());
-    log << debug << "same account: " << same_account << endl;
+    LOG (debug) << "same account: " << same_account;
     if (!same_account) {
       reset_signature ();
     }
@@ -579,7 +578,7 @@ namespace Astroid {
 
 
   void EditMessage::switch_signature_set () {
-    log << debug << "got sig: " << switch_signature->get_active () << endl;
+    LOG (debug) << "got sig: " << switch_signature->get_active ();
     prepare_message ();
     read_edited_message ();
   }
@@ -593,7 +592,7 @@ namespace Astroid {
     ComposeMessage * c = make_message ();
 
     if (c == NULL) {
-      log << error << "err: could not make message." << endl;
+      LOG (error) << "err: could not make message.";
       return;
     }
 
@@ -628,7 +627,7 @@ namespace Astroid {
   /* }}} */
 
   void EditMessage::on_tv_ready () {
-    log << debug << "em: got tv ready." << endl;
+    LOG (debug) << "em: got tv ready.";
 
     if (warning_str.length() > 0)
       thread_view->set_warning (thread_view->focused_message, warning_str);
@@ -652,7 +651,7 @@ namespace Astroid {
 
   /* turn on or off the editor or set up for the editor */
   void EditMessage::editor_toggle (bool on) {
-    log << debug << "em: editor toggle: " << on << endl;
+    LOG (debug) << "em: editor toggle: " << on;
 
     if (on) {
       prepare_message ();
@@ -712,14 +711,14 @@ namespace Astroid {
   }
 
   void EditMessage::activate_editor () {
-    log << debug << "em: activate editor." << endl;
+    LOG (debug) << "em: activate editor.";
 
     editor_active = true;
 
-    log << debug << "em: activate editor." << endl;
+    LOG (debug) << "em: activate editor.";
 
     if (!editor->ready ()) {
-      log << warn << "em: activate editor: not ready." << endl;
+      LOG (warn) << "em: activate editor: not ready.";
       return;
     }
 
@@ -735,7 +734,7 @@ namespace Astroid {
 
     } else {
 
-      log << warn << "em: activate editor, editor not yet started!" << endl;
+      LOG (warn) << "em: activate editor, editor not yet started!";
 
     }
   }
@@ -748,7 +747,7 @@ namespace Astroid {
 
     if (action == ThreadView::ElementAction::EDelete) {
       /* delete attachment */
-      log << info << "em: remove attachment: " << id << endl;
+      LOG (info) << "em: remove attachment: " << id;
 
       /* TODO: this will not always correspond to the attachment number! */
       attachments.erase (attachments.begin() + (id-1));
@@ -768,14 +767,14 @@ namespace Astroid {
   }
 
   bool EditMessage::send_message () {
-    log << info << "em: sending message.." << endl;
+    LOG (info) << "em: sending message..";
 
     info_str = "sending message..";
     warning_str = "";
     on_tv_ready ();
 
     if (!check_fields ()) {
-      log << error << "em: error problem with some of the input fields.." << endl;
+      LOG (error) << "em: error problem with some of the input fields..";
       return false;
     }
 
@@ -821,7 +820,7 @@ namespace Astroid {
   }
 
   void EditMessage::send_message_finished (bool result_from_sender) {
-    log << info << "em: message sending done." << endl;
+    LOG (info) << "em: message sending done.";
     status_icon_visible = true;
 
     Glib::RefPtr<Gtk::IconTheme> theme = Gtk::IconTheme::get_default();
@@ -839,7 +838,7 @@ namespace Astroid {
 
       /* delete draft */
       if (draft_msg) {
-        log << info << "em: deleting draft: " << draft_msg->fname << endl;
+        LOG (info) << "em: deleting draft: " << draft_msg->fname;
         delete_draft ();
       }
 
@@ -873,7 +872,7 @@ namespace Astroid {
   ComposeMessage * EditMessage::make_message () {
 
     if (!check_fields ()) {
-      log << error << "em: error, problem with some of the input fields.." << endl;
+      LOG (error) << "em: error, problem with some of the input fields..";
       return NULL;
     }
 
@@ -910,17 +909,17 @@ namespace Astroid {
   void EditMessage::make_tmpfile () {
     tmpfile_path = tmpfile_path / path(msg_id);
 
-    log << info << "em: tmpfile: " << tmpfile_path << endl;
+    LOG (info) << "em: tmpfile: " << tmpfile_path;
 
     if (is_regular_file (tmpfile_path)) {
-      log << error << "em: error: tmpfile already exists!" << endl;
+      LOG (error) << "em: error: tmpfile already exists!";
       throw runtime_error ("em: tmpfile already exists!");
     }
 
     tmpfile.open (tmpfile_path.c_str(), std::fstream::out);
 
     if (tmpfile.fail()) {
-      log << error << "em: error: could not create tmpfile!" << endl;
+      LOG (error) << "em: error: could not create tmpfile!";
       throw runtime_error ("em: coult not create tmpfile!");
     }
 
@@ -928,10 +927,10 @@ namespace Astroid {
   }
 
   void EditMessage::attach_file () {
-    log << info << "em: attach file.." << endl;
+    LOG (info) << "em: attach file..";
 
     if (message_sent) {
-      log << debug << "em: message already sent." << endl;
+      LOG (debug) << "em: message already sent.";
       return;
     }
 
@@ -952,9 +951,9 @@ namespace Astroid {
             path p (fname.c_str());
 
             if (!is_regular (p)) {
-              log << error << "em: attach: file is not regular: " << p.c_str() << endl;
+              LOG (error) << "em: attach: file is not regular: " << p.c_str();
             } else {
-              log << info << "em: attaching file: " << p.c_str() << endl;
+              LOG (info) << "em: attaching file: " << p.c_str();
               add_attachment (new ComposeMessage::Attachment (p));
             }
           }
@@ -967,7 +966,7 @@ namespace Astroid {
 
       default:
         {
-          log << debug << "em: attach: cancelled." << endl;
+          LOG (debug) << "em: attach: cancelled.";
         }
     }
   }
@@ -976,7 +975,7 @@ namespace Astroid {
     if (a->valid) {
       attachments.push_back (shared_ptr<ComposeMessage::Attachment> (a));
     } else {
-      log << error << "em: invalid attachment, not adding: " << a->name << endl;
+      LOG (error) << "em: invalid attachment, not adding: " << a->name;
       delete a;
     }
   }

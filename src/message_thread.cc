@@ -7,7 +7,6 @@
 
 # include "astroid.hh"
 # include "db.hh"
-# include "log.hh"
 # include "message_thread.hh"
 # include "chunk.hh"
 # include "utils/utils.hh"
@@ -35,7 +34,7 @@ namespace Astroid {
 
   Message::Message (ustring _fname) : Message () {
 
-    log << info << "msg: loading message from file: " << fname << endl;
+    LOG (info) << "msg: loading message from file: " << fname;
     fname = _fname;
     has_file   = true;
     load_message_from_file (fname);
@@ -44,7 +43,7 @@ namespace Astroid {
   Message::Message (ustring _mid, ustring _fname) : Message () {
     mid = _mid;
     fname = _fname;
-    log << info << "msg: loading message from file (mid supplied): " << fname << endl;
+    LOG (info) << "msg: loading message from file (mid supplied): " << fname;
     has_file   = true;
     load_message_from_file (fname);
   }
@@ -59,17 +58,17 @@ namespace Astroid {
     has_file   = true;
     level      = _level;
 
-    log << info << "msg: loading mid: " << mid << endl;
+    LOG (info) << "msg: loading mid: " << mid;
 
     fname = notmuch_message_get_filename (message);
-    log << info << "msg: filename: " << fname << endl;
+    LOG (info) << "msg: filename: " << fname;
 
     load_message_from_file (fname);
     load_tags (message);
   }
 
   Message::Message (GMimeMessage * _msg) {
-    log << info << "msg: loading message from GMimeMessage." << endl;
+    LOG (info) << "msg: loading message from GMimeMessage.";
     in_notmuch = false;
     has_file   = false;
     missing_content = false;
@@ -119,19 +118,19 @@ namespace Astroid {
   }
 
   void Message::emit_message_changed (Db * db, Message::MessageChangedEvent me) {
-    log << info << "message: emitted changed signal for message: " << mid << ": " << me << endl;
+    LOG (info) << "message: emitted changed signal for message: " << mid << ": " << me;
 
     m_signal_message_changed.emit (db, this, me);
   }
 
   void Message::load_tags (Db * db) {
     if (!in_notmuch) {
-      log << error << "mt: error: message not in database." << endl;
+      LOG (error) << "mt: error: message not in database.";
       throw invalid_argument ("mt: load_tags on message not in database.");
     }
 
     if (mid == "") {
-      log << error << "mt: error: mid not defined, no tags" << endl;
+      LOG (error) << "mt: error: mid not defined, no tags";
       throw invalid_argument ("mt: load_tags on message without message id.");
     } else {
       /* get tags from nm db */
@@ -160,18 +159,18 @@ namespace Astroid {
 
   void Message::load_message_from_file (ustring fname) {
     if (!exists (fname.c_str())) {
-      log << error << "failed to open file: " << fname << ", it does not exist!" << endl;
+      LOG (error) << "failed to open file: " << fname << ", it does not exist!";
 
       has_file = false;
       missing_content = true;
 
       if (in_notmuch) {
-        log << warn << "loading cache for missing file from notmuch" << endl;
+        LOG (warn) << "loading cache for missing file from notmuch";
 
         load_notmuch_cache ();
 
       } else {
-        log << error << "message is not in database and not on disk." << endl;
+        LOG (error) << "message is not in database and not on disk.";
 
         string error_s = "failed to open file: " + fname;
         throw message_error (error_s.c_str());
@@ -180,7 +179,7 @@ namespace Astroid {
     } else {
       GMimeStream   * stream  = g_mime_stream_file_new_for_path (fname.c_str(), "r");
       if (stream == NULL) {
-        log << error << "failed to open file: " << fname << " (unspecified error)" << endl;
+        LOG (error) << "failed to open file: " << fname << " (unspecified error)";
         string error_s = "failed to open file: " + fname;
         throw message_error (error_s.c_str());
       }
@@ -254,7 +253,7 @@ namespace Astroid {
       } else {
         mid = UstringUtils::random_alphanumeric (10);
         mid = ustring::compose ("%1-astroid-missing-mid", mid);
-        log << warn << "mt: message does not have a message id, inventing one: " << mid << endl;
+        LOG (warn) << "mt: message does not have a message id, inventing one: " << mid;
       }
     }
 
@@ -294,7 +293,7 @@ namespace Astroid {
      */
 
     if (missing_content) {
-      log << warn << "message: missing content, no text." << endl;
+      LOG (warn) << "message: missing content, no text.";
       return "";
     }
 
@@ -440,7 +439,7 @@ namespace Astroid {
           else s = "";
         });
 
-      log << debug << "message: cached value: " << s << endl;
+      LOG (debug) << "message: cached value: " << s;
       if (s.empty ()) {
         return internet_address_list_new ();
       } else {
@@ -467,7 +466,7 @@ namespace Astroid {
           else s = "";
         });
 
-      log << debug << "message: cached value: " << s << endl;
+      LOG (debug) << "message: cached value: " << s;
       if (s.empty ()) {
         return internet_address_list_new ();
       } else {
@@ -494,7 +493,7 @@ namespace Astroid {
           else s = "";
         });
 
-      log << debug << "message: cached value: " << s << endl;
+      LOG (debug) << "message: cached value: " << s;
       if (s.empty ()) {
         return internet_address_list_new ();
       } else {
@@ -601,7 +600,7 @@ namespace Astroid {
 
   void Message::save () {
     if (missing_content) {
-      log << error << "message: missing content, can't save." << endl;
+      LOG (error) << "message: missing content, can't save.";
       return;
     }
 
@@ -630,7 +629,7 @@ namespace Astroid {
 
       default:
         {
-          log << debug << "msg: save: cancelled." << endl;
+          LOG (debug) << "msg: save: cancelled.";
         }
     }
   }
@@ -641,7 +640,7 @@ namespace Astroid {
     // copy_file ( path (fname), path (tofname) );
 
     if (missing_content) {
-      log << error << "message: missing content, can't save." << endl;
+      LOG (error) << "message: missing content, can't save.";
       return;
     }
 
@@ -660,7 +659,7 @@ namespace Astroid {
     }
 
     tofname = ustring (to.c_str());
-    log << info << "msg: saving to: " << tofname << endl;
+    LOG (info) << "msg: saving to: " << tofname;
 
     if (has_file)
     {
@@ -668,7 +667,7 @@ namespace Astroid {
       std::ofstream dst (tofname, ios::binary);
 
       if (!src.good () || !dst.good ()) {
-        log << error << "msg: failed writing to: " << tofname << endl;
+        LOG (error) << "msg: failed writing to: " << tofname;
         return;
       }
 
@@ -711,7 +710,7 @@ namespace Astroid {
 
     g_object_unref (mem);
 
-    log << info << "message: contents: loaded " << data->size () << " bytes in " << ( (clock () - t0) * 1000.0 / CLOCKS_PER_SEC ) << " ms." << endl;
+    LOG (info) << "message: contents: loaded " << data->size () << " bytes in " << ( (clock () - t0) * 1000.0 / CLOCKS_PER_SEC ) << " ms.";
 
     return data;
   }
@@ -804,7 +803,7 @@ namespace Astroid {
 
   void MessageThread::add_message (refptr<Chunk> c) {
     if (!c->mime_message) {
-      log << error << "mt: can only add message chunks that are GMimeMessages." << endl;
+      LOG (error) << "mt: can only add message chunks that are GMimeMessages.";
       throw runtime_error ("mt: can only add message chunks that are GMimeMessages");
     }
 

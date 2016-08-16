@@ -2,7 +2,6 @@
 # include "build_config.hh"
 # include "astroid.hh"
 # include "config.hh"
-# include "log.hh"
 
 # include <boost/filesystem.hpp>
 
@@ -26,7 +25,7 @@ namespace Astroid {
 
     if (astroid->in_test ()) {
       if (!exists (local_p)) {
-        log << test << "re: could not find local resource: " << local_p.c_str () << endl;
+        LOG (warn) << "re: could not find local resource: " << local_p.c_str ();
         exit (1);
       }
       finalpath = local_p;
@@ -35,7 +34,7 @@ namespace Astroid {
 
     if (has_user) {
       if (exists (user_p)) {
-        log << info << "re: using user configured resource: " << absolute(local_p).c_str () << endl;
+        LOG (info) << "re: using user configured resource: " << absolute(local_p).c_str ();
         finalpath = user_p;
         return;
       }
@@ -43,24 +42,24 @@ namespace Astroid {
 
 # ifdef DEBUG
     if (exists (local_p)) {
-      log << info << "re: using local resource: " << absolute (local_p).c_str () << endl;
+      LOG (info) << "re: using local resource: " << absolute (local_p).c_str ();
       finalpath = local_p;
     } else {
       if (exists (prefix_p)) {
-        log << info << "re: using installed resource: " << absolute (prefix_p).c_str () << endl;
+        LOG (info) << "re: using installed resource: " << absolute (prefix_p).c_str ();
         finalpath = prefix_p;
       } else {
-        log << error << "re: could not find resource: " << local_p.c_str () << " or " << prefix_p.c_str () << endl;
+        LOG (error) << "re: could not find resource: " << local_p.c_str () << " or " << prefix_p.c_str ();
         exit (1);
       }
     }
 # else
     /* if not DEBUG, only check for installed resource */
     if (exists (prefix_p)) {
-      log << info << "re: using installed resource: " << absolute (prefix_p).c_str () << endl;
+      LOG (info) << "re: using installed resource: " << absolute (prefix_p).c_str ();
       finalpath = prefix_p;
     } else {
-      log << error << "re: could not find resource: " << prefix_p.c_str () << endl;
+      LOG (error) << "re: could not find resource: " << prefix_p.c_str ();
       exit (1);
     }
 # endif

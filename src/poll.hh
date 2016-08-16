@@ -1,7 +1,6 @@
 # pragma once
 
 # include "astroid.hh"
-# include "log.hh"
 
 # include <mutex>
 # include <chrono>

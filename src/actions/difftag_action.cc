@@ -2,7 +2,6 @@
 # include <vector>
 # include <algorithm>
 
-# include "log.hh"
 # include "action.hh"
 # include "db.hh"
 
@@ -17,10 +16,10 @@ using namespace std;
 namespace Astroid {
   DiffTagAction * DiffTagAction::create (vector<refptr<NotmuchTaggable>> nmts, ustring diff_str) {
 
-    log << "difftag: parsing: " << diff_str << endl;
+    LOG (debug) << "difftag: parsing: " << diff_str;
 
     if (diff_str.find_first_of (",") != ustring::npos) {
-      log << error << "difftag: ',' not allowed, use ' ' to separate tags" << endl;
+      LOG (error) << "difftag: ',' not allowed, use ' ' to separate tags";
       return NULL;
     }
 
@@ -43,24 +42,8 @@ namespace Astroid {
       }
     }
 
-    log << debug << "difftag: adding: ";
-    for_each (add.begin(),
-              add.end(),
-              [&](ustring t) {
-                log << t << ", ";
-              });
-
-    log << ", removing: ";
-    for_each (remove.begin(),
-              remove.end(),
-              [&](ustring t) {
-                log << t << ", ";
-              });
-
-    log << endl;
-
     if (remove.empty () && add.empty ()) {
-      log << debug << "difftag: nothing to do." << endl;
+      LOG (debug) << "difftag: nothing to do.";
       return NULL;
     }
 

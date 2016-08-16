@@ -2,7 +2,6 @@
 
 # include "proto.hh"
 # include "crypto.hh"
-# include "log.hh"
 
 # include <iomanip>
 # include <iostream>
@@ -43,7 +42,7 @@ namespace Astroid {
           Gravatar::DefaultStr[def],
           size);
 
-    log << debug << "gravatar: for: " << addr << ", uri: " << uri << endl;
+    LOG (debug) << "gravatar: for: " << addr << ", uri: " << uri;
 
     return uri;
   }

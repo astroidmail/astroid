@@ -4,7 +4,6 @@
 
 # include "astroid.hh"
 # include "db.hh"
-# include "log.hh"
 # include "edit_message.hh"
 # include "forward_message.hh"
 
@@ -25,7 +24,7 @@ namespace Astroid {
 
     msg = _msg;
 
-    log << info << "fwd: forwarding message " << msg->mid << endl;
+    LOG (info) << "fwd: forwarding message " << msg->mid;
 
     /* set subject */
     subject = ustring::compose ("Fwd: %1", msg->subject);
@@ -104,10 +103,10 @@ namespace Astroid {
   void ForwardMessage::on_message_sent_attempt_received (bool res) {
     using std::endl;
     if (res) {
-      log << info << "fwd: message successfully sent, adding passed tag to original." << endl;
+      LOG (info) << "fwd: message successfully sent, adding passed tag to original.";
 
       if (!msg->in_notmuch) {
-        log << warn << "fwd: message not in notmuch." << endl;
+        LOG (warn) << "fwd: message not in notmuch.";
         return;
       }
 

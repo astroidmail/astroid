@@ -1,6 +1,5 @@
 # include "astroid.hh"
 # include "db.hh"
-# include "log.hh"
 
 # include "query_loader.hh"
 # include "thread_index_list_view.hh"
@@ -32,7 +31,7 @@ namespace Astroid {
     } else if (sort_order == "unsorted") {
       sort = NOTMUCH_SORT_UNSORTED;
     } else {
-      log << error << "ti: unknown sort order, must be 'newest', 'oldest', 'messageid' or 'unsorted': " << sort_order << ", using 'newest'." << endl;
+      LOG (error) << "ti: unknown sort order, must be 'newest', 'oldest', 'messageid' or 'unsorted': " << sort_order << ", using 'newest'.";
       sort = NOTMUCH_SORT_NEWEST_FIRST;
     }
 
@@ -55,7 +54,7 @@ namespace Astroid {
   }
 
   QueryLoader::~QueryLoader () {
-    log << debug << "ql: destruct." << endl;
+    LOG (debug) << "ql: destruct.";
     in_destructor = true;
     stop ();
   }
@@ -69,7 +68,7 @@ namespace Astroid {
 
   void QueryLoader::stop () {
     if (run) {
-      log << info << "ql (" << id << "): stopping loader..." << endl;
+      LOG (info) << "ql (" << id << "): stopping loader...";
     }
 
     run = false;
@@ -93,7 +92,7 @@ namespace Astroid {
   }
 
   void QueryLoader::refresh_stats () {
-    log << debug << "ql: refresh stats.." << endl;
+    LOG (debug) << "ql: refresh stats..";
     Db db (Db::DATABASE_READ_ONLY);
 
     notmuch_status_t st = NOTMUCH_STATUS_SUCCESS;
@@ -160,7 +159,7 @@ namespace Astroid {
 # endif
 
     if (st != NOTMUCH_STATUS_SUCCESS) {
-      log << error << "ql: could not get threads for query: " << query << endl;
+      LOG (error) << "ql: could not get threads for query: " << query;
       run = false;
     }
 
@@ -175,7 +174,7 @@ namespace Astroid {
       thread = notmuch_threads_get (threads);
 
       if (thread == NULL) {
-        log << error << "ql: error: could not get thread." << endl;
+        LOG (error) << "ql: error: could not get thread.";
         throw database_error ("ql: could not get thread (is NULL)");
       }
 
@@ -234,7 +233,7 @@ namespace Astroid {
       loaded_threads++;
 
       if ((loaded_threads % 100) == 0) {
-        log << debug << "ql: loaded " << loaded_threads << " threads." << endl;
+        LOG (debug) << "ql: loaded " << loaded_threads << " threads.";
       }
     }
   }
@@ -249,14 +248,14 @@ namespace Astroid {
   void QueryLoader::on_refreshed () {
     if (in_destructor) return;
 
-    log << warn << "ql (" << id << "): got refreshed signal." << endl;
+    LOG (warn) << "ql (" << id << "): got refreshed signal.";
     reload ();
   }
 
   void QueryLoader::on_thread_changed (Db * db, ustring thread_id) {
     if (in_destructor) return;
 
-    log << info << "ql (" << id << "): " << query << ", got changed thread signal: " << thread_id << endl;
+    LOG (info) << "ql (" << id << "): " << query << ", got changed thread signal: " << thread_id;
 
     /* we now have three options:
      * - a new thread has been added (unlikely)
@@ -300,11 +299,11 @@ namespace Astroid {
 
     if (found) {
       /* thread has either been updated or deleted from current query */
-      log << debug << "ql: updated: found thread in: " << ((clock() - t0) * 1000.0 / CLOCKS_PER_SEC) << " ms." << endl;
+      LOG (debug) << "ql: updated: found thread in: " << ((clock() - t0) * 1000.0 / CLOCKS_PER_SEC) << " ms.";
 
       if (in_query) {
         /* updated */
-        log << debug << "ql: updated" << endl;
+        LOG (debug) << "ql: updated";
         refptr<NotmuchThread> thread = row[list_store->columns.thread];
         thread->refresh (db);
         row[list_store->columns.newest_date] = thread->newest_date;
@@ -312,7 +311,7 @@ namespace Astroid {
 
       } else {
         /* deleted */
-        log << debug << "ql: deleted" << endl;
+        LOG (debug) << "ql: deleted";
         path = list_store->get_path (fwditer);
         list_store->erase (fwditer);
       }
@@ -321,9 +320,9 @@ namespace Astroid {
 
     } else {
       /* thread has possibly been added to the current query */
-      log << debug << "ql: updated: did not find thread, time used: " << ((clock() - t0) * 1000.0 / CLOCKS_PER_SEC) << " ms." << endl;
+      LOG (debug) << "ql: updated: did not find thread, time used: " << ((clock() - t0) * 1000.0 / CLOCKS_PER_SEC) << " ms.";
       if (in_query) {
-        log << debug << "ql: new thread for query, adding.." << endl;
+        LOG (debug) << "ql: new thread for query, adding..";
 
         /* get current cursor path, if we are at first row and the new addition
          * is before we should scroll up. */

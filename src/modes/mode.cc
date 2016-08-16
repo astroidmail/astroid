@@ -1,7 +1,6 @@
 # include "mode.hh"
 # include "main_window.hh"
 # include "keybindings.hh"
-# include "log.hh"
 
 namespace Astroid {
   Mode::Mode (MainWindow * mw) :
@@ -40,7 +39,7 @@ namespace Astroid {
     int c = main_window->notebook.get_current_page ();
 
     if (((Mode*) main_window->notebook.get_nth_page (c))->invincible && !force) {
-      log << debug << "mode: mode invincible, not closing." << endl;
+      LOG (debug) << "mode: mode invincible, not closing.";
     } else {
       main_window->del_mode (c);
     }
