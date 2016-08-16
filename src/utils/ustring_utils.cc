@@ -20,7 +20,7 @@ namespace Astroid {
       Glib::ustring::iterator end(str.end());
 
       for ( ; it != end; ++it)
-          if (! isspace(*it))
+          if (! g_unichar_isspace(*it))
               break;
 
       if (it == str.end())
@@ -36,7 +36,7 @@ namespace Astroid {
       Glib::ustring::iterator it(--(str.end()));
 
       for ( ; ; --it) {
-          if (! isspace(*it)) {
+          if (! g_unichar_isspace(*it)) {
               Glib::ustring::iterator it_adv(it);
               str.erase(++it_adv, str.end());
               break;
