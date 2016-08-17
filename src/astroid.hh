@@ -22,6 +22,7 @@ namespace Astroid {
       ~Astroid ();
       int main (int, char**);
       void main_test ();
+      void init_log ();
 
       const boost::property_tree::ptree& config (const std::string& path=std::string()) const;
       const boost::property_tree::ptree& notmuch_config () const;
@@ -60,8 +61,6 @@ namespace Astroid {
       void on_mailto_activate (const Glib::VariantBase &);
       refptr<Gio::SimpleAction> mailto;
       void send_mailto (MainWindow * mw, ustring);
-
-      std::ofstream logf;
 
       void on_quit ();
   };

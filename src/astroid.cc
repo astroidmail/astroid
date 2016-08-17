@@ -9,6 +9,20 @@
 # include <boost/program_options.hpp>
 # include <boost/filesystem.hpp>
 
+/* log */
+# include <boost/log/core.hpp>
+# include <boost/log/utility/setup/file.hpp>
+# include <boost/log/utility/setup/console.hpp>
+# include <boost/log/utility/setup/common_attributes.hpp>
+# include <boost/log/sinks/text_file_backend.hpp>
+# include <boost/log/sources/severity_logger.hpp>
+# include <boost/log/sources/record_ostream.hpp>
+# include <boost/log/utility/setup/filter_parser.hpp>
+# include <boost/log/utility/setup/formatter_parser.hpp>
+# include <boost/date_time/posix_time/posix_time_types.hpp>
+# include <boost/log/expressions.hpp>
+# include <boost/log/support/date_time.hpp>
+
 # include "astroid.hh"
 # include "build_config.hh"
 # include "db.hh"
@@ -37,16 +51,35 @@
 using namespace std;
 using namespace boost::filesystem;
 
+namespace logging   = boost::log;
+namespace keywords  = boost::log::keywords;
+namespace expr      = boost::log::expressions;
+
 /* globally available static instance of the Astroid */
 Astroid::Astroid * (Astroid::astroid);
 const char* const Astroid::Astroid::version = GIT_DESC;
 
 namespace Astroid {
+  void Astroid::init_log () {
+    /* log to console */
+    logging::add_common_attributes ();
+    logging::formatter format =
+                  expr::stream
+                      << "["
+                      << expr::format_date_time< boost::posix_time::ptime >("TimeStamp", "%Y-%m-%d %H:%M:%S.%f")
+                      << "] [" << expr::attr <boost::log::attributes::current_thread_id::value_type>("ThreadID")
+                      << "] [" << logging::trivial::severity
+                      << "] " << expr::smessage
+              ;
+
+    logging::add_console_log ()->set_formatter (format);
+  }
+
   Astroid::Astroid () {
     setlocale (LC_ALL, "");
     Glib::init ();
+    init_log ();
 
-    LOG (info) << "welcome to astroid! - " << Astroid::version;
     LOG (info) << "welcome to astroid! - " << Astroid::version;
 
     string charset;
@@ -107,23 +140,33 @@ namespace Astroid {
 
     }
 
-    /*
+    /* log to file */
     if (vm.count ("log")) {
       ustring lfile = vm["log"].as<ustring> ();
-      if (vm.count ("append-log")) {
-        logf.open (lfile, std::ofstream::out | std::ofstream::app);
-      } else {
-        logf.open (lfile, std::ofstream::out);
-      }
-      if (logf.good ()) {
-        log.add_out_stream (&logf);
-        LOG (info) << "logging to: " << lfile;
-      } else {
-        if (logf.is_open ()) logf.close ();
-        LOG (error) << "could not open: " << lfile << " for logging..";
-      }
+      bool append = vm.count ("append-log");
+
+      std::ios_base::openmode om = std::ofstream::out;
+      if (append) om |= std::ofstream::app;
+
+      logging::add_file_log (
+          keywords::file_name   = lfile.c_str (),
+          keywords::auto_flush  = true,
+          keywords::open_mode   = om,
+
+          keywords::format =
+                (
+                  expr::stream
+                      << "["
+                      << expr::format_date_time< boost::posix_time::ptime >("TimeStamp", "%Y-%m-%d %H:%M:%S.%f")
+                      << "] [" << expr::attr <boost::log::attributes::current_thread_id::value_type>("ThreadID")
+                      << "] [" << logging::trivial::severity
+                      << "] " << expr::smessage
+              )
+          );
+
+      LOG (info) << "logging to: " << lfile << " (append: " << append << ")";
     }
-    */
+
 
     /* make new config {{{ */
     if (vm.count("new-config")) {
@@ -339,11 +382,6 @@ namespace Astroid {
     if (plugin_manager) delete plugin_manager;
 # endif
 
-    if (logf.is_open()) {
-      // TODO: log
-      logf.close ();
-    }
-
     LOG (info) << "astroid: goodbye!";
   }
 
@@ -355,9 +393,6 @@ namespace Astroid {
 
     if (actions) actions->close ();
     delete actions;
-
-    // TODO: log
-    /* log.del_out_stream (&cout); */
   }
 
   MainWindow * Astroid::open_new_window (bool open_defaults) {
