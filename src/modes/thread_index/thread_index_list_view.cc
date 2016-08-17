@@ -446,7 +446,7 @@ namespace Astroid {
                              "Toggle marked",
                              bind (&ThreadIndexListView::multi_key_handler, this, MToggle, _1));
 
-    keys->register_key (";",
+    keys->register_key (Key (GDK_KEY_semicolon),
           "thread_index.multi",
           "Apply action to marked threads",
           [&] (Key k) {

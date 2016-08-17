@@ -2635,7 +2635,7 @@ namespace Astroid {
           return true;
         });
 
-    keys.register_key (";",
+    keys.register_key (Key (GDK_KEY_semicolon),
           "thread_view.multi",
           "Apply action to marked threads",
           [&] (Key k) {
