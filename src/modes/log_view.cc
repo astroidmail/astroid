@@ -1,10 +1,18 @@
 # include "astroid.hh"
+
 # include <boost/log/trivial.hpp>
+# include <boost/log/sinks/basic_sink_backend.hpp>
+# include <boost/log/sinks/sync_frontend.hpp>
+# include <boost/log/sinks/frontend_requirements.hpp>
+# include <boost/log/expressions.hpp>
+# include <boost/log/support/date_time.hpp>
 
 # include "log_view.hh"
 
-using namespace std;
 namespace logging = boost::log;
+namespace sinks   = boost::log::sinks;
+namespace expr    = boost::log::expressions;
+
 
 namespace Astroid {
   LogView::LogView (MainWindow * mw) : Mode (mw) {
@@ -31,7 +39,12 @@ namespace Astroid {
 
     show_all_children ();
 
-    // TODO: add
+    /* register with boost::log */
+    auto core = logging::core::get ();
+    lv = std::shared_ptr<LogViewSink> (new LogViewSink (this));
+    sink = boost::shared_ptr<lv_sink_t> (new lv_sink_t (lv));
+    core->add_sink (sink);
+
     LOG (debug) << "log window ready.";
 
     keys.title = "Log view";
@@ -112,36 +125,11 @@ namespace Astroid {
     keys.loghandle = false;
   }
 
-  LogView::~LogView () {
-    // TODO: remove
-  }
-
-  void LogView::log_line (logging::trivial::severity_level lvl, ustring time_str, ustring s) {
-# if 0
-    auto iter = store->append();
-    auto row  = *iter;
-
-    ustring l = ustring::compose (
-        "<i>[%1]</i> %2: %3",
-        Log::level_string (lvl),
-        time_str,
-        Glib::Markup::escape_text(s));
-
-    if (lvl == logging::trivial::error) {
-      row[m_columns.m_col_str] = "<span color=\"red\">" + l + "</span>";
-    } else if (lvl == logging::trivial::warning) {
-      row[m_columns.m_col_str] = "<span color=\"pink\">" + l + "</span>";
-    } else if (lvl == logging::trivial::info) {
-      row[m_columns.m_col_str] = l;
-    } else {
-      /* debug */
-      row[m_columns.m_col_str] = "<span color=\"gray\">" + l + "</span>";
-    }
-
-    auto path = store->get_path (iter);
-    tv.scroll_to_row (path);
-    tv.set_cursor (path);
-# endif
+  void LogView::pre_close () {
+    auto core = logging::core::get ();
+    core->remove_sink (sink);
+    sink.reset ();
+    lv.reset ();
   }
 
   void LogView::grab_modal () {
@@ -151,6 +139,43 @@ namespace Astroid {
 
   void LogView::release_modal () {
     remove_modal_grab ();
+  }
+
+  LogViewSink::LogViewSink (LogView * lv) {
+    log_view = lv;
+  }
+
+  LogViewSink::LogViewSink (const std::shared_ptr<LogViewSink> &lvs) {
+    log_view = lvs->log_view;
+  }
+
+  void LogViewSink::consume (logging::record_view const& rec, string_type const& message) {
+    /* probably need to do this on gui thread */
+    auto iter = log_view->store->append();
+    auto row  = *iter;
+
+    auto lvl = rec[logging::trivial::severity];
+    auto ts  = rec["TimeStamp"].extract<boost::posix_time::ptime> ();
+
+    ustring l = ustring::compose (
+        "<i>[%1]</i> %2: %3",
+        lvl,
+        boost::posix_time::to_simple_string (*ts),
+        Glib::Markup::escape_text(message));
+
+    if (lvl == logging::trivial::error) {
+      row[log_view->m_columns.m_col_str] = "<span color=\"red\">" + l + "</span>";
+    } else if (lvl == logging::trivial::warning) {
+      row[log_view->m_columns.m_col_str] = "<span color=\"pink\">" + l + "</span>";
+    } else if (lvl == logging::trivial::info) {
+      row[log_view->m_columns.m_col_str] = l;
+    } else {
+      row[log_view->m_columns.m_col_str] = "<span color=\"gray\">" + l + "</span>";
+    }
+
+    auto path = log_view->store->get_path (iter);
+    log_view->tv.scroll_to_row (path);
+    log_view->tv.set_cursor (path);
   }
 
 }

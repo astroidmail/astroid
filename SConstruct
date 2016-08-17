@@ -314,6 +314,10 @@ if not conf.CheckLib ('boost_thread', language = 'c++'):
   print "boost_thread does not seem to be installed."
   Exit (1)
 
+if not conf.CheckLib ('boost_date_time', language = 'c++'):
+  print "boost_date_time does not seem to be installed."
+  Exit (1)
+
 libs   = ['notmuch',
           'boost_filesystem',
           'boost_system',
@@ -321,6 +325,7 @@ libs   = ['notmuch',
           'boost_log_setup',
           'boost_log',
           'boost_thread',
+          'boost_date_time',
           'stdc++']
 
 env.AppendUnique (LIBS = libs)
