@@ -1,17 +1,13 @@
 # pragma once
 
 # include "astroid.hh"
-# include "log.hh"
 # include "proto.hh"
 
 using Astroid::astroid;
-using Astroid::error;
-using Astroid::info;
-using Astroid::warn;
-using Astroid::debug;
-using Astroid::test;
-using std::endl;
 using Astroid::ustring;
+
+// for logging
+# define test trace
 
 void setup () {
   astroid = new Astroid::Astroid ();

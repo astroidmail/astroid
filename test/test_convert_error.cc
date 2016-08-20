@@ -1,6 +1,7 @@
 # define BOOST_TEST_DYN_LINK
 # define BOOST_TEST_MODULE TestConvertError
 # include <boost/test/unit_test.hpp>
+# include <iostream>
 
 # include "test_common.hh"
 # include "db.hh"
@@ -62,7 +63,7 @@ BOOST_AUTO_TEST_SUITE(Reading)
 
     /* test writing out */
     std::string name = "test/mail/test_mail/tmp-reply-convert-error";
-    Astroid::log << Astroid::test << "writing to tmp file " << name << endl;
+    LOG (test) << "writing to tmp file " << name;
     std::fstream tmpfile (name, std::fstream::out);
 
     tmpfile << "From: test@test.no" << endl;
@@ -73,7 +74,7 @@ BOOST_AUTO_TEST_SUITE(Reading)
     tmpfile << endl;
     tmpfile.close ();
 
-    Astroid::log << Astroid::test << "removing tmp file" << endl;
+    LOG (test) << "removing tmp file";
     std::remove (name.c_str());
 
     teardown ();

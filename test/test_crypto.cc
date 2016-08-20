@@ -15,11 +15,10 @@ BOOST_AUTO_TEST_SUITE(PGPEncryption)
   {
     using Astroid::ComposeMessage;
     using Astroid::Account;
-    using Astroid::log;
     setup ();
 
     Account a = astroid->accounts->accounts[0];
-    log << test << "cy: account gpg: " << a.gpgkey << endl;
+    LOG (trace) << "cy: account gpg: " << a.gpgkey;
 
     ComposeMessage * c = new ComposeMessage ();
     c->set_from (&a);
@@ -34,11 +33,10 @@ BOOST_AUTO_TEST_SUITE(PGPEncryption)
     using Astroid::ComposeMessage;
     using Astroid::Account;
     using Astroid::Message;
-    using Astroid::log;
     setup ();
 
     Account a = astroid->accounts->accounts[0];
-    log << test << "cy: account gpg: " << a.gpgkey << endl;
+    LOG (trace) << "cy: account gpg: " << a.gpgkey;
     a.email = "gaute@astroidmail.bar";
 
     ComposeMessage * c = new ComposeMessage ();
@@ -49,22 +47,22 @@ BOOST_AUTO_TEST_SUITE(PGPEncryption)
 
     ustring bdy = "This is test: æøå.\n > testing\ntesting\n...";
 
-    log << test << "cm: writing utf-8 text to message body: " << bdy << endl;
+    LOG (trace) << "cm: writing utf-8 text to message body: " << bdy;
     c->body << bdy;
 
-    log << test << "build:" << endl;
+    LOG (trace) << "build:";
     c->build ();
-    log << test << "finalize:" << endl;
+    LOG (trace) << "finalize:";
     c->finalize ();
     ustring fn = c->write_tmp ();
 
     BOOST_CHECK_MESSAGE (c->encryption_success == true, "encryption should be successful");
-    log << test << "cm: encryption error: " << c->encryption_error << endl;
+    LOG (test) << "cm: encryption error: " << c->encryption_error;
 
-    log << test << "cm: encrypted content: " << endl;
-    log << test << g_mime_object_to_string (GMIME_OBJECT(c->message)) << endl;
+    LOG (test) << "cm: encrypted content: ";
+    LOG (test) << g_mime_object_to_string (GMIME_OBJECT(c->message));
 
-    log << test << "cm: deleting ComposeMessage.." << endl;
+    LOG (test) << "cm: deleting ComposeMessage..";
 
     delete c;
 
@@ -89,11 +87,10 @@ BOOST_AUTO_TEST_SUITE(PGPEncryption)
     using Astroid::ComposeMessage;
     using Astroid::Account;
     using Astroid::Message;
-    using Astroid::log;
     setup ();
 
     Account a = astroid->accounts->accounts[0];
-    log << test << "cy: account gpg: " << a.gpgkey << endl;
+    LOG (test) << "cy: account gpg: " << a.gpgkey;
     a.email = "gaute@astroidmail.bar";
 
     ComposeMessage * c = new ComposeMessage ();
@@ -104,7 +101,7 @@ BOOST_AUTO_TEST_SUITE(PGPEncryption)
 
     ustring bdy = "This is test: æøå.\n > testing\ntesting\n...";
 
-    log << test << "cm: writing utf-8 text to message body: " << bdy << endl;
+    LOG (test) << "cm: writing utf-8 text to message body: " << bdy;
     c->body << bdy;
 
     c->build ();
@@ -112,12 +109,12 @@ BOOST_AUTO_TEST_SUITE(PGPEncryption)
     ustring fn = c->write_tmp ();
 
     BOOST_CHECK_MESSAGE (c->encryption_success == true, "encryption should be successful");
-    log << test << "cm: encryption error: " << c->encryption_error << endl;
+    LOG (test) << "cm: encryption error: " << c->encryption_error;
 
-    log << test << "cm: encrypted content: " << endl;
-    log << test << g_mime_object_to_string (GMIME_OBJECT(c->message)) << endl;
+    LOG (test) << "cm: encrypted content: ";
+    LOG (test) << g_mime_object_to_string (GMIME_OBJECT(c->message));
 
-    log << test << "cm: deleting ComposeMessage.." << endl;
+    LOG (test) << "cm: deleting ComposeMessage..";
 
     delete c;
 
@@ -139,11 +136,10 @@ BOOST_AUTO_TEST_SUITE(PGPEncryption)
     using Astroid::ComposeMessage;
     using Astroid::Account;
     using Astroid::Message;
-    using Astroid::log;
     setup ();
 
     Account a = astroid->accounts->accounts[0];
-    log << test << "cy: account gpg: " << a.gpgkey << endl;
+    LOG (test) << "cy: account gpg: " << a.gpgkey;
     a.email = "gaute@astroidmail.bar";
 
     ComposeMessage * c = new ComposeMessage ();
@@ -155,17 +151,17 @@ BOOST_AUTO_TEST_SUITE(PGPEncryption)
 
     c->body << bdy;
 
-    log << test << "build:" << endl;
+    LOG (test) << "build:";
     c->build ();
 
-    log << test << "finalize:" << endl;
+    LOG (test) << "finalize:";
     c->finalize ();
 
     BOOST_CHECK_MESSAGE (c->encryption_success == false, "encryption should fail");
-    log << test << "cm: encryption error: " << c->encryption_error << endl;
+    LOG (test) << "cm: encryption error: " << c->encryption_error;
 
-    log << test << "cm: encrypted content: " << endl;
-    log << test << g_mime_object_to_string (GMIME_OBJECT(c->message)) << endl;
+    LOG (test) << "cm: encrypted content: ";
+    LOG (test) << g_mime_object_to_string (GMIME_OBJECT(c->message));
 
     delete c;
 

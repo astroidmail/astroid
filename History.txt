@@ -19,6 +19,8 @@
 * Make Message-ID customizable, and User-Agent optional. These may also
   be customized with a plugin.
 
+* Use Boost::log for logging.
+
 == v0.6 / 2016-07-23
 
 * Use any editor (general XEmbed support in edit-message window): Emacs

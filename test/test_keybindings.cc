@@ -6,7 +6,6 @@
 # include "glibmm.h"
 
 # include "astroid.hh"
-# include "log.hh"
 # include "modes/keybindings.hh"
 # include "utils/cmd.hh"
 
@@ -65,10 +64,10 @@ BOOST_AUTO_TEST_SUITE(TestTestKeybindings)
     ustring test_thread = "001";
 
     auto f = [&] (Key k, ustring cmd) {
-      Astroid::log << test << "key: run-hook got back: " << cmd << endl;
+      LOG (test) << "key: run-hook got back: " << cmd;
 
       ustring final_cmd = ustring::compose (cmd, test_thread);
-      Astroid::log << test << "key: would run: " << final_cmd << endl;
+      LOG (test) << "key: would run: " << final_cmd;
 
       Cmd("test", final_cmd).run ();
 
@@ -86,7 +85,7 @@ BOOST_AUTO_TEST_SUITE(TestTestKeybindings)
     e.state  = 0;
     e.keyval = n.key;
 
-    Astroid::log << test << "handling key: n" << endl;
+    LOG (test) << "handling key: n";
     keys.handle (&e);
 
 

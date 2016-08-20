@@ -7,14 +7,12 @@
 # include "message_thread.hh"
 # include "chunk.hh"
 # include "glibmm.h"
-# include "log.hh"
 
 using std::endl;
 using Astroid::Message;
 using Astroid::MessageThread;
 using Astroid::Chunk;
 using Astroid::ustring;
-using Astroid::test;
 
 BOOST_AUTO_TEST_SUITE(Reading)
 
@@ -37,14 +35,14 @@ BOOST_AUTO_TEST_SUITE(Reading)
     /* the first part is probablematic */
     /* refptr<Chunk> c = m.root->kids[0]; */
     for (auto &c : m.mime_messages ()) {
-      Astroid::log << test << "chunk: " << c->id
+      LOG (test) << "chunk: " << c->id
         << ", viewable: " << c->viewable
         << ", mime_message: " << c->mime_message
-        << endl;
+       ;
 
       /*
       std::string content ((char *) c->contents ()->get_data ());
-      Astroid::log << test <<  content << endl;
+      LOG (test) <<  content;
       */
 
       refptr<MessageThread> mt = refptr<MessageThread> (new MessageThread ());
@@ -67,14 +65,14 @@ BOOST_AUTO_TEST_SUITE(Reading)
     /* the first part is probablematic */
     /* refptr<Chunk> c = m.root->kids[0]; */
     for (auto &c : m.mime_messages ()) {
-      Astroid::log << test << "chunk: " << c->id
+      LOG (test) << "chunk: " << c->id
         << ", viewable: " << c->viewable
         << ", mime_message: " << c->mime_message
-        << endl;
+       ;
 
       /*
       std::string content ((char *) c->contents ()->get_data ());
-      Astroid::log << test <<  content << endl;
+      LOG (test) <<  content;
       */
 
       refptr<MessageThread> mt = refptr<MessageThread> (new MessageThread ());

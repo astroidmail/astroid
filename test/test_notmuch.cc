@@ -3,12 +3,15 @@
 # include <boost/test/unit_test.hpp>
 # include <boost/filesystem.hpp>
 
+# include <iostream>
+
 # include "test_common.hh"
 
 # include <notmuch.h>
 
 namespace bfs = boost::filesystem;
 using std::cout;
+using std::endl;
 
 BOOST_AUTO_TEST_SUITE(Notmuch)
 

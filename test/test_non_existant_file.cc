@@ -28,9 +28,6 @@ BOOST_AUTO_TEST_SUITE(Reading)
 
   BOOST_AUTO_TEST_CASE(out_of_sync)
   {
-    using Astroid::log;
-    using Astroid::test;
-    using std::endl;
     using Astroid::Message;
     using Astroid::Db;
     using Astroid::AddressList;
@@ -49,7 +46,7 @@ BOOST_AUTO_TEST_SUITE(Reading)
     Message * mm;
     BOOST_CHECK_NO_THROW (mm = new Message ("test/mail/test_mail/oos.eml"));
     BOOST_CHECK ((AddressList (mm->other_to ()).str () == "ba@adsf.asd"));
-    Astroid::log << test << "other: " << AddressList (mm->other_to ()).str () << endl;
+    LOG (test) << "other: " << AddressList (mm->other_to ()).str ();
     delete mm;
 
     /* remove it without updating notmuch */
@@ -61,30 +58,30 @@ BOOST_AUTO_TEST_SUITE(Reading)
     ustring mid = "oos@asdf.com";
     Db db(Db::DATABASE_READ_ONLY);
     db.on_message (mid, [&](notmuch_message_t * msg) {
-        Astroid::log << test << "trying to open deleted file." << endl;
+        LOG (test) << "trying to open deleted file.";
 
         oos = new Message (msg, 0);
 
-        Astroid::log << test << "deleted file opened." << endl;
+        LOG (test) << "deleted file opened.";
 
         });
 
     /* testing various methods */
-    Astroid::log << test << "message: testing methods on out-of-sync message." << endl;
+    LOG (test) << "message: testing methods on out-of-sync message.";
 
     oos->save_to ("test/mail/test_mail/wont-work.eml");
 
-    Astroid::log << test << "sender: " << oos->sender << endl;
-    Astroid::log << test << "text: " << oos->viewable_text (false) << endl;
+    LOG (test) << "sender: " << oos->sender;
+    LOG (test) << "text: " << oos->viewable_text (false);
 
     /* these do not seem to be cached */
-    Astroid::log << test << "to: " << AddressList (oos->to()).str() << endl;
-    Astroid::log << test << "cc: " << AddressList (oos->cc()).str() << endl;
-    Astroid::log << test << "bcc: " << AddressList (oos->bcc()).str() << endl;
-    Astroid::log << test << "other: " << AddressList (oos->other_to ()).str () << endl;
-    Astroid::log << test << "date: " << oos->date () << endl;
+    LOG (test) << "to: " << AddressList (oos->to()).str();
+    LOG (test) << "cc: " << AddressList (oos->cc()).str();
+    LOG (test) << "bcc: " << AddressList (oos->bcc()).str();
+    LOG (test) << "other: " << AddressList (oos->other_to ()).str ();
+    LOG (test) << "date: " << oos->date ();
 
-    Astroid::log << test << "pretty date: " << oos->pretty_verbose_date() << endl;
+    LOG (test) << "pretty date: " << oos->pretty_verbose_date();
 
     oos->contents ();
     oos->attachments ();
