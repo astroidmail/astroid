@@ -1,5 +1,8 @@
 # include "astroid.hh"
 
+# include <deque>
+# include <mutex>
+
 # include <boost/log/trivial.hpp>
 # include <boost/log/sinks/basic_sink_backend.hpp>
 # include <boost/log/sinks/sync_frontend.hpp>
@@ -44,6 +47,8 @@ namespace Astroid {
     lv = std::shared_ptr<LogViewSink> (new LogViewSink (this));
     sink = boost::shared_ptr<lv_sink_t> (new lv_sink_t (lv));
     core->add_sink (sink);
+
+    msgs_d.connect (sigc::mem_fun (this, &LogView::consume));
 
     LOG (debug) << "log window ready.";
 
@@ -141,6 +146,31 @@ namespace Astroid {
     remove_modal_grab ();
   }
 
+  void LogView::consume () {
+    std::unique_lock<std::mutex> lk (msgs_m);
+
+    while (!msgs.empty ()) {
+
+      auto p = msgs.front ();
+      msgs.pop_front ();
+
+      lk.unlock ();
+
+      auto iter = store->append();
+      auto row  = *iter;
+
+      row[m_columns.m_col_str] = p;
+
+      auto path = store->get_path (iter);
+      tv.scroll_to_row (path);
+      tv.set_cursor (path);
+
+      lk.lock (); // for while
+    }
+
+    lk.unlock (); // for while
+  }
+
   LogViewSink::LogViewSink (LogView * lv) {
     log_view = lv;
   }
@@ -150,9 +180,6 @@ namespace Astroid {
   }
 
   void LogViewSink::consume (logging::record_view const& rec, string_type const& message) {
-    /* probably need to do this on gui thread */
-    auto iter = log_view->store->append();
-    auto row  = *iter;
 
     auto lvl = rec[logging::trivial::severity];
     auto ts  = rec["TimeStamp"].extract<boost::posix_time::ptime> ();
@@ -164,18 +191,24 @@ namespace Astroid {
         Glib::Markup::escape_text(message));
 
     if (lvl == logging::trivial::error) {
-      row[log_view->m_columns.m_col_str] = "<span color=\"red\">" + l + "</span>";
+      l = "<span color=\"red\">" + l + "</span>";
     } else if (lvl == logging::trivial::warning) {
-      row[log_view->m_columns.m_col_str] = "<span color=\"pink\">" + l + "</span>";
+      l = "<span color=\"pink\">" + l + "</span>";
     } else if (lvl == logging::trivial::info) {
-      row[log_view->m_columns.m_col_str] = l;
+      l = l;
     } else {
-      row[log_view->m_columns.m_col_str] = "<span color=\"gray\">" + l + "</span>";
+      l = "<span color=\"gray\">" + l + "</span>";
     }
 
-    auto path = log_view->store->get_path (iter);
-    log_view->tv.scroll_to_row (path);
-    log_view->tv.set_cursor (path);
+    std::unique_lock <std::mutex> lk (log_view->msgs_m);
+    bool notify = log_view->msgs.empty ();
+
+    log_view->msgs.push_back (l);
+
+    lk.unlock ();
+
+    if (notify) log_view->msgs_d.emit ();
+
   }
 
 }

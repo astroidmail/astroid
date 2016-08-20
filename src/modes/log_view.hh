@@ -1,5 +1,8 @@
 # pragma once
 
+# include <deque>
+# include <mutex>
+
 # include "proto.hh"
 # include "astroid.hh"
 # include <boost/log/trivial.hpp>
@@ -34,9 +37,9 @@ namespace Astroid {
     public:
       LogView (MainWindow *);
 
-      void grab_modal () override;
+      void grab_modal ()    override;
       void release_modal () override;
-      void pre_close () override;
+      void pre_close ()     override;
 
       std::shared_ptr <LogViewSink> lv;
       boost::shared_ptr <lv_sink_t> sink;
@@ -57,6 +60,14 @@ namespace Astroid {
       Gtk::TreeView tv;
       Gtk::ScrolledWindow scroll;
       refptr<Gtk::ListStore> store;
+
+      /* consume log on GUI thread */
+      std::deque<ustring> msgs;
+
+      std::mutex msgs_m;
+      Glib::Dispatcher msgs_d;
+
+      void consume ();
   };
 
 }
