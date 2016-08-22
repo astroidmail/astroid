@@ -25,15 +25,13 @@ namespace Astroid {
 
   std::atomic<uint> Chunk::nextid (0);
 
-  Chunk::Chunk (GMimeObject * mp, bool encrypted, bool _signed, Crypto * _cr) : mime_object (mp) {
+  Chunk::Chunk (GMimeObject * mp, bool encrypted, bool _signed, refptr<Crypto> _cr) : mime_object (mp) {
     using std::endl;
     id = nextid++;
 
     isencrypted = encrypted;
     issigned    = _signed;
     crypt       = _cr;
-
-    if (crypt != NULL) crypt->reference ();
 
     if (mp == NULL) {
       log << error << "chunk (" << id << "): got NULL mime_object." << endl;
@@ -136,7 +134,7 @@ namespace Astroid {
         ustring protocol = "";
         const char * _protocol = g_mime_content_type_get_parameter (content_type, "protocol");
         if (_protocol != NULL) protocol = _protocol;
-        crypt = new Crypto (protocol);
+        crypt = refptr<Crypto> (new Crypto (protocol));
         if (!crypt->ready) {
           log << error << "chunk: no crypto ready." << endl;
         }
@@ -691,7 +689,6 @@ namespace Astroid {
     // these should not be unreffed.
     // g_object_unref (mime_object);
     // g_object_unref (content_type);
-    if (crypt != NULL) crypt->unreference ();
   }
 }
 

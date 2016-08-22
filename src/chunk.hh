@@ -17,7 +17,7 @@ namespace Astroid {
       static std::atomic<uint> nextid;
 
     public:
-      Chunk (GMimeObject *, bool encrypted = false, bool _signed = false, Crypto * _cr = NULL);
+      Chunk (GMimeObject *, bool encrypted = false, bool _signed = false, refptr<Crypto> _cr = refptr<Crypto> ());
       ~Chunk ();
 
       int id;
@@ -54,7 +54,7 @@ namespace Astroid {
 
       GMimeContentType * preferred_type = viewable_types["plain"];
 
-      Crypto * crypt = NULL;
+      refptr<Crypto> crypt;
 
       /* attachment specific stuff */
       ustring get_filename ();

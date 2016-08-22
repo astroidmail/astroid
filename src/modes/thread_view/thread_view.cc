@@ -1193,7 +1193,7 @@ namespace Astroid {
 
       if (c->issigned) {
 
-        Crypto * cr = c->crypt;
+        refptr<Crypto> cr = c->crypt;
 
         if (cr->verified) {
           sign_string += "<span class=\"header\">Signature verification succeeded.</span>";
@@ -1267,7 +1267,7 @@ namespace Astroid {
       }
 
       if (c->isencrypted) {
-        Crypto * cr = c->crypt;
+        refptr<Crypto> cr = c->crypt;
 
         if (c->issigned) enc_string = "<span class=\"header\">Signed and Encrypted.</span>";
         else             enc_string = "<span class=\"header\">Encrypted.</span>";
