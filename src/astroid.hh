@@ -2,6 +2,7 @@
 
 # include <vector>
 # include <string>
+# include <atomic>
 # include <fstream>
 
 # include <boost/property_tree/ptree.hpp>
@@ -37,9 +38,6 @@ namespace Astroid {
       /* accounts */
       AccountManager * accounts;
 
-      /* contacts */
-      //Contacts * contacts;
-
       /* actions */
       ActionManager * actions;
 
@@ -63,6 +61,8 @@ namespace Astroid {
       void send_mailto (MainWindow * mw, ustring);
 
       void on_quit ();
+
+      static std::atomic<bool> log_initialized;
   };
 
   /* globally available instance of our main Astroid-class */

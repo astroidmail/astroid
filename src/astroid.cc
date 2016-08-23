@@ -1,6 +1,7 @@
 # include <iostream>
 # include <vector>
 # include <memory>
+# include <atomic>
 
 # include <gtkmm.h>
 # include <gtkmm/window.h>
@@ -58,15 +59,18 @@ namespace expr      = boost::log::expressions;
 /* globally available static instance of the Astroid */
 Astroid::Astroid * (Astroid::astroid);
 const char* const Astroid::Astroid::version = GIT_DESC;
+std::atomic<bool> Astroid::Astroid::log_initialized (false);
 
 namespace Astroid {
   void Astroid::init_log () {
+    if (log_initialized) return;
+    log_initialized = true;
     /* log to console */
     logging::add_common_attributes ();
     logging::formatter format =
                   expr::stream
                       << "["
-                      << expr::format_date_time< boost::posix_time::ptime >("TimeStamp", "%Y-%m-%d %H:%M:%S.%f")
+                      << expr::format_date_time< boost::posix_time::ptime >("TimeStamp", "%H:%M:%S.%f")
                       << "] [" << expr::attr <boost::log::attributes::current_thread_id::value_type>("ThreadID")
                       << "] [" << logging::trivial::severity
                       << "] " << expr::smessage

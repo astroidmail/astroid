@@ -2,6 +2,7 @@
 
 # include <deque>
 # include <mutex>
+# include <iostream>
 
 # include <boost/log/trivial.hpp>
 # include <boost/log/sinks/basic_sink_backend.hpp>
@@ -182,13 +183,17 @@ namespace Astroid {
   void LogViewSink::consume (logging::record_view const& rec, string_type const& message) {
 
     auto lvl = rec[logging::trivial::severity];
-    auto ts  = rec["TimeStamp"].extract<boost::posix_time::ptime> ();
 
-    ustring l = ustring::compose (
-        "<i>[%1]</i> %2: %3",
-        lvl,
-        boost::posix_time::to_simple_string (*ts),
-        Glib::Markup::escape_text(message));
+    auto ts  = rec["TimeStamp"].extract<boost::posix_time::ptime> ();
+    boost::posix_time::time_facet * f = new boost::posix_time::time_facet ("%H:%M:%S.%f");
+
+    std::ostringstream s;
+    s.imbue (std::locale (s.getloc (), f));
+
+    s << "<i>[" << std::setw (6) << lvl << "]</i> ";
+    s << *ts << ": " << Glib::Markup::escape_text (message);
+
+    ustring l = s.str ();
 
     if (lvl == logging::trivial::error) {
       l = "<span color=\"red\">" + l + "</span>";
