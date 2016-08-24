@@ -20,6 +20,8 @@ namespace Astroid {
 
       void focus () override;
 
+      void size_allocate (const Gtk::Allocation &);
+
     protected:
       EditMessage * em;
 

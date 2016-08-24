@@ -32,10 +32,19 @@ namespace Astroid {
         sigc::mem_fun(*this, &Plugin::socket_realized) );
 
     add (*editor_socket);
+
+    signal_size_allocate ().connect (
+        sigc::mem_fun (*this, &Plugin::size_allocate));
   }
 
   Plugin::~Plugin () {
 
+  }
+
+  void Plugin::size_allocate (const Gtk::Allocation &) {
+    LOG (debug) << "plugin: size allocate";
+    check_resize ();
+    editor_socket->check_resize ();
   }
 
   bool Plugin::ready () {
@@ -99,6 +108,9 @@ namespace Astroid {
 
     editor_ready = true;
     em->activate_editor ();
+
+    check_resize ();
+    editor_socket->check_resize ();
   }
 
   bool Plugin::plug_removed () {
