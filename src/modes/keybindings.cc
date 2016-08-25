@@ -404,13 +404,24 @@ namespace Astroid {
 
         throw duplicatekey_error (err.c_str());
 
-      } else {
+      } else if (r.first->first.userdefined && !k.userdefined) {
         ustring err = ustring::compose (
             "key: %1 (%2) is user-configured in map with name: %3, will try aliases.",
             k.str (), k.name, r.first->first.name);
 
         LOG (warn) << err;
         has_master = false;
+
+      } else {
+        /* neither are user-configured, we have a hardcoded conflict */
+
+        ustring err = ustring::compose (
+            "key: %1 (%2) is already mapped with name: %3",
+            k.str (), k.name, r.first->first.name);
+
+        LOG (error) << err;
+
+        throw duplicatekey_error (err.c_str());
       }
     }
 

@@ -2408,7 +2408,7 @@ namespace Astroid {
         [&] (Key) {
           bool foundme = false;
 
-          for (auto mi = mthread->messages.rbegin (); 
+          for (auto mi = mthread->messages.rbegin ();
               mi != mthread->messages.rend (); mi++) {
             if (foundme && has ((*mi)->tags, ustring("unread"))) {
               focused_message = *mi;
@@ -2803,7 +2803,7 @@ namespace Astroid {
 
     keys.register_key ("C-f",
         "thread_view.search.search",
-        "Search for text",
+        "Search for text or go to next match",
         sigc::mem_fun (this, &ThreadView::search));
 
 
@@ -2814,7 +2814,7 @@ namespace Astroid {
           return true;
         });
 
-    keys.register_key ("N", "thread_view.search.next",
+    keys.register_key (UnboundKey (), "thread_view.search.next",
         "Go to next match",
         [&] (Key) {
           next_search_match ();
@@ -3848,6 +3848,11 @@ namespace Astroid {
 
   /* Searching  */
   bool ThreadView::search (Key) {
+    if (in_search) {
+      next_search_match ();
+      return true;
+    }
+
     reset_search ();
 
     main_window->enable_command (CommandBar::CommandMode::SearchText,
