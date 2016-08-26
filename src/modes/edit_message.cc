@@ -123,9 +123,32 @@ namespace Astroid {
       _hostname[1023] = 0;
       gethostname (_hostname, 1023);
 
+      char _domainname[1024];
+      _domainname[1023] = 0;
+      getdomainname (_domainname, 1023);
+
       ustring hostname = astroid->config ().get <string> ("mail.message_id_fqdn");
       UstringUtils::trim (hostname);
-      if (hostname.empty ()) hostname = _hostname;
+      if (hostname.empty ()) {
+        if (*_hostname != 0) {
+          hostname = _hostname;
+
+          if (*_domainname != 0) {
+            ustring d (_domainname);
+            d = UstringUtils::replace (d, "(", ""); // often (none) is returned
+            d = UstringUtils::replace (d, ")", "");
+            hostname += ".";
+            hostname += d;
+          }
+
+          if (hostname.find (".", 0) == std::string::npos) {
+            /* add a top level domain */
+            hostname += ".none";
+          }
+        } else {
+          hostname = UstringUtils::random_alphanumeric (10) + ".none";
+        }
+      }
 
 
       ustring user = astroid->config ().get<string> ("mail.message_id_user");
