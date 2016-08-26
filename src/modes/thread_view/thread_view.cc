@@ -3315,6 +3315,7 @@ namespace Astroid {
 
     /* update focus time for unread counter */
     focus_time = chrono::steady_clock::now ();
+    if (unread_delay == 0.0) unread_check ();
   }
 
   bool ThreadView::unread_check () {
@@ -3326,7 +3327,7 @@ namespace Astroid {
 
         chrono::duration<double> elapsed = chrono::steady_clock::now() - focus_time;
 
-        if (elapsed.count () > unread_delay) {
+        if (unread_delay == 0.0 || elapsed.count () > unread_delay) {
           if (has (focused_message->tags, ustring("unread"))) {
 
             main_window->actions->doit (refptr<Action>(new TagAction (refptr<NotmuchTaggable>(new NotmuchMessage(focused_message)), {}, { "unread" })), false);
@@ -3717,6 +3718,10 @@ namespace Astroid {
     g_object_unref (class_list);
     g_object_unref (e);
     g_object_unref (d);
+
+
+    /* if the message was unexpanded, it would not have been marked as read */
+    if (unread_delay == 0.0) unread_check ();
 
     return wasexpanded;
   }
