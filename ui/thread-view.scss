@@ -209,20 +209,42 @@ hr {
         font-size: 90%;
     }
 
-    /* use a left border indicator for focused/unfocused email */
-    padding-left: 7px;
+    .email_container {
+	.header_container, .body {
+	    border-left: 6px solid transparent;
+	}
+	.email_warning {
+	    padding-left: 6px;
+	}
+    }
+
     &.focused {
-      padding-left: 1px;
-      border-left: 6px solid;
-      box-shadow: 0 0 0 transparent !important;
+      padding-left: 0px;
+      border-left: 0px;
+      /* box-shadow: 0 0 0 transparent !important; */
+
+      .email_container {
+	border-left: 6px solid $focused-solid;
+
+	.header_container, .body {
+	    border-left: 0px;
+	}
+	.email_warning {
+	    padding-left: 0px;
+	}
+      }
     }
     &.hide {
       background-color: darken( $recv-normal, 5% ) !important;
-      border-color: $email-solid;
+      padding-left: 7px;
+      border-left: 6px solid transparent;
+	.email_container, .header_container, .body {
+	    border-left: 0;
+	}
     }
-    &.focused, &.hide {
-      border-left-color: $focused-solid;
-      }
+    &.focused.hide {
+      border-left: 6px solid $focused-solid;
+    }
 
     .body {
       padding: 15px;
