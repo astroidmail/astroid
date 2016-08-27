@@ -28,6 +28,14 @@
   $sent-collapsed: #f5f5f5 !global;
 }
 
+/* Colors associated with attachments: */
+@if not(global-variable-exists(attachment-color)) {
+  $attachment-color:  rgba(0,0,0,0.18) !global;
+}
+@if not(global-variable-exists(sibling-color)) {
+  $sibling-color: #8CE7FF !global;
+}
+
 /* Fonts */
 @if not(global-variable-exists(font-base-size)) {
   $font-base-size: 16px !global;
@@ -320,7 +328,7 @@ hr {
 }
 
 .focused {
-    box-shadow: 5px 3px 3px rgba(71,71,173,1) !important;
+    /* box-shadow: 0 0 10px rgba(71,71,173,1) !important; */
 }
 
 .avatar {
@@ -592,9 +600,18 @@ body.nohide .email .compressed_note > span {
     /*font-size: small;*/
     font-size: 0.8em;
     cursor: pointer;
-    border: 1px solid transparent;
-    border-radius: 4px;
     display: inline;
+    background-color: transparent;
+    border-width: 1px;
+    border-style: solid;
+    border-radius: 4px;
+    border-color: transparent;
+
+    &.focused {
+	background-color: lighten( $attachment-color, 90% );
+	border-color: $attachment-color;
+	box-shadow: inset 0px 0px 1px rgba(255,255,255,0.8);
+    }
 }
 
 .email > .attachment_container > .attachment:hover,
@@ -721,12 +738,28 @@ body.nohide .email .compressed_note > span {
     display: block;
     vertical-align: middle;
     text-align: center;
-    padding-bottom: 5px;
-    padding-top: 5px;
-    margin-top: 5px;
-    margin-bottom: 5px;
-    background-color: #8CE7FF;
-    border: 1px solid black;
+    padding: 0px;
+    margin-top: 15px;
+    margin-bottom: 0;
+    background-color: lighten( $sibling-color, 15% );
+    border-width: 1px;
+    border-style: solid;
+    border-color: darken( $sibling-color, 50% );
+    border-radius: 4px;
+    color: darken( $sibling-color, 80% );
+
+    .message {
+	padding-top: 6px;
+	padding-bottom: 6px;
+	font-size: 90%;
+    }
+
+    &.focused {
+	background-color: lighten( $sibling-color, 5% );
+	.message {
+	    border-color: darken( $sibling-color, 50% );
+	}
+    }
 }
 
 #mime_container {
