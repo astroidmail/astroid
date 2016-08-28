@@ -810,6 +810,13 @@ body.nohide .email .compressed_note > span {
 
 .header {
     overflow: hidden;
+    font-size: 90%;
+
+    #Tags {
+	.value span {
+	    padding: 2px;
+	}
+    }
 }
 .header .field {
     clear: both;
