@@ -217,13 +217,16 @@ hr {
 	    padding-left: 6px;
 	}
     }
+    .attachment_container {
+	border-left: 6px solid transparent;
+    }
 
     &.focused {
       padding-left: 0px;
       border-left: 0px;
       /* box-shadow: 0 0 0 transparent !important; */
 
-      .email_container {
+      .email_container, .attachment_container {
 	border-left: 6px solid $focused-solid;
 
 	.header_container, .body {
