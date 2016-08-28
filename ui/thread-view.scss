@@ -383,6 +383,11 @@ body:not(.nohide) .email.hide .header_container .avatar {
     padding-top: 25px;
     overflow-x: auto;
     overflow-y: hidden;
+
+    a {
+	word-break: break-all;
+    }
+    
 }
 
 .email .remote_images {
