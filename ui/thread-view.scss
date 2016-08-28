@@ -28,14 +28,6 @@
   $sent-collapsed: #f5f5f5 !global;
 }
 
-/* Colors associated with attachments: */
-@if not(global-variable-exists(attachment-color)) {
-  $attachment-color:  rgba(0,0,0,0.18) !global;
-}
-@if not(global-variable-exists(sibling-color)) {
-  $sibling-color: #8CE7FF !global;
-}
-
 /* Fonts */
 @if not(global-variable-exists(font-base-size)) {
   $font-base-size: 16px !global;
@@ -60,6 +52,14 @@
 
 @if not(global-variable-exists(focused-solid)) {
   $focused-solid: #4a90d9 !global;
+}
+
+@if not(global-variable-exists(attachment-color)) {
+  $attachment-color:  rgba(0,0,0,0.18) !global;
+}
+
+@if not(global-variable-exists(sibling-color)) {
+  $sibling-color: lighten( $focused-solid, 20%) !global;
 }
 
 @if not(global-variable-exists(encrypted)) {
@@ -772,9 +772,9 @@ body.nohide .email .compressed_note > span {
     margin-top: 15px;
     margin-bottom: 0;
     background-color: lighten( $sibling-color, 15% );
-    border-width: 1px;
+    border-width: 0 0 1px 0px;
     border-style: solid;
-    border-color: darken( $sibling-color, 50% );
+    border-color: darken( $sibling-color, 20% );
     border-radius: 4px;
     color: darken( $sibling-color, 80% );
 
@@ -784,7 +784,7 @@ body.nohide .email .compressed_note > span {
 	font-size: 90%;
     }
 
-    &.focused {
+    &.focused/*, &:hover /* click not supported yet */ {
 	background-color: lighten( $sibling-color, 5% );
 	.message {
 	    border-color: darken( $sibling-color, 50% );
