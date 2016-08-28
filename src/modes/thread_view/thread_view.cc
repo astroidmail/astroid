@@ -3532,11 +3532,7 @@ namespace Astroid {
 
     if (!focus_top && focused_position > 0) {
       focused_message = mthread->messages[focused_position - 1];
-      if (!is_hidden (focused_message)) {
-        state[focused_message].current_element = state[focused_message].elements.size()-1; // start at bottom
-      } else {
-        state[focused_message].current_element = 0; // start at top
-      }
+      state[focused_message].current_element = 0; // start at top
       update_focus_status ();
     }
 
