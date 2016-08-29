@@ -2357,7 +2357,7 @@ namespace Astroid {
     keys.register_key ("p", "thread_view.previous_message",
         "Focus previous message",
         [&] (Key) {
-          focus_previous ();
+          focus_previous (true);
           scroll_to_message (focused_message);
           return true;
         });
@@ -3530,9 +3530,13 @@ namespace Astroid {
         mthread->messages.end (),
         focused_message) - mthread->messages.begin ();
 
-    if (!focus_top && focused_position > 0) {
+    if (focused_position > 0) {
       focused_message = mthread->messages[focused_position - 1];
-      state[focused_message].current_element = 0; // start at top
+      if (!focus_top && !is_hidden (focused_message)) {
+        state[focused_message].current_element = state[focused_message].elements.size()-1; // start at bottom
+      } else {
+        state[focused_message].current_element = 0; // start at top
+      }
       update_focus_status ();
     }
 
