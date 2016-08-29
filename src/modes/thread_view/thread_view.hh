@@ -295,7 +295,7 @@ namespace Astroid {
       void on_thread_updated (Db *, ustring);
 
       /* search */
-      bool search (Key);
+      bool search (Key, bool);
       void on_search (ustring);
       void reset_search ();
 

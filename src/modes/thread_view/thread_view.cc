@@ -2802,9 +2802,14 @@ namespace Astroid {
         });
 
     keys.register_key ("C-f",
-        "thread_view.search.search",
+        "thread_view.search.search_or_next",
         "Search for text or go to next match",
-        sigc::mem_fun (this, &ThreadView::search));
+        std::bind (&ThreadView::search, this, std::placeholders::_1, true));
+
+    keys.register_key (UnboundKey (),
+        "thread_view.search.search",
+        "Search for text",
+        std::bind (&ThreadView::search, this, std::placeholders::_1, false));
 
 
     keys.register_key (GDK_KEY_Escape, "thread_view.search.cancel",
@@ -3852,8 +3857,8 @@ namespace Astroid {
   /* end MessageState  */
 
   /* Searching  */
-  bool ThreadView::search (Key) {
-    if (in_search) {
+  bool ThreadView::search (Key, bool next) {
+    if (in_search && next) {
       next_search_match ();
       return true;
     }
