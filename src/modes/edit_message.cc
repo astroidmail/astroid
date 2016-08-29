@@ -610,7 +610,7 @@ namespace Astroid {
     /* make message */
     draft_saved = false; // we expect changes to have been made
     warning_str = "";
-    info_str = "";
+    info_str = "Edit message with 'Enter'.";
 
     ComposeMessage * c = make_message ();
 
