@@ -50,6 +50,8 @@ namespace Astroid {
 
       MainWindow * open_new_window (bool open_defaults = true);
 
+      int hint_level ();
+
     protected:
       Config * m_config;
 
@@ -63,6 +65,7 @@ namespace Astroid {
       void on_quit ();
 
       static std::atomic<bool> log_initialized;
+      int _hint_level = 0;
   };
 
   /* globally available instance of our main Astroid-class */

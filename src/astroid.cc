@@ -288,6 +288,8 @@ namespace Astroid {
       }
     }
 
+    _hint_level = config ("astroid.hints").get<int> ("level");
+
     /* output db location */
     ustring db_path = ustring (notmuch_config().get<string> ("database.path"));
     LOG (info) << "notmuch db: " << db_path;
@@ -472,6 +474,10 @@ namespace Astroid {
       /* we probably just got the address on the cmd line */
       mw->add_mode (new EditMessage (mw, url));
     }
+  }
+
+  int Astroid::hint_level () {
+    return _hint_level;
   }
 
 }
