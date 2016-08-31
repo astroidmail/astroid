@@ -1659,7 +1659,7 @@ namespace Astroid {
         }
 
         value +=
-          ustring::compose ("<a href=\"mailto:%3\">%4%1%5 (%2)</a>",
+          ustring::compose ("<a href=\"mailto:%3\">%4%1%5 &lt;%2&gt;</a>",
             Glib::Markup::escape_text (address.fail_safe_name ()),
             Glib::Markup::escape_text (address.email ()),
             Glib::Markup::escape_text (address.full_address()),
