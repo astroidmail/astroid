@@ -806,7 +806,7 @@ body.nohide .email .compressed_note > span {
     color: darken( $mime-color, 80% );
 
     &.focused/*, &:hover /* click not supported yet */ {
-	background-color: lighten( $mime-color, 1% );
+	background-color: darken( $mime-color, 15% );
 	.message {
 	    border-color: darken( $mime-color, 50% );
 	}
