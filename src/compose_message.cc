@@ -186,7 +186,6 @@ namespace Astroid {
     g_mime_message_set_date(message, timeValue.tv_sec, -100 * timeZone.tz_minuteswest / 60);
 
     /* Give the message an ID */
-    // TODO: leaking astroid PID
     g_mime_message_set_message_id(message, id.c_str());
 
     /* inline signatures are handled in ::build */
@@ -285,6 +284,7 @@ namespace Astroid {
         encryption_success = cy.encrypt (content, sign, account->gpgkey, from, AddressList (to) + AddressList (cc) + AddressList (bcc), &e_content, &err);
 
         g_mime_message_set_mime_part (message, (GMimeObject *) e_content);
+        g_object_unref (e_content);
 
       } else {
         /* only sign */
@@ -293,6 +293,7 @@ namespace Astroid {
         encryption_success = cy.sign (content, account->gpgkey, &s_content, &err);
 
         g_mime_message_set_mime_part (message, (GMimeObject *) s_content);
+        g_object_unref (s_content);
       }
 
       g_object_unref (content);

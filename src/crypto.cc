@@ -168,7 +168,7 @@ namespace Astroid {
     LOG (debug) << "cr: encrypting for: ";
     for (ustring &u : ur) {
       g_ptr_array_add (recpa, (gpointer) u.c_str ());
-      LOG (debug) << " ";
+      LOG (debug) << u << " ";
     }
 
     *out = g_mime_multipart_encrypted_new ();
@@ -184,7 +184,7 @@ namespace Astroid {
         err);
 
 
-    g_ptr_array_free (recpa, false);
+    g_ptr_array_free (recpa, true);
 
     if (r == 0) {
       LOG (debug) << "crypto: successfully encrypted message.";
