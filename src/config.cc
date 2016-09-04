@@ -116,6 +116,9 @@ namespace Astroid {
 
     default_config.put ("astroid.debug.dryrun_sending", false);
 
+    /* only show hints with a level higher than this */
+    default_config.put ("astroid.hints.level", 0);
+
     if (initial) {
       /* initial default options - these are only set when a new
        * configuration file is created. */

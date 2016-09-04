@@ -1659,7 +1659,7 @@ namespace Astroid {
         }
 
         value +=
-          ustring::compose ("<a href=\"mailto:%3\">%4%1%5 (%2)</a>",
+          ustring::compose ("<a href=\"mailto:%3\">%4%1%5 &lt;%2&gt;</a>",
             Glib::Markup::escape_text (address.fail_safe_name ()),
             Glib::Markup::escape_text (address.email ()),
             Glib::Markup::escape_text (address.full_address()),
@@ -2357,7 +2357,7 @@ namespace Astroid {
     keys.register_key ("p", "thread_view.previous_message",
         "Focus previous message",
         [&] (Key) {
-          focus_previous ();
+          focus_previous (true);
           scroll_to_message (focused_message);
           return true;
         });
@@ -2802,9 +2802,14 @@ namespace Astroid {
         });
 
     keys.register_key ("C-f",
-        "thread_view.search.search",
+        "thread_view.search.search_or_next",
         "Search for text or go to next match",
-        sigc::mem_fun (this, &ThreadView::search));
+        std::bind (&ThreadView::search, this, std::placeholders::_1, true));
+
+    keys.register_key (UnboundKey (),
+        "thread_view.search.search",
+        "Search for text",
+        std::bind (&ThreadView::search, this, std::placeholders::_1, false));
 
 
     keys.register_key (GDK_KEY_Escape, "thread_view.search.cancel",
@@ -3530,9 +3535,9 @@ namespace Astroid {
         mthread->messages.end (),
         focused_message) - mthread->messages.begin ();
 
-    if (!focus_top && focused_position > 0) {
+    if (focused_position > 0) {
       focused_message = mthread->messages[focused_position - 1];
-      if (!is_hidden (focused_message)) {
+      if (!focus_top && !is_hidden (focused_message)) {
         state[focused_message].current_element = state[focused_message].elements.size()-1; // start at bottom
       } else {
         state[focused_message].current_element = 0; // start at top
@@ -3852,8 +3857,8 @@ namespace Astroid {
   /* end MessageState  */
 
   /* Searching  */
-  bool ThreadView::search (Key) {
-    if (in_search) {
+  bool ThreadView::search (Key, bool next) {
+    if (in_search && next) {
       next_search_match ();
       return true;
     }

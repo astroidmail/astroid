@@ -21,6 +21,8 @@
 
 * Use Boost::log for logging.
 
+* Some hints about usage are shown (level of detail can be configured)
+
 == v0.6 / 2016-07-23
 
 * Use any editor (general XEmbed support in edit-message window): Emacs

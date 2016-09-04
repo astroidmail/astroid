@@ -173,7 +173,17 @@ namespace Astroid {
             continue;
           }
 
-          Key k = Key (parts[1]);
+          ustring spec = parts[1];
+          UstringUtils::trim (spec);
+
+          Key k;
+
+          if (spec.empty ()) {
+            k = UnboundKey ();
+          } else {
+            k = Key (spec);
+          }
+
           k.name = parts[0];
 
           user_bindings.push_back (k);
@@ -315,6 +325,12 @@ namespace Astroid {
     if (res != user_bindings.end ()) {
       userdefined = true;
       Key uk = (*res);
+
+      if (uk.unbound) {
+        /* user defined and unbound, key binding is dropped */
+        LOG (debug) << "ky: key: " << k.str () << " dropped." << endl;
+        return;
+      }
 
       k.key  = uk.key;
       k.ctrl = uk.ctrl;
