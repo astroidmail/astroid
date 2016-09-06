@@ -4,6 +4,7 @@
 # include <map>
 # include <vector>
 # include <string>
+# include <chrono>
 
 # include <gtkmm.h>
 # include <webkit/webkit.h>
