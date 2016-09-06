@@ -110,6 +110,10 @@ namespace Astroid {
                   list_view->set_cursor (Gtk::TreePath("0"));
 
                 });
+
+          } else {
+
+            main_window->enable_command (CommandBar::CommandMode::Search, query_string, NULL);
           }
 
           return true;
