@@ -12,7 +12,7 @@ namespace Astroid {
     public:
 
       static std::vector<ustring> split_and_trim (const ustring & str, const ustring delim);
-      static ustring concat (std::vector<ustring> &, ustring, std::vector<ustring>);
+      static ustring concat (std::vector<ustring> &, ustring, std::vector<ustring> =  {});
       static ustring concat_tags (std::vector<ustring>);
       static ustring concat_tags_color (std::vector<ustring>, bool pango, int maxlen, unsigned char canvascolor[3]);
 

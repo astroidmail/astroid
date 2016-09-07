@@ -1190,6 +1190,8 @@ namespace Astroid {
       ustring sign_string = "";
       ustring enc_string  = "";
 
+      vector<ustring> all_sig_errors;
+
       if (c->issigned) {
 
         refptr<Crypto> cr = c->crypt;
@@ -1208,6 +1210,8 @@ namespace Astroid {
           ustring nm, em, ky;
           ustring gd = "";
           ustring err = "";
+          vector<ustring> sig_errors;
+
           if (ce) {
             const char * c = NULL;
             nm = (c = g_mime_certificate_get_name (ce), c ? c : "");
@@ -1227,14 +1231,18 @@ namespace Astroid {
                 if (gd.empty ()) gd = "Erroneous";
 
                 GMimeSignatureError e = g_mime_signature_get_errors (s);
-                if (e & GMIME_SIGNATURE_ERROR_EXPSIG) err += "expired,";
-                if (e & GMIME_SIGNATURE_ERROR_NO_PUBKEY) err += "no-pub-key,";
-                if (e & GMIME_SIGNATURE_ERROR_EXPKEYSIG) err += "expired-key-sig,";
-                if (e & GMIME_SIGNATURE_ERROR_REVKEYSIG) err += "revoked-key-sig,";
-                if (e & GMIME_SIGNATURE_ERROR_UNSUPP_ALGO) err += "unsupported-algo,";
-                if (!err.empty ()) {
-                  err = err.substr (0, err.size () -1);
-                  err = "[Error: " + err + "]";
+                if (e & GMIME_SIGNATURE_ERROR_EXPSIG)
+                  sig_errors.push_back ("expired");
+                if (e & GMIME_SIGNATURE_ERROR_NO_PUBKEY)
+                  sig_errors.push_back ("no-pub-key");
+                if (e & GMIME_SIGNATURE_ERROR_EXPKEYSIG)
+                  sig_errors.push_back ("expired-key-sig");
+                if (e & GMIME_SIGNATURE_ERROR_REVKEYSIG)
+                  sig_errors.push_back ("revoked-key-sig");
+                if (e & GMIME_SIGNATURE_ERROR_UNSUPP_ALGO)
+                  sig_errors.push_back ("unsupported-algo");
+                if (!sig_errors.empty ()) {
+                  err = "[Error: " + VectorUtils::concat (sig_errors, ",") + "]";
                 }
                 break;
             }
@@ -1262,6 +1270,7 @@ namespace Astroid {
           g_object_unref (ce);
           g_object_unref (s);
 
+          all_sig_errors.insert (all_sig_errors.end(), sig_errors.begin (), sig_errors.end ());
         }
       }
 
@@ -1340,6 +1349,17 @@ namespace Astroid {
               (err = NULL, &err));
           webkit_dom_dom_token_list_add (class_list, "verify_failed",
               (err = NULL, &err));
+
+          /* add specific errors */
+          std::sort (all_sig_errors.begin (), all_sig_errors.end ());
+          all_sig_errors.erase (unique (all_sig_errors.begin (), all_sig_errors.end ()), all_sig_errors.end ());
+
+          for (ustring & e : all_sig_errors) {
+            webkit_dom_dom_token_list_add (class_list_e, e.c_str (),
+                (err = NULL, &err));
+            webkit_dom_dom_token_list_add (class_list, e.c_str (),
+                (err = NULL, &err));
+          }
         }
       }
 
