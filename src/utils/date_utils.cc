@@ -24,6 +24,7 @@ namespace Astroid {
       "%l:%M %P", // Datetime format for 12-hour time, i.e. 8:31 am
       "%H:%M",    // Datetime format for 24-hour time, i.e. 16:35
       "%l:%M %P", // Datetime format for the locale default, i.e. 8:31 am or 16:35,
+      // year format will be covered specially.
     };
   const vector<ustring> Date::pretty_verbose_dates =
     {
@@ -35,6 +36,9 @@ namespace Astroid {
 
       // Verbose datetime format for the locale default (full month, day and time)
       "%B %-e, %Y %-l:%M %P",
+
+      // Verbose datetime format for year, 24-hour time, i.e. November 8, 2010 16:35
+      "%B %-e, %Y %-H:%M",
     };
 
   // Date format for dates within the current year, i.e. Nov 8
