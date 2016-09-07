@@ -388,7 +388,7 @@ body:not(.nohide) .email.hide .header_container .avatar {
     overflow-x: auto;
     overflow-y: hidden;
 
-    .body_part a {
+    .body_part a[href*="//"] {
 	word-break: break-all;
     }
     
