@@ -28,7 +28,7 @@ namespace Astroid {
 
     public:
       EditMessage (MainWindow *);
-      EditMessage (MainWindow *, ustring to);
+      EditMessage (MainWindow *, ustring to, ustring from = "");
       EditMessage (MainWindow *, refptr<Message> _msg);
       ~EditMessage ();
 

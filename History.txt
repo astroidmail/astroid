@@ -23,6 +23,9 @@
 
 * Some hints about usage are shown (level of detail can be configured)
 
+* 'c' in thread-view composes message to sender (or receiver if sender
+    is you).
+
 == v0.6 / 2016-07-23
 
 * Use any editor (general XEmbed support in edit-message window): Emacs

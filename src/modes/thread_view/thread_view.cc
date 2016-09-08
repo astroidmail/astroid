@@ -2444,6 +2444,39 @@ namespace Astroid {
           return true;
         });
 
+    keys.register_key ("c", "thread_view.compose_to_sender",
+        "Compose a new message to the sender of the message (or receiver if sender is you)",
+        [&] (Key) {
+          if (!edit_mode) {
+            Address _to = focused_message->sender;
+            AddressList to;
+
+            if (astroid->accounts->is_me (_to)) {
+              to = AddressList(focused_message->to ());
+              Address from = _to;
+              main_window->add_mode (new EditMessage (main_window, to.str (), from.full_address ()));
+            } else {
+              to += _to;
+
+              /* find me */
+              AddressList tos = focused_message->all_to_from ();
+              Address from;
+
+              for (Address f : tos.addresses) {
+                if (astroid->accounts->is_me (f)) {
+                  from = f;
+                  break;
+                }
+              }
+
+
+              main_window->add_mode (new EditMessage (main_window, to.str (), from.full_address ()));
+            }
+
+          }
+          return true;
+        });
+
     keys.register_key ("r", "thread_view.reply",
         "Reply to current message",
         [&] (Key) {

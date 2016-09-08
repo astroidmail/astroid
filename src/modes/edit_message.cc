@@ -35,10 +35,15 @@ using namespace boost::filesystem;
 namespace Astroid {
   int EditMessage::edit_id = 0;
 
-  EditMessage::EditMessage (MainWindow * mw, ustring _to) :
+  EditMessage::EditMessage (MainWindow * mw, ustring _to, ustring _from) :
     EditMessage (mw) { // {{{
 
     to = _to;
+
+    if (!_from.empty ()) {
+      set_from (Address (_from));
+    }
+
 
     /* reload message */
     prepare_message ();
