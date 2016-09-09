@@ -574,7 +574,8 @@ namespace Astroid {
     } else {
       /* check if key is in map */
       UstringUtils::trim (k);
-      guint kk = Keybindings::keynames_to_keyval.at (k);
+      const char *k_str = k.c_str ();
+      guint kk = gdk_keyval_from_name (k_str);
 
       return kk;
     }
@@ -695,7 +696,7 @@ namespace Astroid {
       s += k;
     } else {
       try {
-        ustring kk = Keybindings::keyval_to_keynames.at (key);
+        ustring kk = gdk_keyval_name (key);
         s += kk;
       } catch (std::exception &ex) {
         s += ustring::compose ("%1", key);
