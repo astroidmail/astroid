@@ -19,32 +19,7 @@ namespace Astroid {
   std::vector<Key>  Keybindings::user_bindings;
   std::vector<std::pair<Key, ustring>> Keybindings::user_run_bindings;
 
-  std::map<guint, ustring> Keybindings::keyval_to_keynames = {
-    { GDK_KEY_Down,   "Down" },
-    { GDK_KEY_Up,     "Up" },
-    { GDK_KEY_Tab,    "Tab" },
-    { GDK_KEY_ISO_Left_Tab, "ISO_Left_Tab" },
-    { GDK_KEY_Home,   "Home" },
-    { GDK_KEY_End,    "End" },
-    { GDK_KEY_Return, "Return" },
-    { GDK_KEY_KP_Enter, "KP_Enter" },
-    { GDK_KEY_Page_Up, "Page_Up" },
-    { GDK_KEY_Page_Down, "Page_Down" },
-    { GDK_KEY_Escape, "Esc" },
-    { GDK_KEY_equal, "Equal" },
-    { GDK_KEY_minus, "Minus" },
-    { GDK_KEY_space, "Space" },
-  };
-
-  std::map<ustring, guint> Keybindings::keynames_to_keyval;
-
   void Keybindings::init () {
-    /* build keynames_to_keyval */
-    keynames_to_keyval.clear ();
-    for (auto &s : keyval_to_keynames) {
-      keynames_to_keyval.insert (std::make_pair (s.second, s.first));
-    }
-
     if (!user_bindings_loaded) {
       user_bindings_loaded = true;
 
