@@ -157,6 +157,10 @@ namespace Astroid {
             k = UnboundKey ();
           } else {
             k = Key (spec);
+            if (k.key == GDK_KEY_VoidSymbol) {
+              LOG (error) << "ky: user bindings: invalid key name: " << spec;
+              continue;
+            }
           }
 
           k.name = parts[0];
