@@ -122,6 +122,10 @@ namespace Astroid {
             UstringUtils::trim (target);
 
             Key k (keyspec);
+            if (k.key == GDK_KEY_VoidSymbol) {
+              LOG (error) << "ky: user bindings: invalid key name: " << spec;
+              continue;
+            }
 
             LOG (debug) << "ky: run: " << name << "(" << k.str () << "): " << target;
 
@@ -553,7 +557,7 @@ namespace Astroid {
     } else {
       /* check if key is in map */
       UstringUtils::trim (k);
-      const char *k_str = k.c_str ();
+      const char * k_str = k.c_str ();
       guint kk = gdk_keyval_from_name (k_str);
 
       return kk;
@@ -674,11 +678,12 @@ namespace Astroid {
     if (isgraph (k)) {
       s += k;
     } else {
-      try {
-        ustring kk = gdk_keyval_name (key);
-        s += kk;
-      } catch (std::exception &ex) {
-        s += ustring::compose ("%1", key);
+      gchar * c = gdk_keyval_name (key);
+      if (c == NULL) {
+        LOG (error) << "invalid key: " << key << " for: " << name;
+        throw keyspec_error ("invalid key");
+      } else {
+        s += ustring (c);
       }
     }
 
