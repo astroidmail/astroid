@@ -123,7 +123,7 @@ namespace Astroid {
 
             Key k (keyspec);
             if (k.key == GDK_KEY_VoidSymbol) {
-              LOG (error) << "ky: user bindings: invalid key name: " << spec;
+              LOG (error) << "ky: user bindings: invalid key name: " << keyspec;
               continue;
             }
 
