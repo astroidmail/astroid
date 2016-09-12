@@ -26,6 +26,9 @@
 * 'c' in thread-view composes message to sender (or receiver if sender
     is you).
 
+* Taeer Bar-Yam <taeer@necsi.edu>: Allow any key name defined by GDK to
+  be entered.
+
 == v0.6 / 2016-07-23
 
 * Use any editor (general XEmbed support in edit-message window): Emacs
