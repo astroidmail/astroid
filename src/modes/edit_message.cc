@@ -125,7 +125,9 @@ namespace Astroid {
 
       char _domainname[1024];
       _domainname[1023] = 0;
-      getdomainname (_domainname, 1023);
+      if (getdomainname (_domainname, 1023) < 0) {
+        *_domainname = '\0';
+      }
 
       ustring hostname = astroid->config ().get <string> ("mail.message_id_fqdn");
       UstringUtils::trim (hostname);
