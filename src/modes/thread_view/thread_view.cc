@@ -770,12 +770,14 @@ namespace Astroid {
 
     scroll_to_message (focused_message, true);
 
+    emit_ready ();
+
     if (unread_delay > 0) {
       Glib::signal_timeout ().connect (
           sigc::mem_fun (this, &ThreadView::unread_check), std::max (80., (unread_delay * 1000.) / 2));
+    } else {
+      unread_check ();
     }
-
-    emit_ready ();
   }
 
   void ThreadView::update_all_indent_states () {
