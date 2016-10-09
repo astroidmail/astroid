@@ -463,7 +463,7 @@ namespace Astroid {
 
     g_object_unref (mem);
 
-    LOG (info) << "chunk: contents: loaded " << data->size () << " bytes in " << ( (clock () - t0) * 1000.0 / CLOCKS_PER_SEC ) << " s.";
+    LOG (info) << "chunk: contents: loaded " << data->size () << " bytes in " << ( (clock () - t0) * 1000.0 / CLOCKS_PER_SEC ) << " ms.";
 
     return data;
   }
