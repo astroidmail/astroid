@@ -19,7 +19,9 @@
 # include "actions/onmessage.hh"
 # include "utils/address.hh"
 # include "utils/ustring_utils.hh"
-# include "plugin/manager.hh"
+# ifndef DISABLE_PLUGINS
+  # include "plugin/manager.hh"
+# endif
 
 using namespace std;
 namespace bfs = boost::filesystem;
