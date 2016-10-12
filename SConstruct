@@ -252,6 +252,8 @@ else:
   if not conf.CheckPKG('gobject-introspection-1.0'):
     print 'gobject-introspection-1.0 not found.'
     Exit (1)
+  else:
+    env.ParseConfig ('pkg-config --libs --cflags gobject-introspection-1.0')
 
   if not conf.CheckPKG('libpeas-1.0'):
     print 'libpeas-1.0 not found.'
