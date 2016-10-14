@@ -49,6 +49,7 @@ namespace Astroid {
       Poll * poll;
 
       MainWindow * open_new_window (bool open_defaults = true);
+      bool on_window_close (GdkEventAny *, MainWindow * mw);
 
       int hint_level ();
 

@@ -431,10 +431,23 @@ namespace Astroid {
       mw->set_active (0);
     }
 
+    mw->signal_delete_event ().connect (
+        sigc::bind (
+          sigc::mem_fun(*this, &Astroid::on_window_close), mw));
+
     app->add_window (*mw);
     mw->show_all ();
 
     return mw;
+  }
+
+  bool Astroid::on_window_close (GdkEventAny *, MainWindow * mw) {
+    astroid->app->remove_window (*mw);
+
+    // https://mail.gnome.org/archives/gtkmm-list/2004-March/msg00282.html
+    delete mw;
+
+    return false; // default Gtk handler destroys window
   }
 
   void Astroid::on_signal_activate () {
