@@ -2753,6 +2753,32 @@ namespace Astroid {
           return true;
         });
 
+    keys.register_key ("*",
+        "thread_view.flag",
+        "Toggle the 'flagged' tag on the message",
+        [&] (Key) {
+          if (!edit_mode && focused_message) {
+
+            main_window->actions->doit (refptr<Action>(new ToggleAction (refptr<NotmuchTaggable>(new NotmuchMessage(focused_message)), "flagged")));
+
+          }
+
+          return true;
+        });
+
+    keys.register_key ("a", "thread_index.archive_thread",
+        "Toggle 'inbox' tag on the whole thread",
+        [&] (Key) {
+
+          if (!edit_mode && focused_message) {
+            if (thread) {
+              main_window->actions->doit (refptr<Action>(new ToggleAction(thread, "inbox")));
+            }
+          }
+
+          return true;
+        });
+
     keys.register_key ("C-P",
         "thread_view.print",
         "Print focused message",
