@@ -350,14 +350,15 @@ namespace Astroid {
           Gtk::TreeViewColumn *c;
 
           get_cursor (path, c);
+          thispath = path;
+
           path.prev ();
           iter = list_store->get_iter (path);
-          thispath = path;
 
           Gtk::ListStore::Row row;
 
           bool found = false;
-          while (iter) {
+          while (iter && list_store->get_path(iter) < thispath) {
             row = *iter;
 
             Glib::RefPtr<NotmuchThread> thread = row[list_store->columns.thread];
@@ -377,17 +378,16 @@ namespace Astroid {
             iter--;
 
             while (iter && list_store->get_path(iter) > thispath) {
-            row = *iter;
+              row = *iter;
 
-            Glib::RefPtr<NotmuchThread> thread = row[list_store->columns.thread];
-            if (thread->unread) {
-              path = list_store->get_path (iter);
-              set_cursor (path);
-              found = true;
-              break;
-            }
+              Glib::RefPtr<NotmuchThread> thread = row[list_store->columns.thread];
+              if (thread->unread) {
+                path = list_store->get_path (iter);
+                set_cursor (path);
+                break;
+              }
 
-            iter--;
+              iter--;
             }
           }
 
