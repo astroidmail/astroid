@@ -468,7 +468,7 @@ namespace Astroid {
       // the key is lower-case, even if the user input is not.
       filter_string_start = filter_string_start.lowercase();
 
-      if(key == filter_string_start)
+      if(key.lowercase () == filter_string_start)
         return true; // a match was found.
     }
 
@@ -648,7 +648,7 @@ namespace Astroid {
       // the key is lower-case, even if the user input is not.
       filter_string_start = filter_string_start.lowercase();
 
-      if(key == filter_string_start)
+      if(key.lowercase () == filter_string_start)
         return true; // a match was found.
     }
 
