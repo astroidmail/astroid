@@ -45,7 +45,7 @@ namespace Astroid {
 
     /* register with boost::log */
     auto core = logging::core::get ();
-    lv = std::shared_ptr<LogViewSink> (new LogViewSink (this));
+    lv = boost::shared_ptr<LogViewSink> (new LogViewSink (this));
     sink = boost::shared_ptr<lv_sink_t> (new lv_sink_t (lv));
     core->add_sink (sink);
 
