@@ -184,7 +184,7 @@ namespace Astroid {
 
     auto lvl = rec[logging::trivial::severity];
 
-    auto ts  = rec["TimeStamp"].extract<boost::posix_time::ptime> ();
+    auto ts  = logging::extract<boost::posix_time::ptime> ("TimeStamp",rec);
     boost::posix_time::time_facet * f = new boost::posix_time::time_facet ("%H:%M:%S.%f");
 
     std::ostringstream s;
