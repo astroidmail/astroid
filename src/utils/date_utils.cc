@@ -76,10 +76,10 @@ namespace Astroid {
 			return "Now";
 
 		case CoarseDate::MINUTES:
-			return ustring::compose("%1m ago", (ulong) (diff / 60));
+			return ustring::compose("%1m ago", (unsigned long) (diff / 60));
 
 		case CoarseDate::HOURS:
-			return ustring::compose("%1h ago", (ulong) (diff / (60 * 60)));
+			return ustring::compose("%1h ago", (unsigned long) (diff / (60 * 60)));
 
 		case CoarseDate::TODAY:
 			fmt = pretty_dates[clock_format];
