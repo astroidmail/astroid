@@ -17,6 +17,8 @@ using namespace boost::filesystem;
 
 namespace Astroid {
   const int Poll::DEFAULT_POLL_INTERVAL = 60;
+  sigc::connection debug;
+  sigc::connection warn;
 
   Poll::Poll (bool _auto_polling_enabled) {
     LOG (info) << "poll: setting up.";
@@ -132,8 +134,8 @@ namespace Astroid {
     }
 
     /* connect channels */
-    Glib::signal_io().connect (sigc::mem_fun (this, &Poll::log_out), stdout, Glib::IO_IN | Glib::IO_HUP);
-    Glib::signal_io().connect (sigc::mem_fun (this, &Poll::log_err), stderr, Glib::IO_IN | Glib::IO_HUP);
+    warn = Glib::signal_io().connect (sigc::mem_fun (this, &Poll::log_out), stdout, Glib::IO_IN | Glib::IO_HUP);
+    debug = Glib::signal_io().connect (sigc::mem_fun (this, &Poll::log_err), stderr, Glib::IO_IN | Glib::IO_HUP);
     Glib::signal_child_watch().connect (sigc::mem_fun (this, &Poll::child_watch), pid);
 
     ch_stdout = Glib::IOChannel::create_from_fd (stdout);
@@ -260,6 +262,8 @@ namespace Astroid {
 # endif
     }
 
+    warn.disconnect();
+    debug.disconnect();
     m_dopoll.unlock ();
   }
 
