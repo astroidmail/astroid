@@ -68,11 +68,7 @@ namespace Astroid {
       bool unread_check ();
 
       /* resources */
-      bool    enable_mathjax;
-      ustring mathjax_uri_prefix;
-      std::vector<ustring> mathjax_only_tags;
       ustring home_uri;           // relative url for requests
-      bool    math_is_on = false; // for this thread
 
       bool    enable_code_prettify;
       std::vector<ustring> code_prettify_only_tags;

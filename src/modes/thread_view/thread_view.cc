@@ -46,14 +46,6 @@ namespace Astroid {
     open_html_part_external = config.get<bool> ("open_html_part_external");
     open_external_link = config.get<string> ("open_external_link");
 
-    enable_mathjax = config.get<bool> ("mathjax.enable");
-    mathjax_uri_prefix = config.get<string> ("mathjax.uri_prefix");
-
-    ustring mj_only_tags = config.get<string> ("mathjax.for_tags");
-    if (mj_only_tags.length() > 0) {
-      mathjax_only_tags = VectorUtils::split_and_trim (mj_only_tags, ",");
-    }
-
     enable_code_prettify = config.get<bool> ("code_prettify.enable");
     enable_code_prettify_for_patches = config.get<bool> ("code_prettify.enable_for_patches");
 
@@ -253,10 +245,6 @@ namespace Astroid {
 
     if (enable_gravatar) {
       allowed_uris.push_back ("https://www.gravatar.com/avatar/");
-    }
-
-    if (enable_mathjax) {
-      allowed_uris.push_back (mathjax_uri_prefix);
     }
 
     if (enable_code_prettify) {
@@ -497,44 +485,6 @@ namespace Astroid {
 
           WebKitDOMHTMLHeadElement * head = webkit_dom_document_get_head (d);
           webkit_dom_node_append_child (WEBKIT_DOM_NODE(head), WEBKIT_DOM_NODE(e), (err = NULL, &err));
-
-          /* load mathjax if enabled */
-          if (enable_mathjax) {
-            bool only_tags_ok = false;
-            if (mathjax_only_tags.size () > 0) {
-              if (mthread->in_notmuch) {
-                for (auto &t : mathjax_only_tags) {
-                  if (mthread->thread->has_tag (t)) {
-                    only_tags_ok = true;
-                    break;
-                  }
-                }
-              } else {
-                /* enable for messages not in db */
-                only_tags_ok = true;
-              }
-            } else {
-              only_tags_ok = true;
-            }
-
-            if (only_tags_ok) {
-              math_is_on = true;
-
-              WebKitDOMElement * me = webkit_dom_document_create_element (d, "SCRIPT", (err = NULL, &err));
-
-              ustring mathjax_uri = mathjax_uri_prefix + "MathJax.js";
-
-              webkit_dom_element_set_attribute (me, "type", "text/javascript",
-                  (err = NULL, &err));
-              webkit_dom_element_set_attribute (me, "src", mathjax_uri.c_str(),
-                  (err = NULL, &err));
-
-              webkit_dom_node_append_child (WEBKIT_DOM_NODE(head), WEBKIT_DOM_NODE(me), (err = NULL, &err));
-
-
-              g_object_unref (me);
-            }
-          }
 
           /* load code_prettify if enabled */
           if (enable_code_prettify) {
