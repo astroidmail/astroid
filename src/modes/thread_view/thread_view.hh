@@ -66,6 +66,7 @@ namespace Astroid {
       double unread_delay = .5;
       std::chrono::time_point<std::chrono::steady_clock> focus_time;
       bool unread_check ();
+      bool unread_setup = false;
 
       /* resources */
       ustring home_uri;           // relative url for requests
@@ -95,7 +96,7 @@ namespace Astroid {
       ThreadViewInspector thread_view_inspector;
 
       /* message manipulation and location */
-      void scroll_to_message (refptr<Message>, bool = false);
+      bool scroll_to_message (refptr<Message>, bool = false);
       bool scroll_to_element (ustring, bool = false);
 
       bool    in_scroll = false;

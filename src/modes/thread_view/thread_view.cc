@@ -718,15 +718,24 @@ namespace Astroid {
       }
     }
 
-    scroll_to_message (focused_message, true);
+    bool sc = scroll_to_message (focused_message, true);
 
     emit_ready ();
 
-    if (unread_delay > 0) {
-      Glib::signal_timeout ().connect (
-          sigc::mem_fun (this, &ThreadView::unread_check), std::max (80., (unread_delay * 1000.) / 2));
-    } else {
-      unread_check ();
+    if (sc) {
+      if (!unread_setup) {
+        /* there's potentially a small chance that scroll_to_message gets an
+         * on_scroll_vadjustment_change emitted before we get here. probably not, since
+         * it is the same thread - but still.. */
+        unread_setup = true;
+
+        if (unread_delay > 0) {
+          Glib::signal_timeout ().connect (
+              sigc::mem_fun (this, &ThreadView::unread_check), std::max (80., (unread_delay * 1000.) / 2));
+        } else {
+          unread_check ();
+        }
+      }
     }
   }
 
@@ -3093,6 +3102,17 @@ namespace Astroid {
         if (scroll_to_element (scroll_arg, _scroll_when_visible)) {
           scroll_arg = "";
           _scroll_when_visible = false;
+
+          if (!unread_setup) {
+            unread_setup = true;
+
+            if (unread_delay > 0) {
+              Glib::signal_timeout ().connect (
+                  sigc::mem_fun (this, &ThreadView::unread_check), std::max (80., (unread_delay * 1000.) / 2));
+            }
+
+            // unread_delay == 0 is checked in update_focus_status ()
+          }
         }
       }
     }
@@ -3579,14 +3599,14 @@ namespace Astroid {
     return "message_" + focused_message->mid;
   }
 
-  void ThreadView::scroll_to_message (refptr<Message> m, bool scroll_when_visible) {
+  bool ThreadView::scroll_to_message (refptr<Message> m, bool scroll_when_visible) {
     focused_message = m;
 
-    if (edit_mode) return;
+    if (edit_mode) return false;
 
     if (!focused_message) {
       LOG (warn) << "tv: focusing: no message selected for focus.";
-      return;
+      return false;
     }
 
     LOG (debug) << "tv: focusing: " << m->date ();
@@ -3600,7 +3620,7 @@ namespace Astroid {
     g_object_unref (e);
     g_object_unref (d);
 
-    scroll_to_element (mid, scroll_when_visible);
+    return scroll_to_element (mid, scroll_when_visible);
   }
 
   bool ThreadView::scroll_to_element (
