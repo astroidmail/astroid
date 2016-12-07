@@ -394,6 +394,27 @@ namespace Astroid {
     return mime_messages;
   }
 
+  vector<refptr<Chunk>> Message::mime_messages_and_attachments () {
+    /* return a flat vector of mime messages and attachments in correct order */
+
+    vector<refptr<Chunk>> parts;
+
+    function< void (refptr<Chunk>) > app_part =
+      [&] (refptr<Chunk> c)
+    {
+      if (c->mime_message || c->attachment)
+        parts.push_back (c);
+
+      for_each (c->kids.begin(),
+                c->kids.end (),
+                app_part);
+    };
+
+    if (root) app_part (root);
+
+    return parts;
+  }
+
   ustring Message::date () {
     if (missing_content) {
       ustring s;
