@@ -568,6 +568,18 @@ namespace Astroid {
     valid = true;
     g_object_unref (file);
     g_object_unref (file_info);
+
+    if (content_type == "message/rfc822") {
+      LOG (debug) << "cm: attachment is mime message.";
+      refptr<Message> m (new Message(fname.c_str ()));
+      message = (GMimeObject *) m->message;
+      g_object_ref (message);
+
+      on_disk = false;
+      is_mime_message = true;
+
+      name = m->subject;
+    }
   }
 
   ComposeMessage::Attachment::Attachment (refptr<Chunk> c) {
@@ -583,6 +595,15 @@ namespace Astroid {
     } else {
       content_type = "application/octet-stream";
     }
+
+    if (c->mime_message) {
+      is_mime_message = true;
+      message = c->mime_object;
+      g_object_ref (message);
+    }
+
+    /* used by edit message when deleting attachment */
+    chunk_id = c->id;
 
     valid = true;
   }

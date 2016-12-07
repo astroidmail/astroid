@@ -71,6 +71,8 @@ namespace Astroid {
           refptr<Glib::ByteArray> contents;
           std::string             content_type;
           GMimeObject *           message = NULL;
+
+          int     chunk_id = -1;
       };
 
       void add_attachment (std::shared_ptr<Attachment>);
