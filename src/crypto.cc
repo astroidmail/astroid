@@ -39,6 +39,9 @@ namespace Astroid {
 
   Crypto::~Crypto () {
     LOG (debug) << "crypto: deconstruct.";
+
+    if (gpgctx) g_object_unref (gpgctx);
+    gpgctx = NULL;
   }
 
   GMimeObject * Crypto::decrypt_and_verify (GMimeObject * part) {
