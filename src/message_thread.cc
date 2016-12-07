@@ -13,6 +13,7 @@
 # include "utils/date_utils.hh"
 # include "utils/address.hh"
 # include "utils/ustring_utils.hh"
+# include "utils/vector_utils.hh"
 # include "actions/action_manager.hh"
 
 using namespace std;
@@ -740,6 +741,14 @@ namespace Astroid {
     return (
         (subject.substr(0,3).uppercase() != "RE:") &&
          Glib::Regex::match_simple ("\\[PATCH.*\\]", subject));
+  }
+
+  bool Message::is_encrypted () {
+    return has (tags, ustring("encrypted"));
+  }
+
+  bool Message::is_signed () {
+    return has (tags, ustring("signed"));
   }
 
   /************
