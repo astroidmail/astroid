@@ -80,6 +80,8 @@ namespace Astroid {
 
     /* reload message */
     read_edited_message ();
+
+    /* TODO: read encryption / signing / signature state from message properties */
   }
 
   EditMessage::EditMessage (MainWindow * mw) : Mode (mw) {
@@ -576,11 +578,13 @@ namespace Astroid {
   void EditMessage::set_from (Account * a) {
     int rn = from_combo->get_active_row_number ();
 
+    account_no = 0;
     for (Gtk::TreeRow row : from_store->children ()) {
       if (row[from_columns.account] == a) {
         from_combo->set_active (row);
         break;
       }
+      account_no ++;
     }
 
     bool same_account = (rn == from_combo->get_active_row_number ());

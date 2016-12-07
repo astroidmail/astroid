@@ -73,6 +73,8 @@ namespace Astroid {
       refptr<Glib::ByteArray> raw_contents ();
 
       bool is_patch ();
+      bool is_encrypted ();
+      bool is_signed ();
 
       void save ();
       void save_to (ustring);

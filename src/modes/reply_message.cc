@@ -115,6 +115,23 @@ namespace Astroid {
     prepare_message ();
     read_edited_message ();
 
+    /* match encryption / signing to original message if possible */
+    {
+      Account a = accounts->accounts[account_no];
+      if (a.has_gpg) {
+        if (msg->is_encrypted ()) {
+
+          switch_encrypt->set_active (true);
+          switch_sign->set_active (true);
+
+        } else if (msg->is_signed ()) {
+
+          switch_sign->set_active (true);
+
+        }
+      }
+    }
+
     editor->start_editor_when_ready = true;
 
     /* sent signal */
