@@ -93,6 +93,7 @@ namespace Astroid {
 
     /* attached signatures are handled in ::finalize */
     if (include_signature && account && !account->signature_attach) {
+      LOG (debug) << "cm: adding inline signature..";
       std::ifstream s (account->signature_file.c_str ());
       std::ostringstream sf;
       sf << s.rdbuf ();
@@ -111,7 +112,9 @@ namespace Astroid {
     g_mime_part_set_content_encoding (messagePart, GMIME_CONTENT_ENCODING_QUOTEDPRINTABLE);
     g_mime_part_set_content_object (messagePart, contentWrapper);
 
+    GMimeObject * part = g_mime_message_get_mime_part (message);
     g_mime_message_set_mime_part(message, GMIME_OBJECT(messagePart));
+    if (part) g_object_unref (part);
 
     g_object_unref(messagePart);
     g_object_unref(contentWrapper);
@@ -149,6 +152,7 @@ namespace Astroid {
 
   void ComposeMessage::finalize () {
     /* make message ready to be sent */
+    LOG (debug) << "cm: finalize..";
 
     /* again: ripped more or less from ner */
 
@@ -205,6 +209,8 @@ namespace Astroid {
       GMimeMultipart * multipart = g_mime_multipart_new_with_subtype("mixed");
       g_mime_multipart_add (multipart, (GMimeObject*) message->mime_part);
       g_mime_message_set_mime_part (message, (GMimeObject*) multipart);
+
+      /* not unreffing message->mime_part here since it is reused */
 
       for (shared_ptr<Attachment> &a : attachments)
       {
