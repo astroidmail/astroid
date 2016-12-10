@@ -88,6 +88,7 @@ namespace Astroid {
   EditMessage::EditMessage (MainWindow * mw) : Mode (mw) {
     editor_config = astroid->config ("editor");
 
+    embed_editor = !editor_config.get<bool> ("external_editor");
     save_draft_on_force_quit = editor_config.get <bool> ("save_draft_on_force_quit");
 
     tmpfile_path = astroid->standard_paths ().runtime_dir;
@@ -188,7 +189,7 @@ namespace Astroid {
       editor_box->pack_start (dynamic_cast<Plugin *> (editor)->bin, false, false, 2);
 
     } else {
-      /* editor = new External (this); */
+      editor = new External (this);
     }
 
 
@@ -237,6 +238,13 @@ namespace Astroid {
 
     sending_in_progress.store (false);
 
+    if (!embed_editor) {
+      thread_view->show ();
+      gtk_box_set_child_packing (editor_box->gobj (), GTK_WIDGET(thread_view->gobj ()), true, true, 5, GTK_PACK_START);
+      grab_modal ();
+      thread_view->grab_focus ();
+    }
+
     editor_toggle (false);
 
     from_combo->signal_changed().connect (
@@ -271,6 +279,12 @@ namespace Astroid {
         "Send message",
         [&] (Key) {
           if (!message_sent && !sending_in_progress.load()) {
+            if (editor->started ()) {
+              thread_view->set_warning (thread_view->focused_message, "Cannot send message when editing.");
+
+              return true;
+            }
+
             ask_yes_no ("Really send message?", [&](bool yes){ if (yes) send_message (); });
           }
           return true;
@@ -304,6 +318,13 @@ namespace Astroid {
     keys.register_key ("f", "edit_message.cycle_from",
         "Cycle through From selector",
         [&] (Key) {
+
+          if (editor->started ()) {
+            thread_view->set_warning (thread_view->focused_message, "Cannot change from address when editing.");
+
+            return true;
+          }
+
           /* cycle through from combo box */
           if (!message_sent && !sending_in_progress.load()) {
             if (from_store->children().size() > 1) {
@@ -328,6 +349,13 @@ namespace Astroid {
     keys.register_key ("s", "edit_message.save_draft",
         "Save draft",
         [&] (Key) {
+
+          if (editor->started ()) {
+            thread_view->set_warning (thread_view->focused_message, "Cannot save draft when editing.");
+
+            return true;
+          }
+
           if (sending_in_progress.load ()) {
             /* block closing the window while sending */
             LOG (error) << "em: message is being sent, it cannot be saved as draft anymore.";
@@ -417,6 +445,10 @@ namespace Astroid {
         });
 
     // }}}
+
+    if (!embed_editor) {
+      if (editor->start_editor_when_ready) editor_toggle (true);
+    }
   } // }}}
 
   EditMessage::~EditMessage () {
@@ -436,17 +468,29 @@ namespace Astroid {
   }
 
   void EditMessage::close (bool force) {
+    /* TODO: check if external editor is open */
+
     if (sending_in_progress.load ()) {
       /* block closing the window while sending */
     } else if (!force && !message_sent && !draft_saved) {
+
+      if (editor->started ()) {
+        thread_view->set_warning (thread_view->focused_message, "Cannot close when editing.");
+
+        return;
+      }
+
       ask_yes_no ("Do you want to close this message? (unsaved changes will be lost)", [&](bool yes){ if (yes) { Mode::close (force); } });
+
     } else if (force && !message_sent && !draft_saved && save_draft_on_force_quit) {
+
       LOG (warn) << "em: force quit, trying to save draft..";
       bool r = save_draft ();
       if (!r) {
         LOG (error) << "em: cannot save draft! check account config. changes will be lost.";
       }
       Mode::close (force);
+
     } else {
       // message has been sent successfully, no need to complain.
       Mode::close (force);
@@ -699,64 +743,88 @@ namespace Astroid {
   void EditMessage::editor_toggle (bool on) {
     LOG (debug) << "em: editor toggle: " << on;
 
-    if (on) {
-      prepare_message ();
+    if (embed_editor) {
+      if (on) {
+        prepare_message ();
 
-      editor_active = true;
+        editor_active = true;
 
-      /*
-      editor_rev->set_reveal_child (true);
-      thread_rev->set_reveal_child (false);
-      */
+        /*
+        editor_rev->set_reveal_child (true);
+        thread_rev->set_reveal_child (false);
+        */
 
-      dynamic_cast<Plugin *> (editor)->bin.show ();
-      thread_view->hide ();
+        dynamic_cast<Plugin *> (editor)->bin.show ();
+        thread_view->hide ();
 
-      gtk_box_set_child_packing (editor_box->gobj (), GTK_WIDGET(dynamic_cast<Plugin *> (editor)->bin.gobj ()), true, true, 5, GTK_PACK_START);
-      gtk_box_set_child_packing (editor_box->gobj (), GTK_WIDGET(thread_view->gobj ()), false, false, 5, GTK_PACK_START);
+        gtk_box_set_child_packing (editor_box->gobj (), GTK_WIDGET(dynamic_cast<Plugin *> (editor)->bin.gobj ()), true, true, 5, GTK_PACK_START);
+        gtk_box_set_child_packing (editor_box->gobj (), GTK_WIDGET(thread_view->gobj ()), false, false, 5, GTK_PACK_START);
 
-      /* future Gtk
-      editor_box->set_child_packing (editor_rev, true, true, 2);
-      editor_box->set_child_packing (thread_rev, false, false, 2);
-      */
+        /* future Gtk
+        editor_box->set_child_packing (editor_rev, true, true, 2);
+        editor_box->set_child_packing (thread_rev, false, false, 2);
+        */
 
-      fields_hide ();
+        fields_hide ();
 
-      editor->start ();
+        editor->start ();
 
-    } else {
+      } else {
 
-      editor_active = false;
+        editor_active = false;
 
-      if (editor->started ()) {
-        editor->stop ();
+        if (editor->started ()) {
+          editor->stop ();
+        }
+
+        /*
+        editor_rev->set_reveal_child (false);
+        thread_rev->set_reveal_child (true);
+        */
+        dynamic_cast<Plugin *> (editor)->bin.hide ();
+        thread_view->show ();
+
+        gtk_box_set_child_packing (editor_box->gobj (), GTK_WIDGET(dynamic_cast<Plugin *>(editor)->bin.gobj ()), false, false, 5, GTK_PACK_START);
+        gtk_box_set_child_packing (editor_box->gobj (), GTK_WIDGET(thread_view->gobj ()), true, true, 5, GTK_PACK_START);
+
+        /* future Gtk
+        editor_box->set_child_packing (editor_rev, false, false, 2);
+        editor_box->set_child_packing (thread_rev, true, true, 2);
+        */
+
+        fields_show ();
+
+        read_edited_message ();
+
+        grab_modal ();
+        thread_view->grab_focus ();
       }
 
-      /*
-      editor_rev->set_reveal_child (false);
-      thread_rev->set_reveal_child (true);
-      */
-      dynamic_cast<Plugin *> (editor)->bin.hide ();
-      thread_view->show ();
+    } else {
+      if (on && !editor->started ()) {
+        /* start editor */
+        editor_active = true;
 
-      gtk_box_set_child_packing (editor_box->gobj (), GTK_WIDGET(dynamic_cast<Plugin *>(editor)->bin.gobj ()), false, false, 5, GTK_PACK_START);
-      gtk_box_set_child_packing (editor_box->gobj (), GTK_WIDGET(thread_view->gobj ()), true, true, 5, GTK_PACK_START);
+        prepare_message ();
+        read_edited_message ();
 
-      /* future Gtk
-      editor_box->set_child_packing (editor_rev, false, false, 2);
-      editor_box->set_child_packing (thread_rev, true, true, 2);
-      */
+        info_str = "Editing..";
 
-      fields_show ();
+        editor->start ();
 
-      read_edited_message ();
+      } else {
+        /* return from editor */
+        editor_active = false;
 
-      grab_modal ();
-      thread_view->grab_focus ();
+        read_edited_message ();
+
+        info_str = "";
+      }
     }
   }
 
   void EditMessage::activate_editor () {
+    /* used by Plugin */
     LOG (debug) << "em: activate editor.";
 
     editor_active = true;
@@ -1027,7 +1095,7 @@ namespace Astroid {
   }
 
   void EditMessage::grab_modal () {
-    if (!editor_active) add_modal_grab ();
+    if (!embed_editor || !editor_active) add_modal_grab ();
   }
 
   void EditMessage::release_modal () {

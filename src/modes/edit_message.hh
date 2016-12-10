@@ -91,6 +91,7 @@ namespace Astroid {
       std::atomic<bool> sending_in_progress;
       void send_message_finished (bool result);
 
+      /* make a draft message that can be edited */
       void prepare_message ();
 
       /* draft */
@@ -112,8 +113,8 @@ namespace Astroid {
       int     id;          // id of this instance
       time_t  msg_time;
 
-      void editor_toggle (bool); // enable or disable editor or
-                                 // thread view
+      void editor_toggle (bool); // enable or disable editor or thread view
+
       void fields_show ();       // show fields
       void fields_hide ();       // hide fields
       void read_edited_message (); // load data from message after

@@ -3,6 +3,8 @@
 * Messages are marked unread after a delay (default 2 sec) in
   thread-view. They can be manually toggled with 'N'.
 
+* Edit drafts using an external editor (optional).
+
 * Use Tab and S-Tab to jump between unread messages in thread-view.
 
 * Open element with 'Space', also in editor.

@@ -180,7 +180,8 @@ namespace Astroid {
     /* editor */
     default_config.put ("editor.cmd", "gvim -geom 10x10 --servername %2 --socketid %3 -f -c 'set ft=mail' '+set fileencoding=utf-8' '+set ff=unix' '+set enc=utf-8' %1");
     // also useful: '+/^\\s*\\n/' '+nohl'
-    //
+    default_config.put ("editor.external_editor", false); // should be true on Wayland
+
     default_config.put ("editor.charset", "utf-8");
     default_config.put ("editor.save_draft_on_force_quit", true);
 
