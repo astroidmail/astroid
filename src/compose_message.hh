@@ -70,7 +70,7 @@ namespace Astroid {
 
           refptr<Glib::ByteArray> contents;
           std::string             content_type;
-          GMimeObject *           message = NULL;
+          refptr<Message>         message;
 
           int     chunk_id = -1;
       };

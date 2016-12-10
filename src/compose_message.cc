@@ -225,7 +225,7 @@ namespace Astroid {
 
         if (a->is_mime_message) {
 
-          GMimeMessagePart * mp = g_mime_message_part_new_with_message ("rfc822", (GMimeMessage*) a->message);
+          GMimeMessagePart * mp = g_mime_message_part_new_with_message ("rfc822", (GMimeMessage*) a->message->message);
           g_mime_multipart_add (multipart, (GMimeObject *) mp);
 
           g_object_unref (mp);
@@ -577,14 +577,12 @@ namespace Astroid {
 
     if (content_type == "message/rfc822") {
       LOG (debug) << "cm: attachment is mime message.";
-      refptr<Message> m (new Message(fname.c_str ()));
-      message = (GMimeObject *) m->message;
-      g_object_ref (message);
+      message = refptr<Message> (new Message(fname.c_str ()));
 
       on_disk = false;
       is_mime_message = true;
 
-      name = m->subject;
+      name = message->subject;
     }
   }
 
@@ -592,26 +590,32 @@ namespace Astroid {
     LOG (debug) << "cm: at: construct from chunk.";
     name = c->get_filename ();
     on_disk = false;
-
-    contents = c->contents ();
-
-    const char * ct = g_mime_content_type_to_string (c->content_type);
-    if (ct != NULL) {
-      content_type = std::string (ct);
-    } else {
-      content_type = "application/octet-stream";
-    }
-
-    if (c->mime_message) {
-      is_mime_message = true;
-      message = c->mime_object;
-      g_object_ref (message);
-    }
+    valid = true;
 
     /* used by edit message when deleting attachment */
     chunk_id = c->id;
 
-    valid = true;
+    if (c->mime_message) {
+      content_type = "message/rfc822";
+      is_mime_message = true;
+
+      message = refptr<Message> (new Message(GMIME_MESSAGE(c->mime_object)));
+
+      g_object_ref (c->mime_object); // should be cleaned by Message : Glib::Object
+
+      name = message->subject;
+
+    } else {
+
+      contents = c->contents ();
+
+      const char * ct = g_mime_content_type_to_string (c->content_type);
+      if (ct != NULL) {
+        content_type = std::string (ct);
+      } else {
+        content_type = "application/octet-stream";
+      }
+    }
   }
 
   ComposeMessage::Attachment::Attachment (refptr<Message> msg) {
@@ -621,15 +625,13 @@ namespace Astroid {
     is_mime_message = true;
 
     content_type = "message/rfc822";
-    message = (GMimeObject*) msg->message;
-    g_object_ref (message);
+    message = msg;
 
     valid = true;
   }
 
   ComposeMessage::Attachment::~Attachment () {
     LOG (debug) << "cm: at: deconstruct";
-    if (message) g_object_unref (message);
   }
 
 }

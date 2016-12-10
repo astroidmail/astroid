@@ -32,7 +32,10 @@ namespace Astroid {
 
     if (mp == NULL) {
       LOG (error) << "chunk (" << id << "): got NULL mime_object.";
-      throw std::logic_error ("chunk: got NULL mime_object");
+
+      viewable   = true;
+      attachment = false;
+
     }
 
     content_type = g_mime_object_get_content_type (mime_object);
@@ -241,7 +244,7 @@ namespace Astroid {
 
     GMimeStream * content_stream = NULL;
 
-    if (GMIME_IS_PART(mime_object)) {
+    if (mime_object != NULL && GMIME_IS_PART(mime_object)) {
       LOG (debug) << "chunk: body: part";
 
 
@@ -630,7 +633,8 @@ namespace Astroid {
   }
 
   ustring Chunk::get_content_type () {
-    return ustring (g_mime_content_type_to_string (content_type));
+    if (content_type == NULL) return "";
+    else return ustring (g_mime_content_type_to_string (content_type));
   }
 
   void Chunk::save () {

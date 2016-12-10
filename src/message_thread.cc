@@ -384,9 +384,10 @@ namespace Astroid {
       if (c->mime_message)
         mime_messages.push_back (c);
 
-      for_each (c->kids.begin(),
-                c->kids.end (),
-                app_mm);
+      if (!c->mime_message)
+        for_each (c->kids.begin(),
+                  c->kids.end (),
+                  app_mm);
     };
 
     if (root) app_mm (root);
@@ -405,9 +406,11 @@ namespace Astroid {
       if (c->mime_message || c->attachment)
         parts.push_back (c);
 
-      for_each (c->kids.begin(),
-                c->kids.end (),
-                app_part);
+      /* do not descend for mime messages */
+      if (!c->mime_message)
+        for_each (c->kids.begin(),
+                  c->kids.end (),
+                  app_part);
     };
 
     if (root) app_part (root);
