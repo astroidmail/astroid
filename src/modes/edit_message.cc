@@ -28,6 +28,7 @@
 # include "actions/onmessage.hh"
 
 # include "editor/plugin.hh"
+# include "editor/external.hh"
 
 using namespace std;
 using namespace boost::filesystem;
@@ -180,10 +181,16 @@ namespace Astroid {
 
     make_tmpfile ();
 
-    editor = new Plugin (this, _mid);
+    if (embed_editor) {
+      editor = new Plugin (this, _mid);
 
-    //editor_rev->add (*editor_socket);
-    editor_box->pack_start (*editor, false, false, 2);
+      //editor_rev->add (*editor_socket);
+      editor_box->pack_start (dynamic_cast<Plugin *> (editor)->bin, false, false, 2);
+
+    } else {
+      /* editor = new External (this); */
+    }
+
 
     thread_view = Gtk::manage(new ThreadView(main_window));
     thread_view->edit_mode = true;
@@ -687,7 +694,8 @@ namespace Astroid {
    fields_revealer->set_reveal_child (true);
   }
 
-  /* turn on or off the editor or set up for the editor */
+  /* turn on or off the editor or set up for the editor
+   * only run for embedded editor */
   void EditMessage::editor_toggle (bool on) {
     LOG (debug) << "em: editor toggle: " << on;
 
@@ -701,10 +709,10 @@ namespace Astroid {
       thread_rev->set_reveal_child (false);
       */
 
-      editor->show ();
+      dynamic_cast<Plugin *> (editor)->bin.show ();
       thread_view->hide ();
 
-      gtk_box_set_child_packing (editor_box->gobj (), GTK_WIDGET(editor->gobj ()), true, true, 5, GTK_PACK_START);
+      gtk_box_set_child_packing (editor_box->gobj (), GTK_WIDGET(dynamic_cast<Plugin *> (editor)->bin.gobj ()), true, true, 5, GTK_PACK_START);
       gtk_box_set_child_packing (editor_box->gobj (), GTK_WIDGET(thread_view->gobj ()), false, false, 5, GTK_PACK_START);
 
       /* future Gtk
@@ -728,10 +736,10 @@ namespace Astroid {
       editor_rev->set_reveal_child (false);
       thread_rev->set_reveal_child (true);
       */
-      editor->hide ();
+      dynamic_cast<Plugin *> (editor)->bin.hide ();
       thread_view->show ();
 
-      gtk_box_set_child_packing (editor_box->gobj (), GTK_WIDGET(editor->gobj ()), false, false, 5, GTK_PACK_START);
+      gtk_box_set_child_packing (editor_box->gobj (), GTK_WIDGET(dynamic_cast<Plugin *>(editor)->bin.gobj ()), false, false, 5, GTK_PACK_START);
       gtk_box_set_child_packing (editor_box->gobj (), GTK_WIDGET(thread_view->gobj ()), true, true, 5, GTK_PACK_START);
 
       /* future Gtk

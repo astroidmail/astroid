@@ -17,6 +17,7 @@
 # include "mode.hh"
 # include "editor/editor.hh"
 # include "editor/plugin.hh"
+# include "editor/external.hh"
 # include "compose_message.hh"
 # include "account_manager.hh"
 # include "thread_view/thread_view.hh"
@@ -25,6 +26,7 @@ namespace Astroid {
   class EditMessage : public Mode {
     friend Editor;
     friend Plugin;
+    friend External;
 
     public:
       EditMessage (MainWindow *);
@@ -41,6 +43,8 @@ namespace Astroid {
       Gtk::Revealer *fields_revealer;
       Gtk::Revealer *reply_revealer;
       Gtk::Revealer *encryption_revealer;
+
+      bool embed_editor = true;
 
       Editor * editor;
       bool editor_active = false;

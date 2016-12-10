@@ -31,7 +31,7 @@ namespace Astroid {
     editor_socket->signal_realize ().connect (
         sigc::mem_fun(*this, &Plugin::socket_realized) );
 
-    add (*editor_socket);
+    bin.pack_start (*editor_socket);
   }
 
   Plugin::~Plugin () {
@@ -72,9 +72,9 @@ namespace Astroid {
   }
 
   void Plugin::focus () {
-    grab_focus ();
+    bin.grab_focus ();
     if (!editor_focused) {
-      child_focus (Gtk::DIR_TAB_FORWARD);
+      bin.child_focus (Gtk::DIR_TAB_FORWARD);
       editor_focused = true;
     }
   }
