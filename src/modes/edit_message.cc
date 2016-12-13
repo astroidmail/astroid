@@ -816,9 +816,9 @@ namespace Astroid {
         /* return from editor */
         editor_active = false;
 
+        info_str = "";
         read_edited_message ();
 
-        info_str = "";
       }
     }
   }
