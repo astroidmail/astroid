@@ -68,7 +68,7 @@ namespace Astroid {
       msg_id = msg->mid;
     }
 
-    for (auto &c : msg->attachments ()) {
+    for (auto &c : msg->mime_messages_and_attachments ()) {
       add_attachment (new ComposeMessage::Attachment (c));
     }
 
@@ -785,10 +785,11 @@ namespace Astroid {
 
     if (action == ThreadView::ElementAction::EDelete) {
       /* delete attachment */
-      LOG (info) << "em: remove attachment: " << id;
+      auto e = thread_view->state[thread_view->focused_message].elements[id];
 
-      /* TODO: this will not always correspond to the attachment number! */
-      attachments.erase (attachments.begin() + (id-1));
+      LOG (info) << "em: remove attachment: " << id << ", cid: " << e.id;
+
+      attachments.erase (std::remove_if (attachments.begin (), attachments.end (), [&] (shared_ptr<ComposeMessage::Attachment> &a) { return a->chunk_id == e.id; }));
 
       prepare_message ();
       read_edited_message ();
