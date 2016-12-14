@@ -16,7 +16,7 @@ using namespace std;
 
 namespace Astroid {
   ReplyMessage::ReplyMessage (MainWindow * mw, refptr<Message> _msg, ReplyMode rmode)
-    : EditMessage (mw)
+    : EditMessage (mw, false)
   {
     msg = _msg;
 
@@ -168,6 +168,8 @@ namespace Astroid {
 
           return true;
         });
+
+    edit_when_ready ();
   }
 
   void ReplyMessage::on_receiver_combo_changed () {

@@ -70,10 +70,13 @@ namespace Astroid {
     draft_watch->signal_changed ().connect (sigc::mem_fun (this, &External::on_draft_changed));
   }
 
-  void External::on_draft_changed (const Glib::RefPtr<Gio::File>&, const Glib::RefPtr<Gio::File>&, Gio::FileMonitorEvent) {
+  void External::on_draft_changed (const Glib::RefPtr<Gio::File>&, const Glib::RefPtr<Gio::File>&, Gio::FileMonitorEvent event_type) {
 
-    em->read_edited_message ();
-    em->info_str = "Editing..";
+    if (event_type == Gio::FileMonitorEvent::FILE_MONITOR_EVENT_CHANGES_DONE_HINT) {
+      LOG (debug) << "em: ex: file changed, updating preview..";
+      em->read_edited_message ();
+      em->info_str = "Editing..";
+    }
 
   }
 

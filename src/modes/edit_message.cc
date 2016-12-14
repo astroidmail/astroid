@@ -37,7 +37,7 @@ namespace Astroid {
   int EditMessage::edit_id = 0;
 
   EditMessage::EditMessage (MainWindow * mw, ustring _to, ustring _from) :
-    EditMessage (mw) { // {{{
+    EditMessage (mw, false) { // {{{
 
     to = _to;
 
@@ -49,10 +49,12 @@ namespace Astroid {
     /* reload message */
     prepare_message ();
     read_edited_message ();
+
+    edit_when_ready ();
   }
 
   EditMessage::EditMessage (MainWindow * mw, refptr<Message> msg) :
-    EditMessage (mw) {
+    EditMessage (mw, false) {
     /* load draft */
     LOG (info) << "em: loading draft from: " << msg->fname;
 
@@ -83,9 +85,11 @@ namespace Astroid {
     read_edited_message ();
 
     /* TODO: read encryption / signing / signature state from message properties */
+
+    edit_when_ready ();
   }
 
-  EditMessage::EditMessage (MainWindow * mw) : Mode (mw) {
+  EditMessage::EditMessage (MainWindow * mw, bool _edit_when_ready) : Mode (mw) {
     editor_config = astroid->config ("editor");
 
     embed_editor = !editor_config.get<bool> ("external_editor");
@@ -446,10 +450,17 @@ namespace Astroid {
 
     // }}}
 
-    if (!embed_editor) {
-      if (editor->start_editor_when_ready) editor_toggle (true);
-    }
+    if (_edit_when_ready) edit_when_ready ();
   } // }}}
+
+  void EditMessage::edit_when_ready () {
+    if (!embed_editor) {
+       editor_toggle (true);
+    } else {
+      if (!editor->ready ()) editor->start_editor_when_ready = true;
+      else editor_toggle (true);
+    }
+  }
 
   EditMessage::~EditMessage () {
     LOG (debug) << "em: deconstruct.";
@@ -468,8 +479,6 @@ namespace Astroid {
   }
 
   void EditMessage::close (bool force) {
-    /* TODO: check if external editor is open */
-
     if (sending_in_progress.load ()) {
       /* block closing the window while sending */
     } else if (!force && !message_sent && !draft_saved) {
@@ -806,9 +815,12 @@ namespace Astroid {
         editor_active = true;
 
         prepare_message ();
-        read_edited_message ();
 
         info_str = "Editing..";
+
+        /* TODO: race condition: info_str is set by read_edited_message, may
+         *       happen in conflict with when the thread_view emits the ready
+         *       signal (race will also be in external.cc) */
 
         editor->start ();
 

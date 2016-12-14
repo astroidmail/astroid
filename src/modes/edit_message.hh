@@ -29,11 +29,15 @@ namespace Astroid {
     friend External;
 
     public:
-      EditMessage (MainWindow *);
+      EditMessage (MainWindow *, bool edit_when_ready = true);
       EditMessage (MainWindow *, ustring to, ustring from = "");
       EditMessage (MainWindow *, refptr<Message> _msg);
       ~EditMessage ();
 
+    protected:
+      void edit_when_ready ();
+
+    public:
       Gtk::Box * box_message;
 
       Gtk::ComboBox *from_combo, *reply_mode_combo;

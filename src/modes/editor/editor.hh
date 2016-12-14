@@ -14,7 +14,7 @@ namespace Astroid {
 
       virtual void focus () = 0;
 
-      bool start_editor_when_ready = true;
+      bool start_editor_when_ready = false;
 
   };
 }
