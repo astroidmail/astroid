@@ -200,7 +200,9 @@ citation_depth (const char *in, const char *inend)
 		return 0;
 
 	while (inptr < inend && *inptr != '\n') {
-		if (*inptr == ' ')
+
+    /* remove an arbitrary number of spaces between '>' and next '>' */
+		while (*inptr == ' ' && inptr < inend)
 			inptr++;
 
 		if (inptr >= inend || *inptr++ != '>')
@@ -216,14 +218,25 @@ static char *
 citation_cut (char *in, const char *inend)
 {
 	register char *inptr = in;
+  register char *start;
+
 	/* check that it isn't an escaped From line */
 	if (!strncmp (inptr, ">From", 5))
 		return inptr;
+
 	while (inptr < inend && *inptr != '\n') {
-		if (*inptr == ' ')
+
+    /* remove an arbitrary number of spaces between '>' and next '>' */
+    start = inptr;
+		while (*inptr == ' ' && inptr < inend)
 			inptr++;
-		if (inptr >= inend || *inptr != '>')
+
+		if (inptr >= inend || *inptr != '>') {
+      if (*start == ' ' && start < inend) start++;
+      inptr = start; // not followed by '>', revert.
 			break;
+    }
+
 		inptr++;
 	}
 	return inptr;
