@@ -63,7 +63,6 @@ namespace Astroid {
           ~Attachment ();
           ustring name;
           bfs::path    fname;
-          bool    on_disk;
           bool    is_mime_message = false;
           bool    dispostion_inline = false;
           bool    valid;
