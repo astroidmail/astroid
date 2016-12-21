@@ -524,6 +524,8 @@ namespace Astroid {
   }
 
   void ComposeMessage::write (ustring fname) {
+    if (bfs::exists (fname.c_str ())) unlink (fname.c_str ());
+
     FILE * MessageFile = fopen(fname.c_str(), "w");
 
     GMimeStream * stream = g_mime_stream_file_new(MessageFile);
