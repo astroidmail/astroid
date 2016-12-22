@@ -2916,6 +2916,29 @@ namespace Astroid {
       } else if (a == ESave) {
         /* save message to */
         focused_message->save ();
+
+      } else if (a == EYankRaw) {
+        auto cp = Gtk::Clipboard::get (GDK_SELECTION_PRIMARY);
+        ustring t;
+
+        auto d = focused_message->raw_contents ();
+        if (d->size () == 0) {
+          t = "";
+        } else {
+          char * dd = (char*) d->get_data ();
+          t = dd;
+        }
+
+        cp->set_text (t);
+
+      } else if (a == EYank) {
+
+        auto cp = Gtk::Clipboard::get (GDK_SELECTION_PRIMARY);
+        ustring t;
+
+        t = focused_message->viewable_text (false, true);
+
+        cp->set_text (t);
       }
 
     } else {
