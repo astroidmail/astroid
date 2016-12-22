@@ -9,12 +9,12 @@ Check out the [tour of how to install, configure and use astroid](https://github
 ## main features and goals include:
 * lightweight and fast!
 * fully operatable by [keyboard](https://github.com/astroidmail/astroid/wiki/Customizing-key-bindings).
-* graphical interface, inspired by sup. but allow buffers to be separeted and placed in several windows.
+* graphical interface, inspired by sup. but allow buffers to be separated and placed in several windows.
 * display html mail and some attachments inline.
 * syntax highlighting of code (markdown style) and patches.
 * [themable and configurable](https://github.com/astroidmail/astroid/wiki/Customizing-the-user-interface).
 * built-in [crypto (PGP/MIME) support](https://github.com/astroidmail/astroid/wiki/Signing%2C-Encrypting-and-Decrypting).
-* editors: [embed vim or emacs](https://github.com/astroidmail/astroid/wiki/Customizing-editor) (or anything else that supports XEmbed).
+* editors: [embedded or external vim or emacs](https://github.com/astroidmail/astroid/wiki/Customizing-editor) (or your favourite editor, embedded: must support XEmbed).
 * [python and lua plugins](https://github.com/astroidmail/astroid/wiki/Plugins).
 * and much more...
 
