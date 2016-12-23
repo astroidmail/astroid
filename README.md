@@ -18,16 +18,11 @@ Check out the [tour of how to install, configure and use astroid](https://github
 * [python and lua plugins](https://github.com/astroidmail/astroid/wiki/Plugins).
 * and much more...
 
-### more screenshots
-  <a href="https://raw.githubusercontent.com/astroidmail/astroid/master/doc/astroid-thread-view.png">
-    <img src="https://raw.githubusercontent.com/astroidmail/astroid/master/doc/astroid-thread-view.png" width="49%">
-  </a> <a href="https://raw.githubusercontent.com/astroidmail/astroid/master/doc/astroid-searching.png">
-    <img src="https://raw.githubusercontent.com/astroidmail/astroid/master/doc/astroid-searching.png" width="49%" style="float: right;">
+  <a href="https://raw.githubusercontent.com/astroidmail/astroid/master/doc/full-demo-embedded.png">
+    <img alt="Astroid (with embedded editor)" src="https://raw.githubusercontent.com/astroidmail/astroid/master/doc/full-demo-embedded.png">
   </a>
-  <a href="https://raw.githubusercontent.com/astroidmail/astroid/master/doc/astroid-editor-vim.png">
-    <img src="https://raw.githubusercontent.com/astroidmail/astroid/master/doc/astroid-editor-vim.png" width="49%">
-  </a> <a href="https://raw.githubusercontent.com/astroidmail/astroid/master/doc/astroid-compose-code-highlight.png">
-    <img src="https://raw.githubusercontent.com/astroidmail/astroid/master/doc/astroid-compose-code-highlight.png" width="49%" style="float: right;">
+  <a href="https://raw.githubusercontent.com/astroidmail/astroid/master/doc/full-demo-external.png">
+    <img alt="Astroid (with external editor)" src="https://raw.githubusercontent.com/astroidmail/astroid/master/doc/full-demo-external.png">
   </a>
 
 ## acquiring astroid
