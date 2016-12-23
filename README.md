@@ -18,9 +18,6 @@ Check out the [tour of how to install, configure and use astroid](https://github
 * [python and lua plugins](https://github.com/astroidmail/astroid/wiki/Plugins).
 * and much more...
 
-  <a href="https://raw.githubusercontent.com/astroidmail/astroid/master/doc/full-demo-embedded.png">
-    <img alt="Astroid (with embedded editor)" src="https://raw.githubusercontent.com/astroidmail/astroid/master/doc/full-demo-embedded.png">
-  </a>
   <a href="https://raw.githubusercontent.com/astroidmail/astroid/master/doc/full-demo-external.png">
     <img alt="Astroid (with external editor)" src="https://raw.githubusercontent.com/astroidmail/astroid/master/doc/full-demo-external.png">
   </a>
