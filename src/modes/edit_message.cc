@@ -95,6 +95,10 @@ namespace Astroid {
     embed_editor = !editor_config.get<bool> ("external_editor");
     save_draft_on_force_quit = editor_config.get <bool> ("save_draft_on_force_quit");
 
+    ustring attachment_words_s = editor_config.get<string> ("attachment_words");
+    attachment_words = VectorUtils::split_and_trim (attachment_words_s.lowercase (), ",");
+    sort (attachment_words.begin (), attachment_words.end ());
+
     tmpfile_path = astroid->standard_paths ().runtime_dir;
 
     set_label ("New message");
@@ -285,6 +289,13 @@ namespace Astroid {
           if (!message_sent && !sending_in_progress.load()) {
             if (editor->started ()) {
               thread_view->set_warning (thread_view->focused_message, "Cannot send message when editing.");
+
+              return true;
+            }
+
+            if (!check_fields ()) {
+              /* warning str is set in check_fields () */
+              LOG (error) << "em: error problem with some of the input fields..";
 
               return true;
             }
@@ -888,26 +899,42 @@ namespace Astroid {
 
   /* send message {{{ */
   bool EditMessage::check_fields () {
-    /* TODO: check fields.. */
+    if (to.empty () && cc.empty () && bcc.empty ()) {
+      warning_str = "No recipients defined!";
+
+      on_tv_ready ();
+
+      return false;
+    }
+
+    /* check if attachments are mentioned */
+    if (attachments.empty () && !attachment_words.empty ()) {
+      ustring bl = body.lowercase ();
+
+      if (any_of (attachment_words.begin (),
+                  attachment_words.end (),
+                  [&] (ustring w) {
+                    return bl.find (w) != string::npos;
+                  }))
+      {
+        warning_str = "You have mentioned attachments in the text, but none are attached, do you still want to send?";
+
+        on_tv_ready ();
+      }
+    }
+
     return true;
   }
 
   bool EditMessage::send_message () {
     LOG (info) << "em: sending message..";
 
-    info_str = "sending message..";
-    warning_str = "";
-    on_tv_ready ();
-
-    if (!check_fields ()) {
-      LOG (error) << "em: error problem with some of the input fields..";
-      return false;
-    }
-
     /* load body */
     editor_toggle (false); // resets warning and info
 
-    info_str = "sending message..";
+    warning_str = "";
+    info_str    = "sending message..";
+
     on_tv_ready ();
 
     ComposeMessage * c = make_message ();
@@ -917,6 +944,8 @@ namespace Astroid {
     if (c->encrypt || c->sign) {
       if (!c->encryption_success) {
         warning_str = "Cannot send, failed encrypting: " + UstringUtils::replace (c->encryption_error, "\n", "<br />");
+
+        delete c;
         return false;
       }
     }
@@ -996,11 +1025,6 @@ namespace Astroid {
   }
 
   ComposeMessage * EditMessage::make_message () {
-
-    if (!check_fields ()) {
-      LOG (error) << "em: error, problem with some of the input fields..";
-      return NULL;
-    }
 
     ComposeMessage * c = new ComposeMessage ();
 

@@ -88,6 +88,8 @@ namespace Astroid {
       void set_from (Address);
 
       bool check_fields ();
+      std::vector<ustring> attachment_words = { "attach" }; // defined in config
+
       bool send_message ();
       ComposeMessage * make_message ();
 
