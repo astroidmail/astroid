@@ -7,8 +7,6 @@
 
 * Use Tab and S-Tab to jump between unread messages in thread-view.
 
-* Open element with 'Space', also in editor.
-
 * Yank raw or decoded message or element to primary clipboard with 'Y'
   or 'y', useful for applying patches.
 
@@ -38,6 +36,18 @@
   manually by adding sourcing the script in the thread-view theme file.
 
 * When replying, match encryption / signature level.
+
+* Open element with 'Space', also in editor.
+
+* Check for missing fields and for attachment words before sending.
+
+* Kim Ebert: Make sure all messages are loaded.
+
+* M. Dietrich, G. Hope: Fix buggy quoting of arbitrarly spaced '>'s.
+
+* Close thread-view after deleting draft.
+
+* Hugo Roy: Improve attachment, mime-message, and url display.
 
 == v0.6 / 2016-07-23
 
