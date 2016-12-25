@@ -2544,6 +2544,7 @@ namespace Astroid {
                   [&](bool yes) {
                     if (yes) {
                       EditMessage::delete_draft (focused_message);
+                      close ();
                     }
                   });
 
