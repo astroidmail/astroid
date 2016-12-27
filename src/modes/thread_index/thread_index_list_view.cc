@@ -246,6 +246,8 @@ namespace Astroid {
     filter = VectorUtils::split_and_trim (k.lowercase (), " ");
 
     filtered_store->refilter ();
+
+    thread_index->on_stats_ready ();
   }
 
   bool ThreadIndexListView::redraw () {
@@ -581,9 +583,9 @@ namespace Astroid {
     keys->register_key ("0", { Key (GDK_KEY_End) }, "thread_index.scroll_end",
         "Scroll to last line",
         [&] (Key) {
-          if (list_store->children().size() >= 1) {
-            auto it = list_store->children().end ();
-            auto p  = list_store->get_path (--it);
+          if (filtered_store->children().size() >= 1) {
+            auto it = filtered_store->children().end ();
+            auto p  = filtered_store->get_path (--it);
             if (p) set_cursor (p);
           }
 

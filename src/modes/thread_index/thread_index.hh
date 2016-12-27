@@ -41,8 +41,9 @@ namespace Astroid {
       PluginManager::ThreadIndexExtension * plugins;
 # endif
 
-    private:
       void on_stats_ready ();
+
+    private:
       void on_first_thread_ready ();
   };
 }
