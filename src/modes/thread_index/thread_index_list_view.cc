@@ -300,7 +300,7 @@ namespace Astroid {
     keys->register_key ("j", { Key(false, false, (guint) GDK_KEY_Down) },
         "thread_index.next_thread", "Next thread",
         [&](Key) {
-          if (list_store->children().size() < 2)
+          if (filtered_store->children().size() < 2)
             return true;
 
           Gtk::TreePath path;
@@ -308,7 +308,7 @@ namespace Astroid {
           get_cursor (path, c);
 
           path.next ();
-          Gtk::TreeIter it = list_store->get_iter (path);
+          Gtk::TreeIter it = filtered_store->get_iter (path);
 
           if (it) {
             set_cursor (path);
@@ -326,7 +326,7 @@ namespace Astroid {
 
           get_cursor (path, c);
           path.next ();
-          fwditer = list_store->get_iter (path);
+          fwditer = filtered_store->get_iter (path);
           thispath = path;
 
           Gtk::ListStore::Row row;
@@ -337,7 +337,7 @@ namespace Astroid {
 
             Glib::RefPtr<NotmuchThread> thread = row[list_store->columns.thread];
             if (thread->unread) {
-              path = list_store->get_path (fwditer);
+              path = filtered_store->get_path (fwditer);
               set_cursor (path);
               found = true;
               break;
@@ -348,14 +348,14 @@ namespace Astroid {
 
           /* wrap, and check from start */
           if (!found) {
-            fwditer = list_store->children().begin ();
+            fwditer = filtered_store->children().begin ();
 
-            while (fwditer && list_store->get_path(fwditer) < thispath) {
+            while (fwditer && filtered_store->get_path(fwditer) < thispath) {
             row = *fwditer;
 
             Glib::RefPtr<NotmuchThread> thread = row[list_store->columns.thread];
             if (thread->unread) {
-              path = list_store->get_path (fwditer);
+              path = filtered_store->get_path (fwditer);
               set_cursor (path);
               found = true;
               break;
@@ -380,17 +380,17 @@ namespace Astroid {
           thispath = path;
 
           path.prev ();
-          iter = list_store->get_iter (path);
+          iter = filtered_store->get_iter (path);
 
           Gtk::ListStore::Row row;
 
           bool found = false;
-          while (iter && list_store->get_path(iter) < thispath) {
+          while (iter && filtered_store->get_path(iter) < thispath) {
             row = *iter;
 
             Glib::RefPtr<NotmuchThread> thread = row[list_store->columns.thread];
             if (thread->unread) {
-              path = list_store->get_path (iter);
+              path = filtered_store->get_path (iter);
               set_cursor (path);
               found = true;
               break;
@@ -401,15 +401,15 @@ namespace Astroid {
 
           /* wrap, and check from end */
           if (!found) {
-            iter = list_store->children().end ();
+            iter = filtered_store->children().end ();
             iter--;
 
-            while (iter && list_store->get_path(iter) > thispath) {
+            while (iter && filtered_store->get_path(iter) > thispath) {
               row = *iter;
 
               Glib::RefPtr<NotmuchThread> thread = row[list_store->columns.thread];
               if (thread->unread) {
-                path = list_store->get_path (iter);
+                path = filtered_store->get_path (iter);
                 set_cursor (path);
                 break;
               }
@@ -499,7 +499,7 @@ namespace Astroid {
             Gtk::TreePath path;
             Gtk::TreeIter fwditer;
 
-            fwditer = list_store->get_iter ("0");
+            fwditer = filtered_store->get_iter ("0");
             Gtk::ListStore::Row row;
 
             bool found = false;
@@ -524,7 +524,7 @@ namespace Astroid {
     keys->register_key ("J", "thread_index.scroll_down",
         "Scroll down",
         [&] (Key) {
-          if (list_store->children().size() >= 2) {
+          if (filtered_store->children().size() >= 2) {
 
             Gtk::TreePath path;
             Gtk::TreeViewColumn *c;
@@ -535,14 +535,14 @@ namespace Astroid {
               path.next ();
             }
 
-            Gtk::TreeIter it = list_store->get_iter (path);
+            Gtk::TreeIter it = filtered_store->get_iter (path);
 
             if (it) {
               set_cursor (path);
             } else {
               /* move to last */
-              auto it = list_store->children().end ();
-              auto p  = list_store->get_path (--it);
+              auto it = filtered_store->children().end ();
+              auto p  = filtered_store->get_path (--it);
               if (p) set_cursor (p);
             }
           }
@@ -734,7 +734,7 @@ namespace Astroid {
           get_cursor (path, c);
           Gtk::TreeIter iter;
 
-          iter = list_store->get_iter (path);
+          iter = filtered_store->get_iter (path);
 
           if (iter) {
             Gtk::ListStore::Row row = *iter;
@@ -742,7 +742,7 @@ namespace Astroid {
 
             /* move to next thread */
             path.next ();
-            iter = list_store->get_iter (path);
+            iter = filtered_store->get_iter (path);
             if (iter) set_cursor (path);
           }
 
@@ -760,7 +760,7 @@ namespace Astroid {
           get_cursor (path, c);
           Gtk::TreeIter iter;
 
-          iter = list_store->get_iter (path);
+          iter = filtered_store->get_iter (path);
 
           if (iter) {
             Gtk::ListStore::Row row = *iter;
@@ -773,7 +773,7 @@ namespace Astroid {
     keys->register_key (UnboundKey (), "thread_index.toggle_marked_previous",
         "Toggle mark thread and move to previous",
         [&] (Key) {
-          if (list_store->children().size() < 1)
+          if (filtered_store->children().size() < 1)
             return true;
 
           Gtk::TreePath path;
@@ -781,7 +781,7 @@ namespace Astroid {
           get_cursor (path, c);
           Gtk::TreeIter iter;
 
-          iter = list_store->get_iter (path);
+          iter = filtered_store->get_iter (path);
 
           if (iter) {
             Gtk::ListStore::Row row = *iter;
@@ -802,7 +802,7 @@ namespace Astroid {
         [&] (Key) {
           Gtk::TreePath path;
           Gtk::TreeIter fwditer;
-          fwditer = list_store->get_iter ("0");
+          fwditer = filtered_store->get_iter ("0");
           Gtk::ListStore::Row row;
           while (fwditer) {
             row = *fwditer;
@@ -983,7 +983,7 @@ namespace Astroid {
     /* forward iterating is much faster than going backwards:
      * https://developer.gnome.org/gtkmm/3.11/classGtk_1_1TreeIter.html
      */
-    fwditer = list_store->get_iter ("0");
+    fwditer = filtered_store->get_iter ("0");
     Gtk::ListStore::Row row;
 
     switch (maction) {
@@ -1187,7 +1187,7 @@ namespace Astroid {
   }
 
   void ThreadIndexListView::update_bg_image () {
-    bool hide = (thread_index->queryloader.total_messages == 0);
+    bool hide = (filtered_store->children().size () == 0);
 
     if (!hide) {
       auto sc = get_style_context ();
@@ -1228,7 +1228,7 @@ namespace Astroid {
     get_cursor (path, c);
     Gtk::TreeIter iter;
 
-    iter = list_store->get_iter (path);
+    iter = filtered_store->get_iter (path);
 
     if (iter) {
       Gtk::ListStore::Row row = *iter;
@@ -1248,7 +1248,7 @@ namespace Astroid {
     get_cursor (path, c);
     Gtk::TreeIter iter;
 
-    iter = list_store->get_iter (path);
+    iter = filtered_store->get_iter (path);
 
     if (iter) {
       Gtk::ListStore::Row row = *iter;

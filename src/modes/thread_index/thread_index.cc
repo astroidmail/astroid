@@ -187,8 +187,8 @@ namespace Astroid {
           int cx, cy;
           list_view->get_path_at_pos (0, list_view->get_height (), newpath, c, cx, cy);
           if (!newpath || newpath == path) {
-            auto it = list_store->children().end ();
-            newpath  = list_store->get_path (--it);
+            auto it   = list_view->filtered_store->children().end ();
+            newpath   = list_view->filtered_store->get_path (--it);
           }
           if (newpath)
             list_view->set_cursor (newpath);
