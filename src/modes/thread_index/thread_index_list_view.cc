@@ -91,14 +91,16 @@ namespace Astroid {
 
     set_name ("ThreadIndexListView");
 
-    thread_index = _thread_index;
-    main_window  = _thread_index->main_window;
-    list_store = store;
+    thread_index    = _thread_index;
+    main_window     = _thread_index->main_window;
+    list_store      = store;
+    filtered_store  = Gtk::TreeModelFilter::create (list_store);
+    filtered_store->set_visible_func (sigc::mem_fun (this, &ThreadIndexListView::filter_visible_row));
 
     config = astroid->config ("thread_index");
     page_jump_rows     = config.get<int>("page_jump_rows");
 
-    set_model (list_store);
+    set_model (filtered_store);
     set_enable_search (false);
 
     set_show_expanders (false);
@@ -221,6 +223,29 @@ namespace Astroid {
 
   ThreadIndexListView::~ThreadIndexListView () {
     LOG (debug) << "tilv: deconstruct.";
+  }
+
+  bool ThreadIndexListView::filter_visible_row ( const Gtk::TreeIter & iter)
+  {
+    if (filter.empty ()) return true;
+
+    if (iter) {
+      Gtk::ListStore::Row row = *iter;
+      refptr<NotmuchThread> t = row[list_store->columns.thread];
+
+      if (t) return t->matches (filter);
+      else   return false;
+    }
+
+    return true;
+  }
+
+  void ThreadIndexListView::on_filter (ustring k) {
+    LOG (info) << "ti: filtering: " << k << endl;
+    filter_txt = k;
+    filter = VectorUtils::split_and_trim (k.lowercase (), " ");
+
+    filtered_store->refilter ();
   }
 
   bool ThreadIndexListView::redraw () {
@@ -406,6 +431,24 @@ namespace Astroid {
             }
             return true;
           });
+
+    keys->register_key ("C-f", "thread_index.filter",
+        "Filter rows",
+        [&] (Key) {
+
+          main_window->enable_command (CommandBar::CommandMode::SearchText,
+              filter_txt, sigc::mem_fun (this, &ThreadIndexListView::on_filter));
+
+          return true;
+        });
+
+    keys->register_key (Key (GDK_KEY_Escape),
+        "thread_index.filter_clear",
+        "Clear filter",
+        [&] (Key) {
+          on_filter ("");
+          return true;
+        });
 
 
     /* set up for multi key handler */

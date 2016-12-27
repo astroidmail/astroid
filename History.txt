@@ -5,6 +5,8 @@
 
 * Edit drafts using an external editor (optional).
 
+* Filter thread-index incrementally using 'C-f'.
+
 * Use Tab and S-Tab to jump between unread messages in thread-view.
 
 * Yank raw or decoded message or element to primary clipboard with 'Y'
@@ -43,7 +45,7 @@
 
 * Kim Ebert: Make sure all messages are loaded.
 
-* M. Dietrich, G. Hope: Fix buggy quoting of arbitrarly spaced '>'s.
+* M. Dietrich, G. Hope: Fix buggy quoting of arbitrarily spaced '>'s.
 
 * Close thread-view after deleting draft.
 
@@ -55,10 +57,10 @@
   works.
 
 * Plugins: Python and Lua plugins can now be made, parts of ThreadIndex
-  and ThreadView are exposed allowing extesion of the user interface and
+  and ThreadView are exposed allowing extension of the user interface and
   advanced customization. Check out the plugins available at GitHub.
 
-* Crypto: GPG encryption and signing is added. Decryption and and
+* Crypto: GPG encryption and signing is added. Decryption and
   signature status is shown in greater detail.
 
 * Repository moved to github.com/astroidmail.
