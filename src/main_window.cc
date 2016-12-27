@@ -284,7 +284,7 @@ namespace Astroid {
           return true;
         });
 
-    keys.register_key ("C-f", "main_window.show_saved_searches",
+    keys.register_key ("M-s", "main_window.show_saved_searches",
         "Show saved searches",
         [&] (Key) {
           add_mode (new SavedSearches (this));
