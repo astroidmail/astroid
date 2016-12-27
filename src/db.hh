@@ -68,10 +68,13 @@ namespace Astroid {
       void emit_updated (Db *) override;
       ustring str () override;
 
+      bool matches (std::vector<ustring> &k);
     private:
       int check_total_messages (notmuch_thread_t *);
       std::vector<std::tuple<ustring,bool>> get_authors (notmuch_thread_t *);
       std::vector<ustring> get_tags (notmuch_thread_t *);
+
+      ustring index_str = "";
   };
 
   class Db {
