@@ -442,7 +442,8 @@ namespace Astroid {
         [&] (Key) {
 
           main_window->enable_command (CommandBar::CommandMode::Filter,
-              filter_txt, sigc::mem_fun (this, &ThreadIndexListView::on_filter));
+              "Filter", filter_txt,
+              sigc::mem_fun (this, &ThreadIndexListView::on_filter));
 
           return true;
         });

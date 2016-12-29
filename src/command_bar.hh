@@ -3,8 +3,7 @@
  * is sub classed from Gtk::SearchBar, provides a command and search bar
  * with an entry that takes completions.
  *
- * will in different modes accept full searches, buffer searches, commands
- * or arguments for commands.
+ * will in different modes accept full searches, buffer searches.
  *
  */
 

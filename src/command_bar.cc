@@ -140,7 +140,7 @@ namespace Astroid {
 
       case CommandMode::Tag:
         {
-          mode_label.set_text ("Change tags:");
+          mode_label.set_text ("Change tags");
           entry.set_icon_from_icon_name ("system-run-symbolic");
 
           start_tagging (cmd);
@@ -149,7 +149,7 @@ namespace Astroid {
 
       case CommandMode::DiffTag:
         {
-          mode_label.set_text ("Change tags (+/-):");
+          mode_label.set_text ("Change tags (+/-)");
           entry.set_icon_from_icon_name ("system-run-symbolic");
 
           start_difftagging (cmd);
