@@ -23,7 +23,6 @@ namespace Astroid {
       enum CommandMode {
         Search = 0,
         SearchText,
-        //Generic,
         Tag,        /* apply or remove tags */
         DiffTag,    /* apply or remove tags using + or - */
       };
@@ -44,9 +43,6 @@ namespace Astroid {
 
       void enable_command (CommandMode, ustring cmd, std::function<void(ustring)>);
       void enable_command (CommandMode, ustring title, ustring cmd, std::function<void(ustring)>);
-      void disable_command ();
-
-      //void handle_command (ustring);
 
       ustring get_text ();
       void set_text (ustring);

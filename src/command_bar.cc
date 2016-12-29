@@ -78,14 +78,6 @@ namespace Astroid {
         }
         break;
 
-      /*
-      case CommandMode::Generic:
-        {
-          handle_command (cmd);
-        }
-        break;
-      */
-
       case CommandMode::SearchText:
         {
           text_search_completion->add_query (cmd);
@@ -139,15 +131,6 @@ namespace Astroid {
           start_text_searching (cmd);
         }
         break;
-      /*
-      case CommandMode::Generic:
-        {
-          mode_label.set_text ("");
-          entry.set_icon_from_icon_name ("system-run-symbolic");
-          entry.set_text (cmd);
-        }
-        break;
-      */
 
       case CommandMode::Tag:
         {
@@ -219,40 +202,6 @@ namespace Astroid {
     current_completion = difftag_completion;
   }
 
-  /*
-  void CommandBar::handle_command (ustring cmd) {
-    LOG (debug) << "cb: command: " << cmd;
-
-    UstringUtils::utokenizer tok (cmd);
-
-# define adv_or_return it++; if (it == tok.end()) return;
-
-    auto it = tok.begin ();
-    if (it == tok.end ()) return;
-
-    if (*it == "help") {
-      main_window->add_mode (new HelpMode (main_window));
-
-    } else if (*it == "archive") {
-      adv_or_return;
-
-      if (*it == "thread") {
-        adv_or_return;
-
-        ustring thread_id = *it;
-
-        LOG (info) << "cb: toggle archive on thread: " << thread_id;
-      }
-
-    } else {
-      LOG (error)  << "cb: unknown command: " << cmd;
-    }
-  }
-  */
-
-  void CommandBar::disable_command () {
-  }
-
   bool CommandBar::entry_key_press (GdkEventKey * event) {
     switch (event->keyval) {
       case GDK_KEY_Tab:
@@ -321,7 +270,9 @@ namespace Astroid {
             refptr<SearchCompletion> s = refptr<SearchCompletion>::cast_dynamic (current_completion);
             s->orig_text = "";
             s->history_pos = 0;
+
           }
+
           break;
         }
     }

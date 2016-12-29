@@ -406,7 +406,6 @@ namespace Astroid {
 
   void MainWindow::disable_command () {
     // hides itself
-    command.disable_command ();
     command.remove_modal_grab();
     set_active (current);
     is_command = false;
