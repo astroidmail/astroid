@@ -24,6 +24,9 @@ namespace Astroid {
                 UstringUtils::trim(a);
               });
 
+    /* remove empty */
+    parts.erase (std::remove (parts.begin (), parts.end (), ""), parts.end ());
+
     return parts;
   }
 
