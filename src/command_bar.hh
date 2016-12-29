@@ -23,6 +23,7 @@ namespace Astroid {
       enum CommandMode {
         Search = 0,
         SearchText,
+        Filter,
         Tag,        /* apply or remove tags */
         DiffTag,    /* apply or remove tags using + or - */
       };
@@ -45,11 +46,12 @@ namespace Astroid {
       void enable_command (CommandMode, ustring title, ustring cmd, std::function<void(ustring)>);
 
       ustring get_text ();
-      void set_text (ustring);
+      void    set_text (ustring);
 
       /* relay to search bar event handler */
       bool command_handle_event (GdkEventKey *);
       bool entry_key_press (GdkEventKey *);
+      void entry_changed ();
 
     private:
       void reset_bar ();

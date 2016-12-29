@@ -226,14 +226,10 @@ namespace Astroid {
 
     if (name == "")
       return ustring::compose ("%1 (%2/%3)%4%5", query_string, queryloader.unread_messages,
-          queryloader.total_messages, queryloader.loading() ? " (%)" : "",
-          f
-          );
+          queryloader.total_messages, queryloader.loading() ? " (%)" : "", f);
     else
       return ustring::compose ("%1 (%2/%3)%4%5", name,
-          queryloader.unread_messages, queryloader.total_messages, queryloader.loading() ? " (%)" : "",
-          f
-          );
+          queryloader.unread_messages, queryloader.total_messages, queryloader.loading() ? " (%)" : "", f);
   }
 
   void ThreadIndex::open_thread (refptr<NotmuchThread> thread, bool new_tab, bool new_window) {

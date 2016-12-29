@@ -241,9 +241,12 @@ namespace Astroid {
   }
 
   void ThreadIndexListView::on_filter (ustring k) {
-    LOG (info) << "ti: filtering: " << k << endl;
-    filter_txt = k;
-    filter = VectorUtils::split_and_trim (k.lowercase (), " ");
+    LOG (info) << "ti: filtering: " << k;
+
+    if (filter_txt == k) return;
+
+    filter_txt  = k;
+    filter      = VectorUtils::split_and_trim (k.lowercase (), " ");
 
     filtered_store->refilter ();
 
@@ -438,7 +441,7 @@ namespace Astroid {
         "Filter rows",
         [&] (Key) {
 
-          main_window->enable_command (CommandBar::CommandMode::SearchText,
+          main_window->enable_command (CommandBar::CommandMode::Filter,
               filter_txt, sigc::mem_fun (this, &ThreadIndexListView::on_filter));
 
           return true;
