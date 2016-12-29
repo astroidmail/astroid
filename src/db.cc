@@ -769,17 +769,18 @@ namespace Astroid {
   bool NotmuchThread::matches (std::vector<ustring> &k) {
     if (index_str.empty ()) {
       index_str = subject;
-      for (auto a : authors)  index_str += get<0>(a);
-      for (auto t : tags)     index_str += t;
+      for (auto &a : authors)  index_str += get<0>(a);
+      for (auto &t : tags)     index_str += t;
       index_str += thread_id;
       index_str = index_str.lowercase ();
     }
 
-    for (auto kk : k) {
-      if (index_str.find (kk) != string::npos) return true;
-    }
-
-    return false;
+    /* match all keys (AND) */
+    return std::all_of (k.begin (), k.end (),
+        [&] (ustring &kk)
+          {
+            return index_str.find (kk) != string::npos;
+          });
   }
 
   ustring NotmuchThread::str () {
