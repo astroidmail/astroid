@@ -234,6 +234,7 @@ namespace Astroid {
 
       if ((loaded_threads % 100) == 0) {
         LOG (debug) << "ql: loaded " << loaded_threads << " threads.";
+        if (!in_destructor && !list_view->filter_txt.empty()) stats_ready.emit ();
       }
     }
   }

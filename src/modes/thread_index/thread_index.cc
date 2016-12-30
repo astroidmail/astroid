@@ -208,7 +208,6 @@ namespace Astroid {
   }
 
   void ThreadIndex::on_stats_ready () {
-    LOG (debug) << "ti: got refresh stats.";
     set_label (get_label ());
     list_view->update_bg_image ();
   }

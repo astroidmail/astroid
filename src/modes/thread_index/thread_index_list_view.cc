@@ -1191,7 +1191,7 @@ namespace Astroid {
   }
 
   void ThreadIndexListView::update_bg_image () {
-    bool hide = (filtered_store->children().size () == 0);
+    bool hide = (!filter_txt.empty () && filtered_store->children().size () == 0) || (filter_txt.empty () && thread_index->queryloader.total_messages == 0);
 
     if (!hide) {
       auto sc = get_style_context ();
