@@ -16,14 +16,14 @@ namespace Astroid {
   {
       if (str.empty ()) return;
 
-      Glib::ustring::iterator it(str.begin());
-      Glib::ustring::iterator end(str.end());
+      Glib::ustring::iterator it  (str.begin());
+      Glib::ustring::iterator end (str.end());
 
       for ( ; it != end; ++it)
           if (! g_unichar_isspace(*it))
               break;
 
-      if (it == str.end())
+      if (it == end)
           str.clear();
       else
           str.erase(str.begin(), it);
@@ -33,20 +33,18 @@ namespace Astroid {
   {
       if (str.empty ()) return;
 
-      Glib::ustring::iterator it(--(str.end()));
+      Glib::ustring::reverse_iterator rit  (str.rbegin());
+      Glib::ustring::reverse_iterator rend (str.rend());
 
-      for ( ; ; --it) {
-          if (! g_unichar_isspace(*it)) {
-              Glib::ustring::iterator it_adv(it);
-              str.erase(++it_adv, str.end());
-              break;
-          }
+      for ( ; rit != rend; ++rit)
+        if (! g_unichar_isspace (*rit))
+          break;
 
-          if (it == str.begin()) {
-              str.clear();
-              break;
-          }
-      }
+      if (rit == rend)
+        str.clear ();
+      else
+        str.erase (rit.base (), str.end ());
+
   }
 
   void UstringUtils::trim(Glib::ustring& str)
