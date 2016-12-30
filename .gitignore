@@ -11,6 +11,8 @@ src/build_config.hh
 .sconsign.dblite
 config.log
 .sconf_temp
+gmon.out
+prof.*
 
 *.pyc
 core*

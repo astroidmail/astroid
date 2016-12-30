@@ -11,6 +11,9 @@ AddOption ("--release", action="store", dest="release", default="git", help="Mak
 AddOption ("--enable-debug", action="store", dest="debug", default=None, help="Enable the -g flag for debugging (default: true when release is git)")
 AddOption ("--prefix", action="store", dest="prefix", default = '/usr/local', help="Directory to install astroid under")
 
+AddOption ("--profiler", action="store_true", dest="profile", default = False,
+    help = "Compile with profiling support (-pg)")
+
 AddOption ("--disable-libsass", action='store_true', dest='disable_libsass',
     default = False, help = "Disable libsass and the dependency on libsass, requires a scss compiler")
 AddOption ('--scss-compiler', action='store', dest='scss_compiler',
@@ -21,6 +24,7 @@ AddOption ("--disable-plugins", action = 'store_true', dest = 'disable_plugins',
 
 disable_libsass = GetOption ("disable_libsass")
 scss = GetOption ('scss_compiler')
+profile = GetOption ('profile')
 
 disable_plugins = GetOption ("disable_plugins")
 
@@ -335,6 +339,11 @@ env.AppendUnique (CPPFLAGS = ['-Wall', '-std=c++11', '-pthread', '-DBOOST_LOG_DY
 
 if debug:
   env.AppendUnique (CPPFLAGS = ['-g', '-Wextra', '-DDEBUG'])
+
+if profile:
+  print ("profiling enabled.")
+  env.AppendUnique (CPPFLAGS = ['-pg'])
+  env.AppendUnique (LINKFLAGS = ['-pg'])
 
 env = conf.Finish ()
 
