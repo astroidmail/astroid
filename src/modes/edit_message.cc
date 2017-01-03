@@ -1093,7 +1093,7 @@ namespace Astroid {
         Gtk::FILE_CHOOSER_ACTION_OPEN);
 
     dialog.add_button ("_Cancel", Gtk::RESPONSE_CANCEL);
-    dialog.add_button ("_Select", Gtk::RESPONSE_OK);
+    dialog.add_button ("_Attach", Gtk::RESPONSE_OK);
     dialog.set_select_multiple (true);
 
     int result = dialog.run ();
