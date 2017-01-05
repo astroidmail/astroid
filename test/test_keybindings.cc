@@ -1,6 +1,7 @@
 # define BOOST_TEST_DYN_LINK
 # define BOOST_TEST_MODULE TestKeybindings
 # include <boost/test/unit_test.hpp>
+# include <exception>
 
 # include "test_common.hh"
 # include "glibmm.h"
@@ -36,6 +37,18 @@ BOOST_AUTO_TEST_SUITE(TestTestKeybindings)
 
     keys.register_key (UnboundKey (), "test.unbound", "U1", [&] (Key) { return true; });
     keys.register_key (UnboundKey (), "test.unbound2", "U2", [&] (Key) { return true; });
+
+    /* test unbinding through keybindings */
+    keys.register_key ("7", "test.to_be_unbound", "U2", [&] (Key) { throw new std::logic_error ("should not be run, is unbound in keybindings file"); return true; });
+
+    Key s ("7");
+    GdkEventKey e;
+    e.state  = 0;
+    e.keyval = s.key;
+
+    LOG (test) << "handling key: 7";
+    BOOST_CHECK_NO_THROW ( keys.handle (&e) );
+
 
     /* check a bad key spec */
     BOOST_CHECK_THROW (
@@ -81,7 +94,6 @@ BOOST_AUTO_TEST_SUITE(TestTestKeybindings)
     keys.register_key ("5", "test.runfoo", "test run foo", [&] (Key) { return true; });
 
     Key n ("n");
-    GdkEventKey e;
     e.state  = 0;
     e.keyval = n.key;
 
