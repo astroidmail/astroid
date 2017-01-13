@@ -5,8 +5,6 @@ from subprocess import *
 def getGitDesc():
   return Popen('git describe --abbrev=8 --tags --always', stdout=PIPE, shell=True).stdout.read ().strip ()
 
-env = Environment (ENV=os.environ)
-
 AddOption ("--release", action="store", dest="release", default="git", help="Make a release (default: git describe output)")
 AddOption ("--enable-debug", action="store", dest="debug", default=None, help="Enable the -g flag for debugging (default: true when release is git)")
 AddOption ("--prefix", action="store", dest="prefix", default = '/usr/local', help="Directory to install astroid under")
@@ -21,6 +19,15 @@ AddOption ('--scss-compiler', action='store', dest='scss_compiler',
 
 AddOption ("--disable-plugins", action = 'store_true', dest = 'disable_plugins',
     default = False, help = "Disable plugins")
+
+AddOption ("--propagate-environment", action = 'store_true', dest = 'propagate_environment',
+    default = False, help = "Propagate external environment variables to the build environment")
+
+envargs = {}
+if GetOption ("propagate_environment"):
+    envargs['ENV'] = os.environ
+
+env = Environment (**envargs)
 
 disable_libsass = GetOption ("disable_libsass")
 scss = GetOption ('scss_compiler')
