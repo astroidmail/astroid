@@ -476,7 +476,7 @@ body:not(.nohide) .email.hide .header_container .avatar {
     .email:not(.hide) .email_warning.show,
     .email:not(.hide) .email_info.show,
     body:not(.nohide) .email.hide .header_container .tags {
-        display: block;
+        display: none;
     }
     .email:not(.hide) .header_container .subject,
     body.nohide .email .header_container .subject,
@@ -486,7 +486,7 @@ body:not(.nohide) .email.hide .header_container .avatar {
     .email:not(.hide) .email_warning.show,
     .email:not(.hide) .email_info.show,
     body:not(.nohide) .email.hide .header_container .subject {
-        display: block;
+        display: none;
     }
     body:not(.nohide) .email:not(:only-of-type) .header_container,
     body:not(.nohide) .email .email .header_container {
