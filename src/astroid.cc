@@ -466,7 +466,7 @@ namespace Astroid {
   }
 
   void Astroid::send_mailto (MainWindow * mw, ustring url) {
-    LOG (info) << "astorid: mailto: " << url;
+    LOG (info) << "astroid: mailto: " << url;
 
     ustring scheme = Glib::uri_parse_scheme (url);
     if (scheme.length () > 0) {
