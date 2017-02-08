@@ -5,10 +5,12 @@
 # Intended to be run by astroid. See the following link for more information:
 # https://github.com/astroidmail/astroid/wiki/Polling
 #
+# In particular, in order for this script to be run by astroid, it needs to be
+# located at ~/.config/astroid/poll.sh
+#
 
 # Exit as soon as one of the commands fail.
 set -e
-
 
 # Fetch new mail.
 offlineimap
@@ -16,27 +18,7 @@ offlineimap
 # Import new mail into the notmuch database.
 notmuch new
 
-
-# Here follow some examples of processing the new mail. The respective section
-# of code needs to be uncommented to be enabled. See also notmuch-hooks(5) for
-# an alternative place to put these commands.
-
-
-# Automatic tagging of new mail. See notmuch-tag(1) for details.
-
-#notmuch tag --batch <<EOF
-#
-# # Tag urgent mail
-# +urgent subject:URGENT
-#
-# # Tag all mail from GitHub as "work"
-# +work from:github
-#
-#EOF
-
-
-# Notify user of new mail. See the following link for more information:
-# https://github.com/astroidmail/astroid/wiki/Desktop-notification
-
-#notifymuch
+# Here you can process the mail in any way you see fit. See the following link
+# for examples:
+# https://github.com/astroidmail/astroid/wiki/Processing-mail
 
