@@ -17,11 +17,14 @@
 # include "proto.hh"
 
 namespace Astroid {
-  class Astroid {
+  class Astroid : public Gtk::Application {
     public:
       Astroid ();
       ~Astroid ();
-      int main (int, char**);
+
+      static refptr<Astroid> create ();
+
+      int run (int, char**);
       void main_test ();
       void init_log ();
 
@@ -29,8 +32,6 @@ namespace Astroid {
       const boost::property_tree::ptree& notmuch_config () const;
       const StandardPaths& standard_paths() const;
       bool  in_test ();
-
-      refptr<Gtk::Application> app;
 
       static const char* const version;
       ustring user_agent;
@@ -49,7 +50,6 @@ namespace Astroid {
       Poll * poll;
 
       MainWindow * open_new_window (bool open_defaults = true);
-      bool on_window_close (GdkEventAny *, MainWindow * mw);
 
       int hint_level ();
 
@@ -57,8 +57,8 @@ namespace Astroid {
       Config * m_config;
 
     private:
-      bool activated = false;
-      void on_signal_activate ();
+      void on_activate () override;
+      bool on_window_close (GdkEventAny *, MainWindow * mw);
       void on_mailto_activate (const Glib::VariantBase &);
       refptr<Gio::SimpleAction> mailto;
       void send_mailto (MainWindow * mw, ustring);
@@ -70,6 +70,6 @@ namespace Astroid {
   };
 
   /* globally available instance of our main Astroid-class */
-  extern Astroid * astroid;
+  extern refptr<Astroid> astroid;
 }
 

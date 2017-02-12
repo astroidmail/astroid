@@ -169,7 +169,7 @@ namespace Astroid {
         "main_window.quit_ask",
         "Quit astroid",
         [&] (Key) {
-          if (astroid->app->get_windows().size () > 1) {
+          if (astroid->get_windows().size () > 1) {
             /* other windows, just close this one */
             quit ();
           } else {
@@ -425,9 +425,9 @@ namespace Astroid {
     ungrab_active ();
 
     /* remove all modes */
-    for (int n = notebook.get_n_pages(); n > 0; n--) {
-      close_page (true);
-    }
+    /* for (int n = notebook.get_n_pages(); n > 0; n--) { */
+    /*   close_page (true); */
+    /* } */
 
     close (); // Gtk::Window::close ()
   }
@@ -587,7 +587,7 @@ namespace Astroid {
         LOG (warn) << "mw: attempt to remove negative page";
       }
     } else {
-      if (!in_quit && astroid->app->get_windows().size () > 1) {
+      if (!in_quit && astroid->get_windows().size () > 1) {
         LOG (debug) << "mw: other windows available, closing this one.";
         quit ();
       }
