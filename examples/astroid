@@ -1,7 +1,7 @@
 #! /bin/bash
 #
 # example launch script that sets up the GIR path and launches
-# astorid from the source root directory, unbuffered, and logging to
+# astroid from the source root directory, unbuffered, and logging to
 # ~/.config/astroid/log
 #
 # symlink this to somewhere on your path.
