@@ -17,7 +17,7 @@
 namespace Astroid {
   ForwardMessage::ForwardMessage (MainWindow * mw,
       refptr<Message> _msg,
-      FwdDisposition disp) : EditMessage (mw)
+      FwdDisposition disp) : EditMessage (mw, false)
   {
     using std::endl;
     using std::string;

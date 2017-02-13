@@ -126,8 +126,8 @@ namespace Astroid {
       void read_edited_message (); // load data from message after
                                    // it has been edited.
       void on_tv_ready ();
-      ustring warning_str;
-      ustring info_str;
+      ustring warning_str = "";
+      ustring info_str = "";
 
       AccountManager * accounts;
 
