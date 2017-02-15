@@ -2,6 +2,8 @@
 
 * scons --propagate-environment uses environment from build environment.
 
+* handle mailto when astroid is already running.
+
 == v0.7 / 2017-01-02
 
 * Messages are marked unread after a delay (default 2 sec) in

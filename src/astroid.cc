@@ -85,7 +85,8 @@ namespace Astroid {
   }
 
   Astroid::Astroid () :
-    Gtk::Application("org.astroid")
+    Gtk::Application("org.astroid",
+        Gio::APPLICATION_HANDLES_OPEN | Gio::APPLICATION_HANDLES_COMMAND_LINE)
   {
     setlocale (LC_ALL, "");
     Glib::init ();
@@ -106,15 +107,8 @@ namespace Astroid {
 
     /* gmime settings */
     g_mime_init (0); // utf-8 is default
-  }
-  // }}}
-
-  int Astroid::run (int argc, char **argv) { // {{{
-    register_application ();
 
     /* options */
-    namespace po = boost::program_options;
-    po::options_description desc ("options");
     desc.add_options ()
       ( "help,h", "print this help message")
       ( "config,c", po::value<ustring>(), "config file, default: $XDG_CONFIG_HOME/astroid/config")
@@ -129,6 +123,11 @@ namespace Astroid {
 # else
       ;
 # endif
+  }
+  // }}}
+
+  int Astroid::run (int argc, char **argv) { // {{{
+    register_application ();
 
     po::variables_map vm;
 
@@ -140,7 +139,6 @@ namespace Astroid {
       cout << "unknown option" << endl;
       cout << ex.what() << endl;
       show_help = true;
-
     }
 
     show_help |= vm.count("help");
@@ -229,39 +227,7 @@ namespace Astroid {
     bool disable_plugins = vm.count ("disable-plugins");
 # endif
 
-    bool domailto = false;
-    ustring mailtourl;
-
-    if (vm.count("mailto")) {
-      domailto = true;
-      mailtourl = vm["mailto"].as<ustring>();
-
-      LOG (debug) << "astroid: composing mail to: " << mailtourl;
-    }
-
-    if (is_remote ()) {
-      LOG (warn) << "astroid: instance already running, opening new window..";
-
-      activate ();
-
-      if (no_auto_poll) {
-        LOG (warn) << "astroid: specifying no-auto-poll only makes sense when starting a new astroid instance, ignoring.";
-      }
-
-    } else {
-      /* we are the main instance */
-      /* app->signal_activate().connect (sigc::mem_fun (this, */
-      /*       &Astroid::on_signal_activate)); */
-
-      /* mailto = Gio::SimpleAction::create ("mailto", Glib::VariantType ("s")); */
-
-      /* app->add_action (mailto); */
-
-      /* mailto->set_enabled (true); */
-      /* mailto->signal_activate ().connect ( */
-      /*     sigc::mem_fun (this, &Astroid::on_mailto_activate)); */
-
-
+    if (!is_remote ()) {
       /* load config */
       if (vm.count("config")) {
         if (test_config) {
@@ -309,23 +275,17 @@ namespace Astroid {
 
       /* set up poller */
       poll = new Poll (!no_auto_poll);
-    }
 
-    if (domailto) {
-      if (!is_remote ()) {
-        activate (); // open a standard main window if this is the main instance
-      }
-
-      LOG (debug) << "mailto: " << mailtourl;
-
-      MainWindow * mw = open_new_window (false);
-      send_mailto (mw, mailtourl);
-    }
-
-    if (!is_remote ()) {
-      Gtk::Application::run ();
+      Gtk::Application::run (argc, argv);
 
       on_quit ();
+
+    } else {
+      Gtk::Application::run (argc, argv);
+
+      if (no_auto_poll) {
+        LOG (warn) << "astroid: specifying no-auto-poll only makes sense when starting a new astroid instance, ignoring.";
+      }
     }
 
     return 0;
@@ -399,6 +359,43 @@ namespace Astroid {
     delete actions;
   }
 
+  int Astroid::on_command_line (const refptr<Gio::ApplicationCommandLine> & cmd) {
+    char ** argv;
+    int     argc;
+    bool new_window = true;
+
+    argv = cmd->get_arguments (argc);
+
+    if (get_windows().empty ()) {
+      activate ();
+      new_window = false;
+    }
+
+    /* handling command line arguments that may be passed from secondary
+     * instances as well */
+    if (argc > 0) {
+      po::variables_map vm;
+
+      try {
+        po::store ( po::parse_command_line (argc, argv, desc), vm );
+      } catch (po::unknown_option &ex) {
+        cout << "unknown option" << endl;
+        cout << ex.what() << endl;
+        return 1;
+      }
+
+      if (vm.count("mailto")) {
+        ustring mailtourl = vm["mailto"].as<ustring>();
+        send_mailto (mailtourl);
+        new_window = false;
+      }
+    }
+
+    if (new_window) activate ();
+
+    return 0;
+  }
+
   MainWindow * Astroid::open_new_window (bool open_defaults) {
     LOG (warn) << "astroid: starting a new window..";
 
@@ -452,14 +449,10 @@ namespace Astroid {
     open_new_window ();
   }
 
-  void Astroid::on_mailto_activate (const Glib::VariantBase & parameter) {
-    Glib::Variant<ustring> url = Glib::VariantBase::cast_dynamic<Glib::Variant<ustring>> (parameter);
-
-    send_mailto (open_new_window (false), url.get());
-  }
-
-  void Astroid::send_mailto (MainWindow * mw, ustring url) {
+  void Astroid::send_mailto (ustring url) {
     LOG (info) << "astroid: mailto: " << url;
+
+    MainWindow * mw = (MainWindow*) get_windows ()[0];
 
     ustring scheme = Glib::uri_parse_scheme (url);
     if (scheme.length () > 0) {

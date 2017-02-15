@@ -6,6 +6,7 @@
 # include <fstream>
 
 # include <boost/property_tree/ptree.hpp>
+# include <boost/program_options.hpp>
 # include <boost/log/trivial.hpp>
 
 # define LOG(x) BOOST_LOG_TRIVIAL(x)
@@ -15,6 +16,8 @@
 # include <glibmm.h>
 
 # include "proto.hh"
+
+namespace po = boost::program_options;
 
 namespace Astroid {
   class Astroid : public Gtk::Application {
@@ -59,14 +62,15 @@ namespace Astroid {
     private:
       void on_activate () override;
       bool on_window_close (GdkEventAny *, MainWindow * mw);
-      void on_mailto_activate (const Glib::VariantBase &);
-      refptr<Gio::SimpleAction> mailto;
-      void send_mailto (MainWindow * mw, ustring);
-
+      int  on_command_line (const refptr<Gio::ApplicationCommandLine> &) override;
       void on_quit ();
+
+      void send_mailto (ustring);
+
 
       static std::atomic<bool> log_initialized;
       int _hint_level = 0;
+      po::options_description desc;
   };
 
   /* globally available instance of our main Astroid-class */
