@@ -220,15 +220,21 @@ namespace Astroid {
       al += AddressList (msg->to());
 
       al.remove_me ();
+      al.remove_duplicates ();
 
       to = al.str ();
 
       AddressList ac (msg->cc ());
       ac.remove_me ();
+      ac.remove_duplicates ();
+      ac -= al;
       cc = ac.str ();
 
       AddressList acc (msg->bcc ());
       acc.remove_me ();
+      acc.remove_duplicates ();
+      acc -= al;
+      acc -= ac;
       bcc = acc.str ();
     }
   }

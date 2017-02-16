@@ -58,10 +58,14 @@ namespace Astroid {
       ustring str ();
       int size ();
 
+      AddressList& operator=  (const AddressList &);
       AddressList& operator+= (const Address &);
       AddressList& operator+= (const AddressList &);
-      AddressList  operator+ (const Address &) const;
-      AddressList  operator+ (const AddressList &) const;
+      AddressList  operator+  (const Address &) const;
+      AddressList  operator+  (const AddressList &) const;
+
+      AddressList  operator-  (const AddressList &);
+      AddressList& operator-= (const AddressList &);
 
       void remove_me ();
       void remove_duplicates ();

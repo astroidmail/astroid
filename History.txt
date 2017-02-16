@@ -1,11 +1,13 @@
 ==
 
-* scons --propagate-environment uses environment from build environment.
-
-* handle mailto when astroid is already running.
-
-* session-persistent folder history for attaching files and saving
+* Session-persistent folder history for attaching files and saving
   attachments. default is configurable.
+
+* Remove duplicates when reply-all'ing.
+
+* Handle mailto when astroid is already running.
+
+* `scons --propagate-environment` uses environment from build environment.
 
 == v0.7 / 2017-01-02
 
