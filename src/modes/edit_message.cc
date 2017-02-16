@@ -922,7 +922,7 @@ namespace Astroid {
                     return bl.find (w) != string::npos;
                   }))
       {
-        warning_str = "You have mentioned attachments in the text, but none are attached, do you still want to send?";
+        warning_str = "Attachments have been mentioned in the message, but none are attached, do you still want to send?";
 
         on_tv_ready ();
       }
