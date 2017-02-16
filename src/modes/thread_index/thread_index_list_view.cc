@@ -816,7 +816,7 @@ namespace Astroid {
         });
 
     keys->register_key ("T", "thread_index.toggle_marked_all",
-        "Toggle arked on all loaded threads",
+        "Toggle marked on all loaded threads",
         [&] (Key) {
           Gtk::TreePath path;
           Gtk::TreeIter fwditer;
