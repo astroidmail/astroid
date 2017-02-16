@@ -49,13 +49,7 @@ namespace Astroid {
 
     ustring db_path = ustring (config.get<string> ("database.path"));
 
-    /* replace ~ with home */
-    if (db_path[0] == '~') {
-      path_db = path(home) / path(db_path.substr(1,db_path.size()));
-    } else {
-      path_db = path(db_path);
-    }
-
+    path_db = Utils::expand (path (db_path));
     path_db = absolute (path_db);
 
     ustring excluded_tags_s = config.get<string> ("search.exclude_tags");

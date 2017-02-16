@@ -4,10 +4,13 @@
 # include <string>
 # include <iostream>
 # include <iomanip>
+# include <exception>
 
 # include <glib.h>
 # include <boost/property_tree/ptree.hpp>
+# include <boost/filesystem.hpp>
 
+namespace bfs = boost::filesystem;
 using boost::property_tree::ptree;
 using std::endl;
 
@@ -63,6 +66,24 @@ namespace Astroid {
     _f = pattern2->replace (_f, 0, "", static_cast<Glib::RegexMatchFlags>(0));
 
     return _f;
+  }
+
+  bfs::path Utils::expand (bfs::path in) {
+    if (in.size () < 1) return in;
+
+    const char * home = getenv ("HOME");
+    if (home == NULL) {
+      LOG (error) << "error: HOME variable not set.";
+      throw std::invalid_argument ("error: HOME environment variable not set.");
+    }
+
+    ustring s = in.c_str ();
+    if (s[0] == '~') {
+      s = ustring(home) + s.substr (1, s.size () - 1);
+      return bfs::path (s);
+    } else {
+      return in;
+    }
   }
 
   std::pair<ustring, ustring> Utils::get_tag_color (ustring t, unsigned char cv[3]) {
