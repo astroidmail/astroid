@@ -207,11 +207,25 @@ namespace Astroid {
                       "#ThreadIndexListView  .hide_bg { background-image: none; }",
                       no_mail_img.c_str ());
 
+
+# if GTK_VERSION_GE(3,16)
+
     try {
       css->load_from_data (css_data);
     } catch (Gtk::CssProviderError &e) {
       LOG (error) << "ti: attempted to set background image: " << no_mail_img.c_str () << ": " << e.what ();
     }
+
+
+# else
+
+    bool loaded = css->load_from_data (css_data);
+
+    if (!loaded) {
+      LOG (error) << "ti: failed to set background image: " << no_mail_img.c_str ();
+    }
+
+# endif
 
     auto screen = Gdk::Screen::get_default ();
     sc->add_provider_for_screen (screen, css, GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
