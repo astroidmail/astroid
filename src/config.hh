@@ -21,6 +21,13 @@ namespace Astroid {
     bfs::path config_file;
     bfs::path searches_file;
     bfs::path plugin_dir;
+    bfs::path save_dir;
+    bfs::path attach_dir;
+  };
+
+  struct RuntimePaths {
+    bfs::path save_dir;   // last used save to folder
+    bfs::path attach_dir; // last used attach from folder
   };
 
   class Config {
@@ -38,6 +45,7 @@ namespace Astroid {
       bool test;
 
       StandardPaths std_paths;
+      RuntimePaths  run_paths;
 
 
       void load_config (bool initial = false);
@@ -48,7 +56,7 @@ namespace Astroid {
       ptree config;
       ptree notmuch_config;
 
-      const int CONFIG_VERSION = 6;
+      const int CONFIG_VERSION = 7;
 
     private:
       ptree setup_default_config (bool);

@@ -635,6 +635,7 @@ namespace Astroid {
     dialog.add_button ("_Cancel", Gtk::RESPONSE_CANCEL);
     dialog.add_button ("_Select", Gtk::RESPONSE_OK);
     dialog.set_do_overwrite_confirmation (true);
+    dialog.set_current_folder (astroid->runtime_paths ().save_dir.c_str ());
 
     ustring _f = get_filename ();
 
@@ -648,6 +649,8 @@ namespace Astroid {
           string fname = dialog.get_filename ();
 
           save_to (fname);
+
+          astroid->runtime_paths ().save_dir = bfs::path (dialog.get_current_folder ());
 
           break;
         }

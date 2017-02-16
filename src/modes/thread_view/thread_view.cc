@@ -2589,6 +2589,7 @@ namespace Astroid {
 
             dialog.add_button ("_Cancel", Gtk::RESPONSE_CANCEL);
             dialog.add_button ("_Select", Gtk::RESPONSE_OK);
+            dialog.set_current_folder (astroid->runtime_paths ().save_dir.c_str ());
 
             int result = dialog.run ();
 
@@ -2597,6 +2598,8 @@ namespace Astroid {
                 {
                   string dir = dialog.get_filename ();
                   LOG (info) << "tv: saving messages to: " << dir;
+
+                  astroid->runtime_paths ().save_dir = bfs::path (dialog.get_current_folder ());
 
                   for (refptr<Message> m : tosave) {
                     m->save_to (dir);
@@ -3806,7 +3809,7 @@ namespace Astroid {
     return wasexpanded;
   }
 
-  /* end message hinding  */
+  /* end message hiding  */
 
   void ThreadView::save_all_attachments () { //
     /* save all attachments of current focused message */
@@ -3828,6 +3831,7 @@ namespace Astroid {
 
     dialog.add_button ("_Cancel", Gtk::RESPONSE_CANCEL);
     dialog.add_button ("_Select", Gtk::RESPONSE_OK);
+    dialog.set_current_folder (astroid->runtime_paths ().save_dir.c_str ());
 
     int result = dialog.run ();
 
@@ -3836,6 +3840,8 @@ namespace Astroid {
         {
           string dir = dialog.get_filename ();
           LOG (info) << "tv: saving attachments to: " << dir;
+
+          astroid->runtime_paths ().save_dir = bfs::path (dialog.get_current_folder ());
 
           /* TODO: check if the file exists and ask to overwrite. currently
            *       we are failing silently (except an error message in the log)

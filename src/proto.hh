@@ -17,6 +17,7 @@ namespace Astroid {
   class NotmuchThread;
   class Config;
   struct StandardPaths;
+  struct RuntimePaths;
   class AccountManager;
   class Account;
   //class Contacts;

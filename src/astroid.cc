@@ -303,6 +303,10 @@ namespace Astroid {
     return m_config->std_paths;
   }
 
+  RuntimePaths& Astroid::runtime_paths() const {
+    return m_config->run_paths;
+  }
+
   void Astroid::main_test () { // {{{
     m_config = new Config (true);
 

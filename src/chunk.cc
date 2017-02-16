@@ -647,6 +647,7 @@ namespace Astroid {
 
     dialog.set_do_overwrite_confirmation (true);
     dialog.set_current_name (Utils::safe_fname (get_filename ()));
+    dialog.set_current_folder (astroid->runtime_paths ().save_dir.c_str ());
 
     int result = dialog.run ();
 
@@ -658,6 +659,8 @@ namespace Astroid {
 
           /* the dialog asks whether to overwrite or not */
           save_to (fname, true);
+
+          astroid->runtime_paths ().save_dir = bfs::path (dialog.get_current_folder ());
 
           break;
         }

@@ -1095,6 +1095,7 @@ namespace Astroid {
     dialog.add_button ("_Cancel", Gtk::RESPONSE_CANCEL);
     dialog.add_button ("_Attach", Gtk::RESPONSE_OK);
     dialog.set_select_multiple (true);
+    dialog.set_current_folder (astroid->runtime_paths ().attach_dir.c_str ());
 
     int result = dialog.run ();
 
@@ -1102,6 +1103,7 @@ namespace Astroid {
       case (Gtk::RESPONSE_OK):
         {
           vector<string> fnames = dialog.get_filenames ();
+          astroid->runtime_paths ().attach_dir = bfs::path (dialog.get_current_folder ());
           for (string &fname : fnames) {
             path p (fname.c_str());
 
