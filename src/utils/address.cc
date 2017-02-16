@@ -186,6 +186,35 @@ namespace Astroid {
     return a;
   }
 
+  AddressList& AddressList::operator= (const AddressList &b) {
+    addresses.clear ();
+    addresses = b.addresses;
+
+    return *this;
+  }
+
+  AddressList AddressList::operator- (const AddressList &b) {
+    AddressList a;
+    AddressList bb = b;
+
+    std::sort (addresses.begin (), addresses.end (), [](Address i, Address j) { return i.email () < j.email (); });
+    std::sort (bb.addresses.begin (), bb.addresses.end (), [](Address i, Address j) { return i.email () < j.email (); });
+
+    set_difference (addresses.begin (), addresses.end (),
+                    bb.addresses.begin (), bb.addresses.end (),
+                    std::inserter (a.addresses, a.addresses.begin ()),
+                    [](Address i, Address j) { return i.email () < j.email (); });
+
+    return a;
+  }
+
+  AddressList& AddressList::operator-= (const AddressList &b) {
+    AddressList a = *this - b;
+    *this = a;
+
+    return *this;
+  }
+
   int AddressList::size () {
     return addresses.size ();
   }
