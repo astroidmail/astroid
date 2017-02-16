@@ -69,7 +69,8 @@ namespace Astroid {
   }
 
   bfs::path Utils::expand (bfs::path in) {
-    if (in.size () < 1) return in;
+    ustring s = in.c_str ();
+    if (s.size () < 1) return in;
 
     const char * home = getenv ("HOME");
     if (home == NULL) {
@@ -77,7 +78,6 @@ namespace Astroid {
       throw std::invalid_argument ("error: HOME environment variable not set.");
     }
 
-    ustring s = in.c_str ();
     if (s[0] == '~') {
       s = ustring(home) + s.substr (1, s.size () - 1);
       return bfs::path (s);
