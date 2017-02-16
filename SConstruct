@@ -301,7 +301,8 @@ env.ParseConfig ('pkg-config --libs --cflags glibmm-2.4')
 env.ParseConfig ('pkg-config --libs --cflags gtkmm-3.0')
 env.ParseConfig ('pkg-config --libs --cflags gmime-2.6')
 env.ParseConfig ('pkg-config --libs --cflags webkitgtk-3.0')
-env.ParseConfig ('pkg-config --libs --cflags libsass')
+if not disable_libsass:
+  env.ParseConfig ('pkg-config --libs --cflags libsass')
 
 if not conf.CheckLib ('boost_filesystem', language = 'c++'):
   print "boost_filesystem does not seem to be installed."
