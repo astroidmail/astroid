@@ -61,7 +61,7 @@ namespace Astroid {
 
     ready = false;
 
-    pack_start (scroll, true, true, 5);
+    pack_start (scroll, true, true, 0);
 
     /* set up webkit web view (using C api) */
     webview = WEBKIT_WEB_VIEW (webkit_web_view_new ());
@@ -684,6 +684,7 @@ namespace Astroid {
 
     /* set message state vector */
     state.clear ();
+    focused_message.clear ();
 
     for_each (mthread->messages.begin(),
               mthread->messages.end(),

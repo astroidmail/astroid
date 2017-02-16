@@ -62,14 +62,11 @@ namespace Astroid {
 
     keys.register_key ("x", "thread_index.close_pane", "Close thread view pane if open",
         [&](Key) {
-          if (current == 1) {
-            if (thread_view_loaded && thread_view_visible) {
-              /* hide thread view */
-              del_pane (1);
-              thread_view_visible = false;
+          if (packed == 2) {
+            /* close thread view */
+            del_pane (1);
 
-              return true;
-            }
+            return true;
           }
 
           return false;
@@ -79,17 +76,6 @@ namespace Astroid {
     keys.register_key (Key((guint) GDK_KEY_dollar), "thread_index.refresh", "Refresh query",
         [&] (Key) {
           queryloader.reload ();
-          return true;
-        });
-
-    keys.register_key (Key (false, true, (guint) GDK_KEY_Tab), "thread_index.pane_swap_focus",
-        "Swap focus to other pane if open",
-        [&] (Key) {
-          if (packed == 2) {
-            release_modal ();
-            current = (current == 0 ? 1 : 0);
-            grab_modal ();
-          }
           return true;
         });
 
@@ -245,22 +231,17 @@ namespace Astroid {
       tv = Gtk::manage(new ThreadView (main_window));
       main_window->add_mode (tv);
     } else {
-      if (!thread_view_loaded) {
-        LOG (debug) << "ti: init paned tv";
-        thread_view = Gtk::manage(new ThreadView (main_window));
-        thread_view_loaded = true;
+      LOG (debug) << "ti: init paned tv";
+      if (packed == 2) {
+        tv = (ThreadView *) pw2;
+      } else {
+        tv = Gtk::manage(new ThreadView (main_window));
+        add_pane (1, *tv);
       }
-
-      tv = thread_view;
     }
 
     tv->load_thread (thread);
     tv->show ();
-
-    if (!new_tab && !thread_view_visible && !new_window) {
-      add_pane (1, *tv);
-      thread_view_visible = true;
-    }
 
     // grab modal
     if (!new_tab && !new_window) {
@@ -279,10 +260,6 @@ namespace Astroid {
 
   ThreadIndex::~ThreadIndex () {
     LOG (debug) << "ti: deconstruct.";
-
-    if (thread_view_loaded) {
-      delete thread_view; // apparently not done by Gtk::manage
-    }
   }
 }
 
