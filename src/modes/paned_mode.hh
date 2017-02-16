@@ -14,8 +14,10 @@ namespace Astroid {
 
       /* hpane: can be split into two horizontal panes */
       Gtk::Paned paned;
-      Mode * pw1;
-      Mode * pw2;
+      Gtk::EventBox * fp1 = NULL;
+      Gtk::EventBox * fp2 = NULL;
+      Mode * pw1 = NULL;
+      Mode * pw2 = NULL;
       int packed = 0;
 
       int  current = -1;
@@ -25,6 +27,8 @@ namespace Astroid {
       bool has_modal = false;
       virtual void grab_modal () override;
       virtual void release_modal () override;
+
+      Gdk::RGBA selected_color;
   };
 
 }
