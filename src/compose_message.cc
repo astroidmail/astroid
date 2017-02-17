@@ -33,6 +33,8 @@ namespace Astroid {
 
     d_message_sent.connect (
         sigc::mem_fun (this, &ComposeMessage::message_sent_event));
+    d_message_send_status.connect (
+        sigc::mem_fun (this, &ComposeMessage::message_send_status_event));
   }
 
   ComposeMessage::~ComposeMessage () {
@@ -312,6 +314,8 @@ namespace Astroid {
   }
 
   bool ComposeMessage::cancel_sending () {
+    cancel_send_during_delay = true;
+
     if (pid > 0) {
       LOG (warn) << "cm: cancel sendmail pid: " << pid;
 
@@ -330,6 +334,7 @@ namespace Astroid {
   void ComposeMessage::send_threaded ()
   {
     LOG (info) << "cm: sending (threaded)..";
+    cancel_send_during_delay = false;
     Glib::Threads::Thread::create (
         [&] () {
           this->send (true);
@@ -338,6 +343,33 @@ namespace Astroid {
 
   bool ComposeMessage::send (bool output) {
     dryrun = astroid->config().get<bool>("astroid.debug.dryrun_sending");
+
+    message_send_status_warn = false;
+    message_send_status_msg  = "";
+
+    unsigned int delay = astroid->config ().get<unsigned int> ("mail.send_delay");
+    while (delay > 0 && !cancel_send_during_delay) {
+      LOG (debug) << "cm: sending in " << delay << " seconds..";
+      message_send_status_msg = ustring::compose ("sending message in %1 seconds..", delay);
+      d_message_send_status ();
+      sleep (1);
+      delay--;
+    }
+
+    if (cancel_send_during_delay) {
+      LOG (error) << "cm: cancelled sending before message could be sent.";
+      message_send_status_msg = "sending message.. cancelled before sending.";
+      message_send_status_warn = true;
+      d_message_send_status ();
+
+      message_sent_result = false;
+      d_message_sent ();
+      pid = 0;
+      return false;
+    }
+
+    message_send_status_msg = "sending message..";
+    d_message_send_status ();
 
     /* Send the message */
     if (!dryrun) {
@@ -360,6 +392,11 @@ namespace Astroid {
       } catch (Glib::SpawnError &ex) {
         if (output)
           LOG (error) << "cm: could not send message!";
+
+        message_send_status_msg = "message could not be sent!";
+        message_send_status_warn = true;
+        d_message_send_status ();
+
         message_sent_result = false;
         d_message_sent ();
         pid = 0;
@@ -385,7 +422,6 @@ namespace Astroid {
       fclose (sendMailPipe);
 
       /* wait for sendmail to finish */
-
       int status;
       waitpid (pid, &status, 0);
       g_spawn_close_pid (pid);
@@ -404,6 +440,10 @@ namespace Astroid {
           write (save_to.c_str());
         }
 
+        message_send_status_msg = "message sent successfully!";
+        message_send_status_warn = false;
+        d_message_send_status ();
+
         pid = 0;
         message_sent_result = true;
         d_message_sent ();
@@ -412,6 +452,11 @@ namespace Astroid {
       } else {
         if (output)
           LOG (error) << "cm: could not send message!";
+
+        message_send_status_msg = "message could not be sent!";
+        message_send_status_warn = true;
+        d_message_send_status ();
+
         message_sent_result = false;
         d_message_sent ();
         pid = 0;
@@ -421,6 +466,9 @@ namespace Astroid {
       ustring fname = "/tmp/" + id;
       if (output)
         LOG (warn) << "cm: sending disabled in config, message written to: " << fname;
+      message_send_status_msg = "sending disabled, message written to: " + fname;
+      message_send_status_warn = true;
+      d_message_send_status ();
 
       write (fname);
       message_sent_result = false;
@@ -489,6 +537,20 @@ namespace Astroid {
     }
 
     emit_message_sent (message_sent_result);
+  }
+
+  ComposeMessage::type_message_send_status
+    ComposeMessage::message_send_status ()
+  {
+    return m_message_send_status;
+  }
+
+  void ComposeMessage::emit_message_send_status (bool warn, ustring msg) {
+    m_message_send_status.emit (warn, msg);
+  }
+
+  void ComposeMessage::message_send_status_event () {
+    emit_message_send_status (message_send_status_warn, message_send_status_msg);
   }
 
   ustring ComposeMessage::write_tmp () {

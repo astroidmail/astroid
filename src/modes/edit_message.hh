@@ -96,6 +96,7 @@ namespace Astroid {
       ComposeMessage * sending_message;
       std::atomic<bool> sending_in_progress;
       void send_message_finished (bool result);
+      void update_send_message_status (bool warn, ustring msg);
 
       /* make a draft message that can be edited */
       void prepare_message ();

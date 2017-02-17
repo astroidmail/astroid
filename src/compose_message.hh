@@ -97,6 +97,7 @@ namespace Astroid {
       bool      dryrun;
 
       /* sendmail process */
+      bool cancel_send_during_delay = false;
       int pid;
       int stdin;
       int stdout;
@@ -118,7 +119,20 @@ namespace Astroid {
       void message_sent_event ();
       Glib::Dispatcher d_message_sent;
 
+      /* message send status update */
+      typedef sigc::signal <void, bool, ustring> type_message_send_status;
+      type_message_send_status message_send_status ();
+
+      void emit_message_send_status (bool, ustring);
+
+      bool    message_send_status_warn = false;
+      ustring message_send_status_msg = "";
+
+      void message_send_status_event ();
+      Glib::Dispatcher d_message_send_status;
+
     protected:
       type_message_sent m_message_sent;
+      type_message_send_status m_message_send_status;
   };
 }

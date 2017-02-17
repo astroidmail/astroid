@@ -958,6 +958,8 @@ namespace Astroid {
 
     c->message_sent().connect (
         sigc::mem_fun (this, &EditMessage::send_message_finished));
+    c->message_send_status ().connect (
+        sigc::mem_fun (this, &EditMessage::update_send_message_status));
 
     fields_hide ();
     sending_in_progress.store (true);
@@ -980,6 +982,18 @@ namespace Astroid {
     return true;
   }
 
+  void EditMessage::update_send_message_status (bool warn, ustring msg) {
+    if (warn) {
+      info_str    = "";
+      warning_str = msg;
+    } else {
+      info_str    = msg;
+      warning_str = "";
+    }
+
+    on_tv_ready ();
+  }
+
   void EditMessage::send_message_finished (bool result_from_sender) {
     LOG (info) << "em: message sending done.";
     status_icon_visible = true;
@@ -988,8 +1002,6 @@ namespace Astroid {
     Glib::RefPtr<Gdk::Pixbuf> pixbuf;
 
     if (result_from_sender) {
-      info_str = "message sent successfully!";
-      warning_str = "";
       lock_message_after_send ();
 
       pixbuf = theme->load_icon (
@@ -1004,8 +1016,6 @@ namespace Astroid {
       }
 
     } else {
-      warning_str = "message could not be sent!";
-      info_str = "";
       fields_show ();
 
       pixbuf = theme->load_icon (
@@ -1018,8 +1028,6 @@ namespace Astroid {
     sending_in_progress.store (false);
 
     delete sending_message;
-
-    on_tv_ready ();
 
     emit_message_sent_attempt (result_from_sender);
   }
