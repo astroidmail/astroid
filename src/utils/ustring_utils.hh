@@ -22,6 +22,11 @@ namespace Astroid {
       static ustring random_alphanumeric (int);
       static ustring replace (ustring subject, const ustring& search,
                           const ustring& replace);
+
+
+      /* converts a byte array to a ustring */
+      static std::pair<bool, ustring> data_to_ustring (unsigned int len, const char * data);
+      static std::pair<bool, ustring> bytearray_to_ustring (refptr<Glib::ByteArray> &ba);
   };
 }
 

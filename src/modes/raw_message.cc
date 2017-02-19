@@ -5,6 +5,7 @@
 # include "astroid.hh"
 # include "raw_message.hh"
 # include "message_thread.hh"
+# include "utils/ustring_utils.hh"
 
 using namespace std;
 namespace bfs = boost::filesystem;
@@ -114,23 +115,16 @@ namespace Astroid {
     pbuf->sgetn (fbuf, fsz);
     f.close ();
 
-    /* convert */
-    gsize read, written;
-    GError * err = NULL;
-    gchar * out = g_convert_with_fallback (fbuf, fsz, "UTF-8", "ASCII", NULL,
-                                           &read, &written, &err);
-    if (out != NULL) {
-      s.write (out, written);
+    auto cnv = UstringUtils::data_to_ustring (fsz, fbuf);
+    delete [] fbuf;
+
+    if (cnv.first) {
+      s << cnv.second;
     } else {
-      LOG (error) << "raw: could not convert: " << fbuf;
       s << "Error: Could not convert input to UTF-8.";
     }
 
     buf->set_text ( s.str () );
-
-    delete [] fbuf;
-
-    g_free (out);
   }
 
   RawMessage::RawMessage (MainWindow *mw, refptr<Message> _msg) : RawMessage (mw) {
@@ -150,24 +144,14 @@ namespace Astroid {
     /* add filenames */
     s << "Filename: " << msg->fname << endl << endl;
 
-    gchar * in = (gchar *) c->get_data ();
-    int len = c->size ();
-
-    /* convert */
-    gsize read, written;
-    GError * err = NULL;
-    gchar * out = g_convert_with_fallback (in, len, "UTF-8", "ASCII", NULL,
-                                           &read, &written, &err);
-    if (out != NULL) {
-      s.write (out, written);
+    auto cnv = UstringUtils::bytearray_to_ustring (c);
+    if (cnv.first) {
+      s << cnv.second;
     } else {
-      LOG (error) << "raw: could not convert: " << in;
       s << "Error: Could not convert input to UTF-8.";
     }
 
     buf->set_text ( s.str () );
-
-    g_free (out);
   }
 
   RawMessage::~RawMessage () {

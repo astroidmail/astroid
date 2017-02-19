@@ -22,6 +22,7 @@
 # include "utils/utils.hh"
 # include "utils/address.hh"
 # include "utils/vector_utils.hh"
+# include "utils/ustring_utils.hh"
 # include "utils/gravatar.hh"
 # ifndef DISABLE_PLUGINS
   # include "plugin/manager.hh"
@@ -2569,6 +2570,81 @@ namespace Astroid {
           return true;
         });
 
+    multi_keys.register_key ("C-y", "thread_view.multi.yank_mids",
+        "Yank message id's",
+        [&] (Key) {
+          ustring ids = "";
+
+          for (auto &m : mthread->messages) {
+            MessageState s = state[m];
+            if (s.marked) {
+              ids += m->mid + ", ";
+            }
+          }
+
+          ids = ids.substr (0, ids.length () - 2);
+
+          auto cp = Gtk::Clipboard::get (GDK_SELECTION_PRIMARY);
+          cp->set_text (ids);
+
+          LOG (info) << "tv: " << ids << " copied to primary clipboard.";
+
+          return true;
+        });
+
+    multi_keys.register_key ("y", "thread_view.multi.yank",
+        "Yank",
+        [&] (Key) {
+          ustring y = "";
+
+          for (auto &m : mthread->messages) {
+            MessageState s = state[m];
+            if (s.marked) {
+              y += m->viewable_text (false, true);
+              y += "\n";
+            }
+          }
+
+          /* remove last newline */
+          y = y.substr (0, y.size () - 1);
+
+          auto cp = Gtk::Clipboard::get (GDK_SELECTION_PRIMARY);
+          cp->set_text (y);
+
+          LOG (info) << "tv: yanked marked messages to clipobard.";
+
+          return true;
+        });
+
+    multi_keys.register_key ("Y", "thread_view.multi.yank_raw",
+        "Yank raw",
+        [&] (Key) {
+          /* tries to export the messages as an mbox file */
+          ustring y = "";
+
+          for (auto &m : mthread->messages) {
+            MessageState s = state[m];
+            if (s.marked) {
+              auto d   = m->raw_contents ();
+              auto cnv = UstringUtils::bytearray_to_ustring (d);
+              if (cnv.first) {
+                y += ustring::compose ("From %1  %2",
+                    Address(m->sender).email(),
+                    m->date_asctime ()); // asctime adds a \n
+                y += cnv.second;
+                y += "\n";
+              }
+            }
+          }
+
+          auto cp = Gtk::Clipboard::get (GDK_SELECTION_PRIMARY);
+          cp->set_text (y);
+
+          LOG (info) << "tv: yanked raw marked messages to clipobard.";
+
+          return true;
+        });
+
     multi_keys.register_key ("s", "thread_view.multi.save",
         "Save marked",
         [&] (Key) {
@@ -2623,9 +2699,8 @@ namespace Astroid {
         "Print marked messages",
         [&] (Key) {
           vector<refptr<Message>> toprint;
-          for (auto &ms : state) {
-            refptr<Message> m = ms.first;
-            MessageState    s = ms.second;
+          for (auto &m : mthread->messages) {
+            MessageState s = state[m];
             if (s.marked) {
               toprint.push_back (m);
             }
@@ -2923,15 +2998,13 @@ namespace Astroid {
         focused_message->save ();
 
       } else if (a == EYankRaw) {
-        auto cp = Gtk::Clipboard::get (GDK_SELECTION_PRIMARY);
-        ustring t;
+        auto    cp = Gtk::Clipboard::get (GDK_SELECTION_PRIMARY);
+        ustring t  = "";
 
-        auto d = focused_message->raw_contents ();
-        if (d->size () == 0) {
-          t = "";
-        } else {
-          char * dd = (char*) d->get_data ();
-          t = dd;
+        auto d   = focused_message->raw_contents ();
+        auto cnv = UstringUtils::bytearray_to_ustring (d);
+        if (cnv.first) {
+          t = cnv.second;
         }
 
         cp->set_text (t);
@@ -2955,15 +3028,13 @@ namespace Astroid {
           /* save message to */
           focused_message->save ();
         } else if (a == EYankRaw) {
-          auto cp = Gtk::Clipboard::get (GDK_SELECTION_PRIMARY);
-          ustring t;
+          auto    cp = Gtk::Clipboard::get (GDK_SELECTION_PRIMARY);
+          ustring t  = "";
 
           auto d = focused_message->raw_contents ();
-          if (d->size () == 0) {
-            t = "";
-          } else {
-            char * dd = (char*) d->get_data ();
-            t = dd;
+          auto cnv = UstringUtils::bytearray_to_ustring (d);
+          if (cnv.first) {
+            t = cnv.second;
           }
 
           cp->set_text (t);
@@ -2984,14 +3055,12 @@ namespace Astroid {
           refptr<Chunk> c = focused_message->get_chunk_by_id (
               state[focused_message].elements[state[focused_message].current_element].id);
           auto cp = Gtk::Clipboard::get (GDK_SELECTION_PRIMARY);
-          ustring t;
+          ustring t = "";
 
-          auto d = c->contents ();
-          if (d->size () == 0) {
-            t = "";
-          } else {
-            char * dd = (char*) d->get_data ();
-            t = dd;
+          auto d   = c->contents ();
+          auto cnv = UstringUtils::bytearray_to_ustring (d);
+          if (cnv.first) {
+            t = cnv.second;
           }
 
           cp->set_text (t);

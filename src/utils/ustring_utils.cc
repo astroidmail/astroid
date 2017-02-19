@@ -76,5 +76,37 @@ namespace Astroid {
     }
     return subject;
   }
+
+
+  std::pair<bool, ustring> UstringUtils::data_to_ustring (unsigned int len, const char * data) {
+    stringstream s;
+    bool         success;
+
+    /* convert */
+    gsize read, written;
+    GError * err = NULL;
+    gchar * out = g_convert_with_fallback (data, len, "UTF-8", "ASCII", NULL,
+                                           &read, &written, &err);
+    if (out != NULL) {
+      s.write (out, written);
+      success = true;
+    } else {
+      LOG (error) << "ustring: could not convert: " << data;
+      success = false;
+    }
+
+    g_free (out);
+
+    ustring u (s.str ());
+
+    return std::make_pair (success, u);
+  }
+
+  std::pair<bool, ustring> UstringUtils::bytearray_to_ustring (refptr<Glib::ByteArray> & ba) {
+    gchar *      in   = (gchar *) ba->get_data ();
+    unsigned int len  = ba->size ();
+
+    return data_to_ustring (len, in);
+  }
 }
 

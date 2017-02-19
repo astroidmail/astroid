@@ -440,6 +440,10 @@ namespace Astroid {
     }
   }
 
+  ustring Message::date_asctime () {
+    return Date::asctime (received_time);
+  }
+
   ustring Message::pretty_date () {
     return Date::pretty_print (received_time);
   }

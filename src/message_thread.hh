@@ -59,6 +59,7 @@ namespace Astroid {
 
       time_t  received_time;
       ustring date ();
+      ustring date_asctime ();
       ustring pretty_date ();
       ustring pretty_verbose_date (bool = false);
       std::vector<ustring> tags;
