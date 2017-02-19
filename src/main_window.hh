@@ -15,9 +15,11 @@
 # include "modes/keybindings.hh"
 # include "actions/action_manager.hh"
 
+# ifndef DISABLE_VTE
 extern "C" {
   void mw_on_terminal_child_exit (VteTerminal *, gint, gpointer);
 }
+# endif
 
 namespace Astroid {
   class Notebook : public Gtk::Notebook {
@@ -54,7 +56,9 @@ namespace Astroid {
       typedef enum _active {
         Window,
         Command,
+# ifndef DISABLE_VTE
         Terminal,
+# endif
       } Active;
 
       /* command bar */
@@ -69,6 +73,7 @@ namespace Astroid {
       void on_command_mode_changed ();
 
       /* terminal */
+# ifndef DISABLE_VTE
       void enable_terminal ();
       void disable_terminal ();
       void on_terminal_child_exit (VteTerminal *, gint);
@@ -76,6 +81,7 @@ namespace Astroid {
     private:
       Gtk::Revealer * rev_terminal;
       GtkWidget *     vte_term;
+# endif
 
     public:
       /* actions */

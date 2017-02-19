@@ -20,6 +20,9 @@ AddOption ('--scss-compiler', action='store', dest='scss_compiler',
 AddOption ("--disable-plugins", action = 'store_true', dest = 'disable_plugins',
     default = False, help = "Disable plugins")
 
+AddOption ("--disable-terminal", action='store_true', dest='disable_terminal',
+    default = False, help = "Disable built-in VTE based terminal")
+
 AddOption ("--propagate-environment", action = 'store_true', dest = 'propagate_environment',
     default = False, help = "Propagate external environment variables to the build environment")
 
@@ -29,11 +32,11 @@ if GetOption ("propagate_environment"):
 
 env = Environment (**envargs)
 
-disable_libsass = GetOption ("disable_libsass")
-scss = GetOption ('scss_compiler')
-profile = GetOption ('profile')
-
-disable_plugins = GetOption ("disable_plugins")
+disable_libsass  = GetOption ("disable_libsass")
+scss             = GetOption ('scss_compiler')
+profile          = GetOption ('profile')
+disable_terminal = GetOption ("disable_terminal")
+disable_plugins  = GetOption ("disable_plugins")
 
 prefix = GetOption ("prefix")
 
@@ -236,9 +239,14 @@ if not conf.CheckPKG('webkitgtk-3.0'):
   print "webkitgtk not found."
   Exit (1)
 
-if not conf.CheckPKG ('vte-2.91'):
-  print ("vte3 not found.")
-  Exit (1)
+if not disable_terminal:
+  if not conf.CheckPKG ('vte-2.91'):
+    print ("warning: vte3 not found: disabling built-in terminal.")
+    disable_terminal = True
+
+if disable_terminal:
+  print "warning: built-in terminal disabled."
+  env.AppendUnique (CPPFLAGS = [ '-DDISABLE_VTE' ])
 
 if not disable_libsass:
   if conf.CheckLibWithHeader ('libsass', 'sass_context.h', 'c'):
@@ -250,7 +258,6 @@ if not disable_libsass:
     Exit (1)
 
 else:
-
   print "warning: libsass is disabled, will generate SCSS at build time using: '%s'.." % scss
   env.AppendUnique (CPPFLAGS = [ '-DDISABLE_LIBSASS' ])
 
@@ -307,7 +314,8 @@ env.ParseConfig ('pkg-config --libs --cflags gmime-2.6')
 env.ParseConfig ('pkg-config --libs --cflags webkitgtk-3.0')
 if not disable_libsass:
   env.ParseConfig ('pkg-config --libs --cflags libsass')
-env.ParseConfig ('pkg-config --libs --cflags vte-2.91')
+if not disable_terminal:
+  env.ParseConfig ('pkg-config --libs --cflags vte-2.91')
 
 if not conf.CheckLib ('boost_filesystem', language = 'c++'):
   print "boost_filesystem does not seem to be installed."
@@ -454,6 +462,20 @@ if not disable_plugins:
   env.Depends ('astroid', girm)
   env.Depends ('astroid', gir)
   env.Depends ('astroid', typelib)
+
+
+## summary
+print ""
+print "    debug   ..: ", debug
+print "    release ..: ", release
+print "    version ..: ", GIT_DESC
+print "    profile ..: ", profile
+print "    libsass ..: ", (not disable_libsass)
+print "    scss .....: ", scss, "( use:", disable_libsass, ")"
+print "    plugins ..: ", (not disable_plugins)
+print "    terminal .: ", (not disable_terminal)
+print ""
+
 
 Export ('env')
 Export ('astroid')
