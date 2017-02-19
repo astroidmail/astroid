@@ -21,11 +21,13 @@
 
 using namespace std;
 
+# ifndef DISABLE_VTE
 extern "C" {
   void mw_on_terminal_child_exit (VteTerminal * t, gint a, gpointer mw) {
     ((Astroid::MainWindow *) mw)->on_terminal_child_exit (t, a);
   }
 }
+# endif
 
 namespace Astroid {
   atomic<uint> MainWindow::nextid (0);
@@ -147,10 +149,12 @@ namespace Astroid {
     vbox.pack_end (*rev_multi, false, true, 0);
 
     /* terminal */
+# ifndef DISABLE_VTE
     rev_terminal = Gtk::manage (new Gtk::Revealer ());
     rev_terminal->set_transition_type (Gtk::REVEALER_TRANSITION_TYPE_SLIDE_UP);
     rev_terminal->set_reveal_child (false);
     vbox.pack_end (*rev_terminal, false, true, 0);
+# endif
 
     add (vbox);
 
@@ -363,12 +367,14 @@ namespace Astroid {
           return true;
         });
 
+# ifndef DISABLE_VTE
     keys.register_key ("|", "main_window.open_terminal",
         "Open terminal",
         [&] (Key) {
           enable_terminal ();
           return true;
         });
+# endif
 
     // }}}
   }
@@ -438,6 +444,7 @@ namespace Astroid {
   }
 
   /* Terminal {{{ */
+# ifndef DISABLE_VTE
   void MainWindow::enable_terminal () {
     rev_terminal->set_reveal_child (true);
     ungrab_active ();
@@ -504,6 +511,8 @@ namespace Astroid {
     LOG (info) << "mw: terminal exited.";
     disable_terminal ();
   }
+
+# endif
 
   // }}}
 
