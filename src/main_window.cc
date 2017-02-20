@@ -5,6 +5,7 @@
 # include <gtkmm/notebook.h>
 
 # include <vte/vte.h>
+# include <boost/filesystem.hpp>
 
 # include "astroid.hh"
 # include "poll.hh"
@@ -20,11 +21,16 @@
 # include "actions/action_manager.hh"
 
 using namespace std;
+namespace bfs = boost::filesystem;
 
 # ifndef DISABLE_VTE
 extern "C" {
   void mw_on_terminal_child_exit (VteTerminal * t, gint a, gpointer mw) {
     ((Astroid::MainWindow *) mw)->on_terminal_child_exit (t, a);
+  }
+
+  void mw_on_terminal_commit (VteTerminal * t, gchar ** tx, guint sz, gpointer mw) {
+    ((Astroid::MainWindow *) mw)->on_terminal_commit (t, tx, sz);
   }
 }
 # endif
@@ -154,6 +160,8 @@ namespace Astroid {
     rev_terminal->set_transition_type (Gtk::REVEALER_TRANSITION_TYPE_SLIDE_UP);
     rev_terminal->set_reveal_child (false);
     vbox.pack_end (*rev_terminal, false, true, 0);
+
+    terminal_cwd = bfs::current_path ();
 # endif
 
     add (vbox);
@@ -459,7 +467,6 @@ namespace Astroid {
     vte_terminal_set_size (VTE_TERMINAL (vte_term), 1, 10);
 
     /* start shell */
-    GPid pid;
     /* GCancellable * c = g_cancellable_new (); */
 
     char * shell = vte_get_user_shell ();
@@ -469,15 +476,19 @@ namespace Astroid {
 
     LOG (info) << "mw: starting terminal..: " << shell;
 
+    if (!bfs::exists (terminal_cwd)) {
+      terminal_cwd = bfs::current_path ();
+    }
+
     vte_terminal_spawn_sync (VTE_TERMINAL(vte_term),
         VTE_PTY_DEFAULT,
-        bfs::current_path ().c_str(),
+        terminal_cwd.c_str(),
         args,
         envs,
         G_SPAWN_DEFAULT,
         NULL,
         NULL,
-        &pid,
+        &terminal_pid,
         NULL,
         (err = NULL, &err));
 
@@ -489,9 +500,13 @@ namespace Astroid {
       LOG (error) << "mw: terminal: " << err->message;
       disable_terminal ();
     } else {
-      LOG (debug) << "mw: terminal started.";
+      LOG (debug) << "mw: terminal started: " << terminal_pid;
       g_signal_connect (vte_term, "child-exited",
           G_CALLBACK (mw_on_terminal_child_exit),
+          (gpointer) this);
+
+      g_signal_connect (vte_term, "commit",
+          G_CALLBACK (mw_on_terminal_commit),
           (gpointer) this);
 
     }
@@ -508,10 +523,17 @@ namespace Astroid {
   }
 
   void MainWindow::on_terminal_child_exit (VteTerminal *, gint) {
-    LOG (info) << "mw: terminal exited.";
+    LOG (info) << "mw: terminal exited (cwd: " << terminal_cwd.c_str () << ")";
     disable_terminal ();
   }
 
+  void MainWindow::on_terminal_commit (VteTerminal *, gchar **, guint) {
+    bfs::path pth = bfs::path(ustring::compose ("/proc/%1/cwd", terminal_pid).c_str ());
+
+    if (bfs::exists (pth)) {
+      terminal_cwd = bfs::canonical (pth);
+    }
+  }
 # endif
 
   // }}}

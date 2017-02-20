@@ -8,6 +8,7 @@
 # include <gtkmm/notebook.h>
 
 # include <vte/vte.h>
+# include <boost/filesystem.hpp>
 
 # include "proto.hh"
 # include "command_bar.hh"
@@ -15,9 +16,12 @@
 # include "modes/keybindings.hh"
 # include "actions/action_manager.hh"
 
+namespace bfs = boost::filesystem;
+
 # ifndef DISABLE_VTE
 extern "C" {
   void mw_on_terminal_child_exit (VteTerminal *, gint, gpointer);
+  void mw_on_terminal_commit (VteTerminal *, gchar **, guint, gpointer);
 }
 # endif
 
@@ -74,9 +78,13 @@ namespace Astroid {
 
       /* terminal */
 # ifndef DISABLE_VTE
+      GPid      terminal_pid;
+      bfs::path terminal_cwd;
+
       void enable_terminal ();
       void disable_terminal ();
       void on_terminal_child_exit (VteTerminal *, gint);
+      void on_terminal_commit (VteTerminal*, gchar **, guint);
 
     private:
       Gtk::Revealer * rev_terminal;
