@@ -41,6 +41,12 @@ namespace Astroid {
     entry.signal_changed ().connect (
         sigc::mem_fun (this, &CommandBar::entry_changed));
 
+    auto settings = Gio::Settings::create ("org.gnome.desktop.interface");
+    ustring font_desc_string = settings->get_string ("monospace-font-name");
+    auto font_description = Pango::FontDescription (font_desc_string);
+
+    entry.override_font (font_description);
+
     /* set up tags */
     Db db (Db::DbMode::DATABASE_READ_ONLY);
     db.load_tags ();
