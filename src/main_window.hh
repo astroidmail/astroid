@@ -7,7 +7,9 @@
 # include <gtkmm/window.h>
 # include <gtkmm/notebook.h>
 
+# ifndef DISABLE_VTE
 # include <vte/vte.h>
+# endif
 # include <boost/filesystem.hpp>
 
 # include "proto.hh"

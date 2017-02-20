@@ -4,7 +4,10 @@
 # include <gtkmm/widget.h>
 # include <gtkmm/notebook.h>
 
+# ifndef DISABLE_VTE
 # include <vte/vte.h>
+# endif
+
 # include <boost/filesystem.hpp>
 
 # include "astroid.hh"
