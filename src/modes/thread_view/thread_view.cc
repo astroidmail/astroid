@@ -2249,18 +2249,18 @@ namespace Astroid {
           if (all_of (mthread->messages.begin(),
                       mthread->messages.end (),
                       [&](refptr<Message> m) {
-                        return !is_hidden (m);
+                        return is_hidden (m);
                       }
                 )) {
-            /* all are shown */
+            /* all are hidden */
             for (auto m : mthread->messages) {
-              toggle_hidden (m, ToggleHide);
+              toggle_hidden (m, ToggleShow);
             }
 
           } else {
-            /* some are hidden */
+            /* some are shown */
             for (auto m : mthread->messages) {
-              toggle_hidden (m, ToggleShow);
+              toggle_hidden (m, ToggleHide);
             }
           }
 
