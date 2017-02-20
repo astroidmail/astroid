@@ -2282,10 +2282,30 @@ namespace Astroid {
         "Toggle mark on all messages",
         [&] (Key) {
           if (!edit_mode) {
+
+            bool any = false;
+            bool all = true;
+
             for (auto &s : state) {
-              s.second.marked = !s.second.marked;
-              update_marked_state (s.first);
+              if (s.second.marked) {
+                any = true;
+              } else {
+                all = false;
+              }
+
+              if (any && !all) break;
             }
+
+            for (auto &s : state) {
+              if (any && !all) {
+                s.second.marked = true;
+                update_marked_state (s.first);
+              } else {
+                s.second.marked = !s.second.marked;
+                update_marked_state (s.first);
+              }
+            }
+
 
             return true;
           }
