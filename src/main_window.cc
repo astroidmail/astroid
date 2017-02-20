@@ -610,9 +610,13 @@ namespace Astroid {
 
       return true; // swallow all keys
 
+# ifndef DISABLE_VTE
     } else if (active_mode == Terminal) {
       return true;
     }
+# else
+    }
+# endif
 
     return false;
   }
