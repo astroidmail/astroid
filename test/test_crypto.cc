@@ -68,20 +68,16 @@ BOOST_AUTO_TEST_SUITE(PGPEncryption)
 
     /* need passphrase, doesn't work yet */
 
-    /*
     Message m (fn);
-
     ustring rbdy = m.viewable_text (false);
 
     BOOST_CHECK_MESSAGE (bdy == rbdy, "message reading produces the same output as compose message input");
-    */
 
     unlink (fn.c_str ());
 
     teardown ();
   }
 
-  /*
   BOOST_AUTO_TEST_CASE (crypto_compose_test_sign_body)
   {
     using Astroid::ComposeMessage;
@@ -97,7 +93,7 @@ BOOST_AUTO_TEST_SUITE(PGPEncryption)
     c->set_from (&a);
     c->set_to ("who@astroidmail.bar"); // no pub key
     c->encrypt = false;
-    c->sign = false;
+    c->sign = true;
 
     ustring bdy = "This is test: æøå.\n > testing\ntesting\n...";
 
@@ -128,7 +124,6 @@ BOOST_AUTO_TEST_SUITE(PGPEncryption)
 
     teardown ();
   }
-  */
 
 
   BOOST_AUTO_TEST_CASE (crypto_missing_pub)
