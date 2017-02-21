@@ -92,13 +92,17 @@ namespace Astroid {
   }
 
   void QueryLoader::refresh_stats () {
-    LOG (debug) << "ql: refresh stats..";
     Db db (Db::DATABASE_READ_ONLY);
+    refresh_stats_db (&db);
+  }
+
+  void QueryLoader::refresh_stats_db (Db * db) {
+    LOG (debug) << "ql: refresh stats..";
 
     notmuch_status_t st = NOTMUCH_STATUS_SUCCESS;
 
-    notmuch_query_t * query_t =  notmuch_query_create (db.nm_db, query.c_str ());
-    for (ustring & t : db.excluded_tags) {
+    notmuch_query_t * query_t =  notmuch_query_create (db->nm_db, query.c_str ());
+    for (ustring & t : db->excluded_tags) {
       notmuch_query_add_tag_exclude (query_t, t.c_str());
     }
     notmuch_query_set_omit_excluded (query_t, NOTMUCH_EXCLUDE_TRUE);
@@ -111,8 +115,8 @@ namespace Astroid {
     notmuch_query_destroy (query_t);
 
     ustring unread_q_s = "(" + query + ") AND tag:unread";
-    notmuch_query_t * unread_q = notmuch_query_create (db.nm_db, unread_q_s.c_str());
-    for (ustring & t : db.excluded_tags) {
+    notmuch_query_t * unread_q = notmuch_query_create (db->nm_db, unread_q_s.c_str());
+    for (ustring & t : db->excluded_tags) {
       notmuch_query_add_tag_exclude (unread_q, t.c_str());
     }
     notmuch_query_set_omit_excluded (unread_q, NOTMUCH_EXCLUDE_TRUE);
@@ -367,7 +371,7 @@ namespace Astroid {
 
     if (changed && !waiting_stats) {
       waiting_stats = true;
-      make_stats.emit ();
+      refresh_stats_db (db); // we should already be running on the gui thread
     }
   }
 }
