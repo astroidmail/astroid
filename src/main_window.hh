@@ -105,6 +105,7 @@ namespace Astroid {
       void close_page (bool = false);
       void close_page (Mode *, bool = false);
       bool jump_to_page (Key, int);
+      bool is_current (Mode *);
 
       void ungrab_active ();
       void grab_active (int);

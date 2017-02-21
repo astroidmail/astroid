@@ -406,6 +406,11 @@ namespace Astroid {
     return true;
   }
 
+  bool MainWindow::is_current (Mode * m) {
+    int i = notebook.get_current_page ();
+    return (m == ((Mode *) notebook.get_nth_page (i)));
+  }
+
   void MainWindow::set_title (ustring t) {
 
     ustring tt = ustring::compose( "Astroid (%1)", Astroid::version);

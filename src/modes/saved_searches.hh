@@ -37,6 +37,10 @@ namespace Astroid {
 
       void reload ();
       void refresh_stats ();
+    private:
+      void refresh_stats_db (Db *);
+      bool needs_refresh = false;
+    public:
       bool show_all_history = false;
 
       int page_jump_rows;
