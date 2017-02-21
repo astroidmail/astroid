@@ -78,6 +78,7 @@ namespace Astroid {
   }
 
   Message::~Message () {
+    LOG (debug) << "ms: deconstruct";
     if (message) g_object_unref (message);
   }
 
@@ -783,6 +784,10 @@ namespace Astroid {
 
   }
 
+  MessageThread::~MessageThread () {
+    LOG (debug) << "mt: destruct.";
+  }
+
   void MessageThread::load_messages (Db * db) {
     /* update values */
     subject     = thread->subject;
@@ -888,10 +893,6 @@ namespace Astroid {
     if (subject == "") {
       subject = (*(--messages.end()))->subject;
     }
-  }
-
-
-  void MessageThread::reload_messages () {
   }
 
 }

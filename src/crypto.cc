@@ -41,7 +41,7 @@ namespace Astroid {
     LOG (debug) << "crypto: deconstruct.";
 
     /* if (slist)        g_object_unref (slist); */
-    if (rlist)        g_object_unref (rlist);
+    /* if (rlist)        g_object_unref (rlist); */
     if (decrypt_res)  g_object_unref (decrypt_res);
     if (gpgctx)       g_object_unref (gpgctx);
   }

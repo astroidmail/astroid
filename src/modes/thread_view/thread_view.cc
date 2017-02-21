@@ -562,6 +562,8 @@ namespace Astroid {
   }
 
   void ThreadView::load_message_thread (refptr<MessageThread> _mthread) {
+    ready = false;
+    mthread.clear ();
     mthread = _mthread;
 
     ustring s = mthread->subject;
@@ -1229,9 +1231,6 @@ namespace Astroid {
               "<br />%1 signature from: %2 (%3) [0x%4] [trust: %5] %6",
               gd, nm, em, ky, trust, err);
 
-
-          g_object_unref (ce);
-          g_object_unref (s);
 
           all_sig_errors.insert (all_sig_errors.end(), sig_errors.begin (), sig_errors.end ());
         }

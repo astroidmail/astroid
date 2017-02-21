@@ -831,13 +831,14 @@ namespace Astroid {
 
         prepare_message ();
 
-        info_str = "Editing..";
-
         /* TODO: race condition: info_str is set by read_edited_message, may
          *       happen in conflict with when the thread_view emits the ready
          *       signal (race will also be in external.cc) */
 
         editor->start ();
+
+        read_edited_message ();
+        info_str = "Editing..";
 
       } else {
         /* return from editor */
