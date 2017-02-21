@@ -36,6 +36,8 @@ namespace Astroid {
       viewable   = true;
       attachment = false;
 
+    } else {
+      g_object_ref (mime_object);
     }
 
     content_type = g_mime_object_get_content_type (mime_object);
@@ -686,7 +688,7 @@ namespace Astroid {
   Chunk::~Chunk () {
     LOG (debug) << "chunk: deconstruct.";
     // these should not be unreffed.
-    // g_object_unref (mime_object);
+    if (mime_object) g_object_unref (mime_object);
     // g_object_unref (content_type);
   }
 }

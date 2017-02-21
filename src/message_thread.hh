@@ -38,7 +38,7 @@ namespace Astroid {
       void on_message_updated (Db *, ustring);
       void refresh (Db *);
 
-      GMimeMessage * message;
+      GMimeMessage * message = NULL;
       refptr<Chunk>     root;
       int level = 0;
 

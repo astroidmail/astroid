@@ -23,7 +23,7 @@ namespace Astroid {
       int id;
 
       /* Chunk assumes ownership of these */
-      GMimeObject *       mime_object;
+      GMimeObject *       mime_object = NULL;
       GMimeContentType *  content_type;
       ustring content_id;
 

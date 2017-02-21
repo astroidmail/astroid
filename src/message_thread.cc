@@ -78,7 +78,7 @@ namespace Astroid {
   }
 
   Message::~Message () {
-    //g_object_unref (message);
+    if (message) g_object_unref (message);
   }
 
   void Message::on_message_updated (Db * db, ustring _mid) {
@@ -191,6 +191,7 @@ namespace Astroid {
 
       load_message (_message);
 
+      g_object_unref (_message); // is reffed in load_message
       g_object_unref (stream); // reffed from parser
       g_object_unref (parser); // reffed from message
     }
@@ -245,6 +246,7 @@ namespace Astroid {
      */
 
     message = _msg;
+    g_object_ref (message);
     const char *c;
 
     if (mid == "") {
@@ -282,9 +284,6 @@ namespace Astroid {
     g_mime_message_get_date (message, &received_time, NULL);
 
     root = refptr<Chunk>(new Chunk (g_mime_message_get_mime_part (message)));
-
-    g_object_ref (message);  // TODO: a little bit at loss here -> change to
-                             //       std::something.
   }
 
   ustring Message::viewable_text (bool html, bool fallback_html) {
