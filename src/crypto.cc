@@ -13,8 +13,8 @@
 namespace Astroid {
   Crypto::Crypto (ustring _protocol) {
     using std::endl;
-    config = astroid->config ("crypto");
-    gpgpath = ustring (config.get<std::string> ("gpg.path"));
+    config       = astroid->config ("crypto");
+    gpgpath      = ustring (config.get<std::string> ("gpg.path"));
     always_trust = config.get<bool> ("gpg.always_trust");
 
     LOG (debug) << "crypto: gpg: " << gpgpath;
@@ -22,7 +22,7 @@ namespace Astroid {
     protocol = _protocol.lowercase ();
 
     if ((protocol == "application/pgp-encrypted" ||
-        protocol == "application/pgp-signature")) {
+         protocol == "application/pgp-signature")) {
 
       isgpg = true;
       create_gpg_context ();
@@ -40,8 +40,10 @@ namespace Astroid {
   Crypto::~Crypto () {
     LOG (debug) << "crypto: deconstruct.";
 
-    if (gpgctx) g_object_unref (gpgctx);
-    gpgctx = NULL;
+    /* if (slist)        g_object_unref (slist); */
+    if (rlist)        g_object_unref (rlist);
+    if (decrypt_res)  g_object_unref (decrypt_res);
+    if (gpgctx)       g_object_unref (gpgctx);
   }
 
   GMimeObject * Crypto::decrypt_and_verify (GMimeObject * part) {
@@ -117,7 +119,6 @@ namespace Astroid {
       verify_tried = (slist != NULL);
       verified = verify_signature_list (slist);
     }
-
 
     return dp;
   }
