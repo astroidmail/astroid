@@ -6,6 +6,10 @@
 # include <gmime/gmime.h>
 # include <glib.h>
 # include <gio/gio.h>
+# include <thread>
+# include <mutex>
+# include <condition_variable>
+# include <chrono>
 
 # include "astroid.hh"
 # include "db.hh"
@@ -38,6 +42,7 @@ namespace Astroid {
   }
 
   ComposeMessage::~ComposeMessage () {
+    if (send_thread.joinable ()) send_thread.join ();
     g_object_unref (message);
 
     //if (message_file != "") unlink(message_file.c_str());
@@ -314,10 +319,12 @@ namespace Astroid {
   }
 
   bool ComposeMessage::cancel_sending () {
+    LOG (warn) << "cm: cancel sendmail pid: " << pid;
+    std::lock_guard<std::mutex> lk (send_cancel_m);
+
     cancel_send_during_delay = true;
 
     if (pid > 0) {
-      LOG (warn) << "cm: cancel sendmail pid: " << pid;
 
       int r = kill (pid, SIGKILL);
 
@@ -328,6 +335,11 @@ namespace Astroid {
       }
     }
 
+    send_cancel_cv.notify_one ();
+    if (send_thread.joinable ()) {
+      send_thread.detach ();
+    }
+
     return true;
   }
 
@@ -335,24 +347,25 @@ namespace Astroid {
   {
     LOG (info) << "cm: sending (threaded)..";
     cancel_send_during_delay = false;
-    Glib::Threads::Thread::create (
-        [&] () {
-          this->send (true);
-        });
+    send_thread = std::thread (&ComposeMessage::send, this, true);
   }
 
   bool ComposeMessage::send (bool output) {
+
     dryrun = astroid->config().get<bool>("astroid.debug.dryrun_sending");
 
     message_send_status_warn = false;
     message_send_status_msg  = "";
 
     unsigned int delay = astroid->config ().get<unsigned int> ("mail.send_delay");
+    std::unique_lock<std::mutex> lk (send_cancel_m);
+
     while (delay > 0 && !cancel_send_during_delay) {
       LOG (debug) << "cm: sending in " << delay << " seconds..";
       message_send_status_msg = ustring::compose ("sending message in %1 seconds..", delay);
       d_message_send_status ();
-      sleep (1);
+      std::chrono::seconds sec (1);
+      send_cancel_cv.wait_until (lk, std::chrono::system_clock::now () + sec, [&] { return cancel_send_during_delay; });
       delay--;
     }
 
@@ -367,6 +380,8 @@ namespace Astroid {
       pid = 0;
       return false;
     }
+
+    lk.unlock ();
 
     message_send_status_msg = "sending message..";
     d_message_send_status ();

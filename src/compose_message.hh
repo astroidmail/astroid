@@ -6,6 +6,9 @@
 # include <functional>
 # include <memory>
 # include <boost/filesystem.hpp>
+# include <thread>
+# include <mutex>
+# include <condition_variable>
 
 # include <gmime/gmime.h>
 
@@ -107,6 +110,10 @@ namespace Astroid {
 
       bool log_out (Glib::IOCondition);
       bool log_err (Glib::IOCondition);
+
+      std::thread send_thread;
+      std::mutex  send_cancel_m;
+      std::condition_variable  send_cancel_cv;
 
     public:
       /* message sent */
