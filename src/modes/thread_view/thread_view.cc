@@ -3979,8 +3979,8 @@ namespace Astroid {
 
   void ThreadView::emit_ready () {
     LOG (info) << "tv: ready emitted.";
-    m_signal_ready.emit ();
     ready = true;
+    m_signal_ready.emit ();
   }
 
   ThreadView::type_element_action

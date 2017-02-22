@@ -534,10 +534,7 @@ namespace Astroid {
       path ddir = path(c->account->save_drafts_to.c_str ());
       if (!is_directory(ddir)) {
         LOG (error) << "em: no draft directory specified!";
-        warning_str = "draft could not be saved, no suitable draft directory for account specified.";
-        /* move to key handler:
-         * warning_str = "draft could not be saved!"; */
-        /* on_tv_ready (); */
+        set_warning ("draft could not be saved, no suitable draft directory for account specified.");
         delete c;
         return false;
 
@@ -695,11 +692,14 @@ namespace Astroid {
   void EditMessage::read_edited_message () {
     /* make message */
     draft_saved = false; // we expect changes to have been made
-    warning_str = "";
-    if (astroid->hint_level () < 1) {
-      info_str = "Edit message with 'Enter'.";
-    } else {
-      info_str = "";
+    set_warning ("");
+
+    if (!editor_active) {
+      if (astroid->hint_level () < 1) {
+        set_info ("Edit message with 'Enter'.");
+      } else {
+        set_info ("");
+      }
     }
 
     ComposeMessage * c = make_message ();
@@ -711,7 +711,7 @@ namespace Astroid {
 
     if (c->encrypt || c->sign) {
       if (!c->encryption_success) {
-        warning_str = "Failed encrypting: " + UstringUtils::replace (c->encryption_error, "\n", "<br />");
+        set_warning ("Failed encrypting: " + UstringUtils::replace (c->encryption_error, "\n", "<br />"));
       }
     }
 
@@ -739,18 +739,35 @@ namespace Astroid {
 
   /* }}} */
 
+  void EditMessage::set_info (ustring msg) {
+    info_str = msg;
+    LOG (debug) << "em: set info (ready: " << thread_view->ready << "): " << msg;
+    if (thread_view->ready) {
+      if (info_str.length () > 0) {
+        thread_view->set_info (thread_view->focused_message, info_str);
+      } else {
+        thread_view->hide_info (thread_view->focused_message);
+      }
+    }
+  }
+
+  void EditMessage::set_warning (ustring msg) {
+    warning_str = msg;
+    LOG (debug) << "em: set warning (ready: " << thread_view->ready << "): " << msg;
+    if (thread_view->ready) {
+      if (warning_str.length () > 0) {
+        thread_view->set_warning (thread_view->focused_message, warning_str);
+      } else {
+        thread_view->hide_warning (thread_view->focused_message);
+      }
+    }
+  }
+
   void EditMessage::on_tv_ready () {
     LOG (debug) << "em: got tv ready.";
 
-    if (warning_str.length() > 0)
-      thread_view->set_warning (thread_view->focused_message, warning_str);
-    else
-      thread_view->hide_warning (thread_view->focused_message);
-
-    if (info_str.length () > 0)
-      thread_view->set_info (thread_view->focused_message, info_str);
-    else
-      thread_view->hide_info (thread_view->focused_message);
+    set_info (info_str);
+    set_warning (warning_str);
   }
 
   /* swapping between edit and read mode {{{ */
@@ -831,10 +848,6 @@ namespace Astroid {
 
         prepare_message ();
 
-        /* TODO: race condition: info_str is set by read_edited_message, may
-         *       happen in conflict with when the thread_view emits the ready
-         *       signal (race will also be in external.cc) */
-
         editor->start ();
 
         read_edited_message ();
@@ -844,7 +857,7 @@ namespace Astroid {
         /* return from editor */
         editor_active = false;
 
-        info_str = "";
+        set_info ("");
         read_edited_message ();
 
       }
@@ -906,7 +919,7 @@ namespace Astroid {
   /* send message {{{ */
   bool EditMessage::check_fields () {
     if (to.empty () && cc.empty () && bcc.empty ()) {
-      warning_str = "No recipients defined!";
+      set_warning ("No recipients defined!");
 
       on_tv_ready ();
 
@@ -923,7 +936,7 @@ namespace Astroid {
                     return bl.find (w) != string::npos;
                   }))
       {
-        warning_str = "Attachments have been mentioned in the message, but none are attached, do you still want to send?";
+        set_warning ("Attachments have been mentioned in the message, but none are attached, do you still want to send?");
 
         on_tv_ready ();
       }
@@ -938,8 +951,8 @@ namespace Astroid {
     /* load body */
     editor_toggle (false); // resets warning and info
 
-    warning_str = "";
-    info_str    = "sending message..";
+    set_warning ("");
+    set_info ("sending message..");
 
     on_tv_ready ();
 
@@ -949,7 +962,7 @@ namespace Astroid {
 
     if (c->encrypt || c->sign) {
       if (!c->encryption_success) {
-        warning_str = "Cannot send, failed encrypting: " + UstringUtils::replace (c->encryption_error, "\n", "<br />");
+        set_warning ("Cannot send, failed encrypting: " + UstringUtils::replace (c->encryption_error, "\n", "<br />"));
 
         delete c;
         return false;
@@ -984,11 +997,11 @@ namespace Astroid {
 
   void EditMessage::update_send_message_status (bool warn, ustring msg) {
     if (warn) {
-      info_str    = "";
-      warning_str = msg;
+      set_info ("");
+      set_warning (msg);
     } else {
-      info_str    = msg;
-      warning_str = "";
+      set_info (msg);
+      set_warning ("");
     }
 
     on_tv_ready ();

@@ -68,6 +68,8 @@ namespace Astroid {
     draft_file = Glib::wrap (f, true);
     draft_watch = draft_file->monitor ();
     draft_watch->signal_changed ().connect (sigc::mem_fun (this, &External::on_draft_changed));
+
+    em->set_info ("Editing..");
   }
 
   void External::on_draft_changed (const Glib::RefPtr<Gio::File>&, const Glib::RefPtr<Gio::File>&, Gio::FileMonitorEvent event_type)
@@ -78,7 +80,7 @@ namespace Astroid {
       if (bfs::exists (em->tmpfile_path)) {
         LOG (debug) << "em: ex: file changed, updating preview..";
         em->read_edited_message ();
-        em->info_str = "Editing..";
+        em->set_info ("Editing..");
       }
     }
   }
