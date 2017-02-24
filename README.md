@@ -26,22 +26,28 @@ Check out the [tour of how to install, configure and use astroid](https://github
 
 get astroid from:
 
-` $ git clone https://github.com/astroidmail/astroid.git `
+```sh
+$ git clone https://github.com/astroidmail/astroid.git
+```
 
 ## installation and usage
 
 ### compiling
 
-` $ scons `
+```sh
+$ scons
+```
 
 to run the tests do:
 
-` $ scons test `
+```sh
+$ scons test
+```
 
 ### installing
 
 Configure with a prefix and install:
-```
+```sh
 $ scons --prefix=/usr build
 $ scons --prefix=/usr install
 ```
@@ -54,7 +60,9 @@ running astroid will make a new configuration file in `$XDG_CONFIG_HOME/astroid`
 
 ### running and usage
 
-` $ ./astroid `
+```sh
+$ ./astroid
+```
 
 press `?` to get a list of available key bindings in the current mode, navigate up and down using `j` and `k`. refer to the [usage section](https://github.com/astroidmail/astroid/wiki#usage) in the wiki for more information on usage and customization.
 
@@ -82,6 +90,10 @@ This project adheres to [Contributor Covenant Code of Conduct v1.4](http://contr
   inspired by the [Geary] mail client. Also, some inspiration and code stems from
   ner, another notmuch email client.
 
+## licensing
+
+See [LICENSE.md](./LICENSE.md) for licensing information.
+
 [sup]: http://sup-heliotrope.github.io
 [notmuch]: http://notmuchmail.org/
 [Geary]: http://www.yorba.org/projects/geary/
@@ -96,6 +108,3 @@ This project adheres to [Contributor Covenant Code of Conduct v1.4](http://contr
 [glib]: https://developer.gnome.org/glib/
 [boost::property_tree]: http://www.boost.org/doc/libs/1_56_0/doc/html/property_tree.html
 
-## licensing
-
-See [LICENSE.md](./LICENSE.md) for licensing information.
