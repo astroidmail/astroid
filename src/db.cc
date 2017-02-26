@@ -784,9 +784,30 @@ namespace Astroid {
   /****************
    * NotmuchMessage
    ****************/
+  NotmuchMessage::NotmuchMessage (notmuch_message_t * m) {
+    load (m);
+  }
+
   NotmuchMessage::NotmuchMessage (refptr<Message> m) {
-    mid  = m->mid;
-    tags = m->tags;
+    mid       = m->mid;
+    tags      = m->tags;
+    thread_id = m->tid;
+    subject   = m->subject;
+  }
+
+  void NotmuchMessage::load (notmuch_message_t * m) {
+
+  }
+
+  void NotmuchMessage::refresh (Db * db) {
+    /* do a new db query and update all fields */
+
+    db->on_message (mid,
+        [&](notmuch_message_t * m) {
+
+          load (m);
+
+        });
   }
 
   /* tag actions */
@@ -886,9 +907,9 @@ namespace Astroid {
 
 
   /***************
-   * NotmuchTaggable
+   * NotmuchItem
    ***************/
-  bool NotmuchTaggable::has_tag (ustring tag) {
+  bool NotmuchItem::has_tag (ustring tag) {
     return (find(tags.begin (), tags.end (), tag) != tags.end ());
   }
 

@@ -2803,7 +2803,7 @@ namespace Astroid {
         [&] (Key) {
           if (!edit_mode && focused_message) {
 
-            main_window->actions->doit (refptr<Action>(new ToggleAction (refptr<NotmuchTaggable>(new NotmuchMessage(focused_message)), "unread")));
+            main_window->actions->doit (refptr<Action>(new ToggleAction (refptr<NotmuchItem>(new NotmuchMessage(focused_message)), "unread")));
             state[focused_message].unread_checked = true;
 
           }
@@ -2817,7 +2817,7 @@ namespace Astroid {
         [&] (Key) {
           if (!edit_mode && focused_message) {
 
-            main_window->actions->doit (refptr<Action>(new ToggleAction (refptr<NotmuchTaggable>(new NotmuchMessage(focused_message)), "flagged")));
+            main_window->actions->doit (refptr<Action>(new ToggleAction (refptr<NotmuchItem>(new NotmuchMessage(focused_message)), "flagged")));
 
           }
 
@@ -2930,7 +2930,7 @@ namespace Astroid {
                     rem.size () == 0) {
                   LOG (debug) << "ti: nothing to do.";
                 } else {
-                  main_window->actions->doit (refptr<Action>(new TagAction (refptr<NotmuchTaggable>(new NotmuchMessage(focused_message)), add, rem)));
+                  main_window->actions->doit (refptr<Action>(new TagAction (refptr<NotmuchItem>(new NotmuchMessage(focused_message)), add, rem)));
                 }
 
                 /* make sure that the unread tag is not modified after manually editing tags */
@@ -3502,7 +3502,7 @@ namespace Astroid {
         if (unread_delay == 0.0 || elapsed.count () > unread_delay) {
           if (has (focused_message->tags, ustring("unread"))) {
 
-            main_window->actions->doit (refptr<Action>(new TagAction (refptr<NotmuchTaggable>(new NotmuchMessage(focused_message)), {}, { "unread" })), false);
+            main_window->actions->doit (refptr<Action>(new TagAction (refptr<NotmuchItem>(new NotmuchMessage(focused_message)), {}, { "unread" })), false);
             state[focused_message].unread_checked = true;
           }
         }

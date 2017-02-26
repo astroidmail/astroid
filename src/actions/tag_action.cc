@@ -10,12 +10,12 @@
 using namespace std;
 
 namespace Astroid {
-  TagAction::TagAction ( refptr<NotmuchTaggable> nmt) {
+  TagAction::TagAction ( refptr<NotmuchItem> nmt) {
     taggables.push_back (nmt);
   }
 
   TagAction::TagAction (
-      refptr<NotmuchTaggable> nmt,
+      refptr<NotmuchItem> nmt,
       vector<ustring> _add,
       vector<ustring> _remove)
   : add (_add), remove (_remove)
@@ -23,13 +23,13 @@ namespace Astroid {
     taggables.push_back (nmt);
   }
 
-  TagAction::TagAction ( vector<refptr<NotmuchTaggable>> nmts)
+  TagAction::TagAction ( vector<refptr<NotmuchItem>> nmts)
   : taggables (nmts)
   {
   }
 
   TagAction::TagAction (
-      vector<refptr<NotmuchTaggable>> nmts,
+      vector<refptr<NotmuchItem>> nmts,
       vector<ustring> _add,
       vector<ustring> _remove)
   : taggables(nmts), add (_add), remove (_remove)

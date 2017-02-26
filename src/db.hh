@@ -17,10 +17,15 @@
 # include "proto.hh"
 
 namespace Astroid {
-  class NotmuchTaggable : public Glib::Object {
+  class NotmuchItem : public Glib::Object {
     public:
-      std::vector <ustring> tags;
-      bool has_tag (ustring);
+      ustring thread_id;
+      ustring subject;
+
+      virtual void refresh (Db *) = 0;
+
+      std::vector<ustring>  tags;
+      bool                  has_tag (ustring);
 
       virtual bool remove_tag (Db *, ustring) = 0;
       virtual bool add_tag (Db *, ustring) = 0;
@@ -31,11 +36,15 @@ namespace Astroid {
   };
 
   /* the notmuch message object should get by on the db only */
-  class NotmuchMessage : public NotmuchTaggable {
+  class NotmuchMessage : public NotmuchItem {
     public:
+      NotmuchMessage (notmuch_message_t *);
       NotmuchMessage (refptr<Message>);
 
       ustring mid;
+
+      void load (notmuch_message_t *);
+      void refresh (Db *) override;
 
       bool remove_tag (Db *, ustring) override;
       bool add_tag (Db *, ustring) override;
@@ -44,14 +53,11 @@ namespace Astroid {
   };
 
   /* the notmuch thread object should get by on the db only */
-  class NotmuchThread : public NotmuchTaggable {
+  class NotmuchThread : public NotmuchItem {
     public:
       NotmuchThread (notmuch_thread_t *);
       ~NotmuchThread ();
 
-      ustring thread_id;
-
-      ustring subject;
       time_t  newest_date;
       time_t  oldest_date;
       bool    unread;
@@ -60,8 +66,8 @@ namespace Astroid {
       int     total_messages;
       std::vector<std::tuple<ustring,bool>> authors;
 
-      void refresh (Db *);
       void load (notmuch_thread_t *);
+      void refresh (Db *) override;
 
       bool remove_tag (Db *, ustring) override;
       bool add_tag (Db *, ustring) override;

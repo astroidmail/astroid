@@ -9,18 +9,18 @@
 namespace Astroid {
   class DiffTagAction : public TagAction {
     public:
-      DiffTagAction (std::vector<refptr<NotmuchTaggable>>,
+      DiffTagAction (std::vector<refptr<NotmuchItem>>,
                      std::vector<ustring> add,
                      std::vector<ustring> rem);
 
-      static DiffTagAction * create (std::vector<refptr<NotmuchTaggable>>, ustring);
+      static DiffTagAction * create (std::vector<refptr<NotmuchItem>>, ustring);
 
       virtual bool doit (Db *) override;
       virtual bool undo (Db *) override;
 
     private:
       struct TaggableAction {
-        refptr<NotmuchTaggable> taggable;
+        refptr<NotmuchItem> taggable;
         std::vector<ustring>    add;
         std::vector<ustring>    remove;
       };

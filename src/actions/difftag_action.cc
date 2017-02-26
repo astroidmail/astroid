@@ -14,7 +14,7 @@
 using namespace std;
 
 namespace Astroid {
-  DiffTagAction * DiffTagAction::create (vector<refptr<NotmuchTaggable>> nmts, ustring diff_str) {
+  DiffTagAction * DiffTagAction::create (vector<refptr<NotmuchItem>> nmts, ustring diff_str) {
 
     LOG (debug) << "difftag: parsing: " << diff_str;
 
@@ -51,7 +51,7 @@ namespace Astroid {
   }
 
   DiffTagAction::DiffTagAction (
-      vector<refptr<NotmuchTaggable>> nmts,
+      vector<refptr<NotmuchItem>> nmts,
       vector<ustring> _add,
       vector<ustring> _rem)
   : TagAction(nmts)

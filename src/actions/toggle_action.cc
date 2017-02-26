@@ -12,13 +12,13 @@
 using namespace std;
 
 namespace Astroid {
-  ToggleAction::ToggleAction (refptr<NotmuchTaggable> nmt, ustring _toggle_tag)
+  ToggleAction::ToggleAction (refptr<NotmuchItem> nmt, ustring _toggle_tag)
   : TagAction(nmt)
   {
     toggle_tag = _toggle_tag;
   }
 
-  ToggleAction::ToggleAction (vector<refptr<NotmuchTaggable>> nmts, ustring _toggle_tag)
+  ToggleAction::ToggleAction (vector<refptr<NotmuchItem>> nmts, ustring _toggle_tag)
   : TagAction(nmts)
   {
     toggle_tag = _toggle_tag;
@@ -57,19 +57,19 @@ namespace Astroid {
     return res;
   }
 
-  SpamAction::SpamAction (refptr<NotmuchTaggable> nmt)
+  SpamAction::SpamAction (refptr<NotmuchItem> nmt)
     : ToggleAction (nmt, "spam") {
     }
 
-  SpamAction::SpamAction (vector<refptr<NotmuchTaggable>> nmts)
+  SpamAction::SpamAction (vector<refptr<NotmuchItem>> nmts)
     : ToggleAction (nmts, "spam") {
     }
 
-  MuteAction::MuteAction (refptr<NotmuchTaggable> nmt)
+  MuteAction::MuteAction (refptr<NotmuchItem> nmt)
     : ToggleAction (nmt, "muted") {
     }
 
-  MuteAction::MuteAction (vector<refptr<NotmuchTaggable>> nmts)
+  MuteAction::MuteAction (vector<refptr<NotmuchItem>> nmts)
     : ToggleAction (nmts, "muted") {
     }
 }
