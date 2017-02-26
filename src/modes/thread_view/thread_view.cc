@@ -712,7 +712,7 @@ namespace Astroid {
             mthread->messages.end (),
             [](refptr<Message> &a, refptr<Message> &b)
               {
-                return ( a->received_time < b->received_time );
+                return ( a->time < b->time );
               });
 
         toggle_hidden (focused_message, ToggleShow);

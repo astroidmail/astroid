@@ -48,7 +48,7 @@ namespace Astroid {
      * be a leading '%'.
      *
      */
-    Glib::DateTime dt = Glib::DateTime::create_now_local (msg->received_time);
+    Glib::DateTime dt = Glib::DateTime::create_now_local (msg->time);
     quoting_a = dt.format (quoting_a);
 
     quoted  << quoting_a.raw ()

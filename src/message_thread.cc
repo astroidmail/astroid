@@ -226,7 +226,7 @@ namespace Astroid {
         else reply_to = "";
 
 
-        received_time = notmuch_message_get_date (msg);
+        time = notmuch_message_get_date (msg);
 
       });
   }
@@ -282,7 +282,7 @@ namespace Astroid {
     if (c != NULL) reply_to = ustring (c);
     else reply_to = "";
 
-    g_mime_message_get_date (message, &received_time, NULL);
+    g_mime_message_get_date (message, &time, NULL);
 
     root = refptr<Chunk>(new Chunk (g_mime_message_get_mime_part (message)));
   }
@@ -441,15 +441,15 @@ namespace Astroid {
   }
 
   ustring Message::date_asctime () {
-    return Date::asctime (received_time);
+    return Date::asctime (time);
   }
 
   ustring Message::pretty_date () {
-    return Date::pretty_print (received_time);
+    return Date::pretty_print (time);
   }
 
   ustring Message::pretty_verbose_date (bool include_short) {
-    return Date::pretty_print_verbose (received_time, include_short);
+    return Date::pretty_print_verbose (time, include_short);
   }
 
   InternetAddressList * Message::to () {

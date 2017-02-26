@@ -57,7 +57,7 @@ namespace Astroid {
       ustring inreplyto;
       ustring reply_to;
 
-      time_t  received_time;
+      time_t  time;
       ustring date ();
       ustring date_asctime ();
       ustring pretty_date ();
