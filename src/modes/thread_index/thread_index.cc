@@ -39,7 +39,7 @@ namespace Astroid {
 
     list_view->set_sort_type (queryloader.sort);
 
-    add_pane (0, *scroll);
+    add_pane (0, scroll);
 
     show_all ();
 
@@ -235,8 +235,8 @@ namespace Astroid {
       if (packed == 2) {
         tv = (ThreadView *) pw2;
       } else {
-        tv = Gtk::manage(new ThreadView (main_window));
-        add_pane (1, *tv);
+        tv = new ThreadView (main_window);
+        add_pane (1, tv);
       }
     }
 
@@ -248,10 +248,10 @@ namespace Astroid {
       current = 1;
       grab_modal ();
     }
-
   }
 
   void ThreadIndex::pre_close () {
+    if (packed > 1) del_pane (1);
 # ifndef DISABLE_PLUGINS
     plugins->deactivate ();
     delete plugins;

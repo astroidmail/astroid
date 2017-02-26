@@ -11,9 +11,10 @@ namespace Astroid {
   class PanedMode : public Mode {
     public:
       PanedMode (MainWindow *);
+      ~PanedMode ();
 
       /* hpane: can be split into two horizontal panes */
-      Gtk::Paned paned;
+      Gtk::Paned    * paned;
       Gtk::EventBox * fp1 = NULL;
       Gtk::EventBox * fp2 = NULL;
       Mode * pw1 = NULL;
@@ -21,7 +22,7 @@ namespace Astroid {
       int packed = 0;
 
       int  current = -1;
-      void add_pane (int, Mode &w);
+      void add_pane (int, Mode * w);
       void del_pane (int);
 
       bool has_modal = false;

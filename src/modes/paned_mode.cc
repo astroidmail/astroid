@@ -17,8 +17,10 @@ namespace Astroid {
     set_can_focus (true);
     add_events (Gdk::KEY_PRESS_MASK);
 
-    pack_start (paned, true, true, 0);
-    paned.show_all ();
+    paned = Gtk::manage (new Gtk::Paned ());
+
+    pack_start (*paned, true, true, 0);
+    paned->show_all ();
 
     keys.title = "Paned mode";
     keys.register_key (Key (false, true, (guint) GDK_KEY_space), "pane.swap_focus",
@@ -36,31 +38,30 @@ namespace Astroid {
     selected_color = Gdk::RGBA ("#4a90d9");
   }
 
-  void PanedMode::add_pane (int p, Mode &w) {
+  PanedMode::~PanedMode () {
+    LOG (debug) << "pm: deconstruct";
+  }
+
+  void PanedMode::add_pane (int p, Mode * w) {
     LOG (debug) << "pm: add pane";
 
     if (packed >= 2) {
       throw out_of_range ("Can only embed two panes.");
     }
+    if (p == 0) pw1 = w;
+    else        pw2 = w;
 
-    Gtk::manage (&w);
+    w = Gtk::manage (w);
 
-    if (p == 0) pw1 = &w;
-    else        pw2 = &w;
-
-    Gtk::Widget * ww = &w;
     Gtk::EventBox * fb = Gtk::manage (new Gtk::EventBox ());
-
-    fb->add (*ww);
-
-    fb->show_all ();
+    fb->add (*w);
 
     if (p == 0) {
       fp1 = fb;
-      paned.pack1 (*fb, true, false);
+      paned->pack1 (*fb, true, false);
     } else {
       fp2 = fb;
-      paned.pack2 (*fb, true, false);
+      paned->pack2 (*fb, true, false);
     }
 
     packed++;
@@ -69,6 +70,8 @@ namespace Astroid {
       pw1->set_margin_top (5);
       pw2->set_margin_top (5);
     }
+
+    paned->show_all ();
 
     current = p;
   }
@@ -83,7 +86,7 @@ namespace Astroid {
     }
 
     if (p == 0) {
-      paned.remove (*fp1);
+      paned->remove (*fp1);
 
       delete fp1;
       delete pw1;
@@ -96,7 +99,7 @@ namespace Astroid {
         pw2->set_margin_top (0);
       }
     } else {
-      paned.remove (*fp2);
+      paned->remove (*fp2);
       if (pw1 != NULL) {
         pw1->set_margin_top (0);
       }
@@ -118,7 +121,6 @@ namespace Astroid {
         grab_modal ();
       }
     }
-
   }
 
   void PanedMode::grab_modal () {
