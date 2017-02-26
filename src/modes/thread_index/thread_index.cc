@@ -60,7 +60,7 @@ namespace Astroid {
     /* register keys {{{ */
     keys.set_prefix ("Thread Index", "thread_index");
 
-    keys.register_key ("x", "thread_index.close_pane", "Close thread view pane if open",
+    keys.register_key ("C-w", "thread_index.close_pane", "Close thread view pane if open",
         [&](Key) {
           if (packed == 2) {
             /* close thread view */
