@@ -795,6 +795,7 @@ namespace Astroid {
     subject   = m->subject;
     sender    = m->sender;
     time      = m->time;
+    filename  = m->fname;
 
     unread     = false;
     attachment = false;
@@ -833,6 +834,9 @@ namespace Astroid {
     if (c != NULL) sender = c;
 
     time = notmuch_message_get_date (m);
+
+    c = notmuch_message_get_filename (m);
+    if (c != NULL) filename = c;
 
     unread     = false;
     attachment = false;
@@ -892,13 +896,16 @@ namespace Astroid {
 
   void NotmuchMessage::refresh (Db * db) {
     /* do a new db query and update all fields */
-
     db->on_message (mid,
         [&](notmuch_message_t * m) {
 
-          load (m);
+          refresh (m);
 
         });
+  }
+
+  void NotmuchMessage::refresh (notmuch_message_t * msg) {
+    load (msg);
   }
 
   /* tag actions */

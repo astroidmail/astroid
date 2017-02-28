@@ -49,9 +49,11 @@ namespace Astroid {
       ustring mid;
       ustring sender = "";
       time_t  time;
+      ustring filename = "";
 
       void load (notmuch_message_t *);
       void refresh (Db *) override;
+      void refresh (notmuch_message_t *);
 
       bool remove_tag (Db *, ustring)   override;
       bool add_tag (Db *, ustring)      override;

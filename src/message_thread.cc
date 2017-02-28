@@ -59,13 +59,30 @@ namespace Astroid {
     has_file   = true;
     level      = _level;
 
+    nmmsg = refptr<NotmuchMessage> (new NotmuchMessage (message));
+
     LOG (info) << "msg: loading mid: " << mid;
 
-    fname = notmuch_message_get_filename (message);
+    fname = nmmsg->filename;
     LOG (info) << "msg: filename: " << fname;
 
     load_message_from_file (fname);
-    load_tags (message);
+    tags = nmmsg->tags;
+  }
+
+  Message::Message (refptr<NotmuchMessage> _msg) : Message () {
+    in_notmuch = true;
+    nmmsg = _msg;
+    mid = nmmsg->mid;
+    tid = nmmsg->thread_id;
+    fname = nmmsg->filename;
+    has_file = true;
+
+    LOG (info) << "msg: loading mid: " << mid;
+    LOG (info) << "msg: filename: " << fname;
+
+    load_message_from_file (fname);
+    tags = nmmsg->tags;
   }
 
   Message::Message (GMimeMessage * _msg) {
@@ -94,15 +111,16 @@ namespace Astroid {
     db->on_message (mid, [&](notmuch_message_t * msg)
       {
         if (msg != NULL) {
-          const char * fn = notmuch_message_get_filename (msg);
-          if (fn != NULL) {
-            fname = ustring (fn);
+          in_notmuch = true;
+          if (nmmsg) {
+            nmmsg->refresh (msg);
           } else {
-            fname = "";
-            has_file = false;
+            nmmsg = refptr<NotmuchMessage> (new NotmuchMessage (msg));
           }
 
-          load_tags (msg);
+          fname = nmmsg->filename;
+          tags  = nmmsg->tags;
+
         } else {
           fname = "";
           has_file = false;
@@ -125,41 +143,8 @@ namespace Astroid {
     m_signal_message_changed.emit (db, this, me);
   }
 
-  void Message::load_tags (Db * db) {
-    if (!in_notmuch) {
-      LOG (error) << "mt: error: message not in database.";
-      throw invalid_argument ("mt: load_tags on message not in database.");
-    }
-
-    if (mid == "") {
-      LOG (error) << "mt: error: mid not defined, no tags";
-      throw invalid_argument ("mt: load_tags on message without message id.");
-    } else {
-      /* get tags from nm db */
-
-      db->on_message (mid, [&](notmuch_message_t * msg)
-        {
-          load_tags (msg);
-        });
-    }
-  }
-
-  void Message::load_tags (notmuch_message_t * msg) {
-
-    tags.clear ();
-
-    notmuch_tags_t * ntags;
-    for (ntags = notmuch_message_get_tags (msg);
-         notmuch_tags_valid (ntags);
-         notmuch_tags_move_to_next (ntags)) {
-
-      ustring t = ustring(notmuch_tags_get (ntags));
-      tags.push_back (t);
-    }
-
-  }
-
-  void Message::load_message_from_file (ustring fname) {
+  void Message::load_message_from_file (ustring _fname) {
+    fname = _fname;
     if (!exists (fname.c_str())) {
       LOG (error) << "failed to open file: " << fname << ", it does not exist!";
 

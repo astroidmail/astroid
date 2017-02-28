@@ -17,11 +17,13 @@ namespace Astroid {
       Message (ustring _mid, ustring _fname);
       Message (notmuch_message_t *, int _level);
       Message (GMimeMessage *);
+      Message (refptr<NotmuchMessage>);
       ~Message ();
 
       ustring fname;
       ustring mid;
       ustring tid;
+      refptr<NotmuchMessage> nmmsg;
       bool    in_notmuch;
       bool    has_file;
       bool    missing_content; // file does not have a gmimeobject nor a file, use
@@ -32,8 +34,6 @@ namespace Astroid {
       void load_message_from_file (ustring);
       void load_message (GMimeMessage *);
       void load_notmuch_cache ();
-      void load_tags (Db *);
-      void load_tags (notmuch_message_t *);
 
       void on_message_updated (Db *, ustring);
       void refresh (Db *);
