@@ -35,7 +35,7 @@ $ git clone https://github.com/astroidmail/astroid.git
 ### compiling
 
 ```sh
-$ scons
+$ scons -j 8    # compile up to 8 targets at the same time
 ```
 
 to run the tests do:
@@ -48,7 +48,7 @@ $ scons test
 
 Configure with a prefix and install:
 ```sh
-$ scons --prefix=/usr build
+$ scons -j 8 --prefix=/usr build
 $ scons --prefix=/usr install
 ```
 
