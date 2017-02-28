@@ -148,6 +148,7 @@ namespace Astroid {
 
     private:
       void on_from_combo_changed ();
+      std::atomic<bool> in_read;
       //bool on_from_combo_key_press (GdkEventKey *);
       void on_element_action (int id, ThreadView::ElementAction action);
 

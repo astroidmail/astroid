@@ -39,12 +39,12 @@ namespace Astroid {
   EditMessage::EditMessage (MainWindow * mw, ustring _to, ustring _from) :
     EditMessage (mw, false) { // {{{
 
+    in_read = false;
     to = _to;
 
     if (!_from.empty ()) {
       set_from (Address (_from));
     }
-
 
     /* reload message */
     prepare_message ();
@@ -606,8 +606,14 @@ namespace Astroid {
 
   /* edit / read message cycling {{{ */
   void EditMessage::on_from_combo_changed () {
-    prepare_message ();
-    read_edited_message ();
+    /* this will be called when the From: field has been changed
+     * manually in the e-mail as well. this check prevents the
+     * message currently being read from the edited draft to be
+     * overwritten before it is read. */
+    if (!in_read) {
+      prepare_message ();
+      read_edited_message ();
+    }
   }
 
   void EditMessage::prepare_message () {
@@ -690,7 +696,12 @@ namespace Astroid {
   }
 
   void EditMessage::read_edited_message () {
-    /* make message */
+    if (in_read) {
+      throw std::logic_error ("read_edited_message called when already reading!");
+    }
+
+    in_read = true;
+
     draft_saved = false; // we expect changes to have been made
     set_warning ("");
 
@@ -702,10 +713,12 @@ namespace Astroid {
       }
     }
 
+    /* make message */
     ComposeMessage * c = make_message ();
 
     if (c == NULL) {
       LOG (error) << "err: could not make message.";
+      in_read = false;
       return;
     }
 
@@ -735,6 +748,7 @@ namespace Astroid {
     delete c;
 
     unlink (tmpf.c_str());
+    in_read = false;
   }
 
   /* }}} */
