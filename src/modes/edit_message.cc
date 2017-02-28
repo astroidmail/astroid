@@ -697,7 +697,8 @@ namespace Astroid {
 
   void EditMessage::read_edited_message () {
     if (in_read) {
-      throw std::logic_error ("read_edited_message called when already reading!");
+      LOG (error) << "em: read_edited_message when already reading!";
+      /* throw std::logic_error ("read_edited_message called when already reading!"); */
     }
 
     in_read = true;

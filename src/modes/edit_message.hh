@@ -126,6 +126,7 @@ namespace Astroid {
       void fields_hide ();       // hide fields
       void read_edited_message (); // load data from message after
                                    // it has been edited.
+      std::atomic<bool> in_read;   // true when read_edited_message is running
       void on_tv_ready ();
       void set_warning (ustring);
       void set_info (ustring);
@@ -148,7 +149,6 @@ namespace Astroid {
 
     private:
       void on_from_combo_changed ();
-      std::atomic<bool> in_read;
       //bool on_from_combo_key_press (GdkEventKey *);
       void on_element_action (int id, ThreadView::ElementAction action);
 
