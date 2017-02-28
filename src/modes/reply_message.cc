@@ -143,6 +143,12 @@ namespace Astroid {
     keys.register_key ("r", "reply.cycle_reply_to",
         "Cycle through reply selector",
         [&] (Key) {
+          if (editor->started ()) {
+            thread_view->set_warning (thread_view->focused_message, "Cannot change reply to when editing.");
+
+            return true;
+          }
+
           /* cycle through reply combo box */
           if (!message_sent && !sending_in_progress.load()) {
             int i = reply_mode_combo->get_active_row_number ();
@@ -161,6 +167,13 @@ namespace Astroid {
     keys.register_key ("R", "reply.open_reply_to",
         "Open reply selector",
         [&] (Key) {
+
+          if (editor->started ()) {
+            thread_view->set_warning (thread_view->focused_message, "Cannot change reply to when editing.");
+
+            return true;
+          }
+
           /* bring up reply combo box */
           if (!message_sent && !sending_in_progress.load()) {
             reply_mode_combo->popup ();
@@ -175,10 +188,8 @@ namespace Astroid {
   void ReplyMessage::on_receiver_combo_changed () {
     load_receivers ();
 
-    if (!in_read) {
-      prepare_message ();
-      read_edited_message ();
-    }
+    prepare_message ();
+    read_edited_message ();
   }
 
   void ReplyMessage::load_receivers () {

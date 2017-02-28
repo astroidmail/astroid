@@ -91,6 +91,7 @@ namespace Astroid {
 
   EditMessage::EditMessage (MainWindow * mw, bool _edit_when_ready) : Mode (mw) {
     editor_config = astroid->config ("editor");
+    in_read = false;
 
     embed_editor = !editor_config.get<bool> ("external_editor");
     save_draft_on_force_quit = editor_config.get <bool> ("save_draft_on_force_quit");
@@ -199,7 +200,6 @@ namespace Astroid {
     } else {
       editor = new External (this);
     }
-
 
     thread_view = Gtk::manage(new ThreadView(main_window));
     thread_view->edit_mode = true;
@@ -619,6 +619,11 @@ namespace Astroid {
   void EditMessage::prepare_message () {
     LOG (debug) << "em: preparing message from fields..";
 
+    if (in_read) {
+      LOG (error) << "em: preparing message while in read";
+      throw std::logic_error ("em: preparing message while in read");
+    }
+
     auto iter = from_combo->get_active ();
     if (!iter) {
       LOG (warn) << "em: error: no from account selected.";
@@ -696,9 +701,12 @@ namespace Astroid {
   }
 
   void EditMessage::read_edited_message () {
+    LOG (debug) << "em: reading edited message..";
+    std::lock_guard<std::mutex> lk (message_draft_m);
+
     if (in_read) {
-      LOG (error) << "em: read_edited_message when already reading!";
-      /* throw std::logic_error ("read_edited_message called when already reading!"); */
+      LOG (error) << "em: read while already reading!";
+      throw std::logic_error ("read while already reading");
     }
 
     in_read = true;
@@ -749,6 +757,7 @@ namespace Astroid {
     delete c;
 
     unlink (tmpf.c_str());
+
     in_read = false;
   }
 
@@ -826,9 +835,6 @@ namespace Astroid {
         editor->start ();
 
       } else {
-
-        editor_active = false;
-
         if (editor->started ()) {
           editor->stop ();
         }
@@ -850,7 +856,10 @@ namespace Astroid {
 
         fields_show ();
 
-        read_edited_message ();
+        if (editor_active)
+          read_edited_message ();
+
+        editor_active = false;
 
         grab_modal ();
         thread_view->grab_focus ();
@@ -862,19 +871,21 @@ namespace Astroid {
         editor_active = true;
 
         prepare_message ();
+        read_edited_message ();
 
         editor->start ();
 
-        read_edited_message ();
         info_str = "Editing..";
 
       } else {
         /* return from editor */
-        editor_active = false;
-
         set_info ("");
-        read_edited_message ();
 
+        if (editor_active) {
+          read_edited_message ();
+        }
+
+        editor_active = false;
       }
     }
   }

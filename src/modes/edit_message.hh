@@ -5,6 +5,7 @@
 # include <atomic>
 # include <memory>
 # include <fstream>
+# include <mutex>
 
 # include <gtkmm/socket.h>
 # include <glibmm/iochannel.h>
@@ -126,7 +127,8 @@ namespace Astroid {
       void fields_hide ();       // hide fields
       void read_edited_message (); // load data from message after
                                    // it has been edited.
-      std::atomic<bool> in_read;   // true when read_edited_message is running
+      std::mutex message_draft_m;  // locks message draft
+      std::atomic<bool> in_read;   // true if we are already in read
       void on_tv_ready ();
       void set_warning (ustring);
       void set_info (ustring);
