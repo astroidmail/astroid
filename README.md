@@ -1,6 +1,6 @@
 # astroid mua
 
-![astroid logo](https://github.com/astroidmail/astroid/raw/master/ui/icons/horizontal_color.png)
+<img src="https://github.com/astroidmail/astroid/raw/master/ui/icons/horizontal_color.png" width="400px" alt="astroid logo" />
 
 # getting started
 
