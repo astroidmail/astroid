@@ -22,6 +22,8 @@ namespace Astroid {
 
     LOG (info) << "re: reply to: " << msg->mid;
 
+    mailinglist_reply_to_sender = astroid->config ().get<bool> ("mail.reply.mailinglist_reply_to_sender");
+
     /* set subject */
     if (!(msg->subject.find_first_of ("Re:") == 0)) {
       subject = ustring::compose ("Re: %1", msg->subject);
@@ -90,9 +92,17 @@ namespace Astroid {
     row = *(reply_store->append());
     row[reply_columns.reply_string] = "All";
     row[reply_columns.reply] = Rep_All;
-    row = *(reply_store->append());
-    row[reply_columns.reply_string] = "Mailinglist";
-    row[reply_columns.reply] = Rep_MailingList;
+
+    if (msg->is_list_post ()) {
+      row = *(reply_store->append());
+      row[reply_columns.reply_string] = "Mailinglist";
+      row[reply_columns.reply] = Rep_MailingList;
+    } else {
+      if (rmode == Rep_MailingList) {
+        LOG (warn) << "re: message is not a list post, using default reply to all.";
+        rmode = Rep_All;
+      }
+    }
 
     reply_mode_combo->set_active (rmode); // must match order
     reply_mode_combo->pack_start (reply_columns.reply_string);
@@ -250,6 +260,37 @@ namespace Astroid {
       acc.remove_duplicates ();
       acc -= al;
       acc -= ac;
+      bcc = acc.str ();
+
+    } else if (rmode == Rep_MailingList) {
+      AddressList al = msg->list_post ();
+      al += msg->to();
+
+      if (mailinglist_reply_to_sender) {
+        ustring from;
+        if (msg->reply_to.length () > 0) {
+          from = msg->reply_to;
+        } else {
+          from = msg->sender;
+        }
+        al += Address(from);
+      }
+
+      al.remove_me ();
+      al.remove_duplicates ();
+      to = al.str ();
+
+      AddressList ac (msg->cc ());
+      ac -= al;
+      ac.remove_me ();
+      ac.remove_duplicates ();
+      cc = ac.str ();
+
+      AddressList acc (msg->bcc ());
+      acc -= al;
+      acc -= ac;
+      acc.remove_me ();
+      acc.remove_duplicates ();
       bcc = acc.str ();
     }
   }
