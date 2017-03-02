@@ -810,6 +810,17 @@ namespace Astroid {
     /* marked */
     load_marked_icon (m, div_message);
 
+    /* patches may be rendered somewhat differently */
+    if (m->is_patch ()) {
+      WebKitDOMDOMTokenList * class_list =
+        webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(div_message));
+
+      webkit_dom_dom_token_list_add (class_list, "patch",
+          (err = NULL, &err));
+
+      g_object_unref (class_list);
+    }
+
     if (!edit_mode) {
       /* optionally hide / collapse the message */
       if (!(has (m->tags, ustring("unread")) || has(m->tags, ustring("flagged")))) {
