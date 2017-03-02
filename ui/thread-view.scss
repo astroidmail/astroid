@@ -490,6 +490,11 @@ body:not(.nohide) .email.hide .header_container .avatar {
     body:not(.nohide) .email.hide .header_container .subject {
         display: none;
     }
+    body:not(.nohide) .email.hide.patch .header_container .subject,
+    body:not(.nohide) .email.hide.different_subject .header_container .subject {
+        display: block;
+	margin-top: 0.5em;
+    }
     body:not(.nohide) .email:not(:only-of-type) .header_container,
     body:not(.nohide) .email .email .header_container {
         cursor: pointer;
