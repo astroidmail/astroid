@@ -566,7 +566,7 @@ namespace Astroid {
     mthread.clear ();
     mthread = _mthread;
 
-    ustring s = mthread->subject;
+    ustring s = mthread->get_subject();
 
     set_label (s);
 
@@ -816,6 +816,17 @@ namespace Astroid {
         webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(div_message));
 
       webkit_dom_dom_token_list_add (class_list, "patch",
+          (err = NULL, &err));
+
+      g_object_unref (class_list);
+    }
+
+    /* message subject deviates from thread subject */
+    if (m->is_different_subject ()) {
+      WebKitDOMDOMTokenList * class_list =
+        webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(div_message));
+
+      webkit_dom_dom_token_list_add (class_list, "different_subject",
           (err = NULL, &err));
 
       g_object_unref (class_list);

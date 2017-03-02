@@ -11,6 +11,8 @@
 
 namespace Astroid {
   class Message : public Glib::Object {
+    friend MessageThread;
+
     public:
       Message ();
       Message (ustring _fname);
@@ -78,6 +80,7 @@ namespace Astroid {
       refptr<Glib::ByteArray> raw_contents ();
 
       bool is_patch ();
+      bool is_different_subject ();
       bool is_encrypted ();
       bool is_signed ();
 
@@ -95,6 +98,8 @@ namespace Astroid {
     protected:
       void emit_message_changed (Db *, MessageChangedEvent);
       type_signal_message_changed m_signal_message_changed;
+
+      bool subject_is_different = true;
   };
 
   /* exceptions */
@@ -111,8 +116,17 @@ namespace Astroid {
       ~MessageThread ();
 
       bool in_notmuch;
-      refptr<NotmuchThread> thread;
+      ustring get_subject ();
+
+    private:
       ustring subject;
+      ustring first_subject = "";
+      void set_first_subject (ustring);
+      bool first_subject_set = false;
+      bool subject_is_different (ustring);
+
+    public:
+      refptr<NotmuchThread> thread;
       std::vector<refptr<Message>> messages;
 
       void load_messages (Db *);

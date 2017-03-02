@@ -738,6 +738,10 @@ namespace Astroid {
          Glib::Regex::match_simple ("\\[PATCH.*\\]", subject));
   }
 
+  bool Message::is_different_subject () {
+    return subject_is_different;
+  }
+
   bool Message::is_encrypted () {
     return has (tags, ustring("encrypted"));
   }
@@ -773,9 +777,36 @@ namespace Astroid {
     LOG (debug) << "mt: destruct.";
   }
 
+  ustring MessageThread::get_subject () {
+    return subject;
+  }
+
+  void MessageThread::set_first_subject (ustring s) {
+    first_subject = s;
+    first_subject = UstringUtils::replace (first_subject, "Re:", "");
+    UstringUtils::trim (first_subject);
+
+    first_subject_set = true;
+
+    if (messages.size () == 1) {
+      messages[0]->subject_is_different = true;
+    }
+
+    for (auto &m : messages) {
+      m->subject_is_different = subject_is_different (m->subject);
+    }
+  }
+
+  bool MessageThread::subject_is_different (ustring s) {
+    s = UstringUtils::replace (s, "Re:", "");
+    UstringUtils::trim (s);
+    return !(s == first_subject);
+  }
+
   void MessageThread::load_messages (Db * db) {
     /* update values */
-    subject     = thread->subject;
+    subject = thread->subject;
+    set_first_subject (thread->subject);
     /*
     newest_date = notmuch_thread_get_newest_date (nm_thread);
     unread      = check_unread (nm_thread);
@@ -804,7 +835,13 @@ namespace Astroid {
 
 
               reply = notmuch_messages_get (replies);
-              messages.push_back (refptr<Message> (new Message (reply, lvl)));
+              auto m = refptr<Message>(new Message (reply, lvl));
+
+              if (!first_subject_set) set_first_subject(m->subject);
+
+              m->subject_is_different = subject_is_different (m->subject);
+              messages.push_back (m);
+
 
               add_replies (reply, lvl + 1);
 
@@ -818,7 +855,12 @@ namespace Astroid {
 
           message = notmuch_messages_get (qmessages);
 
-          messages.push_back (refptr<Message>(new Message (message, level)));
+          auto m = refptr<Message>(new Message (message, level));
+
+          if (!first_subject_set) set_first_subject(m->subject);
+
+          m->subject_is_different = subject_is_different (m->subject);
+          messages.push_back (m);
 
           add_replies (message, level + 1);
 
@@ -854,7 +896,12 @@ namespace Astroid {
             if ( ! found )
             {
               LOG (error) << "mid: " << mid << " was missing!";
-              messages.push_back (refptr<Message>(new Message (message, 0)));
+              auto m = refptr<Message>(new Message (message, 0));
+
+              if (!first_subject_set) set_first_subject(m->subject);
+
+              m->subject_is_different = subject_is_different (m->subject);
+              messages.push_back (m);
             }
           }
 
@@ -864,7 +911,10 @@ namespace Astroid {
   }
 
   void MessageThread::add_message (ustring fname) {
-    messages.push_back (refptr<Message>(new Message (fname)));
+    auto m = refptr<Message>(new Message (fname));
+    if (!first_subject_set) set_first_subject(m->subject);
+    m->subject_is_different = subject_is_different (m->subject);
+    messages.push_back (m);
   }
 
   void MessageThread::add_message (refptr<Chunk> c) {
@@ -876,7 +926,7 @@ namespace Astroid {
     messages.push_back (c->get_mime_message ());
 
     if (subject == "") {
-      subject = (*(--messages.end()))->subject;
+      set_first_subject ((*(--messages.end()))->subject);
     }
   }
 
