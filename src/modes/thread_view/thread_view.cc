@@ -24,10 +24,12 @@
 # include "utils/vector_utils.hh"
 # include "utils/ustring_utils.hh"
 # include "utils/gravatar.hh"
+# include "utils/cmd.hh"
 # ifndef DISABLE_PLUGINS
   # include "plugin/manager.hh"
 # endif
 # include "actions/action.hh"
+# include "actions/cmdaction.hh"
 # include "actions/tag_action.hh"
 # include "actions/toggle_action.hh"
 # include "modes/mode.hh"
@@ -2625,10 +2627,10 @@ namespace Astroid {
 	[&] (Key, ustring cmd) {
           if (!edit_mode && focused_message) {
 
-            cmd = ustring::compose (cmd, new NotmuchMessage(focused_message));
+            cmd = ustring::compose (cmd, focused_message->tid, focused_message->mid);
 
             astroid->actions->doit (refptr<Action> (new CmdAction (
-		   Cmd ("thread_view.run", cmd), (focused_message), "")));
+              Cmd ("thread_view.run", cmd), focused_message->tid, focused_message->mid)));
           }
 
           return true;
