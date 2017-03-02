@@ -687,6 +687,40 @@ namespace Astroid {
           return true;
         });
 
+    keys->register_key ("R", "thread_index.reply_sender",
+        "Reply to sender of last message in thread",
+        [&] (Key) {
+          auto thread = get_current_thread ();
+          if (thread) {
+
+            MessageThread mthread (thread);
+            Db db (Db::DbMode::DATABASE_READ_ONLY);
+
+            mthread.load_messages (&db);
+
+            /* reply to last message */
+            main_window->add_mode (new ReplyMessage (main_window, *(--mthread.messages.end()), ReplyMessage::ReplyMode::Rep_Sender));
+          }
+          return true;
+        });
+
+    keys->register_key ("M", "thread_index.reply_mailinglist",
+        "Reply to mailinglist of last message in thread",
+        [&] (Key) {
+          auto thread = get_current_thread ();
+          if (thread) {
+
+            MessageThread mthread (thread);
+            Db db (Db::DbMode::DATABASE_READ_ONLY);
+
+            mthread.load_messages (&db);
+
+            /* reply to last message */
+            main_window->add_mode (new ReplyMessage (main_window, *(--mthread.messages.end()), ReplyMessage::ReplyMode::Rep_MailingList));
+          }
+          return true;
+        });
+
     keys->register_key ("f", "thread_index.forward",
         "Forward last message in thread",
         [&] (Key) {

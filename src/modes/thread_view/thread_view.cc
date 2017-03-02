@@ -2505,6 +2505,30 @@ namespace Astroid {
           return false;
         });
 
+    keys.register_key ("R", "thread_view.reply_sender",
+        "Reply to sender of current message",
+        [&] (Key) {
+          /* reply to currently focused message */
+          if (!edit_mode) {
+            main_window->add_mode (new ReplyMessage (main_window, focused_message, ReplyMessage::ReplyMode::Rep_Sender));
+
+            return true;
+          }
+          return false;
+        });
+
+    keys.register_key ("M", "thread_view.reply_mailinglist",
+        "Reply to mailinglist of current message",
+        [&] (Key) {
+          /* reply to currently focused message */
+          if (!edit_mode) {
+            main_window->add_mode (new ReplyMessage (main_window, focused_message, ReplyMessage::ReplyMode::Rep_MailingList));
+
+            return true;
+          }
+          return false;
+        });
+
     keys.register_key ("f", "thread_view.forward",
         "Forward current message",
         [&] (Key) {
