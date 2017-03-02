@@ -650,15 +650,15 @@ namespace Astroid {
     LOG (debug) << "em: prepare message done.";
   }
 
-  void EditMessage::set_from (Address a) {
+  bool EditMessage::set_from (Address a) {
     if (!accounts->is_me (a)) {
       LOG (error) << "em: from address is not a defined account.";
     }
 
-    set_from (accounts->get_account_for_address (a));
+    return set_from (accounts->get_account_for_address (a));
   }
 
-  void EditMessage::set_from (Account * a) {
+  bool EditMessage::set_from (Account * a) {
     int rn = from_combo->get_active_row_number ();
 
     account_no = 0;
@@ -675,6 +675,8 @@ namespace Astroid {
     if (!same_account) {
       reset_signature ();
     }
+
+    return same_account;
   }
 
   void EditMessage::reset_signature () {
@@ -693,11 +695,12 @@ namespace Astroid {
     switch_sign->set_state (a->has_gpg && a->always_gpg_sign);
   }
 
-
   void EditMessage::switch_signature_set () {
     LOG (debug) << "got sig: " << switch_signature->get_active ();
-    prepare_message ();
-    read_edited_message ();
+    if (!in_read) {
+      prepare_message ();
+      read_edited_message ();
+    }
   }
 
   void EditMessage::read_edited_message () {
@@ -723,22 +726,19 @@ namespace Astroid {
     }
 
     /* make message */
-    ComposeMessage * c = make_message ();
+    ComposeMessage * c = setup_message ();
 
-    if (c == NULL) {
-      LOG (error) << "err: could not make message.";
-      in_read = false;
-      return;
-    }
+    /* set account selector to from address email */
+    set_from (c->account);
+
+    /* build message */
+    finalize_message (c);
 
     if (c->encrypt || c->sign) {
       if (!c->encryption_success) {
         set_warning ("Failed encrypting: " + UstringUtils::replace (c->encryption_error, "\n", "<br />"));
       }
     }
-
-    /* set account selector to from address email */
-    set_from (c->account);
 
     to = c->to;
     cc = c->cc;
@@ -1077,8 +1077,7 @@ namespace Astroid {
     fields_hide ();
   }
 
-  ComposeMessage * EditMessage::make_message () {
-
+  ComposeMessage * EditMessage::setup_message () {
     ComposeMessage * c = new ComposeMessage ();
 
     c->load_message (msg_id, tmpfile_path.c_str());
@@ -1090,6 +1089,12 @@ namespace Astroid {
       c->add_attachment (a);
     }
 
+    return c;
+  }
+
+  void EditMessage::finalize_message (ComposeMessage * c) {
+    /* these options are not known before setup_message is done, and the
+     * new account information has been applied to the editor */
     if (c->account->has_signature && switch_signature->get_active ()) {
       c->include_signature = true;
     } else {
@@ -1103,6 +1108,11 @@ namespace Astroid {
 
     c->build ();
     c->finalize ();
+  }
+
+  ComposeMessage * EditMessage::make_message () {
+    ComposeMessage * c = setup_message ();
+    finalize_message (c);
 
     return c;
   }

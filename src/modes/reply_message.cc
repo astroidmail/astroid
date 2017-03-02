@@ -186,10 +186,12 @@ namespace Astroid {
   }
 
   void ReplyMessage::on_receiver_combo_changed () {
-    load_receivers ();
+    if (!in_read) {
+      load_receivers ();
 
-    prepare_message ();
-    read_edited_message ();
+      prepare_message ();
+      read_edited_message ();
+    }
   }
 
   void ReplyMessage::load_receivers () {

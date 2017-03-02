@@ -85,13 +85,15 @@ namespace Astroid {
       refptr<Gtk::ListStore> from_store;
       int account_no;
 
-      void set_from (Account *);
-      void set_from (Address);
+      bool set_from (Account *);
+      bool set_from (Address);
 
       bool check_fields ();
       std::vector<ustring> attachment_words = { "attach" }; // defined in config
 
       bool send_message ();
+      ComposeMessage * setup_message ();
+      void             finalize_message (ComposeMessage *);
       ComposeMessage * make_message ();
 
       ComposeMessage * sending_message;

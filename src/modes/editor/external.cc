@@ -79,8 +79,10 @@ namespace Astroid {
     {
       if (bfs::exists (em->tmpfile_path)) {
         LOG (debug) << "em: ex: file changed, updating preview..";
-        em->read_edited_message ();
-        em->set_info ("Editing..");
+        if (!em->in_read) {
+          em->read_edited_message ();
+          em->set_info ("Editing..");
+        }
       }
     }
   }
