@@ -2,6 +2,8 @@
 
 * New icons by Elio Qoshi ( http://patreon.com/ura )
 
+* Run hook for thread-view (Hugo Roy)
+
 * Session-persistent folder history for attaching files and saving
   attachments. default is configurable.
 
