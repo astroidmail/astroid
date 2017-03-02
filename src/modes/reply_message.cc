@@ -144,7 +144,7 @@ namespace Astroid {
         "Cycle through reply selector",
         [&] (Key) {
           if (editor->started ()) {
-            thread_view->set_warning (thread_view->focused_message, "Cannot change reply to when editing.");
+            set_warning ("Cannot change reply to when editing.");
 
             return true;
           }
@@ -169,7 +169,7 @@ namespace Astroid {
         [&] (Key) {
 
           if (editor->started ()) {
-            thread_view->set_warning (thread_view->focused_message, "Cannot change reply to when editing.");
+            set_warning ("Cannot change reply to when editing.");
 
             return true;
           }

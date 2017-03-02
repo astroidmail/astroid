@@ -288,7 +288,7 @@ namespace Astroid {
         [&] (Key) {
           if (!message_sent && !sending_in_progress.load()) {
             if (editor->started ()) {
-              thread_view->set_warning (thread_view->focused_message, "Cannot send message when editing.");
+              set_warning ("Cannot send message when editing.");
 
               return true;
             }
@@ -337,7 +337,7 @@ namespace Astroid {
         [&] (Key) {
 
           if (editor->started ()) {
-            thread_view->set_warning (thread_view->focused_message, "Cannot change from address when editing.");
+            set_warning ("Cannot change from address when editing.");
 
             return true;
           }
@@ -368,7 +368,7 @@ namespace Astroid {
         [&] (Key) {
 
           if (editor->started ()) {
-            thread_view->set_warning (thread_view->focused_message, "Cannot save draft when editing.");
+            set_warning ("Cannot save draft when editing.");
 
             return true;
           }
@@ -497,7 +497,7 @@ namespace Astroid {
     } else if (!force && !message_sent && !draft_saved) {
 
       if (editor->started ()) {
-        thread_view->set_warning (thread_view->focused_message, "Cannot close when editing.");
+        set_warning ("Cannot close when editing.");
 
         return;
       }
