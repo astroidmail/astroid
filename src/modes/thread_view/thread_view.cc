@@ -2623,13 +2623,12 @@ namespace Astroid {
 
     keys.register_run ("thread_view.run",
 	[&] (Key, ustring cmd) {
-	  /*FIXME expected type-specifier */
           if (!edit_mode && focused_message) {
 
             cmd = ustring::compose (cmd, new NotmuchMessage(focused_message));
 
             astroid->actions->doit (refptr<Action> (new CmdAction (
-                    Cmd ("thread_view.run", cmd), t->focused_message, "")));
+		   Cmd ("thread_view.run", cmd), (focused_message), "")));
           }
 
           return true;
