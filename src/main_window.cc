@@ -22,6 +22,7 @@
 # include "command_bar.hh"
 # include "actions/action.hh"
 # include "actions/action_manager.hh"
+# include "utils/resource.hh"
 
 using namespace std;
 namespace bfs = boost::filesystem;
@@ -94,10 +95,13 @@ namespace Astroid {
     set_title ("");
     set_default_size (1200, 800);
 
-    Glib::RefPtr<Gtk::IconTheme> theme = Gtk::IconTheme::get_default();
-    Glib::RefPtr<Gdk::Pixbuf> pixbuf = theme->load_icon (
-        "mail-send-symbolic", 42, Gtk::ICON_LOOKUP_USE_BUILTIN );
-    set_icon (pixbuf);
+    path icon = Resource (false, "ui/icons/icon_color.png").get_path ();
+    try {
+      refptr<Gdk::Pixbuf> pixbuf = Gdk::Pixbuf::create_from_file (icon.c_str (), 42, 42, true);
+      set_icon (pixbuf);
+    } catch (Gdk::PixbufError &e) {
+      LOG (error) << "mw: could not set icon: " << e.what ();
+    }
 
     vbox.set_orientation (Gtk::ORIENTATION_VERTICAL);
 

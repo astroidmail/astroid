@@ -474,6 +474,7 @@ print "    libsass ..: ", (not disable_libsass)
 print "    scss .....: ", scss, "( use:", disable_libsass, ")"
 print "    plugins ..: ", (not disable_plugins)
 print "    terminal .: ", (not disable_terminal)
+print "    prefix ...: ", prefix
 print ""
 
 
@@ -500,11 +501,18 @@ idir_bin        = os.path.join (prefix, 'bin')
 idir_shr        = os.path.join (prefix, 'share/astroid')
 idir_ui         = os.path.join (idir_shr, 'ui')
 idir_app        = os.path.join (prefix, 'share/applications')
+idir_icon       = os.path.join (prefix, 'share/icons/hicolor')
 
 inst_bin = env.Install (idir_bin, astroid)
 inst_shr = env.Install (idir_ui,  Glob ('ui/*.glade') +
                                   Glob ('ui/*.png') +
                                   Glob ('ui/*.html'))
+
+# icons are installed in two locations
+inst_shr = env.Install (os.path.join(idir_ui, 'icons'),  Glob ('ui/icons/*'))
+
+inst_shr += env.InstallAs (os.path.join (idir_icon, '512x512/apps/astroid.png'), 'ui/icons/icon_color.png')
+inst_shr += env.InstallAs (os.path.join (idir_icon, 'scalable/apps/astroid.svg'), 'ui/icons/icon_color.svg')
 
 if not disable_plugins:
   inst_shr += env.Install (os.path.join (prefix, 'share/gir-1.0'), gir)
