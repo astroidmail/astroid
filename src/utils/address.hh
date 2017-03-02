@@ -57,6 +57,7 @@ namespace Astroid {
       std::vector<Address> addresses;
       ustring str ();
       int size ();
+      bool empty ();
 
       AddressList& operator=  (const AddressList &);
       AddressList& operator+= (const Address &);

@@ -219,6 +219,10 @@ namespace Astroid {
     return addresses.size ();
   }
 
+  bool AddressList::empty () {
+    return addresses.empty ();
+  }
+
   void AddressList::remove_me () {
 
     vector<Address>::iterator it;
