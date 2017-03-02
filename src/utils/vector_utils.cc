@@ -16,13 +16,16 @@ namespace Astroid {
 
     vector<ustring> parts = Glib::Regex::split_simple(delim, str);
 
-    /* trim */
-    for_each (parts.begin (),
-              parts.end (),
-              [&](ustring &a) {
+    auto it  = parts.begin ();
+    while ( it != parts.end () ) {
+      UstringUtils::trim (*it);
 
-                UstringUtils::trim(a);
-              });
+      if ((*it).empty ()) {
+        it = parts.erase (it);
+      } else {
+        it++;
+      }
+    }
 
     return parts;
   }

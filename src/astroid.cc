@@ -57,11 +57,16 @@ namespace keywords  = boost::log::keywords;
 namespace expr      = boost::log::expressions;
 
 /* globally available static instance of the Astroid */
-Astroid::Astroid * (Astroid::astroid);
+refptr<Astroid::Astroid> Astroid::astroid;
 const char* const Astroid::Astroid::version = GIT_DESC;
 std::atomic<bool> Astroid::Astroid::log_initialized (false);
 
 namespace Astroid {
+  // Initialization and creation {{{
+  refptr<Astroid> Astroid::create () {
+    return refptr<Astroid> (new Astroid ());
+  }
+
   void Astroid::init_log () {
     if (log_initialized) return;
     log_initialized = true;
@@ -79,7 +84,10 @@ namespace Astroid {
     logging::add_console_log ()->set_formatter (format);
   }
 
-  Astroid::Astroid () {
+  Astroid::Astroid () :
+    Gtk::Application("org.astroid",
+        Gio::APPLICATION_HANDLES_OPEN | Gio::APPLICATION_HANDLES_COMMAND_LINE)
+  {
     setlocale (LC_ALL, "");
     Glib::init ();
     init_log ();
@@ -99,13 +107,8 @@ namespace Astroid {
 
     /* gmime settings */
     g_mime_init (0); // utf-8 is default
-  }
-
-  int Astroid::main (int argc, char **argv) {
 
     /* options */
-    namespace po = boost::program_options;
-    po::options_description desc ("options");
     desc.add_options ()
       ( "help,h", "print this help message")
       ( "config,c", po::value<ustring>(), "config file, default: $XDG_CONFIG_HOME/astroid/config")
@@ -120,6 +123,11 @@ namespace Astroid {
 # else
       ;
 # endif
+  }
+  // }}}
+
+  int Astroid::run (int argc, char **argv) { // {{{
+    register_application ();
 
     po::variables_map vm;
 
@@ -131,7 +139,6 @@ namespace Astroid {
       cout << "unknown option" << endl;
       cout << ex.what() << endl;
       show_help = true;
-
     }
 
     show_help |= vm.count("help");
@@ -220,117 +227,69 @@ namespace Astroid {
     bool disable_plugins = vm.count ("disable-plugins");
 # endif
 
-    bool domailto = false;
-    ustring mailtourl;
+    if (!is_remote ()) {
+      /* load config */
+      if (vm.count("config")) {
+        if (test_config) {
+          LOG (error) << "--config cannot be specified together with --test-config.";
+          exit (1);
+        }
 
-    if (vm.count("mailto")) {
-      domailto = true;
-      mailtourl = vm["mailto"].as<ustring>();
+        LOG (info) << "astroid: loading config: " << vm["config"].as<ustring>().c_str();
+        m_config = new Config (vm["config"].as<ustring>().c_str());
+      } else {
+        if (test_config) {
+          m_config = new Config (true);
+        } else {
+          m_config = new Config ();
+        }
+      }
 
-      LOG (debug) << "astroid: composing mail to: " << mailtourl;
-    }
+      _hint_level = config ("astroid.hints").get<int> ("level");
 
-    /* set up gtk */
-    LOG (debug) << "loading gtk..";
-    int aargc = 1; // TODO: allow GTK to get some options aswell.
-    app = Gtk::Application::create (aargc, argv, "org.astroid");
+      /* output db location */
+      ustring db_path = ustring (notmuch_config().get<string> ("database.path"));
+      LOG (info) << "notmuch db: " << db_path;
 
-    app->register_application ();
+      /* set up static classes */
+      Date::init ();
+      Utils::init ();
+      Db::init ();
+      Keybindings::init ();
+      SavedSearches::init ();
 
-    if (app->is_remote ()) {
-      LOG (warn) << "astroid: instance already running, opening new window..";
+      /* set up accounts */
+      accounts = new AccountManager ();
+
+# ifndef DISABLE_PLUGINS
+      /* set up plugins */
+      plugin_manager = new PluginManager (disable_plugins, in_test ());
+      plugin_manager->astroid_extension = new PluginManager::AstroidExtension (this);
+# endif
+
+      /* set up contacts */
+      //contacts = new Contacts ();
+
+      /* set up global actions */
+      actions = new ActionManager ();
+
+      /* set up poller */
+      poll = new Poll (!no_auto_poll);
+
+      Gtk::Application::run (argc, argv);
+
+      on_quit ();
+
+    } else {
+      Gtk::Application::run (argc, argv);
 
       if (no_auto_poll) {
         LOG (warn) << "astroid: specifying no-auto-poll only makes sense when starting a new astroid instance, ignoring.";
       }
-
-      if (domailto) {
-        Glib::Variant<ustring> param = Glib::Variant<ustring>::create (mailtourl);
-        app->activate_action ("mailto",
-            param
-            );
-
-      } else {
-        app->activate ();
-
-      }
-
-      return 0;
-    } else {
-      /* we are the main instance */
-      app->signal_activate().connect (sigc::mem_fun (this,
-            &Astroid::on_signal_activate));
-
-      mailto = Gio::SimpleAction::create ("mailto", Glib::VariantType ("s"));
-
-      app->add_action (mailto);
-
-      mailto->set_enabled (true);
-      mailto->signal_activate ().connect (
-          sigc::mem_fun (this, &Astroid::on_mailto_activate));
-
     }
-
-    /* load config */
-    if (vm.count("config")) {
-      if (test_config) {
-        LOG (error) << "--config cannot be specified together with --test-config.";
-        exit (1);
-      }
-
-      LOG (info) << "astroid: loading config: " << vm["config"].as<ustring>().c_str();
-      m_config = new Config (vm["config"].as<ustring>().c_str());
-    } else {
-      if (test_config) {
-        m_config = new Config (true);
-      } else {
-        m_config = new Config ();
-      }
-    }
-
-    _hint_level = config ("astroid.hints").get<int> ("level");
-
-    /* output db location */
-    ustring db_path = ustring (notmuch_config().get<string> ("database.path"));
-    LOG (info) << "notmuch db: " << db_path;
-
-    /* set up static classes */
-    Date::init ();
-    Utils::init ();
-    Db::init ();
-    Keybindings::init ();
-    SavedSearches::init ();
-
-    /* set up accounts */
-    accounts = new AccountManager ();
-
-# ifndef DISABLE_PLUGINS
-    /* set up plugins */
-    plugin_manager = new PluginManager (disable_plugins, in_test ());
-    plugin_manager->astroid_extension = new PluginManager::AstroidExtension (this);
-# endif
-
-    /* set up contacts */
-    //contacts = new Contacts ();
-
-    /* set up global actions */
-    actions = new ActionManager ();
-
-    /* set up poller */
-    poll = new Poll (!no_auto_poll);
-
-    if (domailto) {
-      MainWindow * mw = open_new_window (false);
-      send_mailto (mw, mailtourl);
-    } else {
-      open_new_window ();
-    }
-    app->run ();
-
-    on_quit ();
 
     return 0;
-  }
+  } // }}}
 
   const boost::property_tree::ptree& Astroid::config (const std::string& id) const {
     return m_config->config.get_child(id);
@@ -344,7 +303,11 @@ namespace Astroid {
     return m_config->std_paths;
   }
 
-  void Astroid::main_test () {
+  RuntimePaths& Astroid::runtime_paths() const {
+    return m_config->run_paths;
+  }
+
+  void Astroid::main_test () { // {{{
     m_config = new Config (true);
 
     /* set up static classes */
@@ -370,7 +333,7 @@ namespace Astroid {
 
     /* set up poller */
     poll = new Poll (false);
-  }
+  } // }}}
 
   bool Astroid::in_test () {
     return m_config->test;
@@ -392,13 +355,49 @@ namespace Astroid {
   }
 
   Astroid::~Astroid () {
-    /* this is only run for tests */
     delete accounts;
     delete m_config;
     delete poll;
 
     if (actions) actions->close ();
     delete actions;
+  }
+
+  int Astroid::on_command_line (const refptr<Gio::ApplicationCommandLine> & cmd) {
+    char ** argv;
+    int     argc;
+    bool new_window = true;
+
+    argv = cmd->get_arguments (argc);
+
+    if (get_windows().empty ()) {
+      activate ();
+      new_window = false;
+    }
+
+    /* handling command line arguments that may be passed from secondary
+     * instances as well */
+    if (argc > 0) {
+      po::variables_map vm;
+
+      try {
+        po::store ( po::parse_command_line (argc, argv, desc), vm );
+      } catch (po::unknown_option &ex) {
+        cout << "unknown option" << endl;
+        cout << ex.what() << endl;
+        return 1;
+      }
+
+      if (vm.count("mailto")) {
+        ustring mailtourl = vm["mailto"].as<ustring>();
+        send_mailto (mailtourl);
+        new_window = false;
+      }
+    }
+
+    if (new_window) activate ();
+
+    return 0;
   }
 
   MainWindow * Astroid::open_new_window (bool open_defaults) {
@@ -435,14 +434,14 @@ namespace Astroid {
         sigc::bind (
           sigc::mem_fun(*this, &Astroid::on_window_close), mw));
 
-    app->add_window (*mw);
+    add_window (*mw);
     mw->show_all ();
 
     return mw;
   }
 
   bool Astroid::on_window_close (GdkEventAny *, MainWindow * mw) {
-    astroid->app->remove_window (*mw);
+    // application automatically removes window
 
     // https://mail.gnome.org/archives/gtkmm-list/2004-March/msg00282.html
     delete mw;
@@ -450,23 +449,14 @@ namespace Astroid {
     return false; // default Gtk handler destroys window
   }
 
-  void Astroid::on_signal_activate () {
-    if (activated) {
-      open_new_window ();
-    } else {
-      /* we'll get one activated signal from ourselves first */
-      activated = true;
-    }
+  void Astroid::on_activate () {
+    open_new_window ();
   }
 
-  void Astroid::on_mailto_activate (const Glib::VariantBase & parameter) {
-    Glib::Variant<ustring> url = Glib::VariantBase::cast_dynamic<Glib::Variant<ustring>> (parameter);
+  void Astroid::send_mailto (ustring url) {
+    LOG (info) << "astroid: mailto: " << url;
 
-    send_mailto (open_new_window (false), url.get());
-  }
-
-  void Astroid::send_mailto (MainWindow * mw, ustring url) {
-    LOG (info) << "astorid: mailto: " << url;
+    MainWindow * mw = (MainWindow*) get_windows ()[0];
 
     ustring scheme = Glib::uri_parse_scheme (url);
     if (scheme.length () > 0) {

@@ -22,6 +22,8 @@ namespace Astroid {
 
     LOG (info) << "re: reply to: " << msg->mid;
 
+    mailinglist_reply_to_sender = astroid->config ().get<bool> ("mail.reply.mailinglist_reply_to_sender");
+
     /* set subject */
     if (!(msg->subject.find_first_of ("Re:") == 0)) {
       subject = ustring::compose ("Re: %1", msg->subject);
@@ -48,7 +50,7 @@ namespace Astroid {
      * be a leading '%'.
      *
      */
-    Glib::DateTime dt = Glib::DateTime::create_now_local (msg->received_time);
+    Glib::DateTime dt = Glib::DateTime::create_now_local (msg->time);
     quoting_a = dt.format (quoting_a);
 
     quoted  << quoting_a.raw ()
@@ -90,9 +92,17 @@ namespace Astroid {
     row = *(reply_store->append());
     row[reply_columns.reply_string] = "All";
     row[reply_columns.reply] = Rep_All;
-    row = *(reply_store->append());
-    row[reply_columns.reply_string] = "Mailinglist";
-    row[reply_columns.reply] = Rep_MailingList;
+
+    if (msg->is_list_post ()) {
+      row = *(reply_store->append());
+      row[reply_columns.reply_string] = "Mailinglist";
+      row[reply_columns.reply] = Rep_MailingList;
+    } else {
+      if (rmode == Rep_MailingList) {
+        LOG (warn) << "re: message is not a list post, using default reply to all.";
+        rmode = Rep_All;
+      }
+    }
 
     reply_mode_combo->set_active (rmode); // must match order
     reply_mode_combo->pack_start (reply_columns.reply_string);
@@ -143,6 +153,12 @@ namespace Astroid {
     keys.register_key ("r", "reply.cycle_reply_to",
         "Cycle through reply selector",
         [&] (Key) {
+          if (editor->started ()) {
+            set_warning ("Cannot change reply to when editing.");
+
+            return true;
+          }
+
           /* cycle through reply combo box */
           if (!message_sent && !sending_in_progress.load()) {
             int i = reply_mode_combo->get_active_row_number ();
@@ -161,6 +177,13 @@ namespace Astroid {
     keys.register_key ("R", "reply.open_reply_to",
         "Open reply selector",
         [&] (Key) {
+
+          if (editor->started ()) {
+            set_warning ("Cannot change reply to when editing.");
+
+            return true;
+          }
+
           /* bring up reply combo box */
           if (!message_sent && !sending_in_progress.load()) {
             reply_mode_combo->popup ();
@@ -173,10 +196,12 @@ namespace Astroid {
   }
 
   void ReplyMessage::on_receiver_combo_changed () {
-    load_receivers ();
+    if (!in_read) {
+      load_receivers ();
 
-    prepare_message ();
-    read_edited_message ();
+      prepare_message ();
+      read_edited_message ();
+    }
   }
 
   void ReplyMessage::load_receivers () {
@@ -220,15 +245,52 @@ namespace Astroid {
       al += AddressList (msg->to());
 
       al.remove_me ();
+      al.remove_duplicates ();
 
       to = al.str ();
 
       AddressList ac (msg->cc ());
       ac.remove_me ();
+      ac.remove_duplicates ();
+      ac -= al;
       cc = ac.str ();
 
       AddressList acc (msg->bcc ());
       acc.remove_me ();
+      acc.remove_duplicates ();
+      acc -= al;
+      acc -= ac;
+      bcc = acc.str ();
+
+    } else if (rmode == Rep_MailingList) {
+      AddressList al = msg->list_post ();
+      al += msg->to();
+
+      if (mailinglist_reply_to_sender) {
+        ustring from;
+        if (msg->reply_to.length () > 0) {
+          from = msg->reply_to;
+        } else {
+          from = msg->sender;
+        }
+        al += Address(from);
+      }
+
+      al.remove_me ();
+      al.remove_duplicates ();
+      to = al.str ();
+
+      AddressList ac (msg->cc ());
+      ac -= al;
+      ac.remove_me ();
+      ac.remove_duplicates ();
+      cc = ac.str ();
+
+      AddressList acc (msg->bcc ());
+      acc -= al;
+      acc -= ac;
+      acc.remove_me ();
+      acc.remove_duplicates ();
       bcc = acc.str ();
     }
   }

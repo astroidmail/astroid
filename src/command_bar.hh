@@ -3,8 +3,7 @@
  * is sub classed from Gtk::SearchBar, provides a command and search bar
  * with an entry that takes completions.
  *
- * will in different modes accept full searches, buffer searches, commands
- * or arguments for commands.
+ * will in different modes accept full searches, buffer searches.
  *
  */
 
@@ -23,7 +22,7 @@ namespace Astroid {
       enum CommandMode {
         Search = 0,
         SearchText,
-        //Generic,
+        Filter,
         Tag,        /* apply or remove tags */
         DiffTag,    /* apply or remove tags using + or - */
       };
@@ -44,16 +43,14 @@ namespace Astroid {
 
       void enable_command (CommandMode, ustring cmd, std::function<void(ustring)>);
       void enable_command (CommandMode, ustring title, ustring cmd, std::function<void(ustring)>);
-      void disable_command ();
-
-      //void handle_command (ustring);
 
       ustring get_text ();
-      void set_text (ustring);
+      void    set_text (ustring);
 
       /* relay to search bar event handler */
       bool command_handle_event (GdkEventKey *);
       bool entry_key_press (GdkEventKey *);
+      void entry_changed ();
 
     private:
       void reset_bar ();

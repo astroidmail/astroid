@@ -49,13 +49,7 @@ namespace Astroid {
 
     ustring db_path = ustring (config.get<string> ("database.path"));
 
-    /* replace ~ with home */
-    if (db_path[0] == '~') {
-      path_db = path(home) / path(db_path.substr(1,db_path.size()));
-    } else {
-      path_db = path(db_path);
-    }
-
+    path_db = Utils::expand (path (db_path));
     path_db = absolute (path_db);
 
     ustring excluded_tags_s = config.get<string> ("search.exclude_tags");
@@ -766,6 +760,23 @@ namespace Astroid {
     astroid->actions->emit_thread_updated (db, thread_id);
   }
 
+  bool NotmuchThread::matches (std::vector<ustring> &k) {
+    if (index_str.empty ()) {
+      index_str = subject;
+      for (auto &a : authors)  index_str += get<0>(a);
+      for (auto &t : tags)     index_str += t;
+      index_str += thread_id;
+      index_str = index_str.lowercase ();
+    }
+
+    /* match all keys (AND) */
+    return std::all_of (k.begin (), k.end (),
+        [&] (ustring &kk)
+          {
+            return index_str.find (kk) != string::npos;
+          });
+  }
+
   ustring NotmuchThread::str () {
     return "threadid:" + thread_id;
   }
@@ -773,9 +784,128 @@ namespace Astroid {
   /****************
    * NotmuchMessage
    ****************/
+  NotmuchMessage::NotmuchMessage (notmuch_message_t * m) {
+    load (m);
+  }
+
   NotmuchMessage::NotmuchMessage (refptr<Message> m) {
-    mid  = m->mid;
-    tags = m->tags;
+    mid       = m->mid;
+    tags      = m->tags;
+    thread_id = m->tid;
+    subject   = m->subject;
+    sender    = m->sender;
+    time      = m->time;
+    filename  = m->fname;
+
+    unread     = false;
+    attachment = false;
+    flagged    = false;
+
+    for (auto &t : tags) {
+      if (t == "unread")      unread = true;
+      if (t == "flagged")     flagged = true;
+      if (t == "attachment")  attachment = true;
+
+      if (attachment && unread && flagged) break;
+    }
+  }
+
+  void NotmuchMessage::load (notmuch_message_t * m) {
+    const char * c;
+
+    c = notmuch_message_get_message_id (m);
+    if (c == NULL) {
+      LOG (error) << "nmm: got NULL for mid.";
+      throw database_error ("nmm: got NULL mid");
+    }
+    mid = c;
+
+    c = notmuch_message_get_thread_id (m);
+    if (c == NULL) {
+      LOG (error) << "nmm: got NULL thread id.";
+      throw database_error ("nmm: NULL thread_id");
+    }
+    thread_id = c;
+
+    c = notmuch_message_get_header (m, "Subject");
+    if (c != NULL) subject = c;
+
+    c = notmuch_message_get_header (m, "From");
+    if (c != NULL) sender = c;
+
+    time = notmuch_message_get_date (m);
+
+    c = notmuch_message_get_filename (m);
+    if (c != NULL) filename = c;
+
+    unread     = false;
+    attachment = false;
+    flagged    = false;
+    tags       = get_tags (m); // sets up unread, attachment and flagged
+  }
+
+  vector<ustring> NotmuchMessage::get_tags (notmuch_message_t * m) {
+    notmuch_tags_t *  tags;
+    const char *      tag;
+
+    vector<ustring> ttags;
+
+    for (tags = notmuch_message_get_tags (m);
+         notmuch_tags_valid (tags);
+         notmuch_tags_move_to_next (tags))
+    {
+      tag = notmuch_tags_get (tags); // tag belongs to tags
+
+      if (tag != NULL) {
+        if (string(tag) == "unread") {
+          unread = true;
+        } else if (string(tag) == "attachment") {
+          attachment = true;
+        } else if (string(tag) == "flagged") {
+          flagged = true;
+        }
+
+        ttags.push_back (ustring(tag));
+
+      }
+    }
+
+    notmuch_tags_destroy (tags);
+
+    sort (ttags.begin (), ttags.end ());
+
+    return ttags;
+  }
+
+  bool NotmuchMessage::matches (std::vector<ustring> &k) {
+    if (index_str.empty ()) {
+      index_str = subject + sender;
+      for (auto &t : tags) index_str += t;
+      index_str += thread_id;
+      index_str += mid;
+      index_str = index_str.lowercase ();
+    }
+
+    /* match all keys (AND) */
+    return std::all_of (k.begin (), k.end (),
+        [&] (ustring &kk)
+          {
+            return index_str.find (kk) != string::npos;
+          });
+  }
+
+  void NotmuchMessage::refresh (Db * db) {
+    /* do a new db query and update all fields */
+    db->on_message (mid,
+        [&](notmuch_message_t * m) {
+
+          refresh (m);
+
+        });
+  }
+
+  void NotmuchMessage::refresh (notmuch_message_t * msg) {
+    load (msg);
   }
 
   /* tag actions */
@@ -875,9 +1005,9 @@ namespace Astroid {
 
 
   /***************
-   * NotmuchTaggable
+   * NotmuchItem
    ***************/
-  bool NotmuchTaggable::has_tag (ustring tag) {
+  bool NotmuchItem::has_tag (ustring tag) {
     return (find(tags.begin (), tags.end (), tag) != tags.end ());
   }
 

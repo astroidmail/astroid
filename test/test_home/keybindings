@@ -14,7 +14,7 @@ test.b=j # double, should throw exception
 
 # unbound
 test.unbound2=1
-
+test.to_be_unbound=
 
 # test some run targets
 

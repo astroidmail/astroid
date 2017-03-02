@@ -28,6 +28,9 @@ namespace Astroid {
       unsigned int unread_messages;
 
       void refresh_stats ();
+    private:
+      void refresh_stats_db (Db *);
+    public:
 
       refptr<ThreadIndexListStore> list_store;
       ThreadIndexListView * list_view;

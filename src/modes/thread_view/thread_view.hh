@@ -121,6 +121,10 @@ namespace Astroid {
       bool toggle_hidden (refptr<Message> = refptr<Message> (), ToggleState = ToggleToggle);
       bool is_hidden (refptr<Message>);
 
+      /* focused message */
+      refptr<Message> candidate_startup; // startup
+
+    public:
       /* message display state */
       struct MessageState {
         public:
@@ -166,10 +170,6 @@ namespace Astroid {
 
       std::map<refptr<Message>, MessageState> state;
 
-      /* focused message */
-      refptr<Message> candidate_startup; // startup
-
-    public:
       refptr<Message> focused_message;
 
       /* set the warning header of the message */

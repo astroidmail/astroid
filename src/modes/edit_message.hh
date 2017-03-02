@@ -5,6 +5,7 @@
 # include <atomic>
 # include <memory>
 # include <fstream>
+# include <mutex>
 
 # include <gtkmm/socket.h>
 # include <glibmm/iochannel.h>
@@ -84,18 +85,21 @@ namespace Astroid {
       refptr<Gtk::ListStore> from_store;
       int account_no;
 
-      void set_from (Account *);
-      void set_from (Address);
+      bool set_from (Account *);
+      bool set_from (Address);
 
       bool check_fields ();
       std::vector<ustring> attachment_words = { "attach" }; // defined in config
 
       bool send_message ();
+      ComposeMessage * setup_message ();
+      void             finalize_message (ComposeMessage *);
       ComposeMessage * make_message ();
 
       ComposeMessage * sending_message;
       std::atomic<bool> sending_in_progress;
       void send_message_finished (bool result);
+      void update_send_message_status (bool warn, ustring msg);
 
       /* make a draft message that can be edited */
       void prepare_message ();
@@ -125,9 +129,14 @@ namespace Astroid {
       void fields_hide ();       // hide fields
       void read_edited_message (); // load data from message after
                                    // it has been edited.
+      std::mutex message_draft_m;  // locks message draft
+      std::atomic<bool> in_read;   // true if we are already in read
       void on_tv_ready ();
-      ustring warning_str;
-      ustring info_str;
+      void set_warning (ustring);
+      void set_info (ustring);
+
+      ustring warning_str = "";
+      ustring info_str = "";
 
       AccountManager * accounts;
 

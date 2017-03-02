@@ -8,21 +8,21 @@
 namespace Astroid {
   class TagAction : public Action {
     public:
-      TagAction (refptr<NotmuchTaggable>);
+      TagAction (refptr<NotmuchItem>);
 
       TagAction (
-          refptr<NotmuchTaggable>,
+          refptr<NotmuchItem>,
           const std::vector<ustring>,
           const std::vector<ustring>);
 
-      TagAction (std::vector<refptr<NotmuchTaggable>>);
+      TagAction (std::vector<refptr<NotmuchItem>>);
 
       TagAction (
-          std::vector<refptr<NotmuchTaggable>>,
+          std::vector<refptr<NotmuchItem>>,
           const std::vector<ustring>,
           const std::vector<ustring>);
 
-      std::vector<refptr<NotmuchTaggable>> taggables;
+      std::vector<refptr<NotmuchItem>> taggables;
       std::vector<ustring> add;
       std::vector<ustring> remove;
 

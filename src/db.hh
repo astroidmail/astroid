@@ -17,61 +17,84 @@
 # include "proto.hh"
 
 namespace Astroid {
-  class NotmuchTaggable : public Glib::Object {
+  class NotmuchItem : public Glib::Object {
     public:
-      std::vector <ustring> tags;
-      bool has_tag (ustring);
+      ustring thread_id;
+      ustring subject;
+
+      bool    unread;
+      bool    attachment;
+      bool    flagged;
+
+      virtual void refresh (Db *) = 0;
+
+      std::vector<ustring>  tags;
+      bool                  has_tag (ustring);
 
       virtual bool remove_tag (Db *, ustring) = 0;
-      virtual bool add_tag (Db *, ustring) = 0;
+      virtual bool add_tag (Db *, ustring)    = 0;
 
       virtual void emit_updated (Db *) = 0;
 
       virtual ustring str () = 0;
+      virtual bool    matches (std::vector<ustring> &k) = 0;
   };
 
   /* the notmuch message object should get by on the db only */
-  class NotmuchMessage : public NotmuchTaggable {
+  class NotmuchMessage : public NotmuchItem {
     public:
+      NotmuchMessage (notmuch_message_t *);
       NotmuchMessage (refptr<Message>);
 
       ustring mid;
+      ustring sender = "";
+      time_t  time;
+      ustring filename = "";
 
-      bool remove_tag (Db *, ustring) override;
-      bool add_tag (Db *, ustring) override;
-      void emit_updated (Db *) override;
+      void load (notmuch_message_t *);
+      void refresh (Db *) override;
+      void refresh (notmuch_message_t *);
+
+      bool remove_tag (Db *, ustring)   override;
+      bool add_tag (Db *, ustring)      override;
+      void emit_updated (Db *)          override;
+
       ustring str () override;
+      bool matches (std::vector<ustring> &k) override;
+
+    private:
+      std::vector<ustring> get_tags (notmuch_message_t *);
+
+      ustring index_str = "";
   };
 
   /* the notmuch thread object should get by on the db only */
-  class NotmuchThread : public NotmuchTaggable {
+  class NotmuchThread : public NotmuchItem {
     public:
       NotmuchThread (notmuch_thread_t *);
       ~NotmuchThread ();
 
-      ustring thread_id;
-
-      ustring subject;
       time_t  newest_date;
       time_t  oldest_date;
-      bool    unread;
-      bool    attachment;
-      bool    flagged;
       int     total_messages;
       std::vector<std::tuple<ustring,bool>> authors;
 
-      void refresh (Db *);
       void load (notmuch_thread_t *);
+      void refresh (Db *) override;
 
       bool remove_tag (Db *, ustring) override;
       bool add_tag (Db *, ustring) override;
       void emit_updated (Db *) override;
+
       ustring str () override;
+      bool matches (std::vector<ustring> &k) override;
 
     private:
       int check_total_messages (notmuch_thread_t *);
       std::vector<std::tuple<ustring,bool>> get_authors (notmuch_thread_t *);
       std::vector<ustring> get_tags (notmuch_thread_t *);
+
+      ustring index_str = "";
   };
 
   class Db {

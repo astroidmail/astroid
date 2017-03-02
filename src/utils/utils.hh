@@ -2,7 +2,11 @@
 # include "vector_utils.hh"
 # include "date_utils.hh"
 
+# include <boost/filesystem.hpp>
+
 # pragma once
+
+namespace bfs = boost::filesystem;
 
 namespace Astroid {
 
@@ -16,6 +20,9 @@ namespace Astroid {
 
       /* make filename safe */
       static ustring safe_fname (ustring fname);
+
+      /* expand ~ to HOME */
+      static bfs::path expand (bfs::path);
 
       /* get tag color */
       static std::pair<ustring, ustring> get_tag_color (ustring, unsigned char canvascolor[3]);

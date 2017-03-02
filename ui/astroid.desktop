@@ -2,7 +2,7 @@
 Name=Astroid Mail
 Comment=Graphical notmuch email client
 Exec=astroid %u
-Icon=emblem-mail
+Icon=astroid
 Terminal=false
 Type=Application
 Keywords=Email;E-mail;

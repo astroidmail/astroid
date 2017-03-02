@@ -32,7 +32,12 @@ namespace Astroid {
 
     if (mp == NULL) {
       LOG (error) << "chunk (" << id << "): got NULL mime_object.";
-      throw std::logic_error ("chunk: got NULL mime_object");
+
+      viewable   = true;
+      attachment = false;
+
+    } else {
+      g_object_ref (mime_object);
     }
 
     content_type = g_mime_object_get_content_type (mime_object);
@@ -241,7 +246,7 @@ namespace Astroid {
 
     GMimeStream * content_stream = NULL;
 
-    if (GMIME_IS_PART(mime_object)) {
+    if (mime_object != NULL && GMIME_IS_PART(mime_object)) {
       LOG (debug) << "chunk: body: part";
 
 
@@ -630,7 +635,8 @@ namespace Astroid {
   }
 
   ustring Chunk::get_content_type () {
-    return ustring (g_mime_content_type_to_string (content_type));
+    if (content_type == NULL) return "";
+    else return ustring (g_mime_content_type_to_string (content_type));
   }
 
   void Chunk::save () {
@@ -643,6 +649,7 @@ namespace Astroid {
 
     dialog.set_do_overwrite_confirmation (true);
     dialog.set_current_name (Utils::safe_fname (get_filename ()));
+    dialog.set_current_folder (astroid->runtime_paths ().save_dir.c_str ());
 
     int result = dialog.run ();
 
@@ -654,6 +661,8 @@ namespace Astroid {
 
           /* the dialog asks whether to overwrite or not */
           save_to (fname, true);
+
+          astroid->runtime_paths ().save_dir = bfs::path (dialog.get_current_folder ());
 
           break;
         }
@@ -679,7 +688,7 @@ namespace Astroid {
   Chunk::~Chunk () {
     LOG (debug) << "chunk: deconstruct.";
     // these should not be unreffed.
-    // g_object_unref (mime_object);
+    if (mime_object) g_object_unref (mime_object);
     // g_object_unref (content_type);
   }
 }

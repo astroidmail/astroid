@@ -2,6 +2,7 @@
 
 # include <boost/property_tree/ptree.hpp>
 # include <glibmm/datetime.h>
+# include <time.h>
 
 # include "astroid.hh"
 # include "config.hh"
@@ -11,6 +12,16 @@ using namespace std;
 using boost::property_tree::ptree;
 
 namespace Astroid {
+
+  ustring Date::asctime (time_t t) {
+    struct tm * temp_t = localtime (&t);
+    struct tm local_time = *temp_t;
+
+    char * asc = std::asctime (&local_time);
+
+    return ustring (asc);
+  }
+
   /*
    * create a pretty string in local time.
    *

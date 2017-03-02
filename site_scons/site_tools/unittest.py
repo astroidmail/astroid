@@ -1,5 +1,6 @@
 import os
 import subprocess
+import resource
 from subprocess import Popen
 
 def unitTestAction(target, source, env):
@@ -23,6 +24,9 @@ def unitTestAction(target, source, env):
 
   # setup gpg
   setupGPG (myenv)
+
+  # set a low number of maximum open files
+  resource.setrlimit (resource.RLIMIT_NOFILE, (64, 64));
 
   app = str(source[0].abspath)
   process = subprocess.Popen (app, shell = True, env = myenv)

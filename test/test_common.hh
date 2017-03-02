@@ -10,11 +10,11 @@ using Astroid::ustring;
 # define test trace
 
 void setup () {
-  astroid = new Astroid::Astroid ();
+  astroid = Astroid::Astroid::create ();
   astroid->main_test ();
 }
 
 void teardown () {
-  delete Astroid::astroid;
+  Astroid::astroid.clear ();
 }
 

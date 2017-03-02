@@ -22,34 +22,47 @@ namespace Astroid {
 
       bool verify_signature (GMimeObject * mo);
 
-      bool encrypt (GMimeObject * mo, bool sign, ustring userid, InternetAddress * from, ustring to, GMimeMultipartEncrypted ** e, GError **);
-      bool encrypt (GMimeObject * mo, bool sign, ustring userid, InternetAddress * from, AddressList to, GMimeMultipartEncrypted ** e, GError **);
+      bool encrypt (GMimeObject * mo,
+                    bool sign,
+                    ustring userid,
+                    InternetAddress * from,
+                    ustring to,
+                    GMimeMultipartEncrypted ** e,
+                    GError **);
+      bool encrypt (GMimeObject * mo,
+                    bool sign,
+                    ustring userid,
+                    InternetAddress * from,
+                    AddressList to,
+                    GMimeMultipartEncrypted ** e,
+                    GError **);
 
       bool sign (GMimeObject * mo, ustring userid, GMimeMultipartSigned ** s, GError **);
 
-      bool decrypted = false;
-      bool verified  = false; /* signature ok */
-      bool verify_tried  = false;
-      bool decrypt_tried = false;
+      bool decrypted        = false;
+      bool verified         = false; /* signature ok */
+      bool verify_tried     = false;
+      bool decrypt_tried    = false;
       ustring decrypt_error = "";
 
-      GMimeDecryptResult * decrypt_res = NULL;
-      GMimeSignatureList * slist = NULL;
-      GMimeCertificateList * rlist = NULL;
+      GMimeDecryptResult *   decrypt_res = NULL;
+      GMimeSignatureList *   slist       = NULL;
+      GMimeCertificateList * rlist       = NULL;
 
     private:
       bool create_gpg_context ();
       GMimeCryptoContext * gpgctx = NULL;
+
       ustring protocol;
       ustring gpgpath;
       bool    always_trust = false;
-      ptree config;
+      ptree   config;
 
       bool verify_signature_list (GMimeSignatureList *);
 
     public:
-      static ustring get_md5_digest (ustring str);
-      static unsigned char * get_md5_digest_char (ustring str);
+      static ustring          get_md5_digest (ustring str);
+      static unsigned char *  get_md5_digest_char (ustring str);
   };
 
 }

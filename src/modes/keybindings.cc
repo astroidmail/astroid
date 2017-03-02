@@ -147,12 +147,17 @@ namespace Astroid {
           LOG (debug) << "ky: parsing line: " << line;
           vector<ustring> parts = VectorUtils::split_and_trim (line, "=");
 
-          if (parts.size () != 2) {
-            LOG (error) << "ky: user bindings: too many parts in: " << line;
+          ustring spec;
+
+          if (parts.size () == 1) {
+            spec = "";
+          } else if (parts.size () > 2 || parts.empty ()) {
+            LOG (error) << "ky: user bindings: invalid number of parts in: " << line;
             continue;
+          } else {
+            spec = parts[1];
           }
 
-          ustring spec = parts[1];
           UstringUtils::trim (spec);
 
           Key k;
@@ -311,7 +316,7 @@ namespace Astroid {
 
       if (uk.unbound) {
         /* user defined and unbound, key binding is dropped */
-        LOG (debug) << "ky: key: " << k.str () << " dropped." << endl;
+        LOG (debug) << "ky: key: " << k.str () << " dropped.";
         return;
       }
 

@@ -6,6 +6,10 @@
 # include <gmime/gmime.h>
 # include <glib.h>
 # include <gio/gio.h>
+# include <thread>
+# include <mutex>
+# include <condition_variable>
+# include <chrono>
 
 # include "astroid.hh"
 # include "db.hh"
@@ -33,9 +37,12 @@ namespace Astroid {
 
     d_message_sent.connect (
         sigc::mem_fun (this, &ComposeMessage::message_sent_event));
+    d_message_send_status.connect (
+        sigc::mem_fun (this, &ComposeMessage::message_send_status_event));
   }
 
   ComposeMessage::~ComposeMessage () {
+    if (send_thread.joinable ()) send_thread.join ();
     g_object_unref (message);
 
     //if (message_file != "") unlink(message_file.c_str());
@@ -93,6 +100,7 @@ namespace Astroid {
 
     /* attached signatures are handled in ::finalize */
     if (include_signature && account && !account->signature_attach) {
+      LOG (debug) << "cm: adding inline signature..";
       std::ifstream s (account->signature_file.c_str ());
       std::ostringstream sf;
       sf << s.rdbuf ();
@@ -111,7 +119,9 @@ namespace Astroid {
     g_mime_part_set_content_encoding (messagePart, GMIME_CONTENT_ENCODING_QUOTEDPRINTABLE);
     g_mime_part_set_content_object (messagePart, contentWrapper);
 
+    GMimeObject * part = g_mime_message_get_mime_part (message);
     g_mime_message_set_mime_part(message, GMIME_OBJECT(messagePart));
+    if (part) g_object_unref (part);
 
     g_object_unref(messagePart);
     g_object_unref(contentWrapper);
@@ -149,6 +159,7 @@ namespace Astroid {
 
   void ComposeMessage::finalize () {
     /* make message ready to be sent */
+    LOG (debug) << "cm: finalize..";
 
     /* again: ripped more or less from ner */
 
@@ -206,6 +217,8 @@ namespace Astroid {
       g_mime_multipart_add (multipart, (GMimeObject*) message->mime_part);
       g_mime_message_set_mime_part (message, (GMimeObject*) multipart);
 
+      /* not unreffing message->mime_part here since it is reused */
+
       for (shared_ptr<Attachment> &a : attachments)
       {
         if (!a->valid) {
@@ -219,7 +232,7 @@ namespace Astroid {
 
         if (a->is_mime_message) {
 
-          GMimeMessagePart * mp = g_mime_message_part_new_with_message ("rfc822", (GMimeMessage*) a->message);
+          GMimeMessagePart * mp = g_mime_message_part_new_with_message ("rfc822", (GMimeMessage*) a->message->message);
           g_mime_multipart_add (multipart, (GMimeObject *) mp);
 
           g_object_unref (mp);
@@ -228,16 +241,10 @@ namespace Astroid {
 
           GMimeStream * file_stream;
 
-          if (a->on_disk) {
 
-            file_stream = g_mime_stream_file_new (fopen(a->fname.c_str(), "r"));
+          file_stream = g_mime_stream_mem_new_with_byte_array (a->contents->gobj());
+          g_mime_stream_mem_set_owner (GMIME_STREAM_MEM (file_stream), false);
 
-          } else {
-
-            file_stream = g_mime_stream_mem_new_with_byte_array (a->contents->gobj());
-            g_mime_stream_mem_set_owner (GMIME_STREAM_MEM (file_stream), false);
-
-          }
 
           GMimeDataWrapper * data = g_mime_data_wrapper_new_with_stream (file_stream,
               GMIME_CONTENT_ENCODING_DEFAULT);
@@ -312,8 +319,12 @@ namespace Astroid {
   }
 
   bool ComposeMessage::cancel_sending () {
+    LOG (warn) << "cm: cancel sendmail pid: " << pid;
+    std::lock_guard<std::mutex> lk (send_cancel_m);
+
+    cancel_send_during_delay = true;
+
     if (pid > 0) {
-      LOG (warn) << "cm: cancel sendmail pid: " << pid;
 
       int r = kill (pid, SIGKILL);
 
@@ -324,20 +335,56 @@ namespace Astroid {
       }
     }
 
+    send_cancel_cv.notify_one ();
+    if (send_thread.joinable ()) {
+      send_thread.detach ();
+    }
+
     return true;
   }
 
   void ComposeMessage::send_threaded ()
   {
     LOG (info) << "cm: sending (threaded)..";
-    Glib::Threads::Thread::create (
-        [&] () {
-          this->send (true);
-        });
+    cancel_send_during_delay = false;
+    send_thread = std::thread (&ComposeMessage::send, this, true);
   }
 
   bool ComposeMessage::send (bool output) {
+
     dryrun = astroid->config().get<bool>("astroid.debug.dryrun_sending");
+
+    message_send_status_warn = false;
+    message_send_status_msg  = "";
+
+    unsigned int delay = astroid->config ().get<unsigned int> ("mail.send_delay");
+    std::unique_lock<std::mutex> lk (send_cancel_m);
+
+    while (delay > 0 && !cancel_send_during_delay) {
+      LOG (debug) << "cm: sending in " << delay << " seconds..";
+      message_send_status_msg = ustring::compose ("sending message in %1 seconds..", delay);
+      d_message_send_status ();
+      std::chrono::seconds sec (1);
+      send_cancel_cv.wait_until (lk, std::chrono::system_clock::now () + sec, [&] { return cancel_send_during_delay; });
+      delay--;
+    }
+
+    if (cancel_send_during_delay) {
+      LOG (error) << "cm: cancelled sending before message could be sent.";
+      message_send_status_msg = "sending message.. cancelled before sending.";
+      message_send_status_warn = true;
+      d_message_send_status ();
+
+      message_sent_result = false;
+      d_message_sent ();
+      pid = 0;
+      return false;
+    }
+
+    lk.unlock ();
+
+    message_send_status_msg = "sending message..";
+    d_message_send_status ();
 
     /* Send the message */
     if (!dryrun) {
@@ -360,6 +407,11 @@ namespace Astroid {
       } catch (Glib::SpawnError &ex) {
         if (output)
           LOG (error) << "cm: could not send message!";
+
+        message_send_status_msg = "message could not be sent!";
+        message_send_status_warn = true;
+        d_message_send_status ();
+
         message_sent_result = false;
         d_message_sent ();
         pid = 0;
@@ -385,7 +437,6 @@ namespace Astroid {
       fclose (sendMailPipe);
 
       /* wait for sendmail to finish */
-
       int status;
       waitpid (pid, &status, 0);
       g_spawn_close_pid (pid);
@@ -404,6 +455,10 @@ namespace Astroid {
           write (save_to.c_str());
         }
 
+        message_send_status_msg = "message sent successfully!";
+        message_send_status_warn = false;
+        d_message_send_status ();
+
         pid = 0;
         message_sent_result = true;
         d_message_sent ();
@@ -412,6 +467,11 @@ namespace Astroid {
       } else {
         if (output)
           LOG (error) << "cm: could not send message!";
+
+        message_send_status_msg = "message could not be sent!";
+        message_send_status_warn = true;
+        d_message_send_status ();
+
         message_sent_result = false;
         d_message_sent ();
         pid = 0;
@@ -421,6 +481,9 @@ namespace Astroid {
       ustring fname = "/tmp/" + id;
       if (output)
         LOG (warn) << "cm: sending disabled in config, message written to: " << fname;
+      message_send_status_msg = "sending disabled, message written to: " + fname;
+      message_send_status_warn = true;
+      d_message_send_status ();
 
       write (fname);
       message_sent_result = false;
@@ -491,6 +554,20 @@ namespace Astroid {
     emit_message_sent (message_sent_result);
   }
 
+  ComposeMessage::type_message_send_status
+    ComposeMessage::message_send_status ()
+  {
+    return m_message_send_status;
+  }
+
+  void ComposeMessage::emit_message_send_status (bool warn, ustring msg) {
+    m_message_send_status.emit (warn, msg);
+  }
+
+  void ComposeMessage::message_send_status_event () {
+    emit_message_send_status (message_send_status_warn, message_send_status_msg);
+  }
+
   ustring ComposeMessage::write_tmp () {
     char * temporaryFilePath;
 
@@ -518,6 +595,8 @@ namespace Astroid {
   }
 
   void ComposeMessage::write (ustring fname) {
+    if (bfs::exists (fname.c_str ())) unlink (fname.c_str ());
+
     FILE * MessageFile = fopen(fname.c_str(), "w");
 
     GMimeStream * stream = g_mime_stream_file_new(MessageFile);
@@ -530,13 +609,11 @@ namespace Astroid {
   }
 
   ComposeMessage::Attachment::Attachment () {
-    on_disk = false;
   }
 
   ComposeMessage::Attachment::Attachment (bfs::path p) {
     LOG (debug) << "cm: at: construct from file.";
     fname   = p;
-    on_disk = true;
 
     std::string filename = fname.c_str ();
 
@@ -554,6 +631,7 @@ namespace Astroid {
       g_object_unref (file_info);
       return;
     }
+
     if (g_file_info_get_file_type(file_info) != G_FILE_TYPE_REGULAR)
     {
       LOG (error) << "cm: attached file is not a regular file.";
@@ -566,6 +644,35 @@ namespace Astroid {
     content_type = g_file_info_get_content_type (file_info);
     name = fname.filename().c_str();
     valid = true;
+
+    if (content_type == "message/rfc822") {
+      LOG (debug) << "cm: attachment is mime message.";
+      message = refptr<Message> (new Message(fname.c_str ()));
+
+      is_mime_message = true;
+
+      name = message->subject;
+
+    } else {
+      /* load into byte array */
+      refptr<Gio::File> fle = Glib::wrap (file, false);
+      refptr<Gio::FileInputStream> istr = fle->read ();
+
+      refptr<Glib::Bytes> b;
+      contents = Glib::ByteArray::create ();
+
+      do {
+        b = istr->read_bytes (4096, refptr<Gio::Cancellable>(NULL));
+
+        if (b) {
+          gsize s = b->get_size ();
+          if (s <= 0) break;
+          contents->append ((const guint8 *) b->get_data (s), s);
+        }
+
+      } while (b);
+    }
+
     g_object_unref (file);
     g_object_unref (file_info);
   }
@@ -573,36 +680,47 @@ namespace Astroid {
   ComposeMessage::Attachment::Attachment (refptr<Chunk> c) {
     LOG (debug) << "cm: at: construct from chunk.";
     name = c->get_filename ();
-    on_disk = false;
-
-    contents = c->contents ();
-
-    const char * ct = g_mime_content_type_to_string (c->content_type);
-    if (ct != NULL) {
-      content_type = std::string (ct);
-    } else {
-      content_type = "application/octet-stream";
-    }
-
     valid = true;
+
+    /* used by edit message when deleting attachment */
+    chunk_id = c->id;
+
+    if (c->mime_message) {
+      content_type = "message/rfc822";
+      is_mime_message = true;
+
+      message = refptr<Message> (new Message(GMIME_MESSAGE(c->mime_object)));
+
+      g_object_ref (c->mime_object); // should be cleaned by Message : Glib::Object
+
+      name = message->subject;
+
+    } else {
+
+      contents = c->contents ();
+
+      const char * ct = g_mime_content_type_to_string (c->content_type);
+      if (ct != NULL) {
+        content_type = std::string (ct);
+      } else {
+        content_type = "application/octet-stream";
+      }
+    }
   }
 
   ComposeMessage::Attachment::Attachment (refptr<Message> msg) {
     LOG (debug) << "cm: at: construct from message.";
     name = msg->subject;
-    on_disk = false;
     is_mime_message = true;
 
     content_type = "message/rfc822";
-    message = (GMimeObject*) msg->message;
-    g_object_ref (message);
+    message = msg;
 
     valid = true;
   }
 
   ComposeMessage::Attachment::~Attachment () {
     LOG (debug) << "cm: at: deconstruct";
-    if (message) g_object_unref (message);
   }
 
 }

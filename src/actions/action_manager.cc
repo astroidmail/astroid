@@ -159,6 +159,8 @@ namespace Astroid {
   }
 
   void ActionManager::close () {
+    if (!run) return;
+
     LOG (debug) << "actions: cleaning up remaining actions..";
     emit = false;
 

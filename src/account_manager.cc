@@ -102,7 +102,7 @@ namespace Astroid {
   }
 
   AccountManager::~AccountManager () {
-    LOG (info) << "ac: deinitializing.";
+    /* LOG (info) << "ac: deinitializing."; */
   }
 
   bool AccountManager::is_me (Address &a) {

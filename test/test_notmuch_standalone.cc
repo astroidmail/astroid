@@ -183,6 +183,11 @@ int main () {
   for ( ; notmuch_threads_valid (threads);
           notmuch_threads_move_to_next (threads))
   {
+    if (threads == NULL) {
+      cout << "threads == NULL" << endl;
+    } else {
+      cout << "threads != NULL" << endl;
+    }
     thread = notmuch_threads_get (threads);
     cout << "loading: " << i;
     std::string tid = notmuch_thread_get_thread_id (thread);

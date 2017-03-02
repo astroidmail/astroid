@@ -396,6 +396,7 @@ namespace Astroid {
     store->clear ();
     load_startup_queries ();
     load_saved_searches ();
+    refresh_stats ();
 
     tv.set_cursor (path);
   }
@@ -408,49 +409,28 @@ namespace Astroid {
     row[m_columns.m_col_query] = query;
     row[m_columns.m_col_saved] = saved;
     row[m_columns.m_col_history] = history;
-
-    unsigned int total_messages, unread_messages;
-    notmuch_status_t st = NOTMUCH_STATUS_SUCCESS;
-
-    /* get stats */
-    Db db;
-    notmuch_query_t * query_t =  notmuch_query_create (db.nm_db, query.c_str ());
-    for (ustring & t : db.excluded_tags) {
-      notmuch_query_add_tag_exclude (query_t, t.c_str());
-    }
-    notmuch_query_set_omit_excluded (query_t, NOTMUCH_EXCLUDE_TRUE);
-
-# ifdef HAVE_QUERY_COUNT_THREADS_ST
-    st = notmuch_query_count_messages_st (query_t, &total_messages); // destructive
-    if (st != NOTMUCH_STATUS_SUCCESS) total_messages = 0;
-# else
-    total_messages = notmuch_query_count_messages (query_t);
-# endif
-    notmuch_query_destroy (query_t);
-
-    ustring unread_q_s = "(" + query + ") AND tag:unread";
-    notmuch_query_t * unread_q = notmuch_query_create (db.nm_db, unread_q_s.c_str());
-    for (ustring & t : db.excluded_tags) {
-      notmuch_query_add_tag_exclude (unread_q, t.c_str());
-    }
-    notmuch_query_set_omit_excluded (unread_q, NOTMUCH_EXCLUDE_TRUE);
-# ifdef HAVE_QUERY_COUNT_THREADS_ST
-    st = notmuch_query_count_messages_st (unread_q, &unread_messages); // destructive
-    if (st != NOTMUCH_STATUS_SUCCESS) unread_messages = 0;
-# else
-    unread_messages = notmuch_query_count_messages (unread_q);
-# endif
-    notmuch_query_destroy (unread_q);
-
-    row[m_columns.m_col_unread_messages] = ustring::compose ("(unread: %1)", unread_messages);
-    row[m_columns.m_col_total_messages] = ustring::compose ("(total: %1)", total_messages);
   }
 
-  void SavedSearches::on_thread_changed (Db *, ustring) {
-    refresh_stats ();
+  void SavedSearches::on_thread_changed (Db * db, ustring) {
+    refresh_stats_db (db);
   }
 
   void SavedSearches::refresh_stats () {
+    Db db;
+    refresh_stats_db (&db);
+  }
+
+  void SavedSearches::refresh_stats_db (Db *db) {
+    LOG (debug) << "searches: refreshing..";
+
+    if (!main_window->is_current (this)) {
+      LOG (debug) << "searches: skipping, not visible.";
+      needs_refresh = true;
+      return;
+    }
+
+    needs_refresh = false;
+
     for (auto row : store->children ()) {
       if (row[m_columns.m_col_description]) continue;
 
@@ -460,9 +440,8 @@ namespace Astroid {
       notmuch_status_t st = NOTMUCH_STATUS_SUCCESS;
 
       /* get stats */
-      Db db;
-      notmuch_query_t * query_t =  notmuch_query_create (db.nm_db, query.c_str ());
-      for (ustring & t : db.excluded_tags) {
+      notmuch_query_t * query_t =  notmuch_query_create (db->nm_db, query.c_str ());
+      for (ustring & t : db->excluded_tags) {
         notmuch_query_add_tag_exclude (query_t, t.c_str());
       }
       notmuch_query_set_omit_excluded (query_t, NOTMUCH_EXCLUDE_TRUE);
@@ -475,8 +454,8 @@ namespace Astroid {
       notmuch_query_destroy (query_t);
 
       ustring unread_q_s = "(" + query + ") AND tag:unread";
-      notmuch_query_t * unread_q = notmuch_query_create (db.nm_db, unread_q_s.c_str());
-      for (ustring & t : db.excluded_tags) {
+      notmuch_query_t * unread_q = notmuch_query_create (db->nm_db, unread_q_s.c_str());
+      for (ustring & t : db->excluded_tags) {
         notmuch_query_add_tag_exclude (unread_q, t.c_str());
       }
       notmuch_query_set_omit_excluded (unread_q, NOTMUCH_EXCLUDE_TRUE);
@@ -643,6 +622,7 @@ namespace Astroid {
   }
 
   void SavedSearches::grab_modal () {
+    if (needs_refresh) refresh_stats ();
     add_modal_grab ();
     grab_focus ();
   }

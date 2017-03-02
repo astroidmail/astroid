@@ -46,6 +46,8 @@ namespace Astroid {
       static ustring pretty_print (time_t );
       static ustring pretty_print_verbose (time_t, bool = false);
 
+      static ustring asctime (time_t t);
+
       static void init ();
   };
 }

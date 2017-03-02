@@ -5,11 +5,12 @@ from subprocess import *
 def getGitDesc():
   return Popen('git describe --abbrev=8 --tags --always', stdout=PIPE, shell=True).stdout.read ().strip ()
 
-env = Environment ()
-
 AddOption ("--release", action="store", dest="release", default="git", help="Make a release (default: git describe output)")
 AddOption ("--enable-debug", action="store", dest="debug", default=None, help="Enable the -g flag for debugging (default: true when release is git)")
 AddOption ("--prefix", action="store", dest="prefix", default = '/usr/local', help="Directory to install astroid under")
+
+AddOption ("--profiler", action="store_true", dest="profile", default = False,
+    help = "Compile with profiling support (-pg)")
 
 AddOption ("--disable-libsass", action='store_true', dest='disable_libsass',
     default = False, help = "Disable libsass and the dependency on libsass, requires a scss compiler")
@@ -19,10 +20,23 @@ AddOption ('--scss-compiler', action='store', dest='scss_compiler',
 AddOption ("--disable-plugins", action = 'store_true', dest = 'disable_plugins',
     default = False, help = "Disable plugins")
 
-disable_libsass = GetOption ("disable_libsass")
-scss = GetOption ('scss_compiler')
+AddOption ("--disable-terminal", action='store_true', dest='disable_terminal',
+    default = False, help = "Disable built-in VTE based terminal")
 
-disable_plugins = GetOption ("disable_plugins")
+AddOption ("--propagate-environment", action = 'store_true', dest = 'propagate_environment',
+    default = False, help = "Propagate external environment variables to the build environment")
+
+envargs = {}
+if GetOption ("propagate_environment"):
+    envargs['ENV'] = os.environ
+
+env = Environment (**envargs)
+
+disable_libsass  = GetOption ("disable_libsass")
+scss             = GetOption ('scss_compiler')
+profile          = GetOption ('profile')
+disable_terminal = GetOption ("disable_terminal")
+disable_plugins  = GetOption ("disable_plugins")
 
 prefix = GetOption ("prefix")
 
@@ -225,6 +239,15 @@ if not conf.CheckPKG('webkitgtk-3.0'):
   print "webkitgtk not found."
   Exit (1)
 
+if not disable_terminal:
+  if not conf.CheckPKG ('vte-2.91'):
+    print ("warning: vte3 not found: disabling built-in terminal.")
+    disable_terminal = True
+
+if disable_terminal:
+  print "warning: built-in terminal disabled."
+  env.AppendUnique (CPPFLAGS = [ '-DDISABLE_VTE' ])
+
 if not disable_libsass:
   if conf.CheckLibWithHeader ('libsass', 'sass_context.h', 'c'):
     env.AppendUnique (CPPFLAGS = [ '-DSASSCTX_SASS_CONTEXT_H' ])
@@ -235,7 +258,6 @@ if not disable_libsass:
     Exit (1)
 
 else:
-
   print "warning: libsass is disabled, will generate SCSS at build time using: '%s'.." % scss
   env.AppendUnique (CPPFLAGS = [ '-DDISABLE_LIBSASS' ])
 
@@ -290,7 +312,10 @@ env.ParseConfig ('pkg-config --libs --cflags glibmm-2.4')
 env.ParseConfig ('pkg-config --libs --cflags gtkmm-3.0')
 env.ParseConfig ('pkg-config --libs --cflags gmime-2.6')
 env.ParseConfig ('pkg-config --libs --cflags webkitgtk-3.0')
-env.ParseConfig ('pkg-config --libs --cflags libsass')
+if not disable_libsass:
+  env.ParseConfig ('pkg-config --libs --cflags libsass')
+if not disable_terminal:
+  env.ParseConfig ('pkg-config --libs --cflags vte-2.91')
 
 if not conf.CheckLib ('boost_filesystem', language = 'c++'):
   print "boost_filesystem does not seem to be installed."
@@ -335,6 +360,11 @@ env.AppendUnique (CPPFLAGS = ['-Wall', '-std=c++11', '-pthread', '-DBOOST_LOG_DY
 
 if debug:
   env.AppendUnique (CPPFLAGS = ['-g', '-Wextra', '-DDEBUG'])
+
+if profile:
+  print ("profiling enabled.")
+  env.AppendUnique (CPPFLAGS = ['-pg'])
+  env.AppendUnique (LINKFLAGS = ['-pg'])
 
 env = conf.Finish ()
 
@@ -433,6 +463,21 @@ if not disable_plugins:
   env.Depends ('astroid', gir)
   env.Depends ('astroid', typelib)
 
+
+## summary
+print ""
+print "    debug   ..: ", debug
+print "    release ..: ", release
+print "    version ..: ", GIT_DESC
+print "    profile ..: ", profile
+print "    libsass ..: ", (not disable_libsass)
+print "    scss .....: ", scss, "( use:", disable_libsass, ")"
+print "    plugins ..: ", (not disable_plugins)
+print "    terminal .: ", (not disable_terminal)
+print "    prefix ...: ", prefix
+print ""
+
+
 Export ('env')
 Export ('astroid')
 
@@ -456,11 +501,18 @@ idir_bin        = os.path.join (prefix, 'bin')
 idir_shr        = os.path.join (prefix, 'share/astroid')
 idir_ui         = os.path.join (idir_shr, 'ui')
 idir_app        = os.path.join (prefix, 'share/applications')
+idir_icon       = os.path.join (prefix, 'share/icons/hicolor')
 
 inst_bin = env.Install (idir_bin, astroid)
 inst_shr = env.Install (idir_ui,  Glob ('ui/*.glade') +
                                   Glob ('ui/*.png') +
                                   Glob ('ui/*.html'))
+
+# icons are installed in two locations
+inst_shr = env.Install (os.path.join(idir_ui, 'icons'),  Glob ('ui/icons/*'))
+
+inst_shr += env.InstallAs (os.path.join (idir_icon, '512x512/apps/astroid.png'), 'ui/icons/icon_color.png')
+inst_shr += env.InstallAs (os.path.join (idir_icon, 'scalable/apps/astroid.svg'), 'ui/icons/icon_color.svg')
 
 if not disable_plugins:
   inst_shr += env.Install (os.path.join (prefix, 'share/gir-1.0'), gir)

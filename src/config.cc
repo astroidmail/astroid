@@ -10,6 +10,7 @@
 
 # include "config.hh"
 # include "poll.hh"
+# include "utils/utils.hh"
 
 using namespace std;
 using namespace boost::filesystem;
@@ -106,6 +107,9 @@ namespace Astroid {
       std_paths.runtime_dir = path(runtime) / path("astroid");
     }
 
+    /* save to and attach from directory */
+    std_paths.save_dir   = std_paths.home;
+    std_paths.attach_dir = std_paths.home;
   }
 
   ptree Config::setup_default_config (bool initial) {
@@ -186,15 +190,18 @@ namespace Astroid {
     default_config.put ("editor.save_draft_on_force_quit", true);
 
     default_config.put ("editor.attachment_words", "attach");
+    default_config.put ("editor.attachment_directory", "~");
 
     /* mail composition */
     default_config.put ("mail.reply.quote_line", "Excerpts from %1's message of %2:"); // %1 = author, %2 = pretty_verbose_date
+    default_config.put ("mail.reply.mailinglist_reply_to_sender", true);
     default_config.put ("mail.forward.quote_line", "Forwarding %1's message of %2:"); // %1 = author, %2 = pretty_verbose_date
     default_config.put ("mail.forward.disposition", "inline");
     default_config.put ("mail.sent_tags", "sent");
     default_config.put ("mail.message_id_fqdn", ""); // custom fqdn for the message id: default: local hostname
     default_config.put ("mail.message_id_user", ""); // custom user for the message id: default: 'astroid'
     default_config.put ("mail.user_agent", "default");
+    default_config.put ("mail.send_delay", 2); // wait seconds before sending, allowing to cancel
 
     /* polling */
     default_config.put ("poll.interval", Poll::DEFAULT_POLL_INTERVAL); // seconds
@@ -214,6 +221,8 @@ namespace Astroid {
     /*   if a link is clicked (html, ftp, etc..) it is executed with this
      *   command. */
     default_config.put ("thread_view.open_external_link", "xdg-open");
+
+    default_config.put ("thread_view.default_save_directory", "~");
 
     default_config.put ("thread_view.indent_messages", false);
 
@@ -297,6 +306,14 @@ namespace Astroid {
         write_back_config ();
       }
     }
+
+    /* load save_dir */
+    std_paths.save_dir = Utils::expand(bfs::path (config.get<string>("thread_view.default_save_directory")));
+    run_paths.save_dir = std_paths.save_dir;
+
+    /* load attach_dir */
+    std_paths.attach_dir = Utils::expand(bfs::path (config.get<string>("editor.attachment_directory")));
+    run_paths.attach_dir = std_paths.attach_dir;
 
     /* read notmuch config */
     boost::property_tree::read_ini (

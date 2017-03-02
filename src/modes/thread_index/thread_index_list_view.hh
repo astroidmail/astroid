@@ -57,7 +57,8 @@ namespace Astroid {
 
       ThreadIndex * thread_index;
       MainWindow  * main_window;
-      Glib::RefPtr<ThreadIndexListStore> list_store;
+      refptr<ThreadIndexListStore> list_store;
+      refptr<Gtk::TreeModelFilter> filtered_store;
 
       ThreadIndexListCellRenderer * renderer;
       int page_jump_rows; // rows to jump
@@ -69,6 +70,12 @@ namespace Astroid {
 
       void update_bg_image ();
       void set_sort_type (notmuch_sort_t sort);
+
+      bool filter_visible_row ( const Gtk::TreeIter & iter );
+      ustring              filter_txt;
+      std::vector<ustring> filter;
+      void on_filter (ustring k);
+
 
     protected:
       Keybindings multi_keys;

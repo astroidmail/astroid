@@ -27,7 +27,6 @@ namespace Astroid {
 
     name = _name;
     set_orientation (Gtk::Orientation::ORIENTATION_VERTICAL);
-    set_label (get_label ());
 
     /* set up treeview */
     list_store = Glib::RefPtr<ThreadIndexListStore>(new ThreadIndexListStore ());
@@ -40,7 +39,7 @@ namespace Astroid {
 
     list_view->set_sort_type (queryloader.sort);
 
-    add_pane (0, *scroll);
+    add_pane (0, scroll);
 
     show_all ();
 
@@ -56,19 +55,18 @@ namespace Astroid {
     plugins = new PluginManager::ThreadIndexExtension (this);
 # endif
 
+    set_label (get_label ());
+
     /* register keys {{{ */
     keys.set_prefix ("Thread Index", "thread_index");
 
-    keys.register_key ("x", "thread_index.close_pane", "Close thread view pane if open",
+    keys.register_key ("C-w", "thread_index.close_pane", "Close thread view pane if open",
         [&](Key) {
-          if (current == 1) {
-            if (thread_view_loaded && thread_view_visible) {
-              /* hide thread view */
-              del_pane (1);
-              thread_view_visible = false;
+          if (packed == 2) {
+            /* close thread view */
+            del_pane (1);
 
-              return true;
-            }
+            return true;
           }
 
           return false;
@@ -78,17 +76,6 @@ namespace Astroid {
     keys.register_key (Key((guint) GDK_KEY_dollar), "thread_index.refresh", "Refresh query",
         [&] (Key) {
           queryloader.reload ();
-          return true;
-        });
-
-    keys.register_key (Key (false, true, (guint) GDK_KEY_Tab), "thread_index.pane_swap_focus",
-        "Swap focus to other pane if open",
-        [&] (Key) {
-          if (packed == 2) {
-            release_modal ();
-            current = (current == 0 ? 1 : 0);
-            grab_modal ();
-          }
           return true;
         });
 
@@ -186,8 +173,8 @@ namespace Astroid {
           int cx, cy;
           list_view->get_path_at_pos (0, list_view->get_height (), newpath, c, cx, cy);
           if (!newpath || newpath == path) {
-            auto it = list_store->children().end ();
-            newpath  = list_store->get_path (--it);
+            auto it   = list_view->filtered_store->children().end ();
+            newpath   = list_view->filtered_store->get_path (--it);
           }
           if (newpath)
             list_view->set_cursor (newpath);
@@ -207,7 +194,6 @@ namespace Astroid {
   }
 
   void ThreadIndex::on_stats_ready () {
-    LOG (debug) << "ti: got refresh stats.";
     set_label (get_label ());
     list_view->update_bg_image ();
   }
@@ -218,10 +204,17 @@ namespace Astroid {
   }
 
   ustring ThreadIndex::get_label () {
+    ustring f = "";
+    if (!list_view->filter_txt.empty ()) {
+      f = ustring::compose (" (%1: %2)", list_view->filter_txt, list_view->filtered_store->children ().size ());
+    }
+
     if (name == "")
-      return ustring::compose ("%1 (%2/%3)%4", query_string, queryloader.unread_messages, queryloader.total_messages, queryloader.loading() ? " (%)" : "");
+      return ustring::compose ("%1 (%2/%3)%4%5", query_string, queryloader.unread_messages,
+          queryloader.total_messages, queryloader.loading() ? " (%)" : "", f);
     else
-      return ustring::compose ("%1 (%2/%3)%4", name, queryloader.unread_messages, queryloader.total_messages, queryloader.loading() ? " (%)" : "");
+      return ustring::compose ("%1 (%2/%3)%4%5", name,
+          queryloader.unread_messages, queryloader.total_messages, queryloader.loading() ? " (%)" : "", f);
   }
 
   void ThreadIndex::open_thread (refptr<NotmuchThread> thread, bool new_tab, bool new_window) {
@@ -238,32 +231,27 @@ namespace Astroid {
       tv = Gtk::manage(new ThreadView (main_window));
       main_window->add_mode (tv);
     } else {
-      if (!thread_view_loaded) {
-        LOG (debug) << "ti: init paned tv";
-        thread_view = Gtk::manage(new ThreadView (main_window));
-        thread_view_loaded = true;
+      LOG (debug) << "ti: init paned tv";
+      if (packed == 2) {
+        tv = (ThreadView *) pw2;
+      } else {
+        tv = new ThreadView (main_window);
+        add_pane (1, tv);
       }
-
-      tv = thread_view;
     }
 
     tv->load_thread (thread);
     tv->show ();
-
-    if (!new_tab && !thread_view_visible && !new_window) {
-      add_pane (1, *tv);
-      thread_view_visible = true;
-    }
 
     // grab modal
     if (!new_tab && !new_window) {
       current = 1;
       grab_modal ();
     }
-
   }
 
   void ThreadIndex::pre_close () {
+    if (packed > 1) del_pane (1);
 # ifndef DISABLE_PLUGINS
     plugins->deactivate ();
     delete plugins;
@@ -272,10 +260,6 @@ namespace Astroid {
 
   ThreadIndex::~ThreadIndex () {
     LOG (debug) << "ti: deconstruct.";
-
-    if (thread_view_loaded) {
-      delete thread_view; // apparently not done by Gtk::manage
-    }
   }
 }
 

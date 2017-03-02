@@ -38,6 +38,9 @@ namespace Astroid {
         sigc::mem_fun (this, &CommandBar::entry_key_press)
         );
 
+    entry.signal_changed ().connect (
+        sigc::mem_fun (this, &CommandBar::entry_changed));
+
     /* set up tags */
     Db db (Db::DbMode::DATABASE_READ_ONLY);
     db.load_tags ();
@@ -64,7 +67,6 @@ namespace Astroid {
     /* handle input */
     ustring cmd = get_text ();
     LOG (debug) << "cb: cmd (in mode: " << mode << "): " << cmd;
-    set_search_mode (false); // emits changed -> disables search
 
     switch (mode) {
       case CommandMode::Search:
@@ -78,14 +80,7 @@ namespace Astroid {
         }
         break;
 
-      /*
-      case CommandMode::Generic:
-        {
-          handle_command (cmd);
-        }
-        break;
-      */
-
+      case CommandMode::Filter:
       case CommandMode::SearchText:
         {
           text_search_completion->add_query (cmd);
@@ -99,6 +94,8 @@ namespace Astroid {
 
     if (callback != NULL) callback (cmd);
     callback = NULL;
+
+    set_search_mode (false); // emits changed -> disables search
   }
 
   void CommandBar::enable_command (
@@ -131,6 +128,7 @@ namespace Astroid {
         }
         break;
 
+      case CommandMode::Filter:
       case CommandMode::SearchText:
         {
           mode_label.set_text ("Find text");
@@ -139,19 +137,10 @@ namespace Astroid {
           start_text_searching (cmd);
         }
         break;
-      /*
-      case CommandMode::Generic:
-        {
-          mode_label.set_text ("");
-          entry.set_icon_from_icon_name ("system-run-symbolic");
-          entry.set_text (cmd);
-        }
-        break;
-      */
 
       case CommandMode::Tag:
         {
-          mode_label.set_text ("Change tags:");
+          mode_label.set_text ("Change tags");
           entry.set_icon_from_icon_name ("system-run-symbolic");
 
           start_tagging (cmd);
@@ -160,7 +149,7 @@ namespace Astroid {
 
       case CommandMode::DiffTag:
         {
-          mode_label.set_text ("Change tags (+/-):");
+          mode_label.set_text ("Change tags (+/-)");
           entry.set_icon_from_icon_name ("system-run-symbolic");
 
           start_difftagging (cmd);
@@ -217,40 +206,6 @@ namespace Astroid {
     difftag_completion->load_tags (Db::tags);
     entry.set_completion (difftag_completion);
     current_completion = difftag_completion;
-  }
-
-  /*
-  void CommandBar::handle_command (ustring cmd) {
-    LOG (debug) << "cb: command: " << cmd;
-
-    UstringUtils::utokenizer tok (cmd);
-
-# define adv_or_return it++; if (it == tok.end()) return;
-
-    auto it = tok.begin ();
-    if (it == tok.end ()) return;
-
-    if (*it == "help") {
-      main_window->add_mode (new HelpMode (main_window));
-
-    } else if (*it == "archive") {
-      adv_or_return;
-
-      if (*it == "thread") {
-        adv_or_return;
-
-        ustring thread_id = *it;
-
-        LOG (info) << "cb: toggle archive on thread: " << thread_id;
-      }
-
-    } else {
-      LOG (error)  << "cb: unknown command: " << cmd;
-    }
-  }
-  */
-
-  void CommandBar::disable_command () {
   }
 
   bool CommandBar::entry_key_press (GdkEventKey * event) {
@@ -321,12 +276,23 @@ namespace Astroid {
             refptr<SearchCompletion> s = refptr<SearchCompletion>::cast_dynamic (current_completion);
             s->orig_text = "";
             s->history_pos = 0;
+
           }
+
           break;
         }
     }
 
     return false;
+  }
+
+  void CommandBar::entry_changed () {
+    if (mode == CommandMode::Filter) {
+      /* filter on the fly */
+
+      ustring cmd = get_text ();
+      if (callback != NULL) callback (cmd);
+    }
   }
 
   bool CommandBar::command_handle_event (GdkEventKey * event) {
