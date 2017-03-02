@@ -1,5 +1,7 @@
 ==
 
+* New icons by Elio Qoshi ( http://patreon.com/ura )
+
 * Session-persistent folder history for attaching files and saving
   attachments. default is configurable.
 
