@@ -24,10 +24,12 @@
 # include "utils/vector_utils.hh"
 # include "utils/ustring_utils.hh"
 # include "utils/gravatar.hh"
+# include "utils/cmd.hh"
 # ifndef DISABLE_PLUGINS
   # include "plugin/manager.hh"
 # endif
 # include "actions/action.hh"
+# include "actions/cmdaction.hh"
 # include "actions/tag_action.hh"
 # include "actions/toggle_action.hh"
 # include "modes/mode.hh"
@@ -2619,6 +2621,19 @@ namespace Astroid {
             }
           }
           return false;
+        });
+
+    keys.register_run ("thread_view.run",
+	[&] (Key, ustring cmd) {
+          if (!edit_mode && focused_message) {
+
+            cmd = ustring::compose (cmd, focused_message->tid, focused_message->mid);
+
+            astroid->actions->doit (refptr<Action> (new CmdAction (
+              Cmd ("thread_view.run", cmd), focused_message->tid, focused_message->mid)));
+          }
+
+          return true;
         });
 
     multi_keys.register_key ("t", "thread_view.multi.toggle",

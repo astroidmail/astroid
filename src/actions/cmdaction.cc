@@ -24,13 +24,14 @@ namespace Astroid {
   }
 
   void CmdAction::emit (Db * db) {
+    if (mid != "") {
+      // will also emit thread_changed
+      astroid->actions->emit_message_updated (db, mid);
+      return;
+    }
+
     if (thread_id != "") {
       astroid->actions->emit_thread_updated (db, thread_id);
     }
-
-    if (mid != "") {
-      astroid->actions->emit_message_updated (db, mid);
-    }
   }
 }
-
