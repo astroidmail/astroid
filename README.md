@@ -1,5 +1,7 @@
 # astroid mua
 
+![astroid logo](https://github.com/astroidmail/astroid/raw/master/ui/icons/horizontal_color.png)
+
 # getting started
 
 > Astroid is a lightweight and fast Mail User Agent that provides a graphical interface to searching, display and composing email, organized in thread and tags. Astroid uses the [notmuch](http://notmuchmail.org/) backend for blazingly fast searches through tons of email. Astroid searches, displays and composes emails - and rely on other programs for fetching, syncing and sending email. Check out [Astroid in your general mail setup](https://github.com/astroidmail/astroid/wiki/Astroid-in-your-general-mail-setup) for a suggested complete  mail solution.
