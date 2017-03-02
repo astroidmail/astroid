@@ -40,6 +40,9 @@ disable_plugins  = GetOption ("disable_plugins")
 
 prefix = GetOption ("prefix")
 
+AddOption ("--install-dir", action="store", dest="idir_prefix", default = prefix, help="Directory to install astroid under")
+idir_prefix = GetOption("idir_prefix")
+
 release = GetOption("release")
 if release != "git":
   GIT_DESC = release
@@ -495,11 +498,10 @@ Export ('testEnv')
 env.SConscript(dirs = ['test'])
 
 ## Install target
-idir_prefix     = prefix
-idir_bin        = os.path.join (prefix, 'bin')
-idir_shr        = os.path.join (prefix, 'share/astroid')
+idir_bin        = os.path.join (idir_prefix, 'bin')
+idir_shr        = os.path.join (idir_prefix, 'share/astroid')
 idir_ui         = os.path.join (idir_shr, 'ui')
-idir_app        = os.path.join (prefix, 'share/applications')
+idir_app        = os.path.join (idir_prefix, 'share/applications')
 
 inst_bin = env.Install (idir_bin, astroid)
 inst_shr = env.Install (idir_ui,  Glob ('ui/*.glade') +
@@ -507,8 +509,8 @@ inst_shr = env.Install (idir_ui,  Glob ('ui/*.glade') +
                                   Glob ('ui/*.html'))
 
 if not disable_plugins:
-  inst_shr += env.Install (os.path.join (prefix, 'share/gir-1.0'), gir)
-  inst_bin += env.Install (os.path.join (prefix, 'lib/girepository-1.0'), typelib)
+  inst_shr += env.Install (os.path.join (idir_prefix, 'share/gir-1.0'), gir)
+  inst_bin += env.Install (os.path.join (idir_prefix, 'lib/girepository-1.0'), typelib)
 
 if disable_libsass:
   inst_shr += env.Install (idir_ui, Glob ('ui/*.css'))
