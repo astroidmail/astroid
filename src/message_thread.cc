@@ -210,7 +210,6 @@ namespace Astroid {
         if (c != NULL) reply_to = ustring (c);
         else reply_to = "";
 
-
         time = notmuch_message_get_date (msg);
 
       });
@@ -570,6 +569,34 @@ namespace Astroid {
     return ret;
   }
 
+  AddressList Message::list_post () {
+    if (missing_content) {
+      return AddressList ();
+    } else {
+      const char * c = g_mime_object_get_header (GMIME_OBJECT(message), "List-Post");
+      if (c == NULL) return AddressList ();
+
+      ustring _list = ustring (c);
+      auto list = VectorUtils::split_and_trim (_list, " ");
+
+      AddressList al;
+      for (auto &a : list) {
+        while (*a.begin () == '<') a.erase (a.begin());
+        while (*(--a.end()) == '>') a.erase (--a.end ());
+
+        ustring scheme = Glib::uri_parse_scheme (a);
+        if (scheme == "mailto") {
+
+          a = a.substr (scheme.length ()+1, a.length () - scheme.length()-1);
+          UstringUtils::trim (a);
+          al += Address(a);
+        }
+      }
+
+      return al;
+    }
+  }
+
   AddressList Message::all_to_from () {
     return ( AddressList(to()) + AddressList(cc()) + AddressList(bcc()) + AddressList(other_to()) + Address(sender) );
   }
@@ -740,6 +767,11 @@ namespace Astroid {
 
   bool Message::is_different_subject () {
     return subject_is_different;
+  }
+
+  bool Message::is_list_post () {
+    const char * c = g_mime_object_get_header (GMIME_OBJECT(message), "List-Post");
+    return (c != NULL);
   }
 
   bool Message::is_encrypted () {

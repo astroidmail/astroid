@@ -58,6 +58,7 @@ namespace Astroid {
       ustring references;
       ustring inreplyto;
       ustring reply_to;
+      AddressList list_post ();
 
       time_t  time;
       ustring date ();
@@ -83,6 +84,7 @@ namespace Astroid {
       bool is_different_subject ();
       bool is_encrypted ();
       bool is_signed ();
+      bool is_list_post ();
 
       void save ();
       void save_to (ustring);
