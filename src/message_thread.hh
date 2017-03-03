@@ -127,6 +127,9 @@ namespace Astroid {
       bool first_subject_set = false;
       bool subject_is_different (ustring);
 
+      void on_thread_updated (Db * db, ustring tid);
+      void on_thread_changed (Db * db, ustring tid);
+
     public:
       refptr<NotmuchThread> thread;
       std::vector<refptr<Message>> messages;

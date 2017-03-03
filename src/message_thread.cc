@@ -795,14 +795,19 @@ namespace Astroid {
    * MessageThread
    * --------
    */
-
   MessageThread::MessageThread () {
     in_notmuch = false;
   }
 
-  MessageThread::MessageThread (refptr<NotmuchThread> _nmt) : thread (_nmt) {
+  MessageThread::MessageThread (refptr<NotmuchThread> _nmt) : MessageThread () {
+    thread = _nmt;
     in_notmuch = true;
 
+    astroid->actions->signal_thread_updated ().connect (
+        sigc::mem_fun (this, &MessageThread::on_thread_updated));
+
+    astroid->actions->signal_thread_changed ().connect (
+        sigc::mem_fun (this, &MessageThread::on_thread_changed));
   }
 
   MessageThread::~MessageThread () {
@@ -833,6 +838,21 @@ namespace Astroid {
     s = UstringUtils::replace (s, "Re:", "");
     UstringUtils::trim (s);
     return !(s == first_subject);
+  }
+
+  void MessageThread::on_thread_updated (Db * db, ustring tid) {
+    if (in_notmuch && tid == thread->thread_id) {
+      thread->refresh (db);
+      for (auto &m : messages) {
+        m->on_message_updated (db, m->mid);
+      }
+    }
+  }
+
+  void MessageThread::on_thread_changed (Db * db, ustring tid) {
+    if (in_notmuch && tid == thread->thread_id) {
+      thread->refresh (db);
+    }
   }
 
   void MessageThread::load_messages (Db * db) {

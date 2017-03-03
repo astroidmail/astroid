@@ -174,7 +174,7 @@ namespace Astroid {
   }
 
 
-  /* signals */
+  /* thread signals */
   ActionManager::type_signal_thread_updated
     ActionManager::signal_thread_updated ()
   {

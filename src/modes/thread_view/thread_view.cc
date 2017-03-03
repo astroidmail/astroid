@@ -183,8 +183,6 @@ namespace Astroid {
     plugins = new PluginManager::ThreadViewExtension (this);
 # endif
 
-    astroid->actions->signal_thread_updated ().connect (
-        sigc::mem_fun (this, &ThreadView::on_thread_updated));
   }
 
   //
@@ -582,40 +580,18 @@ namespace Astroid {
   {
     if (!edit_mode) { // edit mode doesn't show tags
       if (me == Message::MessageChangedEvent::MESSAGE_TAGS_CHANGED) {
-        if (m->in_notmuch) {
+        if (m->in_notmuch && m->tid == thread->thread_id) {
           LOG (debug) << "tv: got message updated.";
-          refptr<Message> rm = refptr<Message> (m);
-          rm->reference ();
 
-          message_refresh_tags (db, rm);
-        }
-      }
-    }
-  }
+          // the message is already refreshed internally
 
-  void ThreadView::on_thread_updated (Db * db, ustring thread_id) {
-    if (!edit_mode) { // edit mode doesn't show tags
-      if (thread && thread_id == thread->thread_id) {
-        LOG (debug) << "tv: got thread updated.";
-        /* thread was updated, check for:
-         * - changed tags
-         * - check if something should be done becasue of changed tags
-         * - messages have been added
-         * - messages have been removed
-         *
-         * if anything happens before the webview is ready it will not be shown.
-         *
-         */
-
-        for (auto &m : mthread->messages) {
-          m->refresh (db);
           message_refresh_tags (db, m);
         }
       }
     }
   }
 
-  void ThreadView::message_refresh_tags (Db *, refptr<Message> m) {
+  void ThreadView::message_refresh_tags (Db *, Message * m) {
 
     if (!wk_loaded || !ready) return;
 
@@ -2631,8 +2607,8 @@ namespace Astroid {
 
             astroid->actions->doit (refptr<Action> (new CmdAction (
               Cmd ("thread_view.run", cmd), focused_message->tid, focused_message->mid)));
-          }
 
+            }
           return true;
         });
 

@@ -279,7 +279,7 @@ namespace Astroid {
       s = notmuch_message_tags_to_maildir_flags (msg);
     }
 
-    /* emit signal */
+    /* return mid */
     const char * mid = notmuch_message_get_message_id (msg);
     ustring _mid;
 
