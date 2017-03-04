@@ -277,7 +277,7 @@ namespace Astroid {
         "edit_message.edit",
         "Edit message in editor",
         [&] (Key) {
-          if (!message_sent && !sending_in_progress.load()) {
+          if (!editor_active && !message_sent && !sending_in_progress.load()) {
             editor_toggle (true);
           }
           return true;
@@ -287,7 +287,7 @@ namespace Astroid {
         "Send message",
         [&] (Key) {
           if (!message_sent && !sending_in_progress.load()) {
-            if (editor->started ()) {
+            if (editor_active) {
               set_warning ("Cannot send message when editing.");
 
               return true;
@@ -336,7 +336,7 @@ namespace Astroid {
         "Cycle through From selector",
         [&] (Key) {
 
-          if (editor->started ()) {
+          if (editor_active) {
             set_warning ("Cannot change from address when editing.");
 
             return true;
@@ -367,7 +367,7 @@ namespace Astroid {
         "Save draft",
         [&] (Key) {
 
-          if (editor->started ()) {
+          if (editor_active) {
             set_warning ("Cannot save draft when editing.");
 
             return true;
