@@ -18,11 +18,15 @@ namespace Astroid {
       const char * poll_script = "poll.sh";
       static const int DEFAULT_POLL_INTERVAL; // 60
 
+      void start_polling ();
+      void stop_polling ();
+
     private:
       std::mutex m_dopoll;
 
       int poll_interval = 0;
       bool auto_polling_enabled = true;
+      bool external_polling = false;
 
       void do_poll ();
       bool periodic_polling ();
@@ -34,6 +38,7 @@ namespace Astroid {
       unsigned long last_good_before_poll_revision = 0;
       unsigned long before_poll_revision = 0;
 # endif
+      void refresh_threads ();
 
       int pid;
       int stdin;

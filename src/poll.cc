@@ -47,6 +47,48 @@ namespace Astroid {
     d_poll_state.connect (sigc::mem_fun (this, &Poll::poll_state_dispatch));
   }
 
+  void Poll::start_polling () {
+    /* external polling is started - will eventually be completed
+     * by a call to stop_polling */
+
+    if (external_polling) {
+      LOG (error) << "poll: external polling already running!";
+      return;
+    }
+
+    LOG (info) << "poll: external polling started..";
+    if (m_dopoll.try_lock ()) {
+
+      external_polling = true;
+      set_poll_state (true);
+# ifdef HAVE_NOTMUCH_GET_REV
+      Db db (Db::DbMode::DATABASE_READ_ONLY);
+      before_poll_revision = db.get_revision ();
+      LOG (debug) << "poll: revision before poll: " << before_poll_revision;
+# endif
+
+    } else {
+      LOG (error) << "poll: uh oh! poll is already running, better disable internal polling if you use external polling - expect hard crashes!";
+      return;
+    }
+  }
+
+  void Poll::stop_polling () {
+    /* external polling is now stopped */
+    if (!external_polling) {
+      LOG (error) << "poll: indicated stopped external polling, but no start external polling was registered!";
+      return;
+    }
+
+    LOG (info) << "poll: external polling stopped.";
+
+    refresh_threads ();
+    external_polling = false;
+    set_poll_state (false);
+    m_dopoll.unlock ();
+
+  }
+
   bool Poll::periodic_polling () {
     if (auto_polling_enabled) {
       chrono::duration<double> elapsed = chrono::steady_clock::now() - last_poll;
@@ -199,72 +241,75 @@ namespace Astroid {
     Glib::spawn_close_pid (pid);
 
     if (child_status == 0) {
-
-# ifdef HAVE_NOTMUCH_GET_REV
-
-      /* first poll */
-      if (last_good_before_poll_revision == 0)
-        last_good_before_poll_revision = before_poll_revision;
-
-      /* update all threads that have been changed */
-      Db db (Db::DbMode::DATABASE_READ_ONLY);
-
-      unsigned long revnow = db.get_revision ();
-      LOG (debug) << "poll: revision after poll: " << revnow;
-
-      if (revnow > last_good_before_poll_revision) {
-
-        ustring query = ustring::compose ("lastmod:%1..%2",
-            before_poll_revision,
-            revnow);
-
-        notmuch_query_t * qry = notmuch_query_create (db.nm_db, query.c_str ());
-
-        unsigned int total_threads;
-        notmuch_status_t st = NOTMUCH_STATUS_SUCCESS;
-# ifdef HAVE_QUERY_COUNT_THREADS_ST
-        st = notmuch_query_count_threads_st (qry, &total_threads);
-# else
-        total_threads = notmuch_query_count_threads (qry);
-# endif
-
-        LOG (info) << "poll: " << total_threads << " threads changed, updating..";
-
-        if (st == NOTMUCH_STATUS_SUCCESS && total_threads > 0) {
-          notmuch_threads_t * threads;
-          notmuch_thread_t  * thread;
-# ifdef HAVE_QUERY_THREADS_ST
-          st = notmuch_query_search_threads_st (qry, &threads);
-# else
-          threads = notmuch_query_search_threads (qry);
-# endif
-
-          for (;
-               (st == NOTMUCH_STATUS_SUCCESS) && notmuch_threads_valid (threads);
-               notmuch_threads_move_to_next (threads)) {
-
-            thread = notmuch_threads_get (threads);
-
-            const char * t = notmuch_thread_get_thread_id (thread);
-
-            ustring tt (t);
-            astroid->actions->emit_thread_updated (&db, tt);
-          }
-        }
-
-        notmuch_query_destroy (qry);
-
-      }
-
-      last_good_before_poll_revision = revnow;
-# else
-      astroid->actions->signal_refreshed_dispatcher ();
-# endif
+      refresh_threads ();
     }
 
     warn.disconnect();
     debug.disconnect();
     m_dopoll.unlock ();
+  }
+
+  void Poll::refresh_threads () {
+
+# ifdef HAVE_NOTMUCH_GET_REV
+    /* first poll */
+    if (last_good_before_poll_revision == 0)
+      last_good_before_poll_revision = before_poll_revision;
+
+    /* update all threads that have been changed */
+    Db db (Db::DbMode::DATABASE_READ_ONLY);
+
+    unsigned long revnow = db.get_revision ();
+    LOG (debug) << "poll: refreshing.. revision after poll: " << revnow;
+
+    if (revnow > last_good_before_poll_revision) {
+
+      ustring query = ustring::compose ("lastmod:%1..%2",
+          before_poll_revision,
+          revnow);
+
+      notmuch_query_t * qry = notmuch_query_create (db.nm_db, query.c_str ());
+
+      unsigned int total_threads;
+      notmuch_status_t st = NOTMUCH_STATUS_SUCCESS;
+# ifdef HAVE_QUERY_COUNT_THREADS_ST
+      st = notmuch_query_count_threads_st (qry, &total_threads);
+# else
+      total_threads = notmuch_query_count_threads (qry);
+# endif
+
+      LOG (info) << "poll: " << total_threads << " threads changed, updating..";
+
+      if (st == NOTMUCH_STATUS_SUCCESS && total_threads > 0) {
+        notmuch_threads_t * threads;
+        notmuch_thread_t  * thread;
+# ifdef HAVE_QUERY_THREADS_ST
+        st = notmuch_query_search_threads_st (qry, &threads);
+# else
+        threads = notmuch_query_search_threads (qry);
+# endif
+
+        for (;
+             (st == NOTMUCH_STATUS_SUCCESS) && notmuch_threads_valid (threads);
+             notmuch_threads_move_to_next (threads)) {
+
+          thread = notmuch_threads_get (threads);
+
+          const char * t = notmuch_thread_get_thread_id (thread);
+
+          ustring tt (t);
+          astroid->actions->emit_thread_updated (&db, tt);
+        }
+      }
+
+      notmuch_query_destroy (qry);
+
+    }
+
+    last_good_before_poll_revision = revnow;
+# else
+    astroid->actions->signal_refreshed_dispatcher ();
+# endif
   }
 
   void Poll::poll_state_dispatch () {

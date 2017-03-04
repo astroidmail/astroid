@@ -118,6 +118,8 @@ namespace Astroid {
       ( "no-auto-poll", "do not poll automatically")
       ( "log,l", po::value<ustring>(), "log to file")
       ( "append-log,a", "append to log file")
+      ( "start-polling", "indicate that external polling (external notmuch db R/W operations) starts")
+      ( "stop-polling", "indicate that external polling stops")
 # ifndef DISABLE_PLUGINS
       ( "disable-plugins", "disable plugins");
 # else
@@ -243,6 +245,11 @@ namespace Astroid {
         } else {
           m_config = new Config ();
         }
+      }
+
+      if (vm.count("start-polling") || vm.count("stop-polling")) {
+        LOG (error) << "--start-polling or --stop-polling can only be specifed when there is already a running astroid instance.";
+        exit (1);
       }
 
       _hint_level = config ("astroid.hints").get<int> ("level");
@@ -391,6 +398,22 @@ namespace Astroid {
       if (vm.count("mailto")) {
         ustring mailtourl = vm["mailto"].as<ustring>();
         send_mailto (mailtourl);
+        new_window = false;
+      }
+
+      if (vm.count ("start-polling")) {
+        if (vm.count ("stop-polling")) {
+          LOG (error) << "--start-polling specified together with --stop-polling";
+          return 1;
+        }
+
+        poll->start_polling ();
+        new_window = false;
+
+      } else if (vm.count ("stop-polling")) {
+        /* conflicting args check covered by above case */
+
+        poll->stop_polling ();
         new_window = false;
       }
     }
