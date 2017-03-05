@@ -362,7 +362,12 @@ namespace Astroid {
 
     while (delay > 0 && !cancel_send_during_delay) {
       LOG (debug) << "cm: sending in " << delay << " seconds..";
-      message_send_status_msg = ustring::compose ("sending message in %1 seconds... Press C-c to cancel!", delay); /*fixme replace C-c with the actual keybding configured by the user*/
+      if (astroid->hint_level () < 1) {
+        /* TODO: replace C-c with the actual keybinding configured by the user */
+        message_send_status_msg = ustring::compose ("sending message in %1 seconds... Press C-c to cancel!", delay);
+      } else {
+        message_send_status_msg = ustring::compose ("sending message in %1 seconds...", delay);
+      }
       d_message_send_status ();
       std::chrono::seconds sec (1);
       send_cancel_cv.wait_until (lk, std::chrono::system_clock::now () + sec, [&] { return cancel_send_during_delay; });
@@ -383,7 +388,12 @@ namespace Astroid {
 
     lk.unlock ();
 
-    message_send_status_msg = "sending message... Press C-c to cancel!"; /*fixme replace C-c with the actual keybding configured by the user*/
+    if (astroid->hint_level () < 1) {
+      /* TODO: replace C-c with the actual keybinding configured by the user */
+      message_send_status_msg = "sending message... Press C-c to cancel!";
+    } else {
+      message_send_status_msg = "sending message...";
+    }
     d_message_send_status ();
 
     /* Send the message */
