@@ -371,7 +371,7 @@ namespace Astroid {
 
     if (cancel_send_during_delay) {
       LOG (error) << "cm: cancelled sending before message could be sent.";
-      message_send_status_msg = "sending message.. cancelled before sending.";
+      message_send_status_msg = "sending message... cancelled before sending.";
       message_send_status_warn = true;
       d_message_send_status ();
 
@@ -383,7 +383,7 @@ namespace Astroid {
 
     lk.unlock ();
 
-    message_send_status_msg = "sending message..";
+    message_send_status_msg = "sending message... Press C-c to cancel!"; /*fixme replace C-c with the actual keybding configured by the user*/
     d_message_send_status ();
 
     /* Send the message */
