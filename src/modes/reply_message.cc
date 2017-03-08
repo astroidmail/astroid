@@ -104,7 +104,7 @@ namespace Astroid {
       }
     }
 
-    reply_mode_combo->set_active (rmode); // must match order
+    reply_mode_combo->set_active (rmode); // must match order in ReplyMode
     reply_mode_combo->pack_start (reply_columns.reply_string);
 
     load_receivers ();
@@ -211,9 +211,10 @@ namespace Astroid {
 
     if (rmode == Rep_Sender || rmode == Rep_Default) {
 
-      if (msg->reply_to.length () > 0) {
+      if (rmode == Rep_Default && msg->reply_to.length () > 0) {
         to = msg->reply_to;
       } else {
+        /* no reply-to or Rep_Sender */
         to = msg->sender;
       }
 
