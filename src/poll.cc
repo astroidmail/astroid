@@ -249,20 +249,36 @@ namespace Astroid {
     m_dopoll.unlock ();
   }
 
+  void Poll::refresh (unsigned long before) {
+    if (external_polling) {
+      LOG (error) << "poll: external polling in progress, --refresh should not be used in combination with --start-polling or --stop-polling";
+      return;
+    }
+
+    if (m_dopoll.try_lock ()) {
+      LOG (info) << "poll: refreshing threads since: " << before;
+
+      before_poll_revision = before;
+      refresh_threads ();
+
+      m_dopoll.unlock ();
+
+    } else {
+      LOG (error) << "poll: polling already in progress, cannot refresh.";
+      return;
+    }
+  }
+
   void Poll::refresh_threads () {
 
 # ifdef HAVE_NOTMUCH_GET_REV
-    /* first poll */
-    if (last_good_before_poll_revision == 0)
-      last_good_before_poll_revision = before_poll_revision;
-
     /* update all threads that have been changed */
     Db db (Db::DbMode::DATABASE_READ_ONLY);
 
     unsigned long revnow = db.get_revision ();
     LOG (debug) << "poll: refreshing.. revision after poll: " << revnow;
 
-    if (revnow > last_good_before_poll_revision) {
+    if (revnow > before_poll_revision) {
 
       ustring query = ustring::compose ("lastmod:%1..%2",
           before_poll_revision,
@@ -306,7 +322,6 @@ namespace Astroid {
 
     }
 
-    last_good_before_poll_revision = revnow;
 # else
     astroid->actions->signal_refreshed_dispatcher ();
 # endif

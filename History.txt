@@ -22,6 +22,9 @@
 * Delay sending of message with configured time, in order to be able to
   cancel wrongly sent messages.
 
+* New --start-polling, --stop-polling and --refresh LASTMOD options which
+  makes external polling mechanisms work better.
+
 == v0.7 / 2017-01-02
 
 * Messages are marked unread after a delay (default 2 sec) in

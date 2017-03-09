@@ -120,6 +120,7 @@ namespace Astroid {
       ( "append-log,a", "append to log file")
       ( "start-polling", "indicate that external polling (external notmuch db R/W operations) starts")
       ( "stop-polling", "indicate that external polling stops")
+      ( "refresh", po::value<unsigned long>(), "refresh threads changed since lastmod")
 # ifndef DISABLE_PLUGINS
       ( "disable-plugins", "disable plugins");
 # else
@@ -247,8 +248,8 @@ namespace Astroid {
         }
       }
 
-      if (vm.count("start-polling") || vm.count("stop-polling")) {
-        LOG (error) << "--start-polling or --stop-polling can only be specifed when there is already a running astroid instance.";
+      if (vm.count("start-polling") || vm.count("stop-polling") || vm.count ("refresh")) {
+        LOG (error) << "--start-polling, --stop-polling or --refresh can only be specifed when there is already a running astroid instance.";
         exit (1);
       }
 
@@ -401,19 +402,24 @@ namespace Astroid {
         new_window = false;
       }
 
-      if (vm.count ("start-polling")) {
-        if (vm.count ("stop-polling")) {
-          LOG (error) << "--start-polling specified together with --stop-polling";
+      if ((vm.count ("start-polling") ? 1:0) + (vm.count ("stop-polling") ? 1:0) + (vm.count("refresh") ? 1:0) > 1) {
+          LOG (error) << "only one of --start-polling, --stop-polling and --refresh should be specified";
           return 1;
-        }
+      }
+
+      if (vm.count ("start-polling")) {
 
         poll->start_polling ();
         new_window = false;
 
       } else if (vm.count ("stop-polling")) {
-        /* conflicting args check covered by above case */
 
         poll->stop_polling ();
+        new_window = false;
+
+      } else if (vm.count ("refresh")) {
+        unsigned long last = vm["refresh"].as<unsigned long> ();
+        poll->refresh ( last );
         new_window = false;
       }
     }

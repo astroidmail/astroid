@@ -20,6 +20,7 @@ namespace Astroid {
 
       void start_polling ();
       void stop_polling ();
+      void refresh (unsigned long before);
 
     private:
       std::mutex m_dopoll;
@@ -35,7 +36,6 @@ namespace Astroid {
       std::chrono::time_point<std::chrono::steady_clock> last_poll;
 
 # ifdef HAVE_NOTMUCH_GET_REV
-      unsigned long last_good_before_poll_revision = 0;
       unsigned long before_poll_revision = 0;
 # endif
       void refresh_threads ();
