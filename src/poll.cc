@@ -240,12 +240,11 @@ namespace Astroid {
     /* close process */
     Glib::spawn_close_pid (pid);
 
-    if (child_status == 0) {
-      refresh_threads ();
-    }
-
     warn.disconnect();
     debug.disconnect();
+
+    refresh_threads ();
+
     m_dopoll.unlock ();
   }
 
