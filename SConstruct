@@ -509,7 +509,7 @@ inst_shr = env.Install (idir_ui,  Glob ('ui/*.glade') +
                                   Glob ('ui/*.html'))
 
 # icons are installed in two locations
-inst_shr = env.Install (os.path.join(idir_ui, 'icons'),  Glob ('ui/icons/*'))
+inst_shr += env.Install (os.path.join(idir_ui, 'icons'),  Glob ('ui/icons/*'))
 
 inst_shr += env.InstallAs (os.path.join (idir_icon, '512x512/apps/astroid.png'), 'ui/icons/icon_color.png')
 inst_shr += env.InstallAs (os.path.join (idir_icon, 'scalable/apps/astroid.svg'), 'ui/icons/icon_color.svg')
