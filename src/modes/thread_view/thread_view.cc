@@ -645,6 +645,7 @@ namespace Astroid {
 
     for (ustring t : m->tags) {
       t = UstringUtils::replace (t, "/", "-");
+      t = UstringUtils::replace (t, ".", "-");
       t = Glib::Markup::escape_text (t);
 
       t = "nm-" + t;
