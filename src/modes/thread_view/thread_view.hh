@@ -218,7 +218,8 @@ namespace Astroid {
       void insert_header_date (ustring &, refptr<Message>);
       ustring create_header_row (ustring title, ustring value, bool important, bool escape, bool noprint = false);
       ustring header_row_value (ustring value, bool escape);
-      void message_refresh_tags (Db *, Message *);
+      void message_render_tags (refptr<Message>, WebKitDOMElement * div_message);
+      void message_update_css_tags (refptr<Message>, WebKitDOMElement * div_message);
 
       bool open_html_part_external;
       void display_part (refptr<Message>, refptr<Chunk>, MessageState::Element);

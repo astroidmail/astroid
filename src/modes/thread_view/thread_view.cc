@@ -493,7 +493,7 @@ namespace Astroid {
             if (code_prettify_only_tags.size () > 0) {
               if (mthread->in_notmuch) {
                 for (auto &t : code_prettify_only_tags) {
-                  if (mthread->thread->has_tag (t)) {
+                  if (mthread->has_tag (t)) {
                     only_tags_ok = true;
                     break;
                   }
@@ -574,7 +574,7 @@ namespace Astroid {
   }
 
   void ThreadView::on_message_changed (
-      Db * db,
+      Db * /* db */,
       Message * m,
       Message::MessageChangedEvent me)
   {
@@ -585,54 +585,95 @@ namespace Astroid {
 
           // the message is already refreshed internally
 
-          message_refresh_tags (db, m);
+          ustring mid = "message_" + m->mid;
+          WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
+          WebKitDOMElement * div_message = webkit_dom_document_get_element_by_id (d, mid.c_str());
+
+          refptr<Message> _m = refptr<Message> (m);
+          _m->reference (); // since m is owned by caller
+
+          message_render_tags (_m, div_message);
+          message_update_css_tags (_m, div_message);
+
+          g_object_unref (div_message);
+          g_object_unref (d);
+
         }
       }
     }
   }
 
-  void ThreadView::message_refresh_tags (Db *, Message * m) {
+  void ThreadView::message_update_css_tags (refptr<Message> m, WebKitDOMElement * div_message) {
+    /* check for tag changes that control display */
+    GError *err;
 
-    if (!wk_loaded || !ready) return;
+    WebKitDOMDOMTokenList * class_list =
+      webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(div_message));
 
-    unsigned char cv[] = { 0xff, 0xff, 0xff };
+    /* patches may be rendered somewhat differently */
+    if (m->is_patch ()) {
+      webkit_dom_dom_token_list_add (class_list, "patch",
+          (err = NULL, &err));
+    } else {
+      webkit_dom_dom_token_list_remove (class_list, "patch",
+          (err = NULL, &err));
+    }
 
-    ustring tags_s;
+    /* message subject deviates from thread subject */
+    if (m->is_different_subject ()) {
+      webkit_dom_dom_token_list_add (class_list, "different_subject",
+          (err = NULL, &err));
+    } else {
+      webkit_dom_dom_token_list_remove (class_list, "different_subject",
+          (err = NULL, &err));
+    }
+
+    /* if unread */
+    if (m->has_tag ("unread")) {
+      webkit_dom_dom_token_list_add (class_list, "unread",
+          (err = NULL, &err));
+    } else {
+      webkit_dom_dom_token_list_remove (class_list, "unread",
+          (err = NULL, &err));
+    }
+
+    g_object_unref (class_list);
+  }
+
+  void ThreadView::message_render_tags (refptr<Message> m, WebKitDOMElement * div_message) {
+    if (m->in_notmuch) {
+      unsigned char cv[] = { 0xff, 0xff, 0xff };
+
+      ustring tags_s;
 
 # ifndef DISABLE_PLUGINS
-    if (!plugins->format_tags (m->tags, "#ffffff", false, tags_s)) {
+      if (!plugins->format_tags (m->tags, "#ffffff", false, tags_s)) {
 #  endif
 
-      tags_s = VectorUtils::concat_tags_color (m->tags, false, 0, cv);
+        tags_s = VectorUtils::concat_tags_color (m->tags, false, 0, cv);
 
 # ifndef DISABLE_PLUGINS
-    }
+      }
 # endif
 
-    GError *err;
-    ustring mid = "message_" + m->mid;
+      GError *err;
 
-    WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
-    WebKitDOMElement * div_message = webkit_dom_document_get_element_by_id (d, mid.c_str());
+      WebKitDOMHTMLElement * tags = DomUtils::select (
+          WEBKIT_DOM_NODE (div_message),
+          ".header_container .tags");
 
+      webkit_dom_html_element_set_inner_html (tags, tags_s.c_str (), (err = NULL, &err));
 
-    WebKitDOMHTMLElement * tags = DomUtils::select (
-        WEBKIT_DOM_NODE (div_message),
-        ".header_container .tags");
+      g_object_unref (tags);
 
-    webkit_dom_html_element_set_inner_html (tags, tags_s.c_str (), (err = NULL, &err));
+      tags = DomUtils::select (
+          WEBKIT_DOM_NODE (div_message),
+          ".header_container .header div#Tags .value");
 
-    g_object_unref (tags);
+      webkit_dom_html_element_set_inner_html (tags, tags_s.c_str (), (err = NULL, &err));
 
-    tags = DomUtils::select (
-        WEBKIT_DOM_NODE (div_message),
-        ".header_container .header div#Tags .value");
-
-    webkit_dom_html_element_set_inner_html (tags, tags_s.c_str (), (err = NULL, &err));
-
-    g_object_unref (tags);
-    g_object_unref (div_message);
-    g_object_unref (d);
+      g_object_unref (tags);
+    }
   }
 
   /* end message loading  */
@@ -788,31 +829,9 @@ namespace Astroid {
     /* marked */
     load_marked_icon (m, div_message);
 
-    /* patches may be rendered somewhat differently */
-    if (m->is_patch ()) {
-      WebKitDOMDOMTokenList * class_list =
-        webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(div_message));
-
-      webkit_dom_dom_token_list_add (class_list, "patch",
-          (err = NULL, &err));
-
-      g_object_unref (class_list);
-    }
-
-    /* message subject deviates from thread subject */
-    if (m->is_different_subject ()) {
-      WebKitDOMDOMTokenList * class_list =
-        webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(div_message));
-
-      webkit_dom_dom_token_list_add (class_list, "different_subject",
-          (err = NULL, &err));
-
-      g_object_unref (class_list);
-    }
-
     if (!edit_mode) {
       /* optionally hide / collapse the message */
-      if (!(has (m->tags, ustring("unread")) || has(m->tags, ustring("flagged")))) {
+      if (!(m->has_tag("unread") || m->has_tag("flagged"))) {
 
         /* hide message */
         WebKitDOMDOMTokenList * class_list =
@@ -829,7 +848,7 @@ namespace Astroid {
 
       /* focus first unread message */
       if (!focused_message) {
-        if (has (m->tags, ustring("unread"))) {
+        if (m->has_tag ("unread")) {
           focused_message = m;
         }
       }
@@ -892,27 +911,7 @@ namespace Astroid {
     }
 
     if (m->in_notmuch) {
-      unsigned char cv[] = { 0xff, 0xff, 0xff };
-      ustring tags_s;
-
-# ifndef DISABLE_PLUGINS
-      if (!plugins->format_tags (m->tags, "#ffffff", false, tags_s)) {
-#  endif
-        tags_s = VectorUtils::concat_tags_color (m->tags, false, 0, cv);
-# ifndef DISABLE_PLUGINS
-      }
-# endif
-
-      header += create_header_row ("Tags", tags_s, false, false, true);
-
-
-      WebKitDOMHTMLElement * tags = DomUtils::select (
-          WEBKIT_DOM_NODE (div_message),
-          ".header_container .tags");
-
-      webkit_dom_html_element_set_inner_html (tags,tags_s.c_str(), (err = NULL, &err));
-
-      g_object_unref (tags);
+      header += create_header_row ("Tags", "", false, false, true);
     }
 
     /* avatar */
@@ -955,6 +954,9 @@ namespace Astroid {
         header.c_str(),
         (err = NULL, &err));
 
+    message_render_tags (m, WEBKIT_DOM_ELEMENT(div_message));
+    message_update_css_tags (m, WEBKIT_DOM_ELEMENT(div_message));
+
     /* if message is missing body, set warning and don't add any content */
 
     WebKitDOMHTMLElement * span_body =
@@ -969,7 +971,7 @@ namespace Astroid {
            any_of (Db::draft_tags.begin (),
                    Db::draft_tags.end (),
                    [&](ustring t) {
-                     return has (m->tags, t);
+                     return m->has_tag (t);
                    }))
       {
 
@@ -2390,7 +2392,7 @@ namespace Astroid {
           bool foundme = false;
 
           for (auto &m : mthread->messages) {
-            if (foundme && has (m->tags, ustring("unread"))) {
+            if (foundme && m->has_tag ("unread")) {
               focused_message = m;
               scroll_to_message (focused_message);
               break;
@@ -2412,7 +2414,7 @@ namespace Astroid {
 
           for (auto mi = mthread->messages.rbegin ();
               mi != mthread->messages.rend (); mi++) {
-            if (foundme && has ((*mi)->tags, ustring("unread"))) {
+            if (foundme && (*mi)->has_tag ("unread")) {
               focused_message = *mi;
               scroll_to_message (focused_message);
               break;
@@ -2582,7 +2584,7 @@ namespace Astroid {
             if (any_of (Db::draft_tags.begin (),
                         Db::draft_tags.end (),
                         [&](ustring t) {
-                          return has (focused_message->tags, t);
+                          return focused_message->has_tag (t);
                         }))
             {
               ask_yes_no ("Do you want to delete this draft? (any changes will be lost)",
@@ -3537,7 +3539,7 @@ namespace Astroid {
         chrono::duration<double> elapsed = chrono::steady_clock::now() - focus_time;
 
         if (unread_delay == 0.0 || elapsed.count () > unread_delay) {
-          if (has (focused_message->tags, ustring("unread"))) {
+          if (focused_message->has_tag ("unread")) {
 
             main_window->actions->doit (refptr<Action>(new TagAction (refptr<NotmuchItem>(new NotmuchMessage(focused_message)), {}, { "unread" })), false);
             state[focused_message].unread_checked = true;
