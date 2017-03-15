@@ -775,11 +775,16 @@ namespace Astroid {
   }
 
   bool Message::is_encrypted () {
-    return has (tags, ustring("encrypted"));
+    return has_tag ("encrypted");
   }
 
   bool Message::is_signed () {
-    return has (tags, ustring("signed"));
+    return has_tag ("signed");
+  }
+
+  bool Message::has_tag (ustring t) {
+    if (nmmsg) return nmmsg->has_tag (t);
+    else return false;
   }
 
   /************
@@ -853,6 +858,11 @@ namespace Astroid {
     if (in_notmuch && tid == thread->thread_id) {
       thread->refresh (db);
     }
+  }
+
+  bool MessageThread::has_tag (ustring t) {
+    if (thread) return thread->has_tag (t);
+    else return false;
   }
 
   void MessageThread::load_messages (Db * db) {

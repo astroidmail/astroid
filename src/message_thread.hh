@@ -85,6 +85,7 @@ namespace Astroid {
       bool is_encrypted ();
       bool is_signed ();
       bool is_list_post ();
+      bool has_tag (ustring);
 
       void save ();
       void save_to (ustring);
@@ -119,6 +120,7 @@ namespace Astroid {
 
       bool in_notmuch;
       ustring get_subject ();
+      bool has_tag (ustring);
 
     private:
       ustring subject;
