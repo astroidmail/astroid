@@ -612,8 +612,10 @@ namespace Astroid {
 
     /* patches may be rendered somewhat differently */
     if (m->is_patch ()) {
-      webkit_dom_dom_token_list_add (class_list, "patch",
-          (err = NULL, &err));
+      if (!webkit_dom_dom_token_list_contains (class_list, "patch", (err = NULL, &err))) {
+        webkit_dom_dom_token_list_add (class_list, "patch",
+            (err = NULL, &err));
+      }
     } else {
       webkit_dom_dom_token_list_remove (class_list, "patch",
           (err = NULL, &err));
@@ -621,20 +623,32 @@ namespace Astroid {
 
     /* message subject deviates from thread subject */
     if (m->is_different_subject ()) {
-      webkit_dom_dom_token_list_add (class_list, "different_subject",
-          (err = NULL, &err));
+      if (!webkit_dom_dom_token_list_contains (class_list, "different_subject", (err = NULL, &err))) {
+        webkit_dom_dom_token_list_add (class_list, "different_subject",
+            (err = NULL, &err));
+      }
     } else {
       webkit_dom_dom_token_list_remove (class_list, "different_subject",
           (err = NULL, &err));
     }
 
-    /* if unread */
-    if (m->has_tag ("unread")) {
-      webkit_dom_dom_token_list_add (class_list, "unread",
-          (err = NULL, &err));
-    } else {
-      webkit_dom_dom_token_list_remove (class_list, "unread",
-          (err = NULL, &err));
+    /* reset notmuch tags */
+    for (unsigned int i = 0; i < webkit_dom_dom_token_list_get_length (class_list); i++)
+    {
+      const char * _t = webkit_dom_dom_token_list_item (class_list, i);
+      ustring t (_t);
+
+      if (t.find ("nm-", 0) != std::string::npos) {
+        webkit_dom_dom_token_list_remove (class_list, _t, (err = NULL, &err));
+      }
+    }
+
+    for (ustring t : m->tags) {
+      t = UstringUtils::replace (t, "/", "-");
+      t = Glib::Markup::escape_text (t);
+
+      t = "nm-" + t;
+      webkit_dom_dom_token_list_add (class_list, t.c_str (), (err = NULL, &err));
     }
 
     g_object_unref (class_list);
