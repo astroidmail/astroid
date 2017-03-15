@@ -113,6 +113,10 @@ namespace Astroid {
     auto_polling_enabled = !auto_polling_enabled;
   }
 
+  bool Poll::get_auto_poll () {
+    return auto_polling_enabled;
+  }
+
   bool Poll::poll () {
     LOG (debug) << "poll: requested..";
 
@@ -121,8 +125,7 @@ namespace Astroid {
 
     if (m_dopoll.try_lock ()) {
 
-      Glib::Threads::Thread::create (
-          sigc::mem_fun (this, &Poll::do_poll));
+      do_poll ();
 
       return true;
 

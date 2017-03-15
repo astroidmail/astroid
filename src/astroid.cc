@@ -349,6 +349,7 @@ namespace Astroid {
 
   void Astroid::on_quit () {
     LOG (debug) << "astroid: quitting..";
+    if (poll->get_auto_poll ()) poll->toggle_auto_poll  ();
 
     /* clean up and exit */
     if (actions) actions->close ();

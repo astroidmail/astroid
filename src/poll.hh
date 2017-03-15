@@ -14,6 +14,7 @@ namespace Astroid {
 
       bool poll ();
       void toggle_auto_poll ();
+      bool get_auto_poll ();
 
       const char * poll_script = "poll.sh";
       static const int DEFAULT_POLL_INTERVAL; // 60
