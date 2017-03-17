@@ -147,8 +147,10 @@ namespace Astroid {
     LOG (info) << "poll: polling: " << poll_script_uri.c_str ();
 
 # ifdef HAVE_NOTMUCH_GET_REV
-    Db db (Db::DbMode::DATABASE_READ_ONLY);
-    before_poll_revision = db.get_revision ();
+    {
+      Db db (Db::DbMode::DATABASE_READ_ONLY);
+      before_poll_revision = db.get_revision ();
+    }
     LOG (debug) << "poll: revision before poll: " << before_poll_revision;
 # endif
 
