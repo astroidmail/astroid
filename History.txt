@@ -1,6 +1,6 @@
-==
+== v0.8 / 2017-03-17
 
-* New icons by Elio Qoshi ( http://patreon.com/ura )
+* New logo and icons by Elio Qoshi ( http://patreon.com/ura )
 
 * Run hook for thread-view (Hugo Roy)
 
@@ -24,6 +24,12 @@
 
 * New --start-polling, --stop-polling and --refresh LASTMOD options which
   makes external polling mechanisms work better.
+
+* All notmuch tags are added to message CSS with 'nm-' prefix and some sanitation to allow thread-view customizing based on tag.
+
+* Reply-To mailing list.
+
+* Fix crypto and performance bugs among many others.
 
 == v0.7 / 2017-01-02
 
