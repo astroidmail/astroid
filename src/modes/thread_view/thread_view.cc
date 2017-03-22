@@ -578,7 +578,7 @@ namespace Astroid {
       Message * m,
       Message::MessageChangedEvent me)
   {
-    if (!edit_mode) { // edit mode doesn't show tags
+    if (!edit_mode && ready) { // edit mode doesn't show tags
       if (me == Message::MessageChangedEvent::MESSAGE_TAGS_CHANGED) {
         if (m->in_notmuch && m->tid == thread->thread_id) {
           LOG (debug) << "tv: got message updated.";
