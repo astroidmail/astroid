@@ -43,6 +43,9 @@ namespace Astroid {
     queue_has_data.connect (
         sigc::mem_fun (this, &QueryLoader::to_list_adder));
 
+    deferred_threads_d.connect (
+        sigc::mem_fun (this, &QueryLoader::update_deferred_changed_threads));
+
     make_stats.connect (
         sigc::mem_fun (this, &QueryLoader::refresh_stats));
 
@@ -204,14 +207,17 @@ namespace Astroid {
     notmuch_threads_destroy (threads);
     notmuch_query_destroy (nmquery);
 
-    run = false;
-
     if (!in_destructor)
       stats_ready.emit (); // update loading status
 
     // catch any remaining entries
     if (!in_destructor)
       queue_has_data.emit ();
+
+    run = false; // on_thread_changed will not check lock
+
+    if (!in_destructor)
+      deferred_threads_d.emit ();
   }
 
   void QueryLoader::to_list_adder () {
@@ -243,6 +249,20 @@ namespace Astroid {
     }
   }
 
+  void QueryLoader::update_deferred_changed_threads () {
+    /* lock and check for changed threads */
+    if (!in_destructor) {
+      Db db (Db::DATABASE_READ_ONLY);
+
+      while (!changed_threads.empty ()) {
+        ustring tid = changed_threads.front ();
+        changed_threads.pop ();
+        LOG (debug) << "ql: deferred update of: " << tid;
+        on_thread_changed (&db, tid);
+      }
+    }
+  }
+
   bool QueryLoader::loading () {
     return run;
   }
@@ -261,6 +281,12 @@ namespace Astroid {
     if (in_destructor) return;
 
     LOG (info) << "ql (" << id << "): " << query << ", got changed thread signal: " << thread_id;
+
+    if (loading ()) {
+      LOG (debug) << "ql: still loading, deferring thread_changed to until load is done.";
+      changed_threads.push (thread_id);
+      return;
+    }
 
     /* we now have three options:
      * - a new thread has been added (unlikely)

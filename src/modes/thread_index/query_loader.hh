@@ -62,8 +62,13 @@ namespace Astroid {
       void to_list_adder ();
       Glib::Dispatcher queue_has_data;
 
-      /* signal handlers */
+      /* this is a list of threads that got a changed signal
+       * while loading */
+      Glib::Dispatcher deferred_threads_d;
+      void update_deferred_changed_threads ();
+      std::queue<ustring> changed_threads;
 
+      /* signal handlers */
       void on_thread_changed (Db *, ustring);
       void on_refreshed ();
   };
