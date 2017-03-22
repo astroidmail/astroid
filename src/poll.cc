@@ -181,12 +181,18 @@ namespace Astroid {
     }
 
     /* connect channels */
-    warn = Glib::signal_io().connect (sigc::mem_fun (this, &Poll::log_out), stdout, Glib::IO_IN | Glib::IO_HUP);
-    debug = Glib::signal_io().connect (sigc::mem_fun (this, &Poll::log_err), stderr, Glib::IO_IN | Glib::IO_HUP);
-    Glib::signal_child_watch().connect (sigc::mem_fun (this, &Poll::child_watch), pid);
+    if (pid) {
+      warn = Glib::signal_io().connect (sigc::mem_fun (this, &Poll::log_out), stdout, Glib::IO_IN | Glib::IO_HUP);
+      debug = Glib::signal_io().connect (sigc::mem_fun (this, &Poll::log_err), stderr, Glib::IO_IN | Glib::IO_HUP);
+      Glib::signal_child_watch().connect (sigc::mem_fun (this, &Poll::child_watch), pid);
 
-    ch_stdout = Glib::IOChannel::create_from_fd (stdout);
-    ch_stderr = Glib::IOChannel::create_from_fd (stderr);
+      ch_stdout = Glib::IOChannel::create_from_fd (stdout);
+      ch_stderr = Glib::IOChannel::create_from_fd (stderr);
+    } else {
+      LOG (error) << "poll: no pid returned";
+      set_poll_state (false);
+      m_dopoll.unlock ();
+    }
   }
 
   bool Poll::log_out (Glib::IOCondition cond) {
