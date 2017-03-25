@@ -61,11 +61,10 @@ namespace Astroid {
 
       external_polling = true;
       set_poll_state (true);
-# ifdef HAVE_NOTMUCH_GET_REV
+
       Db db (Db::DbMode::DATABASE_READ_ONLY);
       before_poll_revision = db.get_revision ();
       LOG (debug) << "poll: revision before poll: " << before_poll_revision;
-# endif
 
     } else {
       LOG (error) << "poll: uh oh! poll is already running, better disable internal polling if you use external polling - expect hard crashes!";
@@ -146,13 +145,11 @@ namespace Astroid {
 
     LOG (info) << "poll: polling: " << poll_script_uri.c_str ();
 
-# ifdef HAVE_NOTMUCH_GET_REV
     {
       Db db (Db::DbMode::DATABASE_READ_ONLY);
       before_poll_revision = db.get_revision ();
     }
     LOG (debug) << "poll: revision before poll: " << before_poll_revision;
-# endif
 
     if (!is_regular_file (poll_script_uri)) {
       LOG (error) << "poll: poll script does not exist or is not a regular file.";
@@ -242,9 +239,6 @@ namespace Astroid {
       LOG (error) << "poll: poll script did not exit successfully.";
     }
 
-    // TODO:
-    // - use lastmod to figure out how many messages have been added or changed
-    //   during poll.
     LOG (info) << "poll: done (time: " << elapsed.count() << " s) (child status: " << child_status << ")";
     set_poll_state (false);
 
@@ -281,7 +275,6 @@ namespace Astroid {
 
   void Poll::refresh_threads () {
 
-# ifdef HAVE_NOTMUCH_GET_REV
     /* update all threads that have been changed */
     Db db (Db::DbMode::DATABASE_READ_ONLY);
 
@@ -298,22 +291,14 @@ namespace Astroid {
 
       unsigned int total_threads;
       notmuch_status_t st = NOTMUCH_STATUS_SUCCESS;
-# ifdef HAVE_QUERY_COUNT_THREADS_ST
-      st = notmuch_query_count_threads_st (qry, &total_threads);
-# else
-      total_threads = notmuch_query_count_threads (qry);
-# endif
+      st = notmuch_query_count_threads (qry, &total_threads);
 
       LOG (info) << "poll: " << total_threads << " threads changed, updating..";
 
       if (st == NOTMUCH_STATUS_SUCCESS && total_threads > 0) {
         notmuch_threads_t * threads;
         notmuch_thread_t  * thread;
-# ifdef HAVE_QUERY_THREADS_ST
-        st = notmuch_query_search_threads_st (qry, &threads);
-# else
-        threads = notmuch_query_search_threads (qry);
-# endif
+        st = notmuch_query_search_threads (qry, &threads);
 
         for (;
              (st == NOTMUCH_STATUS_SUCCESS) && notmuch_threads_valid (threads);
@@ -331,10 +316,6 @@ namespace Astroid {
       notmuch_query_destroy (qry);
 
     }
-
-# else
-    astroid->actions->signal_refreshed_dispatcher ();
-# endif
   }
 
   void Poll::poll_state_dispatch () {

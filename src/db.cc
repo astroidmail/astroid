@@ -209,15 +209,12 @@ namespace Astroid {
     close ();
   }
 
-# ifdef HAVE_NOTMUCH_GET_REV
   unsigned long Db::get_revision () {
     const char *uuid;
     unsigned long revision = notmuch_database_get_revision (nm_db, &uuid);
 
     return revision;
   }
-
-# endif
 
   void Db::load_tags () {
     notmuch_tags_t * nm_tags = notmuch_database_get_all_tags (nm_db);
@@ -334,12 +331,8 @@ namespace Astroid {
     unsigned int c = 0;
     notmuch_status_t st = NOTMUCH_STATUS_SUCCESS;
 
-# ifdef HAVE_QUERY_COUNT_THREADS_ST
-    st = notmuch_query_count_threads_st (query, &c);
+    st = notmuch_query_count_threads (query, &c);
     if (st != NOTMUCH_STATUS_SUCCESS) c = 0;
-# else
-    c = notmuch_query_count_threads (query);
-# endif
 
     if (c > 1) {
       throw database_error ("db: got more than one thread for thread id.");
@@ -362,12 +355,7 @@ namespace Astroid {
     notmuch_threads_t * nm_threads;
     notmuch_status_t st = NOTMUCH_STATUS_SUCCESS;
 
-# ifdef HAVE_QUERY_THREADS_ST
-    /* available since notmuch 0.21 */
-    st = notmuch_query_search_threads_st (query, &nm_threads);
-# else
-    nm_threads = notmuch_query_search_threads (query);
-# endif
+    st = notmuch_query_search_threads (query, &nm_threads);
 
     if ((st != NOTMUCH_STATUS_SUCCESS) || nm_threads == NULL) {
       notmuch_query_destroy (query);

@@ -36,12 +36,10 @@ namespace Astroid {
       std::chrono::time_point<std::chrono::steady_clock> t0; // start time of poll
       std::chrono::time_point<std::chrono::steady_clock> last_poll;
 
-# ifdef HAVE_NOTMUCH_GET_REV
       unsigned long before_poll_revision = 0;
-# endif
       void refresh_threads ();
 
-      int pid;
+      GPid pid;
       int stdin;
       int stdout;
       int stderr;
