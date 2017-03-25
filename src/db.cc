@@ -49,6 +49,8 @@ namespace Astroid {
 
     ustring db_path = ustring (config.get<string> ("database.path"));
 
+    LOG (info) << "db path: " << db_path;
+
     path_db = Utils::expand (path (db_path));
     path_db = absolute (path_db);
 
@@ -359,7 +361,7 @@ namespace Astroid {
 
     if ((st != NOTMUCH_STATUS_SUCCESS) || nm_threads == NULL) {
       notmuch_query_destroy (query);
-      LOG (error) << "db: could not find thread: " << thread_id << ", status: " << st;
+      LOG (error) << "db: could not find thread: " << thread_id << ", status: " << notmuch_status_to_string(st);
 
       func (NULL);
 
