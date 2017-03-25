@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_SUITE(Notmuch)
     notmuch_query_t * q = notmuch_query_create (nm_db, "*");
 
     unsigned int c;
-    notmuch_status_t st = notmuch_query_count_messages_st (q, &c); // desctrutive
+    notmuch_status_t st = notmuch_query_count_messages (q, &c); // desctrutive
     notmuch_query_destroy (q);
     q = notmuch_query_create (nm_db, "*");
 
@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_SUITE(Notmuch)
     notmuch_messages_t * messages;
     notmuch_message_t  * message;
 
-    for (st = notmuch_query_search_messages_st (q, &messages);
+    for (st = notmuch_query_search_messages (q, &messages);
 
          (st == NOTMUCH_STATUS_SUCCESS) &&
          notmuch_messages_valid (messages);
@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_SUITE(Notmuch)
     notmuch_query_t * q = notmuch_query_create (nm_db, "*");
 
     unsigned int c;
-    notmuch_status_t st = notmuch_query_count_threads_st (q, &c); // destructive
+    notmuch_status_t st = notmuch_query_count_threads (q, &c); // destructive
     notmuch_query_destroy (q);
     q = notmuch_query_create (nm_db, "*");
 
@@ -98,7 +98,7 @@ BOOST_AUTO_TEST_SUITE(Notmuch)
 
     notmuch_threads_t * threads;
     notmuch_thread_t  * thread;
-    st = notmuch_query_search_threads_st (q, &threads);
+    st = notmuch_query_search_threads (q, &threads);
 
     std::string thread_id_of_first;
     int i = 0;
@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_SUITE(Notmuch)
     /* restart query */
     cout << "restarting query.." << endl;
     q = notmuch_query_create (nm_db, "*");
-    st = notmuch_query_search_threads_st (q, &threads);
+    st = notmuch_query_search_threads (q, &threads);
 
     i = 0;
 

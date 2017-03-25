@@ -197,7 +197,7 @@ BOOST_AUTO_TEST_SUITE(GPGEncryption)
 
     ustring fn = "test/mail/test_mail/gpg-test-1.eml";
     c->write (fn);
-    system ("notmuch new");
+    system ("notmuch new; notmuch search \"*\"");
 
     BOOST_CHECK_MESSAGE (c->encryption_success == true, "encryption should be successful");
     LOG (test) << "cm: deleting ComposeMessage..";
@@ -206,13 +206,15 @@ BOOST_AUTO_TEST_SUITE(GPGEncryption)
 
     Message *m;
 
-    Db db(Db::DATABASE_READ_ONLY);
-    db.on_message (mid, [&](notmuch_message_t * msg) {
-        LOG (test) << "trying to open encrypted file.";
+    {
+      Db db(Db::DATABASE_READ_ONLY);
+      db.on_message (mid, [&](notmuch_message_t * msg) {
+          LOG (test) << "trying to open encrypted file.";
 
-        m = new Message (msg, 0);
+          m = new Message (msg, 0);
 
-        });
+          });
+    }
 
     /* check that body matches */
     ustring rbdy = m->viewable_text (false);
@@ -224,12 +226,18 @@ BOOST_AUTO_TEST_SUITE(GPGEncryption)
 
     refptr<NotmuchThread> nt;
 
-    db.on_thread (tid, [&](notmuch_thread_t * nmt) {
+    LOG (test) << "trying to open thread: " << tid;
 
-        nt = refptr<NotmuchThread> (new NotmuchThread (nmt));
+    {
+      Db db(Db::DATABASE_READ_ONLY);
+      db.on_thread (tid, [&](notmuch_thread_t * nmt) {
 
-        });
-    db.close ();
+          BOOST_CHECK (nmt != NULL);
+          nt = refptr<NotmuchThread> (new NotmuchThread (nmt));
+
+          });
+    }
+
 
     /* Okay, let's see if we can provoke 'Too many open files' in GPG */
     int tries = 0;
