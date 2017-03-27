@@ -1,4 +1,19 @@
-== v0.8 / 2017-03-17
+== *
+
+* Drop use of old deprecated non _st functions, use their new names. Will
+  require 0.24 or newer.
+
+* No longer support pre-lastmod notmuches.
+
+* Catch missing content errors for messages, not fail.
+
+* Wait and block R/O database opening, not fail.
+
+* Defer changed_thread events on thread-index while still loading.
+
+* Do not update tags in thread-view when not ready.
+
+when not== v0.8 / 2017-03-17
 
 * New logo and icons by Elio Qoshi ( http://patreon.com/ura )
 
