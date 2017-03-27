@@ -52,6 +52,8 @@ namespace Astroid {
     enable_code_prettify = config.get<bool> ("code_prettify.enable");
     enable_code_prettify_for_patches = config.get<bool> ("code_prettify.enable_for_patches");
 
+    expand_flagged = config.get<bool> ("expand_flagged");
+
     ustring cp_only_tags = config.get<string> ("code_prettify.for_tags");
     if (cp_only_tags.length() > 0) {
       code_prettify_only_tags = VectorUtils::split_and_trim (cp_only_tags, ",");
@@ -846,7 +848,7 @@ namespace Astroid {
 
     if (!edit_mode) {
       /* optionally hide / collapse the message */
-      if (!(m->has_tag("unread") || m->has_tag("flagged"))) {
+      if (!(m->has_tag("unread") || (expand_flagged && m->has_tag("flagged")))) {
 
         /* hide message */
         WebKitDOMDOMTokenList * class_list =

@@ -13,6 +13,9 @@
 
 * Do not update tags in thread-view when not ready.
 
+* configuration option thread_view.expand_flagged determines whether flagged
+  messages are expanded by default.
+
 when not== v0.8 / 2017-03-17
 
 * New logo and icons by Elio Qoshi ( http://patreon.com/ura )

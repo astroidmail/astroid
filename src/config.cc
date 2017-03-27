@@ -243,6 +243,9 @@ namespace Astroid {
     /* mark unread */
     default_config.put ("thread_view.mark_unread_delay", .5);
 
+    /* expand flagged messages by default */
+    default_config.put ("thread_view.expand_flagged", true);
+
     /* crypto */
     default_config.put ("crypto.gpg.path", "gpg2");
     default_config.put ("crypto.gpg.always_trust", true);

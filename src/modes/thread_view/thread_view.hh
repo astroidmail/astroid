@@ -71,6 +71,7 @@ namespace Astroid {
       /* resources */
       ustring home_uri;           // relative url for requests
 
+      bool    expand_flagged;
       bool    enable_code_prettify;
       std::vector<ustring> code_prettify_only_tags;
       ustring code_prettify_uri = "https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js";
