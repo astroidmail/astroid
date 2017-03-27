@@ -174,11 +174,11 @@ namespace Astroid {
       DbMode mode;
 
       bool open_db_write (bool);
-      bool open_db_read_only ();
+      bool open_db_read_only (bool);
       bool closed = false;
 
-      const int db_write_open_timeout = 120; // seconds
-      const int db_write_open_delay   = 1;   // seconds
+      const int db_open_timeout = 120; // seconds
+      const int db_open_delay   = 1;   // seconds
 
   };
 

@@ -71,9 +71,10 @@ namespace Astroid {
 
     time_t start = clock ();
 
-    nm_db     = NULL;
+    nm_db = NULL;
+
     if (mode == DATABASE_READ_ONLY) {
-      open_db_read_only ();
+      open_db_read_only (true);
     } else if (mode == DATABASE_READ_WRITE) {
       open_db_write (true);
     } else {
@@ -108,16 +109,16 @@ namespace Astroid {
       if (s == NOTMUCH_STATUS_XAPIAN_EXCEPTION) {
         LOG (error) << "db: error: could not open db r/w, waited " <<
                 time << " of maximum " <<
-                db_write_open_timeout << " seconds.";
+                db_open_timeout << " seconds.";
 
-        chrono::seconds duration (db_write_open_delay);
+        chrono::seconds duration (db_open_delay);
         this_thread::sleep_for (duration);
 
-        time += db_write_open_delay;
+        time += db_open_delay;
 
       }
 
-    } while (block && (s == NOTMUCH_STATUS_XAPIAN_EXCEPTION) && (time <= db_write_open_timeout));
+    } while (block && (s == NOTMUCH_STATUS_XAPIAN_EXCEPTION) && (time <= db_open_timeout));
 
     if (s != NOTMUCH_STATUS_SUCCESS) {
       LOG (error) << "db: error: failed opening database for writing, have you configured the notmuch database path correctly?";
@@ -125,27 +126,43 @@ namespace Astroid {
       release_rw_lock (rw_lock);
       throw database_error ("failed to open database for writing");
 
-
       return false;
     }
 
     return true;
   }
 
-  bool Db::open_db_read_only () {
+  bool Db::open_db_read_only (bool block) {
     Db::acquire_ro_lock ();
 
-    notmuch_status_t s =
-      notmuch_database_open (
-        path_db.c_str(),
-        notmuch_database_mode_t::NOTMUCH_DATABASE_MODE_READ_ONLY,
-        &nm_db);
+    notmuch_status_t s;
+
+    int time = 0;
+
+    do {
+      s = notmuch_database_open (
+          path_db.c_str(),
+          notmuch_database_mode_t::NOTMUCH_DATABASE_MODE_READ_ONLY,
+          &nm_db);
+
+      if (s == NOTMUCH_STATUS_XAPIAN_EXCEPTION) {
+        LOG (error) << "db: error: could not open db r/o, waited " <<
+                time << " of maximum " <<
+                db_open_timeout << " seconds.";
+
+        chrono::seconds duration (db_open_delay);
+        this_thread::sleep_for (duration);
+
+        time += db_open_delay;
+
+      }
+    } while (block && (s == NOTMUCH_STATUS_XAPIAN_EXCEPTION) && (time <= db_open_timeout));
 
     if (s != NOTMUCH_STATUS_SUCCESS) {
       LOG (error) << "db: error: failed opening database for reading, have you configured the notmuch database path correctly?";
 
+      release_ro_lock ();
       throw database_error ("failed to open database (read-only)");
-
 
       return false;
     }
