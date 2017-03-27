@@ -1,7 +1,5 @@
 # pragma once
 
-# include <gtkmm/socket.h>
-
 # include "editor.hh"
 # include "proto.hh"
 

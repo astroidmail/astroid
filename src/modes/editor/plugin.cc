@@ -1,3 +1,5 @@
+# ifndef DISABLE_EMBEDDED
+
 # include <string>
 
 # include <gtkmm/socket.h>
@@ -113,4 +115,5 @@ namespace Astroid {
 
 }
 
+# endif
 

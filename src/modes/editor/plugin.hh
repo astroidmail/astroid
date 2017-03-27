@@ -1,5 +1,7 @@
 # pragma once
 
+# ifndef DISABLE_EMBEDDED
+
 # include <gtkmm/socket.h>
 
 # include "editor.hh"
@@ -45,4 +47,6 @@ namespace Astroid {
       std::string editor_args;
   };
 }
+
+# endif
 

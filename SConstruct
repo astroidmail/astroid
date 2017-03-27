@@ -23,6 +23,9 @@ AddOption ("--disable-plugins", action = 'store_true', dest = 'disable_plugins',
 AddOption ("--disable-terminal", action='store_true', dest='disable_terminal',
     default = False, help = "Disable built-in VTE based terminal")
 
+AddOption ("--disable-embedded-editor", action='store_true', dest='disable_embedded',
+    default = False, help = "Disable embedded editor")
+
 AddOption ("--propagate-environment", action = 'store_true', dest = 'propagate_environment',
     default = False, help = "Propagate external environment variables to the build environment")
 
@@ -37,6 +40,7 @@ scss             = GetOption ('scss_compiler')
 profile          = GetOption ('profile')
 disable_terminal = GetOption ("disable_terminal")
 disable_plugins  = GetOption ("disable_plugins")
+disable_embedded = GetOption ("disable_embedded")
 
 prefix = GetOption ("prefix")
 
@@ -204,6 +208,9 @@ if not disable_terminal:
 if disable_terminal:
   print "warning: built-in terminal disabled."
   env.AppendUnique (CPPFLAGS = [ '-DDISABLE_VTE' ])
+
+if disable_embedded:
+  env.AppendUnique (CPPFLAGS = [ '-DDISABLE_EMBEDDED' ])
 
 if not disable_libsass:
   if conf.CheckLibWithHeader ('libsass', 'sass_context.h', 'c'):
@@ -411,6 +418,7 @@ print "    libsass ..: ", (not disable_libsass)
 print "    scss .....: ", scss, "( use:", disable_libsass, ")"
 print "    plugins ..: ", (not disable_plugins)
 print "    terminal .: ", (not disable_terminal)
+print "    embedded .: ", (not disable_embedded)
 print "    prefix ...: ", prefix
 print ""
 

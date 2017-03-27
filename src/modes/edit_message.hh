@@ -7,9 +7,7 @@
 # include <fstream>
 # include <mutex>
 
-# include <gtkmm/socket.h>
 # include <glibmm/iochannel.h>
-
 # include <boost/filesystem.hpp>
 
 # include "proto.hh"
@@ -26,7 +24,9 @@
 namespace Astroid {
   class EditMessage : public Mode {
     friend Editor;
+# ifndef DISABLE_EMBEDDED
     friend Plugin;
+# endif
     friend External;
 
     public:
@@ -49,7 +49,11 @@ namespace Astroid {
       Gtk::Revealer *reply_revealer;
       Gtk::Revealer *encryption_revealer;
 
+# ifndef DISABLE_EMBEDDED
       bool embed_editor = true;
+# else
+      const bool embed_editor = false;
+# endif
 
       Editor * editor;
       bool editor_active = false;
