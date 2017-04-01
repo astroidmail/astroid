@@ -16,6 +16,10 @@
 * configuration option thread_view.expand_flagged determines whether flagged
   messages are expanded by default.
 
+* Better handle poll thread. Make sure to clean up connections here and in send_message.
+
+* Polling can be cancelled with C-c in main window.
+
 when not== v0.8 / 2017-03-17
 
 * New logo and icons by Elio Qoshi ( http://patreon.com/ura )

@@ -375,6 +375,13 @@ namespace Astroid {
           return true;
         });
 
+    keys.register_key ("C-c", "main_window.cancel_poll",
+        "Cancel ongoing poll",
+        [&] (Key) {
+          astroid->poll->cancel_poll ();
+          return true;
+        });
+
     keys.register_key ("C-o", "main_window.open_new_window",
         "Open new main window",
         [&] (Key) {
