@@ -1,5 +1,6 @@
 # include <mutex>
 # include <chrono>
+# include <sys/wait.h>
 
 # include <boost/filesystem.hpp>
 # include <glibmm/spawn.h>
@@ -17,9 +18,6 @@ using namespace boost::filesystem;
 
 namespace Astroid {
   const int Poll::DEFAULT_POLL_INTERVAL = 60;
-  sigc::connection debug;
-  sigc::connection warn;
-
   Poll::Poll (bool _auto_polling_enabled) {
     LOG (info) << "poll: setting up.";
 
@@ -45,6 +43,11 @@ namespace Astroid {
     }
 
     d_poll_state.connect (sigc::mem_fun (this, &Poll::poll_state_dispatch));
+    d_refresh.connect (sigc::mem_fun (this, &Poll::refresh_threads));
+  }
+
+  Poll::~Poll () {
+    if (poll_thread.joinable ()) poll_thread.join ();
   }
 
   void Poll::start_polling () {
@@ -116,6 +119,26 @@ namespace Astroid {
     return auto_polling_enabled;
   }
 
+  void Poll::cancel_poll () {
+    LOG (warn) << "poll: cancel polling pid: " << pid;
+    std::lock_guard<std::mutex> lk (poll_cancel_m);
+
+    if (pid > 0) {
+
+      int r = kill (pid, SIGKILL);
+
+      if (r == 0) {
+        LOG (warn) << "cm: poll script killed.";
+      } else {
+        LOG (error) << "cm: could not kill poll script.";
+      }
+    }
+
+    if (poll_thread.joinable ()) {
+      poll_thread.detach ();
+    }
+  }
+
   bool Poll::poll () {
     LOG (debug) << "poll: requested..";
 
@@ -124,7 +147,10 @@ namespace Astroid {
 
     if (m_dopoll.try_lock ()) {
 
-      do_poll ();
+      if (poll_thread.joinable () ) {
+        poll_thread.join ();
+      }
+      poll_thread = std::thread (&Poll::do_poll, this);
 
       return true;
 
@@ -137,6 +163,8 @@ namespace Astroid {
   }
 
   void Poll::do_poll () {
+    std::unique_lock<std::mutex> lk (poll_cancel_m);
+
     set_poll_state (true);
 
     t0 = chrono::steady_clock::now ();
@@ -177,19 +205,37 @@ namespace Astroid {
       return;
     }
 
-    /* connect channels */
-    if (pid) {
-      warn = Glib::signal_io().connect (sigc::mem_fun (this, &Poll::log_out), stdout, Glib::IO_IN | Glib::IO_HUP);
-      debug = Glib::signal_io().connect (sigc::mem_fun (this, &Poll::log_err), stderr, Glib::IO_IN | Glib::IO_HUP);
-      Glib::signal_child_watch().connect (sigc::mem_fun (this, &Poll::child_watch), pid);
+    lk.unlock ();
 
-      ch_stdout = Glib::IOChannel::create_from_fd (stdout);
-      ch_stderr = Glib::IOChannel::create_from_fd (stderr);
-    } else {
-      LOG (error) << "poll: no pid returned";
-      set_poll_state (false);
-      m_dopoll.unlock ();
+    /* connect channels */
+    c_ch_stdout = Glib::signal_io().connect (sigc::mem_fun (this, &Poll::log_out), stdout, Glib::IO_IN | Glib::IO_HUP);
+    c_ch_stderr = Glib::signal_io().connect (sigc::mem_fun (this, &Poll::log_err), stderr, Glib::IO_IN | Glib::IO_HUP);
+
+    ch_stdout = Glib::IOChannel::create_from_fd (stdout);
+    ch_stderr = Glib::IOChannel::create_from_fd (stderr);
+
+    /* wait for polll to finish */
+    int status;
+    waitpid (pid, &status, 0);
+    g_spawn_close_pid (pid);
+
+    c_ch_stderr.disconnect();
+    c_ch_stdout.disconnect();
+
+    chrono::duration<double> elapsed = chrono::steady_clock::now() - t0;
+    last_poll = chrono::steady_clock::now ();
+
+    if (status != 0) {
+      LOG (error) << "poll: poll script did not exit successfully.";
     }
+
+    LOG (info) << "poll: done (time: " << elapsed.count() << " s) (status: " << status << ")";
+
+    pid = 0;
+    set_poll_state (false);
+    m_dopoll.unlock ();
+
+    d_refresh (); /* signal refresh */
   }
 
   bool Poll::log_out (Glib::IOCondition cond) {
@@ -229,28 +275,6 @@ namespace Astroid {
       LOG (warn) << "poll script: " << buf;
     }
     return true;
-  }
-
-  void Poll::child_watch (GPid pid, int child_status) {
-    chrono::duration<double> elapsed = chrono::steady_clock::now() - t0;
-    last_poll = chrono::steady_clock::now ();
-
-    if (child_status != 0) {
-      LOG (error) << "poll: poll script did not exit successfully.";
-    }
-
-    LOG (info) << "poll: done (time: " << elapsed.count() << " s) (child status: " << child_status << ")";
-    set_poll_state (false);
-
-    /* close process */
-    Glib::spawn_close_pid (pid);
-
-    warn.disconnect();
-    debug.disconnect();
-
-    refresh_threads ();
-
-    m_dopoll.unlock ();
   }
 
   void Poll::refresh (unsigned long before) {

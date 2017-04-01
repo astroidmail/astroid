@@ -2,15 +2,17 @@
 
 # include "astroid.hh"
 
+# include <thread>
 # include <mutex>
+# include <condition_variable>
 # include <chrono>
-# include <glibmm/threads.h>
 # include <glibmm/iochannel.h>
 
 namespace Astroid {
-  class Poll {
+  class Poll : public sigc::trackable {
     public:
       Poll (bool auto_polling_enabled);
+      ~Poll ();
 
       bool poll ();
       void toggle_auto_poll ();
@@ -22,6 +24,7 @@ namespace Astroid {
       void start_polling ();
       void stop_polling ();
       void refresh (unsigned long before);
+      void cancel_poll ();
 
     private:
       std::mutex m_dopoll;
@@ -39,16 +42,23 @@ namespace Astroid {
       unsigned long before_poll_revision = 0;
       void refresh_threads ();
 
+      std::thread poll_thread;
+      std::mutex  poll_cancel_m;
+      std::condition_variable poll_cancel_cv;
+
       GPid pid;
       int stdin;
       int stdout;
       int stderr;
       refptr<Glib::IOChannel> ch_stdout;
       refptr<Glib::IOChannel> ch_stderr;
+      sigc::connection c_ch_stdout;
+      sigc::connection c_ch_stderr;
+      Glib::Dispatcher d_refresh;
+
 
       bool log_out (Glib::IOCondition);
       bool log_err (Glib::IOCondition);
-      void child_watch (GPid, int);
 
       bool poll_state;
       void set_poll_state (bool);
