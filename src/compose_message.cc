@@ -429,8 +429,9 @@ namespace Astroid {
       }
 
       /* connect channels */
-      Glib::signal_io().connect (sigc::mem_fun (this, &ComposeMessage::log_out), stdout, Glib::IO_IN | Glib::IO_HUP);
-      Glib::signal_io().connect (sigc::mem_fun (this, &ComposeMessage::log_err), stderr, Glib::IO_IN | Glib::IO_HUP);
+      c_ch_stdout = Glib::signal_io().connect (sigc::mem_fun (this, &ComposeMessage::log_out), stdout, Glib::IO_IN | Glib::IO_HUP);
+      c_ch_stderr = Glib::signal_io().connect (sigc::mem_fun (this, &ComposeMessage::log_err), stderr, Glib::IO_IN | Glib::IO_HUP);
+
 
       ch_stdout = Glib::IOChannel::create_from_fd (stdout);
       ch_stderr = Glib::IOChannel::create_from_fd (stderr);
@@ -450,6 +451,9 @@ namespace Astroid {
       int status;
       waitpid (pid, &status, 0);
       g_spawn_close_pid (pid);
+
+      c_ch_stderr.disconnect();
+      c_ch_stdout.disconnect();
 
       if (status == 0)
       {
