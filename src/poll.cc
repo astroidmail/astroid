@@ -150,6 +150,14 @@ namespace Astroid {
       if (poll_thread.joinable () ) {
         poll_thread.join ();
       }
+
+
+      {
+        Db db (Db::DbMode::DATABASE_READ_ONLY);
+        before_poll_revision = db.get_revision ();
+      }
+      LOG (debug) << "poll: revision before poll: " << before_poll_revision;
+
       poll_thread = std::thread (&Poll::do_poll, this);
 
       return true;
@@ -170,14 +178,7 @@ namespace Astroid {
     t0 = chrono::steady_clock::now ();
 
     path poll_script_uri = astroid->standard_paths().config_dir / path(poll_script);
-
     LOG (info) << "poll: polling: " << poll_script_uri.c_str ();
-
-    {
-      Db db (Db::DbMode::DATABASE_READ_ONLY);
-      before_poll_revision = db.get_revision ();
-    }
-    LOG (debug) << "poll: revision before poll: " << before_poll_revision;
 
     if (!is_regular_file (poll_script_uri)) {
       LOG (error) << "poll: poll script does not exist or is not a regular file.";
