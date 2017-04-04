@@ -204,6 +204,11 @@ namespace Astroid {
       set_poll_state (false);
       m_dopoll.unlock ();
       return;
+    } catch (Glib::Error &ex) {
+      LOG (error) << "poll: exception while running poll script: " <<  ex.what ();
+      set_poll_state (false);
+      m_dopoll.unlock ();
+      return;
     }
 
     lk.unlock ();
@@ -215,7 +220,7 @@ namespace Astroid {
     ch_stdout = Glib::IOChannel::create_from_fd (stdout);
     ch_stderr = Glib::IOChannel::create_from_fd (stderr);
 
-    /* wait for polll to finish */
+    /* wait for poll to finish */
     int status;
     waitpid (pid, &status, 0);
     g_spawn_close_pid (pid);
@@ -234,9 +239,9 @@ namespace Astroid {
 
     pid = 0;
     set_poll_state (false);
-    m_dopoll.unlock ();
 
     d_refresh (); /* signal refresh */
+    m_dopoll.unlock ();
   }
 
   bool Poll::log_out (Glib::IOCondition cond) {
