@@ -455,6 +455,10 @@ namespace Astroid {
       c_ch_stderr.disconnect();
       c_ch_stdout.disconnect();
 
+      ::close (stdin);
+      ::close (stdout);
+      ::close (stderr);
+
       if (status == 0)
       {
         if (output)

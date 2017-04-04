@@ -228,6 +228,10 @@ namespace Astroid {
     c_ch_stderr.disconnect();
     c_ch_stdout.disconnect();
 
+    ::close (stdin);
+    ::close (stdout);
+    ::close (stderr);
+
     chrono::duration<double> elapsed = chrono::steady_clock::now() - t0;
     last_poll = chrono::steady_clock::now ();
 
