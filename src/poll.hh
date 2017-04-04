@@ -12,7 +12,7 @@ namespace Astroid {
   class Poll : public sigc::trackable {
     public:
       Poll (bool auto_polling_enabled);
-      ~Poll ();
+      void close ();
 
       bool poll ();
       void toggle_auto_poll ();

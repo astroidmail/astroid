@@ -349,9 +349,10 @@ namespace Astroid {
 
   void Astroid::on_quit () {
     LOG (debug) << "astroid: quitting..";
-    if (poll->get_auto_poll ()) poll->toggle_auto_poll  ();
 
-    /* clean up and exit */
+    if (poll->get_auto_poll ()) poll->toggle_auto_poll  ();
+    if (poll) poll->close ();
+
     if (actions) actions->close ();
     SavedSearches::destruct ();
 
@@ -366,6 +367,8 @@ namespace Astroid {
   Astroid::~Astroid () {
     delete accounts;
     delete m_config;
+
+    if (poll) poll->close ();
     delete poll;
 
     if (actions) actions->close ();

@@ -46,7 +46,7 @@ namespace Astroid {
     d_refresh.connect (sigc::mem_fun (this, &Poll::refresh_threads));
   }
 
-  Poll::~Poll () {
+  void Poll::close () {
     if (poll_thread.joinable ()) poll_thread.join ();
   }
 
