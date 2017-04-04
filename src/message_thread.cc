@@ -166,6 +166,7 @@ namespace Astroid {
 
     } else {
       GMimeStream   * stream  = g_mime_stream_file_new_for_path (fname.c_str(), "r");
+      g_mime_stream_file_set_owner (GMIME_STREAM_FILE(stream), TRUE);
       if (stream == NULL) {
         LOG (error) << "failed to open file: " << fname << " (unspecified error)";
 
