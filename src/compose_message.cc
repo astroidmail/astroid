@@ -83,14 +83,24 @@ namespace Astroid {
 
   void ComposeMessage::set_references (ustring _refs) {
     references = _refs;
-    g_mime_object_set_header (GMIME_OBJECT(message), "References",
-        references.c_str());
+    if (references.empty ())
+        g_mime_header_list_remove (
+            g_mime_object_get_header_list (GMIME_OBJECT(message)),
+            "References");
+    else
+        g_mime_object_set_header (GMIME_OBJECT(message), "References",
+            references.c_str());
   }
 
   void ComposeMessage::set_inreplyto (ustring _inreplyto) {
     inreplyto = _inreplyto;
-    g_mime_object_set_header (GMIME_OBJECT(message), "In-Reply-To",
-        inreplyto.c_str());
+    if (inreplyto.empty ())
+        g_mime_header_list_remove (
+            g_mime_object_get_header_list (GMIME_OBJECT(message)),
+            "In-Reply-To");
+    else
+        g_mime_object_set_header (GMIME_OBJECT(message), "In-Reply-To",
+            inreplyto.c_str());
   }
 
   void ComposeMessage::build () {
