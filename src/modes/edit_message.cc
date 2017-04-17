@@ -6,7 +6,6 @@
 # include <memory>
 
 # include <gtkmm.h>
-# include <gdk/gdkx.h>
 
 # include <boost/filesystem.hpp>
 
