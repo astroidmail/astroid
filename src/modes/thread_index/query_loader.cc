@@ -131,11 +131,8 @@ namespace Astroid {
   void QueryLoader::loader () {
     std::lock_guard<std::mutex> loader_lk (loader_m);
 
-    make_stats ();
-
-    /* important: we cannot safely output debug info from this thread */
-
     Db db (Db::DATABASE_READ_ONLY);
+    refresh_stats_db (&db);
 
     /* set up query */
     notmuch_query_t * nmquery;
@@ -192,7 +189,7 @@ namespace Astroid {
     }
 
     /* closing query */
-    notmuch_threads_destroy (threads);
+    if (st == NOTMUCH_STATUS_SUCCESS) notmuch_threads_destroy (threads);
     notmuch_query_destroy (nmquery);
 
     if (!in_destructor)
