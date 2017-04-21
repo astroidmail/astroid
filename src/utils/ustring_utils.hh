@@ -23,6 +23,7 @@ namespace Astroid {
       static ustring replace (ustring subject, const ustring& search,
                           const ustring& replace);
 
+      static ustring unixify (const ustring subject);
 
       /* converts a byte array to a ustring */
       static std::pair<bool, ustring> data_to_ustring (unsigned int len, const char * data);

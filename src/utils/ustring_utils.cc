@@ -77,6 +77,12 @@ namespace Astroid {
     return subject;
   }
 
+  ustring UstringUtils::unixify (const ustring subject) {
+    /* replace CRs with newlines */
+    ustring s = replace (subject, "\r\n", "\n");
+
+    return s;
+  }
 
   std::pair<bool, ustring> UstringUtils::data_to_ustring (unsigned int len, const char * data) {
     stringstream s;

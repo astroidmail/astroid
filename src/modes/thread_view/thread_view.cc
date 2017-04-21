@@ -2706,7 +2706,8 @@ namespace Astroid {
                 y += ustring::compose ("From %1  %2",
                     Address(m->sender).email(),
                     m->date_asctime ()); // asctime adds a \n
-                y += cnv.second;
+
+                y += UstringUtils::unixify (cnv.second);
                 y += "\n";
               }
             }
@@ -3079,7 +3080,7 @@ namespace Astroid {
         auto d   = focused_message->raw_contents ();
         auto cnv = UstringUtils::bytearray_to_ustring (d);
         if (cnv.first) {
-          t = cnv.second;
+          t = UstringUtils::unixify (cnv.second);
         }
 
         cp->set_text (t);
@@ -3109,7 +3110,7 @@ namespace Astroid {
           auto d = focused_message->raw_contents ();
           auto cnv = UstringUtils::bytearray_to_ustring (d);
           if (cnv.first) {
-            t = cnv.second;
+            t = UstringUtils::unixify (cnv.second);
           }
 
           cp->set_text (t);
