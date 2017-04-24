@@ -288,6 +288,7 @@ namespace Astroid {
 
     private:
       Keybindings multi_keys;
+      Keybindings next_multi;
       void register_keys ();
 
       /* changed signals */
@@ -319,9 +320,23 @@ namespace Astroid {
 
       void emit_element_action (unsigned int element, ElementAction action);
 
+      /* actions for originating thread-index */
+      typedef enum {
+        IA_Next = 0,
+        IA_Previous,
+        IA_NextUnread,
+        IA_PreviousUnread,
+      } IndexAction;
+
+      typedef sigc::signal <bool, ThreadView *, IndexAction> type_index_action;
+      type_index_action signal_index_action ();
+
+      bool emit_index_action (IndexAction action);
+
     protected:
       type_signal_ready m_signal_ready;
       type_element_action m_element_action;
+      type_index_action m_index_action;
   };
 }
 

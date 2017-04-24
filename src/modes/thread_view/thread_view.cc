@@ -2881,7 +2881,8 @@ namespace Astroid {
           return true;
         });
 
-    keys.register_key ("a", "thread_index.archive_thread",
+    keys.register_key ("a",
+        "thread_view.archive_thread",
         "Toggle 'inbox' tag on the whole thread",
         [&] (Key) {
 
@@ -3054,9 +3055,81 @@ namespace Astroid {
           return true;
         });
 
-  }
+    keys.register_key (Key (":"),
+          "thread_view.next_thread",
+          "Open next after..",
+          [&] (Key k) {
+            multi_key (next_multi, k);
 
-  //
+            return true;
+          });
+
+    next_multi.register_key (Key ("a"),
+        "thread_view.next_thread.archive",
+        "Archive and open next thread",
+        [&] (Key) {
+          keys.handle ("thread_view.archive_thread");
+          emit_index_action (IA_Next);
+
+          return true;
+        });
+
+    next_multi.register_key (Key ("A"),
+        "thread_view.next_thread.archive_next_unread_thread",
+        "Archive and open next unread thread",
+        [&] (Key) {
+          keys.handle ("thread_view.archive_thread");
+          emit_index_action (IA_NextUnread);
+
+          return true;
+        });
+
+    next_multi.register_key (Key ("x"),
+        "thread_view.next_thread.close",
+        "Archive and close",
+        [&] (Key) {
+          keys.handle ("thread_view.archive_thread");
+          close ();
+
+          return true;
+        });
+
+    next_multi.register_key (Key ("j"),
+        "thread_view.next_thread.next_thread",
+        "Open next thread",
+        [&] (Key) {
+          emit_index_action (IA_Next);
+
+          return true;
+        });
+
+    next_multi.register_key (Key ("k"),
+        "thread_view.next_thread.previous_thread",
+        "Open previous thread",
+        [&] (Key) {
+          emit_index_action (IA_Previous);
+
+          return true;
+        });
+
+    next_multi.register_key (Key (GDK_KEY_Tab),
+        "thread_view.next_thread.next_unread",
+        "Open next unread thread",
+        [&] (Key) {
+          emit_index_action (IA_NextUnread);
+
+          return true;
+        });
+
+    next_multi.register_key (Key (false, false, (guint) GDK_KEY_ISO_Left_Tab),
+        "thread_view.next_thread.previous_unread",
+        "Open previous unread thread",
+        [&] (Key) {
+          emit_index_action (IA_PreviousUnread);
+
+          return true;
+        });
+  }
 
   bool ThreadView::element_action (ElementAction a) { //
     LOG (debug) << "tv: activate item.";
@@ -4049,6 +4122,15 @@ namespace Astroid {
   void ThreadView::emit_element_action (unsigned int element, ElementAction action) {
     LOG (debug) << "tv: element action emitted: " << element << ", action: enter";
     m_element_action.emit (element, action);
+  }
+
+  ThreadView::type_index_action ThreadView::signal_index_action () {
+    return m_index_action;
+  }
+
+  bool ThreadView::emit_index_action (IndexAction action) {
+    LOG (debug) << "tv: index action: " << action;
+    return m_index_action.emit (this, action);
   }
 
   /* end signals  */
