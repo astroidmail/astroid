@@ -439,7 +439,7 @@ namespace Astroid {
         });
 
     keys->register_key ("k", { Key(false, false, (guint) GDK_KEY_Up) },
-        "thread_index.prev_thread", "Previous thread",
+        "thread_index.previous_thread", "Previous thread",
         [&](Key) {
             Gtk::TreePath path;
             Gtk::TreeViewColumn *c;

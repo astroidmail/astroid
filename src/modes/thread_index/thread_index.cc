@@ -242,12 +242,54 @@ namespace Astroid {
 
     tv->load_thread (thread);
     tv->show ();
+    tv->signal_index_action ().connect (sigc::mem_fun (this, &ThreadIndex::on_index_action));
 
     // grab modal
     if (!new_tab && !new_window) {
       current = 1;
       grab_modal ();
     }
+  }
+
+  bool ThreadIndex::on_index_action (ThreadView * tv, ThreadView::IndexAction action) {
+    switch (action) {
+      case ThreadView::IndexAction::IA_Next:
+        {
+          keys.handle ("thread_index.next_thread");
+          auto thread = list_view->get_current_thread ();
+          tv->load_thread (thread);
+          tv->show ();
+        }
+        break;
+
+      case ThreadView::IndexAction::IA_Previous:
+        {
+          keys.handle ("thread_index.previous_thread");
+          auto thread = list_view->get_current_thread ();
+          tv->load_thread (thread);
+          tv->show ();
+        }
+        break;
+
+      case ThreadView::IndexAction::IA_NextUnread:
+        {
+          keys.handle ("thread_index.next_unread");
+          auto thread = list_view->get_current_thread ();
+          tv->load_thread (thread);
+          tv->show ();
+        }
+        break;
+
+      case ThreadView::IndexAction::IA_PreviousUnread:
+        {
+          keys.handle ("thread_index.previous_unread");
+          auto thread = list_view->get_current_thread ();
+          tv->load_thread (thread);
+          tv->show ();
+        }
+        break;
+    }
+    return true;
   }
 
   void ThreadIndex::pre_close () {

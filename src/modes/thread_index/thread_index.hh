@@ -9,6 +9,7 @@
 
 # include "modes/paned_mode.hh"
 # include "query_loader.hh"
+# include "modes/thread_view/thread_view.hh"
 # ifndef DISABLE_PLUGINS
   # include "plugin/manager.hh"
 # endif
@@ -39,6 +40,8 @@ namespace Astroid {
 # endif
 
       void on_stats_ready ();
+
+      bool on_index_action (ThreadView * tv, ThreadView::IndexAction);
 
     private:
       void on_first_thread_ready ();
