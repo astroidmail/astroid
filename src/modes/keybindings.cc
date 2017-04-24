@@ -551,6 +551,23 @@ namespace Astroid {
     return false;
   }
 
+  bool Keybindings::handle (ustring name) {
+    if (keys.empty ()) return false;
+
+    auto s = std::find_if (keys.begin (), keys.end (), [&](std::pair<Key, std::function<bool (Key)>> p) { return p.first.name == name; });
+
+    if (s != keys.end ()) {
+      if (!s->first.isalias) {
+        return s->second (s->first);
+      } else {
+        auto m = keys.find (*(s->first.master_key));
+        return m->second (s->first);
+      }
+    } else {
+      throw keyspec_error (ustring::compose ("tried to handle unknown key name: %1", name).c_str());
+    }
+  }
+
   // }}}
 
   /* Key {{{ */

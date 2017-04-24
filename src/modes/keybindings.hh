@@ -104,6 +104,7 @@ namespace Astroid {
                          std::function<bool (Key, ustring)>);
 
       bool handle (GdkEventKey *);
+      bool handle (ustring name);
 
       void clear ();
 
