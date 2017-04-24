@@ -24,6 +24,7 @@ namespace bfs = boost::filesystem;
 extern "C" {
   void mw_on_terminal_child_exit (VteTerminal *, gint, gpointer);
   void mw_on_terminal_commit (VteTerminal *, gchar **, guint, gpointer);
+  void mw_on_terminal_spawn_callback (VteTerminal *, GPid pid, GError *, gpointer);
 }
 # endif
 
@@ -86,7 +87,8 @@ namespace Astroid {
       void enable_terminal ();
       void disable_terminal ();
       void on_terminal_child_exit (VteTerminal *, gint);
-      void on_terminal_commit (VteTerminal*, gchar **, guint);
+      void on_terminal_commit (VteTerminal *, gchar **, guint);
+      void on_terminal_spawn_callback (VteTerminal *, GPid, GError *);
 
     private:
       Gtk::Revealer * rev_terminal;

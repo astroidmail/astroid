@@ -36,6 +36,11 @@ extern "C" {
   void mw_on_terminal_commit (VteTerminal * t, gchar ** tx, guint sz, gpointer mw) {
     ((Astroid::MainWindow *) mw)->on_terminal_commit (t, tx, sz);
   }
+
+  void mw_on_terminal_spawn_callback (VteTerminal * t, GPid pid, GError * err, gpointer mw)
+  {
+    ((Astroid::MainWindow *) mw)->on_terminal_spawn_callback (t, pid, err);
+  }
 }
 # endif
 
@@ -481,13 +486,9 @@ namespace Astroid {
     gtk_container_add (GTK_CONTAINER(rev_terminal->gobj ()), vte_term);
     rev_terminal->show_all ();
 
-    GError * err = NULL;
-
     vte_terminal_set_size (VTE_TERMINAL (vte_term), 1, 10);
 
     /* start shell */
-    /* GCancellable * c = g_cancellable_new (); */
-
     char * shell = vte_get_user_shell ();
 
     char * args[2] = { shell, NULL };
@@ -499,7 +500,7 @@ namespace Astroid {
       terminal_cwd = bfs::current_path ();
     }
 
-    vte_terminal_spawn_sync (VTE_TERMINAL(vte_term),
+    vte_terminal_spawn_async (VTE_TERMINAL(vte_term),
         VTE_PTY_DEFAULT,
         terminal_cwd.c_str(),
         args,
@@ -507,18 +508,24 @@ namespace Astroid {
         G_SPAWN_DEFAULT,
         NULL,
         NULL,
-        &terminal_pid,
         NULL,
-        (err = NULL, &err));
-
+        -1,
+        NULL,
+        mw_on_terminal_spawn_callback,
+        this);
 
     gtk_widget_grab_focus (vte_term);
     gtk_grab_add (vte_term);
+  }
 
+  void MainWindow::on_terminal_spawn_callback (VteTerminal * vte_term, GPid pid, GError * err)
+  {
     if (err) {
       LOG (error) << "mw: terminal: " << err->message;
       disable_terminal ();
     } else {
+      terminal_pid = pid;
+
       LOG (debug) << "mw: terminal started: " << terminal_pid;
       g_signal_connect (vte_term, "child-exited",
           G_CALLBACK (mw_on_terminal_child_exit),
