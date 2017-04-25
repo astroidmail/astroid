@@ -192,7 +192,7 @@ namespace Astroid {
   }
 
   ustring Keybindings::short_help () {
-    ustring h;
+    ustring h = "<b>" + title + "</b>: ";
 
     bool first = true;
 

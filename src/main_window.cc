@@ -720,7 +720,7 @@ namespace Astroid {
     multi_keybindings = kb;
 
     rev_multi->set_reveal_child (true);
-    label_multi->set_text (kb.short_help ());
+    label_multi->set_markup (kb.short_help ());
 
     return true;
   }
