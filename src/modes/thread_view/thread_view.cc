@@ -2112,7 +2112,7 @@ namespace Astroid {
     else return Mode::on_key_press_event (event);
   }
 
-  void ThreadView::register_keys () { //
+  void ThreadView::register_keys () { // {{{
     keys.title = "Thread View";
 
     keys.register_key ("j", "thread_view.down",
@@ -3056,7 +3056,7 @@ namespace Astroid {
         });
 
     keys.register_key (Key (":"),
-          "thread_view.next_thread",
+          "thread_view.multi_next_thread",
           "Open next after..",
           [&] (Key k) {
             multi_key (next_multi, k);
@@ -3064,9 +3064,10 @@ namespace Astroid {
             return true;
           });
 
+    next_multi.title = "Thread";
     next_multi.register_key (Key ("a"),
-        "thread_view.next_thread.archive",
-        "Archive and open next thread",
+        "thread_view.multi_next_thread.archive",
+        "Archive, goto next",
         [&] (Key) {
           keys.handle ("thread_view.archive_thread");
           emit_index_action (IA_Next);
@@ -3075,8 +3076,8 @@ namespace Astroid {
         });
 
     next_multi.register_key (Key ("A"),
-        "thread_view.next_thread.archive_next_unread_thread",
-        "Archive and open next unread thread",
+        "thread_view.multi_next_thread.archive_next_unread_thread",
+        "Archive, goto next unread",
         [&] (Key) {
           keys.handle ("thread_view.archive_thread");
           emit_index_action (IA_NextUnread);
@@ -3085,8 +3086,8 @@ namespace Astroid {
         });
 
     next_multi.register_key (Key ("x"),
-        "thread_view.next_thread.close",
-        "Archive and close",
+        "thread_view.multi_next_thread.close",
+        "Archive, close",
         [&] (Key) {
           keys.handle ("thread_view.archive_thread");
           close ();
@@ -3095,8 +3096,8 @@ namespace Astroid {
         });
 
     next_multi.register_key (Key ("j"),
-        "thread_view.next_thread.next_thread",
-        "Open next thread",
+        "thread_view.multi_next_thread.next_thread",
+        "Goto next",
         [&] (Key) {
           emit_index_action (IA_Next);
 
@@ -3104,8 +3105,8 @@ namespace Astroid {
         });
 
     next_multi.register_key (Key ("k"),
-        "thread_view.next_thread.previous_thread",
-        "Open previous thread",
+        "thread_view.multi_next_thread.previous_thread",
+        "Goto previous",
         [&] (Key) {
           emit_index_action (IA_Previous);
 
@@ -3113,8 +3114,8 @@ namespace Astroid {
         });
 
     next_multi.register_key (Key (GDK_KEY_Tab),
-        "thread_view.next_thread.next_unread",
-        "Open next unread thread",
+        "thread_view.multi_next_thread.next_unread",
+        "Goto next unread",
         [&] (Key) {
           emit_index_action (IA_NextUnread);
 
@@ -3122,14 +3123,66 @@ namespace Astroid {
         });
 
     next_multi.register_key (Key (false, false, (guint) GDK_KEY_ISO_Left_Tab),
-        "thread_view.next_thread.previous_unread",
-        "Open previous unread thread",
+        "thread_view.multi_next_thread.previous_unread",
+        "Goto previous unread",
         [&] (Key) {
           emit_index_action (IA_PreviousUnread);
 
           return true;
         });
-  }
+
+    /* make aliases in main namespace */
+    keys.register_key (UnboundKey (),
+        "thread_view.archive_then_next",
+        "Alias for thread_view.multi_next_thread.archive",
+        [&] (Key) {
+          return next_multi.handle ("thread_view.multi_next_thread.archive");
+        });
+
+    keys.register_key (UnboundKey (),
+        "thread_view.archive_then_next_unread",
+        "Alias for thread_view.multi_next_thread.archive_next_unread",
+        [&] (Key) {
+          return next_multi.handle ("thread_view.multi_next_thread.archive_next_unread_thread");
+        });
+
+    keys.register_key (UnboundKey (),
+        "thread_view.archive_and_close",
+        "Alias for thread_view.multi_next_thread.close",
+        [&] (Key) {
+          return next_multi.handle ("thread_view.multi_next_thread.close");
+        });
+
+    keys.register_key (UnboundKey (),
+        "thread_view.next_thread",
+        "Alias for thread_view.multi_next_thread.next_thread",
+        [&] (Key) {
+          return next_multi.handle ("thread_view.multi_next_thread.next_thread");
+        });
+
+    keys.register_key (UnboundKey (),
+        "thread_view.previous_thread",
+        "Alias for thread_view.multi_next_thread.previous_thread",
+        [&] (Key) {
+          return next_multi.handle ("thread_view.multi_next_thread.previous_thread");
+        });
+
+    keys.register_key (UnboundKey (),
+        "thread_view.next_unread_thread",
+        "Alias for thread_view.multi_next_thread.next_unread",
+        [&] (Key) {
+          return next_multi.handle ("thread_view.multi_next_thread.next_unread");
+        });
+
+    keys.register_key (UnboundKey (),
+        "thread_view.previous_unread_thread",
+        "Alias for thread_view.multi_next_thread.previous_unread",
+        [&] (Key) {
+          return next_multi.handle ("thread_view.multi_next_thread.previous_unread");
+        });
+
+
+  } // }}}
 
   bool ThreadView::element_action (ElementAction a) { //
     LOG (debug) << "tv: activate item.";

@@ -20,7 +20,10 @@
 
 * Polling can be cancelled with C-c in main window.
 
-when not== v0.8 / 2017-03-17
+* Archive or close thread and then directly open next or next unread thread
+  in originating thread-index.
+
+== v0.8 / 2017-03-17
 
 * New logo and icons by Elio Qoshi ( http://patreon.com/ura )
 
