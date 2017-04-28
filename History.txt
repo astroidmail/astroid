@@ -1,4 +1,4 @@
-== *
+== v0.9 / 2017-04-28
 
 * Drop use of old deprecated non _st functions, use their new names. Will
   require 0.24 or newer.
