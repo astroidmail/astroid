@@ -24,7 +24,9 @@ namespace bfs = boost::filesystem;
 extern "C" {
   void mw_on_terminal_child_exit (VteTerminal *, gint, gpointer);
   void mw_on_terminal_commit (VteTerminal *, gchar **, guint, gpointer);
+# if VTE_CHECK_VERSION(0,48,0)
   void mw_on_terminal_spawn_callback (VteTerminal *, GPid pid, GError *, gpointer);
+# endif
 }
 # endif
 

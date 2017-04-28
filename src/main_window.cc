@@ -37,10 +37,12 @@ extern "C" {
     ((Astroid::MainWindow *) mw)->on_terminal_commit (t, tx, sz);
   }
 
+# if VTE_CHECK_VERSION(0,48,0)
   void mw_on_terminal_spawn_callback (VteTerminal * t, GPid pid, GError * err, gpointer mw)
   {
     ((Astroid::MainWindow *) mw)->on_terminal_spawn_callback (t, pid, err);
   }
+# endif
 }
 # endif
 
@@ -500,6 +502,7 @@ namespace Astroid {
       terminal_cwd = bfs::current_path ();
     }
 
+# if VTE_CHECK_VERSION(0,48,0)
     vte_terminal_spawn_async (VTE_TERMINAL(vte_term),
         VTE_PTY_DEFAULT,
         terminal_cwd.c_str(),
@@ -513,6 +516,23 @@ namespace Astroid {
         NULL,
         mw_on_terminal_spawn_callback,
         this);
+# else
+    GError * err = NULL;
+    vte_terminal_spawn_sync (VTE_TERMINAL(vte_term),
+        VTE_PTY_DEFAULT,
+        terminal_cwd.c_str(),
+        args,
+        envs,
+        G_SPAWN_DEFAULT,
+        NULL,
+        NULL,
+        &terminal_pid,
+        NULL,
+        (err = NULL, &err));
+
+    on_terminal_spawn_callback (VTE_TERMINAL(vte_term), terminal_pid, err);
+
+# endif
 
     gtk_widget_grab_focus (vte_term);
     gtk_grab_add (vte_term);
