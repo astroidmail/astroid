@@ -8,6 +8,7 @@
 # include "test_common.hh"
 
 # include <notmuch.h>
+# include "db.hh"
 
 namespace bfs = boost::filesystem;
 using std::cout;
