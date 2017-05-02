@@ -45,10 +45,10 @@ namespace Astroid {
     Db db (Db::DbMode::DATABASE_READ_ONLY);
     db.load_tags ();
 
-    tag_completion = refptr<TagCompletion> (new TagCompletion());
-    search_completion = refptr<SearchCompletion> (new SearchCompletion());
-    text_search_completion = refptr<SearchTextCompletion> (new SearchTextCompletion ());
-    difftag_completion = refptr<DiffTagCompletion> (new DiffTagCompletion ());
+    tag_completion          = refptr<TagCompletion> (new TagCompletion());
+    search_completion       = refptr<SearchCompletion> (new SearchCompletion());
+    text_search_completion  = refptr<SearchTextCompletion> (new SearchTextCompletion ());
+    difftag_completion      = refptr<DiffTagCompletion> (new DiffTagCompletion ());
   }
 
   void CommandBar::set_main_window (MainWindow * mw) {
@@ -85,6 +85,7 @@ namespace Astroid {
         {
           text_search_completion->add_query (cmd);
         }
+      case CommandMode::Generic:
       case CommandMode::DiffTag:
       case CommandMode::Tag:
         {
@@ -118,6 +119,13 @@ namespace Astroid {
     reset_bar ();
 
     switch (mode) {
+
+      case CommandMode::Generic:
+        {
+          entry.set_icon_from_icon_name ("system-run-symbolic");
+          start_generic (cmd);
+        }
+        break;
 
       case CommandMode::Search:
         {
@@ -164,6 +172,12 @@ namespace Astroid {
 
   void CommandBar::reset_bar () {
     entry.set_completion (refptr<Gtk::EntryCompletion>());
+  }
+
+  void CommandBar::start_generic (ustring cmd) {
+    entry.set_text (cmd);
+    entry.set_completion (refptr<Gtk::EntryCompletion> ());
+    current_completion.reset ();
   }
 
   void CommandBar::start_searching (ustring searchstring) {

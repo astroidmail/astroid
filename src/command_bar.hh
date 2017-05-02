@@ -20,7 +20,8 @@ namespace Astroid {
   class CommandBar : public Gtk::SearchBar {
     public:
       enum CommandMode {
-        Search = 0,
+        Generic = 0,
+        Search,
         SearchText,
         Filter,
         Tag,        /* apply or remove tags */
@@ -46,6 +47,8 @@ namespace Astroid {
 
       ustring get_text ();
       void    set_text (ustring);
+
+      void    start_generic (ustring);
 
       /* relay to search bar event handler */
       bool command_handle_event (GdkEventKey *);

@@ -1,3 +1,7 @@
+== **
+
+* Attach messages by mids with 'A' in new emails.
+
 == v0.9.1 / 2017-04-30
 
 * Support old vte3.
