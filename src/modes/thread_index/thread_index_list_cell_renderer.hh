@@ -103,6 +103,8 @@ namespace Astroid {
       ustring subject_color; // configurable
       ustring subject_color_selected; // configurable
       ustring background_color_selected; // configurable
+      ustring background_color_marked          = "#fff584";
+      ustring background_color_marked_selected = "#bcb559";
 
       void render_background (
           const ::Cairo::RefPtr< ::Cairo::Context>&cr,

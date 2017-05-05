@@ -104,9 +104,7 @@ namespace Astroid {
       font_description.set_weight (Pango::WEIGHT_NORMAL);
     }
 
-    if (background_color_selected.length() > 0) {
-        render_background (cr, widget, background_area, flags);
-    }
+    render_background (cr, widget, background_area, flags);
     render_date (cr, widget, cell_area); // returns height
 
     if (thread->total_messages > 1)
@@ -151,18 +149,33 @@ namespace Astroid {
     int w = background_area.get_width ();
     int h = background_area.get_height ();
 
+    Gdk::Color bg;
+    bool set = true;
+
     if ((flags & Gtk::CELL_RENDERER_SELECTED) != 0) {
-      Gdk::Color bg(background_color_selected);
-      cr->set_source_rgb (bg.get_red_p(), bg.get_green_p(), bg.get_blue_p());
+      if (!marked) {
+        if (background_color_selected.length () > 0) {
+          bg = Gdk::Color (background_color_selected);
+        } else {
+          set = false;
+        }
+      } else {
+        bg = Gdk::Color (background_color_marked_selected);
+      }
     } else {
-      Gdk::Color gray;
-      gray.set_grey_p (1.);
-      cr->set_source_rgb (gray.get_red_p(), gray.get_green_p(), gray.get_blue_p());
+      if (!marked) {
+        bg.set_grey_p (1.);
+      } else {
+        bg = Gdk::Color (background_color_marked);
+      }
     }
 
-    cr->rectangle (x, y, w, h);
-    cr->fill ();
+    if (set) {
+      cr->set_source_rgb (bg.get_red_p(), bg.get_green_p(), bg.get_blue_p());
 
+      cr->rectangle (x, y, w, h);
+      cr->fill ();
+    }
   } // }}}
 
   /* render icons {{{ */
