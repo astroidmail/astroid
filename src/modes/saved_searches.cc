@@ -36,9 +36,9 @@ namespace Astroid {
       pcolumn->add_attribute (renderer_text->property_markup(), m_columns.m_col_name);
     }
 
-    tv.append_column ("Query", m_columns.m_col_query);
     tv.append_column ("Unread messages", m_columns.m_col_unread_messages);
     tv.append_column ("Total messages ", m_columns.m_col_total_messages);
+    tv.append_column ("Query", m_columns.m_col_query);
 
     tv.set_headers_visible (false);
     tv.set_sensitive (true);
