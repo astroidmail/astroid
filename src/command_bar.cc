@@ -87,7 +87,7 @@ namespace Astroid {
         {
           text_search_completion->add_query (cmd);
         }
-      case CommandMode::Generic:
+      case CommandMode::AttachMids:
       case CommandMode::DiffTag:
       case CommandMode::Tag:
         {
@@ -122,9 +122,9 @@ namespace Astroid {
 
     switch (mode) {
 
-      case CommandMode::Generic:
+      case CommandMode::AttachMids:
         {
-          entry.set_icon_from_icon_name ("system-run-symbolic");
+          entry.set_icon_from_icon_name ("mail-attachment-symbolic");
           start_generic (cmd);
         }
         break;

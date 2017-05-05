@@ -370,7 +370,7 @@ namespace Astroid {
     keys.register_key ("A", "edit_messsage.attach_mids",
         "Attach messages by mids",
         [&] (Key) {
-          main_window->enable_command (CommandBar::CommandMode::Generic,
+          main_window->enable_command (CommandBar::CommandMode::AttachMids,
               "Attach mids:", "", [&] (ustring mids)
               {
                 auto midsv = VectorUtils::split_and_trim (mids, ",");

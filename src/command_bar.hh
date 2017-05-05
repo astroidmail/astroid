@@ -20,12 +20,12 @@ namespace Astroid {
   class CommandBar : public Gtk::SearchBar {
     public:
       enum CommandMode {
-        Generic = 0,
-        Search,
+        Search = 0,
         SearchText,
         Filter,
         Tag,        /* apply or remove tags */
         DiffTag,    /* apply or remove tags using + or - */
+        AttachMids,
       };
 
       CommandBar ();
