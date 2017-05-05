@@ -370,26 +370,29 @@ namespace Astroid {
     keys.register_key ("A", "edit_messsage.attach_mids",
         "Attach messages by mids",
         [&] (Key) {
-          main_window->enable_command (CommandBar::CommandMode::Generic, "Attach mids:", "", [&] (ustring mids) {
-
+          main_window->enable_command (CommandBar::CommandMode::Generic,
+              "Attach mids:", "", [&] (ustring mids)
+              {
                 auto midsv = VectorUtils::split_and_trim (mids, ",");
-                Db db;
+                if (!midsv.empty ()) {
+                  Db db;
 
-                for (auto mid : midsv) {
-                  db.on_message (mid, [&] (notmuch_message_t * msg) {
-                      if (msg != NULL) {
-                        LOG (debug) << "em: attaching: " << mid;
+                  for (auto mid : midsv) {
+                    db.on_message (mid, [&] (notmuch_message_t * msg) {
+                        if (msg != NULL) {
+                          LOG (debug) << "em: attaching: " << mid;
 
-                        refptr<Message> mmsg  = refptr<Message> (new Message (msg, 0));
-                        add_attachment (new ComposeMessage::Attachment (mmsg));
+                          refptr<Message> mmsg  = refptr<Message> (new Message (msg, 0));
+                          add_attachment (new ComposeMessage::Attachment (mmsg));
 
-                      } else {
-                        LOG (warn) << "em: could not find and attach mid: " << mid;
-                      }
-                      });
+                        } else {
+                          LOG (warn) << "em: could not find and attach mid: " << mid;
+                        }
+                        });
+                  }
+                  prepare_message ();
+                  read_edited_message ();
                 }
-                prepare_message ();
-                read_edited_message ();
               });
 
           return true;

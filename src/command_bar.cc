@@ -42,8 +42,10 @@ namespace Astroid {
         sigc::mem_fun (this, &CommandBar::entry_changed));
 
     /* set up tags */
-    Db db (Db::DbMode::DATABASE_READ_ONLY);
-    db.load_tags ();
+    {
+      Db db (Db::DbMode::DATABASE_READ_ONLY);
+      db.load_tags ();
+    }
 
     tag_completion          = refptr<TagCompletion> (new TagCompletion());
     search_completion       = refptr<SearchCompletion> (new SearchCompletion());
