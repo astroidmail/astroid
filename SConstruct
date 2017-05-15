@@ -192,8 +192,18 @@ if not conf.CheckPKG('glibmm-2.4'):
   print "glibmm-2.4 not found."
   Exit (1)
 
-if not conf.CheckPKG('gmime-2.6 >= 2.6.18'):
-  print "gmime-2.6 not found."
+gmime_version = ''
+if conf.CheckPKG ('gmime-3.0 >= 3.0.0'):
+  env.ParseConfig ('pkg-config --libs --cflags gmime-3.0')
+  gmime_version = '3.0'
+
+elif conf.CheckPKG ('gmime-2.6 >= 2.6.18'):
+  env.ParseConfig ('pkg-config --libs --cflags gmime-2.6')
+  gmime_version = '2.6'
+  print ("warning: gmime-2.6 will not be supported in the future.")
+
+else:
+  print "gmime not found."
   Exit (1)
 
 if not conf.CheckPKG('webkitgtk-3.0'):
@@ -254,7 +264,8 @@ if not conf.CheckLibWithHeader ('notmuch', 'notmuch.h', 'c'):
 # external libraries
 env.ParseConfig ('pkg-config --libs --cflags glibmm-2.4')
 env.ParseConfig ('pkg-config --libs --cflags gtkmm-3.0')
-env.ParseConfig ('pkg-config --libs --cflags gmime-2.6')
+
+
 env.ParseConfig ('pkg-config --libs --cflags webkitgtk-3.0')
 if not disable_libsass:
   env.ParseConfig ('pkg-config --libs --cflags libsass')
@@ -334,7 +345,8 @@ source = (
           Glob('src/modes/thread_view/*.cc', strings = True) +
           Glob('src/modes/editor/*.cc', strings = True) +
           Glob('src/actions/*.cc', strings = True) +
-          Glob('src/utils/*.cc', strings = True)
+          Glob('src/utils/*.cc', strings = True) +
+          Glob('src/utils/gmime/*.cc', strings = True)
           )
 
 if not disable_plugins:
@@ -353,7 +365,7 @@ source_objs +=  [cenv.Object (s) for s in csource]
 ## GIR for libpeas plugins
 def add_gobject_introspection(env, gi_name, version,
                               sources, includepaths, program,
-                              pkgs, includes):
+                              pkgs, includes, gmime_version):
 
   # borrowed from:
   # http://fossies.org/linux/privat/mypaint-1.2.0.tar.gz/mypaint-1.2.0/brushlib/SConscript?m=t
@@ -365,10 +377,10 @@ def add_gobject_introspection(env, gi_name, version,
   prgname = os.path.splitext (prgname)[0]
 
   includeflags = ' '.join(['-I%s' % s for s in includepaths])
-  gi_includes = ' '.join(['--include=%s' % s for s in includes])
+  gi_includes  = ' '.join(['--include=%s' % s for s in includes])
 
   scanner_cmd = """LD_LIBRARY_PATH=./ g-ir-scanner -o $TARGET --warn-all \
-      --namespace=%(gi_name)s  --include=GObject-2.0 --include=GMime-2.6 --nsversion=%(version)s \
+      --namespace=%(gi_name)s  --include=GObject-2.0 --include=GMime-%(gmime_version)s --nsversion=%(version)s \
       %(pkgs)s %(includeflags)s  \
       --program=./%(prgname)s $SOURCES""" % locals()
 
@@ -388,7 +400,7 @@ if not disable_plugins:
 
   ## generate GIR and typelib
   gir, typelib = add_gobject_introspection (env, "Astroid", "0.1",
-     girsource + Glob('src/plugin/*.h', strings = True), ['src/'], girm, ['gobject-introspection-1.0', 'gmime-2.6'], [])
+     girsource + Glob('src/plugin/*.h', strings = True), ['src/'], girm, ['gobject-introspection-1.0', 'gmime-%s' % gmime_version], [], gmime_version)
 
 
 
