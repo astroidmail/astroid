@@ -1,6 +1,6 @@
 ==
 
-* Move icons in thread-index to tag line
+* Use color to indicate whether a message is marked in thread-index.
 
 == v0.10.2 / 2017-10-11
 

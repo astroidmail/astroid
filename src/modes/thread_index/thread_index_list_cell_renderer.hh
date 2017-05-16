@@ -75,7 +75,7 @@ namespace Astroid {
 
       int left_icons_size;
       int left_icons_width;
-      const int left_icons_width_n = 3;
+      const int left_icons_width_n = 2;
       const int left_icons_padding = 1;
       int padding;
 

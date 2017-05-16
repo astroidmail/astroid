@@ -128,8 +128,10 @@ namespace Astroid {
     if (thread->attachment)
       render_attachment (cr, widget, cell_area);
 
+    /*
     if (marked)
       render_marked (cr, widget, cell_area);
+    */
 
   }
 
@@ -224,7 +226,7 @@ namespace Astroid {
     }
 
     int y = cell_area.get_y() + left_icons_padding + line_spacing / 2;
-    int x = cell_area.get_x() + left_icons_width + left_icons_padding;
+    int x = cell_area.get_x() + 0 * (left_icons_width + left_icons_padding);
 
     Gdk::Cairo::set_source_pixbuf (cr, flagged_icon, x, y);
 
@@ -252,7 +254,7 @@ namespace Astroid {
     }
 
     int y = cell_area.get_y() + left_icons_padding + line_spacing / 2;
-    int x = cell_area.get_x() + (2 * (left_icons_width + left_icons_padding));
+    int x = cell_area.get_x() + (1 * (left_icons_width + left_icons_padding));
 
     Gdk::Cairo::set_source_pixbuf (cr, attachment_icon, x, y);
 
