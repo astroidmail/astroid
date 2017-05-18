@@ -59,6 +59,15 @@ namespace Astroid {
     subject_color_selected = ti.get<string> ("subject_color_selected");
     background_color_selected = ti.get<string> ("background_color_selected");
 
+    /* get tag icons */
+    if (ti.count ("tag_images")) {
+      ptree imgs = astroid->config ("thread_index.cell.tag_images");
+
+      for (const auto &kv : imgs) {
+        LOG (debug) << "ti cr: icon map: " << kv.first << ": " << kv.second.data ();
+        image_icon_map.insert (std::make_pair (ustring (kv.first), ustring(kv.second.data())));
+      }
+    }
   }
 
   void ThreadIndexListCellRenderer::render_vfunc (
@@ -81,11 +90,10 @@ namespace Astroid {
       line_height     = content_height + line_spacing;
       height_set = true;
 
-      left_icons_size  = content_height - (2 * left_icons_padding);
-      left_icons_width = left_icons_size;
+      icons_size  = content_height - (2 * icons_padding);
+      icons_width = icons_size;
 
-      date_start          = left_icons_width_n * left_icons_width +
-          (left_icons_width_n-1) * left_icons_padding + padding;
+      date_start          = padding;
       date_width          = char_width * date_len;
       message_count_width = char_width * message_count_len;
       message_count_start = date_start + date_width + padding;
@@ -97,6 +105,8 @@ namespace Astroid {
 
       height              = content_height + line_spacing;
     }
+
+    load_icon_map ();
 
     if (thread->unread) {
       font_description.set_weight (Pango::WEIGHT_BOLD);
@@ -121,18 +131,6 @@ namespace Astroid {
     if (!last)
       render_delimiter (cr, widget, cell_area);
     */
-
-    if (thread->flagged)
-      render_flagged (cr, widget, cell_area);
-
-    if (thread->attachment)
-      render_attachment (cr, widget, cell_area);
-
-    /*
-    if (marked)
-      render_marked (cr, widget, cell_area);
-    */
-
   }
 
   ThreadIndexListCellRenderer::~ThreadIndexListCellRenderer () {
@@ -178,88 +176,6 @@ namespace Astroid {
       cr->rectangle (x, y, w, h);
       cr->fill ();
     }
-  } // }}}
-
-  /* render icons {{{ */
-  void ThreadIndexListCellRenderer::render_marked (
-      const ::Cairo::RefPtr< ::Cairo::Context>&cr,
-      Gtk::Widget & /* widget */,
-      const Gdk::Rectangle &cell_area ) {
-
-
-    if (!marked_icon) {
-      Glib::RefPtr<Gtk::IconTheme> theme = Gtk::IconTheme::get_default();
-      Glib::RefPtr<Gdk::Pixbuf> pixbuf = theme->load_icon (
-          "object-select-symbolic",
-          left_icons_size,
-          Gtk::ICON_LOOKUP_USE_BUILTIN  | Gtk::ICON_LOOKUP_FORCE_SIZE);
-
-
-      marked_icon = pixbuf->scale_simple (left_icons_size, left_icons_size,
-          Gdk::INTERP_BILINEAR);
-    }
-
-    int y = cell_area.get_y() + left_icons_padding + line_spacing / 2;
-    int x = cell_area.get_x();
-
-    Gdk::Cairo::set_source_pixbuf (cr, marked_icon, x, y);
-
-    cr->rectangle (x, y, left_icons_size, left_icons_size);
-    cr->fill ();
-  }
-
-  void ThreadIndexListCellRenderer::render_flagged (
-      const ::Cairo::RefPtr< ::Cairo::Context>&cr,
-      Gtk::Widget & /* widget */,
-      const Gdk::Rectangle &cell_area ) {
-
-
-    if (!flagged_icon) {
-      Glib::RefPtr<Gtk::IconTheme> theme = Gtk::IconTheme::get_default();
-      Glib::RefPtr<Gdk::Pixbuf> pixbuf = theme->load_icon (
-          "starred-symbolic",
-          left_icons_size,
-          Gtk::ICON_LOOKUP_USE_BUILTIN  | Gtk::ICON_LOOKUP_FORCE_SIZE);
-
-      flagged_icon = pixbuf->scale_simple (left_icons_size, left_icons_size,
-          Gdk::INTERP_BILINEAR);
-    }
-
-    int y = cell_area.get_y() + left_icons_padding + line_spacing / 2;
-    int x = cell_area.get_x() + 0 * (left_icons_width + left_icons_padding);
-
-    Gdk::Cairo::set_source_pixbuf (cr, flagged_icon, x, y);
-
-    cr->rectangle (x, y, left_icons_size,left_icons_size);
-    cr->fill ();
-  }
-
-
-  void ThreadIndexListCellRenderer::render_attachment (
-      const ::Cairo::RefPtr< ::Cairo::Context>&cr,
-      Gtk::Widget & /* widget */,
-      const Gdk::Rectangle &cell_area ) {
-
-
-    if (!attachment_icon) {
-      Glib::RefPtr<Gtk::IconTheme> theme = Gtk::IconTheme::get_default();
-      Glib::RefPtr<Gdk::Pixbuf> pixbuf = theme->load_icon (
-          "mail-attachment-symbolic",
-          left_icons_size,
-          Gtk::ICON_LOOKUP_USE_BUILTIN | Gtk::ICON_LOOKUP_FORCE_SIZE);
-
-
-      attachment_icon = pixbuf->scale_simple (left_icons_size, left_icons_size,
-          Gdk::INTERP_BILINEAR);
-    }
-
-    int y = cell_area.get_y() + left_icons_padding + line_spacing / 2;
-    int x = cell_area.get_x() + (1 * (left_icons_width + left_icons_padding));
-
-    Gdk::Cairo::set_source_pixbuf (cr, attachment_icon, x, y);
-
-    cr->rectangle (x, y, left_icons_size, left_icons_size);
-    cr->fill ();
   } // }}}
 
   void ThreadIndexListCellRenderer::render_delimiter ( // {{{
@@ -314,14 +230,71 @@ namespace Astroid {
 
   } // }}}
 
+  void ThreadIndexListCellRenderer::load_icon_map () {
+    if (icons_loaded) return;
+
+    Glib::RefPtr<Gtk::IconTheme> theme = Gtk::IconTheme::get_default();
+
+    /* load theme icons */
+    for (auto &p : theme_icon_map) {
+      Glib::RefPtr<Gdk::Pixbuf> pixbuf = theme->load_icon (
+          p.second,
+          icons_size,
+          Gtk::ICON_LOOKUP_USE_BUILTIN  | Gtk::ICON_LOOKUP_FORCE_SIZE);
+
+      refptr<Gdk::Pixbuf> icon = pixbuf->scale_simple (icons_size, icons_size, Gdk::INTERP_BILINEAR);
+      icon_map.insert (std::make_pair (p.first, icon));
+    }
+
+    /* load user images */
+    for (auto &p : image_icon_map) {
+
+      try {
+        refptr<Gdk::Pixbuf> icon = Gdk::Pixbuf::create_from_file (p.second, icons_size, icons_size, true);
+        icon_map.insert (std::make_pair (p.first, icon));
+      } catch (Glib::FileError &ex) {
+        LOG (error) << "til cr: failed to load icon: " << p.second << ", " << ex.what ();
+      } catch (Gdk::PixbufError &ex) {
+        LOG (error) << "til cr: failed to load icon: " << p.second << ", " << ex.what ();
+      }
+    }
+
+    icons_loaded = true;
+  }
+
   int ThreadIndexListCellRenderer::render_tags ( // {{{
       const ::Cairo::RefPtr< ::Cairo::Context>&cr,
       Gtk::Widget &widget,
       const Gdk::Rectangle &cell_area,
       Gtk::CellRendererState flags) {
 
-    Glib::RefPtr<Pango::Layout> pango_layout = widget.create_pango_layout ("");
+    vector<ustring> tags = thread->tags;
 
+    /* render icons and images */
+    int icons_n = 0;
+
+    for ( auto &p : icon_map ) {
+      auto it = std::find (tags.begin (), tags.end (), p.first);
+      if (it != tags.end ())
+      {
+        tags.erase (it);
+
+        /* render icon */
+        int y = cell_area.get_y() + icons_padding + line_spacing / 2;
+        int x = cell_area.get_x() + tags_start + (icons_n * (icons_width + icons_padding));
+
+        Gdk::Cairo::set_source_pixbuf (cr, p.second, x, y);
+
+        cr->rectangle (x, y, icons_size, icons_size);
+        cr->fill ();
+
+        icons_n++;
+      }
+    }
+
+    int my_icons_width = (icons_n * (icons_width + icons_padding));
+
+    Glib::RefPtr<Pango::Layout> pango_layout = widget.create_pango_layout ("");
     pango_layout->set_font_description (font_description);
 
     /* set color */
@@ -331,12 +304,14 @@ namespace Astroid {
     cr->set_source_rgb (color.get_red(), color.get_green(), color.get_blue());
 
     /* subtract hidden tags */
-    vector<ustring> tags;
-    set_difference (thread->tags.begin(),
-                    thread->tags.end(),
+    vector<ustring> new_tags;
+    set_difference (tags.begin(),
+                    tags.end(),
                     hidden_tags.begin (),
                     hidden_tags.end (),
-                    back_inserter(tags));
+                    back_inserter(new_tags));
+
+    tags = new_tags;
 
     ustring tag_string;
 
@@ -370,11 +345,10 @@ namespace Astroid {
     pango_layout->get_size (w, h);
     int y = max(0,(line_height / 2) - ((h / Pango::SCALE) / 2));
 
-    cr->move_to (cell_area.get_x() + tags_start, cell_area.get_y() + y);
+    cr->move_to (cell_area.get_x () + tags_start + my_icons_width + icons_padding, cell_area.get_y() + y);
     pango_layout->show_in_cairo_context (cr);
 
-    return w;
-
+    return w + Pango::SCALE * (my_icons_width + icons_padding);
   } // }}}
 
   int ThreadIndexListCellRenderer::render_date ( // {{{

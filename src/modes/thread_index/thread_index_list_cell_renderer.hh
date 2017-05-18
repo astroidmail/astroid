@@ -21,8 +21,12 @@ namespace Astroid {
       bool marked;
 
       /* these tags are displayed otherwisely (or ignored by the user), so they
-       * are not shown explicitly: MUST BE SORTED. default defined in config.cc. */
-      std::vector<ustring> hidden_tags; // default: { "attachment", "flagged", "unread" } };
+       * are not shown explicitly: MUST BE SORTED. default defined in config.cc.
+       *
+       * Tags that have an image map are also hidden.
+       *
+       */
+      std::vector<ustring> hidden_tags; // default: { "unread" } };
 
       int get_height ();
 
@@ -72,12 +76,23 @@ namespace Astroid {
       int line_height; // content_height + line_spacing
       int content_height;
       int line_spacing = 2; // configurable
-
-      int left_icons_size;
-      int left_icons_width;
-      const int left_icons_width_n = 2;
-      const int left_icons_padding = 1;
       int padding;
+
+      bool icons_loaded = false;
+      int icons_size;
+      int icons_width;
+      const int icons_padding = 1;
+
+      std::map<ustring, ustring> theme_icon_map = {
+        { "flagged", "starred-symbolic" },
+        { "attachment", "mail-attachment-symbolic" }
+      };
+
+      /* holds user configured tag icons */
+      std::map<ustring, ustring> image_icon_map;
+
+      /* holds pixbufs for tag icons */
+      std::map<ustring, refptr<Gdk::Pixbuf>> icon_map;
 
       ustring font_desc_string;
       Pango::FontDescription font_description;
@@ -105,6 +120,8 @@ namespace Astroid {
       ustring background_color_selected; // configurable
       ustring background_color_marked          = "#fff584";
       ustring background_color_marked_selected = "#bcb559";
+
+      void load_icon_map ();
 
       void render_background (
           const ::Cairo::RefPtr< ::Cairo::Context>&cr,
@@ -140,24 +157,6 @@ namespace Astroid {
           const Gdk::Rectangle &cell_area );
 
       void render_delimiter (
-          const ::Cairo::RefPtr< ::Cairo::Context>&cr,
-          Gtk::Widget &widget,
-          const Gdk::Rectangle &cell_area );
-
-      refptr<Gdk::Pixbuf> flagged_icon;
-      void render_flagged (
-          const ::Cairo::RefPtr< ::Cairo::Context>&cr,
-          Gtk::Widget &widget,
-          const Gdk::Rectangle &cell_area );
-
-      refptr<Gdk::Pixbuf> attachment_icon;
-      void render_attachment (
-          const ::Cairo::RefPtr< ::Cairo::Context>&cr,
-          Gtk::Widget &widget,
-          const Gdk::Rectangle &cell_area );
-
-      refptr<Gdk::Pixbuf> marked_icon;
-      void render_marked (
           const ::Cairo::RefPtr< ::Cairo::Context>&cr,
           Gtk::Widget &widget,
           const Gdk::Rectangle &cell_area );
