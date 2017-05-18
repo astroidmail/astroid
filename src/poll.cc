@@ -128,9 +128,9 @@ namespace Astroid {
       int r = kill (pid, SIGKILL);
 
       if (r == 0) {
-        LOG (warn) << "cm: poll script killed.";
+        LOG (warn) << "poll: poll script killed.";
       } else {
-        LOG (error) << "cm: could not kill poll script.";
+        LOG (error) << "poll: could not kill poll script.";
       }
     }
 
