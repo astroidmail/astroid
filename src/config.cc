@@ -188,6 +188,7 @@ namespace Astroid {
     default_config.put ("editor.external_editor", false); // should be true on Wayland
 # else
     default_config.put ("editor.cmd", "gvim -f -c 'set ft=mail' '+set fileencoding=utf-8' '+set enc=utf-8' '+set ff=unix' %1");
+    default_config.put ("editor.external_editor", true); // should be true on Wayland
 # endif
 
     default_config.put ("editor.charset", "utf-8");
