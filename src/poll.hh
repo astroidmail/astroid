@@ -47,15 +47,11 @@ namespace Astroid {
       std::condition_variable poll_cancel_cv;
 
       GPid pid;
-      int stdin;
       int stdout;
       int stderr;
       refptr<Glib::IOChannel> ch_stdout;
       refptr<Glib::IOChannel> ch_stderr;
-      sigc::connection c_ch_stdout;
-      sigc::connection c_ch_stderr;
       Glib::Dispatcher d_refresh;
-
 
       bool log_out (Glib::IOCondition);
       bool log_err (Glib::IOCondition);

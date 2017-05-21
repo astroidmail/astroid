@@ -195,7 +195,7 @@ namespace Astroid {
                         Glib::SPAWN_DO_NOT_REAP_CHILD,
                         sigc::slot <void> (),
                         &pid,
-                        &stdin,
+                        NULL,
                         &stdout,
                         &stderr
                         );
@@ -214,11 +214,11 @@ namespace Astroid {
     lk.unlock ();
 
     /* connect channels */
-    c_ch_stdout = Glib::signal_io().connect (sigc::mem_fun (this, &Poll::log_out), stdout, Glib::IO_IN | Glib::IO_HUP);
-    c_ch_stderr = Glib::signal_io().connect (sigc::mem_fun (this, &Poll::log_err), stderr, Glib::IO_IN | Glib::IO_HUP);
-
     ch_stdout = Glib::IOChannel::create_from_fd (stdout);
     ch_stderr = Glib::IOChannel::create_from_fd (stderr);
+
+    sigc::connection c_ch_stdout = Glib::signal_io().connect (sigc::mem_fun (this, &Poll::log_out), stdout, Glib::IO_IN | Glib::IO_HUP);
+    sigc::connection c_ch_stderr = Glib::signal_io().connect (sigc::mem_fun (this, &Poll::log_err), stderr, Glib::IO_IN | Glib::IO_HUP);
 
     /* wait for poll to finish */
     int status;
@@ -228,7 +228,6 @@ namespace Astroid {
     c_ch_stderr.disconnect();
     c_ch_stdout.disconnect();
 
-    ::close (stdin);
     ::close (stdout);
     ::close (stderr);
 
