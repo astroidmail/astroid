@@ -228,6 +228,26 @@ namespace Astroid {
     c_ch_stderr.disconnect();
     c_ch_stdout.disconnect();
 
+    if (ch_stdout) {
+      Glib::ustring buf;
+
+      ch_stdout->read_to_end (buf);
+      if (*(--buf.end()) == '\n') buf.erase (--buf.end());
+
+      if (!buf.empty ()) LOG (debug) << "poll script: " << buf;
+      ch_stdout.clear ();
+    }
+
+    if (ch_stderr) {
+      Glib::ustring buf;
+
+      ch_stderr->read_to_end (buf);
+      if (*(--buf.end()) == '\n') buf.erase (--buf.end());
+
+      if (!buf.empty ()) LOG (warn) << "poll script: " << buf;
+      ch_stderr.clear ();
+    }
+
     ::close (stdout);
     ::close (stderr);
 
@@ -250,6 +270,7 @@ namespace Astroid {
   bool Poll::log_out (Glib::IOCondition cond) {
     if (cond == Glib::IO_HUP) {
       ch_stdout.clear();
+      LOG (debug) << "poll: (stdout) got HUP";
       return false;
     }
 
@@ -270,6 +291,7 @@ namespace Astroid {
   bool Poll::log_err (Glib::IOCondition cond) {
     if (cond == Glib::IO_HUP) {
       ch_stderr.clear();
+      LOG (debug) << "poll: (stderr) got HUP";
       return false;
     }
 
