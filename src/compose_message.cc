@@ -112,7 +112,7 @@ namespace Astroid {
 
     /* attached signatures are handled in ::finalize */
     if (include_signature && account && !account->signature_attach) {
-      LOG (debug) << "cm: adding inline signature..";
+      LOG (debug) << "cm: adding inline signature from: " << account->signature_file.c_str ();
       std::ifstream s (account->signature_file.c_str ());
       std::ostringstream sf;
       sf << s.rdbuf ();
@@ -359,10 +359,10 @@ namespace Astroid {
   {
     LOG (info) << "cm: sending (threaded)..";
     cancel_send_during_delay = false;
-    send_thread = std::thread (&ComposeMessage::send, this, true);
+    send_thread = std::thread (&ComposeMessage::send, this);
   }
 
-  bool ComposeMessage::send (bool output) {
+  bool ComposeMessage::send () {
 
     dryrun = astroid->config().get<bool>("astroid.debug.dryrun_sending");
 
@@ -410,10 +410,12 @@ namespace Astroid {
 
     /* Send the message */
     if (!dryrun) {
-      if (output)
-        LOG (warn) << "cm: sending message from account: " << account->full_address ();
+      LOG (warn) << "cm: sending message from account: " << account->full_address ();
 
       ustring send_command = account->sendmail;
+
+      LOG (debug) << "cm: sending message using command: " << send_command;
+
       vector<string> args = Glib::shell_parse_argv (send_command);
       try {
         Glib::spawn_async_with_pipes ("",
@@ -427,8 +429,7 @@ namespace Astroid {
                           &stderr
                           );
       } catch (Glib::SpawnError &ex) {
-        if (output)
-          LOG (error) << "cm: could not send message!";
+        LOG (error) << "cm: could not send message!";
 
         message_send_status_msg = "message could not be sent!";
         message_send_status_warn = true;
@@ -473,14 +474,12 @@ namespace Astroid {
 
       if (status == 0)
       {
-        if (output)
-          LOG (warn) << "cm: message sent successfully!";
+        LOG (warn) << "cm: message sent successfully!";
 
         if (account->save_sent) {
           using bfs::path;
           save_to = path(account->save_sent_to) / path(id + ":2,");
-          if (output)
-            LOG (info) << "cm: saving message to: " << save_to;
+          LOG (info) << "cm: saving message to: " << save_to;
 
           write (save_to.c_str());
         }
@@ -495,8 +494,7 @@ namespace Astroid {
         return true;
 
       } else {
-        if (output)
-          LOG (error) << "cm: could not send message!";
+        LOG (error) << "cm: could not send message!";
 
         message_send_status_msg = "message could not be sent!";
         message_send_status_warn = true;
@@ -509,8 +507,7 @@ namespace Astroid {
       }
     } else {
       ustring fname = "/tmp/" + id;
-      if (output)
-        LOG (warn) << "cm: sending disabled in config, message written to: " << fname;
+      LOG (warn) << "cm: sending disabled in config, message written to: " << fname;
       message_send_status_msg = "sending disabled, message written to: " + fname;
       message_send_status_warn = true;
       d_message_send_status ();
@@ -526,6 +523,7 @@ namespace Astroid {
   bool ComposeMessage::log_out (Glib::IOCondition cond) {
     if (cond == Glib::IO_HUP) {
       ch_stdout.clear();
+      LOG (debug) << "cm: sendmail: (stdout) got HUP";
       return false;
     }
 
@@ -546,6 +544,7 @@ namespace Astroid {
   bool ComposeMessage::log_err (Glib::IOCondition cond) {
     if (cond == Glib::IO_HUP) {
       ch_stderr.clear();
+      LOG (debug) << "cm: sendmail: (stderr) got HUP";
       return false;
     }
 
