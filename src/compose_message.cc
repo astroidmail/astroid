@@ -451,11 +451,16 @@ namespace Astroid {
       g_mime_stream_fs_set_owner (GMIME_STREAM_FS(stream), true);
       g_mime_object_write_to_stream(GMIME_OBJECT(message), stream);
       g_mime_stream_flush (stream);
-      g_object_unref (stream);
+      g_object_unref (stream); // closes stdin
 
       /* wait for sendmail to finish */
       int status;
-      waitpid (pid, &status, 0);
+      pid_t wp = waitpid (pid, &status, 0);
+
+      if (wp == (pid_t)-1) {
+        LOG (error) << "cm: error when executing sendmail process: " << errno << ", unknown if message was sent.";
+      }
+
       g_spawn_close_pid (pid);
 
       c_ch_stderr.disconnect();
@@ -489,7 +494,7 @@ namespace Astroid {
       ::close (stdout);
       ::close (stderr);
 
-      if (status == 0)
+      if (status == 0 && wp != (pid_t)-1)
       {
         LOG (warn) << "cm: message sent successfully!";
 
@@ -511,7 +516,7 @@ namespace Astroid {
         return true;
 
       } else {
-        LOG (error) << "cm: could not send message!";
+        LOG (error) << "cm: could not send message: " << status << "!";
 
         message_send_status_msg = "message could not be sent!";
         message_send_status_warn = true;
