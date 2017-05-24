@@ -249,6 +249,9 @@ BOOST_AUTO_TEST_SUITE(GPGEncryption)
         refptr<MessageThread> mthread = refptr<MessageThread>(new MessageThread (nt));
         Db db (Db::DATABASE_READ_ONLY);
         mthread->load_messages (&db);
+
+        BOOST_CHECK_MESSAGE (bdy == mthread->messages[0]->viewable_text (false), "message body matches composed message");
+
         tries++;
       }
     } catch (Astroid::message_error &ex) {
