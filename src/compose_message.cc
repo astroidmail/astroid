@@ -465,6 +465,31 @@ namespace Astroid {
       c_ch_stderr.disconnect();
       c_ch_stdout.disconnect();
 
+      /* these read_to_end's are necessary to wait for the pipes to be closed, hopefully
+       * ensuring that any child processed forked by the sendmail process
+       * has also finished */
+      if (ch_stdout) {
+        Glib::ustring buf;
+
+        ch_stdout->read_to_end(buf);
+        if (*(--buf.end()) == '\n') buf.erase (--buf.end());
+
+        if (!buf.empty ()) LOG (debug) << "sendmail: " << buf;
+        ch_stdout->close ();
+        ch_stdout.clear ();
+      }
+
+      if (ch_stderr) {
+        Glib::ustring buf;
+
+        ch_stderr->read_to_end(buf);
+        if (*(--buf.end()) == '\n') buf.erase (--buf.end());
+
+        if (!buf.empty ()) LOG (warn) << "sendmail: " << buf;
+        ch_stderr->close ();
+        ch_stderr.clear ();
+      }
+
       ::close (stdin);
       ::close (stdout);
       ::close (stderr);
