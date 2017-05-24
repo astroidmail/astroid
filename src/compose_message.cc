@@ -131,9 +131,7 @@ namespace Astroid {
     g_mime_part_set_content_encoding (messagePart, GMIME_CONTENT_ENCODING_QUOTEDPRINTABLE);
     g_mime_part_set_content_object (messagePart, contentWrapper);
 
-    GMimeObject * part = g_mime_message_get_mime_part (message);
     g_mime_message_set_mime_part(message, GMIME_OBJECT(messagePart));
-    if (part) g_object_unref (part);
 
     g_object_unref(messagePart);
     g_object_unref(contentWrapper);
@@ -317,7 +315,7 @@ namespace Astroid {
         g_object_unref (s_content);
       }
 
-      g_object_unref (content);
+      /* g_object_unref (content); */
 
       if (!encryption_success) {
         encryption_error = err->message;
