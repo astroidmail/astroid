@@ -440,12 +440,11 @@ namespace Astroid {
       }
 
       /* connect channels */
-      c_ch_stdout = Glib::signal_io().connect (sigc::mem_fun (this, &ComposeMessage::log_out), stdout, Glib::IO_IN | Glib::IO_HUP);
-      c_ch_stderr = Glib::signal_io().connect (sigc::mem_fun (this, &ComposeMessage::log_err), stderr, Glib::IO_IN | Glib::IO_HUP);
-
-
       ch_stdout = Glib::IOChannel::create_from_fd (stdout);
       ch_stderr = Glib::IOChannel::create_from_fd (stderr);
+
+      sigc::connection c_ch_stdout = Glib::signal_io().connect (sigc::mem_fun (this, &ComposeMessage::log_out), stdout, Glib::IO_IN | Glib::IO_HUP);
+      sigc::connection c_ch_stderr = Glib::signal_io().connect (sigc::mem_fun (this, &ComposeMessage::log_err), stderr, Glib::IO_IN | Glib::IO_HUP);
 
       FILE * sendMailPipe = fdopen (stdin, "w");
 
