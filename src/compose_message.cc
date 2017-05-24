@@ -446,17 +446,12 @@ namespace Astroid {
       sigc::connection c_ch_stdout = Glib::signal_io().connect (sigc::mem_fun (this, &ComposeMessage::log_out), stdout, Glib::IO_IN | Glib::IO_HUP);
       sigc::connection c_ch_stderr = Glib::signal_io().connect (sigc::mem_fun (this, &ComposeMessage::log_err), stderr, Glib::IO_IN | Glib::IO_HUP);
 
-      FILE * sendMailPipe = fdopen (stdin, "w");
-
       /* write message to sendmail */
-      GMimeStream * sendMailStream = g_mime_stream_file_new(sendMailPipe);
-      g_mime_stream_file_set_owner(GMIME_STREAM_FILE(sendMailStream), false);
-      g_mime_object_write_to_stream(GMIME_OBJECT(message), sendMailStream);
-      g_mime_stream_flush (sendMailStream);
-
-      g_object_unref(sendMailStream);
-      fclose (sendMailPipe);
-      ::close (stdin);
+      GMimeStream * stream = g_mime_stream_fs_new (stdin);
+      g_mime_stream_fs_set_owner (GMIME_STREAM_FS(stream), true);
+      g_mime_object_write_to_stream(GMIME_OBJECT(message), stream);
+      g_mime_stream_flush (stream);
+      g_object_unref (stream);
 
       /* wait for sendmail to finish */
       int status;
