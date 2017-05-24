@@ -456,6 +456,7 @@ namespace Astroid {
 
       g_object_unref(sendMailStream);
       fclose (sendMailPipe);
+      ::close (stdin);
 
       /* wait for sendmail to finish */
       int status;
@@ -490,7 +491,6 @@ namespace Astroid {
         ch_stderr.clear ();
       }
 
-      ::close (stdin);
       ::close (stdout);
       ::close (stderr);
 
