@@ -103,10 +103,11 @@ BOOST_AUTO_TEST_SUITE(Composing)
     LOG (debug) << "cm: signature file: " << a.signature_file;
 
     ustring fname = "test/mail/test_mail/test-output.eml";
-    a.sendmail = "tee " + fname;
+    /* a.sendmail = "tee " + fname; */
+    a.sendmail = "test/forktee.sh " + fname;
     LOG (debug) << "cm: sendmail: " << a.sendmail;
 
-    for (int i = 0; i < 100; i++) {
+    for (int i = 0; i < 1; i++) {
       ComposeMessage * c = new ComposeMessage ();
 
       ustring to      = "bar@astroidmail.bar";
