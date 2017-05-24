@@ -5,6 +5,9 @@
 # include "test_common.hh"
 # include "compose_message.hh"
 # include "message_thread.hh"
+# include "account_manager.hh"
+# include "utils/address.hh"
+# include "utils/ustring_utils.hh"
 
 BOOST_AUTO_TEST_SUITE(Composing)
 
@@ -70,6 +73,78 @@ BOOST_AUTO_TEST_SUITE(Composing)
 
     /* try to set empty reference when references are empty already */
     c->set_references ("");
+
+    teardown ();
+  }
+
+  BOOST_AUTO_TEST_CASE (send_messages)
+  {
+
+    using Astroid::ComposeMessage;
+    using Astroid::Message;
+    using Astroid::Account;
+    using Astroid::AddressList;
+    using Astroid::UstringUtils;
+
+    setup ();
+
+    Account a = astroid->accounts->accounts[0];
+    a.email   = "gaute@astroidmail.bar";
+    a.signature_file = "test/test_home/signature.txt";
+
+    /* read signature */
+    std::ifstream s (a.signature_file.c_str ());
+    std::ostringstream sf;
+    sf << s.rdbuf ();
+    s.close ();
+    ustring signature = sf.str ();
+
+    LOG (trace) << "cm: account gpg: " << a.gpgkey;
+    LOG (debug) << "cm: signature file: " << a.signature_file;
+
+    ustring fname = "test/mail/test_mail/test-output.eml";
+    a.sendmail = "tee " + fname;
+    LOG (debug) << "cm: sendmail: " << a.sendmail;
+
+    for (int i = 0; i < 100; i++) {
+      ComposeMessage * c = new ComposeMessage ();
+
+      ustring to      = "bar@astroidmail.bar";
+      ustring subject = "æøå adfasdf asdf";
+      ustring id      = "1@test";
+
+      c->set_from (&a);
+      c->set_id (id);
+      c->set_to (to);
+      c->set_subject (subject);
+
+      /* set body */
+      ustring body = UstringUtils::random_alphanumeric (1000) + "\n   >>" + UstringUtils::random_alphanumeric (1500);
+      c->body << body;
+
+      c->include_signature = true;
+
+      c->build ();
+      c->finalize ();
+
+      if (i % 2 == 0) {
+        c->send_threaded ();
+      } else {
+        c->send ();
+      }
+
+      delete c;
+
+      /* read message */
+      Message m (fname);
+
+      BOOST_CHECK (m.subject == subject);
+      BOOST_CHECK (AddressList(m.to()).str () == to);
+      BOOST_CHECK (m.mid == id);
+      BOOST_CHECK (m.viewable_text (false) == (body + signature));
+
+      unlink (fname.c_str ());
+    }
 
     teardown ();
   }
