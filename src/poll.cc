@@ -229,22 +229,12 @@ namespace Astroid {
     c_ch_stdout.disconnect();
 
     if (ch_stdout) {
-      Glib::ustring buf;
-
-      ch_stdout->read_to_end (buf);
-      if (*(--buf.end()) == '\n') buf.erase (--buf.end());
-
-      if (!buf.empty ()) LOG (debug) << "poll script: " << buf;
+      ch_stdout->close ();
       ch_stdout.clear ();
     }
 
     if (ch_stderr) {
-      Glib::ustring buf;
-
-      ch_stderr->read_to_end (buf);
-      if (*(--buf.end()) == '\n') buf.erase (--buf.end());
-
-      if (!buf.empty ()) LOG (warn) << "poll script: " << buf;
+      ch_stderr->close ();
       ch_stderr.clear ();
     }
 
