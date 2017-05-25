@@ -218,7 +218,7 @@ if not disable_libsass:
   elif conf.CheckLibWithHeader ('libsass', 'sass/context.h', 'c'):
     env.AppendUnique (CPPFLAGS = [ '-DSASSCTX_CONTEXT_H' ])
   else:
-    print "libsass must be installed: could not find header file. you can disable libsass with --disable-libsass, however, that requires a SCSS compiler like 'sassc'."
+    print "libsass must be installed: could not find header file. you can disable libsass with --disable-libsass, however, that requires a SCSS compiler like 'sassc' which should be specified with --scss-compiler=<path to compiler>."
     Exit (1)
 
 else:
