@@ -32,6 +32,9 @@ def unitTestAction(target, source, env):
   process = subprocess.Popen (app, shell = True, env = myenv)
   process.wait ()
   ret = process.returncode
+
+  tearDownGPG (myenv)
+
   if ret == 0:
     open(str(target[0]),'w').write("PASSED\n")
   else:
@@ -42,6 +45,7 @@ def setupGPG (env):
   gpgh = os.path.abspath(os.path.join (home, 'gnupg'))
   env['GNUPGHOME'] = gpgh
   env['GPG_AGENT_INFO'] = ''
+
 
   if not os.path.exists (os.path.join (gpgh, '.ready')):
     print "test: setting up gpg environment in: " + gpgh
@@ -59,6 +63,14 @@ def setupGPG (env):
     Popen ("gpg --batch --always-trust --import two.pub", env = env, shell = True, cwd = gpgh).wait ()
 
   open (os.path.join (gpgh, '.ready'), 'w').write ('ready')
+
+def tearDownGPG (env):
+  home = os.path.join (os.path.curdir, 'test/test_home')
+  gpgh = os.path.abspath(os.path.join (home, 'gnupg'))
+  env['GNUPGHOME'] = gpgh
+
+  # Kill gpg agent
+  Popen ("gpgconf --kill all", env = env, shell = True, cwd = gpgh).wait ()
 
 
 def unitTestActionString(target, source, env):
