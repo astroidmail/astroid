@@ -460,7 +460,7 @@ namespace Astroid {
           auto row = *iter;
           Account * a = row[from_columns.account];
           if (a->has_signature) {
-            switch_signature->set_state (!switch_signature->get_active ());
+            switch_signature->set_active (!switch_signature->get_active ());
           }
           return true;
         });
@@ -720,14 +720,14 @@ namespace Astroid {
     Account * a = (*it)[from_columns.account];
 
     switch_signature->set_sensitive (a->has_signature);
-    switch_signature->set_state (a->has_signature && a->signature_default_on);
+    switch_signature->set_active (a->has_signature && a->signature_default_on);
 
     encryption_revealer->set_reveal_child (a->has_gpg);
     switch_sign->set_sensitive (a->has_gpg);
     switch_encrypt->set_sensitive (a->has_gpg);
 
-    switch_encrypt->set_state (false);
-    switch_sign->set_state (a->has_gpg && a->always_gpg_sign);
+    switch_encrypt->set_active (false);
+    switch_sign->set_active (a->has_gpg && a->always_gpg_sign);
   }
 
   void EditMessage::switch_signature_set () {
