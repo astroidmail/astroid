@@ -406,6 +406,10 @@ namespace Astroid {
     }
     d_message_send_status ();
 
+    int stdin;
+    int stdout;
+    int stderr;
+
     /* Send the message */
     if (!dryrun) {
       LOG (warn) << "cm: sending message from account: " << account->full_address ();
@@ -440,11 +444,10 @@ namespace Astroid {
       }
 
       /* connect channels */
+      refptr<Glib::IOChannel> ch_stdout;
+      refptr<Glib::IOChannel> ch_stderr;
       ch_stdout = Glib::IOChannel::create_from_fd (stdout);
       ch_stderr = Glib::IOChannel::create_from_fd (stderr);
-
-      sigc::connection c_ch_stdout = Glib::signal_io().connect (sigc::mem_fun (this, &ComposeMessage::log_out), stdout, Glib::IO_IN | Glib::IO_HUP);
-      sigc::connection c_ch_stderr = Glib::signal_io().connect (sigc::mem_fun (this, &ComposeMessage::log_err), stderr, Glib::IO_IN | Glib::IO_HUP);
 
       /* write message to sendmail */
       GMimeStream * stream = g_mime_stream_fs_new (stdin);
@@ -462,9 +465,6 @@ namespace Astroid {
       }
 
       g_spawn_close_pid (pid);
-
-      c_ch_stderr.disconnect();
-      c_ch_stdout.disconnect();
 
       /* these read_to_end's are necessary to wait for the pipes to be closed, hopefully
        * ensuring that any child processed forked by the sendmail process
@@ -540,47 +540,6 @@ namespace Astroid {
       pid = 0;
       return false;
     }
-  }
-
-  bool ComposeMessage::log_out (Glib::IOCondition cond) {
-    if (cond == Glib::IO_HUP) {
-      ch_stdout.clear();
-      LOG (debug) << "cm: sendmail: (stdout) got HUP";
-      return false;
-    }
-
-    if ((cond & Glib::IO_IN) == 0) {
-      LOG (error) << "cm: invalid fifo response";
-    } else {
-      Glib::ustring buf;
-
-      ch_stdout->read_line(buf);
-      if (*(--buf.end()) == '\n') buf.erase (--buf.end());
-
-      LOG (debug) << "sendmail: " << buf;
-
-    }
-    return true;
-  }
-
-  bool ComposeMessage::log_err (Glib::IOCondition cond) {
-    if (cond == Glib::IO_HUP) {
-      ch_stderr.clear();
-      LOG (debug) << "cm: sendmail: (stderr) got HUP";
-      return false;
-    }
-
-    if ((cond & Glib::IO_IN) == 0) {
-      LOG (error) << "cm: invalid fifo response";
-    } else {
-      Glib::ustring buf;
-
-      ch_stderr->read_line(buf);
-      if (*(--buf.end()) == '\n') buf.erase (--buf.end());
-
-      LOG (warn) << "sendmail: " << buf;
-    }
-    return true;
   }
 
   /* signals */

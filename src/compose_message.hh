@@ -102,14 +102,6 @@ namespace Astroid {
       /* sendmail process */
       bool cancel_send_during_delay = false;
       int pid;
-      int stdin;
-      int stdout;
-      int stderr;
-      refptr<Glib::IOChannel> ch_stdout;
-      refptr<Glib::IOChannel> ch_stderr;
-
-      bool log_out (Glib::IOCondition);
-      bool log_err (Glib::IOCondition);
 
       std::thread send_thread;
       std::mutex  send_cancel_m;
