@@ -33,7 +33,6 @@ namespace Astroid {
       bool auto_polling_enabled = true;
       bool external_polling = false;
 
-      void do_poll ();
       bool periodic_polling ();
 
       std::chrono::time_point<std::chrono::steady_clock> t0; // start time of poll
@@ -42,15 +41,20 @@ namespace Astroid {
       unsigned long before_poll_revision = 0;
       void refresh_threads ();
 
-      std::thread poll_thread;
       std::mutex  poll_cancel_m;
       std::condition_variable poll_cancel_cv;
+
+      void do_poll ();
+      void poll_child_done (GPid pid, int child_status);
 
       GPid pid;
       int stdout;
       int stderr;
       refptr<Glib::IOChannel> ch_stdout;
       refptr<Glib::IOChannel> ch_stderr;
+      sigc::connection c_ch_stdout;
+      sigc::connection c_ch_stderr;
+
       Glib::Dispatcher d_refresh;
 
       bool log_out (Glib::IOCondition);
