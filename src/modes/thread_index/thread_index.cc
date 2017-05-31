@@ -46,6 +46,7 @@ namespace Astroid {
     /* load threads */
     queryloader.stats_ready.connect (
         sigc::mem_fun (this, &ThreadIndex::on_stats_ready));
+
     queryloader.first_thread_ready.connect (
         sigc::mem_fun (this, &ThreadIndex::on_first_thread_ready));
 

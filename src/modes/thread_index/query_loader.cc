@@ -2,6 +2,7 @@
 # include "db.hh"
 
 # include "query_loader.hh"
+# include "thread_index.hh"
 # include "thread_index_list_view.hh"
 # include "config.hh"
 # include "actions/action_manager.hh"
@@ -45,9 +46,6 @@ namespace Astroid {
 
     deferred_threads_d.connect (
         sigc::mem_fun (this, &QueryLoader::update_deferred_changed_threads));
-
-    make_stats.connect (
-        sigc::mem_fun (this, &QueryLoader::refresh_stats));
 
     astroid->actions->signal_thread_changed ().connect (
         sigc::mem_fun (this, &QueryLoader::on_thread_changed));
@@ -94,11 +92,6 @@ namespace Astroid {
     reload ();
   }
 
-  void QueryLoader::refresh_stats () {
-    Db db (Db::DATABASE_READ_ONLY);
-    refresh_stats_db (&db);
-  }
-
   void QueryLoader::refresh_stats_db (Db * db) {
     LOG (debug) << "ql: refresh stats..";
 
@@ -122,10 +115,6 @@ namespace Astroid {
     st = notmuch_query_count_messages (unread_q, &unread_messages); // destructive
     if (st != NOTMUCH_STATUS_SUCCESS) unread_messages = 0;
     notmuch_query_destroy (unread_q);
-
-    if (!in_destructor) stats_ready.emit ();
-
-    waiting_stats = false;
   }
 
   void QueryLoader::loader () {
@@ -133,6 +122,7 @@ namespace Astroid {
 
     Db db (Db::DATABASE_READ_ONLY);
     refresh_stats_db (&db);
+    if (!in_destructor) stats_ready.emit ();
 
     /* set up query */
     notmuch_query_t * nmquery;
@@ -380,9 +370,9 @@ namespace Astroid {
       }
     }
 
-    if (changed && !waiting_stats) {
-      waiting_stats = true;
+    if (changed) {
       refresh_stats_db (db); // we should already be running on the gui thread
+      list_view->thread_index->on_stats_ready ();
     }
   }
 }
