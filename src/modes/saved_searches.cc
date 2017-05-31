@@ -363,6 +363,58 @@ namespace Astroid {
           return true;
         });
 
+    keys.register_key (Key (false, false, (guint) GDK_KEY_ISO_Left_Tab),
+        "searches.previous_unread",
+        "Jump to previous unread thread",
+        [&] (Key) {
+          Gtk::TreePath thispath, path;
+          Gtk::TreeIter iter;
+          Gtk::TreeViewColumn *c;
+
+          tv.get_cursor (path, c);
+          path.prev ();
+          iter = store->get_iter (path);
+          thispath = path;
+
+          Gtk::ListStore::Row row;
+
+          bool found = false;
+          while (iter) {
+            row = *iter;
+
+            if (row[m_columns.m_col_unread_messages] > 0) {
+              path = store->get_path (iter);
+              tv.set_cursor (path);
+              found = true;
+              break;
+            }
+
+            iter--;
+          }
+
+          /* wrap, and check from end */
+          if (!found) {
+            iter = store->children().end ();
+            iter--;
+
+            while (iter && store->get_path(iter) > thispath) {
+              row = *iter;
+
+              if (row[m_columns.m_col_unread_messages] > 0) {
+                path = store->get_path (iter);
+                tv.set_cursor (path);
+                found = true;
+                break;
+              }
+
+              iter--;
+            }
+          }
+
+          return true;
+        });
+
+
     keys.register_key (Key (GDK_KEY_Return), { Key (GDK_KEY_KP_Enter) },
         "searches.open",
         "Open query",
