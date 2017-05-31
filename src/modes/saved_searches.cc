@@ -36,7 +36,7 @@ namespace Astroid {
       pcolumn->add_attribute (renderer_text->property_markup(), m_columns.m_col_name);
     }
 
-    tv.append_column ("Unread messages", m_columns.m_col_unread_messages);
+    tv.append_column ("Unread messages", m_columns.m_col_unread_messages_s);
     tv.append_column ("Total messages ", m_columns.m_col_total_messages);
     tv.append_column ("Query", m_columns.m_col_query);
 
@@ -313,6 +313,56 @@ namespace Astroid {
           return true;
         });
 
+    keys.register_key (Key (GDK_KEY_Tab),
+        "searches.next_unread",
+        "Jump to next unread thread",
+        [&] (Key) {
+          Gtk::TreePath thispath, path;
+          Gtk::TreeIter fwditer;
+          Gtk::TreeViewColumn *c;
+
+          tv.get_cursor (path, c);
+          path.next ();
+          fwditer = store->get_iter (path);
+          thispath = path;
+
+          Gtk::ListStore::Row row;
+
+          bool found = false;
+          while (fwditer) {
+            row = *fwditer;
+
+            if (row[m_columns.m_col_unread_messages] > 0) {
+              found = true;
+              path = store->get_path (fwditer);
+              tv.set_cursor (path);
+              break;
+            }
+
+            fwditer++;
+          }
+
+          /* wrap, and check from start */
+          if (!found) {
+            fwditer = store->children().begin ();
+
+            while (fwditer && store->get_path(fwditer) < thispath) {
+              row = *fwditer;
+
+              if (row[m_columns.m_col_unread_messages] > 0) {
+                found = true;
+                path = store->get_path (fwditer);
+                tv.set_cursor (path);
+                break;
+              }
+
+              fwditer++;
+            }
+          }
+
+          return true;
+        });
+
     keys.register_key (Key (GDK_KEY_Return), { Key (GDK_KEY_KP_Enter) },
         "searches.open",
         "Open query",
@@ -459,7 +509,8 @@ namespace Astroid {
       if (st != NOTMUCH_STATUS_SUCCESS) unread_messages = 0;
       notmuch_query_destroy (unread_q);
 
-      row[m_columns.m_col_unread_messages] = ustring::compose ("(unread: %1)", unread_messages);
+      row[m_columns.m_col_unread_messages] = unread_messages;
+      row[m_columns.m_col_unread_messages_s] = ustring::compose ("(unread: %1)", unread_messages);
       row[m_columns.m_col_total_messages] = ustring::compose ("(total: %1)", total_messages);
     }
   }
