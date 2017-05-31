@@ -118,6 +118,7 @@ namespace Astroid {
       ( "no-auto-poll", "do not poll automatically")
       ( "log,l", po::value<ustring>(), "log to file")
       ( "append-log,a", "append to log file")
+      ( "disable-log", "disable logging")
       ( "start-polling", "indicate that external polling (external notmuch db R/W operations) starts")
       ( "stop-polling", "indicate that external polling stops")
       ( "refresh", po::value<unsigned long>(), "refresh threads changed since lastmod")
@@ -153,6 +154,12 @@ namespace Astroid {
       exit (0);
 
     }
+
+    if (vm.count ("disable-log")) {
+      LOG (warn) << "disabling log";
+      logging::core::get()->set_logging_enabled (false);
+    }
+
 
     /* log to file */
     if (vm.count ("log")) {
