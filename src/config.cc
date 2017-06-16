@@ -184,10 +184,10 @@ namespace Astroid {
     /* editor */
     // also useful: '+/^\\s*\\n/' '+nohl'
 # ifndef DISABLE_EMBEDDED
-    default_config.put ("editor.cmd", "gvim -geom 10x10 --servername %2 --socketid %3 -f -c 'set ft=mail' '+set fileencoding=utf-8' '+set ff=unix' '+set enc=utf-8' %1");
+    default_config.put ("editor.cmd", "gvim -geom 10x10 --servername %2 --socketid %3 -f -c 'set ft=mail' '+set fileencoding=utf-8' '+set ff=unix' '+set enc=utf-8' '+set fo+=w' %1");
     default_config.put ("editor.external_editor", false); // should be true on Wayland
 # else
-    default_config.put ("editor.cmd", "gvim -f -c 'set ft=mail' '+set fileencoding=utf-8' '+set enc=utf-8' '+set ff=unix' %1");
+    default_config.put ("editor.cmd", "gvim -f -c 'set ft=mail' '+set fileencoding=utf-8' '+set enc=utf-8' '+set ff=unix' '+set fo+=w' %1");
     default_config.put ("editor.external_editor", true); // should be true on Wayland
 # endif
 
