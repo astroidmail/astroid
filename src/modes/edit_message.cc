@@ -975,7 +975,6 @@ namespace Astroid {
 
       prepare_message ();
       read_edited_message ();
-
     }
   }
 

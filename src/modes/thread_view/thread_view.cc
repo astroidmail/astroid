@@ -2219,7 +2219,7 @@ namespace Astroid {
           return true;
         });
 
-    keys.register_key (Key (GDK_KEY_Return), { Key (GDK_KEY_KP_Enter) },
+    keys.register_key (Key (GDK_KEY_Return), { Key (GDK_KEY_KP_Enter), Key (true, false, (guint) GDK_KEY_space) },
         "thread_view.activate",
         "Open/expand/activate focused element",
         [&] (Key) {
@@ -2240,12 +2240,6 @@ namespace Astroid {
             return element_action (EDelete);
           }
           return false;
-        });
-
-    keys.register_key (Key(GDK_KEY_space), "thread_view.open",
-        "Open attachment or message",
-        [&] (Key) {
-          return element_action (EOpen);
         });
 
     keys.register_key ("e", "thread_view.expand",
@@ -3287,7 +3281,7 @@ namespace Astroid {
           switch (state[focused_message].elements[state[focused_message].current_element].type) {
             case MessageState::ElementType::Attachment:
               {
-                if ((!edit_mode && a == EEnter) || a == EOpen) {
+                if (a == EEnter) {
                   /* open attachment */
 
                   refptr<Chunk> c = focused_message->get_chunk_by_id (
@@ -3314,7 +3308,7 @@ namespace Astroid {
               break;
             case MessageState::ElementType::Part:
               {
-                if ((!edit_mode && a == EEnter) || a == EOpen) {
+                if (a == EEnter) {
                   /* open part */
 
                   refptr<Chunk> c = focused_message->get_chunk_by_id (
@@ -3350,7 +3344,7 @@ namespace Astroid {
 
             case MessageState::ElementType::MimeMessage:
               {
-                if ((!edit_mode && a == EEnter) || a == EOpen) {
+                if (a == EEnter) {
                   /* open part */
                   refptr<Chunk> c = focused_message->get_chunk_by_id (
                       state[focused_message].elements[state[focused_message].current_element].id);

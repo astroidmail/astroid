@@ -184,7 +184,6 @@ namespace Astroid {
       /* activate message or selected element */
       typedef enum {
         EEnter = 0,
-        EOpen,
         ESave,
         EDelete,
         EYankRaw,
