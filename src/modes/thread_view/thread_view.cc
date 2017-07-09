@@ -2232,7 +2232,7 @@ namespace Astroid {
           return element_action (ESave);
         });
 
-    keys.register_key ("d", "thread_view.delete",
+    keys.register_key ("d", "thread_view.delete_attachment",
         "Delete attachment (if editing)",
         [&] (Key) {
           if (edit_mode) {

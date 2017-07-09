@@ -966,15 +966,35 @@ namespace Astroid {
     if (sending_in_progress.load ()) return;
 
     if (action == ThreadView::ElementAction::EDelete) {
+
       /* delete attachment */
       auto e = thread_view->state[thread_view->focused_message].elements[id];
 
-      LOG (info) << "em: remove attachment: " << id << ", cid: " << e.id;
+      if (e.type == ThreadView::MessageState::ElementType::Attachment) {
+        LOG (info) << "em: remove attachment: " << id << ", cid: " << e.id;
 
-      attachments.erase (std::remove_if (attachments.begin (), attachments.end (), [&] (shared_ptr<ComposeMessage::Attachment> &a) { return a->chunk_id == e.id; }));
+        /* find attachment */
+        unsigned int attachment = 0;
 
-      prepare_message ();
-      read_edited_message ();
+        for (unsigned int i = 0;
+            i < thread_view->state[thread_view->focused_message].elements.size ();
+            i++)
+        {
+          auto xe = thread_view->state[thread_view->focused_message].elements[i];
+          if (xe.type == ThreadView::MessageState::ElementType::Attachment) {
+
+            if (i == (unsigned int) id) {
+              attachments.erase (attachments.begin () + attachment);
+              break;
+            }
+
+            attachment++;
+          }
+        }
+
+        prepare_message ();
+        read_edited_message ();
+      }
     }
   }
 
