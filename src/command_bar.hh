@@ -105,6 +105,11 @@ namespace Astroid {
               Gtk::TreeModel::const_iterator&) override;
 
           bool on_match_selected(const Gtk::TreeModel::iterator& iter) override;
+
+          /* re-calculate and set colors of tags */
+          Gdk::RGBA canavas_color;
+          bool canvas_color_set = false;
+          void color_tags ();
       };
 
       refptr<TagCompletion> tag_completion;

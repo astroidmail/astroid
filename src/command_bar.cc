@@ -206,24 +206,30 @@ namespace Astroid {
   }
 
   void CommandBar::start_tagging (ustring tagstring) {
-    entry.set_text (tagstring);
-
     /* set up completion */
     tag_completion->load_tags (Db::tags);
     entry.set_completion (tag_completion);
     current_completion = tag_completion;
+
+    entry.set_text (tagstring);
+
+    tag_completion->color_tags ();
   }
 
   void CommandBar::start_difftagging (ustring tagstring) {
-    entry.set_text (tagstring);
-
     /* set up completion */
     difftag_completion->load_tags (Db::tags);
     entry.set_completion (difftag_completion);
     current_completion = difftag_completion;
+
+    entry.set_text (tagstring);
+
+    difftag_completion->color_tags ();
   }
 
   bool CommandBar::entry_key_press (GdkEventKey * event) {
+    LOG (debug) << "cb: got key: " << event->keyval;
+
     switch (event->keyval) {
       case GDK_KEY_Tab:
         {
@@ -309,8 +315,15 @@ namespace Astroid {
 
       ustring cmd = get_text ();
       if (callback != NULL) callback (cmd);
+
+    } else if (mode == CommandMode::Tag || mode == CommandMode::DiffTag) {
+
+      if (current_completion)
+        refptr<TagCompletion>::cast_dynamic (current_completion)->color_tags ();
+
     }
   }
+
 
   bool CommandBar::command_handle_event (GdkEventKey * event) {
     return handle_event (event);
@@ -350,13 +363,6 @@ namespace Astroid {
       fwditer++;
     }
   }
-
-  /* take the next match in the list and return its index */
-  /*
-  unsigned int CommandBar::GenericCompletion::roll_completion (ustring_sz pos) {
-    return 0;
-  }
-  */
 
 
   /********************
@@ -498,6 +504,76 @@ namespace Astroid {
     }
 
     return true;
+  }
+
+  void CommandBar::TagCompletion::color_tags () {
+    Gtk::Entry * entry = get_entry ();
+    if (entry == NULL) return;
+
+    if (!canvas_color_set) {
+      canavas_color    = entry->get_style_context()->get_background_color ();
+      canvas_color_set = true;
+    }
+
+
+    ustring txt = entry->get_text ();
+
+    /* set up attrlist */
+    Pango::AttrList attrs;
+
+    /* walk through unfinished tag list and style each tag */
+    ustring_sz pos = 0;
+    ustring_sz end = pos;
+    ustring_sz len = txt.size ();
+
+    while (pos < len) {
+      /* find beginning of tag */
+      pos = txt.find_first_not_of (break_on, pos);
+
+      if (pos == ustring::npos) break;
+
+      /* find end of tag */
+      end = txt.find_first_of (break_on, pos);
+
+      if (end == ustring::npos)
+        end = txt.length ();
+
+      ustring tag = txt.substr (pos, (end - pos));
+
+      unsigned char cv[3] = { (unsigned char) (canavas_color.get_red_u ()   * 255 / 65535),
+                              (unsigned char) (canavas_color.get_green_u () * 255 / 65535),
+                              (unsigned char) (canavas_color.get_blue_u ()  * 255 / 65535) };
+
+      auto colors = Utils::get_tag_color_rgba (tag, cv);
+
+      auto fg = colors.first;
+      auto bg = colors.second;
+
+      /* grapheme positions */
+      ustring_sz gstart, gend;
+      gstart = txt.substr (0, pos).bytes ();
+      gend   = gstart + tag.bytes ();
+
+      auto fga = Pango::Attribute::Attribute::create_attr_foreground (fg.get_red_u (), fg.get_green_u (), fg.get_blue_u ());
+      fga.set_start_index (gstart);
+      fga.set_end_index   (gend);
+
+      auto bga = Pango::Attribute::Attribute::create_attr_background (bg.get_red_u (), bg.get_green_u (), bg.get_blue_u ());
+      bga.set_start_index (gstart);
+      bga.set_end_index   (gend);
+
+      auto bgalpha = Pango::Attribute::Attribute::create_attr_background_alpha (bg.get_alpha_u ());
+      bgalpha.set_start_index (gstart);
+      bgalpha.set_end_index   (gend);
+
+      attrs.insert (bga);
+      attrs.insert (bgalpha);
+      attrs.insert (fga);
+
+      pos = end+1;
+    }
+
+    entry->set_attributes (attrs);
   }
 
 
