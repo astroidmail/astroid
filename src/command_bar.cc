@@ -206,7 +206,6 @@ namespace Astroid {
   }
 
   void CommandBar::start_tagging (ustring tagstring) {
-    /* TODO: set up text tags */
     entry.set_text (tagstring);
 
     /* set up completion */
@@ -261,6 +260,7 @@ namespace Astroid {
             return false;
           }
         }
+        break;
 
       case GDK_KEY_Down:
         {
@@ -284,6 +284,7 @@ namespace Astroid {
             return false;
           }
         }
+        break;
 
       default:
         {
@@ -392,53 +393,52 @@ namespace Astroid {
   /* searches backwards to the previous ',' and extracts the
    * part of the partially entered tag to be matched on.
    */
-  ustring CommandBar::TagCompletion::get_partial_tag (ustring c, ustring_sz &outpos) {
+  ustring CommandBar::TagCompletion::get_partial_tag (ustring_sz &outpos) {
     Gtk::Entry * e = get_entry ();
     if (e == NULL) return "";
 
     ustring in = e->get_text ();
-    c = in;
 
-    if (c.size() == 0) {
+    if (in.size() == 0) {
       outpos = 0;
-      return c;
+      return in;
     }
 
     int cursor     = e->get_position ();
-    if (cursor == -1) cursor = c.size();
+    if (cursor == -1) cursor = in.size();
 
-    outpos = c.find_last_of (break_on, cursor-1);
+    outpos = in.find_last_of (break_on, cursor-1);
     if (outpos == ustring::npos) outpos = 0;
 
 
-    ustring_sz endpos = c.find_first_of (break_on, outpos+2);
-    if (endpos == ustring::npos) endpos = c.size();
+    ustring_sz endpos = in.find_first_of (break_on, outpos+2);
+    if (endpos == ustring::npos) endpos = in.size();
 
     if (outpos >= endpos) {
       return "";
     }
 
-    if (break_on.find_first_of (c[outpos]) != ustring::npos) {
+    if (break_on.find_first_of (in[outpos]) != ustring::npos) {
       outpos++; // skip delimiter
       endpos--;
     }
 
-    c = c.substr (outpos, endpos);
-    UstringUtils::trim_left (c);
+    in = in.substr (outpos, endpos);
+    UstringUtils::trim_left (in);
 
     /* LOG (debug) << "cursor: " << cursor << ", outpos: " << outpos << ", in: " << in << ", o: " << c; */
-    return c;
+    return in;
   }
 
   bool CommandBar::TagCompletion::match (
-      const ustring& raw_key, const
+      const ustring&, const
       Gtk::TreeModel::const_iterator& iter)
   {
     if (iter)
     {
 
       ustring_sz pos;
-      ustring key = get_partial_tag (raw_key, pos);
+      ustring key = get_partial_tag (pos);
 
       Gtk::TreeModel::Row row = *iter;
 
@@ -469,7 +469,7 @@ namespace Astroid {
 
       ustring t = entry->get_text ();
       ustring_sz pos;
-      ustring key = get_partial_tag (t, pos);
+      ustring key = get_partial_tag (pos);
 
       LOG (debug) << "match selected: " << t << ", key: " << key << ", pos: " << pos;
 
@@ -506,30 +506,9 @@ namespace Astroid {
    ********************/
   CommandBar::DiffTagCompletion::DiffTagCompletion ()
   {
-    completion_model = Gtk::ListStore::create (m_columns);
-    set_model (completion_model);
-    set_text_column (m_columns.m_tag);
-    set_match_func (sigc::mem_fun (*this,
-          &CommandBar::DiffTagCompletion::match));
-
-    set_popup_completion (true);
-    set_popup_single_match (true);
-    set_minimum_key_length (1);
     break_on = "+- ";
   }
 
-  void CommandBar::DiffTagCompletion::load_tags (vector<ustring> _tags) {
-    tags = _tags;
-    sort (tags.begin(), tags.end());
-
-    completion_model->clear ();
-
-    /* fill model with tags */
-    for (ustring t : tags) {
-      auto row = *(completion_model->append ());
-      row[m_columns.m_tag] = t;
-    }
-  }
 
   /********************
    * Search Completion
@@ -570,7 +549,7 @@ namespace Astroid {
   /* searches backwards to the previous ',' and extracts the
    * part of the partially entered tag to be matched on.
    */
-  bool CommandBar::SearchCompletion::get_partial_tag (ustring c, ustring &out, ustring_sz &outpos) {
+  bool CommandBar::SearchCompletion::get_partial_tag (ustring &out, ustring_sz &outpos) {
     // example input
     // (tag:asdf) and tag:asdfb and asdf
     //
@@ -580,15 +559,14 @@ namespace Astroid {
     int cursor     = e->get_position ();
 
     ustring in = e->get_text ();
-    c = in;
 
-    if (cursor == -1) cursor = c.size();
+    if (cursor == -1) cursor = in.size();
 
-    outpos = c.rfind ("tag:", cursor);
+    outpos = in.rfind ("tag:", cursor);
     if (outpos == ustring::npos) return false;
 
     /* check if we find any breaks between tag and current position */
-    ustring_sz endpos = c.find_first_of (") ", outpos); // break completion on these chars
+    ustring_sz endpos = in.find_first_of (") ", outpos); // break completion on these chars
     if (endpos != ustring::npos) {
       if (endpos < static_cast<ustring_sz>(cursor)) {
         //LOG (debug) << "break between tag and cursor";
@@ -596,13 +574,13 @@ namespace Astroid {
       }
     } else {
       /* if we're at end, use remainder of string */
-      endpos = c.size();
+      endpos = in.size();
     }
 
-    c = c.substr (outpos+4, endpos-outpos-4);
-    UstringUtils::trim (c);
+    in = in.substr (outpos+4, endpos-outpos-4);
+    UstringUtils::trim (in);
 
-    out = c;
+    out = in;
 
     // LOG (debug) << "cursor: " << cursor << ", outpos: " << outpos << ", in: " << in << ", o: " << c;
 
@@ -610,12 +588,12 @@ namespace Astroid {
   }
 
   bool CommandBar::SearchCompletion::match (
-      const ustring& raw_key,
+      const ustring&,
       const Gtk::TreeModel::const_iterator& iter)
   {
     ustring key;
     ustring_sz pos;
-    bool in_tag_search = get_partial_tag (raw_key, key, pos);
+    bool in_tag_search = get_partial_tag (key, pos);
 
     if (in_tag_search && iter)
     {
@@ -650,7 +628,7 @@ namespace Astroid {
       ustring t = entry->get_text ();
       ustring key;
       ustring_sz    pos;
-      bool in_tag_search = get_partial_tag (t, key, pos);
+      bool in_tag_search = get_partial_tag (key, pos);
 
       //LOG (debug) << "match selected: " << t << ", in_tag: " << in_tag_search << ", key: " << key << ", pos: " << pos;
 

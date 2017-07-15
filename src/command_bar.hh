@@ -99,7 +99,7 @@ namespace Astroid {
           ModelColumns m_columns;
 
           ustring break_on = ", ";
-          ustring get_partial_tag (ustring, ustring_sz&);
+          ustring get_partial_tag (ustring_sz&);
 
           bool match (const ustring&, const
               Gtk::TreeModel::const_iterator&) override;
@@ -112,7 +112,7 @@ namespace Astroid {
       /********************
        * Completer for diff Tag editing:
        *
-       * +tag1 -tag1
+       * +tag1 -tag2
        ********************
        */
 
@@ -120,34 +120,6 @@ namespace Astroid {
       class DiffTagCompletion : public TagCompletion {
         public:
           DiffTagCompletion ();
-
-          void load_tags (std::vector<ustring>);
-          std::vector<ustring> tags; // must be sorted
-
-          // tree model columns, for the EntryCompletion's filter model
-          class ModelColumns : public Gtk::TreeModel::ColumnRecord
-          {
-            public:
-
-              ModelColumns ()
-              { add(m_tag); }
-
-              Gtk::TreeModelColumn<Glib::ustring> m_tag;
-          };
-
-          ModelColumns m_columns;
-
-          /* ustring break_on = "+- "; */
-
-          /*
-          ustring get_partial_tag (ustring, ustring_sz&);
-
-          bool match (const ustring&, const
-              Gtk::TreeModel::const_iterator&) override;
-
-          bool on_match_selected(const Gtk::TreeModel::iterator& iter) override;
-          */
-
       };
       refptr<DiffTagCompletion> difftag_completion;
 
@@ -184,7 +156,7 @@ namespace Astroid {
 
           ModelColumns m_columns;
 
-          bool get_partial_tag (ustring, ustring&, ustring_sz&);
+          bool get_partial_tag (ustring&, ustring_sz&);
 
           bool match (const ustring&, const
               Gtk::TreeModel::const_iterator&) override;
