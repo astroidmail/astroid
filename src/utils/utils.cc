@@ -86,7 +86,8 @@ namespace Astroid {
     }
   }
 
-  std::pair<ustring, ustring> Utils::get_tag_color (ustring t, unsigned char cv[3]) {
+  std::pair<Gdk::RGBA, Gdk::RGBA> Utils::get_tag_color_rgba (ustring t, unsigned char cv[3])
+  {
     unsigned char * tc = Crypto::get_md5_digest_char (t);
 
     unsigned char upper[3] = {
@@ -113,28 +114,61 @@ namespace Astroid {
       bg[k] = tc[k] * (upper[k] - lower[k]) + lower[k];
     }
 
+    Gdk::RGBA bc;
+    bc.set_rgba_u ( bg[0] * (65535) / (255),
+                    bg[1] * (65535) / (255),
+                    bg[2] * (65535) / (255),
+                    (unsigned short) (tags_alpha * (65535)));
+
+    delete tc;
+
     float lum = ((bg[0] * tags_alpha + (1-tags_alpha) * cv[0] ) * .2126 + (bg[1] * tags_alpha + (1-tags_alpha) * cv[1]) * .7152 + (bg[2] * tags_alpha + (1-tags_alpha) * cv[0]) * .0722) / 255.0;
     /* float avg = (bg[0] + bg[1] + bg[2]) / (3 * 255.0); */
+
+
+    Gdk::RGBA fc;
+    if (lum > 0.5) {
+      fc.set ("#000000");
+    } else {
+      fc.set ("#f2f2f2");
+    }
+
+    return std::make_pair (fc, bc);
+  }
+
+  std::pair<ustring, ustring> Utils::get_tag_color (ustring t, unsigned char cv[3]) {
+    auto clrs = get_tag_color_rgba (t, cv);
+    auto fg = clrs.first;
+    auto bg = clrs.second;
+
+    std::ostringstream fg_str;
+    fg_str << "#";
+
+    fg_str << std::hex << std::setfill('0') << std::setw(2) <<
+      ((int) fg.get_red_u () * 255 / 65535) ;
+    fg_str << std::hex << std::setfill('0') << std::setw(2) <<
+      ((int) fg.get_green_u () * 255 / 65535) ;
+    fg_str << std::hex << std::setfill('0') << std::setw(2) <<
+      ((int) fg.get_blue_u () * 255 / 65535) ;
+
+    fg_str << std::hex << std::setfill('0') << std::setw(2) <<
+      (int) (fg.get_alpha () * 255);
 
     std::ostringstream bg_str;
     bg_str << "#";
 
-    for (int k = 0; k < 3; k++) {
-      bg_str << std::hex << std::setfill('0') << std::setw(2) << ((int)bg[k]);
-    }
+    bg_str << std::hex << std::setfill('0') << std::setw(2) <<
+      ((int) bg.get_red_u () * 255 / 65535) ;
+    bg_str << std::hex << std::setfill('0') << std::setw(2) <<
+      ((int) bg.get_green_u () * 255 / 65535) ;
+    bg_str << std::hex << std::setfill('0') << std::setw(2) <<
+      ((int) bg.get_blue_u () * 255 / 65535) ;
 
-    bg_str << std::hex << std::setfill('0') << std::setw(2) << (int) (tags_alpha * 255);
+    bg_str << std::hex << std::setfill('0') << std::setw(2) <<
+      (int) (bg.get_alpha () * 255);
 
-    delete tc;
 
-    ustring fc;
-    if (lum > 0.5) {
-      fc = "#000000";
-    } else {
-      fc = "#f2f2f2";
-    }
-
-    return std::make_pair (fc, bg_str.str ());
+    return std::make_pair (fg_str.str (), bg_str.str ());
   }
 }
 
