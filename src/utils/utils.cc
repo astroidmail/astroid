@@ -9,6 +9,9 @@
 # include <glib.h>
 # include <boost/property_tree/ptree.hpp>
 # include <boost/filesystem.hpp>
+# ifndef DISABLE_PLUGINS
+  # include "plugin/manager.hh"
+# endif
 
 namespace bfs = boost::filesystem;
 using boost::property_tree::ptree;
@@ -86,8 +89,39 @@ namespace Astroid {
     }
   }
 
+  ustring Utils::rgba_to_hex (Gdk::RGBA c) {
+    std::ostringstream str;
+    str << "#";
+
+    str << std::hex << std::setfill('0') << std::setw(2) <<
+      ((int) c.get_red_u () * 255 / 65535) ;
+    str << std::hex << std::setfill('0') << std::setw(2) <<
+      ((int) c.get_green_u () * 255 / 65535) ;
+    str << std::hex << std::setfill('0') << std::setw(2) <<
+      ((int) c.get_blue_u () * 255 / 65535) ;
+
+    str << std::hex << std::setfill('0') << std::setw(2) <<
+      (int) (c.get_alpha () * 255);
+
+    return str.str ();
+  }
+
   std::pair<Gdk::RGBA, Gdk::RGBA> Utils::get_tag_color_rgba (ustring t, unsigned char cv[3])
   {
+    # ifndef DISABLE_PLUGINS
+
+    Gdk::RGBA canvas;
+    canvas.set_red_u   ( cv[0] * 65535 / 255 );
+    canvas.set_green_u ( cv[1] * 65535 / 255 );
+    canvas.set_blue_u  ( cv[2] * 65535 / 255 );
+
+    auto clrs = astroid->plugin_manager->astroid_extension->get_tag_colors (t, rgba_to_hex (canvas));
+
+    if (!clrs.first.empty () || !clrs.second.empty ()) {
+      return std::make_pair (Gdk::RGBA (clrs.first), Gdk::RGBA (clrs.second));
+    }
+    # endif
+
     unsigned char * tc = Crypto::get_md5_digest_char (t);
 
     unsigned char upper[3] = {
@@ -138,37 +172,8 @@ namespace Astroid {
 
   std::pair<ustring, ustring> Utils::get_tag_color (ustring t, unsigned char cv[3]) {
     auto clrs = get_tag_color_rgba (t, cv);
-    auto fg = clrs.first;
-    auto bg = clrs.second;
 
-    std::ostringstream fg_str;
-    fg_str << "#";
-
-    fg_str << std::hex << std::setfill('0') << std::setw(2) <<
-      ((int) fg.get_red_u () * 255 / 65535) ;
-    fg_str << std::hex << std::setfill('0') << std::setw(2) <<
-      ((int) fg.get_green_u () * 255 / 65535) ;
-    fg_str << std::hex << std::setfill('0') << std::setw(2) <<
-      ((int) fg.get_blue_u () * 255 / 65535) ;
-
-    fg_str << std::hex << std::setfill('0') << std::setw(2) <<
-      (int) (fg.get_alpha () * 255);
-
-    std::ostringstream bg_str;
-    bg_str << "#";
-
-    bg_str << std::hex << std::setfill('0') << std::setw(2) <<
-      ((int) bg.get_red_u () * 255 / 65535) ;
-    bg_str << std::hex << std::setfill('0') << std::setw(2) <<
-      ((int) bg.get_green_u () * 255 / 65535) ;
-    bg_str << std::hex << std::setfill('0') << std::setw(2) <<
-      ((int) bg.get_blue_u () * 255 / 65535) ;
-
-    bg_str << std::hex << std::setfill('0') << std::setw(2) <<
-      (int) (bg.get_alpha () * 255);
-
-
-    return std::make_pair (fg_str.str (), bg_str.str ());
+    return std::make_pair (rgba_to_hex (clrs.first), rgba_to_hex (clrs.second));
   }
 }
 
