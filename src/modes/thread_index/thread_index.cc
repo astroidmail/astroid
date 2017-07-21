@@ -136,6 +136,8 @@ namespace Astroid {
         "thread_index.page_up",
         "Page up",
         [&] (Key) {
+          if (list_view->filtered_store->children().size () == 0) return true;
+
           auto adj = scroll->scroll.get_vadjustment ();
           adj->set_value (adj->get_value() - adj->get_page_increment ());
 
@@ -161,6 +163,8 @@ namespace Astroid {
         "thread_index.page_down",
         "Page down",
         [&] (Key) {
+          if (list_view->filtered_store->children().size () == 0) return true;
+
           auto adj = scroll->scroll.get_vadjustment ();
           adj->set_value (adj->get_value() + adj->get_page_increment ());
 
