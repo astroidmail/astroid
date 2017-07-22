@@ -192,6 +192,8 @@ namespace Astroid {
     search_completion->history_pos = 0;
     entry.set_completion (search_completion);
     current_completion = search_completion;
+
+    search_completion->color_tags ();
   }
 
   void CommandBar::start_text_searching (ustring searchstring) {
@@ -316,7 +318,7 @@ namespace Astroid {
       ustring cmd = get_text ();
       if (callback != NULL) callback (cmd);
 
-    } else if (mode == CommandMode::Tag || mode == CommandMode::DiffTag) {
+    } else if (mode == CommandMode::Tag || mode == CommandMode::DiffTag || mode == CommandMode::Search) {
 
       if (current_completion)
         refptr<TagCompletion>::cast_dynamic (current_completion)->color_tags ();
@@ -368,6 +370,9 @@ namespace Astroid {
   /********************
    * Tag Completion
    ********************/
+  bool      CommandBar::TagCompletion::canvas_color_set = false;
+  Gdk::RGBA CommandBar::TagCompletion::canvas_color;
+
   CommandBar::TagCompletion::TagCompletion ()
   {
     completion_model = Gtk::ListStore::create (m_columns);
@@ -511,10 +516,9 @@ namespace Astroid {
     if (entry == NULL) return;
 
     if (!canvas_color_set) {
-      canavas_color    = entry->get_style_context()->get_background_color ();
+      canvas_color     = entry->get_style_context()->get_background_color ();
       canvas_color_set = true;
     }
-
 
     ustring txt = entry->get_text ();
 
@@ -540,40 +544,46 @@ namespace Astroid {
 
       ustring tag = txt.substr (pos, (end - pos));
 
-      unsigned char cv[3] = { (unsigned char) (canavas_color.get_red_u ()   * 255 / 65535),
-                              (unsigned char) (canavas_color.get_green_u () * 255 / 65535),
-                              (unsigned char) (canavas_color.get_blue_u ()  * 255 / 65535) };
-
-      auto colors = Utils::get_tag_color_rgba (tag, cv);
-
-      auto fg = colors.first;
-      auto bg = colors.second;
-
       /* grapheme positions */
-      ustring_sz gstart, gend;
-      gstart = txt.substr (0, pos).bytes ();
-      gend   = gstart + tag.bytes ();
+      ustring_sz gstart = txt.substr (0, pos).bytes ();
 
-      auto fga = Pango::Attribute::Attribute::create_attr_foreground (fg.get_red_u (), fg.get_green_u (), fg.get_blue_u ());
-      fga.set_start_index (gstart);
-      fga.set_end_index   (gend);
-
-      auto bga = Pango::Attribute::Attribute::create_attr_background (bg.get_red_u (), bg.get_green_u (), bg.get_blue_u ());
-      bga.set_start_index (gstart);
-      bga.set_end_index   (gend);
-
-      auto bgalpha = Pango::Attribute::Attribute::create_attr_background_alpha (bg.get_alpha_u ());
-      bgalpha.set_start_index (gstart);
-      bgalpha.set_end_index   (gend);
-
-      attrs.insert (bga);
-      attrs.insert (bgalpha);
-      attrs.insert (fga);
+      color_tag (tag, gstart, attrs);
 
       pos = end+1;
     }
 
     entry->set_attributes (attrs);
+  }
+
+  void CommandBar::TagCompletion::color_tag (ustring tag,
+    ustring_sz gstart, Pango::AttrList &attrs) {
+
+    unsigned char cv[3] = { (unsigned char) (canvas_color.get_red_u ()   * 255 / 65535),
+                            (unsigned char) (canvas_color.get_green_u () * 255 / 65535),
+                            (unsigned char) (canvas_color.get_blue_u ()  * 255 / 65535) };
+
+    auto colors = Utils::get_tag_color_rgba (tag, cv);
+
+    auto fg = colors.first;
+    auto bg = colors.second;
+
+    ustring_sz gend   = gstart + tag.bytes ();
+
+    auto fga = Pango::Attribute::Attribute::create_attr_foreground (fg.get_red_u (), fg.get_green_u (), fg.get_blue_u ());
+    fga.set_start_index (gstart);
+    fga.set_end_index   (gend);
+
+    auto bga = Pango::Attribute::Attribute::create_attr_background (bg.get_red_u (), bg.get_green_u (), bg.get_blue_u ());
+    bga.set_start_index (gstart);
+    bga.set_end_index   (gend);
+
+    auto bgalpha = Pango::Attribute::Attribute::create_attr_background_alpha (bg.get_alpha_u ());
+    bgalpha.set_start_index (gstart);
+    bgalpha.set_end_index   (gend);
+
+    attrs.insert (bga);
+    attrs.insert (bgalpha);
+    attrs.insert (fga);
   }
 
 
@@ -592,34 +602,13 @@ namespace Astroid {
 
   CommandBar::SearchCompletion::SearchCompletion ()
   {
-    completion_model = Gtk::ListStore::create (m_columns);
-    set_model (completion_model);
-    set_text_column (m_columns.m_tag);
     set_match_func (sigc::mem_fun (*this,
           &CommandBar::SearchCompletion::match));
-
-    //set_inline_completion (true);
-    set_popup_completion (true);
-    set_popup_single_match (true);
-    set_minimum_key_length (1);
   }
 
   void CommandBar::SearchCompletion::load_history () {
     history = SavedSearches::get_history ();
     std::reverse (history.begin (), history.end ());
-  }
-
-  void CommandBar::SearchCompletion::load_tags (vector<ustring> _tags) {
-    tags = _tags;
-    sort (tags.begin(), tags.end());
-
-    completion_model->clear ();
-
-    /* fill model with tags */
-    for (ustring t : tags) {
-      auto row = *(completion_model->append ());
-      row[m_columns.m_tag] = t;
-    }
   }
 
   /* searches backwards to the previous ',' and extracts the
@@ -725,6 +714,54 @@ namespace Astroid {
     }
 
     return true;
+  }
+
+  void CommandBar::SearchCompletion::color_tags () {
+    Gtk::Entry * entry = get_entry ();
+    if (entry == NULL) return;
+
+    if (!canvas_color_set) {
+      canvas_color     = entry->get_style_context()->get_background_color ();
+      canvas_color_set = true;
+    }
+
+    ustring txt = entry->get_text ();
+
+    /* set up attrlist */
+    Pango::AttrList attrs;
+
+    /* walk through unfinished tag list and style each tag */
+    ustring_sz pos = 0;
+    ustring_sz end = pos;
+    ustring_sz len = txt.size ();
+
+    ustring break_on = " )";
+
+    while (pos < len) {
+      /* find beginning of tag */
+      pos = txt.find ("tag:", pos);
+
+      if (pos == ustring::npos) break;
+
+      pos += 4;
+
+      /* find end of tag */
+      end = txt.find_first_of (break_on, pos);
+
+      if (end == ustring::npos)
+        end = txt.length ();
+
+      ustring tag = txt.substr (pos, (end - pos));
+
+      /* grapheme positions */
+      ustring_sz gstart = txt.substr (0, pos).bytes ();
+
+      color_tag (tag, gstart, attrs);
+
+      pos = end+1;
+    }
+
+    entry->set_attributes (attrs);
   }
 
   /********************

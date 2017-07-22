@@ -106,10 +106,12 @@ namespace Astroid {
 
           bool on_match_selected(const Gtk::TreeModel::iterator& iter) override;
 
-          /* re-calculate and set colors of tags */
-          Gdk::RGBA canavas_color;
-          bool canvas_color_set = false;
-          void color_tags ();
+          /* color tags */
+          static Gdk::RGBA  canvas_color;
+          static bool       canvas_color_set;
+
+          virtual void color_tags ();
+          void color_tag (ustring tg, ustring_sz start, Pango::AttrList &attrs);
       };
 
       refptr<TagCompletion> tag_completion;
@@ -134,7 +136,7 @@ namespace Astroid {
        ********************/
       void start_searching (ustring);
 
-      class SearchCompletion : public GenericCompletion {
+      class SearchCompletion : public TagCompletion {
         public:
           SearchCompletion ();
 
@@ -144,29 +146,14 @@ namespace Astroid {
           unsigned int history_pos;
           std::vector <ustring> history;
 
-
-          void load_tags (std::vector<ustring>);
-          std::vector<ustring> tags; // must be sorted
-
-          // tree model columns, for the EntryCompletion's filter model
-          class ModelColumns : public Gtk::TreeModel::ColumnRecord
-          {
-            public:
-
-              ModelColumns ()
-              { add(m_tag); }
-
-              Gtk::TreeModelColumn<Glib::ustring> m_tag;
-          };
-
-          ModelColumns m_columns;
-
           bool get_partial_tag (ustring&, ustring_sz&);
 
           bool match (const ustring&, const
               Gtk::TreeModel::const_iterator&) override;
 
           bool on_match_selected(const Gtk::TreeModel::iterator& iter) override;
+
+          void color_tags () override;
       };
 
       refptr<SearchCompletion> search_completion;
