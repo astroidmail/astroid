@@ -2,6 +2,10 @@
 
 * Attach messages by mids with 'A' in new emails.
 
+* Colorful tags in tag editor and in searching
+
+* Tags in the tag editor is now separated by spaces (comma still works)
+
 == v0.9.1 / 2017-04-30
 
 * Support old vte3.
