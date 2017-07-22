@@ -58,7 +58,7 @@ namespace Astroid {
   }
 
   ustring VectorUtils::concat_tags (vector<ustring> tags) {
-    return concat (tags, ", ", stop_ons_tags);
+    return concat (tags, " ", stop_ons_tags);
   }
 
   ustring VectorUtils::concat_tags_color (

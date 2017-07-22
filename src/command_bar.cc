@@ -401,7 +401,7 @@ namespace Astroid {
     }
   }
 
-  /* searches backwards to the previous ',' and extracts the
+  /* searches backwards to the previous ' ' and extracts the
    * part of the partially entered tag to be matched on.
    */
   ustring CommandBar::TagCompletion::get_partial_tag (ustring_sz &outpos) {

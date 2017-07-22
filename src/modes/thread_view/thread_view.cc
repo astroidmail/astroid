@@ -2944,7 +2944,7 @@ namespace Astroid {
             return false;
           }
 
-          ustring tag_list = VectorUtils::concat_tags (focused_message->tags) + ", ";
+          ustring tag_list = VectorUtils::concat_tags (focused_message->tags) + " ";
 
           main_window->enable_command (CommandBar::CommandMode::Tag,
               "Change tags for message:",
@@ -2952,7 +2952,7 @@ namespace Astroid {
               [&](ustring tgs) {
                 LOG (debug) << "ti: got tags: " << tgs;
 
-                vector<ustring> tags = VectorUtils::split_and_trim (tgs, ",");
+                vector<ustring> tags = VectorUtils::split_and_trim (tgs, ",| ");
 
                 /* remove empty */
                 tags.erase (std::remove (tags.begin (), tags.end (), ""), tags.end ());
