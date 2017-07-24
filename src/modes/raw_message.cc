@@ -106,17 +106,9 @@ namespace Astroid {
     /* add filenames */
     s << "Filename: " << fname << endl << endl;
 
-    ifstream f (fname);
-    std::filebuf  * pbuf = f.rdbuf ();
-    size_t fsz = pbuf->pubseekoff (0, f.end, f.in);
-    pbuf->pubseekpos (0, f.in);
+    std::string data = Glib::file_get_contents (fname);
 
-    char * fbuf = new char[fsz];
-    pbuf->sgetn (fbuf, fsz);
-    f.close ();
-
-    auto cnv = UstringUtils::data_to_ustring (fsz, fbuf);
-    delete [] fbuf;
+    auto cnv = UstringUtils::data_to_ustring (data.size (), data.c_str ());
 
     if (cnv.first) {
       s << cnv.second;
