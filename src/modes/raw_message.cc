@@ -129,14 +129,14 @@ namespace Astroid {
 
     refptr<Gtk::TextBuffer> buf = tv.get_buffer ();
 
-    auto c = msg->raw_contents ();
-
     stringstream s;
 
     /* add filenames */
     s << "Filename: " << msg->fname << endl << endl;
 
+    auto c = msg->raw_contents ();
     auto cnv = UstringUtils::bytearray_to_ustring (c);
+
     if (cnv.first) {
       s << cnv.second;
     } else {
