@@ -85,25 +85,21 @@ namespace Astroid {
   }
 
   std::pair<bool, ustring> UstringUtils::data_to_ustring (unsigned int len, const char * data) {
-    stringstream s;
-    bool         success;
+    std::string  u;
+    bool success;
 
-    /* convert */
-    gsize read, written;
-    GError * err = NULL;
-    gchar * out = g_convert_with_fallback (data, len, "UTF-8", "ASCII", NULL,
-                                           &read, &written, &err);
-    if (out != NULL) {
-      s.write (out, written);
+    std::string in (data, len);
+
+    try {
+      /* this assumes that the input is in UTF-8 rather than trying to detect the input encoding.
+       * UTF-16 is a superset of UTF-8 so we convert around UTF-16 to remove any invalid characters. */
+      u = Glib::convert_with_fallback (in, "UTF-16", "UTF-8");
+      u = Glib::convert_with_fallback (u,  "UTF-8", "UTF-16");
       success = true;
-    } else {
-      LOG (error) << "ustring: could not convert: " << data;
+    } catch (Glib::ConvertError &ex) {
+      LOG (error) << "ustring: could not convert data: " << ex.what ();
       success = false;
     }
-
-    g_free (out);
-
-    ustring u (s.str ());
 
     return std::make_pair (success, u);
   }
