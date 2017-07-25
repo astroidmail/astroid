@@ -24,6 +24,7 @@ namespace Astroid {
       std::vector<ustring> additional_sent_tags;
       ustring save_drafts_to;
 
+      bool      signature_separate = false;
       bfs::path signature_file;
       bool      signature_default_on;
       bool      signature_attach;

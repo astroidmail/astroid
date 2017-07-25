@@ -56,7 +56,7 @@ namespace Astroid {
       ptree config;
       ptree notmuch_config;
 
-      const int CONFIG_VERSION = 7;
+      const int CONFIG_VERSION = 8;
 
     private:
       ptree setup_default_config (bool);
