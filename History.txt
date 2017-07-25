@@ -6,6 +6,9 @@
 
 * Tags in the tag editor is now separated by spaces (comma still works)
 
+* New configuration option 'signature_separate' determines if inline
+  signatures will be separated from the message by a line containing '-- '.
+
 == v0.9.1 / 2017-04-30
 
 * Support old vte3.
