@@ -39,6 +39,7 @@ namespace Astroid {
 
       a->save_drafts_to = kv.second.get<string> ("save_drafts_to");
 
+      a->signature_separate = kv.second.get<bool> ("signature_separate");
       a->signature_file = kv.second.get<string> ("signature_file");
       a->signature_default_on = kv.second.get<bool> ("signature_default_on");
       a->signature_attach     = kv.second.get<bool> ("signature_attach");
