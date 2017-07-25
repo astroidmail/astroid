@@ -117,6 +117,9 @@ namespace Astroid {
       std::ostringstream sf;
       sf << s.rdbuf ();
       s.close ();
+      if (account->signature_separate) {
+	body_content += "-- \n";
+      }
       body_content += sf.str ();
     }
 
