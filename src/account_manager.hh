@@ -20,9 +20,9 @@ namespace Astroid {
       bool isdefault;
 
       bool save_sent;
-      ustring save_sent_to;
+      bfs::path save_sent_to;
       std::vector<ustring> additional_sent_tags;
-      ustring save_drafts_to;
+      bfs::path save_drafts_to;
 
       bool      signature_separate = false;
       bfs::path signature_file;

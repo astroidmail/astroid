@@ -503,7 +503,7 @@ namespace Astroid {
 
         if (account->save_sent) {
           using bfs::path;
-          save_to = path(account->save_sent_to) / path(id + ":2,");
+          save_to = account->save_sent_to / path(id + ":2,");
           LOG (info) << "cm: saving message to: " << save_to;
 
           write (save_to.c_str());

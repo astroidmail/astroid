@@ -566,7 +566,7 @@ namespace Astroid {
     if (!draft_msg) {
       /* make new message */
 
-      path ddir = path(c->account->save_drafts_to.c_str ());
+      path ddir = c->account->save_drafts_to;
       if (!is_directory(ddir)) {
         LOG (error) << "em: no draft directory specified!";
         set_warning ("draft could not be saved, no suitable draft directory for account specified.");
