@@ -34,12 +34,13 @@ using namespace boost::filesystem;
 namespace Astroid {
   int EditMessage::edit_id = 0;
 
-  EditMessage::EditMessage (MainWindow * mw, ustring _to, ustring _from) :
+  EditMessage::EditMessage (MainWindow * mw, ustring _to, ustring _from, ustring _cc, ustring _bcc) :
     EditMessage (mw, false) { // {{{
 
     in_read = false;
-    to = _to;
-
+    to  = _to;
+    cc  = _cc;
+    bcc = _bcc;
     if (!_from.empty ()) {
       set_from (Address (_from));
     }

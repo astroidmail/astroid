@@ -2440,22 +2440,26 @@ namespace Astroid {
         });
 
     keys.register_key ("c", "thread_view.compose_to_sender",
-        "Compose a new message to the sender of the message (or receiver if sender is you)",
+        "Compose a new message to the sender of the message (or all recipients if sender is you)",
         [&] (Key) {
           if (!edit_mode) {
-            Address _to = focused_message->sender;
-            AddressList to;
+            Address sender = focused_message->sender;
+            Address from;
+            AddressList to, cc, bcc;
 
-            if (astroid->accounts->is_me (_to)) {
-              to = AddressList(focused_message->to ());
-              Address from = _to;
-              main_window->add_mode (new EditMessage (main_window, to.str (), from.full_address ()));
+            /* Send to original sender if message is not from own account,
+               otherwise use all recipients as in the original */
+            if (astroid->accounts->is_me (sender)) {
+              from = sender;
+              to   = AddressList(focused_message->to  ());
+              cc   = AddressList(focused_message->cc  ());
+              bcc  = AddressList(focused_message->bcc ());
             } else {
-              to += _to;
+              /* Not from me, just use orginal sender */
+              to += sender;
 
-              /* find me */
+              /* find the 'first' me */
               AddressList tos = focused_message->all_to_from ();
-              Address from;
 
               for (Address f : tos.addresses) {
                 if (astroid->accounts->is_me (f)) {
@@ -2463,11 +2467,10 @@ namespace Astroid {
                   break;
                 }
               }
-
-
-              main_window->add_mode (new EditMessage (main_window, to.str (), from.full_address ()));
             }
-
+	    main_window->add_mode (new EditMessage (main_window, to.str (),
+						    from.full_address (),
+						    cc.str(), bcc.str()));
           }
           return true;
         });
