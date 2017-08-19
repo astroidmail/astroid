@@ -151,6 +151,8 @@ namespace Astroid {
       default_config.put ("accounts.charlie.signature_default_on", true);
       default_config.put ("accounts.charlie.signature_attach", false);
 
+      default_config.put ("accounts.charlie.select_query", "");
+
       /* default searches, also only set if initial */
       default_config.put("startup.queries.inbox", "tag:inbox");
     }
@@ -392,7 +394,7 @@ namespace Astroid {
       LOG (warn) << "config: astroid now reads standard notmuch options from notmuch config, it is configured through: 'astroid.notmuch_config' and is now set to the default: ~/.notmuch-config. please validate!";
     }
 
-    if (version < 8) {
+    if (version < 9) {
       /* check accounts signature */
       ptree apt = config.get_child ("accounts");
 
@@ -442,15 +444,26 @@ namespace Astroid {
         }
 
         if (version < 8) {
-          LOG (debug) << "Trying upgrade for signature separate. Version:" << version;
           try {
-            
+
             ustring ss = kv.second.get<string> ("signature_separate");
-            
+
           } catch (const boost::property_tree::ptree_bad_path &ex) {
-            
+
             ustring key = ustring::compose ("accounts.%1.signature_separate", kv.first);
             config.put (key.c_str (), false);
+          }
+        }
+
+        if (version < 9) {
+          try {
+
+            ustring ss = kv.second.get<string> ("select_query");
+
+          } catch (const boost::property_tree::ptree_bad_path &ex) {
+
+            ustring key = ustring::compose ("accounts.%1.select_query", kv.first);
+            config.put (key.c_str (), "");
           }
         }
       }
