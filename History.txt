@@ -9,6 +9,9 @@
 * New configuration option 'signature_separate' determines if inline
   signatures will be separated from the message by a line containing '-- '.
 
+* Configurable query associated with account can be used to select account as
+  From: when replying or forwarding e-mail.
+
 == v0.9.1 / 2017-04-30
 
 * Support old vte3.

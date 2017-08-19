@@ -80,14 +80,8 @@ namespace Astroid {
     }
 
 
-    /* try to figure which account the message was sent to, using
-     * first match. */
-    for (Address &a : msg->all_to_from().addresses) {
-      if (accounts->is_me (a)) {
-        set_from (a);
-        break;
-      }
-    }
+    /* determine which account to use */
+    set_from (accounts->get_assosciated_account (msg));
 
     /* reload message */
     prepare_message ();
