@@ -30,6 +30,8 @@ namespace Astroid {
       bool      signature_attach;
       bool      has_signature = false;
 
+      ustring   select_query = "";
+
       ustring gpgkey;
       bool has_gpg = false;
       bool always_gpg_sign = false;
@@ -48,6 +50,8 @@ namespace Astroid {
       int default_account;
       Account * get_account_for_address (ustring);
       Account * get_account_for_address (Address);
+
+      Account * get_assosciated_account (refptr<Message>);
 
       bool is_me (Address &);
   };
