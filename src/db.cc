@@ -324,6 +324,46 @@ namespace Astroid {
     return add_message_with_tags (fname, draft_tags);
   }
 
+  bool Db::message_in_query (ustring query_in, ustring mid) {
+    /* check if message is in query */
+    string query_s;
+
+    UstringUtils::trim(query_in);
+
+    if (query_in.length() == 0 || query_in == "*") {
+      query_s = "id:" + mid;
+    } else {
+      query_s = "id:" + mid  + " AND (" + query_in + ")";
+    }
+
+    time_t t0 = clock ();
+
+    LOG (debug) << "db: checking if message: " << mid << " matches query: " << query_in;
+
+    notmuch_query_t * query = notmuch_query_create (nm_db, query_s.c_str());
+    for (ustring &t : excluded_tags) {
+      notmuch_query_add_tag_exclude (query, t.c_str());
+    }
+    notmuch_query_set_omit_excluded (query, NOTMUCH_EXCLUDE_TRUE);
+
+    unsigned int c = 0;
+    notmuch_status_t st = NOTMUCH_STATUS_SUCCESS;
+
+    st = notmuch_query_count_messages (query, &c);
+    if (st != NOTMUCH_STATUS_SUCCESS) c = 0;
+
+    if (c > 1) {
+      throw database_error ("db: got more than one message for message id.");
+    }
+
+    /* free resources */
+    notmuch_query_destroy (query);
+
+    LOG (debug) << "db: message in query check: " << ((clock() - t0) * 1000.0 / CLOCKS_PER_SEC) << " ms.";
+
+    return (st == NOTMUCH_STATUS_SUCCESS) && (c == 1);
+
+  }
 
   bool Db::thread_in_query (ustring query_in, ustring thread_id) {
     /* check if thread id is in query */
@@ -784,6 +824,10 @@ namespace Astroid {
           });
   }
 
+  bool NotmuchThread::in_query (Db * db, ustring query) {
+    return db->thread_in_query (query, thread_id);
+  }
+
   ustring NotmuchThread::str () {
     return "threadid:" + thread_id;
   }
@@ -1004,6 +1048,10 @@ namespace Astroid {
 
   void NotmuchMessage::emit_updated (Db * db) {
     astroid->actions->emit_message_updated (db, mid);
+  }
+
+  bool NotmuchMessage::in_query (Db * db, ustring query) {
+    return db->message_in_query (query, mid);
   }
 
   ustring NotmuchMessage::str () {

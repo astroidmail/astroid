@@ -47,6 +47,7 @@ namespace Astroid {
 
       virtual ustring str () = 0;
       virtual bool    matches (std::vector<ustring> &k) = 0;
+      virtual bool    in_query (Db *, ustring) = 0;
   };
 
   /* the notmuch message object should get by on the db only */
@@ -70,6 +71,7 @@ namespace Astroid {
 
       ustring str () override;
       bool matches (std::vector<ustring> &k) override;
+      bool in_query (Db *, ustring) override;
 
     private:
       std::vector<ustring> get_tags (notmuch_message_t *);
@@ -97,6 +99,7 @@ namespace Astroid {
 
       ustring str () override;
       bool matches (std::vector<ustring> &k) override;
+      bool in_query (Db *, ustring) override;
 
     private:
       int check_total_messages (notmuch_thread_t *);
@@ -121,6 +124,7 @@ namespace Astroid {
       void on_message (ustring, std::function <void(notmuch_message_t *)>);
 
       bool thread_in_query (ustring, ustring);
+      bool message_in_query (ustring, ustring);
 
       unsigned long get_revision ();
 
