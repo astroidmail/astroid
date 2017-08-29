@@ -1067,7 +1067,7 @@ namespace Astroid {
 
     ustring mime_type;
     if (c->content_type) {
-      mime_type = ustring(g_mime_content_type_to_string (c->content_type));
+      mime_type = ustring(g_mime_content_type_get_mime_type (c->content_type));
     } else {
       mime_type = "application/octet-stream";
     }
@@ -1203,47 +1203,42 @@ namespace Astroid {
             em = (c = g_mime_certificate_get_email (ce), c ? c : "");
             ky = (c = g_mime_certificate_get_key_id (ce), c ? c : "");
 
-            switch (g_mime_signature_get_status (s)) {
-              case GMIME_SIGNATURE_STATUS_GOOD:
+
+            GMimeSignatureStatus stat = g_mime_signature_get_status (s);
+            if (g_mime_signature_status_good (stat)) {
                 gd = "Good";
-                break;
+            } else if (g_mime_signature_status_bad (stat) || g_mime_signature_status_error (stat)) {
 
-              case GMIME_SIGNATURE_STATUS_BAD:
-                gd = "Bad";
-                // fall through
+              if (g_mime_signature_status_bad (stat)) gd = "Bad";
+              else gd = "Erroneous";
 
-              case GMIME_SIGNATURE_STATUS_ERROR:
-                if (gd.empty ()) gd = "Erroneous";
+              if (stat & GMIME_SIGNATURE_STATUS_KEY_REVOKED) sig_errors.push_back ("revoked-key");
+              if (stat & GMIME_SIGNATURE_STATUS_KEY_EXPIRED) sig_errors.push_back ("expired-key");
+              if (stat & GMIME_SIGNATURE_STATUS_SIG_EXPIRED) sig_errors.push_back ("expired-sig");
+              if (stat & GMIME_SIGNATURE_STATUS_KEY_MISSING) sig_errors.push_back ("key-missing");
+              if (stat & GMIME_SIGNATURE_STATUS_CRL_MISSING) sig_errors.push_back ("crl-missing");
+              if (stat & GMIME_SIGNATURE_STATUS_CRL_TOO_OLD) sig_errors.push_back ("crl-too-old");
+              if (stat & GMIME_SIGNATURE_STATUS_BAD_POLICY)  sig_errors.push_back ("bad-policy");
+              if (stat & GMIME_SIGNATURE_STATUS_SYS_ERROR)   sig_errors.push_back ("sys-error");
+              if (stat & GMIME_SIGNATURE_STATUS_TOFU_CONFLICT) sig_errors.push_back ("tofu-conflict");
 
-                GMimeSignatureError e = g_mime_signature_get_errors (s);
-                if (e & GMIME_SIGNATURE_ERROR_EXPSIG)
-                  sig_errors.push_back ("expired");
-                if (e & GMIME_SIGNATURE_ERROR_NO_PUBKEY)
-                  sig_errors.push_back ("no-pub-key");
-                if (e & GMIME_SIGNATURE_ERROR_EXPKEYSIG)
-                  sig_errors.push_back ("expired-key-sig");
-                if (e & GMIME_SIGNATURE_ERROR_REVKEYSIG)
-                  sig_errors.push_back ("revoked-key-sig");
-                if (e & GMIME_SIGNATURE_ERROR_UNSUPP_ALGO)
-                  sig_errors.push_back ("unsupported-algo");
-                if (!sig_errors.empty ()) {
-                  err = "[Error: " + VectorUtils::concat (sig_errors, ",") + "]";
-                }
-                break;
+              if (!sig_errors.empty ()) {
+                err = "[Error: " + VectorUtils::concat (sig_errors, ",") + "]";
+              }
             }
           } else {
             err = "[Error: Could not get certificate]";
           }
 
-          GMimeCertificateTrust t = g_mime_certificate_get_trust (ce);
+          GMimeTrust t = g_mime_certificate_get_trust (ce);
           ustring trust = "";
           switch (t) {
-            case GMIME_CERTIFICATE_TRUST_NONE: trust = "none"; break;
-            case GMIME_CERTIFICATE_TRUST_NEVER: trust = "never"; break;
-            case GMIME_CERTIFICATE_TRUST_UNDEFINED: trust = "undefined"; break;
-            case GMIME_CERTIFICATE_TRUST_MARGINAL: trust = "marginal"; break;
-            case GMIME_CERTIFICATE_TRUST_FULLY: trust = "fully"; break;
-            case GMIME_CERTIFICATE_TRUST_ULTIMATE: trust = "ultimate"; break;
+            case GMIME_TRUST_UNKNOWN: trust = "unknown"; break;
+            case GMIME_TRUST_UNDEFINED: trust = "undefined"; break;
+            case GMIME_TRUST_NEVER: trust = "never"; break;
+            case GMIME_TRUST_MARGINAL: trust = "marginal"; break;
+            case GMIME_TRUST_FULL: trust = "full"; break;
+            case GMIME_TRUST_ULTIMATE: trust = "ultimate"; break;
           }
 
 
@@ -1893,7 +1888,7 @@ namespace Astroid {
     if (_mtype == NULL) {
       mime_type = "application/octet-stream";
     } else {
-      mime_type = ustring(g_mime_content_type_to_string (c->content_type));
+      mime_type = ustring(g_mime_content_type_get_mime_type (c->content_type));
     }
 
     LOG (debug) << "tv: set attachment, mime_type: " << mime_type << ", mtype: " << _mtype;

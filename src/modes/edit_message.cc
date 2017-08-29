@@ -669,7 +669,7 @@ namespace Astroid {
     auto row = *iter;
     Account * a = row[from_columns.account];
     auto from_ia = internet_address_mailbox_new (a->name.c_str(), a->email.c_str());
-    ustring from = internet_address_to_string (from_ia, true);
+    ustring from = internet_address_to_string (from_ia, NULL, true);
 
     tmpfile.open (tmpfile_path.c_str(), std::fstream::out);
     tmpfile << "From: " << from << endl;

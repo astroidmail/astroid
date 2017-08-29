@@ -1,6 +1,5 @@
 # pragma once
 
-# include <vector>
 
 # include <notmuch.h>
 # include <gmime/gmime.h>

@@ -17,7 +17,7 @@ namespace Astroid {
   Address::Address (ustring full_address) {
     /* parse and split */
     InternetAddressList * list =
-      internet_address_list_parse_string (full_address.c_str());
+      internet_address_list_parse (NULL, full_address.c_str());
 
     _valid = true;
 
@@ -50,10 +50,10 @@ namespace Astroid {
     InternetAddressMailbox * mbox = INTERNET_ADDRESS_MAILBOX (address);
     const char * n = internet_address_get_name (address);
     if (n != NULL)
-      _name  = ustring (g_mime_utils_header_decode_text(n));
+      _name  = ustring (g_mime_utils_header_decode_text(NULL, n));
     n = internet_address_mailbox_get_addr (mbox);
     if (n != NULL)
-      _email = ustring (g_mime_utils_header_decode_text(n));
+      _email = ustring (g_mime_utils_header_decode_text(NULL, n));
 
     g_object_unref (list);
   }
@@ -62,10 +62,10 @@ namespace Astroid {
     InternetAddressMailbox * mbox = INTERNET_ADDRESS_MAILBOX (addr);
     const char * n = internet_address_get_name (addr);
     if (n != NULL)
-      _name  = ustring (g_mime_utils_header_decode_text(n));
+      _name  = ustring (g_mime_utils_header_decode_text(NULL, n));
     n = internet_address_mailbox_get_addr (mbox);
     if (n != NULL)
-      _email = ustring (g_mime_utils_header_decode_text(n));
+      _email = ustring (g_mime_utils_header_decode_text(NULL, n));
 
     _valid = true;
   }
@@ -97,7 +97,7 @@ namespace Astroid {
 
   ustring Address::full_address () {
     InternetAddress * mbox = internet_address_mailbox_new (_name.c_str(), _email.c_str());
-    const char * faddr = internet_address_to_string (mbox, false);
+    const char * faddr = internet_address_to_string (mbox, NULL, false);
     g_object_unref (mbox);
     return ustring(faddr);
   }
@@ -115,16 +115,18 @@ namespace Astroid {
   }
 
   AddressList::AddressList (InternetAddressList * list) {
-    for (int i = 0; i < internet_address_list_length (list); i++) {
-      InternetAddress * a = internet_address_list_get_address (list, i);
-      addresses.push_back (Address (a));
+    if (list != NULL) {
+      for (int i = 0; i < internet_address_list_length (list); i++) {
+        InternetAddress * a = internet_address_list_get_address (list, i);
+        addresses.push_back (Address (a));
+      }
     }
   }
 
   AddressList::AddressList (ustring _str)
   {
     if (!_str.empty ())  {
-      InternetAddressList * list = internet_address_list_parse_string (_str.c_str ());
+      InternetAddressList * list = internet_address_list_parse (NULL, _str.c_str ());
 
       for (int i = 0; i < internet_address_list_length (list); i++) {
         InternetAddress * a = internet_address_list_get_address (list, i);
@@ -145,11 +147,11 @@ namespace Astroid {
       g_object_unref (addr);
     }
 
-    const char * addrs = internet_address_list_to_string (list, false);
+    const char * addrs = internet_address_list_to_string (list, NULL, false);
 
     ustring r ("");
 
-    if (addrs != NULL) r = ustring (g_mime_utils_header_decode_text(addrs));
+    if (addrs != NULL) r = ustring (g_mime_utils_header_decode_text (NULL, addrs));
 
     g_object_unref (list);
 

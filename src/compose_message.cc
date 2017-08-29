@@ -45,36 +45,33 @@ namespace Astroid {
     if (send_thread.joinable ()) send_thread.join ();
     g_object_unref (message);
 
-    //if (message_file != "") unlink(message_file.c_str());
-
     LOG (debug) << "cm: deinitialized.";
   }
 
   void ComposeMessage::set_from (Account *a) {
-    // some of this stuff is more or less ripped from ner
     account = a;
     from = internet_address_mailbox_new (a->name.c_str(), a->email.c_str());
-    g_mime_message_set_sender (message, internet_address_to_string (from, true));
+    g_mime_message_add_mailbox (message, GMIME_ADDRESS_TYPE_FROM, a->name.c_str (), a->email.c_str ());
   }
 
   void ComposeMessage::set_to (ustring _to) {
     to = _to;
-    g_mime_object_set_header (GMIME_OBJECT(message), "To", to.c_str());
+    g_mime_object_set_header (GMIME_OBJECT(message), "To", to.c_str(), NULL);
   }
 
   void ComposeMessage::set_cc (ustring _cc) {
     cc = _cc;
-    g_mime_object_set_header (GMIME_OBJECT(message), "Cc", cc.c_str());
+    g_mime_object_set_header (GMIME_OBJECT(message), "Cc", cc.c_str(), NULL);
   }
 
   void ComposeMessage::set_bcc (ustring _bcc) {
     bcc = _bcc;
-    g_mime_object_set_header (GMIME_OBJECT(message), "Bcc", bcc.c_str());
+    g_mime_object_set_header (GMIME_OBJECT(message), "Bcc", bcc.c_str(), NULL);
   }
 
   void ComposeMessage::set_subject (ustring _subject) {
     subject = _subject;
-    g_mime_message_set_subject (message, subject.c_str());
+    g_mime_message_set_subject (message, subject.c_str(), NULL);
   }
 
   void ComposeMessage::set_id (ustring _id) {
@@ -89,7 +86,7 @@ namespace Astroid {
           "References");
     } else {
       g_mime_object_set_header (GMIME_OBJECT(message), "References",
-          references.c_str());
+          references.c_str(), NULL);
     }
   }
 
@@ -101,7 +98,7 @@ namespace Astroid {
           "In-Reply-To");
     } else {
       g_mime_object_set_header (GMIME_OBJECT(message), "In-Reply-To",
-          inreplyto.c_str());
+          inreplyto.c_str(), NULL);
     }
   }
 
@@ -132,7 +129,7 @@ namespace Astroid {
     GMimeDataWrapper * contentWrapper = g_mime_data_wrapper_new_with_stream(contentStream, GMIME_CONTENT_ENCODING_DEFAULT);
 
     g_mime_part_set_content_encoding (messagePart, GMIME_CONTENT_ENCODING_QUOTEDPRINTABLE);
-    g_mime_part_set_content_object (messagePart, contentWrapper);
+    g_mime_part_set_content (messagePart, contentWrapper);
 
     g_mime_message_set_mime_part(message, GMIME_OBJECT(messagePart));
 
@@ -152,13 +149,13 @@ namespace Astroid {
     }
     set_from (from);
 
-    char * cto = internet_address_list_to_string (msg.to(), false);
+    char * cto = internet_address_list_to_string (msg.to(), NULL, false);
     if (cto) set_to (cto);
 
-    cto = internet_address_list_to_string (msg.cc(), false);
+    cto = internet_address_list_to_string (msg.cc(), NULL, false);
     if (cto) set_cc (cto);
 
-    cto = internet_address_list_to_string (msg.bcc(), false);
+    cto = internet_address_list_to_string (msg.bcc(), NULL, false);
     if (cto) set_bcc (cto);
 
     set_references (msg.references);
@@ -199,17 +196,12 @@ namespace Astroid {
 # endif
 
     if (!ua.empty ()) {
-      g_mime_object_set_header (GMIME_OBJECT(message), "User-Agent", ua.c_str());
+      g_mime_object_set_header (GMIME_OBJECT(message), "User-Agent", ua.c_str(), NULL);
     }
 
-
     /* add date to the message */
-    struct timeval timeValue;
-    struct timezone timeZone;
-
-    gettimeofday(&timeValue, &timeZone);
-
-    g_mime_message_set_date(message, timeValue.tv_sec, -100 * timeZone.tz_minuteswest / 60);
+    GDateTime * now = g_date_time_new_now_local ();
+    g_mime_message_set_date (message, now);
 
     /* Give the message an ID */
     g_mime_message_set_message_id(message, id.c_str());
@@ -223,7 +215,7 @@ namespace Astroid {
       add_attachment (sa);
     }
 
-    /* attachments (most of this copied from ner) */
+    /* attachments  */
     if (attachments.size() > 0)
     {
       GMimeMultipart * multipart = g_mime_multipart_new_with_subtype("mixed");
@@ -262,12 +254,12 @@ namespace Astroid {
           GMimeDataWrapper * data = g_mime_data_wrapper_new_with_stream (file_stream,
               GMIME_CONTENT_ENCODING_DEFAULT);
 
-          GMimeContentType * contentType = g_mime_content_type_new_from_string (a->content_type.c_str());
+          GMimeContentType * contentType = g_mime_content_type_parse (g_mime_parser_options_get_default (), a->content_type.c_str ());
 
           GMimePart * part =
             g_mime_part_new_with_type(g_mime_content_type_get_media_type (contentType),
             g_mime_content_type_get_media_subtype (contentType));
-          g_mime_part_set_content_object (part, data);
+          g_mime_part_set_content (part, data);
           g_mime_part_set_filename (part, a->name.c_str());
 
           if (a->dispostion_inline) {
@@ -455,7 +447,7 @@ namespace Astroid {
       /* write message to sendmail */
       GMimeStream * stream = g_mime_stream_pipe_new (stdin);
       g_mime_stream_pipe_set_owner (GMIME_STREAM_PIPE(stream), true); // causes stdin to be closed when stream is closed
-      g_mime_object_write_to_stream (GMIME_OBJECT(message), stream);
+      g_mime_object_write_to_stream (GMIME_OBJECT(message), g_mime_format_options_get_default (), stream);
       g_mime_stream_flush (stream);
       g_object_unref (stream); // closes stdin
 
@@ -597,7 +589,7 @@ namespace Astroid {
     free(temporaryFilePath);
 
     GMimeStream * stream = g_mime_stream_fs_new(fd);
-    g_mime_object_write_to_stream(GMIME_OBJECT(message), stream);
+    g_mime_object_write_to_stream (GMIME_OBJECT(message), g_mime_format_options_get_default (), stream);
     g_mime_stream_flush (stream);
 
     g_object_unref(stream);
@@ -613,7 +605,7 @@ namespace Astroid {
     FILE * MessageFile = fopen(fname.c_str(), "w");
 
     GMimeStream * stream = g_mime_stream_file_new(MessageFile);
-    g_mime_object_write_to_stream(GMIME_OBJECT(message), stream);
+    g_mime_object_write_to_stream (GMIME_OBJECT(message), g_mime_format_options_get_default (), stream);
     g_mime_stream_flush (stream);
 
     g_object_unref(stream);
@@ -712,7 +704,7 @@ namespace Astroid {
 
       contents = c->contents ();
 
-      const char * ct = g_mime_content_type_to_string (c->content_type);
+      const char * ct = g_mime_content_type_get_mime_type (c->content_type);
       if (ct != NULL) {
         content_type = std::string (ct);
       } else {

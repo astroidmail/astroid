@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_SUITE(GPGEncryption)
     LOG (test) << "cm: encryption error: " << c->encryption_error;
 
     LOG (test) << "cm: encrypted content: ";
-    LOG (test) << g_mime_object_to_string (GMIME_OBJECT(c->message));
+    LOG (test) << g_mime_object_to_string (GMIME_OBJECT(c->message), NULL);
 
     LOG (test) << "cm: deleting ComposeMessage..";
 
@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_SUITE(GPGEncryption)
     LOG (test) << "cm: encryption error: " << c->encryption_error;
 
     LOG (test) << "cm: encrypted content: ";
-    LOG (test) << g_mime_object_to_string (GMIME_OBJECT(c->message));
+    LOG (test) << g_mime_object_to_string (GMIME_OBJECT(c->message), NULL);
 
     LOG (test) << "cm: deleting ComposeMessage..";
 
@@ -155,7 +155,7 @@ BOOST_AUTO_TEST_SUITE(GPGEncryption)
     LOG (test) << "cm: encryption error: " << c->encryption_error;
 
     LOG (test) << "cm: encrypted content: ";
-    LOG (test) << g_mime_object_to_string (GMIME_OBJECT(c->message));
+    LOG (test) << g_mime_object_to_string (GMIME_OBJECT(c->message), NULL);
 
     delete c;
 

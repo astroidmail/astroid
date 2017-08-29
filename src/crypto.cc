@@ -60,7 +60,7 @@ namespace Astroid {
 
     GMimeMultipartEncrypted * ep = GMIME_MULTIPART_ENCRYPTED (part);
     GMimeObject * dp = g_mime_multipart_encrypted_decrypt
-	(ep, gpgctx, &decrypt_res, &err);
+	(ep, GMIME_DECRYPT_NONE, NULL, &decrypt_res, &err);
 
     /* GMimeDecryptResult and GMimeCertificates
      *
@@ -128,7 +128,7 @@ namespace Astroid {
 
     verify_tried = true;
 
-    slist = g_mime_multipart_signed_verify (GMIME_MULTIPART_SIGNED(mo), gpgctx, &err);
+    slist = g_mime_multipart_signed_verify (GMIME_MULTIPART_SIGNED(mo), GMIME_VERIFY_NONE, &err);
 
     verified = verify_signature_list (slist);
 
@@ -143,7 +143,7 @@ namespace Astroid {
     for (int i = 0; i < g_mime_signature_list_length (list); i++) {
       GMimeSignature * s = g_mime_signature_list_get_signature (list, i);
 
-      res &= g_mime_signature_get_status (s) == GMIME_SIGNATURE_STATUS_GOOD;
+      res &= g_mime_signature_status_good(g_mime_signature_get_status (s));
     }
 
     return res;
@@ -175,62 +175,59 @@ namespace Astroid {
       LOG (debug) << u << " ";
     }
 
-    *out = g_mime_multipart_encrypted_new ();
-
-    int r = g_mime_multipart_encrypted_encrypt (
-        *out,
-        mo,
+    *out = g_mime_multipart_encrypted_encrypt (
         gpgctx,
+        mo,
         sign,
         userid.c_str (),
-        GMIME_DIGEST_ALGO_DEFAULT,
+        GMIME_ENCRYPT_NONE,
         recpa,
         err);
 
 
     g_ptr_array_free (recpa, true);
 
-    if (r == 0) {
+    if (*out != NULL) {
       LOG (debug) << "crypto: successfully encrypted message.";
+      return true;
     } else {
       LOG (debug) << "crypto: failed to encrypt message: " << (*err)->message;
+      return false;
     }
-
-    return (r == 0);
   }
 
   bool Crypto::sign (GMimeObject * mo, ustring userid, GMimeMultipartSigned ** out, GError ** err) {
-    *out = g_mime_multipart_signed_new ();
-
-    int r = g_mime_multipart_signed_sign (
-        *out,
-        mo,
+    *out = g_mime_multipart_signed_sign (
         gpgctx,
+        mo,
         userid.c_str (),
-        GMIME_DIGEST_ALGO_DEFAULT,
         err);
 
-    if (r == 0) {
+    if (*out != NULL) {
       LOG (debug) << "crypto: successfully signed message.";
+      return true;
     } else {
       LOG (debug) << "crypto: failed to sign message: " << (*err)->message;
+      return false;
     }
-
-    return (r == 0);
   }
 
   bool Crypto::create_gpg_context () {
 
     if (!astroid->in_test ()) {
 
-      gpgctx = g_mime_gpg_context_new (NULL, gpgpath.length() ? gpgpath.c_str () : "gpg");
+      gpgctx = g_mime_gpg_context_new ();
+
+      /* ignored in gmime 3 */
       g_mime_gpg_context_set_use_agent ((GMimeGpgContext *) gpgctx, TRUE);
       g_mime_gpg_context_set_always_trust ((GMimeGpgContext *) gpgctx, always_trust);
 
     } else {
 
       LOG (debug) << "crypto: in test";
-      gpgctx = g_mime_gpg_context_new (NULL, "gpg");
+      gpgctx = g_mime_gpg_context_new ();
+
+      /* ignored in gmime 3 */
       g_mime_gpg_context_set_use_agent ((GMimeGpgContext *) gpgctx, TRUE);
       g_mime_gpg_context_set_always_trust ((GMimeGpgContext *) gpgctx, TRUE);
 

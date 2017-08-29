@@ -49,6 +49,7 @@
 
 /* gmime */
 # include <gmime/gmime.h>
+# include <utils/gmime/gmime-compat.h>
 
 using namespace std;
 using namespace boost::filesystem;
@@ -107,7 +108,7 @@ namespace Astroid {
     user_agent = ustring::compose ("astroid/%1 (https://github.com/astroidmail/astroid)", Astroid::version);
 
     /* gmime settings */
-    g_mime_init (0); // utf-8 is default
+    g_mime_init ();
 
     /* options */
     desc.add_options ()
