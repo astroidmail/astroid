@@ -125,6 +125,8 @@ namespace Astroid {
     private:
       bool on_my_focus_in_event (GdkEventFocus *);
       bool on_my_focus_out_event (GdkEventFocus *);
+      bool _has_focus = false;
+
       void on_my_switch_page (Gtk::Widget *, guint);
 
       void on_update_title ();
