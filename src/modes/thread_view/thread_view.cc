@@ -2656,10 +2656,10 @@ namespace Astroid {
 
           ids = ids.substr (0, ids.length () - 2);
 
-          auto cp = Gtk::Clipboard::get (GDK_SELECTION_PRIMARY);
+          auto cp = Gtk::Clipboard::get (astroid->clipboard_target);
           cp->set_text (ids);
 
-          LOG (info) << "tv: " << ids << " copied to primary clipboard.";
+          LOG (info) << "tv: " << ids << " copied to clipboard.";
 
           return true;
         });
@@ -2680,7 +2680,7 @@ namespace Astroid {
           /* remove last newline */
           y = y.substr (0, y.size () - 1);
 
-          auto cp = Gtk::Clipboard::get (GDK_SELECTION_PRIMARY);
+          auto cp = Gtk::Clipboard::get (astroid->clipboard_target);
           cp->set_text (y);
 
           LOG (info) << "tv: yanked marked messages to clipobard.";
@@ -2710,7 +2710,7 @@ namespace Astroid {
             }
           }
 
-          auto cp = Gtk::Clipboard::get (GDK_SELECTION_PRIMARY);
+          auto cp = Gtk::Clipboard::get (astroid->clipboard_target);
           cp->set_text (y);
 
           LOG (info) << "tv: yanked raw marked messages to clipobard.";
@@ -3028,26 +3028,26 @@ namespace Astroid {
         });
 
     keys.register_key ("y", "thread_view.yank",
-        "Yank current element or message text to primary clipboard",
+        "Yank current element or message text to clipboard",
         [&] (Key) {
           element_action (EYank);
           return true;
         });
 
     keys.register_key ("Y", "thread_view.yank_raw",
-        "Yank raw content of current element or message to primary clipboard",
+        "Yank raw content of current element or message to clipboard",
         [&] (Key) {
           element_action (EYankRaw);
           return true;
         });
 
     keys.register_key ("C-y", "thread_view.yank_mid",
-        "Yank the Message-ID of the focused message to primary clipboard",
+        "Yank the Message-ID of the focused message to clipboard",
         [&] (Key) {
-          auto cp = Gtk::Clipboard::get (GDK_SELECTION_PRIMARY);
+          auto cp = Gtk::Clipboard::get (astroid->clipboard_target);
           cp->set_text (focused_message->mid);
 
-          LOG (info) << "tv: " << focused_message->mid << " copied to primary clipboard.";
+          LOG (info) << "tv: " << focused_message->mid << " copied to clipboard.";
 
           return true;
         });
@@ -3197,7 +3197,7 @@ namespace Astroid {
         focused_message->save ();
 
       } else if (a == EYankRaw) {
-        auto    cp = Gtk::Clipboard::get (GDK_SELECTION_PRIMARY);
+        auto    cp = Gtk::Clipboard::get (astroid->clipboard_target);
         ustring t  = "";
 
         auto d   = focused_message->raw_contents ();
@@ -3210,7 +3210,7 @@ namespace Astroid {
 
       } else if (a == EYank) {
 
-        auto cp = Gtk::Clipboard::get (GDK_SELECTION_PRIMARY);
+        auto cp = Gtk::Clipboard::get (astroid->clipboard_target);
         ustring t;
 
         t = focused_message->viewable_text (false, true);
@@ -3227,7 +3227,7 @@ namespace Astroid {
           /* save message to */
           focused_message->save ();
         } else if (a == EYankRaw) {
-          auto    cp = Gtk::Clipboard::get (GDK_SELECTION_PRIMARY);
+          auto    cp = Gtk::Clipboard::get (astroid->clipboard_target);
           ustring t  = "";
 
           auto d = focused_message->raw_contents ();
@@ -3240,7 +3240,7 @@ namespace Astroid {
 
         } else if (a == EYank) {
 
-          auto cp = Gtk::Clipboard::get (GDK_SELECTION_PRIMARY);
+          auto cp = Gtk::Clipboard::get (astroid->clipboard_target);
           ustring t;
 
           t = focused_message->viewable_text (false, true);
@@ -3253,7 +3253,7 @@ namespace Astroid {
 
           refptr<Chunk> c = focused_message->get_chunk_by_id (
               state[focused_message].elements[state[focused_message].current_element].id);
-          auto cp = Gtk::Clipboard::get (GDK_SELECTION_PRIMARY);
+          auto cp = Gtk::Clipboard::get (astroid->clipboard_target);
           ustring t = "";
 
           auto d   = c->contents ();
@@ -3268,7 +3268,7 @@ namespace Astroid {
 
           refptr<Chunk> c = focused_message->get_chunk_by_id (
               state[focused_message].elements[state[focused_message].current_element].id);
-          auto cp = Gtk::Clipboard::get (GDK_SELECTION_PRIMARY);
+          auto cp = Gtk::Clipboard::get (astroid->clipboard_target);
           ustring t;
 
           if (c->viewable) {

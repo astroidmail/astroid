@@ -56,6 +56,7 @@ namespace Astroid {
       MainWindow * open_new_window (bool open_defaults = true);
 
       int hint_level ();
+      GdkAtom clipboard_target = GDK_SELECTION_CLIPBOARD;
 
     protected:
       Config * m_config;

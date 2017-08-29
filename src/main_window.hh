@@ -121,6 +121,7 @@ namespace Astroid {
       Glib::Dispatcher update_title_dispatcher;
 
       Keybindings keys;
+      Keybindings clipboard;
 
     private:
       bool on_my_focus_in_event (GdkEventFocus *);

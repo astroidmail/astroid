@@ -396,6 +396,27 @@ namespace Astroid {
           return true;
         });
 
+    keys.register_key ("\"", "main_window.clipboard",
+        "Set target clipboard",
+        [&] (Key k) {
+          multi_key (clipboard, k);
+          return true;
+        });
+
+    clipboard.register_key ("+", "main_window.clipboard.clipboard",
+        "Set target clipboard to CLIPBOARD (default)",
+        [&] (Key) {
+          astroid->clipboard_target = GDK_SELECTION_CLIPBOARD;
+          return true;
+        });
+
+    clipboard.register_key ("*", "main_window.clipboard.primary",
+        "Set target clipboard to PRIMARY",
+        [&] (Key) {
+          astroid->clipboard_target = GDK_SELECTION_PRIMARY;
+          return true;
+        });
+
 # ifndef DISABLE_VTE
     keys.register_key ("|", "main_window.open_terminal",
         "Open terminal",
