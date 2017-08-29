@@ -12,6 +12,9 @@
 * Configurable query associated with account can be used to select account as
   From: when replying or forwarding e-mail.
 
+* Default clipboard target: CLIPBOARD since this is the only one accessible by keyboard
+  in GTK.
+
 * Select target for yank operations with '"'
 
 * Track focus changes manually
