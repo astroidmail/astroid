@@ -971,7 +971,9 @@ namespace Astroid {
       /* delete attachment */
       auto e = thread_view->state[thread_view->focused_message].elements[id];
 
-      if (e.type == ThreadView::MessageState::ElementType::Attachment) {
+      if (e.type == ThreadView::MessageState::ElementType::Attachment ||
+          e.type == ThreadView::MessageState::ElementType::MimeMessage )
+      {
         LOG (info) << "em: remove attachment: " << id << ", cid: " << e.id;
 
         /* find attachment */
@@ -982,7 +984,9 @@ namespace Astroid {
             i++)
         {
           auto xe = thread_view->state[thread_view->focused_message].elements[i];
-          if (xe.type == ThreadView::MessageState::ElementType::Attachment) {
+          if (xe.type == ThreadView::MessageState::ElementType::Attachment ||
+              xe.type == ThreadView::MessageState::ElementType::MimeMessage )
+          {
 
             if (i == (unsigned int) id) {
               attachments.erase (attachments.begin () + attachment);
