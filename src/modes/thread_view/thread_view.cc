@@ -32,6 +32,7 @@
 # include "actions/cmdaction.hh"
 # include "actions/tag_action.hh"
 # include "actions/toggle_action.hh"
+# include "actions/difftag_action.hh"
 # include "modes/mode.hh"
 # include "modes/reply_message.hh"
 # include "modes/forward_message.hh"
@@ -2639,6 +2640,38 @@ namespace Astroid {
               update_marked_state (m);
             }
           }
+          return true;
+        });
+
+    multi_keys.register_key ("+", "thread_view.multi.tag",
+        "Tag",
+        [&] (Key) {
+          /* TODO: Move this into a function in a similar way as multi_key_handler
+           * for threadindex */
+
+
+          /* ask for tags */
+          main_window->enable_command (CommandBar::CommandMode::DiffTag,
+              "",
+              [&](ustring tgs) {
+                LOG (debug) << "tv: got difftags: " << tgs;
+
+                vector<refptr<NotmuchItem>> messages;
+
+                for (auto &ms : state) {
+                  refptr<Message> m = ms.first;
+                  MessageState    s = ms.second;
+                  if (s.marked) {
+                    messages.push_back (m->nmmsg);
+                  }
+                }
+
+                refptr<Action> ma = refptr<DiffTagAction> (DiffTagAction::create (messages, tgs));
+                if (ma) {
+                  main_window->actions->doit (ma);
+                }
+              });
+
           return true;
         });
 
