@@ -2837,7 +2837,7 @@ namespace Astroid {
 
     keys.register_key (Key (GDK_KEY_semicolon),
           "thread_view.multi",
-          "Apply action to marked threads",
+          "Apply action to marked messages",
           [&] (Key k) {
             if (any_of (state.begin(), state.end(),
                   [](std::pair<refptr<Message>, ThreadView::MessageState> ms)
