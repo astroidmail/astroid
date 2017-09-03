@@ -246,36 +246,14 @@ namespace Astroid {
   }
 
   ustring Crypto::get_md5_digest (ustring str) {
-    unsigned char * digest = get_md5_digest_char (str);
+    std::string cs = Glib::Checksum::compute_checksum (Glib::Checksum::ChecksumType::CHECKSUM_MD5, str);
 
-    std::ostringstream os;
-    for (int i = 0; i < 16; i++) {
-      os << std::hex << std::setfill('0') << std::setw(2) << ((int)digest[i]);
-    }
-
-    delete digest;
-
-    return os.str ();
+    return cs;
   }
 
   unsigned char * Crypto::get_md5_digest_char (ustring str) {
-    GMimeStream * mem = g_mime_stream_mem_new ();
-    GMimeStream * filter_stream = g_mime_stream_filter_new (mem);
-
-    GMimeFilter * md5f = g_mime_filter_md5_new ();
-    g_mime_stream_filter_add(GMIME_STREAM_FILTER(filter_stream), md5f);
-
-    g_mime_stream_write_string (filter_stream, str.c_str ());
-
-    unsigned char *digest = new unsigned char[16];
-    g_mime_filter_md5_get_digest (GMIME_FILTER_MD5(md5f), digest);
-
-
-    g_object_unref (md5f);
-    g_object_unref (filter_stream);
-    g_object_unref (mem);
-
-    return digest;
+    std::string cs = get_md5_digest (str);
+    return (unsigned char *) cs.c_str ();
   }
 }
 
