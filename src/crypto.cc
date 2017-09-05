@@ -251,9 +251,25 @@ namespace Astroid {
     return cs;
   }
 
-  unsigned char * Crypto::get_md5_digest_char (ustring str) {
-    std::string cs = get_md5_digest (str);
-    return (unsigned char *) cs.c_str ();
+  gssize Crypto::get_md5_length () {
+    return Glib::Checksum::get_length (Glib::Checksum::ChecksumType::CHECKSUM_MD5);
+  }
+
+  refptr<Glib::Bytes> Crypto::get_md5_digest_b (ustring str) {
+    if (str.empty ()) {
+      guint8 buffer[get_md5_length ()];
+      return Glib::Bytes::create (buffer, get_md5_length ());
+    }
+
+    guint8 buffer[get_md5_length ()];
+    gsize  len = get_md5_length ();
+
+    Glib::Checksum chk (Glib::Checksum::ChecksumType::CHECKSUM_MD5);
+    chk.update (str);
+
+    chk.get_digest (buffer, &len);
+
+    return Glib::Bytes::create (buffer, len);
   }
 }
 

@@ -61,8 +61,9 @@ namespace Astroid {
       bool verify_signature_list (GMimeSignatureList *);
 
     public:
-      static ustring          get_md5_digest (ustring str);
-      static unsigned char *  get_md5_digest_char (ustring str);
+      static ustring  get_md5_digest (ustring str);
+      static gssize   get_md5_length ();
+      static refptr<Glib::Bytes> get_md5_digest_b (ustring str);
   };
 
 }

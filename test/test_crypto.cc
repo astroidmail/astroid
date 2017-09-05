@@ -287,5 +287,35 @@ BOOST_AUTO_TEST_SUITE(GPGEncryption)
     teardown ();
   }
 
+  BOOST_AUTO_TEST_CASE (crypto_md5)
+  {
+    using Astroid::Crypto;
+
+    ustring data = "12345asdfasdfasdf";
+    ustring expected = "983443541cfec1e77671d8dd8e0ee33e"; // echo -n ... | md5sum
+
+    ustring chk;
+    BOOST_CHECK_NO_THROW (chk = Crypto::get_md5_digest (data));
+    BOOST_CHECK (chk == expected);
+    LOG (test) << "digest: " << chk;
+
+    /* testing md5_b */
+    refptr<Glib::Bytes> d = Crypto::get_md5_digest_b (data);
+
+    LOG (test) << "digest, length: " << d->get_size ();
+
+    gsize len;
+    guint8 * buffer = (guint8 *) d->get_data (len);
+
+    std::stringstream ss;
+    for (unsigned int i = 0; i < len; i++)
+      ss << std::hex << std::setw(2) << std::setfill ('0') << static_cast<unsigned int>(buffer[i]);
+
+    LOG (test) << "digest, bytes:  " << ss.str ();
+
+    BOOST_CHECK (len == 16);
+    BOOST_CHECK (ss.str () == expected);
+  }
+
 BOOST_AUTO_TEST_SUITE_END()
 

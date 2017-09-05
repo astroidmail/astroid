@@ -122,18 +122,20 @@ namespace Astroid {
     }
     # endif
 
-    unsigned char * tc = Crypto::get_md5_digest_char (t);
+    auto     _tc = Crypto::get_md5_digest_b (t);
+    gsize    len;
+    guint8 * tc  = (guint8 *) _tc->get_data (len);
 
-    unsigned char upper[3] = {
-      (unsigned char) tags_upper_color.get_red (),
-      (unsigned char) tags_upper_color.get_green (),
-      (unsigned char) tags_upper_color.get_blue (),
+    guint8 upper[3] = {
+      (guint8) tags_upper_color.get_red (),
+      (guint8) tags_upper_color.get_green (),
+      (guint8) tags_upper_color.get_blue (),
       };
 
-    unsigned char lower[3] = {
-      (unsigned char) tags_lower_color.get_red (),
-      (unsigned char) tags_lower_color.get_green (),
-      (unsigned char) tags_lower_color.get_blue (),
+    guint8 lower[3] = {
+      (guint8) tags_lower_color.get_red (),
+      (guint8) tags_lower_color.get_green (),
+      (guint8) tags_lower_color.get_blue (),
       };
 
     /*
@@ -142,7 +144,7 @@ namespace Astroid {
      * luminocity of background color.
      */
 
-    unsigned char bg[3];
+    guint8 bg[3];
 
     for (int k = 0; k < 3; k++) {
       bg[k] = tc[k] * (upper[k] - lower[k]) + lower[k];
@@ -153,8 +155,6 @@ namespace Astroid {
                     bg[1] * (65535) / (255),
                     bg[2] * (65535) / (255),
                     (unsigned short) (tags_alpha * (65535)));
-
-    delete tc;
 
     float lum = ((bg[0] * tags_alpha + (1-tags_alpha) * cv[0] ) * .2126 + (bg[1] * tags_alpha + (1-tags_alpha) * cv[1]) * .7152 + (bg[2] * tags_alpha + (1-tags_alpha) * cv[0]) * .0722) / 255.0;
     /* float avg = (bg[0] + bg[1] + bg[2]) / (3 * 255.0); */
@@ -170,7 +170,7 @@ namespace Astroid {
     return std::make_pair (fc, bc);
   }
 
-  std::pair<ustring, ustring> Utils::get_tag_color (ustring t, unsigned char cv[3]) {
+  std::pair<ustring, ustring> Utils::get_tag_color (ustring t, guint8 cv[3]) {
     auto clrs = get_tag_color_rgba (t, cv);
 
     return std::make_pair (rgba_to_hex (clrs.first), rgba_to_hex (clrs.second));
