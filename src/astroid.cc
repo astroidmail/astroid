@@ -10,6 +10,9 @@
 # include <boost/program_options.hpp>
 # include <boost/filesystem.hpp>
 
+/* for map_list_of */
+# include <boost/assign/list_of.hpp>
+
 /* log */
 # include <boost/log/core.hpp>
 # include <boost/log/utility/setup/file.hpp>
@@ -22,6 +25,7 @@
 # include <boost/log/utility/setup/formatter_parser.hpp>
 # include <boost/date_time/posix_time/posix_time_types.hpp>
 # include <boost/log/expressions.hpp>
+# include <boost/log/trivial.hpp>
 # include <boost/log/support/date_time.hpp>
 
 # include "astroid.hh"
@@ -119,6 +123,7 @@ namespace Astroid {
       ( "log,l", po::value<ustring>(), "log to file")
       ( "append-log,a", "append to log file")
       ( "disable-log", "disable logging")
+      ( "log-level", po::value<ustring>(), "set logging level (trace, debug, info, warning, error, fatal)")
       ( "start-polling", "indicate that external polling (external notmuch db R/W operations) starts")
       ( "stop-polling", "indicate that external polling stops")
       ( "refresh", po::value<unsigned long>(), "refresh threads changed since lastmod")
@@ -158,6 +163,16 @@ namespace Astroid {
     if (vm.count ("disable-log")) {
       LOG (warn) << "disabling log";
       logging::core::get()->set_logging_enabled (false);
+    } else if (vm.count ("log-level")) {
+      ustring llevel = vm["log-level"].as<ustring> ();
+
+      /* Not very elegant map for string to enum */
+      std::map<std::string, logging::trivial::severity_level> sevmap = boost::assign::map_list_of
+        ("trace", logging::trivial::trace)("debug", logging::trivial::debug)
+        ("info", logging::trivial::info)("warning", logging::trivial::warning)
+        ("error", logging::trivial::error)("fatal", logging::trivial::fatal);
+
+       logging::core::get()->set_filter (logging::trivial::severity >= sevmap[llevel]);
     }
 
 
