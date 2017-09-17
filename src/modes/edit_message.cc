@@ -23,6 +23,7 @@
 # include "utils/utils.hh"
 # include "utils/ustring_utils.hh"
 # include "utils/resource.hh"
+# include "utils/gmime/gmime-compat.h"
 # include "actions/onmessage.hh"
 
 # include "editor/plugin.hh"

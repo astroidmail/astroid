@@ -2,6 +2,7 @@
 # include "astroid.hh"
 
 # include <gmime/gmime.h>
+# include "gmime/gmime-compat.h"
 
 # include "ustring_utils.hh"
 # include "address.hh"
@@ -14,24 +15,34 @@ namespace Astroid {
     _valid = false;
   }
 
+  Address::Address (const char * full_address) {
+    parse (full_address);
+  }
+
   Address::Address (ustring full_address) {
+    parse (full_address.c_str ());
+  }
+
+  void Address::parse (const char * str) {
+    if (str == NULL) return;
+
     /* parse and split */
     InternetAddressList * list =
-      internet_address_list_parse (NULL, full_address.c_str());
+      internet_address_list_parse (NULL, str);
 
     _valid = true;
 
     if (internet_address_list_length (list) > 1) {
       LOG (error) << "address: more than one address in list!";
       _valid = false;
-      _email = full_address;
+      _email = str;
       g_object_unref (list);
       return;
     }
 
     if (internet_address_list_length (list) < 1) {
       LOG (error) << "address: no address in string.";
-      _email = full_address;
+      _email = str;
       _valid = false;
       g_object_unref (list);
       return;
@@ -41,7 +52,7 @@ namespace Astroid {
         list, 0);
     if (address == NULL) {
       LOG (error) << "address: no address in string.";
-      _email = full_address;
+      _email = str;
       _valid = false;
       g_object_unref (list);
       return;
@@ -116,6 +127,17 @@ namespace Astroid {
 
   AddressList::AddressList (InternetAddressList * list) {
     if (list != NULL) {
+      for (int i = 0; i < internet_address_list_length (list); i++) {
+        InternetAddress * a = internet_address_list_get_address (list, i);
+        addresses.push_back (Address (a));
+      }
+    }
+  }
+
+  AddressList::AddressList (const char * str) {
+    if (str != NULL) {
+      InternetAddressList * list = internet_address_list_parse (NULL, str);
+
       for (int i = 0; i < internet_address_list_length (list); i++) {
         InternetAddress * a = internet_address_list_get_address (list, i);
         addresses.push_back (Address (a));

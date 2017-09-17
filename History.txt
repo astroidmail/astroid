@@ -1,5 +1,8 @@
 == **
 
+* Support GMime 3 with backwards compatability with GMime 2. This orients us
+  towards GMime 3, and support for GMime 2 will be dropped in the future.
+
 * Attach messages by mids with 'A' in new emails.
 
 * Colorful tags in tag editor and in searching

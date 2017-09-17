@@ -3,13 +3,15 @@
 # include <sys/wait.h>
 
 # include <boost/filesystem.hpp>
-# include <gmime/gmime.h>
 # include <glib.h>
 # include <gio/gio.h>
 # include <thread>
 # include <mutex>
 # include <condition_variable>
 # include <chrono>
+
+# include <gmime/gmime.h>
+# include "utils/gmime/gmime-compat.h"
 
 # include "astroid.hh"
 # include "db.hh"

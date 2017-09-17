@@ -1,5 +1,6 @@
 # include <glib.h>
 # include <gmime/gmime.h>
+# include "utils/gmime/gmime-compat.h"
 
 # include <string>
 
@@ -216,21 +217,23 @@ namespace Astroid {
 
     if (!astroid->in_test ()) {
 
-      gpgctx = g_mime_gpg_context_new ();
-
-      /* ignored in gmime 3 */
+# if (GMIME_MAJOR_VERSION < 3)
+      gpgctx = g_mime_gpg_context_new(NULL, gpgpath.length() ? gpgpath.c_str () : "gpg");
       g_mime_gpg_context_set_use_agent ((GMimeGpgContext *) gpgctx, TRUE);
       g_mime_gpg_context_set_always_trust ((GMimeGpgContext *) gpgctx, always_trust);
-
+# else
+      gpgctx = g_mime_gpg_context_new ();
+# endif
     } else {
 
       LOG (debug) << "crypto: in test";
-      gpgctx = g_mime_gpg_context_new ();
-
-      /* ignored in gmime 3 */
+# if (GMIME_MAJOR_VERSION < 3)
+      gpgctx = g_mime_gpg_context_new(NULL, "gpg");
       g_mime_gpg_context_set_use_agent ((GMimeGpgContext *) gpgctx, TRUE);
       g_mime_gpg_context_set_always_trust ((GMimeGpgContext *) gpgctx, TRUE);
-
+# else
+      gpgctx = g_mime_gpg_context_new ();
+# endif
     }
 
     if (! gpgctx) {

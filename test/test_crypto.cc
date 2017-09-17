@@ -8,6 +8,7 @@
 # include "message_thread.hh"
 # include "account_manager.hh"
 # include "db.hh"
+# include "utils/gmime/gmime-compat.h"
 
 
 BOOST_AUTO_TEST_SUITE(GPGEncryption)

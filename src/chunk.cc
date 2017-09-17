@@ -7,6 +7,7 @@
 
 # include <glib.h>
 # include <gmime/gmime.h>
+# include "utils/gmime/gmime-compat.h"
 # include "utils/gmime/gmime-filter-html-bq.h"
 
 # include "astroid.hh"

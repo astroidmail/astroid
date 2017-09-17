@@ -3,6 +3,7 @@
 
 # include <notmuch.h>
 # include <gmime/gmime.h>
+# include "utils/gmime/gmime-compat.h"
 # include <boost/filesystem.hpp>
 
 # include "astroid.hh"
@@ -165,7 +166,7 @@ namespace Astroid {
       return;
 
     } else {
-      GError *err = NULL;
+      GError *err = NULL; (void) (err); // not used in GMime 2.
       GMimeStream   * stream  = g_mime_stream_file_open (fname.c_str(), "r", &err);
       g_mime_stream_file_set_owner (GMIME_STREAM_FILE(stream), TRUE);
       if (stream == NULL) {

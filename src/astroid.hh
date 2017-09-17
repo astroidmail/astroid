@@ -13,7 +13,6 @@
 # define warn warning
 
 # include <gmime/gmime.h>
-# include <utils/gmime/gmime-compat.h>
 
 # include <gtkmm.h>
 # include <glibmm.h>
