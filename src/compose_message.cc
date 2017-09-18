@@ -453,9 +453,9 @@ namespace Astroid {
       ch_stderr = Glib::IOChannel::create_from_fd (stderr);
 
       /* write message to sendmail */
-      GMimeStream * stream = g_mime_stream_fs_new (stdin);
-      g_mime_stream_fs_set_owner (GMIME_STREAM_FS(stream), true);
-      g_mime_object_write_to_stream(GMIME_OBJECT(message), stream);
+      GMimeStream * stream = g_mime_stream_pipe_new (stdin);
+      g_mime_stream_pipe_set_owner (GMIME_STREAM_PIPE(stream), true); // causes stdin to be closed when stream is closed
+      g_mime_object_write_to_stream (GMIME_OBJECT(message), stream);
       g_mime_stream_flush (stream);
       g_object_unref (stream); // closes stdin
 
