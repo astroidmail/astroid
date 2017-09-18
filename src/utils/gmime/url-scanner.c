@@ -500,6 +500,11 @@ url_web_end (const char *in, const char *pos, const char *inend, urlmatch_t *mat
 				break;
 			
 			/* we have a '/' so there could be a path - fall through */
+# if defined (__clang__)
+      [[clang::fallthrough]];
+# elif defined (__GNUC__)
+      __attribute__ ((fallthrough));
+# endif
 		case '/': /* we've detected a path component to our url */
 			inptr++;
 			
