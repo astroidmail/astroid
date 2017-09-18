@@ -62,6 +62,10 @@ def setupGPG (env):
 
     Popen ("gpg --batch --always-trust --import two.pub", env = env, shell = True, cwd = gpgh).wait ()
 
+    print ("test: gnupg: setting always-trust")
+    with open (os.path.join (gpgh, 'gpg.conf'), 'w') as fd:
+      fd.write ('always-trust\n')
+
   open (os.path.join (gpgh, '.ready'), 'w').write ('ready')
 
 def tearDownGPG (env):
