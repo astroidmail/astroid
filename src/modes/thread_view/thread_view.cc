@@ -25,6 +25,7 @@
 # include "utils/ustring_utils.hh"
 # include "utils/gravatar.hh"
 # include "utils/cmd.hh"
+# include "utils/gmime/gmime-compat.h"
 # ifndef DISABLE_PLUGINS
   # include "plugin/manager.hh"
 # endif
