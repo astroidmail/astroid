@@ -10,9 +10,6 @@
 # include <boost/program_options.hpp>
 # include <boost/filesystem.hpp>
 
-/* for map_list_of */
-# include <boost/assign/list_of.hpp>
-
 /* log */
 # include <boost/log/core.hpp>
 # include <boost/log/utility/setup/file.hpp>
@@ -165,14 +162,18 @@ namespace Astroid {
       logging::core::get()->set_logging_enabled (false);
     } else if (vm.count ("log-level")) {
       ustring llevel = vm["log-level"].as<ustring> ();
+      map<string, logging::trivial::severity_level> sevmap;
+      
+      /* Map commandline string parameter to severity enum */
+      sevmap.insert (pair<string,logging::trivial::severity_level>("trace"  , logging::trivial::trace));
+      sevmap.insert (pair<string,logging::trivial::severity_level>("debug"  , logging::trivial::debug));
+      sevmap.insert (pair<string,logging::trivial::severity_level>("info"   , logging::trivial::info));
+      sevmap.insert (pair<string,logging::trivial::severity_level>("warning", logging::trivial::warning));
+      sevmap.insert (pair<string,logging::trivial::severity_level>("error"  , logging::trivial::error));
+      sevmap.insert (pair<string,logging::trivial::severity_level>("fatal"  , logging::trivial::fatal));
 
-      /* Not very elegant map for string to enum */
-      std::map<std::string, logging::trivial::severity_level> sevmap = boost::assign::map_list_of
-        ("trace", logging::trivial::trace)("debug", logging::trivial::debug)
-        ("info", logging::trivial::info)("warning", logging::trivial::warning)
-        ("error", logging::trivial::error)("fatal", logging::trivial::fatal);
-
-       logging::core::get()->set_filter (logging::trivial::severity >= sevmap[llevel]);
+      /* Non existing llevel  in map will be silently ignored */
+      logging::core::get()->set_filter (logging::trivial::severity >= sevmap[llevel]);
     }
 
 
