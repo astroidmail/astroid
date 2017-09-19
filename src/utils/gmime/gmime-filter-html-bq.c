@@ -29,9 +29,10 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "url-scanner.h"
+# include "url-scanner.h"
 # include <gmime/gmime-filter-html.h>
-#include "gmime-filter-html-bq.h"
+# include "gmime-filter-html-bq.h"
+# include "utils/compiler.h"
 
 #ifdef ENABLE_WARNINGS
 #define w(x) x
@@ -332,11 +333,7 @@ writeln (GMimeFilter *filter, const char *in, const char *end, char *outptr, cha
 				break;
 			}
 			/* otherwise, FALL THROUGH */
-# if defined (__clang__)
-      [[clang::fallthrough]];
-# elif defined (__GNUC__)
-      __attribute__ ((fallthrough));
-# endif
+      FALLTHROUGH;
 		case ' ':
 			if (html->flags & GMIME_FILTER_HTML_CONVERT_SPACES) {
 				if (inptr == (instart + 1) || (inptr < inend && (*inptr == ' ' || *inptr == '\t'))) {
@@ -346,11 +343,7 @@ writeln (GMimeFilter *filter, const char *in, const char *end, char *outptr, cha
 				}
 			}
 			/* otherwise, FALL THROUGH */
-# if defined (__clang__)
-      [[clang::fallthrough]];
-# elif defined (__GNUC__)
-      __attribute__ ((fallthrough));
-# endif
+      FALLTHROUGH;
 		default:
 			if (u >= 0x20 && u < 0x80) {
 				*outptr++ = (char) (u & 0xff);
