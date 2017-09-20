@@ -694,8 +694,9 @@ namespace Astroid {
     }
   }
 
+  // TODO: [JS] [REIMPLEMENT]
   void ThreadView::update_indent_state (refptr<Message> m) {
-
+# if 0
     ustring mid = "message_" + m->mid;
     GError * err = NULL;
 
@@ -712,10 +713,12 @@ namespace Astroid {
 
     g_object_unref (e);
     g_object_unref (d);
-
+# endif
   }
 
+  // TODO: [JS] [REIMPLEMENT]
   void ThreadView::add_message (refptr<Message> m) {
+# if 0
     LOG (debug) << "tv: adding message: " << m->mid;
 
     ustring div_id = "message_" + m->mid;
@@ -784,13 +787,16 @@ namespace Astroid {
 
     g_object_unref (insert_before);
     g_object_unref (div_message);
-  } //
+# endif
+  }
 
   /* main message generation  */
+  // TODO: [JS] [REIMPLEMENT]
   void ThreadView::set_message_html (
       refptr<Message> m,
       WebKitDOMHTMLElement * div_message)
   {
+# if 0
     GError *err;
 
     /* load message into div */
@@ -963,7 +969,8 @@ namespace Astroid {
     g_object_unref (preview);
     g_object_unref (span_body);
     g_object_unref (table_header);
-  } //
+# endif
+  }
 
   /* generating message parts  */
   void ThreadView::create_message_part_html (
@@ -1016,11 +1023,13 @@ namespace Astroid {
     }
   }
 
+  // TODO: [JS] [REIMPLEMENT]
   void ThreadView::create_body_part (
       refptr<Message> message,
       refptr<Chunk> c,
       WebKitDOMHTMLElement * span_body)
   {
+# if 0
     // <span id="body_template" class="body_part"></span>
 
     LOG (debug) << "create body part: " << c->id;
@@ -1303,6 +1312,7 @@ namespace Astroid {
 
     g_object_unref (body_container);
     g_object_unref (d);
+# endif
   }
 
   void ThreadView::filter_code_tags (ustring &body) {
@@ -1352,7 +1362,9 @@ namespace Astroid {
 
   }
 
+  // TODO: [JS] [REIMPLEMENT]
   void ThreadView::display_part (refptr<Message> message, refptr<Chunk> c, MessageState::Element el) {
+# if 0
     GError * err;
 
     WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
@@ -1401,9 +1413,12 @@ namespace Astroid {
     g_object_unref (div_email_container);
     g_object_unref (e);
     g_object_unref (d);
+# endif
   }
 
+  // TODO: [JS] [REIMPLEMENT]
   void ThreadView::create_sibling_part (refptr<Message> message, refptr<Chunk> sibling, WebKitDOMHTMLElement * span_body) {
+# if 0
 
     LOG (debug) << "create sibling part: " << sibling->id;
     //
@@ -1448,11 +1463,14 @@ namespace Astroid {
     g_object_unref (message_cont);
     g_object_unref (sibling_container);
     g_object_unref (d);
+# endif
   } //
 
   /* info and warning  */
+  // TODO: [JS] [REIMPLEMENT] Possibly use GtkInfoBar
   void ThreadView::set_warning (refptr<Message> m, ustring txt)
   {
+# if 0
     LOG (debug) << "tv: set warning: " << txt;
     ustring mid = "message_" + m->mid;
 
@@ -1476,10 +1494,12 @@ namespace Astroid {
     g_object_unref (warning);
     g_object_unref (e);
     g_object_unref (d);
+# endif
   }
 
   void ThreadView::hide_warning (refptr<Message> m)
   {
+# if 0
     ustring mid = "message_" + m->mid;
 
     WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
@@ -1502,11 +1522,14 @@ namespace Astroid {
     g_object_unref (warning);
     g_object_unref (e);
     g_object_unref (d);
+# endif
   }
 
+  // TODO: [JS] [REIMPLEMENT] Same as warning
   void ThreadView::set_info (refptr<Message> m, ustring txt)
   {
     LOG (debug) << "tv: set info: " << txt;
+# if 0
 
     ustring mid = "message_" + m->mid;
 
@@ -1534,9 +1557,11 @@ namespace Astroid {
     g_object_unref (info);
     g_object_unref (e);
     g_object_unref (d);
+# endif
   }
 
   void ThreadView::hide_info (refptr<Message> m) {
+# if 0
     ustring mid = "message_" + m->mid;
 
     WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
@@ -1563,10 +1588,12 @@ namespace Astroid {
     g_object_unref (info);
     g_object_unref (e);
     g_object_unref (d);
+# endif
   }
   /* end info and warning  */
 
   /* headers  */
+  // TODO: [JS] [REIMPLEMENT] all this header stuff should go in JS
   void ThreadView::insert_header_date (ustring & header, refptr<Message> m)
   {
     ustring value = ustring::compose (
@@ -1657,11 +1684,13 @@ namespace Astroid {
   /* headers end  */
 
   /* attachments  */
+  // TODO: [JS] [REIMPLEMENT]
   void ThreadView::set_attachment_icon (
       refptr<Message> /* message */,
       WebKitDOMHTMLElement * div_message)
 
   {
+# if 0
     GError *err;
 
     WebKitDOMHTMLElement * attachment_icon_img = DomUtils::select (
@@ -1699,9 +1728,11 @@ namespace Astroid {
 
     g_object_unref (class_list);
     g_object_unref (attachment_icon_img);
+# endif
   }
 
 
+  // TODO: [JS] [REIMPLEMENT]
   bool ThreadView::insert_attachments (
       refptr<Message> message,
       WebKitDOMHTMLElement * div_message)
@@ -1722,6 +1753,7 @@ namespace Astroid {
     //     </table>
     // </div>
 
+# if 0
     GError *err;
 
     WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
@@ -1825,13 +1857,16 @@ namespace Astroid {
     g_object_unref (d);
 
     return (attachments > 0);
+# endif
   }
 
+  // TODO: [JS] [REIMPLEMENT]
   void ThreadView::set_attachment_src (
       refptr<Chunk> c,
       refptr<Glib::ByteArray> data,
       WebKitDOMHTMLImageElement *img)
   {
+# if 0
     /* set the preview image or icon on the attachment display element */
 
     const char * _mtype = g_mime_content_type_get_media_type (c->content_type);
@@ -1916,14 +1951,17 @@ namespace Astroid {
     webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (img), "src",
         DomUtils::assemble_data_uri (image_content_type, content, content_size).c_str(), &err);
 
+# endif
   }
   /* attachments end  */
 
   /* marked  */
+  // TODO: [JS] [REIMPLEMENT]
   void ThreadView::load_marked_icon (
       refptr<Message> /* message */,
       WebKitDOMHTMLElement * div_message)
   {
+# if 0
     GError *err;
 
     WebKitDOMHTMLElement * marked_icon_img = DomUtils::select (
@@ -1951,9 +1989,12 @@ namespace Astroid {
         DomUtils::assemble_data_uri (image_content_type, content, content_size).c_str(), &err);
 
     g_object_unref (marked_icon_img);
+# endif
   }
 
+  // TODO: [JS] [REIMPLEMENT]
   void ThreadView::update_marked_state (refptr<Message> m) {
+# if 0
     GError *err;
     ustring mid = "message_" + m->mid;
 
@@ -1976,18 +2017,20 @@ namespace Astroid {
     g_object_unref (class_list);
     g_object_unref (e);
     g_object_unref (d);
-
+# endif
   }
 
 
   //
 
   /* mime messages  */
+  // TODO: [JS] [REIMPLEMENT]
   void ThreadView::insert_mime_messages (
       refptr<Message> message,
       WebKitDOMHTMLElement * div_message)
 
   {
+# if 0
     WebKitDOMHTMLElement * div_email_container =
       DomUtils::select (WEBKIT_DOM_NODE(div_message), "div.email_container");
 
@@ -2045,7 +2088,7 @@ namespace Astroid {
 
     g_object_unref (span_body);
     g_object_unref (div_email_container);
-
+# endif
   }
 
 
@@ -2758,10 +2801,14 @@ namespace Astroid {
             }
           }
 
+# if 0
           GError * err = NULL;
           WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
+# endif
 
           for (auto &m : toprint) {
+          // TODO: [JS] [REIMPLEMENT]
+# if 0
             ustring mid = "message_" + m->mid;
             WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
             WebKitDOMDOMTokenList * class_list =
@@ -2769,6 +2816,7 @@ namespace Astroid {
 
             webkit_dom_dom_token_list_add (class_list, "print",
                 (err = NULL, &err));
+# endif
 
             /* expand */
             state[m].print_expanded = !toggle_hidden (m, ToggleShow);
@@ -2782,8 +2830,11 @@ namespace Astroid {
           }
 
           /* open print window */
+          // TODO: [W2] Fix print
+# if 0
           WebKitWebFrame * frame = webkit_web_view_get_main_frame (webview);
           webkit_web_frame_print (frame);
+# endif
 
           if (indented) {
             indent_messages = true;
@@ -2797,6 +2848,7 @@ namespace Astroid {
               state[m].print_expanded = false;
             }
 
+# if 0
             ustring mid = "message_" + m->mid;
             WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
             WebKitDOMDOMTokenList * class_list =
@@ -2807,9 +2859,12 @@ namespace Astroid {
 
             g_object_unref (class_list);
             g_object_unref (e);
+# endif
           }
 
+# if 0
           g_object_unref (d);
+# endif
 
           return true;
         });
@@ -2875,6 +2930,8 @@ namespace Astroid {
         "thread_view.print",
         "Print focused message",
         [&] (Key) {
+        // TODO: [W2]
+# if 0
           GError * err = NULL;
           WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
 
@@ -2914,6 +2971,7 @@ namespace Astroid {
           g_object_unref (class_list);
           g_object_unref (e);
           g_object_unref (d);
+# endif
 
           return true;
         });
@@ -3401,10 +3459,13 @@ namespace Astroid {
     }
   }
 
+  // TODO: [JS]
   void ThreadView::update_focus_to_center () {
     /* focus the message which is currently vertically centered */
 
     if (edit_mode) return;
+
+# if 0
 
     WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
 
@@ -3441,9 +3502,11 @@ namespace Astroid {
 
     g_object_unref (d);
 
+# endif
     update_focus_status ();
   }
 
+  // TODO: [JS]
   void ThreadView::update_focus_to_view () {
     /* check if currently focused message has gone out of focus
      * and update focus */
@@ -3455,6 +3518,7 @@ namespace Astroid {
      * of it is within the view
      */
 
+# if 0
     WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
 
     auto adj = scroll.get_vadjustment ();
@@ -3557,10 +3621,13 @@ namespace Astroid {
 
       if (redo_focus_tags) update_focus_status ();
     }
+# endif
   }
 
+  // TODO: [JS]
   void ThreadView::update_focus_status () {
     /* update focus to currently set element (no scrolling ) */
+# if 0
     WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
     for (auto &m : mthread->messages) {
       ustring mid = "message_" + m->mid;
@@ -3643,6 +3710,7 @@ namespace Astroid {
     }
 
     g_object_unref (d);
+# endif
 
     /* update focus time for unread counter */
     focus_time = chrono::steady_clock::now ();
@@ -3671,7 +3739,9 @@ namespace Astroid {
     return true;
   }
 
+  // TODO: [JS]
   ustring ThreadView::focus_next_element (bool force_change) {
+# if 0
     ustring eid;
 
     if (!is_hidden (focused_message) || edit_mode) {
@@ -3748,9 +3818,12 @@ namespace Astroid {
     }
 
     return eid;
+# endif
   }
 
+  // TODO: [JS]
   ustring ThreadView::focus_previous_element (bool force_change) {
+# if 0
     ustring eid;
 
     if (!is_hidden (focused_message) || edit_mode) {
@@ -3830,6 +3903,7 @@ namespace Astroid {
     }
 
     return eid;
+# endif
   }
 
   ustring ThreadView::focus_next () {
@@ -3874,7 +3948,9 @@ namespace Astroid {
     return "message_" + focused_message->mid;
   }
 
+  // TODO: [JS]
   bool ThreadView::scroll_to_message (refptr<Message> m, bool scroll_when_visible) {
+# if 0
     focused_message = m;
 
     if (edit_mode) return false;
@@ -3896,12 +3972,15 @@ namespace Astroid {
     g_object_unref (d);
 
     return scroll_to_element (mid, scroll_when_visible);
+# endif
   }
 
+  // TODO: [JS]
   bool ThreadView::scroll_to_element (
       ustring eid,
       bool scroll_when_visible)
   {
+# if 0
     /* returns false when rendering is incomplete and scrolling
      * doesn't work */
 
@@ -3977,12 +4056,15 @@ namespace Astroid {
       return true;
 
     }
+# endif
   }
 
   /* end focus handeling   */
 
   /* message hiding  */
+  // TODO: [JS]
   bool ThreadView::is_hidden (refptr<Message> m) {
+# if 0
     ustring mid = "message_" + m->mid;
 
     WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
@@ -4001,12 +4083,15 @@ namespace Astroid {
     g_object_unref (d);
 
     return r;
+# endif
   }
 
+  // TODO: [JS]
   bool ThreadView::toggle_hidden (
       refptr<Message> m,
       ToggleState t)
   {
+# if 0
     /* returns true if the message was expanded in the first place */
 
     if (!m) m = focused_message;
@@ -4055,6 +4140,8 @@ namespace Astroid {
     if (unread_delay == 0.0) unread_check ();
 
     return wasexpanded;
+# endif
+    return false; // TODO
   }
 
   /* end message hiding  */
@@ -4221,8 +4308,12 @@ namespace Astroid {
     in_search = false;
     in_search_match = false;
     search_q  = "";
+
+    // TODO: [W2]
+# if 0
     webkit_web_view_set_highlight_text_matches (webview, false);
     webkit_web_view_unmark_text_matches (webview);
+# endif
   }
 
   void ThreadView::on_search (ustring k) {
@@ -4238,7 +4329,9 @@ namespace Astroid {
       }
 
       LOG (debug) << "tv: searching for: " << k;
-      int n = webkit_web_view_mark_text_matches (webview, k.c_str (), false, 0);
+      // TODO: [W2]
+      /* int n = webkit_web_view_mark_text_matches (webview, k.c_str (), false, 0); */
+      int n = 0; // TODO
 
       LOG (debug) << "tv: search, found: " << n << " matches.";
 
@@ -4247,7 +4340,8 @@ namespace Astroid {
       if (in_search) {
         search_q = k;
 
-        webkit_web_view_set_highlight_text_matches (webview, true);
+        // TODO: [W2]
+        /* webkit_web_view_set_highlight_text_matches (webview, true); */
 
         next_search_match ();
 
@@ -4273,14 +4367,16 @@ namespace Astroid {
      */
 
     in_search_match = true;
-    webkit_web_view_search_text (webview, search_q.c_str (), false, true, true);
+    // TODO: [W2]
+    /* webkit_web_view_search_text (webview, search_q.c_str (), false, true, true); */
   }
 
   void ThreadView::prev_search_match () {
     if (!in_search) return;
 
     in_search_match = true;
-    webkit_web_view_search_text (webview, search_q.c_str (), false, false, true);
+    // TODO: [W2]
+    /* webkit_web_view_search_text (webview, search_q.c_str (), false, false, true); */
   }
 
   /*  */
