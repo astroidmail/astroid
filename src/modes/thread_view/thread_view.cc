@@ -105,7 +105,7 @@ namespace Astroid {
 
     wk_loaded = false;
 
-    g_signal_connect (webview, "notify::load-status",
+    g_signal_connect (webview, "load-changed",
         G_CALLBACK(ThreadView_on_load_changed),
         (gpointer) this );
 
@@ -379,36 +379,25 @@ namespace Astroid {
    */
 
   extern "C" bool ThreadView_on_load_changed (
-      GtkWidget *       w,
-      GParamSpec *      p,
-      gpointer          data )
+      WebKitWebView * w,
+      WebKitLoadEvent load_event,
+      gpointer user_data)
   {
-    return ((ThreadView *) data)->on_load_changed (w, p);
+    return ((ThreadView *) user_data)->on_load_changed (w, load_event);
   }
 
   bool ThreadView::on_load_changed (
-      GtkWidget *       /* w */,
-      GParamSpec *      /* p */)
+      WebKitWebView * /* w */,
+      WebKitLoadEvent load_event)
   {
-    WebKitLoadStatus ev = webkit_web_view_get_load_status (webview);
-    LOG (debug) << "tv: on_load_changed: " << ev;
-    switch (ev) {
+    LOG (debug) << "tv: on_load_changed: " << load_event;
+    switch (load_event) {
       case WEBKIT_LOAD_FINISHED:
         LOG (debug) << "tv: load finished.";
         {
-
           /* load css style */
-          GError *err = NULL;
-          WebKitDOMDocument *d = webkit_web_view_get_dom_document (webview);
-          WebKitDOMElement  *e = webkit_dom_document_create_element (d, theme.STYLE_NAME, &err);
 
-          WebKitDOMText *t = webkit_dom_document_create_text_node
-            (d, theme.thread_view_css.c_str());
-
-          webkit_dom_node_append_child (WEBKIT_DOM_NODE(e), WEBKIT_DOM_NODE(t), (err = NULL, &err));
-
-          WebKitDOMHTMLHeadElement * head = webkit_dom_document_get_head (d);
-          webkit_dom_node_append_child (WEBKIT_DOM_NODE(head), WEBKIT_DOM_NODE(e), (err = NULL, &err));
+          // TODO: Load CSS
 
           /* load code_prettify if enabled */
           if (enable_code_prettify) {
@@ -432,32 +421,12 @@ namespace Astroid {
             if (only_tags_ok) {
               code_is_on = true;
 
-              WebKitDOMElement * me = webkit_dom_document_create_element (d, "SCRIPT", (err = NULL, &err));
+              // TODO: Load code prettify
 
-              webkit_dom_element_set_attribute (me, "type", "text/javascript",
-                  (err = NULL, &err));
-              webkit_dom_element_set_attribute (me, "src", code_prettify_uri.c_str(),
-                  (err = NULL, &err));
-
-              webkit_dom_node_append_child (WEBKIT_DOM_NODE(head), WEBKIT_DOM_NODE(me), (err = NULL, &err));
-
-
-              g_object_unref (me);
+              /* webkit_dom_element_set_attribute (me, "src", code_prettify_uri.c_str(), */
+              /*     (err = NULL, &err)); */
             }
           }
-
-          /* get container for message divs */
-          container = WEBKIT_DOM_HTML_DIV_ELEMENT(webkit_dom_document_get_element_by_id (d, "message_container"));
-
-          if (container == NULL) {
-            LOG (warn) << "render: could not find container!";
-          }
-
-
-          g_object_unref (d);
-          g_object_unref (e);
-          g_object_unref (t);
-          g_object_unref (head);
 
           /* render */
           wk_loaded = true;
@@ -505,22 +474,23 @@ namespace Astroid {
       if (me == Message::MessageChangedEvent::MESSAGE_TAGS_CHANGED) {
         if (m->in_notmuch && m->tid == thread->thread_id) {
           LOG (debug) << "tv: got message updated.";
-
-          // the message is already refreshed internally
-
-          ustring mid = "message_" + m->mid;
-          WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
-          WebKitDOMElement * div_message = webkit_dom_document_get_element_by_id (d, mid.c_str());
+          // Note that the message has already been refreshed internally
 
           refptr<Message> _m = refptr<Message> (m);
           _m->reference (); // since m is owned by caller
 
+          // TODO: [JS] Update notmuch tags and update corresponding CSS tags
+
+          /*
+          ustring mid = "message_" + m->mid;
+          WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
+          WebKitDOMElement * div_message = webkit_dom_document_get_element_by_id (d, mid.c_str());
           message_render_tags (_m, div_message);
           message_update_css_tags (_m, div_message);
 
           g_object_unref (div_message);
           g_object_unref (d);
-
+          */
         }
       }
     }
