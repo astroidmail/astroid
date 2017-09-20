@@ -22,9 +22,9 @@
 
 namespace Astroid {
   extern "C" bool ThreadView_on_load_changed (
-          GtkWidget *,
-          GParamSpec *,
-          gpointer );
+      WebKitWebView * w,
+      WebKitLoadEvent load_event,
+      gpointer user_data);
 
   extern "C" gboolean ThreadView_permission_request (
       WebKitWebView * w,
@@ -212,8 +212,10 @@ namespace Astroid {
       void insert_header_date (ustring &, refptr<Message>);
       ustring create_header_row (ustring title, ustring value, bool important, bool escape, bool noprint = false);
       ustring header_row_value (ustring value, bool escape);
+      /*
       void message_render_tags (refptr<Message>, WebKitDOMElement * div_message);
       void message_update_css_tags (refptr<Message>, WebKitDOMElement * div_message);
+      */
 
       bool open_html_part_external;
       void display_part (refptr<Message>, refptr<Chunk>, MessageState::Element);
@@ -247,23 +249,23 @@ namespace Astroid {
 
       /* event wrappers */
       bool on_load_changed (
-          GtkWidget *,
-          GParamSpec *);
+        WebKitWebView * w,
+        WebKitLoadEvent load_event);
 
       void on_scroll_vadjustment_changed();
 
-     gboolean permission_request (
-        WebKitWebView * w,
-        WebKitPermissionRequest * request);
+      gboolean permission_request (
+          WebKitWebView * w,
+          WebKitPermissionRequest * request);
 
       ustring open_external_link;
       void open_link (ustring);
       void do_open_link (ustring);
 
-    gboolean decide_policy (
-        WebKitWebView * w,
-        WebKitPolicyDecision * decision,
-        WebKitPolicyDecisionType decision_type);
+      gboolean decide_policy (
+          WebKitWebView * w,
+          WebKitPolicyDecision * decision,
+          WebKitPolicyDecisionType decision_type);
 
       void grab_focus ();
 
