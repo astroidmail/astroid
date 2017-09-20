@@ -6,12 +6,11 @@
 # include <chrono>
 
 # include <gtkmm.h>
-# include <webkit/webkit.h>
+# include <webkit2/webkit2.h>
 # include <gio/gio.h>
 
 # include "thread_view.hh"
 # include "web_inspector.hh"
-# include "dom_utils.hh"
 # include "theme.hh"
 
 # include "main_window.hh"
@@ -70,39 +69,10 @@ namespace Astroid {
 
     pack_start (scroll, true, true, 0);
 
-    /* set up webkit web view (using C api) */
+    /* set up webkit web view */
     webview = WEBKIT_WEB_VIEW (webkit_web_view_new ());
 
-    /* dpi */
-    /*
-    WebKitViewportAttributes* attributes = webkit_web_view_get_viewport_attributes (webview);
-
-    gint dpi;
-    gfloat dpr;
-    g_object_get (G_OBJECT (attributes), "device-dpi", &dpi, NULL);
-    g_object_get (G_OBJECT (attributes), "device-pixel-ratio", &dpr, NULL);
-
-    LOG (debug) << "web: dpi: " << dpi << ", dpr: " << dpr;
-    auto win = get_screen ();
-    double gdpi = win->get_resolution ();
-
-    LOG (debug) << "gdk: dpi: " << gdpi;
-
-    g_object_set (G_OBJECT (attributes), "device-dpi", (int)gdpi, NULL);
-
-    webkit_viewport_attributes_recompute (attributes);
-
-    g_object_get (G_OBJECT (attributes), "device-dpi", &dpi, NULL);
-    g_object_get (G_OBJECT (attributes), "device-pixel-ratio", &dpr, NULL);
-
-    LOG (debug) << "web: dpi: " << dpi << ", dpr: " << dpr;
-
-    bool valid;
-    g_object_get (G_OBJECT (attributes), "valid", &valid, NULL);
-    LOG (debug) << "web: valid: " << valid;
-    */
-
-    websettings = WEBKIT_WEB_SETTINGS (webkit_web_settings_new ());
+    websettings = WEBKIT_SETTINGS (webkit_settings_new ());
     g_object_set (G_OBJECT(websettings),
         "enable-scripts", TRUE,
         "enable-java-applet", FALSE,
@@ -146,16 +116,12 @@ namespace Astroid {
     thread_view_inspector.setup (this);
 
     /* navigation requests */
-    g_signal_connect (webview, "navigation-policy-decision-requested",
-        G_CALLBACK(ThreadView_navigation_request),
+    g_signal_connect (webview, "permissions-request",
+        G_CALLBACK(ThreadView_permission_request),
         (gpointer) this);
 
-    g_signal_connect (webview, "new-window-policy-decision-requested",
-        G_CALLBACK(ThreadView_navigation_request),
-        (gpointer) this);
-
-    g_signal_connect (webview, "resource-request-starting",
-        G_CALLBACK(ThreadView_resource_request_starting),
+    g_signal_connect (webview, "decide-policy",
+        G_CALLBACK(ThreadView_decide_policy),
         (gpointer) this);
 
     /* scrolled window */
@@ -189,14 +155,8 @@ namespace Astroid {
 
   }
 
-  //
-
   ThreadView::~ThreadView () { //
     LOG (debug) << "tv: deconstruct.";
-    // TODO: possibly still some errors here in paned mode
-    //g_object_unref (webview); // probably garbage collected since it has a parent widget
-    //g_object_unref (websettings);
-    if (container) g_object_unref (container);
   }
 
   void ThreadView::pre_close () {
@@ -206,197 +166,156 @@ namespace Astroid {
 # endif
   }
 
-  //
-
   /* navigation requests  */
-  extern "C" void ThreadView_resource_request_starting (
-      WebKitWebView         *web_view,
-      WebKitWebFrame        *web_frame,
-      WebKitWebResource     *web_resource,
-      WebKitNetworkRequest  *request,
-      WebKitNetworkResponse *response,
-      gpointer               user_data) {
-
-    ((ThreadView*) user_data)->resource_request_starting (
-      web_view,
-      web_frame,
-      web_resource,
-      request,
-      response);
-  }
-
-  void ThreadView::resource_request_starting (
-      WebKitWebView         * /* web_view */,
-      WebKitWebFrame        * /* web_frame */,
-      WebKitWebResource     * /* web_resource */,
-      WebKitNetworkRequest  * request,
-      WebKitNetworkResponse * response) {
-
-    if (response != NULL) {
-      /* a previously handled request */
-      return;
-    }
-
-    const gchar * uri_c = webkit_network_request_get_uri (request);
-    ustring uri (uri_c);
-
-    // prefix of local uris for loading image thumbnails
-    vector<ustring> allowed_uris =
-      {
-        home_uri,
-        "data:image/png;base64",
-        "data:image/jpeg;base64",
-      };
-
-    if (enable_gravatar) {
-      allowed_uris.push_back ("https://www.gravatar.com/avatar/");
-    }
-
-    if (enable_code_prettify) {
-      allowed_uris.push_back (code_prettify_uri.substr (0, code_prettify_uri.rfind ("/")));
-    }
-
-# ifndef DISABLE_PLUGINS
-    /* get plugin allowed uris */
-    std::vector<ustring> puris = plugins->get_allowed_uris ();
-    if (puris.size() > 0) {
-      LOG (debug) << "tv: plugin allowed uris: " << VectorUtils::concat_tags (puris);
-      allowed_uris.insert (allowed_uris.end (), puris.begin (), puris.end ());
-    }
-# endif
-
-    // TODO: show cid type images and inline-attachments
-
-    /* is this request allowed */
-    if (find_if (allowed_uris.begin (), allowed_uris.end (),
-          [&](ustring &a) {
-            return (uri.substr (0, a.length ()) == a);
-          }) != allowed_uris.end ())
-    {
-
-      /* LOG (debug) << "tv: request: allowed: " << uri; */
-      return; // yes
-
-    } else {
-      if (show_remote_images) {
-        // TODO: use an approved-url (like geary) to only allow imgs, not JS
-        //       or other content.
-        LOG (warn) << "tv: remote images allowed, approving _all_ requests: " << uri;
-        return; // yes
-      } else {
-        LOG (debug)<< "tv: request: denied: " << uri;
-        webkit_network_request_set_uri (request, "about:blank"); // no
-      }
-    }
-  }
-
   void ThreadView::reload_images () {
-
-    GError * err = NULL;
-    WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
-
-    for (auto &m : mthread->messages) {
-
-      ustring div_id = "message_" + m->mid;
-      WebKitDOMElement * me = webkit_dom_document_get_element_by_id (d, div_id.c_str());
-
-      WebKitDOMNodeList * imgs = webkit_dom_element_query_selector_all (me, "img", (err = NULL, &err));
-
-      gulong l = webkit_dom_node_list_get_length (imgs);
-      for (gulong i = 0; i < l; i++) {
-
-        WebKitDOMNode * in = webkit_dom_node_list_item (imgs, i);
-        WebKitDOMElement * ine = WEBKIT_DOM_ELEMENT (in);
-
-        if (ine != NULL) {
-          gchar * src = webkit_dom_element_get_attribute (ine, "src");
-          if (src != NULL) {
-            webkit_dom_element_set_attribute (ine, "src", "", (err = NULL, &err));
-            webkit_dom_element_set_attribute (ine, "src", src, (err = NULL, &err));
-          }
-
-          // TODO: cid type images or attachment references are not loaded
-        }
-
-        g_object_unref (in);
-      }
-
-      g_object_unref (imgs);
-      g_object_unref (me);
-    }
-
-    g_object_unref (d);
+    /* TODO: [JS]: Reload all images */
   }
 
-  extern "C" gboolean ThreadView_navigation_request (
+  extern "C" gboolean ThreadView_permission_request (
       WebKitWebView * w,
-      WebKitWebFrame * frame,
-      WebKitNetworkRequest * request,
-      WebKitWebNavigationAction * navigation_action,
-      WebKitWebPolicyDecision * policy_decision,
+      WebKitPermissionRequest * request,
       gpointer user_data) {
 
-    return ((ThreadView*)user_data)->navigation_request (
-        w,
-        frame,
-        request,
-        navigation_action,
-        policy_decision);
+    return ((ThreadView*) user_data)->permission_request (w, request);
   }
 
-  gboolean ThreadView::navigation_request (
+  gboolean ThreadView::permission_request (
       WebKitWebView * /* w */,
-      WebKitWebFrame * /* frame */,
-      WebKitNetworkRequest * request,
-      WebKitWebNavigationAction * navigation_action,
-      WebKitWebPolicyDecision * policy_decision) {
+      WebKitPermissionRequest * request) {
 
-    if (webkit_web_navigation_action_get_reason (navigation_action)
-        == WEBKIT_WEB_NAVIGATION_REASON_LINK_CLICKED) {
+    /* these requests are typically full-screen or location requests */
+    webkit_permission_request_deny (request);
 
-      webkit_web_policy_decision_ignore (policy_decision);
+    return true;
+  }
 
-      const gchar * uri_c = webkit_network_request_get_uri (
-          request );
+  extern "C" gboolean ThreadView_decide_policy (
+      WebKitWebView * w,
+      WebKitPolicyDecision * decision,
+      WebKitPolicyDecisionType decision_type,
+      gpointer user_data) {
 
-      ustring uri (uri_c);
-      LOG (info) << "tv: navigating to: " << uri;
+    return ((ThreadView *) user_data)->decide_policy (w, decision, decision_type);
+  }
 
-      ustring scheme = Glib::uri_parse_scheme (uri);
+  gboolean ThreadView::decide_policy (
+      WebKitWebView * /* w */,
+      WebKitPolicyDecision *   decision,
+      WebKitPolicyDecisionType decision_type)
+  {
 
-      if (scheme == "mailto") {
+    switch (decision_type) {
+      case WEBKIT_POLICY_DECISION_TYPE_NAVIGATION_ACTION: // navigate to {{{
+        {
+          WebKitNavigationPolicyDecision * navigation_decision = WEBKIT_NAVIGATION_POLICY_DECISION (decision);
+          WebKitNavigationAction * nav_action = webkit_navigation_policy_decision_get_navigation_action (navigation_decision);
 
-        uri = uri.substr (scheme.length ()+1, uri.length () - scheme.length()-1);
-        UstringUtils::trim(uri);
+          webkit_policy_decision_ignore (decision);
 
-        main_window->add_mode (new EditMessage (main_window, uri));
+          if (webkit_navigation_action_get_navigation_type (nav_action)
+              == WEBKIT_NAVIGATION_TYPE_LINK_CLICKED) {
 
-      } else if (scheme == "id" || scheme == "mid" ) {
-        main_window->add_mode (new ThreadIndex (main_window, uri));
-
-      } else if (scheme == "http" || scheme == "https" || scheme == "ftp") {
-        open_link (uri);
-
-      } else {
-
-        LOG (error) << "tv: unknown uri scheme. not opening.";
-      }
-
-      return true;
-
-    } else {
-      LOG (info) << "tv: navigation action: " <<
-        webkit_web_navigation_action_get_reason (navigation_action);
+            const gchar * uri_c = webkit_uri_request_get_uri (
+                webkit_navigation_action_get_request (nav_action));
 
 
-      const gchar * uri_c = webkit_network_request_get_uri (
-          request );
+            ustring uri (uri_c);
+            LOG (info) << "tv: navigating to: " << uri;
 
-      ustring uri (uri_c);
-      LOG (info) << "tv: navigating to: " << uri;
+            ustring scheme = Glib::uri_parse_scheme (uri);
+
+            if (scheme == "mailto") {
+
+              uri = uri.substr (scheme.length ()+1, uri.length () - scheme.length()-1);
+              UstringUtils::trim(uri);
+
+              main_window->add_mode (new EditMessage (main_window, uri));
+
+            } else if (scheme == "id" || scheme == "mid" ) {
+              main_window->add_mode (new ThreadIndex (main_window, uri));
+
+            } else if (scheme == "http" || scheme == "https" || scheme == "ftp") {
+              open_link (uri);
+
+            } else {
+
+              LOG (error) << "tv: unknown uri scheme. not opening.";
+            }
+          }
+        } // }}}
+        break;
+
+      case WEBKIT_POLICY_DECISION_TYPE_NEW_WINDOW_ACTION:
+        webkit_policy_decision_ignore (decision);
+        break;
+
+      case WEBKIT_POLICY_DECISION_TYPE_RESPONSE: // {{{
+        {
+          /* request to load any resources or similar */
+          WebKitResponsePolicyDecision * response = WEBKIT_RESPONSE_POLICY_DECISION (decision);
+          WebKitURIRequest * request = webkit_response_policy_decision_get_request (response);
+
+          const gchar * uri_c = webkit_uri_request_get_uri (request);
+          ustring uri (uri_c);
+
+          // prefix of local uris for loading image thumbnails
+          vector<ustring> allowed_uris =
+            {
+              home_uri,
+              "data:image/png;base64",
+              "data:image/jpeg;base64",
+            };
+
+          if (enable_gravatar) {
+            allowed_uris.push_back ("https://www.gravatar.com/avatar/");
+          }
+
+          if (enable_code_prettify) {
+            allowed_uris.push_back (code_prettify_uri.substr (0, code_prettify_uri.rfind ("/")));
+          }
+
+# ifndef DISABLE_PLUGINS
+          /* get plugin allowed uris */
+          std::vector<ustring> puris = plugins->get_allowed_uris ();
+          if (puris.size() > 0) {
+            LOG (debug) << "tv: plugin allowed uris: " << VectorUtils::concat_tags (puris);
+            allowed_uris.insert (allowed_uris.end (), puris.begin (), puris.end ());
+          }
+# endif
+
+          // TODO: show cid type images and inline-attachments
+
+          /* is this request allowed */
+          if (find_if (allowed_uris.begin (), allowed_uris.end (),
+                [&](ustring &a) {
+                  return (uri.substr (0, a.length ()) == a);
+                }) != allowed_uris.end ())
+          {
+
+            /* LOG (debug) << "tv: request: allowed: " << uri; */
+            webkit_policy_decision_use (decision);
+
+          } else {
+            if (show_remote_images) {
+              // TODO: use an approved-url (like geary) to only allow imgs, not JS
+              //       or other content.
+              LOG (warn) << "tv: remote images allowed, approving _all_ requests: " << uri;
+              webkit_policy_decision_use (decision);
+            } else {
+              LOG (debug)<< "tv: request: denied: " << uri;
+              webkit_policy_decision_ignore (decision);
+              /* webkit_network_request_set_uri (request, "about:blank"); // no */
+            }
+          }
+        } // }}}
+        break;
+
+      default:
+        webkit_policy_decision_ignore (decision);
+        return true; // stop event
     }
 
-    return false;
+    return true; // stop event
   }
 
   void ThreadView::open_link (ustring uri) {
