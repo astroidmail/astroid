@@ -98,6 +98,25 @@ namespace Astroid {
 
     webkit_web_view_set_settings (webview, websettings);
 
+    /* content manager for adding theme and script */
+    webcontent = webkit_web_view_get_user_content_manager (webview);
+
+    /* add style sheet */
+    WebKitUserStyleSheet * style = webkit_user_style_sheet_new (
+        theme.thread_view_css.c_str(),
+        WEBKIT_USER_CONTENT_INJECT_ALL_FRAMES,
+        WEBKIT_USER_STYLE_LEVEL_AUTHOR,
+        NULL, NULL);
+    webkit_user_content_manager_add_style_sheet (webcontent, style);
+
+    /* add javascript library */
+    WebKitUserScript * js = webkit_user_script_new (
+        theme.thread_view_js.c_str (),
+        WEBKIT_USER_CONTENT_INJECT_ALL_FRAMES,
+        WEBKIT_USER_SCRIPT_INJECT_AT_DOCUMENT_START,
+        NULL, NULL);
+    webkit_user_content_manager_add_script (webcontent, js);
+
 
     gtk_container_add (GTK_CONTAINER (scroll.gobj()), GTK_WIDGET(webview));
 
@@ -395,10 +414,6 @@ namespace Astroid {
       case WEBKIT_LOAD_FINISHED:
         LOG (debug) << "tv: load finished.";
         {
-          /* load css style */
-
-          // TODO: Load CSS
-
           /* load code_prettify if enabled */
           if (enable_code_prettify) {
             bool only_tags_ok = false;
