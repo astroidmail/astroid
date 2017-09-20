@@ -496,6 +496,8 @@ namespace Astroid {
     }
   }
 
+  // TODO: [JS] [REIMPLEMENT]
+# if 0
   void ThreadView::message_update_css_tags (refptr<Message> m, WebKitDOMElement * div_message) {
     /* check for tag changes that control display */
     GError *err;
@@ -547,7 +549,10 @@ namespace Astroid {
 
     g_object_unref (class_list);
   }
+# endif
 
+  // TODO: [JS] [REIMPLEMENT]
+# if 0
   void ThreadView::message_render_tags (refptr<Message> m, WebKitDOMElement * div_message) {
     if (m->in_notmuch) {
       unsigned char cv[] = { 0xff, 0xff, 0xff };
@@ -583,7 +588,7 @@ namespace Astroid {
       g_object_unref (tags);
     }
   }
-
+# endif
   /* end message loading  */
 
   /* rendering  */
