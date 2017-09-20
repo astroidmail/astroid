@@ -12,14 +12,14 @@ namespace Astroid {
     thread_view = tv;
 
     /* set up web view inspector */
-    web_inspector = webkit_web_view_get_inspector (thread_view->webview);
-    g_signal_connect (web_inspector, "inspect-web-view",
-        G_CALLBACK(ThreadViewInspector_activate_inspector),
-        (gpointer) this);
+    /* web_inspector = webkit_web_view_get_inspector (thread_view->webview); */
+    /* g_signal_connect (web_inspector, "inspect-web-view", */
+    /*     G_CALLBACK(ThreadViewInspector_activate_inspector), */
+    /*     (gpointer) this); */
 
-    g_signal_connect (web_inspector, "show-window",
-        G_CALLBACK(ThreadViewInspector_show_inspector),
-        (gpointer) this);
+    /* g_signal_connect (web_inspector, "open-window", */
+    /*     G_CALLBACK(ThreadViewInspector_show_inspector), */
+    /*     (gpointer) this); */
   }
 
   extern "C" WebKitWebView * ThreadViewInspector_activate_inspector (

@@ -69,37 +69,10 @@ namespace Astroid {
 
     pack_start (scroll, true, true, 0);
 
-    /* set up webkit web view */
-    webview = WEBKIT_WEB_VIEW (webkit_web_view_new ());
-
-    websettings = WEBKIT_SETTINGS (webkit_settings_new ());
-    g_object_set (G_OBJECT(websettings),
-        "enable-scripts", TRUE,
-        "enable-java-applet", FALSE,
-        "enable-plugins", FALSE,
-        "auto-load-images", TRUE,
-        "enable-display-of-insecure-content", FALSE,
-        "enable-dns-prefetching", FALSE,
-        "enable-fullscreen", FALSE,
-        "enable-html5-database", FALSE,
-        "enable-html5-local-storage", FALSE,
-     /* "enable-mediastream", FALSE, */
-        "enable-mediasource", FALSE,
-        "enable-offline-web-application-cache", FALSE,
-        "enable-page-cache", FALSE,
-        "enable-private-browsing", TRUE,
-        "enable-running-of-insecure-content", FALSE,
-        "enable-display-of-insecure-content", FALSE,
-        "enable-xss-auditor", TRUE,
-        "media-playback-requires-user-gesture", TRUE,
-        "enable-developer-extras", TRUE, // TODO: should only enabled conditionally
-
-        NULL);
-
-    webkit_web_view_set_settings (webview, websettings);
+    /* WebKit: set up webkit web view */
 
     /* content manager for adding theme and script */
-    webcontent = webkit_web_view_get_user_content_manager (webview);
+    webcontent = webkit_user_content_manager_new ();
 
     /* add style sheet */
     WebKitUserStyleSheet * style = webkit_user_style_sheet_new (
@@ -117,6 +90,27 @@ namespace Astroid {
         NULL, NULL);
     webkit_user_content_manager_add_script (webcontent, js);
 
+    webview    = WEBKIT_WEB_VIEW (webkit_web_view_new_with_user_content_manager (webcontent));
+
+    websettings = WEBKIT_SETTINGS (webkit_settings_new_with_settings (
+        "enable-javascript", TRUE,
+        "enable-java", FALSE,
+        "enable-plugins", FALSE,
+        "auto-load-images", TRUE,
+        "enable-dns-prefetching", FALSE,
+        "enable-fullscreen", FALSE,
+        "enable-html5-database", FALSE,
+        "enable-html5-local-storage", FALSE,
+        "enable-mediasource", FALSE,
+        "enable-offline-web-application-cache", FALSE,
+        "enable-page-cache", FALSE,
+        "enable-private-browsing", TRUE,
+        "enable-xss-auditor", TRUE,
+        "media-playback-requires-user-gesture", TRUE,
+        "enable-developer-extras", TRUE, // TODO: should only enabled conditionally
+        NULL));
+
+    webkit_web_view_set_settings (webview, websettings);
 
     gtk_container_add (GTK_CONTAINER (scroll.gobj()), GTK_WIDGET(webview));
 
@@ -135,9 +129,9 @@ namespace Astroid {
     thread_view_inspector.setup (this);
 
     /* navigation requests */
-    g_signal_connect (webview, "permissions-request",
-        G_CALLBACK(ThreadView_permission_request),
-        (gpointer) this);
+    /* g_signal_connect (webview, "permissions-request", */
+    /*     G_CALLBACK(ThreadView_permission_request), */
+    /*     (gpointer) this); */
 
     g_signal_connect (webview, "decide-policy",
         G_CALLBACK(ThreadView_decide_policy),
@@ -203,7 +197,7 @@ namespace Astroid {
       WebKitPermissionRequest * request) {
 
     /* these requests are typically full-screen or location requests */
-    webkit_permission_request_deny (request);
+    webkit_permission_request_allow (request);
 
     return true;
   }
@@ -229,10 +223,14 @@ namespace Astroid {
           WebKitNavigationPolicyDecision * navigation_decision = WEBKIT_NAVIGATION_POLICY_DECISION (decision);
           WebKitNavigationAction * nav_action = webkit_navigation_policy_decision_get_navigation_action (navigation_decision);
 
-          webkit_policy_decision_ignore (decision);
+
+          // TODO: [W2]: should this request be used or ignored? Currently ignoring if we
+          //             handle ourselves.
 
           if (webkit_navigation_action_get_navigation_type (nav_action)
               == WEBKIT_NAVIGATION_TYPE_LINK_CLICKED) {
+
+            webkit_policy_decision_ignore (decision);
 
             const gchar * uri_c = webkit_uri_request_get_uri (
                 webkit_navigation_action_get_request (nav_action));
@@ -330,11 +328,13 @@ namespace Astroid {
         break;
 
       default:
-        webkit_policy_decision_ignore (decision);
-        return true; // stop event
+        /* webkit_policy_decision_ignore (decision); */
+        /* return true; // stop event */
+        // TODO: [W2] when do we ignore and when do we use?
+        return false;
     }
 
-    return true; // stop event
+    return false; // stop event
   }
 
   void ThreadView::open_link (ustring uri) {
@@ -629,6 +629,9 @@ namespace Astroid {
       LOG (error) << "tv: web kit not loaded.";
       return;
     }
+
+    /* test JS */
+    webkit_web_view_run_javascript (webview, "testJs();", NULL, NULL, NULL);
 
     /* set message state vector */
     state.clear ();
