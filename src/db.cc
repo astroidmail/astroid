@@ -271,8 +271,9 @@ namespace Astroid {
   ustring Db::add_message_with_tags (ustring fname, vector<ustring> tags) {
     notmuch_message_t * msg;
 
-    notmuch_status_t s = notmuch_database_add_message (nm_db,
+    notmuch_status_t s = notmuch_database_index_file (nm_db,
         fname.c_str (),
+        notmuch_database_get_default_indexopts (nm_db),
         &msg);
 
     if ((s != NOTMUCH_STATUS_SUCCESS) && (s != NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID)) {
