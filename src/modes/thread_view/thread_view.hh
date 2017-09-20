@@ -7,7 +7,8 @@
 # include <chrono>
 
 # include <gtkmm.h>
-# include <webkit/webkit.h>
+# include <webkit2/webkit2.h>
+# include <webkitdom/webkitdom.h>
 
 # include "proto.hh"
 # include "modes/mode.hh"
@@ -25,21 +26,16 @@ namespace Astroid {
           GParamSpec *,
           gpointer );
 
-  extern "C" gboolean ThreadView_navigation_request (
+  extern "C" gboolean ThreadView_permission_request (
       WebKitWebView * w,
-      WebKitWebFrame * frame,
-      WebKitNetworkRequest * request,
-      WebKitWebNavigationAction * navigation_action,
-      WebKitWebPolicyDecision * policy_decision,
+      WebKitPermissionRequest * request,
       gpointer user_data);
 
-  extern "C" void ThreadView_resource_request_starting (
-      WebKitWebView         *web_view,
-      WebKitWebFrame        *web_frame,
-      WebKitWebResource     *web_resource,
-      WebKitNetworkRequest  *request,
-      WebKitNetworkResponse *response,
-      gpointer               user_data);
+  extern "C" gboolean ThreadView_decide_policy (
+      WebKitWebView * w,
+      WebKitPolicyDecision * decision,
+      WebKitPolicyDecisionType decision_type,
+      gpointer user_data);
 
   class ThreadView : public Mode {
     friend class ThreadViewInspector;
@@ -192,13 +188,11 @@ namespace Astroid {
 
       bool element_action (ElementAction);
 
-      /* webkit (using C api) */
+      /* webkit */
       WebKitWebView     * webview;
-      WebKitWebSettings * websettings;
+      WebKitSettings *    websettings;
 
     private:
-      WebKitDOMHTMLDivElement * container = NULL;
-
       std::atomic<bool> wk_loaded;
 
       /* rendering */
@@ -258,25 +252,18 @@ namespace Astroid {
 
       void on_scroll_vadjustment_changed();
 
-
-      gboolean navigation_request (
+     gboolean permission_request (
         WebKitWebView * w,
-        WebKitWebFrame * frame,
-        WebKitNetworkRequest * request,
-        WebKitWebNavigationAction * navigation_action,
-        WebKitWebPolicyDecision * policy_decision);
+        WebKitPermissionRequest * request);
 
       ustring open_external_link;
       void open_link (ustring);
       void do_open_link (ustring);
 
-      void resource_request_starting (
-        WebKitWebView         *web_view,
-        WebKitWebFrame        *web_frame,
-        WebKitWebResource     *web_resource,
-        WebKitNetworkRequest  *request,
-        WebKitNetworkResponse *response);
-
+    gboolean decide_policy (
+        WebKitWebView * w,
+        WebKitPolicyDecision * decision,
+        WebKitPolicyDecisionType decision_type);
 
       void grab_focus ();
 
