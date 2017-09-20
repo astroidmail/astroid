@@ -611,8 +611,6 @@ namespace Astroid {
   /* general message adding and rendering  */
   void ThreadView::render () {
     LOG (info) << "render: loading html..";
-    if (container) g_object_unref (container);
-    container = NULL;
     wk_loaded = false;
 
     /* home uri used for thread view - request will be relative this
@@ -621,14 +619,14 @@ namespace Astroid {
         astroid->standard_paths ().config_dir.c_str(),
         UstringUtils::random_alphanumeric (120));
 
-    webkit_web_view_load_html_string (webview, theme.thread_view_html.c_str (), home_uri.c_str());
-    ready     = false;
+    ready = false;
+    webkit_web_view_load_html (webview, theme.thread_view_html.c_str (), home_uri.c_str());
   }
 
   void ThreadView::render_messages () {
     LOG (debug) << "render: html loaded, building messages..";
-    if (!container || !wk_loaded) {
-      LOG (error) << "tv: div container and web kit not loaded.";
+    if (!wk_loaded) {
+      LOG (error) << "tv: web kit not loaded.";
       return;
     }
 
