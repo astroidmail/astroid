@@ -189,8 +189,9 @@ namespace Astroid {
       bool element_action (ElementAction);
 
       /* webkit */
-      WebKitWebView     * webview;
+      WebKitWebView *     webview;
       WebKitSettings *    websettings;
+      WebKitUserContentManager * webcontent;
 
     private:
       std::atomic<bool> wk_loaded;
