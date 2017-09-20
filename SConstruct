@@ -206,8 +206,8 @@ else:
   print "gmime not found."
   Exit (1)
 
-if not conf.CheckPKG('webkitgtk-3.0'):
-  print "webkitgtk not found."
+if not conf.CheckPKG('webkit2gtk-4.0'):
+  print "webkit2gtk not found."
   Exit (1)
 
 if not disable_terminal:
@@ -282,7 +282,7 @@ env.ParseConfig ('pkg-config --libs --cflags glibmm-2.4')
 env.ParseConfig ('pkg-config --libs --cflags gtkmm-3.0')
 
 
-env.ParseConfig ('pkg-config --libs --cflags webkitgtk-3.0')
+env.ParseConfig ('pkg-config --libs --cflags webkit2gtk-4.0')
 if not disable_libsass:
   env.ParseConfig ('pkg-config --libs --cflags libsass')
 if not disable_terminal:
