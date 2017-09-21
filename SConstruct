@@ -480,7 +480,8 @@ idir_icon       = os.path.join (prefix, 'share/icons/hicolor')
 inst_bin = env.Install (idir_bin, astroid)
 inst_shr = env.Install (idir_ui,  Glob ('ui/*.glade') +
                                   Glob ('ui/*.png') +
-                                  Glob ('ui/*.html'))
+                                  Glob ('ui/*.html') +
+                                  Glob ('ui/*.js'))
 
 # icons are installed in two locations
 inst_shr += env.Install (os.path.join(idir_ui, 'icons'),  Glob ('ui/icons/*'))
