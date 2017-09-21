@@ -1,4 +1,4 @@
-== **
+== v.10 / 2017-09-21
 
 * Support GMime 3 with backwards compatability with GMime 2. This orients us
   towards GMime 3, and support for GMime 2 will be dropped in the future.
