@@ -431,6 +431,7 @@ print "    scss .....: ", scss, "( use:", disable_libsass, ")"
 print "    plugins ..: ", (not disable_plugins)
 print "    terminal .: ", (not disable_terminal)
 print "    embedded .: ", (not disable_embedded)
+print "    gmime ....: ", gmime_version
 print "    prefix ...: ", prefix
 print ""
 
