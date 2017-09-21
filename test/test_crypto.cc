@@ -288,6 +288,56 @@ BOOST_AUTO_TEST_SUITE(GPGEncryption)
     teardown ();
   }
 
+  BOOST_AUTO_TEST_CASE (decrypt_entire_message)
+  {
+    using Astroid::ComposeMessage;
+    using Astroid::Account;
+    using Astroid::Message;
+    setup ();
+
+    Account a = astroid->accounts->accounts[0];
+    LOG (trace) << "cy: account gpg: " << a.gpgkey;
+    a.email = "gaute@astroidmail.bar";
+
+    ComposeMessage * c = new ComposeMessage ();
+    c->set_from (&a);
+    c->set_to ("astrid@astroidmail.bar");
+    c->encrypt =  true;
+    c->sign = false;
+
+    ustring bdy = "This is test: æøå.\n > testing\ntesting\n...";
+
+    c->body << bdy;
+
+    c->build ();
+    c->finalize ();
+    ustring fn = c->write_tmp ();
+
+    BOOST_CHECK_MESSAGE (c->encryption_success == true, "encryption should be successful");
+
+    LOG (test) << "cm: encrypted content: ";
+    LOG (test) << g_mime_object_to_string (GMIME_OBJECT(c->message), NULL);
+
+    delete c;
+
+    Message m (fn);
+    ustring rbdy = m.viewable_text (false);
+
+    BOOST_CHECK_MESSAGE (bdy == rbdy, "message reading produces the same output as compose message input");
+
+    /* Try to get a decrypted version of the message */
+    GMimeMessage * _dm = m.decrypt ();
+    BOOST_CHECK (_dm != NULL);
+    Message dm (_dm);
+
+    LOG (test) << "cm: decrypted content: ";
+    LOG (test) << g_mime_object_to_string (GMIME_OBJECT (_dm), NULL);
+
+    unlink (fn.c_str ());
+
+    teardown ();
+  }
+
   BOOST_AUTO_TEST_CASE (crypto_md5)
   {
     using Astroid::Crypto;

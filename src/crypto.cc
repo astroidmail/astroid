@@ -124,6 +124,63 @@ namespace Astroid {
     return dp;
   }
 
+  GMimeMessage * Crypto::decrypt_message (GMimeMessage * in) {
+    GMimeStream * ins = GMIME_STREAM (g_mime_stream_mem_new ());
+
+    g_mime_object_write_to_stream (GMIME_OBJECT(in), NULL, ins);
+    g_mime_stream_seek (ins, 0, GMIME_STREAM_SEEK_SET);
+
+    GError * err = NULL;
+    GMimeStream * outs = GMIME_STREAM (g_mime_stream_mem_new ());
+
+    GMimeDecryptResult * decrypt_res = g_mime_crypto_context_decrypt (gpgctx, GMIME_DECRYPT_NONE, NULL,
+        ins, outs, &err);
+
+    g_mime_stream_flush (outs);
+    g_mime_stream_seek (outs, 0, GMIME_STREAM_SEEK_SET);
+
+    g_object_unref (ins);
+
+    /* check if message */
+    GMimeParser * parser = g_mime_parser_new_with_stream (outs);
+    GMimeMessage * dp = g_mime_parser_construct_message (parser, NULL);
+    g_object_unref (parser);
+    g_object_unref (outs);
+
+    if (decrypt_res) {
+      rlist = g_mime_decrypt_result_get_recipients (decrypt_res);
+      slist = g_mime_decrypt_result_get_signatures (decrypt_res);
+
+      for (int i = 0; i < g_mime_certificate_list_length (rlist); i++) {
+
+        GMimeCertificate * ce = g_mime_certificate_list_get_certificate (rlist, i);
+
+        const char * c = NULL;
+        ustring fp = (c = g_mime_certificate_get_fingerprint (ce), c ? c : "");
+        ustring nm = (c = g_mime_certificate_get_name (ce), c ? c : "");
+        ustring em = (c = g_mime_certificate_get_email (ce), c ? c : "");
+        ustring key = (c = g_mime_certificate_get_key_id (ce), c ? c : "");
+
+        LOG (debug) << "cr: encrypted for: " << nm << "(" << em << ") [" << fp << "] [" << key << "]";
+      }
+    }
+
+    if (dp == NULL) {
+      LOG (error) << "crypto: failed to decrypt message: " << err->message;
+      decrypted = false;
+      decrypt_error = err->message;
+
+    } else {
+      LOG (info) << "crypto: successfully decrypted message.";
+      decrypted = true;
+
+      verify_tried = (slist != NULL);
+      verified = verify_signature_list (slist);
+    }
+
+    return dp;
+  }
+
   bool Crypto::verify_signature (GMimeObject * mo) {
     GError * err = NULL;
 

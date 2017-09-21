@@ -19,6 +19,7 @@ namespace Astroid {
       bool isgpg = false;
 
       GMimeObject * decrypt_and_verify (GMimeObject * mo);
+      GMimeMessage * decrypt_message (GMimeMessage * in);
 
       bool verify_signature (GMimeObject * mo);
 
@@ -38,6 +39,7 @@ namespace Astroid {
                     GError **);
 
       bool sign (GMimeObject * mo, ustring userid, GMimeMultipartSigned ** s, GError **);
+
 
       bool decrypted        = false;
       bool verified         = false; /* signature ok */

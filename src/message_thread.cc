@@ -663,6 +663,12 @@ namespace Astroid {
     return _f;
   }
 
+  GMimeMessage * Message::decrypt () {
+    Crypto c ("application/pgp-encrypted");
+
+    return c.decrypt_message (message);
+  }
+
   void Message::save () {
     if (missing_content) {
       LOG (error) << "message: missing content, can't save.";
