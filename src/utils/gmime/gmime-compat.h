@@ -51,7 +51,9 @@ void g_mime_message_add_mailbox (GMimeMessage * msg, GMimeAddressType, const cha
 /************************
  * Crypto
  ************************/
+# define GMIME_DECRYPT_NONE NULL
 # define g_mime_multipart_encrypted_decrypt(mpe, _de, _f, out, err) g_mime_multipart_encrypted_decrypt(mpe,gpgctx,out,err)
+# define g_mime_crypto_context_decrypt(g, dopt, skey, is, os, err) g_mime_crypto_context_decrypt(g, is, os, err)
 
 # define g_mime_multipart_signed_verify(mps, _e, err) g_mime_multipart_signed_verify(mps,gpgctx,err)
 
