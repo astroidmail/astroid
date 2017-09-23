@@ -169,7 +169,7 @@ namespace Astroid {
        *  + There can only be one read-write db open at the time.
        *
        *  + It is not possible to have read-only db's open when there is a
-       *    read-only db open.
+       *    read-write db open.
        *
        * If you open one read-only db, and try to open a read-write db in the
        * same thread without closing the read-only db there will be a deadlock.
