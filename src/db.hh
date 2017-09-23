@@ -23,9 +23,10 @@
 # define notmuch_query_count_threads(x,y) notmuch_query_count_threads_st(x,y)
 # define notmuch_query_search_messages(x,y) notmuch_query_search_messages_st(x,y)
 # define notmuch_query_count_messages(x,y) notmuch_query_count_messages_st(x,y)
-# if (LIBNOTMUCH_MINOR_VERSION < 1)
+# endif
+
+# ifndef HAVE_NOTMUCH_INDEX_FILE
 # define notmuch_database_index_file(d,f,o,m) notmuch_database_add_message(d,f,m)
-# endif 
 # endif
 
 namespace Astroid {

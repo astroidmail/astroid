@@ -261,6 +261,22 @@ if not conf.CheckLibWithHeader ('notmuch', 'notmuch.h', 'c'):
   print "notmuch does not seem to be installed."
   Exit (1)
 
+
+n_index_src = """
+# include <notmuch.h>
+
+int main () {
+  notmuch_database_t * db;
+  notmuch_message_t  * m;
+  notmuch_database_index_file (db, "asdf", notmuch_database_get_default_indexopts (db), &m);
+
+  return 0;
+}
+"""
+
+if conf.CheckNotmuch ("notmuch_database_index_file", n_index_src):
+  env.AppendUnique (CPPFLAGS = [ '-DHAVE_NOTMUCH_INDEX_FILE' ])
+
 # external libraries
 env.ParseConfig ('pkg-config --libs --cflags glibmm-2.4')
 env.ParseConfig ('pkg-config --libs --cflags gtkmm-3.0')
