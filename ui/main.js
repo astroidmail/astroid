@@ -3,4 +3,5 @@
   * Must be concated into the bundle at the very end.
   */
 Astroid.init()
-AstroidStubs.init()
+
+// AstroidStubs.init()

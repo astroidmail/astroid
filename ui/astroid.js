@@ -195,10 +195,19 @@ ${BRACKET_OPEN}${address}${BRACKET_CLOSE}</a>`
 
   const EmailView = (props) => hx`
   <div id="message_container">
-  ${console.log(props)}
   ${props.messages.map((message) => h(EmailMessage, { message }))}
   </div>
   `
+  /* --------
+   * Logging helpers
+   * --------
+   */
+
+  const log = {
+    info() {
+      console.log(`[Astroid::${R.head(arguments)}]`, ...R.tail(arguments))
+    }
+  }
 
   /* --------
    * State management
@@ -206,6 +215,22 @@ ${BRACKET_OPEN}${address}${BRACKET_CLOSE}</a>`
    */
   const State = {
     messages: []
+  }
+
+  const cleanMessage = (message) => {
+    const cleanedMessage = R.clone(message);
+
+    if(!Array.isArray(message.cc))
+      cleanedMessage.cc = undefined;
+
+    if(!Array.isArray(message.bcc))
+      cleanedMessage.cc = undefined;
+
+    if(!Array.isArray(message.to))
+      cleanedMessage.to = undefined;
+
+    return cleanedMessage;
+
   }
 
   /* --------
@@ -259,6 +284,7 @@ ${BRACKET_OPEN}${address}${BRACKET_CLOSE}</a>`
      * Initialize the Astroid System and UI
      */
     init() {
+      log.info('init');
       this.render()
     },
 
@@ -266,6 +292,7 @@ ${BRACKET_OPEN}${address}${BRACKET_CLOSE}</a>`
      * Force a re-render of the UI
      */
     render() {
+      log.info('render');
       preact.render(h(EmailView, State), document.body, document.body.lastChild)
     },
 
@@ -275,7 +302,10 @@ ${BRACKET_OPEN}${address}${BRACKET_CLOSE}</a>`
      * @return {void}
      */
     add_message(message) {
-      State.messages = R.append(message, State.messages)
+      log.info('add_message', 'received', message);
+      const cleanedMessage = cleanMessage(message);
+      log.info('add_message', 'cleaned', cleanedMessage);
+      State.messages = R.append(cleanedMessage, State.messages)
       this.render()
     },
 
@@ -284,6 +314,7 @@ ${BRACKET_OPEN}${address}${BRACKET_CLOSE}</a>`
      * @return {void}
      */
     clear_messages() {
+      log.info('clear_messages');
       State.messages = []
       this.render()
     }
