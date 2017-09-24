@@ -26,7 +26,7 @@ using namespace boost::filesystem;
 namespace Astroid {
   std::atomic<bool> Theme::theme_loaded (false);
   const char * Theme::thread_view_html_f = "ui/thread-view.html";
-  const char * Theme::thread_view_js_f   = "ui/thread-view.js";
+  const char * Theme::thread_view_js_f   = "ui/bundle.min.js";
 # ifndef DISABLE_LIBSASS
   const char * Theme::thread_view_scss_f  = "ui/thread-view.scss";
 # else
