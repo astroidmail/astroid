@@ -1,5 +1,5 @@
 CLOSURE_ARGS    ?= --warning_level=DEFAULT
-CLOSURECOMPILER ?= java -jar ./compiler/closure-compiler-*.jar
+CLOSURECOMPILER ?= closure-compiler
 
 ASTROID_JS      := astroid.js email-css.js stub.js main.js
 CLOSURE_JS_ARGS := $(addprefix --js , $(ASTROID_JS))
