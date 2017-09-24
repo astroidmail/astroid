@@ -8,6 +8,7 @@
 # include <gtkmm.h>
 # include <webkit2/webkit2.h>
 # include <gio/gio.h>
+# include <boost/property_tree/ptree.hpp>
 
 # include "thread_view.hh"
 # include "web_inspector.hh"
@@ -41,6 +42,7 @@
 # include "theme.hh"
 
 using namespace std;
+using boost::property_tree::ptree;
 
 namespace Astroid {
 
@@ -632,7 +634,6 @@ namespace Astroid {
       return;
     }
 
-    /* test JS */
     webkit_web_view_run_javascript (webview, theme.thread_view_js.c_str (), NULL, NULL, NULL);
 
     /* set message state vector */
@@ -650,6 +651,8 @@ namespace Astroid {
                       sigc::mem_fun (this, &ThreadView::on_message_changed));
                 }
               });
+
+    webkit_web_view_run_javascript (webview, "Astroid.render();", NULL, NULL, NULL);
 
     update_all_indent_states ();
 
@@ -723,8 +726,76 @@ namespace Astroid {
 
   // TODO: [JS] [REIMPLEMENT]
   void ThreadView::add_message (refptr<Message> m) {
-# if 0
     LOG (debug) << "tv: adding message: " << m->mid;
+
+    ptree mjs;
+    mjs.put ("id", m->mid);
+
+    Address sender (m->sender);
+    mjs.put ("from.address", sender.email ());
+    mjs.put ("from.name", sender.fail_safe_name ());
+
+    ptree to_node; // list of objects
+    for (Address &recipient: AddressList(m->to()).addresses) {
+      ptree contact_node; // Contact object
+      contact_node.put ("address", recipient.email ());
+      contact_node.put ("name", recipient.fail_safe_name ());
+      to_node.push_back(std::make_pair("", contact_node));
+    }
+    mjs.add_child("to", to_node);
+
+    ptree cc_node; // list of objects
+    for (Address &recipient: AddressList(m->cc()).addresses) {
+      ptree contact_node; // Contact object
+      contact_node.put ("address", recipient.email ());
+      contact_node.put ("name", recipient.fail_safe_name ());
+      cc_node.push_back(std::make_pair("", contact_node));
+    }
+    mjs.add_child("cc", cc_node);
+
+    ptree bcc_node; // list of objects
+    for (Address &recipient: AddressList(m->bcc()).addresses) {
+      ptree contact_node; // Contact object
+      contact_node.put ("address", recipient.email ());
+      contact_node.put ("name", recipient.fail_safe_name ());
+      bcc_node.push_back(std::make_pair("", contact_node));
+    }
+    mjs.add_child("bcc", bcc_node);
+
+    mjs.put("date.pretty", m->pretty_date ());
+    mjs.put("date.verbose",  m->pretty_verbose_date (true));
+    mjs.put("date.timestamp", "");
+
+    mjs.put("subject", m->subject);
+    mjs.put("gravatar", "");
+
+    ptree tags_node;
+    for (ustring &tag : m->tags) {
+      ptree tag_node;
+      tag_node.put ("label", tag);
+      tags_node.push_back(std::make_pair("", tag_node));
+    }
+    mjs.add_child("tags", tags_node);
+
+    mjs.put("focused", false);
+    mjs.put("missing_content", m->missing_content);
+
+    mjs.put("preview", "this is the preview");
+    mjs.put("body", "this is the body. <strong>it can have html</strong>");
+
+
+    std::stringstream js;
+    js << "Astroid.add_message(";
+    write_json (js, mjs);
+    js << ");";
+
+    LOG (debug) << "tv: js:" << js.str ();
+
+    webkit_web_view_run_javascript (webview, js.str ().c_str (), NULL, NULL, NULL);
+
+
+
+# if 0
 
     ustring div_id = "message_" + m->mid;
 
