@@ -333,6 +333,10 @@ BOOST_AUTO_TEST_SUITE(GPGEncryption)
     LOG (test) << "cm: decrypted content: ";
     LOG (test) << g_mime_object_to_string (GMIME_OBJECT (_dm), NULL);
 
+    ustring dec (g_mime_object_to_string (GMIME_OBJECT (_dm), NULL));
+    BOOST_CHECK (dec.find ("This is test") != std::string::npos);
+
+
     unlink (fn.c_str ());
 
     teardown ();
