@@ -77,18 +77,20 @@ namespace Astroid {
     /* add style sheet */
     WebKitUserStyleSheet * style = webkit_user_style_sheet_new (
         theme.thread_view_css.c_str(),
-        WEBKIT_USER_CONTENT_INJECT_ALL_FRAMES,
+        WEBKIT_USER_CONTENT_INJECT_TOP_FRAME,
         WEBKIT_USER_STYLE_LEVEL_AUTHOR,
         NULL, NULL);
     webkit_user_content_manager_add_style_sheet (webcontent, style);
 
     /* add javascript library */
+    /*
     WebKitUserScript * js = webkit_user_script_new (
         theme.thread_view_js.c_str (),
         WEBKIT_USER_CONTENT_INJECT_ALL_FRAMES,
         WEBKIT_USER_SCRIPT_INJECT_AT_DOCUMENT_START,
         NULL, NULL);
     webkit_user_content_manager_add_script (webcontent, js);
+    */
 
     webview    = WEBKIT_WEB_VIEW (webkit_web_view_new_with_user_content_manager (webcontent));
 
@@ -631,7 +633,7 @@ namespace Astroid {
     }
 
     /* test JS */
-    webkit_web_view_run_javascript (webview, "testJs();", NULL, NULL, NULL);
+    webkit_web_view_run_javascript (webview, theme.thread_view_js.c_str (), NULL, NULL, NULL);
 
     /* set message state vector */
     state.clear ();
