@@ -217,11 +217,42 @@ ${BRACKET_OPEN}${address}${BRACKET_CLOSE}</a>`
   window['Astroid'] = {
 
     /**
-     * @typedef {{
-     *            id:string,
-     *            from: Contact,
-     *            foobar:number|string
-     *          }}
+     * A notmuch tag
+     * @typedef {Object} Tag
+     * @property {string} label
+     */
+
+    /**
+     * A contact can be the sender or recipient of a message
+     * @typedef {Object} Contact
+     * @property {string} address
+     * @property {string|undefined} name
+     */
+
+    /**
+     * An object containing a date in useful formats
+     * @typedef {Object} AstroidDate
+     * @property {string} pretty
+     * @property {string} verbose
+     * @property {Number} timestamp
+     */
+
+    /**
+     * An email message as represented by Astroid
+     * @typedef {Object} Message
+     * @property {string} id
+     * @property {Contact} from
+     * @property {Array.<Contact>} to
+     * @property {Array.<Contact>} cc
+     * @property {Array.<Contact>} bcc
+     * @property {AstroidDate} date
+     * @property {String} subject
+     * @property {String} gravatar
+     * @property {Array.<Tag>} tags
+     * @property {boolean} focused - whether the message is focused
+     * @property {boolean} missing_content - whether the message is missing content
+     * @property {string} preview
+     * @property {string} body - an html string
      */
 
     /**
