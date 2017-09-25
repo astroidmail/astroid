@@ -779,6 +779,7 @@ namespace Astroid {
     mjs.add_child ("tags", tags_node);
 
 
+    /* avatar */
     {
       ustring uri = "";
       auto se = Address(m->sender);
@@ -801,7 +802,22 @@ namespace Astroid {
     mjs.put("focused", false);
     mjs.put("missing_content", m->missing_content);
 
-    mjs.put("preview", "this is the preview");
+    /* preview */
+    ustring bp = m->viewable_text (false, false);
+    if (static_cast<int>(bp.size()) > MAX_PREVIEW_LEN)
+      bp = bp.substr(0, MAX_PREVIEW_LEN - 3) + "...";
+
+    while (true) {
+      size_t i = bp.find ("<br>");
+
+      if (i == ustring::npos) break;
+
+      bp.erase (i, 4);
+    }
+
+    bp = Glib::Markup::escape_text (bp);
+    mjs.put("preview", bp);
+
     mjs.put("body", "this is the body. <strong>it can have html</strong>");
 
 
