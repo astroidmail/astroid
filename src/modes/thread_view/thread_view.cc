@@ -767,15 +767,36 @@ namespace Astroid {
     mjs.put("date.timestamp", "");
 
     mjs.put("subject", m->subject);
-    mjs.put("gravatar", "");
 
     ptree tags_node;
-    for (ustring &tag : m->tags) {
-      ptree tag_node;
-      tag_node.put ("label", tag);
-      tags_node.push_back(std::make_pair("", tag_node));
+    if (m->in_notmuch) {
+      for (ustring &tag : m->tags) {
+        ptree tag_node;
+        tag_node.put ("label", tag);
+        tags_node.push_back(std::make_pair("", tag_node));
+      }
     }
-    mjs.add_child("tags", tags_node);
+    mjs.add_child ("tags", tags_node);
+
+
+    {
+      ustring uri = "";
+      auto se = Address(m->sender);
+# ifdef DISABLE_PLUGINS
+      if (false) {
+# else
+      if (plugins->get_avatar_uri (se.email (), Gravatar::DefaultStr[Gravatar::Default::RETRO], 48, m, uri)) {
+# endif
+        ; // all fine, use plugins avatar
+      } else {
+        if (enable_gravatar) {
+          uri = Gravatar::get_image_uri (se.email (),Gravatar::Default::RETRO , 48);
+        }
+      }
+
+      mjs.put("gravatar", uri);
+    }
+
 
     mjs.put("focused", false);
     mjs.put("missing_content", m->missing_content);
