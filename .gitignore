@@ -28,3 +28,7 @@ girmain
 # generated from tests run in a chroot
 tmp-*
 
+
+ui/bundle*js
+ui/vendor/*
+ui/*compiler*

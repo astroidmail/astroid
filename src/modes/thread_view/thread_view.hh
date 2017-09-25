@@ -7,7 +7,8 @@
 # include <chrono>
 
 # include <gtkmm.h>
-# include <webkit/webkit.h>
+# include <webkit2/webkit2.h>
+# include <webkitdom/webkitdom.h>
 
 # include "proto.hh"
 # include "modes/mode.hh"
@@ -21,25 +22,20 @@
 
 namespace Astroid {
   extern "C" bool ThreadView_on_load_changed (
-          GtkWidget *,
-          GParamSpec *,
-          gpointer );
-
-  extern "C" gboolean ThreadView_navigation_request (
       WebKitWebView * w,
-      WebKitWebFrame * frame,
-      WebKitNetworkRequest * request,
-      WebKitWebNavigationAction * navigation_action,
-      WebKitWebPolicyDecision * policy_decision,
+      WebKitLoadEvent load_event,
       gpointer user_data);
 
-  extern "C" void ThreadView_resource_request_starting (
-      WebKitWebView         *web_view,
-      WebKitWebFrame        *web_frame,
-      WebKitWebResource     *web_resource,
-      WebKitNetworkRequest  *request,
-      WebKitNetworkResponse *response,
-      gpointer               user_data);
+  extern "C" gboolean ThreadView_permission_request (
+      WebKitWebView * w,
+      WebKitPermissionRequest * request,
+      gpointer user_data);
+
+  extern "C" gboolean ThreadView_decide_policy (
+      WebKitWebView * w,
+      WebKitPolicyDecision * decision,
+      WebKitPolicyDecisionType decision_type,
+      gpointer user_data);
 
   class ThreadView : public Mode {
     friend class ThreadViewInspector;
@@ -192,13 +188,12 @@ namespace Astroid {
 
       bool element_action (ElementAction);
 
-      /* webkit (using C api) */
-      WebKitWebView     * webview;
-      WebKitWebSettings * websettings;
+      /* webkit */
+      WebKitWebView *     webview;
+      WebKitSettings *    websettings;
+      WebKitUserContentManager * webcontent;
 
     private:
-      WebKitDOMHTMLDivElement * container = NULL;
-
       std::atomic<bool> wk_loaded;
 
       /* rendering */
@@ -218,8 +213,10 @@ namespace Astroid {
       void insert_header_date (ustring &, refptr<Message>);
       ustring create_header_row (ustring title, ustring value, bool important, bool escape, bool noprint = false);
       ustring header_row_value (ustring value, bool escape);
+      /*
       void message_render_tags (refptr<Message>, WebKitDOMElement * div_message);
       void message_update_css_tags (refptr<Message>, WebKitDOMElement * div_message);
+      */
 
       bool open_html_part_external;
       void display_part (refptr<Message>, refptr<Chunk>, MessageState::Element);
@@ -253,30 +250,23 @@ namespace Astroid {
 
       /* event wrappers */
       bool on_load_changed (
-          GtkWidget *,
-          GParamSpec *);
+        WebKitWebView * w,
+        WebKitLoadEvent load_event);
 
       void on_scroll_vadjustment_changed();
 
-
-      gboolean navigation_request (
-        WebKitWebView * w,
-        WebKitWebFrame * frame,
-        WebKitNetworkRequest * request,
-        WebKitWebNavigationAction * navigation_action,
-        WebKitWebPolicyDecision * policy_decision);
+      gboolean permission_request (
+          WebKitWebView * w,
+          WebKitPermissionRequest * request);
 
       ustring open_external_link;
       void open_link (ustring);
       void do_open_link (ustring);
 
-      void resource_request_starting (
-        WebKitWebView         *web_view,
-        WebKitWebFrame        *web_frame,
-        WebKitWebResource     *web_resource,
-        WebKitNetworkRequest  *request,
-        WebKitNetworkResponse *response);
-
+      gboolean decide_policy (
+          WebKitWebView * w,
+          WebKitPolicyDecision * decision,
+          WebKitPolicyDecisionType decision_type);
 
       void grab_focus ();
 

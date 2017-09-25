@@ -206,8 +206,8 @@ else:
   print "gmime not found."
   Exit (1)
 
-if not conf.CheckPKG('webkitgtk-3.0'):
-  print "webkitgtk not found."
+if not conf.CheckPKG('webkit2gtk-4.0'):
+  print "webkit2gtk not found."
   Exit (1)
 
 if not disable_terminal:
@@ -282,7 +282,7 @@ env.ParseConfig ('pkg-config --libs --cflags glibmm-2.4')
 env.ParseConfig ('pkg-config --libs --cflags gtkmm-3.0')
 
 
-env.ParseConfig ('pkg-config --libs --cflags webkitgtk-3.0')
+env.ParseConfig ('pkg-config --libs --cflags webkit2gtk-4.0')
 if not disable_libsass:
   env.ParseConfig ('pkg-config --libs --cflags libsass')
 if not disable_terminal:
@@ -480,7 +480,8 @@ idir_icon       = os.path.join (prefix, 'share/icons/hicolor')
 inst_bin = env.Install (idir_bin, astroid)
 inst_shr = env.Install (idir_ui,  Glob ('ui/*.glade') +
                                   Glob ('ui/*.png') +
-                                  Glob ('ui/*.html'))
+                                  Glob ('ui/*.html') +
+                                  Glob ('ui/*.js'))
 
 # icons are installed in two locations
 inst_shr += env.Install (os.path.join(idir_ui, 'icons'),  Glob ('ui/icons/*'))

@@ -2,6 +2,14 @@
 <html>
 <head>
   <title>Astroid</title>
+  <script src="https://unpkg.com/preact@8.2.5/dist/preact.js"></script>
+  <script src="https://unpkg.com/ramda@0.24.1/dist/ramda.js"></script>
+  <script src="https://wzrd.in/standalone/hyperx@2.3.0"></script>
+
+  <!-- astroid code -->
+  <script src="astroid.js"></script>
+  <script src="stub.js"></script>
+  <link rel="stylesheet" href="thread-view.css"/>
 </head>
 <body>
 <div id="spinner">
@@ -20,5 +28,11 @@
     <div class="f_circleG" id="frotateG_08"></div>
   </div>
 </div>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    Astroid.init()
+    AstroidStubs.init()
+  })
+</script>
 </body>
 </html>

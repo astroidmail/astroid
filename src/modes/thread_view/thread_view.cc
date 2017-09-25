@@ -6,12 +6,12 @@
 # include <chrono>
 
 # include <gtkmm.h>
-# include <webkit/webkit.h>
+# include <webkit2/webkit2.h>
 # include <gio/gio.h>
+# include <boost/property_tree/ptree.hpp>
 
 # include "thread_view.hh"
 # include "web_inspector.hh"
-# include "dom_utils.hh"
 # include "theme.hh"
 
 # include "main_window.hh"
@@ -42,6 +42,7 @@
 # include "theme.hh"
 
 using namespace std;
+using boost::property_tree::ptree;
 
 namespace Astroid {
 
@@ -70,64 +71,50 @@ namespace Astroid {
 
     pack_start (scroll, true, true, 0);
 
-    /* set up webkit web view (using C api) */
-    webview = WEBKIT_WEB_VIEW (webkit_web_view_new ());
+    /* WebKit: set up webkit web view */
 
-    /* dpi */
+    /* content manager for adding theme and script */
+    webcontent = webkit_user_content_manager_new ();
+
+    /* add style sheet */
+    WebKitUserStyleSheet * style = webkit_user_style_sheet_new (
+        theme.thread_view_css.c_str(),
+        WEBKIT_USER_CONTENT_INJECT_TOP_FRAME,
+        WEBKIT_USER_STYLE_LEVEL_AUTHOR,
+        NULL, NULL);
+    webkit_user_content_manager_add_style_sheet (webcontent, style);
+
+    /* add javascript library */
     /*
-    WebKitViewportAttributes* attributes = webkit_web_view_get_viewport_attributes (webview);
-
-    gint dpi;
-    gfloat dpr;
-    g_object_get (G_OBJECT (attributes), "device-dpi", &dpi, NULL);
-    g_object_get (G_OBJECT (attributes), "device-pixel-ratio", &dpr, NULL);
-
-    LOG (debug) << "web: dpi: " << dpi << ", dpr: " << dpr;
-    auto win = get_screen ();
-    double gdpi = win->get_resolution ();
-
-    LOG (debug) << "gdk: dpi: " << gdpi;
-
-    g_object_set (G_OBJECT (attributes), "device-dpi", (int)gdpi, NULL);
-
-    webkit_viewport_attributes_recompute (attributes);
-
-    g_object_get (G_OBJECT (attributes), "device-dpi", &dpi, NULL);
-    g_object_get (G_OBJECT (attributes), "device-pixel-ratio", &dpr, NULL);
-
-    LOG (debug) << "web: dpi: " << dpi << ", dpr: " << dpr;
-
-    bool valid;
-    g_object_get (G_OBJECT (attributes), "valid", &valid, NULL);
-    LOG (debug) << "web: valid: " << valid;
+    WebKitUserScript * js = webkit_user_script_new (
+        theme.thread_view_js.c_str (),
+        WEBKIT_USER_CONTENT_INJECT_ALL_FRAMES,
+        WEBKIT_USER_SCRIPT_INJECT_AT_DOCUMENT_START,
+        NULL, NULL);
+    webkit_user_content_manager_add_script (webcontent, js);
     */
 
-    websettings = WEBKIT_WEB_SETTINGS (webkit_web_settings_new ());
-    g_object_set (G_OBJECT(websettings),
-        "enable-scripts", TRUE,
-        "enable-java-applet", FALSE,
+    webview    = WEBKIT_WEB_VIEW (webkit_web_view_new_with_user_content_manager (webcontent));
+
+    websettings = WEBKIT_SETTINGS (webkit_settings_new_with_settings (
+        "enable-javascript", TRUE,
+        "enable-java", FALSE,
         "enable-plugins", FALSE,
         "auto-load-images", TRUE,
-        "enable-display-of-insecure-content", FALSE,
         "enable-dns-prefetching", FALSE,
         "enable-fullscreen", FALSE,
         "enable-html5-database", FALSE,
         "enable-html5-local-storage", FALSE,
-     /* "enable-mediastream", FALSE, */
         "enable-mediasource", FALSE,
         "enable-offline-web-application-cache", FALSE,
         "enable-page-cache", FALSE,
         "enable-private-browsing", TRUE,
-        "enable-running-of-insecure-content", FALSE,
-        "enable-display-of-insecure-content", FALSE,
         "enable-xss-auditor", TRUE,
         "media-playback-requires-user-gesture", TRUE,
         "enable-developer-extras", TRUE, // TODO: should only enabled conditionally
-
-        NULL);
+        NULL));
 
     webkit_web_view_set_settings (webview, websettings);
-
 
     gtk_container_add (GTK_CONTAINER (scroll.gobj()), GTK_WIDGET(webview));
 
@@ -135,7 +122,7 @@ namespace Astroid {
 
     wk_loaded = false;
 
-    g_signal_connect (webview, "notify::load-status",
+    g_signal_connect (webview, "load-changed",
         G_CALLBACK(ThreadView_on_load_changed),
         (gpointer) this );
 
@@ -146,16 +133,12 @@ namespace Astroid {
     thread_view_inspector.setup (this);
 
     /* navigation requests */
-    g_signal_connect (webview, "navigation-policy-decision-requested",
-        G_CALLBACK(ThreadView_navigation_request),
-        (gpointer) this);
+    /* g_signal_connect (webview, "permissions-request", */
+    /*     G_CALLBACK(ThreadView_permission_request), */
+    /*     (gpointer) this); */
 
-    g_signal_connect (webview, "new-window-policy-decision-requested",
-        G_CALLBACK(ThreadView_navigation_request),
-        (gpointer) this);
-
-    g_signal_connect (webview, "resource-request-starting",
-        G_CALLBACK(ThreadView_resource_request_starting),
+    g_signal_connect (webview, "decide-policy",
+        G_CALLBACK(ThreadView_decide_policy),
         (gpointer) this);
 
     /* scrolled window */
@@ -189,14 +172,8 @@ namespace Astroid {
 
   }
 
-  //
-
   ThreadView::~ThreadView () { //
     LOG (debug) << "tv: deconstruct.";
-    // TODO: possibly still some errors here in paned mode
-    //g_object_unref (webview); // probably garbage collected since it has a parent widget
-    //g_object_unref (websettings);
-    if (container) g_object_unref (container);
   }
 
   void ThreadView::pre_close () {
@@ -206,197 +183,162 @@ namespace Astroid {
 # endif
   }
 
-  //
-
   /* navigation requests  */
-  extern "C" void ThreadView_resource_request_starting (
-      WebKitWebView         *web_view,
-      WebKitWebFrame        *web_frame,
-      WebKitWebResource     *web_resource,
-      WebKitNetworkRequest  *request,
-      WebKitNetworkResponse *response,
-      gpointer               user_data) {
-
-    ((ThreadView*) user_data)->resource_request_starting (
-      web_view,
-      web_frame,
-      web_resource,
-      request,
-      response);
-  }
-
-  void ThreadView::resource_request_starting (
-      WebKitWebView         * /* web_view */,
-      WebKitWebFrame        * /* web_frame */,
-      WebKitWebResource     * /* web_resource */,
-      WebKitNetworkRequest  * request,
-      WebKitNetworkResponse * response) {
-
-    if (response != NULL) {
-      /* a previously handled request */
-      return;
-    }
-
-    const gchar * uri_c = webkit_network_request_get_uri (request);
-    ustring uri (uri_c);
-
-    // prefix of local uris for loading image thumbnails
-    vector<ustring> allowed_uris =
-      {
-        home_uri,
-        "data:image/png;base64",
-        "data:image/jpeg;base64",
-      };
-
-    if (enable_gravatar) {
-      allowed_uris.push_back ("https://www.gravatar.com/avatar/");
-    }
-
-    if (enable_code_prettify) {
-      allowed_uris.push_back (code_prettify_uri.substr (0, code_prettify_uri.rfind ("/")));
-    }
-
-# ifndef DISABLE_PLUGINS
-    /* get plugin allowed uris */
-    std::vector<ustring> puris = plugins->get_allowed_uris ();
-    if (puris.size() > 0) {
-      LOG (debug) << "tv: plugin allowed uris: " << VectorUtils::concat_tags (puris);
-      allowed_uris.insert (allowed_uris.end (), puris.begin (), puris.end ());
-    }
-# endif
-
-    // TODO: show cid type images and inline-attachments
-
-    /* is this request allowed */
-    if (find_if (allowed_uris.begin (), allowed_uris.end (),
-          [&](ustring &a) {
-            return (uri.substr (0, a.length ()) == a);
-          }) != allowed_uris.end ())
-    {
-
-      /* LOG (debug) << "tv: request: allowed: " << uri; */
-      return; // yes
-
-    } else {
-      if (show_remote_images) {
-        // TODO: use an approved-url (like geary) to only allow imgs, not JS
-        //       or other content.
-        LOG (warn) << "tv: remote images allowed, approving _all_ requests: " << uri;
-        return; // yes
-      } else {
-        LOG (debug)<< "tv: request: denied: " << uri;
-        webkit_network_request_set_uri (request, "about:blank"); // no
-      }
-    }
-  }
-
   void ThreadView::reload_images () {
-
-    GError * err = NULL;
-    WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
-
-    for (auto &m : mthread->messages) {
-
-      ustring div_id = "message_" + m->mid;
-      WebKitDOMElement * me = webkit_dom_document_get_element_by_id (d, div_id.c_str());
-
-      WebKitDOMNodeList * imgs = webkit_dom_element_query_selector_all (me, "img", (err = NULL, &err));
-
-      gulong l = webkit_dom_node_list_get_length (imgs);
-      for (gulong i = 0; i < l; i++) {
-
-        WebKitDOMNode * in = webkit_dom_node_list_item (imgs, i);
-        WebKitDOMElement * ine = WEBKIT_DOM_ELEMENT (in);
-
-        if (ine != NULL) {
-          gchar * src = webkit_dom_element_get_attribute (ine, "src");
-          if (src != NULL) {
-            webkit_dom_element_set_attribute (ine, "src", "", (err = NULL, &err));
-            webkit_dom_element_set_attribute (ine, "src", src, (err = NULL, &err));
-          }
-
-          // TODO: cid type images or attachment references are not loaded
-        }
-
-        g_object_unref (in);
-      }
-
-      g_object_unref (imgs);
-      g_object_unref (me);
-    }
-
-    g_object_unref (d);
+    /* TODO: [JS]: Reload all images */
   }
 
-  extern "C" gboolean ThreadView_navigation_request (
+  extern "C" gboolean ThreadView_permission_request (
       WebKitWebView * w,
-      WebKitWebFrame * frame,
-      WebKitNetworkRequest * request,
-      WebKitWebNavigationAction * navigation_action,
-      WebKitWebPolicyDecision * policy_decision,
+      WebKitPermissionRequest * request,
       gpointer user_data) {
 
-    return ((ThreadView*)user_data)->navigation_request (
-        w,
-        frame,
-        request,
-        navigation_action,
-        policy_decision);
+    return ((ThreadView*) user_data)->permission_request (w, request);
   }
 
-  gboolean ThreadView::navigation_request (
+  gboolean ThreadView::permission_request (
       WebKitWebView * /* w */,
-      WebKitWebFrame * /* frame */,
-      WebKitNetworkRequest * request,
-      WebKitWebNavigationAction * navigation_action,
-      WebKitWebPolicyDecision * policy_decision) {
+      WebKitPermissionRequest * request) {
 
-    if (webkit_web_navigation_action_get_reason (navigation_action)
-        == WEBKIT_WEB_NAVIGATION_REASON_LINK_CLICKED) {
+    /* these requests are typically full-screen or location requests */
+    webkit_permission_request_allow (request);
 
-      webkit_web_policy_decision_ignore (policy_decision);
+    return true;
+  }
 
-      const gchar * uri_c = webkit_network_request_get_uri (
-          request );
+  extern "C" gboolean ThreadView_decide_policy (
+      WebKitWebView * w,
+      WebKitPolicyDecision * decision,
+      WebKitPolicyDecisionType decision_type,
+      gpointer user_data) {
 
-      ustring uri (uri_c);
-      LOG (info) << "tv: navigating to: " << uri;
+    return ((ThreadView *) user_data)->decide_policy (w, decision, decision_type);
+  }
 
-      ustring scheme = Glib::uri_parse_scheme (uri);
+  gboolean ThreadView::decide_policy (
+      WebKitWebView * /* w */,
+      WebKitPolicyDecision *   decision,
+      WebKitPolicyDecisionType decision_type)
+  {
 
-      if (scheme == "mailto") {
-
-        uri = uri.substr (scheme.length ()+1, uri.length () - scheme.length()-1);
-        UstringUtils::trim(uri);
-
-        main_window->add_mode (new EditMessage (main_window, uri));
-
-      } else if (scheme == "id" || scheme == "mid" ) {
-        main_window->add_mode (new ThreadIndex (main_window, uri));
-
-      } else if (scheme == "http" || scheme == "https" || scheme == "ftp") {
-        open_link (uri);
-
-      } else {
-
-        LOG (error) << "tv: unknown uri scheme. not opening.";
-      }
-
-      return true;
-
-    } else {
-      LOG (info) << "tv: navigation action: " <<
-        webkit_web_navigation_action_get_reason (navigation_action);
+    switch (decision_type) {
+      case WEBKIT_POLICY_DECISION_TYPE_NAVIGATION_ACTION: // navigate to {{{
+        {
+          WebKitNavigationPolicyDecision * navigation_decision = WEBKIT_NAVIGATION_POLICY_DECISION (decision);
+          WebKitNavigationAction * nav_action = webkit_navigation_policy_decision_get_navigation_action (navigation_decision);
 
 
-      const gchar * uri_c = webkit_network_request_get_uri (
-          request );
+          // TODO: [W2]: should this request be used or ignored? Currently ignoring if we
+          //             handle ourselves.
 
-      ustring uri (uri_c);
-      LOG (info) << "tv: navigating to: " << uri;
+          if (webkit_navigation_action_get_navigation_type (nav_action)
+              == WEBKIT_NAVIGATION_TYPE_LINK_CLICKED) {
+
+            webkit_policy_decision_ignore (decision);
+
+            const gchar * uri_c = webkit_uri_request_get_uri (
+                webkit_navigation_action_get_request (nav_action));
+
+
+            ustring uri (uri_c);
+            LOG (info) << "tv: navigating to: " << uri;
+
+            ustring scheme = Glib::uri_parse_scheme (uri);
+
+            if (scheme == "mailto") {
+
+              uri = uri.substr (scheme.length ()+1, uri.length () - scheme.length()-1);
+              UstringUtils::trim(uri);
+
+              main_window->add_mode (new EditMessage (main_window, uri));
+
+            } else if (scheme == "id" || scheme == "mid" ) {
+              main_window->add_mode (new ThreadIndex (main_window, uri));
+
+            } else if (scheme == "http" || scheme == "https" || scheme == "ftp") {
+              open_link (uri);
+
+            } else {
+
+              LOG (error) << "tv: unknown uri scheme. not opening.";
+            }
+          }
+        } // }}}
+        break;
+
+      case WEBKIT_POLICY_DECISION_TYPE_NEW_WINDOW_ACTION:
+        webkit_policy_decision_ignore (decision);
+        break;
+
+      case WEBKIT_POLICY_DECISION_TYPE_RESPONSE: // {{{
+        {
+          /* request to load any resources or similar */
+          WebKitResponsePolicyDecision * response = WEBKIT_RESPONSE_POLICY_DECISION (decision);
+          WebKitURIRequest * request = webkit_response_policy_decision_get_request (response);
+
+          const gchar * uri_c = webkit_uri_request_get_uri (request);
+          ustring uri (uri_c);
+
+          // prefix of local uris for loading image thumbnails
+          vector<ustring> allowed_uris =
+            {
+              home_uri,
+              "data:image/png;base64",
+              "data:image/jpeg;base64",
+            };
+
+          if (enable_gravatar) {
+            allowed_uris.push_back ("https://www.gravatar.com/avatar/");
+          }
+
+          if (enable_code_prettify) {
+            allowed_uris.push_back (code_prettify_uri.substr (0, code_prettify_uri.rfind ("/")));
+          }
+
+# ifndef DISABLE_PLUGINS
+          /* get plugin allowed uris */
+          std::vector<ustring> puris = plugins->get_allowed_uris ();
+          if (puris.size() > 0) {
+            LOG (debug) << "tv: plugin allowed uris: " << VectorUtils::concat_tags (puris);
+            allowed_uris.insert (allowed_uris.end (), puris.begin (), puris.end ());
+          }
+# endif
+
+          // TODO: show cid type images and inline-attachments
+
+          /* is this request allowed */
+          if (find_if (allowed_uris.begin (), allowed_uris.end (),
+                [&](ustring &a) {
+                  return (uri.substr (0, a.length ()) == a);
+                }) != allowed_uris.end ())
+          {
+
+            /* LOG (debug) << "tv: request: allowed: " << uri; */
+            webkit_policy_decision_use (decision);
+
+          } else {
+            if (show_remote_images) {
+              // TODO: use an approved-url (like geary) to only allow imgs, not JS
+              //       or other content.
+              LOG (warn) << "tv: remote images allowed, approving _all_ requests: " << uri;
+              webkit_policy_decision_use (decision);
+            } else {
+              LOG (debug)<< "tv: request: denied: " << uri;
+              webkit_policy_decision_ignore (decision);
+              /* webkit_network_request_set_uri (request, "about:blank"); // no */
+            }
+          }
+        } // }}}
+        break;
+
+      default:
+        /* webkit_policy_decision_ignore (decision); */
+        /* return true; // stop event */
+        // TODO: [W2] when do we ignore and when do we use?
+        return false;
     }
 
-    return false;
+    return false; // stop event
   }
 
   void ThreadView::open_link (ustring uri) {
@@ -460,37 +402,22 @@ namespace Astroid {
    */
 
   extern "C" bool ThreadView_on_load_changed (
-      GtkWidget *       w,
-      GParamSpec *      p,
-      gpointer          data )
+      WebKitWebView * w,
+      WebKitLoadEvent load_event,
+      gpointer user_data)
   {
-    return ((ThreadView *) data)->on_load_changed (w, p);
+    return ((ThreadView *) user_data)->on_load_changed (w, load_event);
   }
 
   bool ThreadView::on_load_changed (
-      GtkWidget *       /* w */,
-      GParamSpec *      /* p */)
+      WebKitWebView * /* w */,
+      WebKitLoadEvent load_event)
   {
-    WebKitLoadStatus ev = webkit_web_view_get_load_status (webview);
-    LOG (debug) << "tv: on_load_changed: " << ev;
-    switch (ev) {
+    LOG (debug) << "tv: on_load_changed: " << load_event;
+    switch (load_event) {
       case WEBKIT_LOAD_FINISHED:
         LOG (debug) << "tv: load finished.";
         {
-
-          /* load css style */
-          GError *err = NULL;
-          WebKitDOMDocument *d = webkit_web_view_get_dom_document (webview);
-          WebKitDOMElement  *e = webkit_dom_document_create_element (d, theme.STYLE_NAME, &err);
-
-          WebKitDOMText *t = webkit_dom_document_create_text_node
-            (d, theme.thread_view_css.c_str());
-
-          webkit_dom_node_append_child (WEBKIT_DOM_NODE(e), WEBKIT_DOM_NODE(t), (err = NULL, &err));
-
-          WebKitDOMHTMLHeadElement * head = webkit_dom_document_get_head (d);
-          webkit_dom_node_append_child (WEBKIT_DOM_NODE(head), WEBKIT_DOM_NODE(e), (err = NULL, &err));
-
           /* load code_prettify if enabled */
           if (enable_code_prettify) {
             bool only_tags_ok = false;
@@ -513,32 +440,12 @@ namespace Astroid {
             if (only_tags_ok) {
               code_is_on = true;
 
-              WebKitDOMElement * me = webkit_dom_document_create_element (d, "SCRIPT", (err = NULL, &err));
+              // TODO: Load code prettify
 
-              webkit_dom_element_set_attribute (me, "type", "text/javascript",
-                  (err = NULL, &err));
-              webkit_dom_element_set_attribute (me, "src", code_prettify_uri.c_str(),
-                  (err = NULL, &err));
-
-              webkit_dom_node_append_child (WEBKIT_DOM_NODE(head), WEBKIT_DOM_NODE(me), (err = NULL, &err));
-
-
-              g_object_unref (me);
+              /* webkit_dom_element_set_attribute (me, "src", code_prettify_uri.c_str(), */
+              /*     (err = NULL, &err)); */
             }
           }
-
-          /* get container for message divs */
-          container = WEBKIT_DOM_HTML_DIV_ELEMENT(webkit_dom_document_get_element_by_id (d, "message_container"));
-
-          if (container == NULL) {
-            LOG (warn) << "render: could not find container!";
-          }
-
-
-          g_object_unref (d);
-          g_object_unref (e);
-          g_object_unref (t);
-          g_object_unref (head);
 
           /* render */
           wk_loaded = true;
@@ -586,27 +493,30 @@ namespace Astroid {
       if (me == Message::MessageChangedEvent::MESSAGE_TAGS_CHANGED) {
         if (m->in_notmuch && m->tid == thread->thread_id) {
           LOG (debug) << "tv: got message updated.";
-
-          // the message is already refreshed internally
-
-          ustring mid = "message_" + m->mid;
-          WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
-          WebKitDOMElement * div_message = webkit_dom_document_get_element_by_id (d, mid.c_str());
+          // Note that the message has already been refreshed internally
 
           refptr<Message> _m = refptr<Message> (m);
           _m->reference (); // since m is owned by caller
 
+          // TODO: [JS] Update notmuch tags and update corresponding CSS tags
+
+          /*
+          ustring mid = "message_" + m->mid;
+          WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
+          WebKitDOMElement * div_message = webkit_dom_document_get_element_by_id (d, mid.c_str());
           message_render_tags (_m, div_message);
           message_update_css_tags (_m, div_message);
 
           g_object_unref (div_message);
           g_object_unref (d);
-
+          */
         }
       }
     }
   }
 
+  // TODO: [JS] [REIMPLEMENT]
+# if 0
   void ThreadView::message_update_css_tags (refptr<Message> m, WebKitDOMElement * div_message) {
     /* check for tag changes that control display */
     GError *err;
@@ -658,7 +568,10 @@ namespace Astroid {
 
     g_object_unref (class_list);
   }
+# endif
 
+  // TODO: [JS] [REIMPLEMENT]
+# if 0
   void ThreadView::message_render_tags (refptr<Message> m, WebKitDOMElement * div_message) {
     if (m->in_notmuch) {
       unsigned char cv[] = { 0xff, 0xff, 0xff };
@@ -694,7 +607,7 @@ namespace Astroid {
       g_object_unref (tags);
     }
   }
-
+# endif
   /* end message loading  */
 
   /* rendering  */
@@ -702,8 +615,6 @@ namespace Astroid {
   /* general message adding and rendering  */
   void ThreadView::render () {
     LOG (info) << "render: loading html..";
-    if (container) g_object_unref (container);
-    container = NULL;
     wk_loaded = false;
 
     /* home uri used for thread view - request will be relative this
@@ -712,16 +623,18 @@ namespace Astroid {
         astroid->standard_paths ().config_dir.c_str(),
         UstringUtils::random_alphanumeric (120));
 
-    webkit_web_view_load_html_string (webview, theme.thread_view_html.c_str (), home_uri.c_str());
-    ready     = false;
+    ready = false;
+    webkit_web_view_load_html (webview, theme.thread_view_html.c_str (), home_uri.c_str());
   }
 
   void ThreadView::render_messages () {
     LOG (debug) << "render: html loaded, building messages..";
-    if (!container || !wk_loaded) {
-      LOG (error) << "tv: div container and web kit not loaded.";
+    if (!wk_loaded) {
+      LOG (error) << "tv: web kit not loaded.";
       return;
     }
+
+    webkit_web_view_run_javascript (webview, theme.thread_view_js.c_str (), NULL, NULL, NULL);
 
     /* set message state vector */
     state.clear ();
@@ -738,6 +651,8 @@ namespace Astroid {
                       sigc::mem_fun (this, &ThreadView::on_message_changed));
                 }
               });
+
+    webkit_web_view_run_javascript (webview, "Astroid.render();", NULL, NULL, NULL);
 
     update_all_indent_states ();
 
@@ -787,8 +702,9 @@ namespace Astroid {
     }
   }
 
+  // TODO: [JS] [REIMPLEMENT]
   void ThreadView::update_indent_state (refptr<Message> m) {
-
+# if 0
     ustring mid = "message_" + m->mid;
     GError * err = NULL;
 
@@ -805,11 +721,81 @@ namespace Astroid {
 
     g_object_unref (e);
     g_object_unref (d);
-
+# endif
   }
 
+  // TODO: [JS] [REIMPLEMENT]
   void ThreadView::add_message (refptr<Message> m) {
     LOG (debug) << "tv: adding message: " << m->mid;
+
+    ptree mjs;
+    mjs.put ("id", m->mid);
+
+    Address sender (m->sender);
+    mjs.put ("from.address", sender.email ());
+    mjs.put ("from.name", sender.fail_safe_name ());
+
+    ptree to_node; // list of objects
+    for (Address &recipient: AddressList(m->to()).addresses) {
+      ptree contact_node; // Contact object
+      contact_node.put ("address", recipient.email ());
+      contact_node.put ("name", recipient.fail_safe_name ());
+      to_node.push_back(std::make_pair("", contact_node));
+    }
+    mjs.add_child("to", to_node);
+
+    ptree cc_node; // list of objects
+    for (Address &recipient: AddressList(m->cc()).addresses) {
+      ptree contact_node; // Contact object
+      contact_node.put ("address", recipient.email ());
+      contact_node.put ("name", recipient.fail_safe_name ());
+      cc_node.push_back(std::make_pair("", contact_node));
+    }
+    mjs.add_child("cc", cc_node);
+
+    ptree bcc_node; // list of objects
+    for (Address &recipient: AddressList(m->bcc()).addresses) {
+      ptree contact_node; // Contact object
+      contact_node.put ("address", recipient.email ());
+      contact_node.put ("name", recipient.fail_safe_name ());
+      bcc_node.push_back(std::make_pair("", contact_node));
+    }
+    mjs.add_child("bcc", bcc_node);
+
+    mjs.put("date.pretty", m->pretty_date ());
+    mjs.put("date.verbose",  m->pretty_verbose_date (true));
+    mjs.put("date.timestamp", "");
+
+    mjs.put("subject", m->subject);
+    mjs.put("gravatar", "");
+
+    ptree tags_node;
+    for (ustring &tag : m->tags) {
+      ptree tag_node;
+      tag_node.put ("label", tag);
+      tags_node.push_back(std::make_pair("", tag_node));
+    }
+    mjs.add_child("tags", tags_node);
+
+    mjs.put("focused", false);
+    mjs.put("missing_content", m->missing_content);
+
+    mjs.put("preview", "this is the preview");
+    mjs.put("body", "this is the body. <strong>it can have html</strong>");
+
+
+    std::stringstream js;
+    js << "Astroid.add_message(";
+    write_json (js, mjs);
+    js << ");";
+
+    LOG (debug) << "tv: js:" << js.str ();
+
+    webkit_web_view_run_javascript (webview, js.str ().c_str (), NULL, NULL, NULL);
+
+
+
+# if 0
 
     ustring div_id = "message_" + m->mid;
 
@@ -877,13 +863,16 @@ namespace Astroid {
 
     g_object_unref (insert_before);
     g_object_unref (div_message);
-  } //
+# endif
+  }
 
   /* main message generation  */
+  // TODO: [JS] [REIMPLEMENT]
   void ThreadView::set_message_html (
       refptr<Message> m,
       WebKitDOMHTMLElement * div_message)
   {
+# if 0
     GError *err;
 
     /* load message into div */
@@ -1056,7 +1045,8 @@ namespace Astroid {
     g_object_unref (preview);
     g_object_unref (span_body);
     g_object_unref (table_header);
-  } //
+# endif
+  }
 
   /* generating message parts  */
   void ThreadView::create_message_part_html (
@@ -1109,11 +1099,13 @@ namespace Astroid {
     }
   }
 
+  // TODO: [JS] [REIMPLEMENT]
   void ThreadView::create_body_part (
       refptr<Message> message,
       refptr<Chunk> c,
       WebKitDOMHTMLElement * span_body)
   {
+# if 0
     // <span id="body_template" class="body_part"></span>
 
     LOG (debug) << "create body part: " << c->id;
@@ -1396,6 +1388,7 @@ namespace Astroid {
 
     g_object_unref (body_container);
     g_object_unref (d);
+# endif
   }
 
   void ThreadView::filter_code_tags (ustring &body) {
@@ -1445,7 +1438,9 @@ namespace Astroid {
 
   }
 
+  // TODO: [JS] [REIMPLEMENT]
   void ThreadView::display_part (refptr<Message> message, refptr<Chunk> c, MessageState::Element el) {
+# if 0
     GError * err;
 
     WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
@@ -1494,9 +1489,12 @@ namespace Astroid {
     g_object_unref (div_email_container);
     g_object_unref (e);
     g_object_unref (d);
+# endif
   }
 
+  // TODO: [JS] [REIMPLEMENT]
   void ThreadView::create_sibling_part (refptr<Message> message, refptr<Chunk> sibling, WebKitDOMHTMLElement * span_body) {
+# if 0
 
     LOG (debug) << "create sibling part: " << sibling->id;
     //
@@ -1541,11 +1539,14 @@ namespace Astroid {
     g_object_unref (message_cont);
     g_object_unref (sibling_container);
     g_object_unref (d);
+# endif
   } //
 
   /* info and warning  */
+  // TODO: [JS] [REIMPLEMENT] Possibly use GtkInfoBar
   void ThreadView::set_warning (refptr<Message> m, ustring txt)
   {
+# if 0
     LOG (debug) << "tv: set warning: " << txt;
     ustring mid = "message_" + m->mid;
 
@@ -1569,10 +1570,12 @@ namespace Astroid {
     g_object_unref (warning);
     g_object_unref (e);
     g_object_unref (d);
+# endif
   }
 
   void ThreadView::hide_warning (refptr<Message> m)
   {
+# if 0
     ustring mid = "message_" + m->mid;
 
     WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
@@ -1595,11 +1598,14 @@ namespace Astroid {
     g_object_unref (warning);
     g_object_unref (e);
     g_object_unref (d);
+# endif
   }
 
+  // TODO: [JS] [REIMPLEMENT] Same as warning
   void ThreadView::set_info (refptr<Message> m, ustring txt)
   {
     LOG (debug) << "tv: set info: " << txt;
+# if 0
 
     ustring mid = "message_" + m->mid;
 
@@ -1627,9 +1633,11 @@ namespace Astroid {
     g_object_unref (info);
     g_object_unref (e);
     g_object_unref (d);
+# endif
   }
 
   void ThreadView::hide_info (refptr<Message> m) {
+# if 0
     ustring mid = "message_" + m->mid;
 
     WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
@@ -1656,10 +1664,12 @@ namespace Astroid {
     g_object_unref (info);
     g_object_unref (e);
     g_object_unref (d);
+# endif
   }
   /* end info and warning  */
 
   /* headers  */
+  // TODO: [JS] [REIMPLEMENT] all this header stuff should go in JS
   void ThreadView::insert_header_date (ustring & header, refptr<Message> m)
   {
     ustring value = ustring::compose (
@@ -1750,11 +1760,13 @@ namespace Astroid {
   /* headers end  */
 
   /* attachments  */
+  // TODO: [JS] [REIMPLEMENT]
   void ThreadView::set_attachment_icon (
       refptr<Message> /* message */,
       WebKitDOMHTMLElement * div_message)
 
   {
+# if 0
     GError *err;
 
     WebKitDOMHTMLElement * attachment_icon_img = DomUtils::select (
@@ -1792,9 +1804,11 @@ namespace Astroid {
 
     g_object_unref (class_list);
     g_object_unref (attachment_icon_img);
+# endif
   }
 
 
+  // TODO: [JS] [REIMPLEMENT]
   bool ThreadView::insert_attachments (
       refptr<Message> message,
       WebKitDOMHTMLElement * div_message)
@@ -1815,6 +1829,7 @@ namespace Astroid {
     //     </table>
     // </div>
 
+# if 0
     GError *err;
 
     WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
@@ -1918,13 +1933,16 @@ namespace Astroid {
     g_object_unref (d);
 
     return (attachments > 0);
+# endif
   }
 
+  // TODO: [JS] [REIMPLEMENT]
   void ThreadView::set_attachment_src (
       refptr<Chunk> c,
       refptr<Glib::ByteArray> data,
       WebKitDOMHTMLImageElement *img)
   {
+# if 0
     /* set the preview image or icon on the attachment display element */
 
     const char * _mtype = g_mime_content_type_get_media_type (c->content_type);
@@ -2009,14 +2027,17 @@ namespace Astroid {
     webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (img), "src",
         DomUtils::assemble_data_uri (image_content_type, content, content_size).c_str(), &err);
 
+# endif
   }
   /* attachments end  */
 
   /* marked  */
+  // TODO: [JS] [REIMPLEMENT]
   void ThreadView::load_marked_icon (
       refptr<Message> /* message */,
       WebKitDOMHTMLElement * div_message)
   {
+# if 0
     GError *err;
 
     WebKitDOMHTMLElement * marked_icon_img = DomUtils::select (
@@ -2044,9 +2065,12 @@ namespace Astroid {
         DomUtils::assemble_data_uri (image_content_type, content, content_size).c_str(), &err);
 
     g_object_unref (marked_icon_img);
+# endif
   }
 
+  // TODO: [JS] [REIMPLEMENT]
   void ThreadView::update_marked_state (refptr<Message> m) {
+# if 0
     GError *err;
     ustring mid = "message_" + m->mid;
 
@@ -2069,18 +2093,20 @@ namespace Astroid {
     g_object_unref (class_list);
     g_object_unref (e);
     g_object_unref (d);
-
+# endif
   }
 
 
   //
 
   /* mime messages  */
+  // TODO: [JS] [REIMPLEMENT]
   void ThreadView::insert_mime_messages (
       refptr<Message> message,
       WebKitDOMHTMLElement * div_message)
 
   {
+# if 0
     WebKitDOMHTMLElement * div_email_container =
       DomUtils::select (WEBKIT_DOM_NODE(div_message), "div.email_container");
 
@@ -2138,7 +2164,7 @@ namespace Astroid {
 
     g_object_unref (span_body);
     g_object_unref (div_email_container);
-
+# endif
   }
 
 
@@ -2851,10 +2877,14 @@ namespace Astroid {
             }
           }
 
+# if 0
           GError * err = NULL;
           WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
+# endif
 
           for (auto &m : toprint) {
+          // TODO: [JS] [REIMPLEMENT]
+# if 0
             ustring mid = "message_" + m->mid;
             WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
             WebKitDOMDOMTokenList * class_list =
@@ -2862,6 +2892,7 @@ namespace Astroid {
 
             webkit_dom_dom_token_list_add (class_list, "print",
                 (err = NULL, &err));
+# endif
 
             /* expand */
             state[m].print_expanded = !toggle_hidden (m, ToggleShow);
@@ -2875,8 +2906,11 @@ namespace Astroid {
           }
 
           /* open print window */
+          // TODO: [W2] Fix print
+# if 0
           WebKitWebFrame * frame = webkit_web_view_get_main_frame (webview);
           webkit_web_frame_print (frame);
+# endif
 
           if (indented) {
             indent_messages = true;
@@ -2890,6 +2924,7 @@ namespace Astroid {
               state[m].print_expanded = false;
             }
 
+# if 0
             ustring mid = "message_" + m->mid;
             WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
             WebKitDOMDOMTokenList * class_list =
@@ -2900,9 +2935,12 @@ namespace Astroid {
 
             g_object_unref (class_list);
             g_object_unref (e);
+# endif
           }
 
+# if 0
           g_object_unref (d);
+# endif
 
           return true;
         });
@@ -2968,6 +3006,8 @@ namespace Astroid {
         "thread_view.print",
         "Print focused message",
         [&] (Key) {
+        // TODO: [W2]
+# if 0
           GError * err = NULL;
           WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
 
@@ -3007,6 +3047,7 @@ namespace Astroid {
           g_object_unref (class_list);
           g_object_unref (e);
           g_object_unref (d);
+# endif
 
           return true;
         });
@@ -3494,10 +3535,13 @@ namespace Astroid {
     }
   }
 
+  // TODO: [JS]
   void ThreadView::update_focus_to_center () {
     /* focus the message which is currently vertically centered */
 
     if (edit_mode) return;
+
+# if 0
 
     WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
 
@@ -3534,9 +3578,11 @@ namespace Astroid {
 
     g_object_unref (d);
 
+# endif
     update_focus_status ();
   }
 
+  // TODO: [JS]
   void ThreadView::update_focus_to_view () {
     /* check if currently focused message has gone out of focus
      * and update focus */
@@ -3548,6 +3594,7 @@ namespace Astroid {
      * of it is within the view
      */
 
+# if 0
     WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
 
     auto adj = scroll.get_vadjustment ();
@@ -3650,10 +3697,13 @@ namespace Astroid {
 
       if (redo_focus_tags) update_focus_status ();
     }
+# endif
   }
 
+  // TODO: [JS]
   void ThreadView::update_focus_status () {
     /* update focus to currently set element (no scrolling ) */
+# if 0
     WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
     for (auto &m : mthread->messages) {
       ustring mid = "message_" + m->mid;
@@ -3736,6 +3786,7 @@ namespace Astroid {
     }
 
     g_object_unref (d);
+# endif
 
     /* update focus time for unread counter */
     focus_time = chrono::steady_clock::now ();
@@ -3764,7 +3815,9 @@ namespace Astroid {
     return true;
   }
 
+  // TODO: [JS]
   ustring ThreadView::focus_next_element (bool force_change) {
+# if 0
     ustring eid;
 
     if (!is_hidden (focused_message) || edit_mode) {
@@ -3841,9 +3894,12 @@ namespace Astroid {
     }
 
     return eid;
+# endif
   }
 
+  // TODO: [JS]
   ustring ThreadView::focus_previous_element (bool force_change) {
+# if 0
     ustring eid;
 
     if (!is_hidden (focused_message) || edit_mode) {
@@ -3923,6 +3979,7 @@ namespace Astroid {
     }
 
     return eid;
+# endif
   }
 
   ustring ThreadView::focus_next () {
@@ -3967,7 +4024,9 @@ namespace Astroid {
     return "message_" + focused_message->mid;
   }
 
+  // TODO: [JS]
   bool ThreadView::scroll_to_message (refptr<Message> m, bool scroll_when_visible) {
+# if 0
     focused_message = m;
 
     if (edit_mode) return false;
@@ -3989,12 +4048,15 @@ namespace Astroid {
     g_object_unref (d);
 
     return scroll_to_element (mid, scroll_when_visible);
+# endif
   }
 
+  // TODO: [JS]
   bool ThreadView::scroll_to_element (
       ustring eid,
       bool scroll_when_visible)
   {
+# if 0
     /* returns false when rendering is incomplete and scrolling
      * doesn't work */
 
@@ -4070,12 +4132,15 @@ namespace Astroid {
       return true;
 
     }
+# endif
   }
 
   /* end focus handeling   */
 
   /* message hiding  */
+  // TODO: [JS]
   bool ThreadView::is_hidden (refptr<Message> m) {
+# if 0
     ustring mid = "message_" + m->mid;
 
     WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
@@ -4094,12 +4159,15 @@ namespace Astroid {
     g_object_unref (d);
 
     return r;
+# endif
   }
 
+  // TODO: [JS]
   bool ThreadView::toggle_hidden (
       refptr<Message> m,
       ToggleState t)
   {
+# if 0
     /* returns true if the message was expanded in the first place */
 
     if (!m) m = focused_message;
@@ -4148,6 +4216,8 @@ namespace Astroid {
     if (unread_delay == 0.0) unread_check ();
 
     return wasexpanded;
+# endif
+    return false; // TODO
   }
 
   /* end message hiding  */
@@ -4314,8 +4384,12 @@ namespace Astroid {
     in_search = false;
     in_search_match = false;
     search_q  = "";
+
+    // TODO: [W2]
+# if 0
     webkit_web_view_set_highlight_text_matches (webview, false);
     webkit_web_view_unmark_text_matches (webview);
+# endif
   }
 
   void ThreadView::on_search (ustring k) {
@@ -4331,7 +4405,9 @@ namespace Astroid {
       }
 
       LOG (debug) << "tv: searching for: " << k;
-      int n = webkit_web_view_mark_text_matches (webview, k.c_str (), false, 0);
+      // TODO: [W2]
+      /* int n = webkit_web_view_mark_text_matches (webview, k.c_str (), false, 0); */
+      int n = 0; // TODO
 
       LOG (debug) << "tv: search, found: " << n << " matches.";
 
@@ -4340,7 +4416,8 @@ namespace Astroid {
       if (in_search) {
         search_q = k;
 
-        webkit_web_view_set_highlight_text_matches (webview, true);
+        // TODO: [W2]
+        /* webkit_web_view_set_highlight_text_matches (webview, true); */
 
         next_search_match ();
 
@@ -4366,14 +4443,16 @@ namespace Astroid {
      */
 
     in_search_match = true;
-    webkit_web_view_search_text (webview, search_q.c_str (), false, true, true);
+    // TODO: [W2]
+    /* webkit_web_view_search_text (webview, search_q.c_str (), false, true, true); */
   }
 
   void ThreadView::prev_search_match () {
     if (!in_search) return;
 
     in_search_match = true;
-    webkit_web_view_search_text (webview, search_q.c_str (), false, false, true);
+    // TODO: [W2]
+    /* webkit_web_view_search_text (webview, search_q.c_str (), false, false, true); */
   }
 
   /*  */
