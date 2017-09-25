@@ -9,6 +9,7 @@
 # include <gtkmm.h>
 # include <webkit2/webkit2.h>
 # include <webkitdom/webkitdom.h>
+# include <boost/property_tree/ptree.hpp>
 
 # include "proto.hh"
 # include "modes/mode.hh"
@@ -19,6 +20,8 @@
 # endif
 
 # include "web_inspector.hh"
+
+using boost::property_tree::ptree;
 
 namespace Astroid {
   extern "C" bool ThreadView_on_load_changed (
@@ -199,8 +202,11 @@ namespace Astroid {
       /* rendering */
       void render ();
       void render_messages ();
-      void add_message (refptr<Message>);
       void reload_images ();
+
+      /* message rendering */
+      void add_message (refptr<Message>);
+      ptree build_mime_tree (refptr<Chunk>, bool);
 
       /* message loading */
       void set_message_html (refptr<Message>, WebKitDOMHTMLElement *);

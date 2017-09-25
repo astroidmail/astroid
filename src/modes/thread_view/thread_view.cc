@@ -798,7 +798,6 @@ namespace Astroid {
       mjs.put("gravatar", uri);
     }
 
-
     mjs.put("focused", false);
     mjs.put("missing_content", m->missing_content);
 
@@ -818,8 +817,11 @@ namespace Astroid {
     bp = Glib::Markup::escape_text (bp);
     mjs.put("preview", bp);
 
-    mjs.put("body", "this is the body. <strong>it can have html</strong>");
+    /* building body */
+    ptree body = build_mime_tree (m->root, true);
+    mjs.add_child ("body", body);
 
+    /* add attachments */
 
     std::stringstream js;
     js << "Astroid.add_message(";
@@ -829,6 +831,66 @@ namespace Astroid {
     LOG (debug) << "tv: js:" << js.str ();
 
     webkit_web_view_run_javascript (webview, js.str ().c_str (), NULL, NULL, NULL);
+
+  }
+
+  ptree ThreadView::build_mime_tree (refptr<Chunk> c, bool root) {
+
+    ustring mime_type;
+    if (c->content_type) {
+      mime_type = ustring(g_mime_content_type_get_mime_type (c->content_type));
+    } else {
+      mime_type = "application/octet-stream";
+    }
+
+    LOG (debug) << "create message part: " << c->id << " (siblings: " << c->siblings.size() << ") (kids: " << c->kids.size() << ")" <<
+      " (attachment: " << c->attachment << ")" << " (viewable: " << c->viewable << ")" << " (mimetype: " << mime_type << ")";
+
+    ptree part;
+    part.put ("mime_type", "text/plain");
+    part.put ("preferred", true);
+    part.put ("encrypted", false);
+    part.put ("signed", false);
+    part.put ("content", "");
+    part.add_child ("children", ptree());
+
+    /*
+     * this should not happen on the root part, but a message may be constructed
+     * in such a way.
+     */
+    if (root && c->attachment) {
+      /* return empty root part */
+      return part;
+    } else if (c->attachment) {
+      return ptree ();
+    }
+
+    /*
+     * we flatten the structure, replacing empty wrappers with an array of
+     * their children.
+     */
+    ptree children;
+
+    for (auto &k : c->kids) {
+      ptree child = build_mime_tree (k, false);
+      if (!child.empty ()) {
+        children.push_back(std::make_pair("", child));
+      }
+    }
+
+    if (c->viewable) {
+      part.put ("mime_type", mime_type);
+      part.put ("preferred", c->preferred);
+      part.put ("encrypted", c->isencrypted);
+      part.put ("signed", c->issigned);
+      part.put ("content", c->viewable_text (mime_type == "text/plain", true));
+      part.put_child ("children", children);
+    } else {
+      part = children;
+    }
+
+    return part;
+  }
 
 
 
@@ -901,7 +963,6 @@ namespace Astroid {
     g_object_unref (insert_before);
     g_object_unref (div_message);
 # endif
-  }
 
   /* main message generation  */
   // TODO: [JS] [REIMPLEMENT]
