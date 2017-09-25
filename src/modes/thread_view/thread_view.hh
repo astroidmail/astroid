@@ -207,6 +207,8 @@ namespace Astroid {
       /* message rendering */
       void add_message (refptr<Message>);
       ptree build_mime_tree (refptr<Chunk>, bool);
+      ptree get_encryption_state (refptr<Chunk>);
+      ptree get_signature_state (refptr<Chunk>);
 
       /* message loading */
       void set_message_html (refptr<Message>, WebKitDOMHTMLElement *);
