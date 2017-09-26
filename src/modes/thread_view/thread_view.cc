@@ -723,7 +723,53 @@ namespace Astroid {
     ptree body = build_mime_tree (m->root, true);
     mjs.add_child ("body", body);
 
+    /* add mime messages */
+    ptree mime_messages;
+    for (refptr<Chunk> &c : m->mime_messages ()) {
+      ptree message;
+
+      message.put ("filename", c->get_filename ());
+      message.put ("size", Utils::format_size(c->get_file_size ()));
+
+      /* add signature and encryption status */
+      message.put ("signed", c->issigned);
+      if (c->issigned)
+        message.add_child ("signature", get_signature_state (c));
+
+      message.put ("encrypted", c->isencrypted);
+      if (c->isencrypted)
+        message.add_child ("encryption", get_encryption_state (c));
+
+      MessageState::Element e (MessageState::ElementType::MimeMessage, c->id);
+      state[m].elements.push_back (e);
+      LOG (debug) << "tv: added mime message: " << state[m].elements.size();
+    }
+    mjs.add_child ("mime_messages", mime_messages);
+
     /* add attachments */
+    ptree attachments;
+    for (refptr<Chunk> &c : m->attachments ()) {
+      ptree attachment;
+      attachment.put ("filename", c->get_filename ());
+      attachment.put ("size", Utils::format_size (c->get_file_size ()));
+      attachment.put ("thumbnail", get_attachment_thumbnail (c));
+
+      refptr<Glib::ByteArray> attachment_data = c->contents ();
+
+      /* add signature and encryption status */
+      attachment.put ("signed", c->issigned);
+      if (c->issigned)
+        attachment.add_child ("signature", get_signature_state (c));
+
+      attachment.put ("encrypted", c->isencrypted);
+      if (c->isencrypted)
+        attachment.add_child ("encryption", get_encryption_state (c));
+
+      MessageState::Element e (MessageState::ElementType::Attachment, c->id);
+      state[m].elements.push_back (e);
+      LOG (debug) << "tv: added attachment: " << state[m].elements.size();
+    }
+    mjs.add_child ("attachments", attachments);
 
     std::stringstream js;
     js << "Astroid.add_message(";
@@ -757,7 +803,7 @@ namespace Astroid {
     part.add_child ("children", ptree());
 
     /*
-     * this should not happen on the root part, but a message may be constructed
+     * this should not happen on the root part, but a broken message may be constructed
      * in such a way.
      */
     if (root && c->attachment) {
@@ -803,7 +849,7 @@ namespace Astroid {
     return part;
   }
 
-  ptree ThreadView::get_encryption_state (refptr<Chunk> c) {
+  ptree ThreadView::get_encryption_state (refptr<Chunk> c) { // {{{
     refptr<Crypto> cr = c->crypt;
 
     ptree encryption;
@@ -835,9 +881,9 @@ namespace Astroid {
     encryption.put_child ("recipients", recipients);
 
     return encryption;
-  }
+  } // }}}
 
-  ptree ThreadView::get_signature_state (refptr<Chunk> c) {
+  ptree ThreadView::get_signature_state (refptr<Chunk> c) { // {{{
     ptree signature;
 
     vector<ustring> all_sig_errors;
@@ -964,260 +1010,51 @@ namespace Astroid {
     signature.put_child ("signatures", signatures);
 
     return signature;
-  }
+  } // }}}
 
-
-
-# if 0
-
-    ustring div_id = "message_" + m->mid;
-
-    WebKitDOMNode * insert_before = webkit_dom_node_get_last_child (
-        WEBKIT_DOM_NODE (container));
-
-    WebKitDOMHTMLElement * div_message = DomUtils::make_message_div (webview);
-
-    GError * err = NULL;
-    webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT(div_message),
-        "id", div_id.c_str(), &err);
-
-    /* insert message div */
-    webkit_dom_node_insert_before (WEBKIT_DOM_NODE(container),
-        WEBKIT_DOM_NODE(div_message),
-        insert_before,
-        (err = NULL, &err));
-
-    set_message_html (m, div_message);
-
-    /* insert mime messages */
-    if (!m->missing_content) {
-      insert_mime_messages (m, div_message);
+  ustring ThreadView::get_attachment_thumbnail (refptr<Chunk> c) {
+    /* set the preview image or icon on the attachment display element */
+    const char * _mtype = g_mime_content_type_get_media_type (c->content_type);
+    ustring mime_type;
+    if (_mtype == NULL) {
+      mime_type = "application/octet-stream";
+    } else {
+      mime_type = ustring(g_mime_content_type_get_mime_type (c->content_type));
     }
 
-    /* insert attachments */
-    if (!m->missing_content) {
-      bool has_attachment = insert_attachments (m, div_message);
+    LOG (debug) << "tv: set attachment, mime_type: " << mime_type << ", mtype: " << _mtype;
 
-      /* add attachment icon */
-      if (has_attachment) {
-        set_attachment_icon (m, div_message);
-      }
-    }
+    gchar * content;
+    gsize   content_size;
+    ustring image_content_type;
 
-    /* marked */
-    load_marked_icon (m, div_message);
+    if ((_mtype != NULL) && (ustring(_mtype) == "image")) {
+      auto mis = Gio::MemoryInputStream::create ();
 
-    if (!edit_mode) {
-      /* optionally hide / collapse the message */
-      if (!(m->has_tag("unread") || (expand_flagged && m->has_tag("flagged")))) {
+      refptr<Glib::ByteArray> data = c->contents ();
+      mis->add_data (data->get_data (), data->size ());
 
-        /* hide message */
-        WebKitDOMDOMTokenList * class_list =
-          webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(div_message));
+      try {
 
-        webkit_dom_dom_token_list_add (class_list, "hide",
-            (err = NULL, &err));
+        auto pb = Gdk::Pixbuf::create_from_stream_at_scale (mis, THUMBNAIL_WIDTH, -1, true, refptr<Gio::Cancellable>());
+        pb = pb->apply_embedded_orientation ();
 
-        g_object_unref (class_list);
-      } else {
-        if (!candidate_startup)
-          candidate_startup = m;
-      }
+        pb->save_to_buffer (content, content_size, "png");
+        image_content_type = "image/png";
+      } catch (Gdk::PixbufError &ex) {
 
-      /* focus first unread message */
-      if (!focused_message) {
-        if (m->has_tag ("unread")) {
-          focused_message = m;
-        }
+        LOG (error) << "tv: could not create icon from attachmed image.";
+        attachment_icon->save_to_buffer (content, content_size, "png"); // default type is png
+        image_content_type = "image/png";
       }
     } else {
-      focused_message = m;
+      // TODO: guess icon from mime type. Using standard icon for now.
+
+      attachment_icon->save_to_buffer (content, content_size, "png"); // default type is png
+      image_content_type = "image/png";
     }
 
-    g_object_unref (insert_before);
-    g_object_unref (div_message);
-# endif
-
-  /* main message generation  */
-  // TODO: [JS] [REIMPLEMENT]
-  void ThreadView::set_message_html (
-      refptr<Message> m,
-      WebKitDOMHTMLElement * div_message)
-  {
-# if 0
-    GError *err;
-
-    /* load message into div */
-    ustring header;
-    WebKitDOMHTMLElement * div_email_container =
-      DomUtils::select (WEBKIT_DOM_NODE(div_message), "div.email_container");
-
-    /* build header */
-    Address sender (m->sender);
-    insert_header_address (header, "From", sender, true);
-
-    if (m->reply_to.size () > 0) {
-      Address reply_to (m->reply_to);
-      if (reply_to.email () != sender.email())
-        insert_header_address (header, "Reply-To", reply_to, false);
-    }
-
-    insert_header_address_list (header, "To", AddressList(m->to()), false);
-
-    if (internet_address_list_length (m->cc()) > 0) {
-      insert_header_address_list (header, "Cc", AddressList(m->cc()), false);
-    }
-
-    if (internet_address_list_length (m->bcc()) > 0) {
-      insert_header_address_list (header, "Bcc", AddressList(m->bcc()), false);
-    }
-
-    insert_header_date (header, m);
-
-    if (m->subject.length() > 0) {
-      insert_header_row (header, "Subject", m->subject, false);
-
-      WebKitDOMHTMLElement * subject = DomUtils::select (
-          WEBKIT_DOM_NODE (div_message),
-          ".header_container .subject");
-
-      ustring s = Glib::Markup::escape_text(m->subject);
-      if (static_cast<int>(s.size()) > MAX_PREVIEW_LEN)
-        s = s.substr(0, MAX_PREVIEW_LEN - 3) + "...";
-
-      webkit_dom_html_element_set_inner_html (subject, s.c_str(), (err = NULL, &err));
-
-      g_object_unref (subject);
-    }
-
-    if (m->in_notmuch) {
-      header += create_header_row ("Tags", "", false, false, true);
-    }
-
-    /* avatar */
-    {
-      ustring uri = "";
-      auto se = Address(m->sender);
-# ifdef DISABLE_PLUGINS
-      if (false) {
-# else
-      if (plugins->get_avatar_uri (se.email (), Gravatar::DefaultStr[Gravatar::Default::RETRO], 48, m, uri)) {
-# endif
-        ; // all fine, use plugins avatar
-      } else {
-        if (enable_gravatar) {
-          uri = Gravatar::get_image_uri (se.email (),Gravatar::Default::RETRO , 48);
-        }
-      }
-
-      if (!uri.empty ()) {
-        WebKitDOMHTMLImageElement * av = WEBKIT_DOM_HTML_IMAGE_ELEMENT (
-            DomUtils::select (
-            WEBKIT_DOM_NODE (div_message),
-            ".avatar"));
-
-        webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (av), "src",
-            uri.c_str (),
-            (err = NULL, &err));
-
-        g_object_unref (av);
-      }
-    }
-
-    /* insert header html*/
-    WebKitDOMHTMLElement * table_header =
-      DomUtils::select (WEBKIT_DOM_NODE(div_email_container),
-          ".header_container .header");
-
-    webkit_dom_html_element_set_inner_html (
-        table_header,
-        header.c_str(),
-        (err = NULL, &err));
-
-    message_render_tags (m, WEBKIT_DOM_ELEMENT(div_message));
-    message_update_css_tags (m, WEBKIT_DOM_ELEMENT(div_message));
-
-    /* if message is missing body, set warning and don't add any content */
-
-    WebKitDOMHTMLElement * span_body =
-      DomUtils::select (WEBKIT_DOM_NODE(div_email_container), ".body");
-
-    WebKitDOMHTMLElement * preview = DomUtils::select (
-        WEBKIT_DOM_NODE (div_message),
-        ".header_container .preview");
-
-    {
-      if (!edit_mode &&
-           any_of (Db::draft_tags.begin (),
-                   Db::draft_tags.end (),
-                   [&](ustring t) {
-                     return m->has_tag (t);
-                   }))
-      {
-
-        /* set warning */
-        set_warning (m, "This message is a draft, edit it with E or delete with D.");
-
-      }
-    }
-
-    if (m->missing_content) {
-      /* set preview */
-      webkit_dom_html_element_set_inner_html (preview, "<i>Message content is missing.</i>", (err = NULL, &err));
-
-      /* set warning */
-      set_warning (m, "The message file is missing, only fields cached in the notmuch database are shown. Most likely your database is out of sync.");
-
-      /* add an explenation to the body */
-      GError *err;
-
-      WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
-      WebKitDOMHTMLElement * body_container =
-        DomUtils::clone_select (WEBKIT_DOM_NODE(d), "#body_template");
-
-      webkit_dom_element_remove_attribute (WEBKIT_DOM_ELEMENT (body_container),
-          "id");
-
-      webkit_dom_html_element_set_inner_html (
-          body_container,
-          "<i>Message content is missing.</i>",
-          (err = NULL, &err));
-
-      webkit_dom_node_append_child (WEBKIT_DOM_NODE (span_body),
-          WEBKIT_DOM_NODE (body_container), (err = NULL, &err));
-
-      g_object_unref (body_container);
-      g_object_unref (d);
-
-    } else {
-
-      /* build message body */
-      create_message_part_html (m, m->root, span_body, true);
-
-      /* preview */
-      LOG (debug) << "tv: make preview..";
-
-      ustring bp = m->viewable_text (false, false);
-      if (static_cast<int>(bp.size()) > MAX_PREVIEW_LEN)
-        bp = bp.substr(0, MAX_PREVIEW_LEN - 3) + "...";
-
-      while (true) {
-        size_t i = bp.find ("<br>");
-
-        if (i == ustring::npos) break;
-
-        bp.erase (i, 4);
-      }
-
-      bp = Glib::Markup::escape_text (bp);
-
-      webkit_dom_html_element_set_inner_html (preview, bp.c_str(), (err = NULL, &err));
-    }
-
-    g_object_unref (preview);
-    g_object_unref (span_body);
-    g_object_unref (table_header);
-# endif
+    return assemble_data_uri (image_content_type, content, content_size);
   }
 
   void ThreadView::filter_code_tags (ustring &body) {
@@ -1320,56 +1157,6 @@ namespace Astroid {
     g_object_unref (d);
 # endif
   }
-
-  // TODO: [JS] [REIMPLEMENT]
-  void ThreadView::create_sibling_part (refptr<Message> message, refptr<Chunk> sibling, WebKitDOMHTMLElement * span_body) {
-# if 0
-
-    LOG (debug) << "create sibling part: " << sibling->id;
-    //
-    //  <div id="sibling_template" class=sibling_container">
-    //      <div class="message"></div>
-    //  </div>
-
-    GError *err;
-
-    WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
-    WebKitDOMHTMLElement * sibling_container =
-      DomUtils::clone_select (WEBKIT_DOM_NODE(d), "#sibling_template");
-
-    webkit_dom_element_remove_attribute (WEBKIT_DOM_ELEMENT (sibling_container),
-        "id");
-
-    // add to message state
-    MessageState::Element e (MessageState::ElementType::Part, sibling->id);
-    state[message].elements.push_back (e);
-    LOG (debug) << "tv: added sibling: " << state[message].elements.size();
-
-    webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (sibling_container),
-      "id", e.element_id().c_str(),
-      (err = NULL, &err));
-
-    ustring content = ustring::compose ("Alternative part (type: %1) - potentially sketchy.",
-        Glib::Markup::escape_text(sibling->get_content_type ()),
-        e.element_id ());
-
-    WebKitDOMHTMLElement * message_cont =
-      DomUtils::select (WEBKIT_DOM_NODE (sibling_container), ".message");
-
-    webkit_dom_html_element_set_inner_html (
-        message_cont,
-        content.c_str(),
-        (err = NULL, &err));
-
-
-    webkit_dom_node_append_child (WEBKIT_DOM_NODE (span_body),
-        WEBKIT_DOM_NODE (sibling_container), (err = NULL, &err));
-
-    g_object_unref (message_cont);
-    g_object_unref (sibling_container);
-    g_object_unref (d);
-# endif
-  } //
 
   /* info and warning  */
   // TODO: [JS] [REIMPLEMENT] Possibly use GtkInfoBar
@@ -1497,368 +1284,6 @@ namespace Astroid {
   }
   /* end info and warning  */
 
-  /* headers  */
-  // TODO: [JS] [REIMPLEMENT] all this header stuff should go in JS
-  void ThreadView::insert_header_date (ustring & header, refptr<Message> m)
-  {
-    ustring value = ustring::compose (
-                "<span class=\"hidden_only\">%1</span>"
-                "<span class=\"not_hidden_only\">%2</span>",
-                m->pretty_date (),
-                m->pretty_verbose_date (true));
-
-    header += create_header_row ("Date", value, true, false);
-  }
-
-  void ThreadView::insert_header_address (
-      ustring &header,
-      ustring title,
-      Address address,
-      bool important) {
-
-    AddressList al (address);
-
-    insert_header_address_list (header, title, al, important);
-  }
-
-  void ThreadView::insert_header_address_list (
-      ustring &header,
-      ustring title,
-      AddressList addresses,
-      bool important) {
-
-    ustring value;
-    bool first = true;
-
-    for (Address &address : addresses.addresses) {
-      if (address.full_address().size() > 0) {
-        if (!first) {
-          value += ", ";
-        } else {
-          first = false;
-        }
-
-        value +=
-          ustring::compose ("<a href=\"mailto:%3\">%4%1%5 &lt;%2&gt;</a>",
-            Glib::Markup::escape_text (address.fail_safe_name ()),
-            Glib::Markup::escape_text (address.email ()),
-            Glib::Markup::escape_text (address.full_address()),
-            (important ? "<b>" : ""),
-            (important ? "</b>" : "")
-            );
-      }
-    }
-
-    header += create_header_row (title, value, important, false);
-  }
-
-  void ThreadView::insert_header_row (
-      ustring &header,
-      ustring title,
-      ustring value,
-      bool important) {
-
-    header += create_header_row (title, value, important, true);
-
-  }
-
-
-  ustring ThreadView::create_header_row (
-      ustring title,
-      ustring value,
-      bool important,
-      bool escape,
-      bool noprint) {
-
-    return ustring::compose (
-        "<div class=\"field %1 %2\" id=\"%3\">"
-        "  <div class=\"title\">%3:</div>"
-        "  <div class=\"value\">%4</div>"
-        "</div>",
-        (important ? "important" : ""),
-        (noprint ? "noprint" : ""),
-        Glib::Markup::escape_text (title),
-        header_row_value (value, escape)
-        );
-  }
-
-  ustring ThreadView::header_row_value (ustring value, bool escape)  {
-    return (escape ? Glib::Markup::escape_text (value) : value);
-  }
-
-  /* headers end  */
-
-  /* attachments  */
-  // TODO: [JS] [REIMPLEMENT]
-  void ThreadView::set_attachment_icon (
-      refptr<Message> /* message */,
-      WebKitDOMHTMLElement * div_message)
-
-  {
-# if 0
-    GError *err;
-
-    WebKitDOMHTMLElement * attachment_icon_img = DomUtils::select (
-        WEBKIT_DOM_NODE (div_message),
-        ".attachment.icon.first");
-
-    gchar * content;
-    gsize   content_size;
-    attachment_icon->save_to_buffer (content, content_size, "png");
-    ustring image_content_type = "image/png";
-
-    WebKitDOMHTMLImageElement *img = WEBKIT_DOM_HTML_IMAGE_ELEMENT (attachment_icon_img);
-
-    err = NULL;
-    webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (img), "src",
-        DomUtils::assemble_data_uri (image_content_type, content, content_size).c_str(), &err);
-
-    g_object_unref (attachment_icon_img);
-
-    attachment_icon_img = DomUtils::select (
-        WEBKIT_DOM_NODE (div_message),
-        ".attachment.icon.sec");
-    img = WEBKIT_DOM_HTML_IMAGE_ELEMENT (attachment_icon_img);
-
-    err = NULL;
-    webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (img), "src",
-        DomUtils::assemble_data_uri (image_content_type, content, content_size).c_str(), &err);
-
-    WebKitDOMDOMTokenList * class_list =
-      webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(div_message));
-
-    /* set class  */
-    webkit_dom_dom_token_list_add (class_list, "attachment",
-        (err = NULL, &err));
-
-    g_object_unref (class_list);
-    g_object_unref (attachment_icon_img);
-# endif
-  }
-
-
-  // TODO: [JS] [REIMPLEMENT]
-  bool ThreadView::insert_attachments (
-      refptr<Message> message,
-      WebKitDOMHTMLElement * div_message)
-
-  {
-    // <div class="attachment_container">
-    //     <div class="top_border"></div>
-    //     <table class="attachment" data-attachment-id="">
-    //         <tr>
-    //             <td class="preview">
-    //                 <img src="" />
-    //             </td>
-    //             <td class="info">
-    //                 <div class="filename"></div>
-    //                 <div class="filesize"></div>
-    //             </td>
-    //         </tr>
-    //     </table>
-    // </div>
-
-# if 0
-    GError *err;
-
-    WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
-    WebKitDOMHTMLElement * attachment_container =
-      DomUtils::clone_select (WEBKIT_DOM_NODE(d), "#attachment_template");
-    WebKitDOMHTMLElement * attachment_template =
-      DomUtils::select (WEBKIT_DOM_NODE(attachment_container), ".attachment");
-
-    webkit_dom_element_remove_attribute (WEBKIT_DOM_ELEMENT (attachment_container),
-        "id");
-    webkit_dom_node_remove_child (WEBKIT_DOM_NODE (attachment_container),
-        WEBKIT_DOM_NODE(attachment_template), (err = NULL, &err));
-
-    int attachments = 0;
-
-    /* generate an attachment table for each attachment */
-    for (refptr<Chunk> &c : message->attachments ()) {
-      WebKitDOMHTMLElement * attachment_table =
-        DomUtils::clone_node (WEBKIT_DOM_NODE (attachment_template));
-
-      attachments++;
-
-      WebKitDOMHTMLElement * info_fname =
-        DomUtils::select (WEBKIT_DOM_NODE (attachment_table), ".info .filename");
-
-      ustring fname = c->get_filename ();
-      if (fname.size () == 0) {
-        fname = "Unnamed attachment";
-      }
-
-      fname = Glib::Markup::escape_text (fname);
-
-      webkit_dom_html_element_set_inner_text (info_fname, fname.c_str(), (err = NULL, &err));
-
-      WebKitDOMHTMLElement * info_fsize =
-        DomUtils::select (WEBKIT_DOM_NODE (attachment_table), ".info .filesize");
-
-      refptr<Glib::ByteArray> attachment_data = c->contents ();
-
-      ustring fsize = Utils::format_size (attachment_data->size ());
-
-      webkit_dom_html_element_set_inner_text (info_fsize, fsize.c_str(), (err = NULL, &err));
-
-
-      // add attachment to message state
-      MessageState::Element e (MessageState::ElementType::Attachment, c->id);
-      state[message].elements.push_back (e);
-      LOG (debug) << "tv: added attachment: " << state[message].elements.size();
-
-      webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (attachment_table),
-        "data-attachment-id", e.element_id().c_str(),
-        (err = NULL, &err));
-      webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (attachment_table),
-        "id", e.element_id().c_str(),
-        (err = NULL, &err));
-
-      // set image
-      WebKitDOMHTMLImageElement * img =
-        WEBKIT_DOM_HTML_IMAGE_ELEMENT(
-        DomUtils::select (WEBKIT_DOM_NODE (attachment_table), ".preview img"));
-
-      set_attachment_src (c, attachment_data, img);
-
-      // add the attachment table
-      webkit_dom_node_append_child (WEBKIT_DOM_NODE (attachment_container),
-          WEBKIT_DOM_NODE (attachment_table), (err = NULL, &err));
-
-
-      if (c->issigned || c->isencrypted) {
-        /* add encryption or signed tag to attachment */
-        WebKitDOMDOMTokenList * class_list =
-          webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(attachment_table));
-
-        if (c->isencrypted) {
-          webkit_dom_dom_token_list_add (class_list, "encrypted",
-              (err = NULL, &err));
-        }
-
-        if (c->issigned) {
-          webkit_dom_dom_token_list_add (class_list, "signed",
-              (err = NULL, &err));
-        }
-
-        g_object_unref (class_list);
-      }
-
-      g_object_unref (img);
-      g_object_unref (info_fname);
-      g_object_unref (info_fsize);
-      g_object_unref (attachment_table);
-
-    }
-
-    if (attachments > 0) {
-      webkit_dom_node_append_child (WEBKIT_DOM_NODE (div_message),
-          WEBKIT_DOM_NODE (attachment_container), (err = NULL, &err));
-    }
-
-    g_object_unref (attachment_template);
-    g_object_unref (attachment_container);
-    g_object_unref (d);
-
-    return (attachments > 0);
-# endif
-  }
-
-  // TODO: [JS] [REIMPLEMENT]
-  void ThreadView::set_attachment_src (
-      refptr<Chunk> c,
-      refptr<Glib::ByteArray> data,
-      WebKitDOMHTMLImageElement *img)
-  {
-# if 0
-    /* set the preview image or icon on the attachment display element */
-
-    const char * _mtype = g_mime_content_type_get_media_type (c->content_type);
-    ustring mime_type;
-    if (_mtype == NULL) {
-      mime_type = "application/octet-stream";
-    } else {
-      mime_type = ustring(g_mime_content_type_get_mime_type (c->content_type));
-    }
-
-    LOG (debug) << "tv: set attachment, mime_type: " << mime_type << ", mtype: " << _mtype;
-
-    gchar * content;
-    gsize   content_size;
-    ustring image_content_type;
-
-    if ((_mtype != NULL) && (ustring(_mtype) == "image")) {
-      auto mis = Gio::MemoryInputStream::create ();
-      mis->add_data (data->get_data (), data->size ());
-
-      try {
-
-        auto pb = Gdk::Pixbuf::create_from_stream_at_scale (mis, THUMBNAIL_WIDTH, -1, true, refptr<Gio::Cancellable>());
-        pb = pb->apply_embedded_orientation ();
-
-        pb->save_to_buffer (content, content_size, "png");
-        image_content_type = "image/png";
-
-        GError * gerr;
-        WebKitDOMDOMTokenList * class_list =
-          webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(img));
-        /* set class  */
-        webkit_dom_dom_token_list_add (class_list, "thumbnail",
-            (gerr = NULL, &gerr));
-
-        g_object_unref (class_list);
-
-      } catch (Gdk::PixbufError &ex) {
-
-        LOG (error) << "tv: could not create icon from attachmed image.";
-
-        attachment_icon->save_to_buffer (content, content_size, "png"); // default type is png
-        image_content_type = "image/png";
-
-      }
-    } else {
-
-      /*
-      const char * _gio_content_type = g_content_type_from_mime_type (mime_type.c_str());
-      ustring gio_content_type;
-      if (_gio_content_type == NULL) {
-        gio_content_type = "application/octet-stream";
-      } else {
-        gio_content_type = ustring(_gio_content_type);
-      }
-      GIcon * icon = g_content_type_get_icon (gio_content_type.c_str());
-
-      ustring icon_string;
-      if (icon == NULL) {
-        icon_string = "mail-attachment-symbolic";
-      } else {
-        icon_string = g_icon_to_string (icon);
-        g_object_unref (icon);
-      }
-
-      if (icon_string.size() < 1) {
-        icon_string = "mail-attachment-symbolic";
-      }
-
-
-      LOG (debug) << "icon: " << icon_string << flush;
-      */
-
-      // TODO: use guessed icon
-
-      attachment_icon->save_to_buffer (content, content_size, "png"); // default type is png
-      image_content_type = "image/png";
-
-    }
-
-    GError * err = NULL;
-    webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (img), "src",
-        DomUtils::assemble_data_uri (image_content_type, content, content_size).c_str(), &err);
-
-# endif
-  }
-  /* attachments end  */
 
   /* marked  */
   // TODO: [JS] [REIMPLEMENT]
@@ -1927,78 +1352,6 @@ namespace Astroid {
 
 
   //
-
-  /* mime messages  */
-  // TODO: [JS] [REIMPLEMENT]
-  void ThreadView::insert_mime_messages (
-      refptr<Message> message,
-      WebKitDOMHTMLElement * div_message)
-
-  {
-# if 0
-    WebKitDOMHTMLElement * div_email_container =
-      DomUtils::select (WEBKIT_DOM_NODE(div_message), "div.email_container");
-
-    WebKitDOMHTMLElement * span_body =
-      DomUtils::select (WEBKIT_DOM_NODE(div_email_container), ".body");
-
-    for (refptr<Chunk> &c : message->mime_messages ()) {
-      LOG (debug) << "create mime message part: " << c->id;
-      //
-      //  <div id="mime_template" class=mime_container">
-      //      <div class="top_border"></div>
-      //      <div class="message"></div>
-      //  </div>
-
-      GError *err;
-
-      WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
-      WebKitDOMHTMLElement * mime_container =
-        DomUtils::clone_select (WEBKIT_DOM_NODE(d), "#mime_template");
-
-      webkit_dom_element_remove_attribute (WEBKIT_DOM_ELEMENT (mime_container),
-          "id");
-
-      // add attachment to message state
-      MessageState::Element e (MessageState::ElementType::MimeMessage, c->id);
-      state[message].elements.push_back (e);
-      LOG (debug) << "tv: added mime message: " << state[message].elements.size();
-
-      webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (mime_container),
-        "id", e.element_id().c_str(),
-        (err = NULL, &err));
-
-      ustring content = ustring::compose ("MIME message (subject: %1, size: %2 B) - potentially sketchy.",
-          Glib::Markup::escape_text(c->get_filename ()),
-          c->get_file_size (),
-          e.element_id ());
-
-      WebKitDOMHTMLElement * message_cont =
-        DomUtils::select (WEBKIT_DOM_NODE (mime_container), ".message");
-
-      webkit_dom_html_element_set_inner_html (
-          message_cont,
-          content.c_str(),
-          (err = NULL, &err));
-
-
-      webkit_dom_node_append_child (WEBKIT_DOM_NODE (span_body),
-          WEBKIT_DOM_NODE (mime_container), (err = NULL, &err));
-
-      g_object_unref (message_cont);
-      g_object_unref (mime_container);
-      g_object_unref (d);
-
-    }
-
-    g_object_unref (span_body);
-    g_object_unref (div_email_container);
-# endif
-  }
-
-
-  /*  */
-
 
   /* end rendering  */
 
@@ -3123,7 +2476,7 @@ namespace Astroid {
 
   } // }}}
 
-  bool ThreadView::element_action (ElementAction a) { //
+  bool ThreadView::element_action (ElementAction a) { // {{{
     LOG (debug) << "tv: activate item.";
 
     if (!(focused_message)) {
@@ -3327,10 +2680,9 @@ namespace Astroid {
       emit_element_action (state[focused_message].current_element, a);
     }
     return true;
-  } // 
+  } // }}}
 
   /* focus handling  */
-
   void ThreadView::on_scroll_vadjustment_changed () {
     if (in_scroll) {
       in_scroll = false;
@@ -3724,6 +3076,7 @@ namespace Astroid {
 
     return eid;
 # endif
+    return "";
   }
 
   // TODO: [JS]
@@ -4284,6 +3637,12 @@ namespace Astroid {
     /* webkit_web_view_search_text (webview, search_q.c_str (), false, false, true); */
   }
 
-  /*  */
+  /* Utils */
+  std::string ThreadView::assemble_data_uri (ustring mime_type, gchar * &data, gsize len) {
+
+    std::string base64 = "data:" + mime_type + ";base64," + Glib::Base64::encode (std::string(data, len));
+
+    return base64;
+  }
 }
 

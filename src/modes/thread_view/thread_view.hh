@@ -204,27 +204,13 @@ namespace Astroid {
       void render_messages ();
       void reload_images ();
 
-      /* message rendering */
+      /* message loading and rendering */
       void add_message (refptr<Message>);
       ptree build_mime_tree (refptr<Chunk>, bool);
       ptree get_encryption_state (refptr<Chunk>);
       ptree get_signature_state (refptr<Chunk>);
-
-      /* message loading */
-      void set_message_html (refptr<Message>, WebKitDOMHTMLElement *);
-      void create_message_part_html (refptr<Message>, refptr<Chunk>, WebKitDOMHTMLElement *, bool);
-      void create_sibling_part (refptr<Message>, refptr<Chunk>, WebKitDOMHTMLElement *);
-      void create_body_part (refptr<Message>, refptr<Chunk>, WebKitDOMHTMLElement *);
-      void insert_header_address (ustring &, ustring, Address, bool);
-      void insert_header_address_list (ustring &, ustring, AddressList, bool);
-      void insert_header_row (ustring &, ustring, ustring, bool);
-      void insert_header_date (ustring &, refptr<Message>);
-      ustring create_header_row (ustring title, ustring value, bool important, bool escape, bool noprint = false);
-      ustring header_row_value (ustring value, bool escape);
-      /*
-      void message_render_tags (refptr<Message>, WebKitDOMElement * div_message);
-      void message_update_css_tags (refptr<Message>, WebKitDOMElement * div_message);
-      */
+      ustring get_attachment_thumbnail (refptr<Chunk>);
+      static std::string assemble_data_uri (ustring, gchar *&, gsize);
 
       bool open_html_part_external;
       void display_part (refptr<Message>, refptr<Chunk>, MessageState::Element);
@@ -236,17 +222,6 @@ namespace Astroid {
       refptr<Gdk::Pixbuf> marked_icon;
       void load_marked_icon (refptr<Message>, WebKitDOMHTMLElement *);
       void update_marked_state (refptr<Message>);
-
-      /* attachments */
-      bool insert_attachments (refptr<Message>, WebKitDOMHTMLElement *);
-      void set_attachment_icon (refptr<Message>, WebKitDOMHTMLElement *);
-
-      /* mime messages */
-      void insert_mime_messages (refptr<Message>, WebKitDOMHTMLElement *);
-
-      void set_attachment_src (refptr<Chunk>,
-          refptr<Glib::ByteArray>,
-          WebKitDOMHTMLImageElement *);
 
       refptr<Gdk::Pixbuf> attachment_icon;
 
