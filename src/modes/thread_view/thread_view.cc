@@ -671,7 +671,13 @@ namespace Astroid {
     if (m->in_notmuch) {
       for (ustring &tag : m->tags) {
         ptree tag_node;
-        tag_node.put ("label", tag);
+        tag_node.put ("tag", tag);
+
+        unsigned char cv[] = { 0xff, 0xff, 0xff }; // assuming tag-background is white
+        auto clrs = Utils::get_tag_color (tag, cv);
+        tag_node.put ("fg", clrs.first);
+        tag_node.put ("bg", clrs.second);
+
         tags_node.push_back(std::make_pair("", tag_node));
       }
     }
