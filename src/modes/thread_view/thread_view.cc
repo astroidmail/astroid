@@ -502,6 +502,7 @@ namespace Astroid {
           _m->reference (); // since m is owned by caller
 
           add_message (_m);
+          webkit_web_view_run_javascript (webview, "Astroid.render();", NULL, NULL, NULL);
         }
       }
     }
@@ -532,6 +533,7 @@ namespace Astroid {
       return;
     }
 
+    /* load Astorid JS */
     webkit_web_view_run_javascript (webview, theme.thread_view_js.c_str (), NULL, NULL, NULL);
 
     /* set message state vector */
@@ -622,7 +624,6 @@ namespace Astroid {
 # endif
   }
 
-  // TODO: [JS] [REIMPLEMENT]
   void ThreadView::add_message (refptr<Message> m) {
     LOG (debug) << "tv: adding message: " << m->mid;
 
@@ -699,6 +700,8 @@ namespace Astroid {
     mjs.put ("focused", false);
     mjs.put ("missing_content", m->missing_content);
     mjs.put ("patch", m->is_patch ());
+    mjs.put ("level", m->level);
+    mjs.put ("in-reply-to", m->inreplyto);
 
     /* preview */
     ustring bp = m->viewable_text (false, false);
