@@ -94,7 +94,8 @@ namespace Astroid {
     webkit_user_content_manager_add_script (webcontent, js);
     */
 
-    webview    = WEBKIT_WEB_VIEW (webkit_web_view_new_with_user_content_manager (webcontent));
+    /* create webview */
+    webview = WEBKIT_WEB_VIEW (webkit_web_view_new_with_user_content_manager (webcontent));
 
     websettings = WEBKIT_SETTINGS (webkit_settings_new_with_settings (
         "enable-javascript", TRUE,
@@ -389,13 +390,15 @@ namespace Astroid {
   /* end navigation requests  */
 
   /* message loading  */
-  /* is this callback setup safe?
+  /*
+   * By the C++ standard this callback-setup is not necessarily safe, but it seems
+   * to be for both g++ and clang++.
    *
    * http://stackoverflow.com/questions/2068022/in-c-is-it-safe-portable-to-use-static-member-function-pointer-for-c-api-call
    *
    * http://gtk.10911.n7.nabble.com/Using-g-signal-connect-in-class-td57137.html
    *
-   * to be portable we have to use a free function declared extern "C". a
+   * To be portable we have to use a free function declared extern "C". A
    * static member function is likely to work at least on gcc/g++, but not
    * necessarily elsewhere.
    *
@@ -498,116 +501,11 @@ namespace Astroid {
           refptr<Message> _m = refptr<Message> (m);
           _m->reference (); // since m is owned by caller
 
-          // TODO: [JS] Update notmuch tags and update corresponding CSS tags
-
-          /*
-          ustring mid = "message_" + m->mid;
-          WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
-          WebKitDOMElement * div_message = webkit_dom_document_get_element_by_id (d, mid.c_str());
-          message_render_tags (_m, div_message);
-          message_update_css_tags (_m, div_message);
-
-          g_object_unref (div_message);
-          g_object_unref (d);
-          */
+          add_message (_m);
         }
       }
     }
   }
-
-  // TODO: [JS] [REIMPLEMENT]
-# if 0
-  void ThreadView::message_update_css_tags (refptr<Message> m, WebKitDOMElement * div_message) {
-    /* check for tag changes that control display */
-    GError *err;
-
-    WebKitDOMDOMTokenList * class_list =
-      webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(div_message));
-
-    /* patches may be rendered somewhat differently */
-    if (m->is_patch ()) {
-      if (!webkit_dom_dom_token_list_contains (class_list, "patch", (err = NULL, &err))) {
-        webkit_dom_dom_token_list_add (class_list, "patch",
-            (err = NULL, &err));
-      }
-    } else {
-      webkit_dom_dom_token_list_remove (class_list, "patch",
-          (err = NULL, &err));
-    }
-
-    /* message subject deviates from thread subject */
-    if (m->is_different_subject ()) {
-      if (!webkit_dom_dom_token_list_contains (class_list, "different_subject", (err = NULL, &err))) {
-        webkit_dom_dom_token_list_add (class_list, "different_subject",
-            (err = NULL, &err));
-      }
-    } else {
-      webkit_dom_dom_token_list_remove (class_list, "different_subject",
-          (err = NULL, &err));
-    }
-
-    /* reset notmuch tags */
-    for (unsigned int i = 0; i < webkit_dom_dom_token_list_get_length (class_list); i++)
-    {
-      const char * _t = webkit_dom_dom_token_list_item (class_list, i);
-      ustring t (_t);
-
-      if (t.find ("nm-", 0) != std::string::npos) {
-        webkit_dom_dom_token_list_remove (class_list, _t, (err = NULL, &err));
-      }
-    }
-
-    for (ustring t : m->tags) {
-      t = UstringUtils::replace (t, "/", "-");
-      t = UstringUtils::replace (t, ".", "-");
-      t = Glib::Markup::escape_text (t);
-
-      t = "nm-" + t;
-      webkit_dom_dom_token_list_add (class_list, t.c_str (), (err = NULL, &err));
-    }
-
-    g_object_unref (class_list);
-  }
-# endif
-
-  // TODO: [JS] [REIMPLEMENT]
-# if 0
-  void ThreadView::message_render_tags (refptr<Message> m, WebKitDOMElement * div_message) {
-    if (m->in_notmuch) {
-      unsigned char cv[] = { 0xff, 0xff, 0xff };
-
-      ustring tags_s;
-
-# ifndef DISABLE_PLUGINS
-      if (!plugins->format_tags (m->tags, "#ffffff", false, tags_s)) {
-#  endif
-
-        tags_s = VectorUtils::concat_tags_color (m->tags, false, 0, cv);
-
-# ifndef DISABLE_PLUGINS
-      }
-# endif
-
-      GError *err;
-
-      WebKitDOMHTMLElement * tags = DomUtils::select (
-          WEBKIT_DOM_NODE (div_message),
-          ".header_container .tags");
-
-      webkit_dom_html_element_set_inner_html (tags, tags_s.c_str (), (err = NULL, &err));
-
-      g_object_unref (tags);
-
-      tags = DomUtils::select (
-          WEBKIT_DOM_NODE (div_message),
-          ".header_container .header div#Tags .value");
-
-      webkit_dom_html_element_set_inner_html (tags, tags_s.c_str (), (err = NULL, &err));
-
-      g_object_unref (tags);
-    }
-  }
-# endif
   /* end message loading  */
 
   /* rendering  */
