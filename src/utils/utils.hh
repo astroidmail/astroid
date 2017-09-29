@@ -35,6 +35,10 @@ namespace Astroid {
       static Pango::Color tags_lower_color;
 
       /* property tree */
+      static void extend_ptree (ptree &p, ptree &v) {
+        p.push_back (std::make_pair ("", v));
+      }
+
       template <class T>
       static void extend_ptree (ptree &p, T v) {
         ptree a;

@@ -624,7 +624,7 @@ namespace Astroid {
 # endif
   }
 
-  void ThreadView::add_message (refptr<Message> m) {
+  void ThreadView::add_message (refptr<Message> m) { // {{{
     LOG (debug) << "tv: adding message: " << m->mid;
 
     ptree mjs;
@@ -726,7 +726,7 @@ namespace Astroid {
     mjs.put("preview", bp);
 
     /* building body */
-    ptree body = build_mime_tree (m->root, true);
+    ptree body = build_mime_tree (m, m->root, true);
     mjs.add_child ("body", body);
 
     /* add mime messages */
@@ -748,7 +748,11 @@ namespace Astroid {
 
       MessageState::Element e (MessageState::ElementType::MimeMessage, c->id);
       state[m].elements.push_back (e);
-      LOG (debug) << "tv: added mime message: " << state[m].elements.size();
+
+      message.put ("eid", e.id);
+
+      LOG (debug) << "tv: added mime message: " << e.id;
+      Utils::extend_ptree (mime_messages, message);
     }
     mjs.add_child ("mime_messages", mime_messages);
 
@@ -773,7 +777,11 @@ namespace Astroid {
 
       MessageState::Element e (MessageState::ElementType::Attachment, c->id);
       state[m].elements.push_back (e);
-      LOG (debug) << "tv: added attachment: " << state[m].elements.size();
+
+      attachment.put ("eid", e.id);
+
+      LOG (debug) << "tv: added attachment: " << e.id;
+      Utils::extend_ptree (attachments, attachment);
     }
     mjs.add_child ("attachments", attachments);
 
@@ -786,9 +794,9 @@ namespace Astroid {
 
     webkit_web_view_run_javascript (webview, js.str ().c_str (), NULL, NULL, NULL);
 
-  }
+  } // }}}
 
-  ptree ThreadView::build_mime_tree (refptr<Chunk> c, bool root) {
+  ptree ThreadView::build_mime_tree (refptr<Message> m, refptr<Chunk> c, bool root) {
 
     ustring mime_type;
     if (c->content_type) {
@@ -819,18 +827,6 @@ namespace Astroid {
       return ptree ();
     }
 
-    /*
-     * we flatten the structure, replacing empty wrappers with an array of
-     * their children.
-     */
-    ptree children;
-
-    for (auto &k : c->kids) {
-      ptree child = build_mime_tree (k, false);
-      if (!child.empty ()) {
-        children.push_back(std::make_pair("", child));
-      }
-    }
 
     if (c->viewable) {
       part.put ("mime_type", mime_type);
@@ -847,8 +843,37 @@ namespace Astroid {
       /* TODO: filter_code_tags */
       part.put ("content", c->viewable_text (mime_type == "text/plain", true));
 
+      /* make element */
+      MessageState::Element e (MessageState::ElementType::Part, c->id);
+      state[m].elements.push_back (e);
+
+      part.put ("eid", e.id);
+
+      LOG (debug) << "tv: added part: " << e.id;
+    }
+
+    /* recurse into children after first part so that we get the correct order
+     * on elements */
+
+    ptree children;
+
+    for (auto &k : c->kids) {
+      ptree child = build_mime_tree (m, k, false);
+      if (!child.empty ()) {
+        children.push_back(std::make_pair("", child));
+      }
+    }
+
+    if (c->viewable) {
+
       part.put_child ("children", children);
+
     } else {
+      /*
+       * we flatten the structure, replacing empty wrappers with an array of
+       * their children.
+       */
+
       part = children;
     }
 
@@ -1017,7 +1042,7 @@ namespace Astroid {
     return signature;
   } // }}}
 
-  ustring ThreadView::get_attachment_thumbnail (refptr<Chunk> c) {
+  ustring ThreadView::get_attachment_thumbnail (refptr<Chunk> c) { // {{{
     /* set the preview image or icon on the attachment display element */
     const char * _mtype = g_mime_content_type_get_media_type (c->content_type);
     ustring mime_type;
@@ -1060,9 +1085,9 @@ namespace Astroid {
     }
 
     return assemble_data_uri (image_content_type, content, content_size);
-  }
+  } // }}}
 
-  void ThreadView::filter_code_tags (ustring &body) {
+  void ThreadView::filter_code_tags (ustring &body) { // {{{
     time_t t0 = clock ();
     ustring code_tag = code_prettify_code_tag;
     ustring start_tag = code_start_tag;
@@ -1107,7 +1132,7 @@ namespace Astroid {
 
     LOG (debug) << "tv: code filter done, time: " << ((clock() - t0) * 1000 / CLOCKS_PER_SEC) << " ms.";
 
-  }
+  } // }}}
 
   // TODO: [JS] [REIMPLEMENT]
   void ThreadView::display_part (refptr<Message> message, refptr<Chunk> c, MessageState::Element el) {

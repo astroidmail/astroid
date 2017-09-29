@@ -206,7 +206,7 @@ namespace Astroid {
 
       /* message loading and rendering */
       void add_message (refptr<Message>);
-      ptree build_mime_tree (refptr<Chunk>, bool);
+      ptree build_mime_tree (refptr<Message>, refptr<Chunk>, bool);
       ptree get_encryption_state (refptr<Chunk>);
       ptree get_signature_state (refptr<Chunk>);
       ustring get_attachment_thumbnail (refptr<Chunk>);
