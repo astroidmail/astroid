@@ -892,7 +892,6 @@ namespace Astroid {
   ptree ThreadView::get_signature_state (refptr<Chunk> c) { // {{{
     ptree signature;
 
-    vector<ustring> all_sig_errors;
     refptr<Crypto> cr = c->crypt;
 
     signature.put ("verified", cr->verified);
@@ -941,15 +940,15 @@ namespace Astroid {
 
             GMimeSignatureError e = g_mime_signature_get_errors (s);
             if (e & GMIME_SIGNATURE_ERROR_EXPSIG)
-              sig_errors.put ("", "expired");
+              Utils::extend_ptree (sig_errors, "expired");
             if (e & GMIME_SIGNATURE_ERROR_NO_PUBKEY)
-              sig_errors.put ("", "no-pub-key");
+              Utils::extend_ptree (sig_errors, "no-pub-key");
             if (e & GMIME_SIGNATURE_ERROR_EXPKEYSIG)
-              sig_errors.put ("", "expired-key-sig");
+              Utils::extend_ptree (sig_errors, "expired-key-sig");
             if (e & GMIME_SIGNATURE_ERROR_REVKEYSIG)
-              sig_errors.put ("", "revoked-key-sig");
+              Utils::extend_ptree (sig_errors, "revoked-key-sig");
             if (e & GMIME_SIGNATURE_ERROR_UNSUPP_ALGO)
-              sig_errors.put ("", "unsupported-algo");
+              Utils::extend_ptree (sig_errors, "unsupported-algo");
             break;
 # else
         GMimeSignatureStatus stat = g_mime_signature_get_status (s);
@@ -961,27 +960,27 @@ namespace Astroid {
           else gd = "erroneous";
 
           if (stat & GMIME_SIGNATURE_STATUS_KEY_REVOKED)
-            sig_errors.put ("", "revoked-key");
+            Utils::extend_ptree (sig_errors, "revoked-key");
           if (stat & GMIME_SIGNATURE_STATUS_KEY_EXPIRED)
-            sig_errors.put ("", "expired-key");
+            Utils::extend_ptree (sig_errors, "expired-key");
           if (stat & GMIME_SIGNATURE_STATUS_SIG_EXPIRED)
-            sig_errors.put ("", "expired-sig");
+            Utils::extend_ptree (sig_errors, "expired-sig");
           if (stat & GMIME_SIGNATURE_STATUS_KEY_MISSING)
-            sig_errors.put ("", "key-missing");
+            Utils::extend_ptree (sig_errors, "key-missing");
           if (stat & GMIME_SIGNATURE_STATUS_CRL_MISSING)
-            sig_errors.put ("", "crl-missing");
+            Utils::extend_ptree (sig_errors, "crl-missing");
           if (stat & GMIME_SIGNATURE_STATUS_CRL_TOO_OLD)
-            sig_errors.put ("", "crl-too-old");
+            Utils::extend_ptree (sig_errors, "crl-too-old");
           if (stat & GMIME_SIGNATURE_STATUS_BAD_POLICY)
-            sig_errors.put ("", "bad-policy");
+            Utils::extend_ptree (sig_errors, "bad-policy");
           if (stat & GMIME_SIGNATURE_STATUS_SYS_ERROR)
-            sig_errors.put ("", "sys-error");
+            Utils::extend_ptree (sig_errors, "sys-error");
           if (stat & GMIME_SIGNATURE_STATUS_TOFU_CONFLICT)
-            sig_errors.put ("", "tofu-conflict");
+            Utils::extend_ptree (sig_errors, "tofu-conflict");
 # endif
         }
       } else {
-        sig_errors.put ("", "bad-certificate");
+        Utils::extend_ptree (sig_errors, "bad-certificate");
       }
 
 # if (GMIME_MAJOR_VERSION < 3)
