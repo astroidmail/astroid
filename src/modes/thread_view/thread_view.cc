@@ -85,14 +85,12 @@ namespace Astroid {
     webkit_user_content_manager_add_style_sheet (webcontent, style);
 
     /* add javascript library */
-    /*
     WebKitUserScript * js = webkit_user_script_new (
         theme.thread_view_js.c_str (),
-        WEBKIT_USER_CONTENT_INJECT_ALL_FRAMES,
+        WEBKIT_USER_CONTENT_INJECT_TOP_FRAME,
         WEBKIT_USER_SCRIPT_INJECT_AT_DOCUMENT_START,
         NULL, NULL);
     webkit_user_content_manager_add_script (webcontent, js);
-    */
 
     /* create webview */
     webview = WEBKIT_WEB_VIEW (webkit_web_view_new_with_user_content_manager (webcontent));
@@ -532,9 +530,6 @@ namespace Astroid {
       LOG (error) << "tv: web kit not loaded.";
       return;
     }
-
-    /* load Astorid JS */
-    webkit_web_view_run_javascript (webview, theme.thread_view_js.c_str (), NULL, NULL, NULL);
 
     /* set message state vector */
     state.clear ();
