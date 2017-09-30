@@ -634,7 +634,7 @@ namespace Astroid {
       ptree contact_node; // Contact object
       contact_node.put ("address", recipient.email ());
       contact_node.put ("name", recipient.fail_safe_name ());
-      to_node.push_back(std::make_pair("", contact_node));
+      Utils::extend_ptree (to_node, contact_node);
     }
     mjs.add_child("to", to_node);
 
@@ -643,7 +643,7 @@ namespace Astroid {
       ptree contact_node; // Contact object
       contact_node.put ("address", recipient.email ());
       contact_node.put ("name", recipient.fail_safe_name ());
-      cc_node.push_back(std::make_pair("", contact_node));
+      Utils::extend_ptree (cc_node, contact_node);
     }
     mjs.add_child("cc", cc_node);
 
@@ -652,7 +652,7 @@ namespace Astroid {
       ptree contact_node; // Contact object
       contact_node.put ("address", recipient.email ());
       contact_node.put ("name", recipient.fail_safe_name ());
-      bcc_node.push_back(std::make_pair("", contact_node));
+      Utils::extend_ptree (bcc_node, contact_node);
     }
     mjs.add_child("bcc", bcc_node);
 
@@ -673,7 +673,7 @@ namespace Astroid {
         tag_node.put ("fg", clrs.first);
         tag_node.put ("bg", clrs.second);
 
-        tags_node.push_back(std::make_pair("", tag_node));
+        Utils::extend_ptree (tags_node, tag_node);
       }
     }
     mjs.add_child ("tags", tags_node);
@@ -855,7 +855,7 @@ namespace Astroid {
     for (auto &k : c->kids) {
       ptree child = build_mime_tree (m, k, false);
       if (!child.empty ()) {
-        children.push_back(std::make_pair("", child));
+        Utils::extend_ptree (children, child);
       }
     }
 
@@ -900,7 +900,7 @@ namespace Astroid {
         _r.put ("email", em);
         _r.put ("key", ky);
 
-        recipients.push_back (std::make_pair ("", _r));
+        Utils::extend_ptree (recipients, _r);
       }
     }
 
@@ -1029,7 +1029,7 @@ namespace Astroid {
       _sign.put ("status", gd);
       _sign.put ("trust", trust);
       _sign.put_child ("errors", sig_errors);
-      signatures.push_back (std::make_pair ("", _sign));
+      Utils::extend_ptree (signatures, _sign);
     }
 
     signature.put_child ("signatures", signatures);
