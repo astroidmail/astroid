@@ -2564,6 +2564,11 @@ namespace Astroid {
     return true;
   }
 
+  void ThreadView::run_javascript_async (string js)
+  {
+    webkit_web_view_run_javascript (webview, js.c_str (), NULL, NULL, NULL);
+  }
+
   void ThreadView::run_javascript_sync (string js)
   {
     {
@@ -2599,14 +2604,19 @@ namespace Astroid {
      */
 
     string js = "Astroid.focus_next_element(" + ( force_change ? string("true") : string("false")) + ");";
-
   }
 
   // TODO: [JS]
   void ThreadView::focus_previous_element (bool force_change) {
+    /* Reverse of focus_next_element */
   }
 
   void ThreadView::focus_element (refptr<Message> m, unsigned int e) {
+    /* TODO:
+     * C++: Update focus_message and state vector
+     * JS:
+     *  - Move focus to specified element
+     */
   }
 
   void ThreadView::focus_message (refptr<Message> m) {
