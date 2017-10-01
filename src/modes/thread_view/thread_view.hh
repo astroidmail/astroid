@@ -5,6 +5,9 @@
 # include <vector>
 # include <string>
 # include <chrono>
+# include <mutex>
+# include <condition_variable>
+# include <functional>
 
 # include <gtkmm.h>
 # include <webkit2/webkit2.h>
@@ -39,6 +42,12 @@ namespace Astroid {
       WebKitPolicyDecision * decision,
       WebKitPolicyDecisionType decision_type,
       gpointer user_data);
+
+  extern "C" void ThreadView_js_finished (
+      GObject *       o,
+      GAsyncResult *  result,
+      gpointer        user_data);
+
 
   class ThreadView : public Mode {
     friend class ThreadViewInspector;
@@ -82,7 +91,7 @@ namespace Astroid {
       bool    code_is_on = false; // for this thread
       void    filter_code_tags (ustring &); // look for code tags
 
-      bool enable_gravatar;
+      bool    enable_gravatar;
 
       Theme theme;
 
@@ -95,22 +104,27 @@ namespace Astroid {
     private:
       ThreadViewInspector thread_view_inspector;
 
+      /* javascript */
+      void run_javascript_sync (std::string);
+      void run_javascript_sync (std::string, std::function<void (std::string)>);
+
+    public:
+      void run_javascript_sync_cb (GObject *, GAsyncResult *);
+    private:
+
+      std::mutex              js_sync;
+      std::condition_variable js_cv;
+      bool                    js_done = false;
+
       /* message manipulation and location */
-      bool scroll_to_message (refptr<Message>, bool = false);
-      bool scroll_to_element (ustring, bool = false);
+      void focus_next_element (bool = false);
+      void focus_previous_element (bool = false);
 
-      bool    in_scroll = false;
-      ustring scroll_arg;
-      bool    _scroll_when_visible;
+      void focus_next_message ();
+      void focus_previous_message (bool focus_top = false);
 
-      void update_focus_to_view ();
-      void update_focus_to_center ();
-      void update_focus_status ();
-      ustring focus_next ();
-      ustring focus_previous (bool focus_top = false);
-
-      ustring focus_next_element (bool = false);
-      ustring focus_previous_element (bool = false);
+      void focus_message (refptr<Message>);
+      void focus_element (refptr<Message>, unsigned int);
 
       enum ToggleState {
         ToggleToggle,
@@ -120,9 +134,6 @@ namespace Astroid {
 
       bool toggle_hidden (refptr<Message> = refptr<Message> (), ToggleState = ToggleToggle);
       bool is_hidden (refptr<Message>);
-
-      /* focused message */
-      refptr<Message> candidate_startup; // startup
 
     public:
       /* message display state */
@@ -240,8 +251,6 @@ namespace Astroid {
       bool on_load_changed (
         WebKitWebView * w,
         WebKitLoadEvent load_event);
-
-      void on_scroll_vadjustment_changed();
 
       gboolean permission_request (
           WebKitWebView * w,

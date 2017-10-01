@@ -4,6 +4,9 @@
 # include <vector>
 # include <algorithm>
 # include <chrono>
+# include <mutex>
+# include <condition_variable>
+# include <functional>
 
 # include <gtkmm.h>
 # include <webkit2/webkit2.h>
@@ -139,11 +142,6 @@ namespace Astroid {
     g_signal_connect (webview, "decide-policy",
         G_CALLBACK(ThreadView_decide_policy),
         (gpointer) this);
-
-    /* scrolled window */
-    auto vadj = scroll.get_vadjustment ();
-    vadj->signal_changed().connect (
-        sigc::mem_fun (this, &ThreadView::on_scroll_vadjustment_changed));
 
     /* load attachment icon */
     ustring icon_string = "mail-attachment-symbolic";
@@ -546,41 +544,33 @@ namespace Astroid {
     update_all_indent_states ();
 
     if (!focused_message) {
-      if (!candidate_startup) {
-        LOG (debug) << "tv: no message expanded, showing newest message.";
+      LOG (debug) << "tv: no message focused, showing newest message.";
 
-        focused_message = *max_element (
-            mthread->messages.begin (),
-            mthread->messages.end (),
-            [](refptr<Message> &a, refptr<Message> &b)
-              {
-                return ( a->time < b->time );
-              });
+      focused_message = *max_element (
+          mthread->messages.begin (),
+          mthread->messages.end (),
+          [](refptr<Message> &a, refptr<Message> &b)
+            {
+              return ( a->time < b->time );
+            });
 
-        toggle_hidden (focused_message, ToggleShow);
+      toggle_hidden (focused_message, ToggleShow);
 
-      } else {
-        focused_message = candidate_startup;
-      }
     }
-
-    bool sc = scroll_to_message (focused_message, true);
 
     emit_ready ();
 
-    if (sc) {
-      if (!unread_setup) {
-        /* there's potentially a small chance that scroll_to_message gets an
-         * on_scroll_vadjustment_change emitted before we get here. probably not, since
-         * it is the same thread - but still.. */
-        unread_setup = true;
+    if (!unread_setup) {
+      /* there's potentially a small chance that scroll_to_message gets an
+       * on_scroll_vadjustment_change emitted before we get here. probably not, since
+       * it is the same thread - but still.. */
+      unread_setup = true;
 
-        if (unread_delay > 0) {
-          Glib::signal_timeout ().connect (
-              sigc::mem_fun (this, &ThreadView::unread_check), std::max (80., (unread_delay * 1000.) / 2));
-        } else {
-          unread_check ();
-        }
+      if (unread_delay > 0) {
+        Glib::signal_timeout ().connect (
+            sigc::mem_fun (this, &ThreadView::unread_check), std::max (80., (unread_delay * 1000.) / 2));
+      } else {
+        unread_check ();
       }
     }
   }
@@ -642,7 +632,8 @@ namespace Astroid {
 
     // if the updated message was focused, the currently focused element may
     // have changed.
-    update_focus_status ();
+    if (m == focused_message)
+      focus_element (focused_message, state[focused_message].current_element);
   }
 
   void ThreadView::remove_message (refptr<Message> m) {
@@ -1156,181 +1147,37 @@ namespace Astroid {
 
   // TODO: [JS] [REIMPLEMENT]
   void ThreadView::display_part (refptr<Message> message, refptr<Chunk> c, MessageState::Element el) {
-# if 0
-    GError * err;
 
-    WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
-    ustring mid = "message_" + message->mid;
-
-    WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
-
-    WebKitDOMHTMLElement * div_email_container =
-      DomUtils::select (WEBKIT_DOM_NODE(e), "div.email_container");
-
-    WebKitDOMHTMLElement * span_body =
-      DomUtils::select (WEBKIT_DOM_NODE(div_email_container), ".body");
-
-    WebKitDOMElement * sibling =
-      webkit_dom_document_get_element_by_id (d, el.element_id().c_str());
-
-    webkit_dom_node_remove_child (WEBKIT_DOM_NODE (span_body),
-        WEBKIT_DOM_NODE(sibling), (err = NULL, &err));
-
-    state[message].elements.erase (
-        std::remove(
-          state[message].elements.begin(),
-          state[message].elements.end(), el),
-        state[message].elements.end());
-
-    state[message].current_element = 0;
-
-    if (c->viewable) {
-      create_body_part (message, c, span_body);
-    }
-
-    /* this shows parts that are nested directly below the part
-     * as well. otherwise multipart/mixed with html's would
-     * require two enters. */
-
-    for (auto &k: c->kids) {
-      if (k->viewable) {
-        create_body_part (message, k, span_body);
-      } else {
-        create_message_part_html (message, k, span_body, true);
-      }
-    }
-
-    g_object_unref (sibling);
-    g_object_unref (span_body);
-    g_object_unref (div_email_container);
-    g_object_unref (e);
-    g_object_unref (d);
-# endif
   }
 
   /* info and warning  */
   // TODO: [JS] [REIMPLEMENT] Possibly use GtkInfoBar
   void ThreadView::set_warning (refptr<Message> m, ustring txt)
   {
-# if 0
-    LOG (debug) << "tv: set warning: " << txt;
-    ustring mid = "message_" + m->mid;
-
-    WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
-    WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
-
-    WebKitDOMHTMLElement * warning = DomUtils::select (
-        WEBKIT_DOM_NODE (e),
-        ".email_warning");
-
-    GError * err;
-    webkit_dom_html_element_set_inner_html (warning, txt.c_str(), (err = NULL, &err));
-
-    WebKitDOMDOMTokenList * class_list =
-      webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(warning));
-
-    webkit_dom_dom_token_list_add (class_list, "show",
-        (err = NULL, &err));
-
-    g_object_unref (class_list);
-    g_object_unref (warning);
-    g_object_unref (e);
-    g_object_unref (d);
-# endif
+    // TODO: escape
+    ustring js = "Astroid.set_warning(" + m->mid + ", " + txt + ");";
+    webkit_web_view_run_javascript (webview, js.c_str (), NULL, NULL, NULL);
   }
+
 
   void ThreadView::hide_warning (refptr<Message> m)
   {
-# if 0
-    ustring mid = "message_" + m->mid;
-
-    WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
-    WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
-
-    WebKitDOMHTMLElement * warning = DomUtils::select (
-        WEBKIT_DOM_NODE (e),
-        ".email_warning");
-
-    GError * err;
-    webkit_dom_html_element_set_inner_html (warning, "", (err = NULL, &err));
-
-    WebKitDOMDOMTokenList * class_list =
-      webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(warning));
-
-    webkit_dom_dom_token_list_remove (class_list, "show",
-        (err = NULL, &err));
-
-    g_object_unref (class_list);
-    g_object_unref (warning);
-    g_object_unref (e);
-    g_object_unref (d);
-# endif
+    ustring js = "Astroid.hide_warning(" + m->mid + ");";
+    webkit_web_view_run_javascript (webview, js.c_str (), NULL, NULL, NULL);
   }
 
   // TODO: [JS] [REIMPLEMENT] Same as warning
   void ThreadView::set_info (refptr<Message> m, ustring txt)
   {
     LOG (debug) << "tv: set info: " << txt;
-# if 0
-
-    ustring mid = "message_" + m->mid;
-
-    WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
-    WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
-
-    if (e == NULL) {
-      LOG (warn) << "tv: could not get email div.";
-    }
-
-    WebKitDOMHTMLElement * info = DomUtils::select (
-        WEBKIT_DOM_NODE (e),
-        ".email_info");
-
-    GError * err;
-    webkit_dom_html_element_set_inner_html (info, txt.c_str(), (err = NULL, &err));
-
-    WebKitDOMDOMTokenList * class_list =
-      webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(info));
-
-    webkit_dom_dom_token_list_add (class_list, "show",
-        (err = NULL, &err));
-
-    g_object_unref (class_list);
-    g_object_unref (info);
-    g_object_unref (e);
-    g_object_unref (d);
-# endif
+    // TODO: escape
+    ustring js = "Astroid.set_info(" + m->mid + ", " + txt + ");";
+    webkit_web_view_run_javascript (webview, js.c_str (), NULL, NULL, NULL);
   }
 
   void ThreadView::hide_info (refptr<Message> m) {
-# if 0
-    ustring mid = "message_" + m->mid;
-
-    WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
-    WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
-
-    if (e == NULL) {
-      LOG (warn) << "tv: could not get email div.";
-    }
-
-    WebKitDOMHTMLElement * info = DomUtils::select (
-        WEBKIT_DOM_NODE (e),
-        ".email_info");
-
-    GError * err;
-    webkit_dom_html_element_set_inner_html (info, "", (err = NULL, &err));
-
-    WebKitDOMDOMTokenList * class_list =
-      webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(info));
-
-    webkit_dom_dom_token_list_remove (class_list, "show",
-        (err = NULL, &err));
-
-    g_object_unref (class_list);
-    g_object_unref (info);
-    g_object_unref (e);
-    g_object_unref (d);
-# endif
+    ustring js = "Astroid.hide_info(" + m->mid + ");";
+    webkit_web_view_run_javascript (webview, js.c_str (), NULL, NULL, NULL);
   }
   /* end info and warning  */
 
@@ -1423,26 +1270,16 @@ namespace Astroid {
     keys.register_key ("C-j", "thread_view.next_element",
         "Move focus to next element",
         [&] (Key) {
-          /* move focus to next element and optionally scroll to it */
+          /* move focus to next element and scroll to it if necessary */
 
-          ustring eid = focus_next_element (true);
-          if (eid != "") {
-            scroll_to_element (eid, false);
-          }
+          focus_next_element (true);
           return true;
         });
 
     keys.register_key ("J", { Key (GDK_KEY_Down) }, "thread_view.scroll_down",
         "Scroll down",
         [&] (Key) {
-          auto adj = scroll.get_vadjustment ();
-          double v = adj->get_value ();
-          adj->set_value (adj->get_value() + adj->get_step_increment ());
-
-          if (v < adj->get_value ()) {
-            update_focus_to_view ();
-          }
-
+          // TODO
           return true;
         });
 
@@ -1450,9 +1287,7 @@ namespace Astroid {
         "thread_view.page_down",
         "Page down",
         [&] (Key) {
-          auto adj = scroll.get_vadjustment ();
-          adj->set_value (adj->get_value() + adj->get_page_increment ());
-          update_focus_to_view ();
+          // TODO
           return true;
         });
 
@@ -1466,10 +1301,7 @@ namespace Astroid {
     keys.register_key ("C-k", "thread_view.previous_element",
         "Move focus to previous element",
         [&] (Key) {
-          ustring eid = focus_previous_element (true);
-          if (eid != "") {
-            scroll_to_element (eid, false);
-          }
+          focus_previous_element (true);
           return true;
         });
 
@@ -1477,11 +1309,7 @@ namespace Astroid {
         "thread_view.scroll_up",
         "Scroll up",
         [&] (Key) {
-          auto adj = scroll.get_vadjustment ();
-          if (!(adj->get_value () == adj->get_lower ())) {
-            adj->set_value (adj->get_value() - adj->get_step_increment ());
-            update_focus_to_view ();
-          }
+          // TODO
           return true;
         });
 
@@ -1489,9 +1317,7 @@ namespace Astroid {
         "thread_view.page_up",
         "Page up",
         [&] (Key) {
-          auto adj = scroll.get_vadjustment ();
-          adj->set_value (adj->get_value() - adj->get_page_increment ());
-          update_focus_to_view ();
+          // TODO
           return true;
         });
 
@@ -1499,10 +1325,7 @@ namespace Astroid {
         "thread_view.home",
         "Scroll home",
         [&] (Key) {
-          auto adj = scroll.get_vadjustment ();
-          adj->set_value (adj->get_lower ());
-          focused_message = mthread->messages[0];
-          update_focus_status ();
+          focus_message (mthread->messages[0]);
           return true;
         });
 
@@ -1510,10 +1333,7 @@ namespace Astroid {
         "thread_view.end",
         "Scroll to end",
         [&] (Key) {
-          auto adj = scroll.get_vadjustment ();
-          adj->set_value (adj->get_upper ());
-          focused_message = mthread->messages[mthread->messages.size()-1];
-          update_focus_status ();
+          focus_message (mthread->messages[mthread->messages.size()-1]);
           return true;
         });
 
@@ -1642,8 +1462,7 @@ namespace Astroid {
     keys.register_key ("n", "thread_view.next_message",
         "Focus next message",
         [&] (Key) {
-          focus_next ();
-          scroll_to_message (focused_message);
+          focus_next_message ();
           return true;
         });
 
@@ -1653,25 +1472,21 @@ namespace Astroid {
           if (state[focused_message].scroll_expanded) {
             toggle_hidden (focused_message, ToggleHide);
             state[focused_message].scroll_expanded = false;
-            in_scroll = true;
           }
 
-          focus_next ();
+          focus_next_message ();
 
           if (is_hidden (focused_message)) {
             toggle_hidden (focused_message, ToggleShow);
             state[focused_message].scroll_expanded = true;
-            in_scroll = true;
           }
-          scroll_to_message (focused_message);
           return true;
         });
 
     keys.register_key ("p", "thread_view.previous_message",
         "Focus previous message",
         [&] (Key) {
-          focus_previous (true);
-          scroll_to_message (focused_message);
+          focus_previous_message (true);
           return true;
         });
 
@@ -1681,17 +1496,14 @@ namespace Astroid {
           if (state[focused_message].scroll_expanded) {
             toggle_hidden (focused_message, ToggleHide);
             state[focused_message].scroll_expanded = false;
-            in_scroll = true;
           }
 
-          focus_previous ();
+          focus_previous_message ();
 
           if (is_hidden (focused_message)) {
             toggle_hidden (focused_message, ToggleShow);
             state[focused_message].scroll_expanded = true;
-            in_scroll = true;
           }
-          scroll_to_message (focused_message);
           return true;
         });
 
@@ -1702,8 +1514,7 @@ namespace Astroid {
 
           for (auto &m : mthread->messages) {
             if (foundme && m->has_tag ("unread")) {
-              focused_message = m;
-              scroll_to_message (focused_message);
+              focus_message (m);
               break;
             }
 
@@ -1724,8 +1535,7 @@ namespace Astroid {
           for (auto mi = mthread->messages.rbegin ();
               mi != mthread->messages.rend (); mi++) {
             if (foundme && (*mi)->has_tag ("unread")) {
-              focused_message = *mi;
-              scroll_to_message (focused_message);
+              focus_message (*mi);
               break;
             }
 
@@ -2732,303 +2542,6 @@ namespace Astroid {
     return true;
   } // }}}
 
-  /* focus handling  */
-  void ThreadView::on_scroll_vadjustment_changed () {
-    if (in_scroll) {
-      in_scroll = false;
-      LOG (debug) << "tv: re-doing scroll.";
-
-      if (scroll_arg != "") {
-        if (scroll_to_element (scroll_arg, _scroll_when_visible)) {
-          scroll_arg = "";
-          _scroll_when_visible = false;
-
-          if (!unread_setup) {
-            unread_setup = true;
-
-            if (unread_delay > 0) {
-              Glib::signal_timeout ().connect (
-                  sigc::mem_fun (this, &ThreadView::unread_check), std::max (80., (unread_delay * 1000.) / 2));
-            }
-
-            // unread_delay == 0 is checked in update_focus_status ()
-          }
-        }
-      }
-    }
-
-    if (in_search && in_search_match) {
-      /* focus message in vertical center */
-
-      update_focus_to_center ();
-
-      in_search_match = false;
-    }
-  }
-
-  // TODO: [JS]
-  void ThreadView::update_focus_to_center () {
-    /* focus the message which is currently vertically centered */
-
-    if (edit_mode) return;
-
-# if 0
-
-    WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
-
-    auto adj = scroll.get_vadjustment ();
-    double scrolled = adj->get_value ();
-    double height   = adj->get_page_size (); // 0 when there is
-
-    if (height == 0) height = scroll.get_height ();
-
-    double center = scrolled + (height / 2);
-
-    for (auto &m : mthread->messages) {
-      ustring mid = "message_" + m->mid;
-
-      WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
-
-      double clientY = webkit_dom_element_get_offset_top (e);
-      double clientH = webkit_dom_element_get_client_height (e);
-
-      // LOG (debug) << "y = " << clientY;
-      // LOG (debug) << "h = " << clientH;
-
-      g_object_unref (e);
-
-      if ((clientY < center) && ((clientY + clientH) > center))
-      {
-        // LOG (debug) << "message: " << m->date() << " now in view.";
-
-        focused_message = m;
-
-        break;
-      }
-    }
-
-    g_object_unref (d);
-
-# endif
-    update_focus_status ();
-  }
-
-  // TODO: [JS]
-  void ThreadView::update_focus_to_view () {
-    /* check if currently focused message has gone out of focus
-     * and update focus to visible element: if previous focus was at top,
-     * take topmost visible element and vice-versa. */
-    if (edit_mode) {
-      return;
-    }
-
-    /* loop through elements from the top and test whether the top
-     * of it is within the view
-     */
-
-# if 0
-    WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
-
-    auto adj = scroll.get_vadjustment ();
-    double scrolled = adj->get_value ();
-    double height   = adj->get_page_size (); // 0 when there is
-                                             // no paging.
-
-    //LOG (debug) << "scrolled = " << scrolled << ", height = " << height;
-
-    /* check currently focused message */
-    bool take_next = false;
-
-    /* take first */
-    if (!focused_message) {
-      //LOG (debug) << "tv: u_f_t_v: none focused, take first initially.";
-      focused_message = mthread->messages[0];
-      update_focus_status ();
-    }
-
-    /* check if focused message is still visible */
-    ustring mid = "message_" + focused_message->mid;
-
-    WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
-
-    double clientY = webkit_dom_element_get_offset_top (e);
-    double clientH = webkit_dom_element_get_client_height (e);
-
-    g_object_unref (e);
-
-    //LOG (debug) << "y = " << clientY;
-    //LOG (debug) << "h = " << clientH;
-
-    // height = 0 if there is no paging: all messages are in view.
-    if ((height == 0) || ( (clientY <= (scrolled + height)) && ((clientY + clientH) >= scrolled) )) {
-      //LOG (debug) << "message: " << focused_message->date() << " still in view.";
-    } else {
-      //LOG (debug) << "message: " << focused_message->date() << " out of view.";
-      take_next = true;
-    }
-
-
-    /* find first message that is in view and update
-     * focused status */
-    if (take_next) {
-      int focused_position = find (
-          mthread->messages.begin (),
-          mthread->messages.end (),
-          focused_message) - mthread->messages.begin ();
-      int cur_position = 0;
-
-      bool found = false;
-      bool redo_focus_tags = false;
-
-      for (auto &m : mthread->messages) {
-        ustring mid = "message_" + m->mid;
-
-        WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
-
-        double clientY = webkit_dom_element_get_offset_top (e);
-        double clientH = webkit_dom_element_get_client_height (e);
-
-        // LOG (debug) << "y = " << clientY;
-        // LOG (debug) << "h = " << clientH;
-
-        WebKitDOMDOMTokenList * class_list =
-          webkit_dom_element_get_class_list (e);
-
-        GError * gerr = NULL;
-
-        /* search for the last message that is currently in view
-         * if the focused message is now below / beyond the view.
-         * otherwise, take first that is in view now. */
-
-        if ((!found || cur_position < focused_position) &&
-            ( (height == 0) || ((clientY <= (scrolled + height)) && ((clientY + clientH) >= scrolled)) ))
-        {
-          // LOG (debug) << "message: " << m->date() << " now in view.";
-
-          if (found) redo_focus_tags = true;
-          found = true;
-          focused_message = m;
-
-          /* set class  */
-          webkit_dom_dom_token_list_add (class_list, "focused",
-              (gerr = NULL, &gerr));
-
-        } else {
-          /* reset class */
-          webkit_dom_dom_token_list_remove (class_list, "focused",
-              (gerr = NULL, &gerr));
-        }
-
-        g_object_unref (class_list);
-        g_object_unref (e);
-
-        cur_position++;
-      }
-
-      g_object_unref (d);
-
-      if (redo_focus_tags) update_focus_status ();
-    }
-# endif
-  }
-
-  // TODO: [JS]
-  void ThreadView::update_focus_status () {
-    /* update focus visibility to currently set element (no scrolling):
-     *
-     * if focus has been changed this updates the ui to reflect that.
-     *
-     * */
-# if 0
-    WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
-    for (auto &m : mthread->messages) {
-      ustring mid = "message_" + m->mid;
-
-      WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
-
-      WebKitDOMDOMTokenList * class_list =
-        webkit_dom_element_get_class_list (e);
-
-      GError * gerr = NULL;
-
-      if (focused_message == m)
-      {
-        if (!edit_mode) {
-          /* set class  */
-          webkit_dom_dom_token_list_add (class_list, "focused",
-              (gerr = NULL, &gerr));
-        }
-
-        /* check elements */
-        unsigned int eno = 0;
-        for (auto el : state[m].elements) {
-          if (eno > 0) {
-
-            WebKitDOMElement * ee = webkit_dom_document_get_element_by_id (d, el.element_id().c_str());
-
-            WebKitDOMDOMTokenList * e_class_list =
-              webkit_dom_element_get_class_list (ee);
-
-            if (eno == state[m].current_element) {
-              webkit_dom_dom_token_list_add (e_class_list, "focused",
-                  (gerr = NULL, &gerr));
-
-            } else {
-
-              /* reset class */
-              webkit_dom_dom_token_list_remove (e_class_list, "focused",
-                  (gerr = NULL, &gerr));
-
-            }
-
-            g_object_unref (e_class_list);
-            g_object_unref (ee);
-          }
-
-          eno++;
-        }
-
-      } else {
-        /* reset class */
-        if (!edit_mode) {
-          webkit_dom_dom_token_list_remove (class_list, "focused",
-              (gerr = NULL, &gerr));
-        }
-
-        /* check elements */
-        unsigned int eno = 0;
-        for (auto el : state[m].elements) {
-          if (eno > 0) {
-
-            WebKitDOMElement * ee = webkit_dom_document_get_element_by_id (d, el.element_id().c_str());
-
-            WebKitDOMDOMTokenList * e_class_list =
-              webkit_dom_element_get_class_list (ee);
-
-            /* reset class */
-            webkit_dom_dom_token_list_remove (e_class_list, "focused",
-                (gerr = NULL, &gerr));
-
-            g_object_unref (e_class_list);
-            g_object_unref (ee);
-          }
-
-          eno++;
-        }
-      }
-
-      g_object_unref (class_list);
-      g_object_unref (e);
-    }
-
-    g_object_unref (d);
-# endif
-
-    /* update focus time for unread counter */
-    focus_time = chrono::steady_clock::now ();
-    if (unread_delay == 0.0) unread_check ();
-  }
-
   bool ThreadView::unread_check () {
     if (!ready) return false; // disconnect
 
@@ -3051,178 +2564,59 @@ namespace Astroid {
     return true;
   }
 
-  // TODO: [JS]
-  ustring ThreadView::focus_next_element (bool force_change) {
-# if 0
-    ustring eid;
-
-    if (!is_hidden (focused_message) || edit_mode) {
-      /* if the message is expanded, check if we should move focus
-       * to the next element */
-
-      MessageState * s = &(state[focused_message]);
-
-      //LOG (debug) << "focus next: current element: " << s->current_element << " of " << s->elements.size();
-      /* are there any more elements */
-      if (s->current_element < (s->elements.size()-1)) {
-        /* check if the next element is in full view */
-
-        MessageState::Element * next_e = &(s->elements[s->current_element + 1]);
-
-        WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
-
-        auto adj = scroll.get_vadjustment ();
-
-        eid = next_e->element_id ();
-
-        bool change_focus = force_change;
-
-        if (!force_change) {
-          WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, eid.c_str());
-
-          double scrolled = adj->get_value ();
-          double height   = adj->get_page_size (); // 0 when there is
-                                                   // no paging.
-
-          double clientY = webkit_dom_element_get_offset_top (e);
-          double clientH = webkit_dom_element_get_client_height (e);
-
-          g_object_unref (e);
-          g_object_unref (d);
-
-          if (height > 0) {
-            if (  (clientY >= scrolled) &&
-                ( (clientY + clientH) <= (scrolled + height) ))
-            {
-              change_focus = true;
-            }
-          } else {
-            change_focus = true;
-          }
-        }
-
-        //LOG (debug) << "focus_next_element: change: " << change_focus;
-
-        if (change_focus) {
-          s->current_element++;
-          update_focus_status ();
-          return eid;
-        }
-      }
+  void ThreadView::run_javascript_sync (string js)
+  {
+    {
+      std::lock_guard<std::mutex> lk (js_sync);
+      js_done = false;
     }
+    webkit_web_view_run_javascript (webview, js.c_str (), NULL, ThreadView_js_finished, this);
 
-    /* no focus change, standard behaviour */
-    auto adj = scroll.get_vadjustment ();
-    double v = adj->get_value ();
-    adj->set_value (adj->get_value() + adj->get_step_increment ());
+    /* wait for JS to finish */
+    std::unique_lock<std::mutex> u (js_sync);
+    js_cv.wait (u, [&] { return js_done; });
+  }
 
-    if (force_change  || (v == adj->get_value ())) {
-      /* we're at the bottom, just move focus down */
-      bool last = find (
-          mthread->messages.begin (),
-          mthread->messages.end (),
-          focused_message) == (mthread->messages.end () - 1);
+  void ThreadView_js_finished (GObject * o, GAsyncResult * r, gpointer data) {
+    ((ThreadView *) data)->run_javascript_sync_cb (o, r);
+  }
 
-
-      if (!last) eid = focus_next ();
-    } else {
-      update_focus_to_view ();
-    }
-
-    return eid;
-# endif
-    return "";
+  void ThreadView::run_javascript_sync_cb (GObject * o, GAsyncResult * r) {
+    std::lock_guard<std::mutex> lk (js_sync);
+    js_done = true;
+    js_cv.notify_one ();
   }
 
   // TODO: [JS]
-  ustring ThreadView::focus_previous_element (bool force_change) {
-# if 0
-    ustring eid;
+  void ThreadView::focus_next_element (bool force_change) {
+    /* Jump to next element (if no scrolling is necessary),
+     * otherwise scroll a small increment.
+     *
+     * If force_change is true, then always move focus the next element.
+     *
+     * The function should return the currently selected element.
+     *
+     */
 
-    if (!is_hidden (focused_message) || edit_mode) {
-      /* if the message is expanded, check if we should move focus
-       * to the previous element */
+    string js = "Astroid.focus_next_element(" + ( force_change ? string("true") : string("false")) + ");";
 
-      MessageState * s = &(state[focused_message]);
-
-      //LOG (debug) << "focus prev: current elemenet: " << s->current_element;
-      /* are there any more elements */
-      if (s->current_element > 0) {
-        /* check if the prev element is in full view */
-
-        MessageState::Element * next_e = &(s->elements[s->current_element - 1]);
-
-        bool change_focus = force_change;
-
-        if (!force_change) {
-          if (next_e->type != MessageState::ElementType::Empty) {
-            WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
-
-            auto adj = scroll.get_vadjustment ();
-
-            eid = next_e->element_id ();
-
-            WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, eid.c_str());
-
-            double scrolled = adj->get_value ();
-            double height   = adj->get_page_size (); // 0 when there is
-                                                     // no paging.
-
-            double clientY = webkit_dom_element_get_offset_top (e);
-            double clientH = webkit_dom_element_get_client_height (e);
-
-            g_object_unref (e);
-            g_object_unref (d);
-
-            if (height > 0) {
-              if (  (clientY >= scrolled) &&
-                  ( (clientY + clientH) <= (scrolled + height) ))
-              {
-                change_focus = true;
-              }
-            } else {
-              change_focus = true;
-            }
-          } else {
-            change_focus = true;
-          }
-        }
-
-        //LOG (debug) << "focus_prev_element: change: " << change_focus;
-
-        if (change_focus) {
-          s->current_element--;
-          update_focus_status ();
-          return eid;
-        }
-      }
-    }
-
-    /* standard behaviour */
-    auto adj = scroll.get_vadjustment ();
-    if (force_change || (adj->get_value () == adj->get_lower ())) {
-      /* we're at the top, move focus up */
-      ustring mid = focus_previous (false);
-      ThreadView::MessageState::Element * e =
-        state[focused_message].get_current_element ();
-      if (e != NULL) {
-        eid = e->element_id ();
-      } else {
-        eid = mid; // if no element selected, focus message
-      }
-    } else {
-      adj->set_value (adj->get_value() - adj->get_step_increment ());
-      update_focus_to_view ();
-    }
-
-    return eid;
-# endif
   }
 
-  ustring ThreadView::focus_next () {
+  // TODO: [JS]
+  void ThreadView::focus_previous_element (bool force_change) {
+  }
+
+  void ThreadView::focus_element (refptr<Message> m, unsigned int e) {
+  }
+
+  void ThreadView::focus_message (refptr<Message> m) {
+    focus_element (m, 0);
+  }
+
+  void ThreadView::focus_next_message () {
     //LOG (debug) << "tv: focus_next.";
 
-    if (edit_mode) return "";
+    if (edit_mode) return;
 
     int focused_position = find (
         mthread->messages.begin (),
@@ -3232,16 +2626,13 @@ namespace Astroid {
     if (focused_position < static_cast<int>((mthread->messages.size ()-1))) {
       focused_message = mthread->messages[focused_position + 1];
       state[focused_message].current_element = 0; // start at top
-      update_focus_status ();
     }
 
-    return "message_" + focused_message->mid;
   }
 
-  ustring ThreadView::focus_previous (bool focus_top) {
+  void ThreadView::focus_previous_message (bool focus_top) {
     //LOG (debug) << "tv: focus previous.";
-
-    if (edit_mode) return "";
+    if (edit_mode) return;
 
     int focused_position = find (
         mthread->messages.begin (),
@@ -3255,121 +2646,7 @@ namespace Astroid {
       } else {
         state[focused_message].current_element = 0; // start at top
       }
-      update_focus_status ();
     }
-
-    return "message_" + focused_message->mid;
-  }
-
-  // TODO: [JS]
-  bool ThreadView::scroll_to_message (refptr<Message> m, bool scroll_when_visible) {
-# if 0
-    focused_message = m;
-
-    if (edit_mode) return false;
-
-    if (!focused_message) {
-      LOG (warn) << "tv: focusing: no message selected for focus.";
-      return false;
-    }
-
-    LOG (debug) << "tv: focusing: " << m->date ();
-
-    WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
-
-    ustring mid = "message_" + m->mid;
-
-    WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
-
-    g_object_unref (e);
-    g_object_unref (d);
-
-    return scroll_to_element (mid, scroll_when_visible);
-# endif
-  }
-
-  // TODO: [JS]
-  bool ThreadView::scroll_to_element (
-      ustring eid,
-      bool scroll_when_visible)
-  {
-# if 0
-    /* returns false when rendering is incomplete and scrolling
-     * doesn't work */
-
-    if (eid == "") {
-      LOG (error) << "tv: attempted to scroll to unspecified id.";
-      return false;
-
-    }
-
-    WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
-    WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, eid.c_str());
-
-    auto adj = scroll.get_vadjustment ();
-    double scrolled = adj->get_value ();
-    double height   = adj->get_page_size (); // 0 when there is
-                                             // no paging.
-    double upper    = adj->get_upper ();
-
-    double clientY = webkit_dom_element_get_offset_top (e);
-    double clientH = webkit_dom_element_get_client_height (e);
-
-    if (height > 0) {
-      if (scroll_when_visible) {
-        if ((clientY + clientH - height) > upper) {
-          /* message is last, can't scroll past bottom */
-          adj->set_value (upper);
-        } else {
-          adj->set_value (clientY);
-        }
-      } else {
-        /* only scroll if parts of the message are out view */
-        if (clientY < scrolled) {
-          /* top is above view  */
-          adj->set_value (clientY);
-
-        } else if ((clientY + clientH) > (scrolled + height)) {
-          /* bottom is below view */
-
-          // if message is of less height than page, scroll so that
-          // bottom is aligned with bottom
-
-          if (clientH < height) {
-            adj->set_value (clientY + clientH - height);
-          } else {
-            // otherwise align top with top
-            if ((clientY + clientH - height) > upper) {
-              /* message is last, can't scroll past bottom */
-              adj->set_value (upper);
-            } else {
-              adj->set_value (clientY);
-            }
-          }
-        }
-      }
-    }
-
-    update_focus_status ();
-
-    g_object_unref (e);
-    g_object_unref (d);
-
-    /* the height does not seem to make any sense, but is still more
-     * than empty. we need to re-do the calculation when everything
-     * has been rendered and re-calculated. */
-    if (height == 1) {
-      in_scroll = true;
-      scroll_arg = eid;
-      _scroll_when_visible = scroll_when_visible;
-      return false;
-
-    } else {
-
-      return true;
-
-    }
-# endif
   }
 
   /* end focus handeling   */
