@@ -499,8 +499,8 @@ namespace Astroid {
           refptr<Message> _m = refptr<Message> (m);
           _m->reference (); // since m is owned by caller
 
-          add_message (_m);
-          webkit_web_view_run_javascript (webview, "Astroid.render();", NULL, NULL, NULL);
+          update_message (_m);
+          render_webview ();
         }
       }
     }
@@ -539,15 +539,9 @@ namespace Astroid {
               mthread->messages.end(),
               [&](refptr<Message> m) {
                 add_message (m);
-                state.insert (std::pair<refptr<Message>, MessageState> (m, MessageState ()));
-
-                if (!edit_mode) {
-                  m->signal_message_changed ().connect (
-                      sigc::mem_fun (this, &ThreadView::on_message_changed));
-                }
               });
 
-    webkit_web_view_run_javascript (webview, "Astroid.render();", NULL, NULL, NULL);
+    render_webview ();
 
     update_all_indent_states ();
 
@@ -599,29 +593,68 @@ namespace Astroid {
 
   // TODO: [JS] [REIMPLEMENT]
   void ThreadView::update_indent_state (refptr<Message> m) {
-# if 0
-    ustring mid = "message_" + m->mid;
-    GError * err = NULL;
-
-    WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
-    WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
-
-    /* set indentation based on level */
-    if (indent_messages && m->level > 0) {
-      webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (e),
-          "style", ustring::compose ("margin-left: %1px", int(m->level * INDENT_PX)).c_str(), (err = NULL, &err));
-    } else {
-      webkit_dom_element_remove_attribute (WEBKIT_DOM_ELEMENT (e), "style");
-    }
-
-    g_object_unref (e);
-    g_object_unref (d);
-# endif
+    string js = "Astroid.indent_state (" + m->mid + "," + ( indent_messages ? string("true") : string("false")) + ");";
+    webkit_web_view_run_javascript (webview, js.c_str (), NULL, NULL, NULL);
   }
 
-  void ThreadView::add_message (refptr<Message> m) { // {{{
+  void ThreadView::render_webview () {
+    webkit_web_view_run_javascript (webview, "Astroid.render();", NULL, NULL, NULL);
+  }
+
+  void ThreadView::add_message (refptr<Message> m) {
     LOG (debug) << "tv: adding message: " << m->mid;
 
+    state.insert (std::pair<refptr<Message>, MessageState> (m, MessageState ()));
+
+    if (!edit_mode) {
+      m->signal_message_changed ().connect (
+          sigc::mem_fun (this, &ThreadView::on_message_changed));
+    }
+
+    ptree mjs = build_message (m); // this populates the MessageState with elements.
+
+    std::stringstream js;
+    js << "Astroid.add_message(";
+    write_json (js, mjs);
+    js << ");";
+
+    LOG (debug) << "tv: js:" << js.str ();
+
+    webkit_web_view_run_javascript (webview, js.str ().c_str (), NULL, NULL, NULL);
+  }
+
+  void ThreadView::update_message (refptr<Message> m) {
+    LOG (debug) << "tv: updating message: " << m->mid;
+
+    // reset element list
+    state[m].elements.clear ();
+    ptree mjs = build_message (m); // this populates the MessageState with elements.
+    state[m].current_element = std::max((unsigned int) (state[m].elements.size () - 1), state[m].current_element);
+
+    std::stringstream js;
+    js << "Astroid.add_message(";
+    write_json (js, mjs);
+    js << ");";
+
+    LOG (debug) << "tv: js:" << js.str ();
+
+    webkit_web_view_run_javascript (webview, js.str ().c_str (), NULL, NULL, NULL);
+
+    // if the updated message was focused, the currently focused element may
+    // have changed.
+    update_focus_status ();
+  }
+
+  void ThreadView::remove_message (refptr<Message> m) {
+    LOG (debug) << "tv: remove message: " << m->mid;
+    state.erase (m);
+
+    // TODO: escape!
+    std::string js = "Astroid.remove_message (" + m->mid + ");";
+    webkit_web_view_run_javascript (webview, js.c_str (), NULL, NULL, NULL);
+  }
+
+  ptree ThreadView::build_message (refptr<Message> m) { // {{{
     ptree mjs;
     mjs.put ("id", m->mid);
 
@@ -780,18 +813,10 @@ namespace Astroid {
     }
     mjs.add_child ("attachments", attachments);
 
-    std::stringstream js;
-    js << "Astroid.add_message(";
-    write_json (js, mjs);
-    js << ");";
-
-    LOG (debug) << "tv: js:" << js.str ();
-
-    webkit_web_view_run_javascript (webview, js.str ().c_str (), NULL, NULL, NULL);
-
+    return mjs;
   } // }}}
 
-  ptree ThreadView::build_mime_tree (refptr<Message> m, refptr<Chunk> c, bool root) {
+  ptree ThreadView::build_mime_tree (refptr<Message> m, refptr<Chunk> c, bool root) { // {{{
 
     ustring mime_type;
     if (c->content_type) {
@@ -873,7 +898,7 @@ namespace Astroid {
     }
 
     return part;
-  }
+  } // }}}
 
   ptree ThreadView::get_encryption_state (refptr<Chunk> c) { // {{{
     refptr<Crypto> cr = c->crypt;
@@ -2791,7 +2816,8 @@ namespace Astroid {
   // TODO: [JS]
   void ThreadView::update_focus_to_view () {
     /* check if currently focused message has gone out of focus
-     * and update focus */
+     * and update focus to visible element: if previous focus was at top,
+     * take topmost visible element and vice-versa. */
     if (edit_mode) {
       return;
     }
@@ -2908,7 +2934,11 @@ namespace Astroid {
 
   // TODO: [JS]
   void ThreadView::update_focus_status () {
-    /* update focus to currently set element (no scrolling ) */
+    /* update focus visibility to currently set element (no scrolling):
+     *
+     * if focus has been changed this updates the ui to reflect that.
+     *
+     * */
 # if 0
     WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
     for (auto &m : mthread->messages) {

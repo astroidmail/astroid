@@ -203,14 +203,19 @@ namespace Astroid {
       void render ();
       void render_messages ();
       void reload_images ();
+      void render_webview ();
 
       /* message loading and rendering */
-      void add_message (refptr<Message>);
-      ptree build_mime_tree (refptr<Message>, refptr<Chunk>, bool);
-      ptree get_encryption_state (refptr<Chunk>);
-      ptree get_signature_state (refptr<Chunk>);
-      ustring get_attachment_thumbnail (refptr<Chunk>);
-      static std::string assemble_data_uri (ustring, gchar *&, gsize);
+      void                add_message (refptr<Message>);
+      void                update_message (refptr<Message>);
+      void                remove_message (refptr<Message>);
+      ptree               build_message (refptr<Message>);
+      ptree               build_mime_tree (refptr<Message>, refptr<Chunk>, bool);
+      ptree               get_encryption_state (refptr<Chunk>);
+      ptree               get_signature_state (refptr<Chunk>);
+      ustring             get_attachment_thumbnail (refptr<Chunk>);
+      static std::string  assemble_data_uri (ustring, gchar *&, gsize);
+
 
       bool open_html_part_external;
       void display_part (refptr<Message>, refptr<Chunk>, MessageState::Element);
