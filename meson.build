@@ -24,9 +24,19 @@ gtk     = dependency ('gtk+-3.0')
 gtkmm   = dependency ('gtkmm-3.0')
 webkit  = dependency ('webkitgtk-3.0')
 peas    = dependency ('libpeas-1.0')
-vte     = dependency ('vte-2.91')
 threads = dependency ('threads')
 notmuch = cc.find_library ('notmuch', required : true)
+
+vte     = dependency ('vte-2.91')
+if not vte.found () or get_option('disable-terminal')
+  add_global_arguments ('-DDISABLE_VTE', language: 'cpp')
+  message ('Embedded terminal is disabled.')
+endif
+
+if get_option ('disable-embedded-editor')
+  add_global_arguments ('-DDISABLE_EMBEDDED', language: 'cpp')
+  message ('Embedded editor is disabled.')
+endif
 
 libsass = dependency ('libsass')
 if c.has_header ('sass_context.h')

@@ -1,0 +1,2 @@
+option ('disable-terminal', type : 'boolean', value : 'false', description : 'Disable built in terminal')
+option ('disable-embedded-editor', type : 'boolean', value : 'false', description : 'Disable embedded editor')
