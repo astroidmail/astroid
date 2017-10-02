@@ -33,21 +33,23 @@ $ git clone https://github.com/astroidmail/astroid.git
 ### compiling
 
 ```sh
-$ scons     # (use `-j 8` to parallelize compilation)
+$ meson build 
+$ ninja -C build
 ```
 
 to run the tests do:
 
 ```sh
-$ scons test
+$ ninja test
 ```
 
 ### installing
 
 Configure with a prefix and install:
 ```sh
-$ scons -j 8 --prefix=/usr build
-$ scons --prefix=/usr install
+$ meson build --prefix=/usr build
+$ ninja -C build
+$ ninja -C build install
 ```
 
 this will install the `astroid` binary into `/usr/bin/`, and data files into `/usr/share/astroid/`. refer to the [installing section](https://github.com/astroidmail/astroid/wiki/Compiling-and-Installing) in the wiki for more information.
@@ -97,7 +99,6 @@ See [LICENSE.md](./LICENSE.md) for licensing information.
 [gmime]: http://spruce.sourceforge.net/gmime/
 [webkit]: http://webkitgtk.org/
 [GPL]: https://www.gnu.org/copyleft/gpl.html
-[scons]: http://www.scons.org/
 [git]: http://git-scm.com/
 [C++11]: http://en.wikipedia.org/wiki/C%2B%2B11
 [boost]: http://www.boost.org/
