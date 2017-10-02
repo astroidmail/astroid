@@ -4,7 +4,17 @@ project ('astroid', ['cpp', 'c'],
 c  = meson.get_compiler ('c')
 cc = meson.get_compiler ('cpp')
 
-gmime   = dependency ('gmime-3.0')
+gmime3   = dependency ('gmime-3.0', required : false)
+gmime2   = dependency ('gmime-2.6', required : false)
+
+if gmime3.found ()
+  gmime = gmime3
+elif gmime2.found ()
+  gmime = gmime2
+else
+  error ('neither gmime3 or gmime2 available')
+endif
+
 boost   = dependency ('boost',
                         modules : [ 'filesystem', 'system', 'program_options',
                                     'log_setup', 'log', 'thread', 'date_time' ])
