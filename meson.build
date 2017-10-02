@@ -25,6 +25,16 @@ elif c.has_header  ('sass/context.h')
   add_global_arguments ('-DSASSCTX_CONTEXT_H', language : 'cpp')
 endif
 
+if get_option ('buildtype').startswith('debug')
+  add_global_arguments ('-DDEBUG', language : 'cpp')
+endif
+
+conf_data = configuration_data ()
+conf_data.set ('git_desc', run_command ('git', ['describe', '--abbrev=8', '--tags', '--always']).stdout().strip('\n'))
+conf_data.set ('prefix', get_option('prefix'))
+configure_file (input : 'src/build_config.hh.in',
+                output : 'build_config.hh',
+                configuration : conf_data)
 
 deps = [ gmime, boost, gtk, gtkmm, webkit, peas, vte, threads, notmuch, libsass ]
 
@@ -90,7 +100,7 @@ src = [
 ## Astroid executable
 astroid_exe = executable ('astroid', src + ['src/main.cc'], dependencies : deps, include_directories : include_directories ('src') )
 
-install_data ('ui/thread-view.html', install_dir : join_paths(get_option('datadir'), 'progname'))
+#install_data ('ui/thread-view.html', install_dir : join_paths(get_option('datadir'), 'progname'))
 
 ## GIR generation (for plugins)
 girsource = [
