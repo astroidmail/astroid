@@ -1,6 +1,8 @@
 project ('astroid', ['cpp', 'c'],
     default_options : [ 'cpp_std=c++11'] )
 
+version = '0.10.1'
+
 c  = meson.get_compiler ('c')
 cc = meson.get_compiler ('cpp')
 
@@ -25,9 +27,14 @@ gtkmm   = dependency ('gtkmm-3.0')
 webkit  = dependency ('webkitgtk-3.0')
 peas    = dependency ('libpeas-1.0')
 threads = dependency ('threads')
-notmuch = cc.find_library ('notmuch', required : true)
 
-vte     = dependency ('vte-2.91')
+notmuch = cc.find_library ('notmuch', required : true)
+if cc.has_function ('notmuch_database_index_file', dependencies : notmuch, prefix : '''#include <notmuch.h>''')
+  add_global_arguments ('-DHAVE_NOTMUCH_INDEX_FILE', language: 'cpp')
+endif
+
+
+vte = dependency ('vte-2.91')
 if not vte.found () or get_option('disable-terminal')
   add_global_arguments ('-DDISABLE_VTE', language: 'cpp')
   message ('Embedded terminal is disabled.')
@@ -50,7 +57,11 @@ if get_option ('buildtype').startswith('debug')
 endif
 
 conf_data = configuration_data ()
-conf_data.set ('git_desc', run_command ('git', ['describe', '--abbrev=8', '--tags', '--always']).stdout().strip('\n'))
+if get_option ('buildtype').startswith('debug')
+  conf_data.set ('git_desc', run_command ('git', ['describe', '--abbrev=8', '--tags', '--always']).stdout().strip('\n'))
+else
+  conf_data.set ('git_desc', version)
+endif
 conf_data.set ('prefix', get_option('prefix'))
 configure_file (input : 'src/build_config.hh.in',
                 output : 'build_config.hh',
