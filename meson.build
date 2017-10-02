@@ -45,12 +45,28 @@ if get_option ('disable-embedded-editor')
   message ('Embedded editor is disabled.')
 endif
 
-libsass = dependency ('libsass')
-if c.has_header ('sass_context.h')
-  add_global_arguments ('-DSASSCTX_SASS_CONTEXT_H', language : 'cpp')
-elif c.has_header  ('sass/context.h')
-  add_global_arguments ('-DSASSCTX_CONTEXT_H', language : 'cpp')
+deps = [ gmime, boost, gtk, gtkmm, webkit, peas, vte, threads, notmuch ]
+
+if get_option ('disable-libsass')
+  sassc = find_program(get_option('scss-compiler'))
+  add_global_arguments ('-DDISABLE_LIBSASS', language : 'cpp')
+  css = custom_target ('css',
+      output : 'thread-view.css',
+      input :  'ui/thread-view.scss',
+      command : [sassc, '@INPUT@', '@OUTPUT@' ],
+      install : true,
+      install_dir : 'ui')
+else
+  libsass = dependency ('libsass', required : true)
+  deps += libsass
+
+  if c.has_header ('sass_context.h')
+    add_global_arguments ('-DSASSCTX_SASS_CONTEXT_H', language : 'cpp')
+  elif c.has_header  ('sass/context.h')
+    add_global_arguments ('-DSASSCTX_CONTEXT_H', language : 'cpp')
+  endif
 endif
+
 
 if get_option ('buildtype').startswith('debug')
   add_global_arguments ('-DDEBUG', language : 'cpp')
@@ -67,7 +83,6 @@ configure_file (input : 'src/build_config.hh.in',
                 output : 'build_config.hh',
                 configuration : conf_data)
 
-deps = [ gmime, boost, gtk, gtkmm, webkit, peas, vte, threads, notmuch, libsass ]
 
 src = [
     'src/modes/log_view.cc',
