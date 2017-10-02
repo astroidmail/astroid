@@ -1,0 +1,108 @@
+project ('astroid', ['cpp', 'c'],
+    default_options : [ 'cpp_std=c++11'] )
+
+c  = meson.get_compiler ('c')
+cc = meson.get_compiler ('cpp')
+
+gmime   = dependency ('gmime-3.0')
+boost   = dependency ('boost',
+                        modules : [ 'filesystem', 'system', 'program_options',
+                                    'log_setup', 'log', 'thread', 'date_time' ])
+add_global_arguments ('-DBOOST_LOG_DYN_LINK', language : 'cpp')
+
+gtk     = dependency ('gtk+-3.0')
+gtkmm   = dependency ('gtkmm-3.0')
+webkit  = dependency ('webkitgtk-3.0')
+peas    = dependency ('libpeas-1.0')
+vte     = dependency ('vte-2.91')
+threads = dependency ('threads')
+notmuch = cc.find_library ('notmuch', required : true)
+
+libsass = dependency ('libsass')
+if c.has_header ('sass_context.h')
+  add_global_arguments ('-DSASSCTX_SASS_CONTEXT_H', language : 'cpp')
+elif c.has_header  ('sass/context.h')
+  add_global_arguments ('-DSASSCTX_CONTEXT_H', language : 'cpp')
+endif
+
+
+deps = [ gmime, boost, gtk, gtkmm, webkit, peas, vte, threads, notmuch, libsass ]
+
+src = [
+    'src/modes/log_view.cc',
+    'src/modes/mode.cc',
+    'src/modes/thread_view/thread_view.cc',
+    'src/modes/thread_view/web_inspector.cc',
+    'src/modes/thread_view/dom_utils.cc',
+    'src/modes/thread_view/theme.cc',
+    'src/modes/paned_mode.cc',
+    'src/modes/thread_index/thread_index_list_cell_renderer.cc',
+    'src/modes/thread_index/query_loader.cc',
+    'src/modes/thread_index/thread_index.cc',
+    'src/modes/thread_index/thread_index_list_view.cc',
+    'src/modes/saved_searches.cc',
+    'src/modes/edit_message.cc',
+    'src/modes/reply_message.cc',
+    'src/modes/forward_message.cc',
+    'src/modes/editor/editor.cc',
+    'src/modes/editor/external.cc',
+    'src/modes/editor/plugin.cc',
+    'src/modes/keybindings.cc',
+    'src/modes/raw_message.cc',
+    'src/modes/help_mode.cc',
+    'src/actions/tag_action.cc',
+    'src/actions/cmdaction.cc',
+    'src/actions/onmessage.cc',
+    'src/actions/action_manager.cc',
+    'src/actions/difftag_action.cc',
+    'src/actions/toggle_action.cc',
+    'src/actions/action.cc',
+    'src/astroid.cc',
+    'src/plugin/manager.cc',
+    'src/plugin/astroid_activatable.c',
+    'src/plugin/thread_view_activatable.c',
+    'src/plugin/thread_index_activatable.c',
+    'src/db.cc',
+    'src/config.cc',
+    'src/poll.cc',
+    'src/message_thread.cc',
+    'src/utils/resource.cc',
+    'src/utils/address.cc',
+    'src/utils/gmime/gmime-compat.cc',
+    'src/utils/gravatar.cc',
+    'src/utils/date_utils.cc',
+    'src/utils/ustring_utils.cc',
+    'src/utils/cmd.cc',
+    'src/utils/utils.cc',
+    'src/utils/vector_utils.cc',
+    'src/utils/gmime/gtrie.c',
+    'src/utils/gmime/gmime-filter-html-bq.c',
+    'src/utils/gmime/url-scanner.c',
+    'src/crypto.cc',
+    'src/account_manager.cc',
+    'src/chunk.cc',
+    'src/command_bar.cc',
+    'src/compose_message.cc',
+    'src/main_window.cc',
+  ]
+
+
+## Astroid executable
+astroid_exe = executable ('astroid', src + ['src/main.cc'], dependencies : deps, include_directories : include_directories ('src') )
+
+install_data ('ui/thread-view.html', install_dir : join_paths(get_option('datadir'), 'progname'))
+
+## GIR generation (for plugins)
+girsource = [
+    'src/plugin/astroid_activatable.c',
+    'src/plugin/thread_view_activatable.c',
+    'src/plugin/thread_index_activatable.c',
+    'src/plugin/astroid_activatable.h',
+    'src/plugin/thread_view_activatable.h',
+    'src/plugin/thread_index_activatable.h',
+    'src/plugin/gir_main.c'
+    ]
+gir_target  = executable ('gir_main', girsource, dependencies : deps, include_directories : include_directories ('src'), install : false)
+gnome = import ('gnome')
+gir   = gnome.generate_gir (gir_target, sources : girsource, namespace : 'Astroid', nsversion : '0.1', include_directories : include_directories ('src'), dependencies : deps, install : true, includes : ['GObject-2.0', 'GMime-3.0'])
+
