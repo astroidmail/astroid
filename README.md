@@ -37,6 +37,8 @@ $ meson build
 $ ninja -C build
 ```
 
+or run `meson configure` from `build/` to set any build options. Subsequent builds can be done by running `ninja` from the build directory.
+
 to run the tests do:
 
 ```sh
@@ -47,7 +49,7 @@ $ ninja test
 
 Configure with a prefix and install:
 ```sh
-$ meson build --prefix=/usr build
+$ meson build --prefix=/usr
 $ ninja -C build
 $ ninja -C build install
 ```

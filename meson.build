@@ -153,6 +153,23 @@ src = [
 ## Astroid executable
 astroid_exe = executable ('astroid', src + ['src/main.cc'], dependencies : deps, include_directories : include_directories ('src'), install : true )
 
+## GIR generation (for plugins)
+if not get_option ('disable-plugins')
+  girsource = [
+      'src/plugin/astroid_activatable.c',
+      'src/plugin/thread_view_activatable.c',
+      'src/plugin/thread_index_activatable.c',
+      'src/plugin/astroid_activatable.h',
+      'src/plugin/thread_view_activatable.h',
+      'src/plugin/thread_index_activatable.h',
+      'src/plugin/gir_main.c'
+      ]
+  gir_target  = executable ('gir_main', girsource, dependencies : deps, include_directories : include_directories ('src'), install : false)
+  gnome = import ('gnome')
+  gir   = gnome.generate_gir (gir_target, sources : girsource, namespace : 'Astroid', nsversion : '0.1', include_directories : include_directories ('src'), dependencies : deps, install : true, includes : ['GObject-2.0', 'GMime-3.0'])
+endif
+
+## Installating data files
 ui_src = [
     'ui/thread-view.html',
     'ui/edit-message.glade',
@@ -187,20 +204,4 @@ install_data ('ui/icons/astroid.png', install_dir : join_paths(get_option('datad
 install_data ('ui/icons/astroid.svg', install_dir : join_paths(get_option('datadir'), 'icons', 'hicolor', 'scalable', 'apps'))
 
 install_data ('ui/astroid.desktop', install_dir : join_paths(get_option('datadir'), 'applications'))
-
-## GIR generation (for plugins)
-if not get_option ('disable-plugins')
-  girsource = [
-      'src/plugin/astroid_activatable.c',
-      'src/plugin/thread_view_activatable.c',
-      'src/plugin/thread_index_activatable.c',
-      'src/plugin/astroid_activatable.h',
-      'src/plugin/thread_view_activatable.h',
-      'src/plugin/thread_index_activatable.h',
-      'src/plugin/gir_main.c'
-      ]
-  gir_target  = executable ('gir_main', girsource, dependencies : deps, include_directories : include_directories ('src'), install : false)
-  gnome = import ('gnome')
-  gir   = gnome.generate_gir (gir_target, sources : girsource, namespace : 'Astroid', nsversion : '0.1', include_directories : include_directories ('src'), dependencies : deps, install : true, includes : ['GObject-2.0', 'GMime-3.0'])
-endif
 
