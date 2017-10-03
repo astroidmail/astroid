@@ -207,44 +207,44 @@ install_data ('ui/icons/astroid.svg', install_dir : join_paths(get_option('datad
 install_data ('ui/astroid.desktop', install_dir : join_paths(get_option('datadir'), 'applications'))
 
 ## Tests
-test_setup = custom_target ('test_setup',
-    command : [ find_program('tests/test_setup.sh').path(), '@INPUT@', '@OUTPUT@' ],
-    input : 'tests',
-    output : 'tests',
-    install : false)
+if not get_option('disable-tests')
+  test_setup = custom_target ('test_setup',
+      command : [ find_program('tests/test_setup.sh').path(), '@INPUT@', '@OUTPUT@' ],
+      input : 'tests',
+      output : 'tests',
+      install : false)
 
-test_env = environment ()
-test_env.set ('NOTMUCH_CONFIG', join_paths(meson.build_root (), 'tests', 'mail', 'test_config'))
-test_env.set ('GNUPGHOME', join_paths(meson.build_root (), 'tests', 'test_home', 'gnupg'))
+  test_env = environment ()
+  test_env.set ('NOTMUCH_CONFIG', join_paths(meson.build_root (), 'tests', 'mail', 'test_config'))
+  test_env.set ('GNUPGHOME', join_paths(meson.build_root (), 'tests', 'test_home', 'gnupg'))
 
-src_o = astroid_exe.extract_objects (src)
+  src_o = astroid_exe.extract_objects (src)
 
-boost_test = dependency ('boost', modules : [ 'unit_test_framework' ])
-test_deps = deps
-test_deps += boost_test
+  boost_test = dependency ('boost', modules : [ 'unit_test_framework' ])
+  test_deps = deps
+  test_deps += boost_test
 
-tests = [ [ 'generic test',   'test_generic',         [ 'tests/test_generic.cc' ]],
-          [ 'compose testing', 'test_composed_message',     [ 'tests/test_composed_message.cc' ]],
-          [ 'non existant file', 'test_non_existant_file',  [ 'tests/test_non_existant_file.cc' ]],
-          [ 'open db',        'test_open_db',         [ 'tests/test_open_db.cc' ]],
-          [ 'convert error',  'test_convert_error',   [ 'tests/test_convert_error.cc' ]],
-          [ 'no newline msg', 'test_no_newline_msg',  [ 'tests/test_no_newline_msg.cc' ]],
-          [ 'mime message',   'test_mime_message',    [ 'tests/test_mime_message.cc' ]],
-          [ 'theme',          'test_theme',           [ 'tests/test_theme.cc' ]],
-          [ 'keybindings',    'test_keybindings',     [ 'tests/test_keybindings.cc' ]],
-          [ 'bad content-id', 'test_bad_content_id',  [ 'tests/test_bad_content_id.cc' ]],
-          [ 'notmuch',        'test_notmuch',         [ 'tests/test_notmuch.cc' ]],
-          [ 'notmuch (standalone)', 'test_notmuch_standalone', [ 'tests/test_notmuch_standalone.cc' ]],
-          [ 'address',        'test_address',         [ 'tests/test_address.cc' ]],
-          [ 'dates',          'test_dates',           [ 'tests/test_dates.cc' ]],
+  tests = [ [ 'generic test',   'test_generic',         [ 'tests/test_generic.cc' ]],
+            [ 'compose testing', 'test_composed_message',     [ 'tests/test_composed_message.cc' ]],
+            [ 'non existant file', 'test_non_existant_file',  [ 'tests/test_non_existant_file.cc' ]],
+            [ 'open db',        'test_open_db',         [ 'tests/test_open_db.cc' ]],
+            [ 'convert error',  'test_convert_error',   [ 'tests/test_convert_error.cc' ]],
+            [ 'no newline msg', 'test_no_newline_msg',  [ 'tests/test_no_newline_msg.cc' ]],
+            [ 'mime message',   'test_mime_message',    [ 'tests/test_mime_message.cc' ]],
+            [ 'theme',          'test_theme',           [ 'tests/test_theme.cc' ]],
+            [ 'keybindings',    'test_keybindings',     [ 'tests/test_keybindings.cc' ]],
+            [ 'bad content-id', 'test_bad_content_id',  [ 'tests/test_bad_content_id.cc' ]],
+            [ 'notmuch',        'test_notmuch',         [ 'tests/test_notmuch.cc' ]],
+            [ 'notmuch (standalone)', 'test_notmuch_standalone', [ 'tests/test_notmuch_standalone.cc' ]],
+            [ 'address',        'test_address',         [ 'tests/test_address.cc' ]],
+            [ 'dates',          'test_dates',           [ 'tests/test_dates.cc' ]],
+            [ 'crypto',         'test_crypto',          [ 'tests/test_crypto.cc' ]],
+          ]
 
-          [ 'crypto',         'test_crypto',          [ 'tests/test_crypto.cc' ]],
-
-        ]
-
-foreach t : tests
-  test (t[0],
-      executable (t[1], t[2], objects : src_o, include_directories : include_directories ('src'), dependencies : test_deps, link_depends : test_setup, build_by_default : false),
-      env : test_env, workdir : meson.build_root())
-endforeach
+  foreach t : tests
+    test (t[0],
+        executable (t[1], t[2], objects : src_o, include_directories : include_directories ('src'), dependencies : test_deps, link_depends : test_setup, build_by_default : false),
+        env : test_env, workdir : meson.build_root())
+  endforeach
+endif
 

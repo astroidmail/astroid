@@ -1,3 +1,4 @@
+option ('disable-tests', type : 'boolean', value : 'false', description : 'Disable tests')
 option ('disable-plugins', type : 'boolean', value : 'false', description : 'Disable plugins')
 option ('disable-terminal', type : 'boolean', value : 'false', description : 'Disable built in terminal')
 option ('disable-embedded-editor', type : 'boolean', value : 'false', description : 'Disable embedded editor')
