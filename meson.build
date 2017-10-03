@@ -144,9 +144,42 @@ src = [
 
 
 ## Astroid executable
-astroid_exe = executable ('astroid', src + ['src/main.cc'], dependencies : deps, include_directories : include_directories ('src') )
+astroid_exe = executable ('astroid', src + ['src/main.cc'], dependencies : deps, include_directories : include_directories ('src'), install : true )
 
-#install_data ('ui/thread-view.html', install_dir : join_paths(get_option('datadir'), 'progname'))
+ui_src = [
+    'ui/thread-view.html',
+    'ui/edit-message.glade',
+    'ui/no-mail.png'
+    ]
+
+if not get_option ('disable-libsass')
+  ui_src += 'ui/thread-view.scss'
+endif
+
+install_data (ui_src, install_dir : join_paths(get_option('datadir'), 'astroid', 'ui'))
+
+icons = [
+  'ui/icons/horizontal_color.png',
+  'ui/icons/horizontal_color.svg',
+  'ui/icons/horizontal_white.png',
+  'ui/icons/horizontal_white.svg',
+  'ui/icons/icon_color.png',
+  'ui/icons/icon_color.svg',
+  'ui/icons/icon_white.png',
+  'ui/icons/icon_white.svg',
+  'ui/icons/LICENSE',
+  'ui/icons/vertical_color.png',
+  'ui/icons/vertical_color.svg',
+  'ui/icons/vertical_white.png',
+  'ui/icons/vertical_white.svg',
+  ]
+
+install_data (icons, install_dir : join_paths(get_option('datadir'), 'astroid', 'ui', 'icons'))
+
+install_data ('ui/icons/astroid.png', install_dir : join_paths(get_option('datadir'), 'icons', 'hicolor', '512x512', 'apps'))
+install_data ('ui/icons/astroid.svg', install_dir : join_paths(get_option('datadir'), 'icons', 'hicolor', 'scalable', 'apps'))
+
+install_data ('ui/astroid.desktop', install_dir : join_paths(get_option('datadir'), 'applications'))
 
 ## GIR generation (for plugins)
 girsource = [
