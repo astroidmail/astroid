@@ -25,7 +25,6 @@ add_global_arguments ('-DBOOST_LOG_DYN_LINK', language : 'cpp')
 gtk     = dependency ('gtk+-3.0')
 gtkmm   = dependency ('gtkmm-3.0')
 webkit  = dependency ('webkitgtk-3.0')
-peas    = dependency ('libpeas-1.0')
 threads = dependency ('threads')
 
 notmuch = cc.find_library ('notmuch', required : true)
@@ -33,19 +32,27 @@ if cc.has_function ('notmuch_database_index_file', dependencies : notmuch, prefi
   add_global_arguments ('-DHAVE_NOTMUCH_INDEX_FILE', language: 'cpp')
 endif
 
+deps = [ gmime, boost, gtk, gtkmm, webkit, threads, notmuch ]
 
 vte = dependency ('vte-2.91')
 if not vte.found () or get_option('disable-terminal')
   add_global_arguments ('-DDISABLE_VTE', language: 'cpp')
   message ('Embedded terminal is disabled.')
+else
+  deps += vte
+endif
+
+if get_option ('disable-plugins')
+  add_global_arguments ('-DDISABLE_PLUGINS', language: 'cpp')
+else
+  peas = dependency ('libpeas-1.0')
+  deps += peas
 endif
 
 if get_option ('disable-embedded-editor')
   add_global_arguments ('-DDISABLE_EMBEDDED', language: 'cpp')
-  message ('Embedded editor is disabled.')
 endif
 
-deps = [ gmime, boost, gtk, gtkmm, webkit, peas, vte, threads, notmuch ]
 
 if get_option ('disable-libsass')
   sassc = find_program(get_option('scss-compiler'))
@@ -182,16 +189,18 @@ install_data ('ui/icons/astroid.svg', install_dir : join_paths(get_option('datad
 install_data ('ui/astroid.desktop', install_dir : join_paths(get_option('datadir'), 'applications'))
 
 ## GIR generation (for plugins)
-girsource = [
-    'src/plugin/astroid_activatable.c',
-    'src/plugin/thread_view_activatable.c',
-    'src/plugin/thread_index_activatable.c',
-    'src/plugin/astroid_activatable.h',
-    'src/plugin/thread_view_activatable.h',
-    'src/plugin/thread_index_activatable.h',
-    'src/plugin/gir_main.c'
-    ]
-gir_target  = executable ('gir_main', girsource, dependencies : deps, include_directories : include_directories ('src'), install : false)
-gnome = import ('gnome')
-gir   = gnome.generate_gir (gir_target, sources : girsource, namespace : 'Astroid', nsversion : '0.1', include_directories : include_directories ('src'), dependencies : deps, install : true, includes : ['GObject-2.0', 'GMime-3.0'])
+if not get_option ('disable-plugins')
+  girsource = [
+      'src/plugin/astroid_activatable.c',
+      'src/plugin/thread_view_activatable.c',
+      'src/plugin/thread_index_activatable.c',
+      'src/plugin/astroid_activatable.h',
+      'src/plugin/thread_view_activatable.h',
+      'src/plugin/thread_index_activatable.h',
+      'src/plugin/gir_main.c'
+      ]
+  gir_target  = executable ('gir_main', girsource, dependencies : deps, include_directories : include_directories ('src'), install : false)
+  gnome = import ('gnome')
+  gir   = gnome.generate_gir (gir_target, sources : girsource, namespace : 'Astroid', nsversion : '0.1', include_directories : include_directories ('src'), dependencies : deps, install : true, includes : ['GObject-2.0', 'GMime-3.0'])
+endif
 
