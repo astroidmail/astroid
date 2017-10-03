@@ -9,7 +9,6 @@ namespace Astroid {
 
     public:
       External (EditMessage * em);
-      ~External ();
 
       bool ready () override;
       bool started () override;

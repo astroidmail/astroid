@@ -15,10 +15,6 @@ namespace Astroid {
     editor_cmd  = em->editor_config.get <std::string>("cmd");
   }
 
-  External::~External () {
-
-  }
-
   bool External::ready () {
     return editor_ready;
   }

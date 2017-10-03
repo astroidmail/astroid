@@ -13,7 +13,6 @@ namespace Astroid {
 
     public:
       Plugin (EditMessage * em, ustring server);
-      ~Plugin ();
 
       bool ready () override;
       bool started () override;

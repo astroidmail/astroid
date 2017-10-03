@@ -5,7 +5,7 @@
 namespace Astroid {
   class Editor {
     public:
-
+      virtual ~Editor () { };
       virtual bool ready () = 0;
       virtual bool started () = 0;
 

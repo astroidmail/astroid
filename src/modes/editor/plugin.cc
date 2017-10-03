@@ -36,10 +36,6 @@ namespace Astroid {
     bin.pack_start (*editor_socket);
   }
 
-  Plugin::~Plugin () {
-
-  }
-
   bool Plugin::ready () {
     return editor_ready;
   }
