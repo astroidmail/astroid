@@ -27,12 +27,14 @@ int main () {
       notmuch_database_mode_t::NOTMUCH_DATABASE_MODE_READ_ONLY,
       &nm_db);
 
+  (void) (s);
 
   cout << "db: running test query.." << endl;
   notmuch_query_t * q = notmuch_query_create (nm_db, "*");
 
   unsigned int c;
   notmuch_status_t st = notmuch_query_count_threads (q, &c); // destructive
+  (void) (st);
   notmuch_query_destroy (q);
   q = notmuch_query_create (nm_db, "*");
 

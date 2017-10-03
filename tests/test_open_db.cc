@@ -56,6 +56,8 @@ BOOST_AUTO_TEST_SUITE(DbTest)
 
     BOOST_CHECK_THROW ( db = new Db (Db::DbMode::DATABASE_READ_ONLY), database_error );
 
+    (void) (db);
+
     //delete db;
 
     teardown ();
