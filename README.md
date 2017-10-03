@@ -33,8 +33,9 @@ $ git clone https://github.com/astroidmail/astroid.git
 ### compiling
 
 ```sh
-$ meson build 
-$ ninja -C build
+$ meson build
+$ cd build/
+$ ninja
 ```
 
 or run `meson configure` from `build/` to set any build options. Subsequent builds can be done by running `ninja` from the build directory.
@@ -50,8 +51,9 @@ $ ninja test
 Configure with a prefix and install:
 ```sh
 $ meson build --prefix=/usr
-$ ninja -C build
-$ ninja -C build install
+$ cd build/
+$ ninja
+$ ninja install
 ```
 
 this will install the `astroid` binary into `/usr/bin/`, and data files into `/usr/share/astroid/`. refer to the [installing section](https://github.com/astroidmail/astroid/wiki/Compiling-and-Installing) in the wiki for more information.

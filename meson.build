@@ -152,7 +152,7 @@ src = [
 
 
 ## Astroid executable
-astroid_exe = executable ('astroid', src + ['src/main.cc'], dependencies : deps, include_directories : include_directories ('src'), install : true )
+astroid_exe = executable ('astroid', src + ['src/main.cc'], dependencies : deps, include_directories : include_directories ('src'), install : true, build_by_default : true )
 
 ## GIR generation (for plugins)
 if not get_option ('disable-plugins')
@@ -170,7 +170,7 @@ if not get_option ('disable-plugins')
   gir   = gnome.generate_gir (gir_target, sources : girsource, namespace : 'Astroid', nsversion : '0.1', include_directories : include_directories ('src'), dependencies : deps, install : true, includes : ['GObject-2.0', 'GMime-3.0'])
 endif
 
-## Installating data files
+## Installaing data files
 ui_src = [
     'ui/thread-view.html',
     'ui/edit-message.glade',
