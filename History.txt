@@ -1,3 +1,7 @@
+== 
+
+* Move to the Meson build system, replacing SCons.
+
 == v0.10.1 / 2017-09-24
 
 * Fix compilation errors against older versions of notmuch and gmime.
