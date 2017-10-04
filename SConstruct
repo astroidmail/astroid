@@ -320,10 +320,10 @@ libs   = ['notmuch',
           'boost_filesystem',
           'boost_program_options',
           'boost_log_setup',
-          'boost_log-mt',
-          'boost_thread-mt',
+          'boost_log',
+          'boost_thread',
           'boost_date_time',
-          'boost_system-mt',
+          'boost_system',
           'stdc++']
 
 env.AppendUnique (LIBS = libs)
