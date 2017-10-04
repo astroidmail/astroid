@@ -318,12 +318,12 @@ if not conf.CheckLib ('boost_date_time', language = 'c++'):
 
 libs   = ['notmuch',
           'boost_filesystem',
-          'boost_system',
           'boost_program_options',
           'boost_log_setup',
           'boost_log',
           'boost_thread',
           'boost_date_time',
+          'boost_system',
           'stdc++']
 
 env.AppendUnique (LIBS = libs)
