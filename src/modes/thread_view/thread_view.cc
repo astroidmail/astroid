@@ -825,6 +825,7 @@ namespace Astroid {
     part.put ("encrypted", false);
     part.put ("signed", false);
     part.put ("content", "");
+    part.put ("sibling", !c->siblings.empty ());
     part.add_child ("children", ptree());
 
     /*
