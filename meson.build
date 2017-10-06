@@ -42,13 +42,6 @@ else
   deps += vte
 endif
 
-if get_option ('disable-plugins')
-  add_global_arguments ('-DDISABLE_PLUGINS', language: 'cpp')
-else
-  peas = dependency ('libpeas-1.0')
-  deps += peas
-endif
-
 if get_option ('disable-embedded-editor')
   add_global_arguments ('-DDISABLE_EMBEDDED', language: 'cpp')
 endif
@@ -122,10 +115,6 @@ src = [
     'src/actions/toggle_action.cc',
     'src/actions/action.cc',
     'src/astroid.cc',
-    'src/plugin/manager.cc',
-    'src/plugin/astroid_activatable.c',
-    'src/plugin/thread_view_activatable.c',
-    'src/plugin/thread_index_activatable.c',
     'src/db.cc',
     'src/config.cc',
     'src/poll.cc',
@@ -150,6 +139,20 @@ src = [
     'src/main_window.cc',
   ]
 
+plugin_src = [
+    'src/plugin/manager.cc',
+    'src/plugin/astroid_activatable.c',
+    'src/plugin/thread_view_activatable.c',
+    'src/plugin/thread_index_activatable.c',
+    ]
+
+if get_option ('disable-plugins')
+  add_global_arguments ('-DDISABLE_PLUGINS', language: 'cpp')
+else
+  peas = dependency ('libpeas-1.0')
+  deps += peas
+  src  += plugin_src
+endif
 
 ## Astroid executable
 astroid_exe = executable ('astroid', src + ['src/main.cc'], dependencies : deps, include_directories : include_directories ('src'), install : true, build_by_default : true )
