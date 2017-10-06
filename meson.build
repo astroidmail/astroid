@@ -18,9 +18,9 @@ else
 endif
 
 boost   = dependency ('boost',
-                        modules : [ 'filesystem', 'program_options',
-                                    'log_setup', 'log', 'thread',
-                                    'date_time', 'system' ])
+                        modules : [ 'thread', 'filesystem',
+                                    'program_options', 'log_setup',
+                                    'log', 'date_time', 'system' ])
 add_global_arguments ('-DBOOST_LOG_DYN_LINK', language : 'cpp')
 
 gtk     = dependency ('gtk+-3.0')
