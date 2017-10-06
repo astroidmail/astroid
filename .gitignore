@@ -28,5 +28,5 @@ girmain
 # generated from tests run in a chroot
 tmp-*
 
-build
+build*
 
