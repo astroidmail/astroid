@@ -19,7 +19,7 @@ BOOST_AUTO_TEST_SUITE(Reading)
   {
     setup ();
 
-    ustring fname = "test/mail/test_mail/no-nl.eml";
+    ustring fname = "tests/mail/test_mail/no-nl.eml";
 
     Message m (fname);
 
@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_SUITE(Reading)
 
     setup ();
 
-    ustring fname = "test/mail/test_mail/no-nl-link.eml";
+    ustring fname = "tests/mail/test_mail/no-nl-link.eml";
 
     Message m (fname);
 
@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_SUITE(Reading)
      * with no other text beforehand */
     setup ();
 
-    ustring fname = "test/mail/test_mail/no-nl-link-plain.eml";
+    ustring fname = "tests/mail/test_mail/no-nl-link-plain.eml";
 
     Message m (fname);
 
@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_SUITE(Reading)
      * no other text beforehand */
     setup ();
 
-    ustring fname = "test/mail/test_mail/no-nl-link-html.eml";
+    ustring fname = "tests/mail/test_mail/no-nl-link-html.eml";
 
     Message m (fname);
 

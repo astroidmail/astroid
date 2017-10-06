@@ -17,7 +17,7 @@ using std::cout;
 using std::endl;
 
 int main () {
-  bfs::path path_db = bfs::absolute (bfs::path("./test/mail/test_mail"));
+  bfs::path path_db = bfs::absolute (bfs::path("./tests/mail/test_mail"));
 
   notmuch_database_t * nm_db;
 

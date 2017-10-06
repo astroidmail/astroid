@@ -17,7 +17,7 @@ BOOST_AUTO_TEST_SUITE(Reading)
   {
     setup ();
 
-    std::string fname = "test/mail/test_mail/this-one-should-not-exist.eml";
+    std::string fname = "tests/mail/test_mail/this-one-should-not-exist.eml";
 
     BOOST_CHECK (!exists(fname));
 
@@ -36,21 +36,21 @@ BOOST_AUTO_TEST_SUITE(Reading)
     setup ();
 
     /* open other email and make copy */
-    Message om ("test/mail/test_out_of_sync.eml");
-    om.save_to ("test/mail/test_mail/oos.eml");
+    Message om ("tests/mail/test_out_of_sync.eml");
+    om.save_to ("tests/mail/test_mail/oos.eml");
 
     /* update notmuch */
     system ("notmuch new");
 
     /* test if file can be read now */
     Message * mm;
-    BOOST_CHECK_NO_THROW (mm = new Message ("test/mail/test_mail/oos.eml"));
+    BOOST_CHECK_NO_THROW (mm = new Message ("tests/mail/test_mail/oos.eml"));
     BOOST_CHECK ((AddressList (mm->other_to ()).str () == "ba@adsf.asd"));
     LOG (test) << "other: " << AddressList (mm->other_to ()).str ();
     delete mm;
 
     /* remove it without updating notmuch */
-    unlink ("test/mail/test_mail/oos.eml");
+    unlink ("tests/mail/test_mail/oos.eml");
 
     /* try to open file using notmuch */
     Message * oos;
@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_SUITE(Reading)
     /* testing various methods */
     LOG (test) << "message: testing methods on out-of-sync message.";
 
-    oos->save_to ("test/mail/test_mail/wont-work.eml");
+    oos->save_to ("tests/mail/test_mail/wont-work.eml");
 
     LOG (test) << "sender: " << oos->sender;
     LOG (test) << "text: " << oos->viewable_text (false);

@@ -20,7 +20,7 @@ BOOST_AUTO_TEST_SUITE(Reading)
   {
     setup ();
 
-    ustring fname = "test/mail/test_mail/convert_error.eml";
+    ustring fname = "tests/mail/test_mail/convert_error.eml";
 
     Astroid::Message m (fname);
 
@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_SUITE(Reading)
   {
     setup ();
 
-    ustring fname = "test/mail/test_mail/bad-convert-error.eml";
+    ustring fname = "tests/mail/test_mail/bad-convert-error.eml";
 
     Astroid::Message msg (fname);
     /* quote original message */
@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_SUITE(Reading)
 
 
     /* test writing out */
-    std::string name = "test/mail/test_mail/tmp-reply-convert-error";
+    std::string name = "tests/mail/test_mail/tmp-reply-convert-error";
     LOG (test) << "writing to tmp file " << name;
     std::fstream tmpfile (name, std::fstream::out);
 

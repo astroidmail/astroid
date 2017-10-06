@@ -26,7 +26,7 @@ BOOST_AUTO_TEST_SUITE(Reading)
   {
     setup ();
 
-    ustring fname = "test/mail/test_mail/bad-content-part-id-2.eml";
+    ustring fname = "tests/mail/test_mail/bad-content-part-id-2.eml";
 
     Message m (fname);
 
@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_SUITE(Reading)
   {
     setup ();
 
-    ustring fname = "test/mail/test_mail/bad-content-part-id.eml";
+    ustring fname = "tests/mail/test_mail/bad-content-part-id.eml";
 
     Message m (fname);
 

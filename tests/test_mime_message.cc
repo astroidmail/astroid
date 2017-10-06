@@ -23,7 +23,7 @@ BOOST_AUTO_TEST_SUITE(Reading)
   {
     setup ();
 
-    ustring fname = "test/mail/test_mail/mime-message-no-content-type.eml";
+    ustring fname = "tests/mail/test_mail/mime-message-no-content-type.eml";
 
     Message m (fname);
 
@@ -42,13 +42,13 @@ BOOST_AUTO_TEST_SUITE(Reading)
     setup ();
 
     Account a = astroid->accounts->accounts[0];
-    a.signature_file = bfs::path ("test/test_home/signature.txt");
+    a.signature_file = bfs::path ("tests/test_home/signature.txt");
     a.has_signature  = true;
     a.signature_attach = false;
 
     ComposeMessage * c = new ComposeMessage ();
 
-    std::shared_ptr<ComposeMessage::Attachment> mm (new ComposeMessage::Attachment ("test/mail/test_mail/multipart.eml"));
+    std::shared_ptr<ComposeMessage::Attachment> mm (new ComposeMessage::Attachment ("tests/mail/test_mail/multipart.eml"));
     c->add_attachment (mm);
 
     c->set_from (&a);
@@ -56,14 +56,14 @@ BOOST_AUTO_TEST_SUITE(Reading)
     c->build ();
     c->finalize ();
 
-    c->write ("test/mail/test_mail/out_mm_sig.eml");
+    c->write ("tests/mail/test_mail/out_mm_sig.eml");
 
     ustring fn = c->write_tmp ();
 
     delete c;
 
     unlink (fn.c_str ());
-    unlink ("test/mail/test_mail/out_mm_sig.eml");
+    unlink ("tests/mail/test_mail/out_mm_sig.eml");
 
     teardown ();
 

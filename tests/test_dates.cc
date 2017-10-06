@@ -16,7 +16,7 @@ BOOST_AUTO_TEST_SUITE(Dates)
     setup ();
 
     {
-      Message m ("test/mail/test_mail/date1.eml");
+      Message m ("tests/mail/test_mail/date1.eml");
 
       LOG (warn) << "date1:";
       LOG (test) << "pretty_date: " << m.pretty_date ();
@@ -25,7 +25,7 @@ BOOST_AUTO_TEST_SUITE(Dates)
     }
 
     {
-      Message m ("test/mail/test_mail/date2.eml");
+      Message m ("tests/mail/test_mail/date2.eml");
 
       LOG (warn) << "date2:";
       LOG (test) << "pretty_date: " << m.pretty_date ();
@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_SUITE(Dates)
     };
 
 
-    Message a ("test/mail/test_mail/date1.eml");
+    Message a ("tests/mail/test_mail/date1.eml");
 
     for (ustring d : dates) {
       LOG (warn) << "date: testing: " << d;

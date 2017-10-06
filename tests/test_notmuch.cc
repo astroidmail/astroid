@@ -19,7 +19,7 @@ BOOST_AUTO_TEST_SUITE(Notmuch)
   BOOST_AUTO_TEST_CASE(read_all_threads)
   {
 
-    bfs::path path_db = bfs::absolute (bfs::path("./test/mail/test_mail"));
+    bfs::path path_db = bfs::absolute (bfs::path("./tests/mail/test_mail"));
 
     notmuch_database_t * nm_db;
 
@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_SUITE(Notmuch)
   BOOST_AUTO_TEST_CASE(notmuch_threads_move_to_next_fail)
   {
 
-    bfs::path path_db = bfs::absolute (bfs::path("./test/mail/test_mail"));
+    bfs::path path_db = bfs::absolute (bfs::path("./tests/mail/test_mail"));
 
     notmuch_database_t * nm_db;
 

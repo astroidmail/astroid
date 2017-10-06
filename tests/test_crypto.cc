@@ -196,7 +196,7 @@ BOOST_AUTO_TEST_SUITE(GPGEncryption)
     c->build ();
     c->finalize ();
 
-    ustring fn = "test/mail/test_mail/gpg-test-1.eml";
+    ustring fn = "tests/mail/test_mail/gpg-test-1.eml";
     c->write (fn);
     system ("notmuch new; notmuch search \"*\"");
 

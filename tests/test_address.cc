@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_SUITE(TestAddressA)
   {
     setup ();
 
-    Message m ("test/mail/test_mail/isspace-fail-utf-8.eml");
+    Message m ("tests/mail/test_mail/isspace-fail-utf-8.eml");
     LOG (test) << m.sender;
 
     Address ma (m.sender);

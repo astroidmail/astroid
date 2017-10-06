@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_SUITE(Composing)
 
     Account a = astroid->accounts->accounts[0];
     a.email   = "gaute@astroidmail.bar";
-    a.signature_file = "test/test_home/signature.txt";
+    a.signature_file = "tests/test_home/signature.txt";
 
     /* read signature */
     std::ifstream s (a.signature_file.c_str ());
@@ -102,9 +102,9 @@ BOOST_AUTO_TEST_SUITE(Composing)
     LOG (trace) << "cm: account gpg: " << a.gpgkey;
     LOG (debug) << "cm: signature file: " << a.signature_file;
 
-    ustring fname = "test/mail/test_mail/test-output.eml";
+    ustring fname = "tests/mail/test_mail/test-output.eml";
     /* a.sendmail = "tee " + fname; */
-    a.sendmail = "test/forktee.sh " + fname;
+    a.sendmail = "tests/forktee.sh " + fname;
     LOG (debug) << "cm: sendmail: " << a.sendmail;
 
     for (int i = 0; i < 1; i++) {

@@ -49,7 +49,7 @@ namespace Astroid {
 
       path cur_path (current_path() );
 
-      std_paths.home = cur_path / path("test/test_home");
+      std_paths.home = cur_path / path("tests/test_home");
 
       LOG (debug) << "cf: using home and config_dir directory: " << std_paths.home.c_str ();
 
@@ -280,7 +280,7 @@ namespace Astroid {
       config.put ("poll.interval", 0);
       config.put ("accounts.charlie.gpgkey", "gaute@astroidmail.bar");
       config.put ("mail.send_delay", 0);
-      std::string test_nmcfg_path = path(current_path() / path ("test/mail/test_config")).string();
+      std::string test_nmcfg_path = path(current_path() / path ("tests/mail/test_config")).string();
       boost::property_tree::read_ini (test_nmcfg_path, notmuch_config);
       return;
     }
