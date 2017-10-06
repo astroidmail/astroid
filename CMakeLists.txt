@@ -78,16 +78,20 @@ configure_file (
     src/build_config.hh
     )
 
-if( EXISTS ${SASS_INCLUDE_DIRS}/sass_context.h )
+include (CheckIncludeFiles)
+check_include_files (sass_context.h SASSCTX_SASS_CONTEXT_H)
+check_include_files (sass/context.h SASSCTX_CONTEXT_H)
+
+if( SASSCTX_SASS_CONTEXT_H )
   add_definitions ( -DSASSCTX_SASS_CONTEXT_H )
-elseif( EXISTS ${SASS_INCLUDE_DIRS}/sass/context.h)
+elseif( SASSCTX_CONTEXT_H )
   add_definitions ( -DSASSCTX_CONTEXT_H )
 else()
   message (
     FATAL_ERROR
     "libsass must be installed: could not find header file. You can disable libsass with --disable-libsass, however, that requires a SCSS compiler like 'sassc' which can be specified with --scss-compiler=<path to compiler>."
     )
-endif()  
+endif()
 
 include_directories (
   src/
