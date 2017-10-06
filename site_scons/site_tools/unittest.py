@@ -19,7 +19,7 @@ def unitTestAction(target, source, env):
     myenv[k] = v
 
   # add notmuch path
-  config = os.path.abspath(os.path.join (os.path.curdir, 'test/mail/test_config'))
+  config = os.path.abspath(os.path.join (os.path.curdir, 'tests/mail/test_config'))
   myenv['NOTMUCH_CONFIG'] = config
 
   # setup gpg
@@ -41,7 +41,7 @@ def unitTestAction(target, source, env):
     return 1
 
 def setupGPG (env):
-  home = os.path.join (os.path.curdir, 'test/test_home')
+  home = os.path.join (os.path.curdir, 'tests/test_home')
   gpgh = os.path.abspath(os.path.join (home, 'gnupg'))
   env['GNUPGHOME'] = gpgh
   env['GPG_AGENT_INFO'] = ''
@@ -69,7 +69,7 @@ def setupGPG (env):
   open (os.path.join (gpgh, '.ready'), 'w').write ('ready')
 
 def tearDownGPG (env):
-  home = os.path.join (os.path.curdir, 'test/test_home')
+  home = os.path.join (os.path.curdir, 'tests/test_home')
   gpgh = os.path.abspath(os.path.join (home, 'gnupg'))
   env['GNUPGHOME'] = gpgh
 

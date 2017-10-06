@@ -65,26 +65,26 @@ print "debug flag enabled: " + str(debug)
 
 if 'clean_test' in COMMAND_LINE_TARGETS:
   print "cleaning out tests.."
-  for fn in os.listdir('./test/'):
+  for fn in os.listdir('./tests/'):
     if '.passed' in fn:
       print "delting: " + fn
-      os.remove (os.path.join ('./test', fn))
+      os.remove (os.path.join ('./tests', fn))
 
-  for fn in os.listdir('./test/mail/'):
+  for fn in os.listdir('./tests/mail/'):
     if '.passed' in fn or '.setup' in fn:
       print "delting: " + fn
-      os.remove (os.path.join ('./test/mail/', fn))
+      os.remove (os.path.join ('./tests/mail/', fn))
 
   # clean notmuch dir
   print "cleaning out notmuch dir.."
   import shutil
-  if os.path.exists ("./test/mail/test_mail/.notmuch"):
-    shutil.rmtree ("./test/mail/test_mail/.notmuch")
+  if os.path.exists ("./tests/mail/test_mail/.notmuch"):
+    shutil.rmtree ("./tests/mail/test_mail/.notmuch")
 
   # remove gpg
   print "cleaning out gnupg dir.."
-  if os.path.exists ("./test/test_home/gnupg"):
-    shutil.rmtree ("./test/test_home/gnupg")
+  if os.path.exists ("./tests/test_home/gnupg"):
+    shutil.rmtree ("./tests/test_home/gnupg")
 
   exit ()
 
@@ -460,14 +460,14 @@ Export ('astroid')
 testEnv = env.Clone()
 testEnv.Append (CPPPATH = '../src')
 testEnv.Tool ('unittest',
-              toolpath=['test/bt/'],
-              UTEST_MAIN_SRC=File('test/bt/boostautotestmain.cc'),
+              toolpath=['tests/bt/'],
+              UTEST_MAIN_SRC=File('tests/bt/boostautotestmain.cc'),
               LIBS=['boost_unit_test_framework']
 )
 
 Export ('testEnv')
 # grab stuff from sub-directories.
-env.SConscript(dirs = ['test'])
+env.SConscript(dirs = ['tests'])
 
 ## Install target
 idir_prefix     = prefix
