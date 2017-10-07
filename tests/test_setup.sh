@@ -30,7 +30,7 @@ mkdir -p "${notmuch_db}"
 export NOTMUCH_CONFIG="${bld}/mail/test_config"
 
 echo "* writing notmuch config: ${NOTMUCH_CONFIG}"
-cp "${src}/mail/test_config" "${NOTMUCH_CONFIG}"
+cp "${src}/mail/test_config.template" "${NOTMUCH_CONFIG}"
 notmuch config set database.path "${notmuch_db}"
 
 echo "* install e-mail test corpus.."
