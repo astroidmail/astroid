@@ -31,7 +31,7 @@ boost_po = cc.find_library ('boost_program_options')
 
 gtk     = dependency ('gtk+-3.0')
 gtkmm   = dependency ('gtkmm-3.0')
-webkit  = dependency ('webkitgtk-3.0')
+webkit  = dependency ('webkit2gtk-4.0')
 threads = dependency ('threads')
 
 notmuch = cc.find_library ('notmuch', required : true)
@@ -105,7 +105,6 @@ src = [
     'src/modes/mode.cc',
     'src/modes/thread_view/thread_view.cc',
     'src/modes/thread_view/web_inspector.cc',
-    'src/modes/thread_view/dom_utils.cc',
     'src/modes/thread_view/theme.cc',
     'src/modes/paned_mode.cc',
     'src/modes/thread_index/thread_index_list_cell_renderer.cc',
