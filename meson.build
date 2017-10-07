@@ -85,6 +85,7 @@ configure_file (input : 'src/build_config.hh.in',
                 output : 'build_config.hh',
                 configuration : conf_data)
 
+message ('Building astroid: ' + conf_data.get ('git_desc'))
 
 src = [
     'src/modes/log_view.cc',
