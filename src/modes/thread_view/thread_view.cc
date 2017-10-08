@@ -507,7 +507,6 @@ namespace Astroid {
           _m->reference (); // since m is owned by caller
 
           update_message (_m);
-          render_webview ();
         }
       }
     }
@@ -548,8 +547,6 @@ namespace Astroid {
               [&](refptr<Message> m) {
                 add_message (m);
               });
-
-    render_webview ();
 
     update_all_indent_states ();
 
@@ -595,10 +592,6 @@ namespace Astroid {
   void ThreadView::update_indent_state (refptr<Message> m) {
     string js = "Astroid.indent_state ('" + m->mid + "'," + ( indent_messages ? string("true") : string("false")) + ");";
     webkit_web_view_run_javascript (webview, js.c_str (), NULL, NULL, NULL);
-  }
-
-  void ThreadView::render_webview () {
-    webkit_web_view_run_javascript (webview, "Astroid.render();", NULL, NULL, NULL);
   }
 
   void ThreadView::add_message (refptr<Message> m) {
