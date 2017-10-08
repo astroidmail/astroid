@@ -2613,12 +2613,15 @@ namespace Astroid {
      *
      */
 
+    LOG (info) << "tv: focus next element, force_change=" << force_change;
+
     string js = "Astroid.focus_next_element(" + ( force_change ? string("true") : string("false")) + ");";
   }
 
   // TODO: [JS]
   void ThreadView::focus_previous_element (bool force_change) {
     /* Reverse of focus_next_element */
+    LOG (info) << "tv: focus previous element, force_change=" << force_change;
   }
 
   void ThreadView::focus_element (refptr<Message> m, unsigned int e) {
@@ -2627,6 +2630,7 @@ namespace Astroid {
      * JS:
      *  - Move focus to specified element
      */
+    LOG (info) << "tv: focus element, e=" << e;
   }
 
   void ThreadView::focus_message (refptr<Message> m) {
@@ -2634,7 +2638,7 @@ namespace Astroid {
   }
 
   void ThreadView::focus_next_message () {
-    //LOG (debug) << "tv: focus_next.";
+    LOG (debug) << "tv: focus_next_message";
 
     if (edit_mode) return;
 
@@ -2651,7 +2655,7 @@ namespace Astroid {
   }
 
   void ThreadView::focus_previous_message (bool focus_top) {
-    //LOG (debug) << "tv: focus previous.";
+    LOG (debug) << "tv: focus_previous_message";
     if (edit_mode) return;
 
     int focused_position = find (
