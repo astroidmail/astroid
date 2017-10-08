@@ -5,7 +5,7 @@ export const Contact = {
   address: ['address']
 }
 
-export const Tag = {
+export const Tag     = {
   tag: 'tag',
   fg: ['fg', L.define('#000000')],
   bg: ['bg', L.define('rgba(225, 171, 21, 0.5)')]
@@ -38,8 +38,19 @@ export const Model = {
     L.define([]),
     L.normalize(R.sortBy(L.get('id')))
   ],
-  Message: []
+  Message: [],
+
+  messageById: (mid) => {
+    return [
+      'messages',
+      L.define([]),
+      L.normalize(R.sortBy(L.get('id'))),
+      L.find(m => m.id === mid)
+    ]
+
+  }
 }
+
 
 window.Model   = Model
 window.Message = Message

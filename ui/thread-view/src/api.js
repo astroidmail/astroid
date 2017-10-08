@@ -6,6 +6,7 @@
 import * as R from 'ramda/index-es'
 import * as U from 'karet.util'
 import * as ui from './ui'
+import { Model } from './model'
 
 /*
 const cleanMimeContent = (mimecontent) => {
@@ -81,12 +82,12 @@ export function init(context) {
  * @param {Message} message - the email message to add
  * @return {void}
  */
-function add_message(context, message) {
-  log.info('add_message', 'received', message)
-  const cleanedMessage = cleanMessage(message)
-  log.info('add_message', 'cleaned', cleanedMessage)
 
-  U.view('messages', context.state).modify(U.append(cleanedMessage))
+function add_message(context, message) {
+  const cleanedMessage = cleanMessage(message)
+  log.info('add_message', message.id, 'original', message, 'cleaned', cleanedMessage)
+
+  U.view(Model.messageById(message.id), context.state).set(cleanedMessage)
 }
 
 /**
@@ -97,7 +98,7 @@ function add_message(context, message) {
  */
 function clear_messages(context) {
   log.info('clear_messages')
-  U.view('messages', context.state).set([])
+  U.view(Model.messages, context.state).set([])
 }
 
 /**
