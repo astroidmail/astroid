@@ -51,6 +51,80 @@ export const Model = {
   }
 }
 
+/*
+const cleanMimeContent = (mimecontent) => {
+  const cleanedMimeContent = R.clone(mimecontent)
+  if (!Array.isArray(mimecontent.children)) {
+    cleanedMimeContent.children = undefined
+  }
+  return cleanedMimeContent
+}
+*/
+
+// Higher order function: returns a function (value, lens) => value that acts as a reducer over
+// lens modification
+const fieldReducer = (operator) => (m, lens) => L.modify(lens, operator, m)
+
+// accumulates a new value by applying the operator to all fields in message focused by every lens
+// in lenses
+const applyToAllLenses = (operator, lenses, message) => R.reduce(fieldReducer(operator), message, lenses)
+
+// A function returning a Lens that will recursively descend a tree structure of Arrays and Objects
+// and return the lens focusing on an object key named 'field'
+const recurseTreeFor = field => L.lazy(rec => L.iftes(R.is(Array), [L.elems, rec], R.is(Object), [field]))
+
+// recursively traverse the body tree and get a lens on any field with the 'field' key
+const recurseBodyFor = field => ['body', L.elems, recurseTreeFor(field)]
+
+function fixupArrays(message) {
+
+  // lenses to the fields we want to be arrays
+  const fieldsToForceAsArray = [
+    'to', 'cc', 'bcc', 'from', 'body',
+    recurseBodyFor('children'),
+    'mime_messages',
+    'attachments'
+  ]
+
+  const forceArray = R.when(R.complement(Array.isArray), () => [])
+  return applyToAllLenses(forceArray, fieldsToForceAsArray, message)
+}
+
+function fixupBooleans(message) {
+
+  // lenses to focus one every boolean field
+  const toBools = [
+    'focused',
+    'missing_content',
+    'patch',
+    recurseBodyFor('preferred'),
+    recurseBodyFor('encrypted'),
+    recurseBodyFor('signed'),
+    ['attachments', L.elems, 'signed'],
+    ['attachments', L.elems, 'encrypted']
+  ]
+
+  const forceBool = v => v === 'true'
+  return applyToAllLenses(forceBool, toBools, message)
+
+}
+
+/**
+ * Clean up invalid/improper JSON that the C++ layer sends us.
+ *
+ * Astroid's C++ layer is using boost property tree to create json, however this isn't a true
+ * json library. It is not capable of serializing empty JSON arrays. Instead what should be empty
+ * JSON arrays are sent as empty strings.
+ *
+ * This function will deeply traverse a Message object and replace all fields that _should_ be
+ * empty or undefined Arrays with undefined.
+ *
+ * @param {Message} message
+ * @return {Message} cleaned with all array fields guaranteed to be arrays
+ */
+export function cleanMessage(message) {
+  return fixupBooleans(fixupArrays(message))
+}
 
 window.Model   = Model
 window.Message = Message

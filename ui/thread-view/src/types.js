@@ -114,6 +114,7 @@
  * @property {boolean} focused                   - whether the message is focused
  * @property {boolean} missing_content           - whether the message is missing content
  * @property {boolean} patch                     - whether the message is a patch and should have syntax highlighting applied to its body
+ * @property {boolean} sibling                   -
  * @property {String} preview                    - plain text preview
  * @property {Array.<MimeContent>} body          - a list of MimeContent parts
  * @property {Array.<MimeMessage>} mime_messages -
