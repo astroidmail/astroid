@@ -35,7 +35,7 @@ endif
 
 deps = [ gmime, boost, gtk, gtkmm, webkit, threads, notmuch ]
 
-vte = dependency ('vte-2.91')
+vte = dependency ('vte-2.91', required: false)
 if not vte.found () or get_option('disable-terminal')
   add_global_arguments ('-DDISABLE_VTE', language: 'cpp')
   message ('Embedded terminal is disabled.')
