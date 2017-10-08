@@ -25,12 +25,12 @@ using namespace boost::filesystem;
 
 namespace Astroid {
   std::atomic<bool> Theme::theme_loaded (false);
-  const char * Theme::thread_view_html_f = "ui/thread-view.html";
-  const char * Theme::thread_view_js_f   = "ui/bundle.min.js";
+  const char * Theme::thread_view_html_f = "ui/thread-view/dist/index.html";
+  const char * Theme::thread_view_js_f   = "ui/thread-view/dist/astroid.js";
 # ifndef DISABLE_LIBSASS
-  const char * Theme::thread_view_scss_f  = "ui/thread-view.scss";
+  const char * Theme::thread_view_scss_f  = "ui/thread-view/src/thread-view.scss";
 # else
-  const char * Theme::thread_view_css_f  = "ui/thread-view.css";
+  const char * Theme::thread_view_css_f  = "ui/thread-view/dist/thread-view.css";
 # endif
   ustring Theme::thread_view_html;
   ustring Theme::thread_view_js;

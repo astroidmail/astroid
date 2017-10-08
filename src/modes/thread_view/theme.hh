@@ -24,7 +24,7 @@ namespace Astroid {
       static ustring       thread_view_js;
       static ustring       thread_view_css;
       const char * STYLE_NAME = "STYLE";
-      const int THEME_VERSION = 4;
+      const int THEME_VERSION = 5;
 
     private:
       bool check_theme_version (bfs::path);
