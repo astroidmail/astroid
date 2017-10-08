@@ -122,6 +122,13 @@ namespace Astroid {
 
     gtk_container_add (GTK_CONTAINER (scroll.gobj()), GTK_WIDGET(webview));
 
+    /* Show the inspector
+      TODO: should only enabled conditionally, like the developer extras
+      setting above
+    */
+    WebKitWebInspector *inspector = webkit_web_view_get_inspector (WEBKIT_WEB_VIEW(webview));
+    webkit_web_inspector_show (WEBKIT_WEB_INSPECTOR(inspector));
+
     scroll.show_all ();
 
     wk_loaded = false;
