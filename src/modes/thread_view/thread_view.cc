@@ -652,9 +652,15 @@ namespace Astroid {
     ptree mjs;
     mjs.put ("id", m->mid);
 
-    Address sender (m->sender);
-    mjs.put ("from.address", sender.email ());
-    mjs.put ("from.name", sender.fail_safe_name ());
+    ptree from_node; // list of objects
+    {
+      Address sender (m->sender);
+      ptree contact_node; // Contact object
+      contact_node.put ("address", sender.email ());
+      contact_node.put ("name", sender.fail_safe_name ());
+      Utils::extend_ptree (from_node, contact_node);
+    }
+    mjs.add_child("from", from_node);
 
     ptree to_node; // list of objects
     for (Address &recipient: AddressList(m->to()).addresses) {
