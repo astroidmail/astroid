@@ -593,7 +593,7 @@ namespace Astroid {
 
   // TODO: [JS] [REIMPLEMENT]
   void ThreadView::update_indent_state (refptr<Message> m) {
-    string js = "Astroid.indent_state (" + m->mid + "," + ( indent_messages ? string("true") : string("false")) + ");";
+    string js = "Astroid.indent_state ('" + m->mid + "'," + ( indent_messages ? string("true") : string("false")) + ");";
     webkit_web_view_run_javascript (webview, js.c_str (), NULL, NULL, NULL);
   }
 
