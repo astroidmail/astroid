@@ -17,7 +17,10 @@ import * as U from 'karet.util'
  * @name Astroid.Context
  * @type {{
  *     meta: Astroid.Meta,
- *     state: *
+ *     state: {
+ *       messages: Array<Astroid.Message>,
+ *       elements: Astroid.Elements,
+ *     }
  * }}
  */
 

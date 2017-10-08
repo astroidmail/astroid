@@ -92,14 +92,15 @@
  * @property {String} email         -
  * @property {String} key           -
  * @property {String} status        - one of good, bad, erroneous
- * @property {String} trust         - trust level of signers key (could also be reason for status != good)
+ * @property {String} trust         - trust level of signers key (could also be reason for status
+ *     != good)
  * @property {Array<String>} errors - indicating why status is not good
  */
 
 /**
  * An email message as represented by Astroid
  *
- * @typedef {Object} Message
+ * @typedef {Object} Astroid.Message
  *
  * @property {String} id                         -
  * @property {Array.<Contact>} from              -
@@ -113,11 +114,18 @@
  * @property {Array.<Tag>} tags                  - list of tags on this message
  * @property {boolean} focused                   - whether the message is focused
  * @property {boolean} missing_content           - whether the message is missing content
- * @property {boolean} patch                     - whether the message is a patch and should have syntax highlighting applied to its body
+ * @property {boolean} patch                     - whether the message is a patch and should have
+ *     syntax highlighting applied to its body
  * @property {boolean} sibling                   -
  * @property {String} preview                    - plain text preview
  * @property {Array.<MimeContent>} body          - a list of MimeContent parts
  * @property {Array.<MimeMessage>} mime_messages -
  * @property {Array.<Attachment>} attachments    -
+ */
+
+/**
+ * An array of element ids, always sorted in display order, such that if the currently focused
+ * element is at index i, then the "next" element is at index i+1
+ * @typedef {Array<String>} Astroid.Elements
  */
 

@@ -5,8 +5,9 @@
 
 import * as R from 'ramda/index-es'
 import * as U from 'karet.util'
+import * as L from 'partial.lenses'
 import * as ui from './ui'
-import { cleanMessage, Model } from './model'
+import { buildElements, cleanMessage, Model } from './model'
 
 /* --------
  * Logging helpers
@@ -34,7 +35,8 @@ export function init(context) {
     hide_warning: R.curry(hide_warning)(context),
     set_info: R.curry(set_info)(context),
     hide_info: R.curry(hide_info)(context),
-    focus_next_element: R.curry(focus_next_element)(context)
+    focus_next_element: R.curry(focus_next_element)(context),
+    focus_previous_element: R.curry(focus_previous_element)(context)
   }
 }
 
@@ -50,7 +52,12 @@ function add_message(context, message) {
   const cleanedMessage = cleanMessage(message)
   log.info('add_message', message.id, 'original', message, 'cleaned', cleanedMessage)
 
-  U.view(Model.messageById(message.id), context.state).set(cleanedMessage)
+  context.state.modify(L.set(Model.messageById(message.id), cleanedMessage))
+  context.state.modify(L.set('elements', buildElements(context.state.view('messages').get())))
+
+  if (R.isNil(context.state.view('focused').get())) {
+    focus_next_element(context)
+  }
 }
 
 /**
@@ -130,6 +137,46 @@ function hide_info(context, mid) {
  */
 function focus_next_element(context, force_change) {
   log.info('focus_next_element', ...arguments)
+  // const state = context.state.get()
+
+  const elements      = context.state.view('elements')
+  const focusedIdx    = context.state.view(['focusedIdx', L.define(0)])
+  const totalElements = elements.get().length
+
+  const newIdx = Math.min(focusedIdx.get() + 1, totalElements - 1)
+
+  return set_focus(context, newIdx)
+}
+
+/**
+ * Jump to the previous element if no scrolling is necessary, otherwise scroll a small amount.
+ *
+ * @param {Astroid.Context} context
+ * @param {Boolean} force_change if true, then always move to focus the next element
+ * @return the id of the currently selected element
+ */
+function focus_previous_element(context, force_change) {
+  log.info('focus_previous_element', ...arguments)
+
+  const focusedIdx = context.state.view(['focusedIdx', L.define(0)])
+
+  const newIdx = Math.max(focusedIdx.get() - 1, 0)
+
+  return set_focus(context, newIdx)
+}
+
+function set_focus(context, newIdx) {
+  const elements   = context.state.view('elements')
+  const focusedIdx = context.state.view(['focusedIdx', L.define(0)])
+  const old        = focusedIdx.get()
+
+  context.state.modify(L.set('focusedIdx', newIdx))
+  const now     = focusedIdx.get()
+  const element = elements.view(L.index(now)).get()
+  context.state.modify(L.set('focused', element))
+
+  console.log('focused is now ', now, element, ' but was', old)
+  return element
 }
 
 

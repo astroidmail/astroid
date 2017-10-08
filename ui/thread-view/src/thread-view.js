@@ -1,7 +1,7 @@
-import preact from 'preact'
+import preact, { Component } from 'preact'
 import * as R from 'ramda/index-es'
+import * as L from 'partial.lenses'
 import * as U from 'karet.util'
-import { Component } from 'preact'
 import { k, kx } from './ui'
 import { Message, Tag as TagModel } from './model'
 import './thread-view.scss'
@@ -100,7 +100,7 @@ const EmailHeaders = ({ message }) => kx`
 </div>
 `
 
-const Gravatar = ({ gravatar }) => kx`<img src="EXTERNAL_FRAGMENT"${gravatar} class="avatar" />`
+const Gravatar = ({ gravatar }) => kx`<img src=${gravatar} class="avatar" />`
 
 // this is a higher-order component that wraps a component and renders it into a sandboxed iframe
 // the afterRenderHook is called after the content has been rendered
@@ -138,7 +138,8 @@ const SandboxedComponent = (wrappedComponent, afterRenderHook) => class extends 
   }
 
   componentDidUpdate() {
-    this.updateIFrameContents()
+    if(this.frameDocument)
+      this.updateIFrameContents()
   }
 }
 
@@ -163,10 +164,8 @@ const EmailBodySandboxed = SandboxedComponent(EmailBodyDangerous, (frame, frameB
   frame.style.height = `${(outerHeight(frame.contentDocument.body))}px`
 })
 
-const emailClass = (message) => U.string`email ${U.ifte(U.view('focused', message), 'focused', 'hide')}`
-
 const AlternativePart = ({ body }) => {
-  const mime_type = U.view('mime_type', body).log("alt mime part")
+  const mime_type = U.view('mime_type', body)
 
   const msg = U.ift(U.seq(mime_type, U.toLower, U.contains('html')), ' - potentially sketchy')
   return kx`
@@ -179,8 +178,8 @@ const AlternativePart = ({ body }) => {
 const BodySection = ({ message }) => {
   // the body parts are sorted with the preferred at the head of the list
   // if there is no preferred we take the first one anyways
-  const bodyParts    = U.view(Message.body, message).log("BODY PARTS")
-  const bodyContent  = U.view('content', U.head(bodyParts)).log("body content")
+  const bodyParts    = U.view(Message.body, message)
+  const bodyContent  = U.view('content', U.head(bodyParts))
   const alternatives = U.tail(bodyParts)
   return kx`
   <div class="body">
@@ -192,10 +191,13 @@ const BodySection = ({ message }) => {
 `
 }
 
-const EmailMessage = ({ message }) => {
+// focused hide
+const emailClass = (elements, focused, message) => U.string`email ${U.ifte(U.equals(U.view('mid', focused), U.view('id', message)), 'focused', 'hide')}`
+
+const EmailMessage = ({ message, focused, elements }) => {
   const gravatar = U.view(Message.gravatar, message)
   return kx`
-<div class=${emailClass(message)}>
+<div class=${emailClass(elements, focused, message)}>
   <div class="compressed_note"></div>
   <div class="geary_spacer"></div>
   <div class="email_container">
@@ -227,12 +229,14 @@ const EmailMessage = ({ message }) => {
   `
 }
 
-export const EmailView = ({ messages }) => kx`
+export const EmailView = ({ messages, elements, focused }) => {
+  return kx`
 <div id="message_container">
   ${
-  U.seq(messages, U.mapElems((message) => k(EmailMessage, {
-    message, key: U.view(Message.id, message)
-  })))}
+    U.seq(messages, U.mapElems((message) => k(EmailMessage, {
+      message, focused, elements, key: U.view(Message.id, message)
+    })))}
 </div>
   `
+}
 

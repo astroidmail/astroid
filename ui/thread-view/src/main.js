@@ -38,7 +38,12 @@ const initialState = {
  *
  * @type {Astroid.Context}
  */
-const context = State.context({})
+const context = State.context({
+  messages: [],
+  focused: undefined,
+  focusedIdx: 0,
+  elements: []
+})
 
 if (process.env.NODE_ENV !== 'production') {
   window.Kefir   = Kefir
@@ -58,8 +63,13 @@ if (process.env.NODE_ENV !== 'production') {
 
 window['Astroid'] = Astroid.init(context)
 
+const messages = U.view('messages', context.state)
+const elements = U.view(['elements', L.define([])], context.state)
+const focusedIdx  = U.view(['focusedIdx', L.define(0)], context.state)
+const focused  = U.view(['focused'], context.state)
+
 UI.render(
-  UI.k(EmailView, { messages: U.view('messages', context.state) }),
+  UI.k(EmailView, { messages, elements, focused }),
   document.body,
   document.getElementById('app')
 )

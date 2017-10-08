@@ -71,17 +71,23 @@ const applyToAllLenses = (operator, lenses, message) => R.reduce(fieldReducer(op
 
 // A function returning a Lens that will recursively descend a tree structure of Arrays and Objects
 // and return the lens focusing on an object key named 'field'
-const recurseTreeFor = field => L.lazy(rec => L.iftes(R.is(Array), [L.elems, rec], R.is(Object), [field]))
-
-// recursively traverse the body tree and get a lens on any field with the 'field' key
-const recurseBodyFor = field => ['body', L.elems, recurseTreeFor(field)]
+const recurseTreeFor = field => {
+  if (!R.is(Array, field)) {
+    field = [field]
+  }
+  return L.lazy(rec =>
+    L.iftes(
+      R.is(Array), [L.elems, rec],
+      R.is(Object), [L.values, L.iftes((_, key) => R.contains(key, field), [], rec)]
+    )
+  )
+}
 
 function fixupArrays(message) {
-
   // lenses to the fields we want to be arrays
   const fieldsToForceAsArray = [
     'to', 'cc', 'bcc', 'from', 'body',
-    recurseBodyFor('children'),
+    recurseTreeFor('children'),
     'mime_messages',
     'attachments'
   ]
@@ -97,16 +103,15 @@ function fixupBooleans(message) {
     'focused',
     'missing_content',
     'patch',
-    recurseBodyFor('preferred'),
-    recurseBodyFor('encrypted'),
-    recurseBodyFor('signed'),
-    ['attachments', L.elems, 'signed'],
-    ['attachments', L.elems, 'encrypted']
+    'sibling',
+    recurseTreeFor('sibling'),
+    recurseTreeFor('preferred'),
+    recurseTreeFor('encrypted'),
+    recurseTreeFor('signed')
   ]
 
-  const forceBool = v => v === 'true'
+  const forceBool = R.ifElse(R.equals('true'), () => true, () => false)
   return applyToAllLenses(forceBool, toBools, message)
-
 }
 
 /**
@@ -116,6 +121,8 @@ function fixupBooleans(message) {
  * json library. It is not capable of serializing empty JSON arrays. Instead what should be empty
  * JSON arrays are sent as empty strings.
  *
+ * It also sends booleans as strings (i.e., 'true'), which we need to fix up.
+ *
  * This function will deeply traverse a Message object and replace all fields that _should_ be
  * empty or undefined Arrays with undefined.
  *
@@ -123,7 +130,16 @@ function fixupBooleans(message) {
  * @return {Message} cleaned with all array fields guaranteed to be arrays
  */
 export function cleanMessage(message) {
-  return fixupBooleans(fixupArrays(message))
+  return fixupArrays(fixupBooleans(message))
+}
+
+export function buildElements(messages) {
+  /*
+  returns [ { mid: xx, eid: 1}, { mid: xx, eid: 2} , {mid: yy, eid 3} ...]
+   */
+  return R.chain(message =>
+      R.map(eid => ({ mid: message.id, eid }), L.collect(recurseTreeFor(['eid']), message))
+    , messages)
 }
 
 window.Model   = Model
