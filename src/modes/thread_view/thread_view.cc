@@ -2616,12 +2616,15 @@ namespace Astroid {
     LOG (info) << "tv: focus next element, force_change=" << force_change;
 
     string js = "Astroid.focus_next_element(" + ( force_change ? string("true") : string("false")) + ");";
+    webkit_web_view_run_javascript (webview, js.c_str (), NULL, NULL, NULL);
   }
 
   // TODO: [JS]
   void ThreadView::focus_previous_element (bool force_change) {
     /* Reverse of focus_next_element */
     LOG (info) << "tv: focus previous element, force_change=" << force_change;
+    string js = "Astroid.focus_previous_element(" + ( force_change ? string("true") : string("false")) + ");";
+    webkit_web_view_run_javascript (webview, js.c_str (), NULL, NULL, NULL);
   }
 
   void ThreadView::focus_element (refptr<Message> m, unsigned int e) {
