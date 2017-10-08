@@ -66,7 +66,7 @@ if get_option ('disable-libsass')
   add_global_arguments ('-DDISABLE_LIBSASS', language : 'cpp')
   css = custom_target ('css',
       output : 'thread-view.css',
-      input :  'ui/thread-view.scss',
+      input :  'ui/thread-view/src/thread-view.scss',
       command : [sassc, '@INPUT@', '@OUTPUT@' ],
       build_by_default : true,
       install : true,
@@ -189,14 +189,16 @@ endif
 
 ## Installaing data files
 ui_src = [
-    'ui/thread-view.html',
+    'ui/thread-view/dist/index.html',
+    'ui/thread-view/dist/astroid.js',
+    'ui/thread-view/dist/thread-view.css',
     'ui/edit-message.glade',
     'ui/no-mail.png'
     ]
 
-if not get_option ('disable-libsass')
-  ui_src += 'ui/thread-view.scss'
-endif
+#if not get_option ('disable-libsass')
+  #ui_src += 'ui/thread-view/dist/thread-view.css'
+#endif
 
 install_data (ui_src, install_dir : join_paths(get_option('datadir'), 'astroid', 'ui'))
 
