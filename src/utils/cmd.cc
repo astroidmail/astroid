@@ -49,7 +49,7 @@ namespace Astroid {
       }
     }
 
-    return exit;
+    return (exit == 0);
   }
 
   ustring Cmd::substitute (const ustring _cmd) {
