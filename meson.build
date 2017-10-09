@@ -11,10 +11,13 @@ gmime2   = dependency ('gmime-2.6', required : false)
 
 if gmime3.found ()
   gmime = gmime3
+  gmime_gir = 'GMime-3.0'
 elif gmime2.found ()
   gmime = gmime2
+  gmime_gir = 'GMime-2.6'
 else
   error ('neither gmime3 or gmime2 available')
+  gmime_gir = ''
 endif
 
 boost   = dependency ('boost',
@@ -172,7 +175,7 @@ if not get_option ('disable-plugins')
       ]
   gir_target  = executable ('gir_main', girsource, dependencies : deps, include_directories : include_directories ('src'), install : false)
   gnome = import ('gnome')
-  gir   = gnome.generate_gir (gir_target, sources : girsource, namespace : 'Astroid', nsversion : '0.1', include_directories : include_directories ('src'), dependencies : deps, install : true, includes : ['GObject-2.0', 'GMime-3.0'])
+  gir   = gnome.generate_gir (gir_target, sources : girsource, namespace : 'Astroid', nsversion : '0.1', include_directories : include_directories ('src'), dependencies : deps, install : true, includes : ['GObject-2.0', gmime_gir])
 endif
 
 ## Installaing data files
