@@ -11,6 +11,9 @@ bld=$(realpath "$2")
 echo "setting up test suite:"
 echo "======================"
 
+echo "* stopping all gpg components.."
+gpgconf --kill all # stop all components
+
 if [ -e $bld ]; then
   echo "test suite already set up."
   echo "======================"
@@ -59,7 +62,7 @@ export GNUPGHOME="${bld}/test_home/gnupg"
 mkdir -p ${GNUPGHOME}
 chmod og-rwx ${GNUPGHOME}
 
-gpgconf --kill all # stop all components
+# gpg components have been stopped at top
 
 cp ${src}/*.key ${bld}/
 
