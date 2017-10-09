@@ -22,9 +22,12 @@ endif
 
 boost   = dependency ('boost',
                         modules : [ 'thread', 'filesystem',
-                                    'program_options', 'log_setup',
+                                    'log_setup',
                                     'log', 'date_time', 'system' ])
 add_global_arguments ('-DBOOST_LOG_DYN_LINK', language : 'cpp')
+
+# work around for https://github.com/mesonbuild/meson/issues/2456
+boost_po = cc.find_library ('boost_program_options')
 
 gtk     = dependency ('gtk+-3.0')
 gtkmm   = dependency ('gtkmm-3.0')
@@ -36,7 +39,7 @@ if cc.has_function ('notmuch_database_index_file', dependencies : notmuch, prefi
   add_global_arguments ('-DHAVE_NOTMUCH_INDEX_FILE', language: 'cpp')
 endif
 
-deps = [ gmime, boost, gtk, gtkmm, webkit, threads, notmuch ]
+deps = [ gmime, boost, boost_po, gtk, gtkmm, webkit, threads, notmuch ]
 
 vte = dependency ('vte-2.91', required: false)
 if not vte.found () or get_option('disable-terminal')
