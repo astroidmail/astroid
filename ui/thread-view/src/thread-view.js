@@ -117,14 +117,13 @@ const SandboxedComponent = (wrappedComponent, afterRenderHook) => class extends 
 
   updateIFrameContents() {
     preact.render(k(wrappedComponent, { ...this.props }), this.frameBody, this.contentElement)
-    const iframe = this.base
-    afterRenderHook(iframe, this.frameBody)
+    afterRenderHook(this.base, this.frameBody)
   }
 
   render({ iframeId }) {
-    return kx`<iframe id="message-iframe message-part-${iframeId}"
+    return kx`<iframe class="message-iframe message-part-ID message-part-html" id=${iframeId}
       sandbox="allow-same-origin allow-top-navigation allow-popups allow-popups-to-escape-sandbox"
-        seamless class="message-part-html" target="_blank"></iframe>
+        seamless target="_blank"></iframe>
       `
   }
 
@@ -145,7 +144,7 @@ const SandboxedComponent = (wrappedComponent, afterRenderHook) => class extends 
 
 const EmailBodyDangerous = ({ bodyContent }) => {
   // see https://github.com/developit/preact/commit/a9f28e66b4f34a8fa8621b3a0350df2754fa5308
-  return k('div', { dangerouslySetInnerHTML: U.template({ __html: bodyContent }) })
+  return k('div', { id: 'content', dangerouslySetInnerHTML: U.template({ __html: bodyContent }) })
 }
 
 const EmailBodySandboxed = SandboxedComponent(EmailBodyDangerous, (frame, frameBody) => {
@@ -160,8 +159,10 @@ const EmailBodySandboxed = SandboxedComponent(EmailBodyDangerous, (frame, frameB
     }
   })
 
-  // adjust the height of the frame to be the height of the content
-  frame.style.height = `${(outerHeight(frame.contentDocument.body))}px`
+  setTimeout(() => {
+    // adjust the height of the frame to be the height of the content
+    frame.style.height = `${(outerHeight(frame.contentDocument.body))}px`
+  }, 100)
 })
 
 const AlternativePart = ({ body }) => {
@@ -169,7 +170,7 @@ const AlternativePart = ({ body }) => {
 
   const msg = U.ift(U.seq(mime_type, U.toLower, U.contains('html')), ' - potentially sketchy')
   return kx`
-<div class="sibling_container" id="">
+<div class="sibling_container" id=${U.view('eid', body)}>
   <button class="message">Alternative part (type: ${mime_type})${msg}</button>
 </div>
 `
@@ -179,12 +180,14 @@ const BodySection = ({ message }) => {
   // the body parts are sorted with the preferred at the head of the list
   // if there is no preferred we take the first one anyways
   const bodyParts    = U.view(Message.body, message)
-  const bodyContent  = U.view('content', U.head(bodyParts))
+  const selectedBody = U.head(bodyParts)
+  const bodyContent  = U.view('content', selectedBody)
+  const bodyEid      = U.view('eid', selectedBody)
   const alternatives = U.tail(bodyParts)
   return kx`
   <div class="body">
       <span class="body_part">
-          ${k(EmailBodySandboxed, { bodyContent, iframeId: message.id })}
+          ${k(EmailBodySandboxed, { bodyContent, iframeId: bodyEid })}
       </span>
       ${U.seq(alternatives, U.mapElems(alt => k(AlternativePart, { body: alt })))}
   </div>

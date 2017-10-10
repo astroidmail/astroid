@@ -8,6 +8,7 @@ import * as U from 'karet.util'
 import * as L from 'partial.lenses'
 import * as ui from './ui'
 import { buildElements, cleanMessage, Model } from './model'
+import './intersectionobserver-polyfill'
 
 /* --------
  * Logging helpers
@@ -145,6 +146,7 @@ function focus_next_element(context, force_change) {
 
   const newIdx = Math.min(focusedIdx.get() + 1, totalElements - 1)
 
+
   return set_focus(context, newIdx)
 }
 
@@ -168,15 +170,44 @@ function focus_previous_element(context, force_change) {
 function set_focus(context, newIdx) {
   const elements   = context.state.view('elements')
   const focusedIdx = context.state.view(['focusedIdx', L.define(0)])
-  const old        = focusedIdx.get()
+  const oldIdx     = focusedIdx.get()
+  const old        = elements.view(L.index(oldIdx)).get()
+
+  const watchMe = new IntersectionObserver((entries) => {
+    for (let entry of entries) {
+      let ratio = entry.intersectionRatio
+      console.log(entry)
+      console.log('OBSERVED', entry.target, ratio, 'isIntersecting?', entry.isIntersecting)
+    }
+  }, {thresholds: 1})
+
+  const $el     = document.getElementById(old.eid)
+  if ($el) {
+    console.log("monitoring..", old.eid)
+    watchMe.observe($el)
+  }
 
   context.state.modify(L.set('focusedIdx', newIdx))
-  const now     = focusedIdx.get()
-  const element = elements.view(L.index(now)).get()
+  const nowIdx     = focusedIdx.get()
+  const element = elements.view(L.index(nowIdx)).get()
   context.state.modify(L.set('focused', element))
 
-  console.log('focused is now ', now, element, ' but was', old)
+
+  const $el2     = document.getElementById(element.eid)
+  if ($el2) {
+    console.log("monitoring..", element.eid)
+    watchMe.observe($el2)
+  }
+
+
+  console.log('focused is now ', nowIdx, element, ' but was', old)
   return element
 }
 
+function scroll_down() {
+  window.scrollBy(0, 50)
+}
 
+function scroll_up() {
+  window.scrollBy(0, -50)
+}
