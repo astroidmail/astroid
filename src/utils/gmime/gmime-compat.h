@@ -30,9 +30,7 @@
 # define g_mime_utils_header_decode_text(NULL, n) g_mime_utils_header_decode_text(n)
 # define g_mime_message_set_subject(m,s,f) g_mime_message_set_subject(m,s)
 
-void        g_mime_message_set_date (GMimeMessage * msg, GDateTime *);
 GDateTime * g_mime_message_get_date (GMimeMessage * msg);
-
 
 # define GMIME_ADDRESS_TYPE_TO      GMIME_RECIPIENT_TYPE_TO
 # define GMIME_ADDRESS_TYPE_CC      GMIME_RECIPIENT_TYPE_CC
@@ -83,4 +81,5 @@ gboolean g_mime_signature_status_good (GMimeSignatureStatus status);
 gboolean g_mime_signature_status_bad (GMimeSignatureStatus status);
 gboolean g_mime_signature_status_error (GMimeSignatureError status);
 
+void g_mime_message_set_date_now (GMimeMessage * msg);
 

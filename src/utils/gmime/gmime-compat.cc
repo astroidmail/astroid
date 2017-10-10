@@ -1,6 +1,12 @@
 # include "gmime-compat.h"
 
 # include <stdexcept>
+# include <cmath>
+# include <iostream>
+# include <time.h>
+# include <string>
+# include <iomanip>
+# include "utils/date_utils.hh"
 
 # if (GMIME_MAJOR_VERSION < 3)
 
@@ -18,11 +24,20 @@ void g_mime_message_add_mailbox (
   }
 }
 
-void g_mime_message_set_date (GMimeMessage * msg, GDateTime * dt) {
-  # warning "gmime-compat: assuming timezone is local"
-  GTimeZone * tz = g_time_zone_new_local ();
-  g_mime_message_set_date (msg, g_date_time_to_unix (dt),  g_time_zone_get_offset (tz, 0));
-  g_time_zone_unref (tz);
+void g_mime_message_set_date_now (GMimeMessage * msg) {
+  time_t now = time (NULL);
+
+  struct tm * temp_t = localtime (&now);
+  struct tm local_time = *temp_t;
+
+  std::string asctime = std::asctime (&local_time);
+
+  char zstr[50];
+  std::strftime (zstr, sizeof (zstr), " %z", &local_time);
+
+  std::string t = asctime + zstr;
+
+  g_mime_message_set_date_as_string (msg, t.c_str ());
 }
 
 GDateTime * g_mime_message_get_date (GMimeMessage * msg) {
@@ -131,6 +146,11 @@ g_mime_utils_header_decode_date_unix (const char *date) {
   }
 
   return ret;
+}
+
+void g_mime_message_set_date_now (GMimeMessage * msg) {
+  GDateTime * now = g_date_time_new_now_local ();
+  g_mime_message_set_date (msg, now);
 }
 
 # endif

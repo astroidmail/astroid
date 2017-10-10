@@ -202,8 +202,7 @@ namespace Astroid {
     }
 
     /* add date to the message */
-    GDateTime * now = g_date_time_new_now_local ();
-    g_mime_message_set_date (message, now);
+    g_mime_message_set_date_now (message);
 
     /* Give the message an ID */
     g_mime_message_set_message_id(message, id.c_str());
