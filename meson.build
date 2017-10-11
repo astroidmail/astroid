@@ -1,7 +1,7 @@
 project ('astroid', ['cpp', 'c'],
     default_options : [ 'cpp_std=c++14'] )
 
-version = '0.10.1'
+version = '0.10.2'
 
 c  = meson.get_compiler ('c')
 cc = meson.get_compiler ('cpp')

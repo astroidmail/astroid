@@ -1,6 +1,8 @@
-== 
+== v0.10.2 / 2017-10-11
 
-* Move to the Meson build system, replacing SCons.
+* Fix build issues on Mac OS.
+* Gmime 2 used weird timezone for sent email.
+* Add Meson build system as alternative.
 
 == v0.10.1 / 2017-09-24
 
