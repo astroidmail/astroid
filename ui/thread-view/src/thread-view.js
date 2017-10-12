@@ -1,9 +1,8 @@
 import preact, { Component } from 'preact'
 import * as R from 'ramda/index-es'
-import * as L from 'partial.lenses'
 import * as U from 'karet.util'
 import { k, kx } from './ui'
-import { Message, Tag as TagModel } from './model'
+import { Model, Message, Tag as TagModel } from './model'
 import './thread-view.scss'
 
 /* --------
@@ -117,7 +116,9 @@ const SandboxedComponent = (wrappedComponent, afterRenderHook) => class extends 
 
   updateIFrameContents() {
     preact.render(k(wrappedComponent, { ...this.props }), this.frameBody, this.contentElement)
-    afterRenderHook(this.base, this.frameBody)
+    if (this.base && this.frameBody) {
+      afterRenderHook(this.base, this.frameBody)
+    }
   }
 
   render({ iframeId }) {
@@ -161,8 +162,10 @@ const EmailBodySandboxed = SandboxedComponent(EmailBodyDangerous, (frame, frameB
 
   setTimeout(() => {
     // adjust the height of the frame to be the height of the content
-    frame.style.height = `${(outerHeight(frame.contentDocument.body))}px`
-  }, 100)
+    if (frame.contentDocument) {
+      frame.style.height = `${(outerHeight(frame.contentDocument.body))}px`
+    }
+  }, 500)
 })
 
 const AlternativePart = ({ body }) => {
@@ -194,13 +197,15 @@ const BodySection = ({ message }) => {
 `
 }
 
-// focused hide
-const emailClass = (elements, focused, message) => U.string`email ${U.ifte(U.equals(U.view('mid', focused), U.view('id', message)), 'focused', 'hide')}`
+const emailClass = (flags) =>
+  U.cns('email',
+    U.ift(U.view('focused', flags), 'focused'),
+    U.ift(U.not(U.view('expanded', flags)), 'hide'))
 
-const EmailMessage = ({ message, focused, elements }) => {
+const EmailMessage = ({ message, focused, elements, flags }) => {
   const gravatar = U.view(Message.gravatar, message)
   return kx`
-<div class=${emailClass(elements, focused, message)}>
+<div class=${emailClass(flags)} id=${U.view(Message.id, message)}>
   <div class="compressed_note"></div>
   <div class="geary_spacer"></div>
   <div class="email_container">
@@ -232,13 +237,22 @@ const EmailMessage = ({ message, focused, elements }) => {
   `
 }
 
-export const EmailView = ({ messages, elements, focused }) => {
+export const EmailView = ({ state }) => {
+  const messages  = U.view(Model.messages, state)
+  const elements  = U.view(Model.elements, state)
+  const focused   = U.view(Model.focused, state)
+  const flagsById = U.lift(Model.flagsById)
+
   return kx`
 <div id="message_container">
   ${
-    U.seq(messages, U.mapElems((message) => k(EmailMessage, {
-      message, focused, elements, key: U.view(Message.id, message)
-    })))}
+  U.seq(messages, U.mapElems((message) => {
+    const mid   = U.view(Message.id, message)
+    const flags = U.view(flagsById(mid), state)
+    return k(EmailMessage, {
+      message, focused, elements, flags, key: mid
+    })
+  }))}
 </div>
   `
 }

@@ -12,6 +12,8 @@ export const Tag     = {
 }
 export const Message = {
 
+  id: ['id'],
+
   subject: ['subject', L.define('')],
   gravatar: ['gravatar', L.define('')],
   from: ['from', L.define([])],
@@ -31,6 +33,13 @@ export const Message = {
   ]
 
 }
+const setFocus       = focused => mid => L.set(['flags', L.define({}), mid, 'focused'], focused)
+const setFocusAllBut = focused => mid => L.set(
+  ['flags', L.define({}),
+    L.values, L.when((_, k) => k !== mid),
+    'focused'
+  ],
+  focused)
 
 export const Model = {
   messages: [
@@ -40,6 +49,15 @@ export const Model = {
   ],
   Message: [],
 
+  elements: [
+    'elements',
+    L.define([])
+  ],
+
+  focused: [
+    'focused'
+  ],
+
   messageById: (mid) => {
     return [
       'messages',
@@ -48,7 +66,27 @@ export const Model = {
       L.find(m => m.id === mid)
     ]
 
-  }
+  },
+
+  flagsById: (id) => {
+    return [
+      'flags',
+      L.define({}),
+      L.prop(id),
+      L.define({ focused: false, expanded: false })
+    ]
+  },
+
+  focus: setFocus(true),
+  defocus: setFocus(false),
+
+  focusAllBut: setFocusAllBut(true),
+  defocusAllBut: setFocusAllBut(false)
+
+}
+
+export const Flags = {
+
 }
 
 /*
@@ -135,10 +173,13 @@ export function cleanMessage(message) {
 
 export function buildElements(messages) {
   /*
-  returns [ { mid: xx, eid: 1}, { mid: xx, eid: 2} , {mid: yy, eid 3} ...]
+  returns [ {mid: xx, eid: xx} { mid: xx, eid: 1}, { mid: xx, eid: 2} , {mid: yy, eid: yy}, {mid: yy, eid 3} ...]
    */
   return R.chain(message =>
+    R.concat(
+      [{ mid: message.id, eid: message.id }],
       R.map(eid => ({ mid: message.id, eid }), L.collect(recurseTreeFor(['eid']), message))
+    )
     , messages)
 }
 

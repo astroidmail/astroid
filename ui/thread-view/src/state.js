@@ -13,13 +13,24 @@ import * as U from 'karet.util'
  */
 
 /**
+ * @name Astroid.Flags
+ * @type {{
+ *     focused: Boolean,
+ *     expanded: Boolean
+ * }}
+ */
+
+/**
  * Global app state
+ *
+ * Contains all the state used to render the thread view, messages, elements, focus flags etc
  * @name Astroid.Context
  * @type {{
  *     meta: Astroid.Meta,
  *     state: {
  *       messages: Array<Astroid.Message>,
  *       elements: Astroid.Elements,
+ *       flags: Object.<string, Astroid.Flags>
  *     }
  * }}
  */

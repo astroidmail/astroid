@@ -63,13 +63,8 @@ if (process.env.NODE_ENV !== 'production') {
 
 window['Astroid'] = Astroid.init(context)
 
-const messages = U.view('messages', context.state)
-const elements = U.view(['elements', L.define([])], context.state)
-const focusedIdx  = U.view(['focusedIdx', L.define(0)], context.state)
-const focused  = U.view(['focused'], context.state)
-
 UI.render(
-  UI.k(EmailView, { messages, elements, focused }),
+  UI.k(EmailView, {state : U.view('state', context)}),
   document.body,
   document.getElementById('app')
 )

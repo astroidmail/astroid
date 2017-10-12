@@ -8,7 +8,6 @@ import * as U from 'karet.util'
 import * as L from 'partial.lenses'
 import * as ui from './ui'
 import { buildElements, cleanMessage, Model } from './model'
-import './intersectionobserver-polyfill'
 
 /* --------
  * Logging helpers
@@ -41,6 +40,34 @@ export function init(context) {
   }
 }
 
+// https://gist.github.com/davidtheclark/5515733
+function isAnyPartOfElementInViewport(el) {
+
+  const rect         = el.getBoundingClientRect()
+  // DOMRect { x: 8, y: 8, width: 100, height: 100, top: 8, right: 108, bottom: 108, left: 8 }
+  const windowHeight = (window.innerHeight || document.documentElement.clientHeight)
+  const windowWidth  = (window.innerWidth || document.documentElement.clientWidth)
+
+  // http://stackoverflow.com/questions/325933/determine-whether-two-date-ranges-overlap
+  const vertInView = (rect.top <= windowHeight) && ((rect.top + rect.height) >= 0)
+  const horInView  = (rect.left <= windowWidth) && ((rect.left + rect.width) >= 0)
+
+  return (vertInView && horInView)
+}
+
+function isElementContainedInViewport(el) {
+  if (!el) {
+    return undefined
+  }
+  const rect = el.getBoundingClientRect()
+  return (
+    rect.top >= 0 &&
+    rect.left >= 0 &&
+    rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+    rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+  )
+}
+
 /**
  * Add a message. If it already exists, it will be updated.
  *
@@ -50,14 +77,28 @@ export function init(context) {
  */
 
 function add_message(context, message) {
+  const { state } = context
+
+  // clean the message
   const cleanedMessage = cleanMessage(message)
   log.info('add_message', message.id, 'original', message, 'cleaned', cleanedMessage)
 
-  context.state.modify(L.set(Model.messageById(message.id), cleanedMessage))
-  context.state.modify(L.set('elements', buildElements(context.state.view('messages').get())))
+  // add it to state.messages
+  state.modify(L.set(Model.messageById(message.id), cleanedMessage))
+
+  // rebuild state.elements
+  const elements = buildElements(state.view('messages').get())
+  state.modify(L.set('elements', elements))
+
+  // set state.flags for message
+  state.modify(L.set(Model.flagsById(message.id), undefined))
+
+  log.info('new flags', state.view('flags').get())
+
 
   if (R.isNil(context.state.view('focused').get())) {
-    focus_next_element(context)
+    console.log('SETTING FIRST FOCUS')
+    set_focused(context, elements[0], 0)
   }
 }
 
@@ -144,10 +185,10 @@ function focus_next_element(context, force_change) {
   const focusedIdx    = context.state.view(['focusedIdx', L.define(0)])
   const totalElements = elements.get().length
 
-  const newIdx = Math.min(focusedIdx.get() + 1, totalElements - 1)
+  const newIdx     = Math.min(focusedIdx.get() + 1, totalElements - 1)
+  const newElement = elements.view(L.index(newIdx)).get()
 
-
-  return set_focus(context, newIdx)
+  return move_focus(context, newElement, newIdx)
 }
 
 /**
@@ -161,53 +202,82 @@ function focus_previous_element(context, force_change) {
   log.info('focus_previous_element', ...arguments)
 
   const focusedIdx = context.state.view(['focusedIdx', L.define(0)])
+  const elements   = context.state.view('elements')
 
-  const newIdx = Math.max(focusedIdx.get() - 1, 0)
+  const newIdx     = Math.max(focusedIdx.get() - 1, 0)
+  const newElement = elements.view(L.index(newIdx)).get()
 
-  return set_focus(context, newIdx)
+  return move_focus(context, newElement, newIdx)
 }
 
-function set_focus(context, newIdx) {
-  const elements   = context.state.view('elements')
-  const focusedIdx = context.state.view(['focusedIdx', L.define(0)])
-  const oldIdx     = focusedIdx.get()
-  const old        = elements.view(L.index(oldIdx)).get()
+/**
+ * Move focus towards the given element
+ * @param context
+ * @param targetElement
+ * @param targetIndex
+ */
+function move_focus(context, targetElement, targetIndex) {
+  const { state }        = context
+  const elements         = state.view('elements')
+  const flags            = state.view('flags')
+  const oldIdx           = state.view(['focusedIdx', L.define(undefined)]).get() // can be undefined
+  const nothingIsFocused = R.isNil(oldIdx)
+  const oldElement       = nothingIsFocused || elements.view(L.index(oldIdx)).get()
+  const directionDown    = nothingIsFocused ? true : (targetIndex - oldIdx) > 0
+  const $el              = document.getElementById(targetElement.eid)
 
-  const watchMe = new IntersectionObserver((entries) => {
-    for (let entry of entries) {
-      let ratio = entry.intersectionRatio
-      console.log(entry)
-      console.log('OBSERVED', entry.target, ratio, 'isIntersecting?', entry.isIntersecting)
+  // check if element's message is expanded
+
+  const targetFlags = state.view(Model.flagsById(targetElement.mid)).get()
+  if (targetFlags.expanded) {
+    console.log('target\'s msg is expanded')
+  } else {
+    console.log('target\'s msg is collapsed')
+  }
+
+  console.log('want to focus: ', targetElement, $el)
+  if ($el && isAnyPartOfElementInViewport(($el))) {
+    console.log(targetElement.eid, ' visible? yes')
+    set_focused(context, targetElement, targetIndex)
+  } else {
+    console.log(targetElement.eid, ' visible? no')
+
+    if (directionDown) {
+      scroll_down()
+    } else {
+      scroll_up()
     }
-  }, {thresholds: 1})
-
-  const $el     = document.getElementById(old.eid)
-  if ($el) {
-    console.log("monitoring..", old.eid)
-    watchMe.observe($el)
   }
+}
 
-  context.state.modify(L.set('focusedIdx', newIdx))
-  const nowIdx     = focusedIdx.get()
-  const element = elements.view(L.index(nowIdx)).get()
-  context.state.modify(L.set('focused', element))
+function set_focused(context, targetElement, targetIndex) {
+  const { state } = context
 
+  state.modify(L.set('focusedIdx', targetIndex))
+  state.modify(L.set('focused', targetElement))
 
-  const $el2     = document.getElementById(element.eid)
-  if ($el2) {
-    console.log("monitoring..", element.eid)
-    watchMe.observe($el2)
-  }
+  const { mid, eid } = targetElement
 
+  state.modify(Model.focus(mid))
+  state.modify(Model.defocusAllBut(mid))
 
-  console.log('focused is now ', nowIdx, element, ' but was', old)
-  return element
+  console.log('focusing', targetElement, targetIndex)
+}
+
+function get_focused_element(context) {
+  const { state }        = context
+  const elements         = state.view('elements')
+  const oldIdx           = state.view(['focusedIdx', L.define(undefined)]).get() // can be undefined
+  const nothingIsFocused = R.isNil(oldIdx)
+  return nothingIsFocused || elements.view(L.index(oldIdx)).get()
 }
 
 function scroll_down() {
+  console.log('going... DOWN')
   window.scrollBy(0, 50)
 }
 
 function scroll_up() {
+  console.log('going... UP')
   window.scrollBy(0, -50)
 }
