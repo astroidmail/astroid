@@ -299,9 +299,6 @@ namespace Astroid {
       plugin_manager->astroid_extension = new PluginManager::AstroidExtension (this);
 # endif
 
-      /* set up contacts */
-      //contacts = new Contacts ();
-
       /* set up global actions */
       actions = new ActionManager ();
 
