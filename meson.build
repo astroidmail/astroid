@@ -56,6 +56,10 @@ else
   deps += vte
 endif
 
+if get_option ('debug-webkit')
+  add_global_arguments ('-DDEBUG_WEBKIT', language : 'cpp')
+endif
+
 if get_option ('disable-embedded-editor')
   add_global_arguments ('-DDISABLE_EMBEDDED', language: 'cpp')
 endif

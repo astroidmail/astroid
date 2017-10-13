@@ -122,12 +122,11 @@ namespace Astroid {
 
     gtk_container_add (GTK_CONTAINER (scroll.gobj()), GTK_WIDGET(webview));
 
-    /* Show the inspector
-      TODO: should only enabled conditionally, like the developer extras
-      setting above
-    */
+# ifdef DEBUG_WEBKIT
+    /* Always show the inspector */
     WebKitWebInspector *inspector = webkit_web_view_get_inspector (WEBKIT_WEB_VIEW(webview));
     webkit_web_inspector_show (WEBKIT_WEB_INSPECTOR(inspector));
+# endif
 
     scroll.show_all ();
 
@@ -1269,6 +1268,18 @@ namespace Astroid {
 
   void ThreadView::register_keys () { // {{{
     keys.title = "Thread View";
+
+# ifdef DEBUG_WEBKIT
+    keys.register_key ("C-r", "thread_view.reload",
+        "Reload everything",
+        [&] (Key) {
+          LOG (debug) << "tv: reloading..";
+          theme.load (true);
+
+          load_message_thread (mthread);
+          return true;
+        });
+# endif
 
     keys.register_key ("j", "thread_view.down",
         "Scroll down or move focus to next element",
