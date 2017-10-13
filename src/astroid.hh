@@ -37,6 +37,7 @@ namespace Astroid {
       const boost::property_tree::ptree& notmuch_config () const;
       const StandardPaths& standard_paths() const;
             RuntimePaths& runtime_paths() const;
+      bool  has_notmuch_config ();
       bool  in_test ();
 
       static const char* const version;

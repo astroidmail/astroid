@@ -47,14 +47,28 @@ namespace Astroid {
       throw invalid_argument ("db: error: HOME environment variable not set.");
     }
 
-    ustring db_path = ustring (config.get<string> ("database.path"));
+    if (!astroid->has_notmuch_config ()) {
+      throw database_error ("db: error: no notmuch config file found.");
+    }
+
+    ustring db_path;
+    try {
+      db_path = ustring (config.get<string> ("database.path"));
+    } catch (const boost::property_tree::ptree_bad_path &ex) {
+      throw database_error ("db: error: no database path specified");
+    }
 
     LOG (info) << "db path: " << db_path;
 
     path_db = Utils::expand (path (db_path));
     path_db = absolute (path_db);
 
-    ustring excluded_tags_s = config.get<string> ("search.exclude_tags");
+    ustring excluded_tags_s;
+    try {
+      excluded_tags_s = config.get<string> ("search.exclude_tags");
+    } catch (const boost::property_tree::ptree_bad_path &ex) {
+      throw database_error ("db: error: no search.exclude_tags defined in notmuch-config");
+    }
     excluded_tags = VectorUtils::split_and_trim (excluded_tags_s, ";");
     sort (excluded_tags.begin (), excluded_tags.end ());
 
@@ -63,7 +77,11 @@ namespace Astroid {
     sent_tags = VectorUtils::split_and_trim (sent_tags_s, ",");
     sort (sent_tags.begin (), sent_tags.end ());
 
-    maildir_synchronize_flags = config.get<bool> ("maildir.synchronize_flags");
+    try {
+      maildir_synchronize_flags = config.get<bool> ("maildir.synchronize_flags");
+    } catch (const boost::property_tree::ptree_bad_path &ex) {
+      throw database_error ("db: error: no maildir.maildir_synchronize_flags defined in notmuch-config");
+    }
   }
 
   Db::Db (DbMode _mode) {
@@ -162,7 +180,7 @@ namespace Astroid {
       LOG (error) << "db: error: failed opening database for reading, have you configured the notmuch database path correctly?";
 
       release_ro_lock ();
-      throw database_error ("failed to open database (read-only)");
+      throw database_error ("failed to open database (in read-only mode)");
 
       return false;
     }

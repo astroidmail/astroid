@@ -279,14 +279,26 @@ namespace Astroid {
 
       _hint_level = config ("astroid.hints").get<int> ("level");
 
-      /* output db location */
-      ustring db_path = ustring (notmuch_config().get<string> ("database.path"));
-      LOG (info) << "notmuch db: " << db_path;
-
-      /* set up static classes */
+      /* set up classes */
       Date::init ();
       Utils::init ();
-      Db::init ();
+
+      /* Initialize Db and check if it has been set up */
+      try {
+        Db::init ();
+        Db d; d.get_revision ();
+      } catch (database_error &ex) {
+        LOG (error) << "db: failed to open database, please check the manual if everything is set up correctly: " << ex.what ();
+
+        Gtk::MessageDialog md ("Astroid: Failed to open database", false, Gtk::MESSAGE_ERROR);
+        md.set_secondary_text (ustring::compose ("Please check the documentation if you have set up astroid and notmuch correctly.\n Error: <b>%1</b>", ex.what ()), true);
+
+        md.run ();
+
+        on_quit ();
+        return 1;
+      }
+
       Keybindings::init ();
       SavedSearches::init ();
 
@@ -336,6 +348,10 @@ namespace Astroid {
     return m_config->run_paths;
   }
 
+  bool Astroid::has_notmuch_config () {
+    return m_config->has_notmuch_config;
+  }
+
   void Astroid::main_test () { // {{{
     m_config = new Config (true);
 
@@ -371,14 +387,14 @@ namespace Astroid {
   void Astroid::on_quit () {
     LOG (debug) << "astroid: quitting..";
 
-    if (poll->get_auto_poll ()) poll->toggle_auto_poll  ();
+    if (poll && poll->get_auto_poll ()) poll->toggle_auto_poll  ();
     if (poll) poll->close ();
 
     if (actions) actions->close ();
     SavedSearches::destruct ();
 
 # ifndef DISABLE_PLUGINS
-    if (plugin_manager->astroid_extension) delete plugin_manager->astroid_extension;
+    if (plugin_manager && plugin_manager->astroid_extension) delete plugin_manager->astroid_extension;
     if (plugin_manager) delete plugin_manager;
 # endif
 

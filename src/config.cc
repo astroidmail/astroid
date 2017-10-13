@@ -282,6 +282,7 @@ namespace Astroid {
       config.put ("mail.send_delay", 0);
       std::string test_nmcfg_path = path(current_path() / path ("tests/mail/test_config")).string();
       boost::property_tree::read_ini (test_nmcfg_path, notmuch_config);
+      has_notmuch_config = true;
       return;
     }
 
@@ -328,9 +329,14 @@ namespace Astroid {
     run_paths.attach_dir = std_paths.attach_dir;
 
     /* read notmuch config */
-    boost::property_tree::read_ini (
-      config.get<std::string> ("astroid.notmuch_config"),
-      notmuch_config);
+    if (is_regular_file (config.get<std::string> ("astroid.notmuch_config"))) {
+      boost::property_tree::read_ini (
+        config.get<std::string> ("astroid.notmuch_config"),
+        notmuch_config);
+      has_notmuch_config = true;
+    } else {
+      has_notmuch_config = false;
+    }
   }
 
 
