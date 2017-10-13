@@ -255,7 +255,7 @@ if not get_option('disable-tests')
   foreach t : tests
     test (t[0],
         executable (t[1], t[2], objects : src_o, include_directories : include_directories ('src'), dependencies : test_deps, link_depends : test_setup, build_by_default : false),
-        env : test_env, workdir : meson.build_root())
+        env : test_env, workdir : meson.build_root(), is_parallel : false)
   endforeach
 endif
 
