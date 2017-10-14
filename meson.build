@@ -108,7 +108,6 @@ src = [
     'src/modes/log_view.cc',
     'src/modes/mode.cc',
     'src/modes/thread_view/thread_view.cc',
-    'src/modes/thread_view/web_inspector.cc',
     'src/modes/thread_view/theme.cc',
     'src/modes/paned_mode.cc',
     'src/modes/thread_index/thread_index_list_cell_renderer.cc',

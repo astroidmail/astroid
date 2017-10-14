@@ -14,7 +14,6 @@
 # include <boost/property_tree/ptree.hpp>
 
 # include "thread_view.hh"
-# include "web_inspector.hh"
 # include "theme.hh"
 
 # include "main_window.hh"
@@ -138,9 +137,6 @@ namespace Astroid {
 
 
     add_events (Gdk::KEY_PRESS_MASK);
-
-    /* set up ThreadViewInspector */
-    thread_view_inspector.setup (this);
 
     /* navigation requests */
     /* g_signal_connect (webview, "permissions-request", */

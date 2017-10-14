@@ -22,8 +22,6 @@
   # include "plugin/manager.hh"
 # endif
 
-# include "web_inspector.hh"
-
 using boost::property_tree::ptree;
 
 namespace Astroid {
@@ -50,8 +48,6 @@ namespace Astroid {
 
 
   class ThreadView : public Mode {
-    friend class ThreadViewInspector;
-
     public:
       ThreadView (MainWindow *);
       ~ThreadView ();
@@ -102,8 +98,6 @@ namespace Astroid {
       void pre_close () override;
 
     private:
-      ThreadViewInspector thread_view_inspector;
-
       /* javascript */
       void run_javascript_sync (std::string);
       void run_javascript_sync (std::string, std::function<void (std::string)>);
