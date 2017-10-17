@@ -82,16 +82,16 @@ endif
 
 conf_data = configuration_data ()
 if get_option ('buildtype').startswith('debug')
-  conf_data.set ('git_desc', run_command ('git', ['describe', '--abbrev=8', '--tags', '--always']).stdout().strip('\n'))
+  conf_data.set ('GIT_DESC', run_command ('git', ['describe', '--abbrev=8', '--tags', '--always']).stdout().strip('\n'))
 else
-  conf_data.set ('git_desc', version)
+  conf_data.set ('GIT_DESC', version)
 endif
-conf_data.set ('prefix', get_option('prefix'))
+conf_data.set ('PREFIX', get_option('prefix'))
 configure_file (input : 'src/build_config.hh.in',
                 output : 'build_config.hh',
                 configuration : conf_data)
 
-message ('Building astroid: ' + conf_data.get ('git_desc'))
+message ('Building astroid: ' + conf_data.get ('GIT_DESC'))
 
 src = [
     'src/modes/log_view.cc',
