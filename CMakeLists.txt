@@ -1,4 +1,5 @@
 cmake_minimum_required (VERSION 3.9)
+set (CMAKE_CONFIGURATION_TYPES Debug Release CACHE TYPE INTERNAL FORCE)
 
 project (astroid)
 
@@ -8,17 +9,16 @@ execute_process (
   OUTPUT_STRIP_TRAILING_WHITESPACE
   )
 
-message (
-  STATUS
-  "Building ${PROJECT_NAME} ${PROJECT_VERSION}"
-  )
+option (DISABLE_TERMINAL "Disable embedded terminal (default = enabled)" OFF)
+
+message (STATUS "Building ${PROJECT_NAME} ${PROJECT_VERSION}")
+message (STATUS "Generating with config types: ${CMAKE_CONFIGURATION_TYPES}")
 
 find_package ( PkgConfig REQUIRED )
 pkg_check_modules (GTKMM3     REQUIRED  gtkmm-3.0>=3.10)
 pkg_check_modules (GLIBMM2    REQUIRED  glibmm-2.4)
 pkg_check_modules (GMIME3     REQUIRED  gmime-3.0>=3.0.0)
 pkg_check_modules (WEBKITGTK3 REQUIRED  webkitgtk-3.0)
-pkg_check_modules (VTE2       REQUIRED  vte-2.91)
 pkg_check_modules (SASS       REQUIRED  libsass)
 
 find_package ( Boost REQUIRED
@@ -34,7 +34,7 @@ find_package ( Boost REQUIRED
 
 find_library ( NOTMUCH_LIB notmuch )
 if(NOT NOTMUCH_LIB)
-  message(FATAL_ERROR "notmuch library not found")
+  message (FATAL_ERROR "notmuch library not found")
 endif()
 
 include ( CheckSymbolExists )
@@ -47,10 +47,18 @@ endif()
 # usually, link _directories is not needed; but gettext does not write
 # pkg-config info of its own, so we add the lib paths from glibmm,
 # which links to gettext (so that is included, too)
-
 link_directories (
   ${GLIBMM2_LIBRARY_DIRS}
   )
+
+pkg_check_modules (VTE2 vte-2.91)
+if(DISABLE_TERMINAL OR ( NOT VTE2_FOUND ))
+  add_definitions ( -DDISABLE_VTE )
+  if(NOT VTE2_FOUND)
+    message (WARNING "Vte library not found.")
+  endif()
+  message (STATUS "Disabling embedded terminal.")
+endif()
 
 add_compile_options (
   ${GTKMM3_CFLAGS}
@@ -68,7 +76,7 @@ add_compile_options (
   -Wextra
   )
 
-set ( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14" )
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
 
 add_definitions (
   -DDISABLE_EMBEDDED
@@ -87,7 +95,6 @@ configure_file (
 include (CheckIncludeFiles)
 check_include_files (sass_context.h SASSCTX_SASS_CONTEXT_H)
 check_include_files (sass/context.h SASSCTX_CONTEXT_H)
-
 if( SASSCTX_SASS_CONTEXT_H )
   add_definitions ( -DSASSCTX_SASS_CONTEXT_H )
 elseif( SASSCTX_CONTEXT_H )
@@ -97,7 +104,7 @@ else()
     FATAL_ERROR
     "libsass must be installed: could not find header file. You can disable libsass with --disable-libsass, however, that requires a SCSS compiler like 'sassc' which can be specified with --scss-compiler=<path to compiler>."
     )
-endif()
+endif()  
 
 include_directories (
   src/
@@ -113,6 +120,7 @@ include_directories (
 
 add_executable(
   astroid
+  
   src/account_manager.cc
   src/astroid.cc
   src/chunk.cc
