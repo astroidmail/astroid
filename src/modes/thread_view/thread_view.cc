@@ -2641,6 +2641,8 @@ namespace Astroid {
      *  - Move focus to specified element
      */
     LOG (info) << "tv: focus element, e=" << e;
+    focused_message = m;
+    state[focused_message].current_element = e;
   }
 
   void ThreadView::focus_message (refptr<Message> m) {
@@ -2658,8 +2660,7 @@ namespace Astroid {
         focused_message) - mthread->messages.begin ();
 
     if (focused_position < static_cast<int>((mthread->messages.size ()-1))) {
-      focused_message = mthread->messages[focused_position + 1];
-      state[focused_message].current_element = 0; // start at top
+      focus_message (mthread->messages[focused_position + 1]);
     }
 
   }
@@ -2674,11 +2675,11 @@ namespace Astroid {
         focused_message) - mthread->messages.begin ();
 
     if (focused_position > 0) {
-      focused_message = mthread->messages[focused_position - 1];
+      auto m = mthread->messages[focused_position - 1];
       if (!focus_top && !is_hidden (focused_message)) {
-        state[focused_message].current_element = state[focused_message].elements.size()-1; // start at bottom
+        focus_element (m, state[m].elements.size ()-1); // start at bottom
       } else {
-        state[focused_message].current_element = 0; // start at top
+        focus_message (m); // start at top
       }
     }
   }
