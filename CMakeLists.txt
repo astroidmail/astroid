@@ -37,13 +37,19 @@ if(NOT NOTMUCH_LIB)
   message(FATAL_ERROR "notmuch library not found")
 endif()
 
+include ( CheckSymbolExists )
+set ( CMAKE_REQUIRED_LIBRARIES ${NOTMUCH_LIB} )
+check_symbol_exists ( notmuch_database_index_file notmuch.h NOTMUCH_INDEX_FILE_API )
+if(NOTMUCH_INDEX_FILE_API)
+  add_definitions ( -DHAVE_NOTMUCH_INDEX_FILE )
+endif()
+
+# usually, link _directories is not needed; but gettext does not write
+# pkg-config info of its own, so we add the lib paths from glibmm,
+# which links to gettext (so that is included, too)
+
 link_directories (
-  ${GTKMM3_LIBRARY_DIRS}
   ${GLIBMM2_LIBRARY_DIRS}
-  ${GMIME3_LIBRARY_DIRS}
-  ${WEBKITGTK3_LIBRARY_DIRS}
-  ${VTE2_LIBRARY_DIRS}
-  ${SASS_LIBRARY_DIRS}
   )
 
 add_compile_options (
@@ -62,7 +68,7 @@ add_compile_options (
   -Wextra
   )
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
+set ( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14" )
 
 add_definitions (
   -DDISABLE_EMBEDDED
