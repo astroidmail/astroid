@@ -1,20 +1,42 @@
+##
+# This MUST be the first line
+#
 cmake_minimum_required (VERSION 3.9)
+
+##
+# don't use obscure build types, but only Debug and Release
+#
 set (CMAKE_CONFIGURATION_TYPES Debug Release CACHE TYPE INTERNAL FORCE)
 
+##
+# project name
+#
 project (astroid)
 
+##
+# retrieve current project version from git
+#
 execute_process (
   COMMAND git describe --abbrev=8 --tags --always
   OUTPUT_VARIABLE PROJECT_VERSION
   OUTPUT_STRIP_TRAILING_WHITESPACE
   )
 
+##
+# cmake -D...=ON|OFF command line feature switches and their default values
+#
 option (DISABLE_TERMINAL "Disable embedded terminal (default = enabled)" OFF)
 option (DISABLE_EMBEDDED_EDITOR "Disable embedded editor (default = enabled)" OFF)
 
+##
+# welcome message
+#
 message (STATUS "Building ${PROJECT_NAME} ${PROJECT_VERSION}")
 message (STATUS "Generating with config types: ${CMAKE_CONFIGURATION_TYPES}")
 
+##
+# check for required packages and libraries
+#
 find_package ( PkgConfig REQUIRED )
 pkg_check_modules (GTKMM3     REQUIRED  gtkmm-3.0>=3.10)
 pkg_check_modules (GLIBMM2    REQUIRED  glibmm-2.4)
@@ -45,13 +67,6 @@ if(NOTMUCH_INDEX_FILE_API)
   add_definitions ( -DHAVE_NOTMUCH_INDEX_FILE )
 endif()
 
-# usually, link _directories is not needed; but gettext does not write
-# pkg-config info of its own, so we add the lib paths from glibmm,
-# which links to gettext (so that is included, too)
-link_directories (
-  ${GLIBMM2_LIBRARY_DIRS}
-  )
-
 pkg_check_modules (VTE2 vte-2.91)
 if(DISABLE_TERMINAL OR ( NOT VTE2_FOUND ))
   add_definitions ( -DDISABLE_VTE )
@@ -60,6 +75,12 @@ if(DISABLE_TERMINAL OR ( NOT VTE2_FOUND ))
   endif()
   message (STATUS "Disabling embedded terminal.")
 endif()
+
+##
+# compile flags and options
+#
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
 
 add_compile_options (
   ${GTKMM3_CFLAGS}
@@ -76,8 +97,6 @@ add_compile_options (
   -g
   -Wextra
   )
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
 
 add_definitions (
   -DDISABLE_PLUGINS
@@ -178,11 +197,13 @@ add_executable(
   src/utils/gmime/gmime-filter-html-bq.c
   src/utils/gmime/gtrie.c
   src/utils/gmime/url-scanner.c
+  )
 
-  # src/plugin/astroid_activatable.c
-  # src/plugin/gir_main.c
-  # src/plugin/thread_index_activatable.c
-  # src/plugin/thread_view_activatable.c
+# usually, link _directories is not needed; but gettext does not write
+# pkg-config info of its own, so we add the lib paths from glibmm,
+# which links to gettext (so that is included, too)
+link_directories (
+  ${GLIBMM2_LIBRARY_DIRS}
   )
 
 target_link_libraries (
@@ -197,6 +218,9 @@ target_link_libraries (
   ${Boost_LIBRARIES}
   )
 
+##
+# conditional compilation based on feature switches
+#
 if(DISABLE_EMBEDDED_EDITOR)
   add_definitions ( -DDISABLE_EMBEDDED )
   message (STATUS "Disabling embedded editor.")
