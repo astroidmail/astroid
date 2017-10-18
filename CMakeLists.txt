@@ -10,6 +10,7 @@ execute_process (
   )
 
 option (DISABLE_TERMINAL "Disable embedded terminal (default = enabled)" OFF)
+option (DISABLE_EMBEDDED_EDITOR "Disable embedded editor (default = enabled)" OFF)
 
 message (STATUS "Building ${PROJECT_NAME} ${PROJECT_VERSION}")
 message (STATUS "Generating with config types: ${CMAKE_CONFIGURATION_TYPES}")
@@ -79,7 +80,6 @@ add_compile_options (
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
 
 add_definitions (
-  -DDISABLE_EMBEDDED
   -DDISABLE_PLUGINS
   -DBOOST_LOG_DYN_LINK
   -DDEBUG
@@ -145,6 +145,8 @@ add_executable(
   src/modes/reply_message.cc
   src/modes/saved_searches.cc
 
+  src/modes/editor/external.cc
+
   src/modes/thread_index/query_loader.cc
   src/modes/thread_index/thread_index.cc
   src/modes/thread_index/thread_index_list_cell_renderer.cc
@@ -154,10 +156,6 @@ add_executable(
   src/modes/thread_view/theme.cc
   src/modes/thread_view/thread_view.cc
   src/modes/thread_view/web_inspector.cc
-
-  src/modes/editor/editor.cc
-  src/modes/editor/external.cc
-  src/modes/editor/plugin.cc
 
   src/actions/action.cc
   src/actions/action_manager.cc
@@ -198,3 +196,20 @@ target_link_libraries (
   ${SASS_LIBRARIES}
   ${Boost_LIBRARIES}
   )
+
+if(DISABLE_EMBEDDED_EDITOR)
+  add_definitions ( -DDISABLE_EMBEDDED )
+  message (STATUS "Disabling embedded editor.")
+else(DISABLE_EMBEDDED_EDITOR)
+  if (APPLE)
+    message (WARNING "Embedded editor cannot be built on macOS; disabling embedded editor.")
+    add_definitions ( -DDISABLE_EMBEDDED )
+  else(APPLE)
+    target_sources (
+      astroid
+      PRIVATE
+      src/modes/editor/editor.cc
+      src/modes/editor/plugin.cc
+      )
+  endif(APPLE)
+endif(DISABLE_EMBEDDED_EDITOR)
