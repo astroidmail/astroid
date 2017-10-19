@@ -366,6 +366,10 @@ namespace Astroid {
     return attachments;
   }
 
+  ustring Message::safe_mid () {
+    return Glib::Markup::escape_text (mid);
+  }
+
   refptr<Chunk> Message::get_chunk_by_id (int id) {
     if (root->id == id) {
       return root;
