@@ -99,20 +99,18 @@ namespace Astroid {
 
     private:
       /* javascript */
-      void run_javascript_sync (std::string);
-      void run_javascript_sync (std::string, std::function<void (std::string)>);
+      void run_javascript (std::string);
+      void run_javascript (std::string, std::function<void (GObject *, GAsyncResult *)>);
 
-      void run_javascript_async (std::string);
+      /* used for the sync callback */
+      std::function<void (GObject *, GAsyncResult *r)> js_cb;
 
     public:
-      void run_javascript_sync_cb (GObject *, GAsyncResult *);
+      void run_javascript_cb (GObject *, GAsyncResult *);
+
     private:
-
-      std::mutex              js_sync;
-      std::condition_variable js_cv;
-      bool                    js_done = false;
-
       /* focus and message state */
+      void focus_change_cb (GObject *o, GAsyncResult *r);
       void focus_next_element (bool = false);
       void focus_previous_element (bool = false);
 
@@ -319,6 +317,13 @@ namespace Astroid {
       type_signal_ready m_signal_ready;
       type_element_action m_element_action;
       type_index_action m_index_action;
+  };
+
+  /* exceptions */
+  class webkit_error : public std::runtime_error {
+    public:
+      webkit_error (const char *);
+
   };
 }
 

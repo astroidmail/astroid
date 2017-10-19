@@ -532,7 +532,8 @@ namespace Astroid {
       return;
     }
 
-    webkit_web_view_run_javascript (webview, theme.thread_view_js.c_str(), NULL, NULL, NULL);
+    run_javascript (theme.thread_view_js.c_str());
+
     /* set message state vector */
     state.clear ();
     focused_message.clear ();
@@ -585,8 +586,9 @@ namespace Astroid {
 
   // TODO: [JS] [REIMPLEMENT]
   void ThreadView::update_indent_state (refptr<Message> m) {
-    string js = "Astroid.indent_state ('" + m->mid + "'," + ( indent_messages ? string("true") : string("false")) + ");";
-    webkit_web_view_run_javascript (webview, js.c_str (), NULL, NULL, NULL);
+    string js = "Astroid.indent_state ('" + m->safe_mid () + "'," + ( indent_messages ? string("true") : string("false")) + ");";
+
+    run_javascript (js);
   }
 
   void ThreadView::add_message (refptr<Message> m) {
@@ -606,9 +608,7 @@ namespace Astroid {
     write_json (js, mjs);
     js << ");";
 
-    LOG (debug) << "tv: js:" << js.str ();
-
-    webkit_web_view_run_javascript (webview, js.str ().c_str (), NULL, NULL, NULL);
+    run_javascript (js.str ());
   }
 
   void ThreadView::update_message (refptr<Message> m) {
@@ -624,9 +624,7 @@ namespace Astroid {
     write_json (js, mjs);
     js << ");";
 
-    LOG (debug) << "tv: js:" << js.str ();
-
-    webkit_web_view_run_javascript (webview, js.str ().c_str (), NULL, NULL, NULL);
+    run_javascript (js.str ());
 
     // if the updated message was focused, the currently focused element may
     // have changed.
@@ -638,14 +636,17 @@ namespace Astroid {
     LOG (debug) << "tv: remove message: " << m->mid;
     state.erase (m);
 
-    // TODO: escape!
-    std::string js = "Astroid.remove_message (" + m->mid + ");";
+    // TODO: escape message id EVERYWHERE!!
+    // JS: Return new focused element.
+    std::string js = "Astroid.remove_message (" + m->safe_mid () + ");";
     webkit_web_view_run_javascript (webview, js.c_str (), NULL, NULL, NULL);
+
+    run_javascript (js, std::bind (&ThreadView::focus_change_cb, this, std::placeholders::_1, std::placeholders::_2));
   }
 
   ptree ThreadView::build_message (refptr<Message> m) { // {{{
     ptree mjs;
-    mjs.put ("id", m->mid);
+    mjs.put ("id", m->safe_mid ());
 
     ptree from_node; // list of objects
     {
@@ -1159,15 +1160,14 @@ namespace Astroid {
   // TODO: [JS] [REIMPLEMENT] Possibly use GtkInfoBar
   void ThreadView::set_warning (refptr<Message> m, ustring txt)
   {
-    // TODO: escape
-    ustring js = "Astroid.set_warning(" + m->mid + ", " + txt + ");";
+    ustring js = "Astroid.set_warning(" + m->safe_mid () + ", " + txt + ");";
     webkit_web_view_run_javascript (webview, js.c_str (), NULL, NULL, NULL);
   }
 
 
   void ThreadView::hide_warning (refptr<Message> m)
   {
-    ustring js = "Astroid.hide_warning(" + m->mid + ");";
+    ustring js = "Astroid.hide_warning(" + m->safe_mid () + ");";
     webkit_web_view_run_javascript (webview, js.c_str (), NULL, NULL, NULL);
   }
 
@@ -1175,13 +1175,12 @@ namespace Astroid {
   void ThreadView::set_info (refptr<Message> m, ustring txt)
   {
     LOG (debug) << "tv: set info: " << txt;
-    // TODO: escape
-    ustring js = "Astroid.set_info(" + m->mid + ", " + txt + ");";
+    ustring js = "Astroid.set_info(" + m->safe_mid () + ", " + txt + ");";
     webkit_web_view_run_javascript (webview, js.c_str (), NULL, NULL, NULL);
   }
 
   void ThreadView::hide_info (refptr<Message> m) {
-    ustring js = "Astroid.hide_info(" + m->mid + ");";
+    ustring js = "Astroid.hide_info(" + m->safe_mid () + ");";
     webkit_web_view_run_javascript (webview, js.c_str (), NULL, NULL, NULL);
   }
   /* end info and warning  */
@@ -2581,68 +2580,80 @@ namespace Astroid {
     return true;
   }
 
-  void ThreadView::run_javascript_async (string js)
+  void ThreadView::run_javascript (string js)
   {
-    webkit_web_view_run_javascript (webview, js.c_str (), NULL, NULL, NULL);
+    run_javascript (js, NULL);
   }
 
-  void ThreadView::run_javascript_sync (string js)
+  void ThreadView::run_javascript (
+      string js,
+      std::function<void (GObject *, GAsyncResult *)> cb)
   {
-    {
-      std::lock_guard<std::mutex> lk (js_sync);
-      js_done = false;
+    if (cb != NULL && js_cb != NULL) {
+      throw webkit_error ("javascript call expecting return value was run before previous javascript has returned expected value");
     }
-    webkit_web_view_run_javascript (webview, js.c_str (), NULL, ThreadView_js_finished, this);
 
-    /* wait for JS to finish */
-    std::unique_lock<std::mutex> u (js_sync);
-    js_cv.wait (u, [&] { return js_done; });
+    js_cb = cb;
+
+    LOG (debug) << "tv: js: running: " << js;
+    webkit_web_view_run_javascript (webview, js.c_str (), NULL, ThreadView_js_finished, this);
   }
 
   void ThreadView_js_finished (GObject * o, GAsyncResult * r, gpointer data) {
-    ((ThreadView *) data)->run_javascript_sync_cb (o, r);
+    ((ThreadView *) data)->run_javascript_cb (o, r);
   }
 
-  void ThreadView::run_javascript_sync_cb (GObject * o, GAsyncResult * r) {
-    std::lock_guard<std::mutex> lk (js_sync);
-    js_done = true;
-    js_cv.notify_one ();
+  void ThreadView::run_javascript_cb (GObject * o, GAsyncResult * r) {
+    cout << "tv: js: done." << std::endl;
+
+    if (js_cb) {
+      js_cb (o, r);
+      js_cb = NULL;
+    }
   }
 
-  // TODO: [JS]
+  void ThreadView::focus_change_cb (GObject * o, GAsyncResult * r) {
+    LOG (debug) << "tv: got focus_change cb";
+
+    /* focused_message = m; */
+    /* state[focused_message].current_element = e; */
+  }
+
   void ThreadView::focus_next_element (bool force_change) {
-    /* Jump to next element (if no scrolling is necessary),
-     * otherwise scroll a small increment.
+    /*
+     * Jump to next element (if no scrolling is necessary),
+     * otherwise scroll the viewport a small increment.
      *
-     * If force_change is true, then always move focus the next element.
+     * If force_change is true, then always move focus to the next element.
      *
-     * The function should return the currently selected element.
+     * The function should return the currently selected message and element.
      *
      */
 
     LOG (info) << "tv: focus next element, force_change=" << force_change;
 
     string js = "Astroid.focus_next_element(" + ( force_change ? string("true") : string("false")) + ");";
-    webkit_web_view_run_javascript (webview, js.c_str (), NULL, NULL, NULL);
+
+    run_javascript (js, std::bind (&ThreadView::focus_change_cb, this, std::placeholders::_1, std::placeholders::_2));
   }
 
   // TODO: [JS]
   void ThreadView::focus_previous_element (bool force_change) {
-    /* Reverse of focus_next_element */
-    LOG (info) << "tv: focus previous element, force_change=" << force_change;
+    /* Inverse of focus_next_element */
+
+    LOG (debug) << "tv: focus previous element, force_change=" << force_change;
+
     string js = "Astroid.focus_previous_element(" + ( force_change ? string("true") : string("false")) + ");";
-    webkit_web_view_run_javascript (webview, js.c_str (), NULL, NULL, NULL);
+    run_javascript (js, std::bind (&ThreadView::focus_change_cb, this, std::placeholders::_1, std::placeholders::_2));
   }
 
   void ThreadView::focus_element (refptr<Message> m, unsigned int e) {
-    /* TODO:
-     * C++: Update focus_message and state vector
-     * JS:
-     *  - Move focus to specified element
-     */
-    LOG (info) << "tv: focus element, e=" << e;
-    focused_message = m;
-    state[focused_message].current_element = e;
+    LOG (debug) << "tv: focus element, e=" << e;
+
+    string js = ustring::compose ("Astroid.focus_element (%1, %2);",
+        m->safe_mid (), e);
+
+    run_javascript (js, std::bind (&ThreadView::focus_change_cb, this, std::placeholders::_1, std::placeholders::_2));
   }
 
   void ThreadView::focus_message (refptr<Message> m) {
@@ -3010,6 +3021,14 @@ namespace Astroid {
     std::string base64 = "data:" + mime_type + ";base64," + Glib::Base64::encode (std::string(data, len));
 
     return base64;
+  }
+
+  /***************
+   * Exceptions
+   ***************/
+
+  webkit_error::webkit_error (const char * w) : std::runtime_error (w)
+  {
   }
 }
 
