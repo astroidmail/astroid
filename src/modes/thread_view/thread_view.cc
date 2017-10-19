@@ -10,6 +10,8 @@
 
 # include <gtkmm.h>
 # include <webkit2/webkit2.h>
+# include <JavaScriptCore/JSStringRef.h>
+# include <JavaScriptCore/JSContextRef.h>
 # include <gio/gio.h>
 # include <boost/property_tree/ptree.hpp>
 
@@ -2612,8 +2614,45 @@ namespace Astroid {
     }
   }
 
-  void ThreadView::focus_change_cb (GObject * o, GAsyncResult * r) {
+  void ThreadView::focus_change_cb (GObject * object, GAsyncResult * result) {
     LOG (debug) << "tv: got focus_change cb";
+
+    WebKitJavascriptResult *js_result;
+    JSValueRef              value;
+    JSGlobalContextRef      context;
+    GError                 *error = NULL;
+
+    js_result = webkit_web_view_run_javascript_finish (WEBKIT_WEB_VIEW (object), result, &error);
+    if (!js_result) {
+      g_warning ("Error running javascript: %s", error->message);
+      g_error_free (error);
+      return;
+    }
+
+    context = webkit_javascript_result_get_global_context (js_result);
+    value = webkit_javascript_result_get_value (js_result);
+    if (JSValueIsString (context, value)) {
+      JSStringRef js_str_value;
+      gchar      *str_value;
+      gsize       str_length;
+
+      js_str_value = JSValueToStringCopy (context, value, NULL);
+      str_length = JSStringGetMaximumUTF8CStringSize (js_str_value);
+      str_value = (gchar *)g_malloc (str_length);
+      JSStringGetUTF8CString (js_str_value, str_value, str_length);
+      JSStringRelease (js_str_value);
+
+      string value (str_value);
+      LOG (debug) << "tv: focusing element: " << value;
+
+
+
+      g_free (str_value);
+    } else {
+      throw webkit_error ("error running javascript: unexpected return value");
+    }
+
+    webkit_javascript_result_unref (js_result);
 
     /* focused_message = m; */
     /* state[focused_message].current_element = e; */

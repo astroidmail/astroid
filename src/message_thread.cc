@@ -367,7 +367,10 @@ namespace Astroid {
   }
 
   ustring Message::safe_mid () {
-    return Glib::Markup::escape_text (mid);
+    ustring _m;
+    _m = Glib::Markup::escape_text (mid);
+    _m = UstringUtils::replace (_m, ",", "_");
+    return _m;
   }
 
   refptr<Chunk> Message::get_chunk_by_id (int id) {

@@ -248,6 +248,11 @@ function move_focus(context, targetElement, targetIndex) {
       scroll_up()
     }
   }
+
+  var _focused_el = get_focused_element(context);
+  console.log ('returning:',  _focused_el.eid);
+
+  return _focused_el.mid + ',' + _focused_el.eid;
 }
 
 function set_focused(context, targetElement, targetIndex) {
