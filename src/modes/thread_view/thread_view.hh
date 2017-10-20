@@ -101,16 +101,19 @@ namespace Astroid {
       /* javascript */
       void run_javascript (std::string);
       void run_javascript (std::string, std::function<void (GObject *, GAsyncResult *)>);
+      void run_javascript (std::string, std::function<void (std::string)>);
 
       /* used for the sync callback */
       std::function<void (GObject *, GAsyncResult *r)> js_cb;
+
+      void run_javascript_cb_s (GObject *, GAsyncResult *, std::function<void (std::string)>);
 
     public:
       void run_javascript_cb (GObject *, GAsyncResult *);
 
     private:
       /* focus and message state */
-      void focus_change_cb (GObject *o, GAsyncResult *r);
+      void focus_change_cb (std::string);
       void focus_next_element (bool = false);
       void focus_previous_element (bool = false);
 

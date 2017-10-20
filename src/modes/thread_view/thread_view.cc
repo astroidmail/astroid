@@ -561,6 +561,7 @@ namespace Astroid {
 
       toggle_hidden (focused_message, ToggleShow);
 
+      focus_message (focused_message);
     }
 
     emit_ready ();
@@ -643,7 +644,7 @@ namespace Astroid {
     std::string js = "Astroid.remove_message (" + m->safe_mid () + ");";
     webkit_web_view_run_javascript (webview, js.c_str (), NULL, NULL, NULL);
 
-    run_javascript (js, std::bind (&ThreadView::focus_change_cb, this, std::placeholders::_1, std::placeholders::_2));
+    run_javascript (js, std::bind (&ThreadView::focus_change_cb, this, std::placeholders::_1));
   }
 
   ptree ThreadView::build_message (refptr<Message> m) { // {{{
@@ -2584,7 +2585,16 @@ namespace Astroid {
 
   void ThreadView::run_javascript (string js)
   {
-    run_javascript (js, NULL);
+    run_javascript (js, (std::function<void (GObject *, GAsyncResult *)>) NULL);
+  }
+
+  void ThreadView::run_javascript (
+      string js,
+      std::function<void (std::string)> cb)
+  {
+    run_javascript (js,
+                    std::bind (&ThreadView::run_javascript_cb_s,
+                      this, std::placeholders::_1, std::placeholders::_2, cb));
   }
 
   void ThreadView::run_javascript (
@@ -2606,7 +2616,7 @@ namespace Astroid {
   }
 
   void ThreadView::run_javascript_cb (GObject * o, GAsyncResult * r) {
-    cout << "tv: js: done." << std::endl;
+    LOG (debug) << "tv: js: done." << std::endl;
 
     if (js_cb) {
       js_cb (o, r);
@@ -2614,9 +2624,11 @@ namespace Astroid {
     }
   }
 
-  void ThreadView::focus_change_cb (GObject * object, GAsyncResult * result) {
-    LOG (debug) << "tv: got focus_change cb";
-
+  void ThreadView::run_javascript_cb_s (
+      GObject * object,
+      GAsyncResult * result,
+      std::function<void (std::string)> cb)
+  {
     WebKitJavascriptResult *js_result;
     JSValueRef              value;
     JSGlobalContextRef      context;
@@ -2624,13 +2636,13 @@ namespace Astroid {
 
     js_result = webkit_web_view_run_javascript_finish (WEBKIT_WEB_VIEW (object), result, &error);
     if (!js_result) {
-      g_warning ("Error running javascript: %s", error->message);
-      g_error_free (error);
+      throw webkit_error (ustring::compose ("error running javascript: %1", error->message).c_str());
       return;
     }
 
     context = webkit_javascript_result_get_global_context (js_result);
     value = webkit_javascript_result_get_value (js_result);
+    std::string s_value = "";
     if (JSValueIsString (context, value)) {
       JSStringRef js_str_value;
       gchar      *str_value;
@@ -2642,17 +2654,19 @@ namespace Astroid {
       JSStringGetUTF8CString (js_str_value, str_value, str_length);
       JSStringRelease (js_str_value);
 
-      string value (str_value);
-      LOG (debug) << "tv: focusing element: " << value;
-
-
-
+      s_value = str_value;
       g_free (str_value);
     } else {
-      throw webkit_error ("error running javascript: unexpected return value");
+      throw webkit_error ("error running javascript: expected string return value");
     }
 
     webkit_javascript_result_unref (js_result);
+
+    cb (s_value);
+  }
+
+  void ThreadView::focus_change_cb (std::string e) {
+    LOG (debug) << "tv: got focus_change, element: " << e;
 
     /* focused_message = m; */
     /* state[focused_message].current_element = e; */
@@ -2673,7 +2687,7 @@ namespace Astroid {
 
     string js = "Astroid.focus_next_element(" + ( force_change ? string("true") : string("false")) + ");";
 
-    run_javascript (js, std::bind (&ThreadView::focus_change_cb, this, std::placeholders::_1, std::placeholders::_2));
+    run_javascript (js, std::bind (&ThreadView::focus_change_cb, this, std::placeholders::_1));
   }
 
   // TODO: [JS]
@@ -2683,7 +2697,7 @@ namespace Astroid {
     LOG (debug) << "tv: focus previous element, force_change=" << force_change;
 
     string js = "Astroid.focus_previous_element(" + ( force_change ? string("true") : string("false")) + ");";
-    run_javascript (js, std::bind (&ThreadView::focus_change_cb, this, std::placeholders::_1, std::placeholders::_2));
+    run_javascript (js, std::bind (&ThreadView::focus_change_cb, this, std::placeholders::_1));
   }
 
   void ThreadView::focus_element (refptr<Message> m, unsigned int e) {
@@ -2692,7 +2706,9 @@ namespace Astroid {
     string js = ustring::compose ("Astroid.focus_element (%1, %2);",
         m->safe_mid (), e);
 
-    run_javascript (js, std::bind (&ThreadView::focus_change_cb, this, std::placeholders::_1, std::placeholders::_2));
+    // TODO [JS]
+    LOG (error) << "tv: focus element NOT IMPLEMENTED!";
+    /* run_javascript (js, std::bind (&ThreadView::focus_change_cb, this, std::placeholders::_1)); */
   }
 
   void ThreadView::focus_message (refptr<Message> m) {
