@@ -1019,6 +1019,7 @@ namespace Astroid {
 
     if (subject == "") {
       set_first_subject ((*(--messages.end()))->subject);
+      subject = first_subject;
     }
   }
 
