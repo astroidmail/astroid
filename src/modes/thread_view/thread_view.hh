@@ -123,20 +123,17 @@ namespace Astroid {
       void focus_message (refptr<Message>);
       void focus_element (refptr<Message>, unsigned int);
 
-      enum ToggleState {
-        ToggleToggle,
-        ToggleHide,
-        ToggleShow
-      };
-
-      bool toggle_hidden (refptr<Message> = refptr<Message> (), ToggleState = ToggleToggle);
-      bool is_hidden (refptr<Message>);
+      bool expand   (refptr<Message>);
+      bool collapse (refptr<Message>);
+      bool toggle   (refptr<Message>);
 
     public:
       /* message display state */
       struct MessageState {
         public:
           MessageState ();
+
+          bool expanded         = false;
 
           /* the message was expanded as part of an
            * C-n or C-p command */

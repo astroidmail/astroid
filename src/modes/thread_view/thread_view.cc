@@ -559,7 +559,7 @@ namespace Astroid {
               return ( a->time < b->time );
             });
 
-      toggle_hidden (focused_message, ToggleShow);
+      expand (focused_message);
 
       focus_message (focused_message);
     }
@@ -1384,7 +1384,7 @@ namespace Astroid {
         [&] (Key) {
           if (edit_mode) return false;
 
-          toggle_hidden ();
+          toggle (focused_message);
 
           return true;
         });
@@ -1398,18 +1398,18 @@ namespace Astroid {
           if (all_of (mthread->messages.begin(),
                       mthread->messages.end (),
                       [&](refptr<Message> m) {
-                        return is_hidden (m);
+                        return !state[m].expanded;
                       }
                 )) {
             /* all are hidden */
             for (auto m : mthread->messages) {
-              toggle_hidden (m, ToggleShow);
+              expand (m);
             }
 
           } else {
             /* some are shown */
             for (auto m : mthread->messages) {
-              toggle_hidden (m, ToggleHide);
+              collapse (m);
             }
           }
 
@@ -1489,16 +1489,13 @@ namespace Astroid {
         "Focus next message (and expand if necessary)",
         [&] (Key) {
           if (state[focused_message].scroll_expanded) {
-            toggle_hidden (focused_message, ToggleHide);
+            collapse (focused_message);
             state[focused_message].scroll_expanded = false;
           }
 
           focus_next_message ();
 
-          if (is_hidden (focused_message)) {
-            toggle_hidden (focused_message, ToggleShow);
-            state[focused_message].scroll_expanded = true;
-          }
+          state[focused_message].scroll_expanded = !expand (focused_message);
           return true;
         });
 
@@ -1513,16 +1510,13 @@ namespace Astroid {
         "Focus previous message (and expand if necessary)",
         [&] (Key) {
           if (state[focused_message].scroll_expanded) {
-            toggle_hidden (focused_message, ToggleHide);
+            collapse (focused_message);
             state[focused_message].scroll_expanded = false;
           }
 
           focus_previous_message ();
 
-          if (is_hidden (focused_message)) {
-            toggle_hidden (focused_message, ToggleShow);
-            state[focused_message].scroll_expanded = true;
-          }
+          state[focused_message].scroll_expanded = !expand (focused_message);
           return true;
         });
 
@@ -1956,7 +1950,7 @@ namespace Astroid {
 # endif
 
             /* expand */
-            state[m].print_expanded = !toggle_hidden (m, ToggleShow);
+            state[m].print_expanded = !expand (m);
 
           }
 
@@ -1981,7 +1975,7 @@ namespace Astroid {
           for (auto &m : toprint) {
 
             if (state[m].print_expanded) {
-              toggle_hidden (m, ToggleHide);
+              collapse (m);
               state[m].print_expanded = false;
             }
 
@@ -2363,9 +2357,9 @@ namespace Astroid {
       return true;
     }
 
-    if (!edit_mode && is_hidden (focused_message)) {
+    if (!edit_mode && !state[focused_message].expanded) {
       if (a == EEnter) {
-        toggle_hidden ();
+        toggle (focused_message);
       } else if (a == ESave) {
         /* save message to */
         focused_message->save ();
@@ -2396,7 +2390,7 @@ namespace Astroid {
       if (state[focused_message].current_element == 0) {
         if (!edit_mode && a == EEnter) {
           /* nothing selected, closing message */
-          toggle_hidden ();
+          toggle (focused_message);
         } else if (a == ESave) {
           /* save message to */
           focused_message->save ();
@@ -2566,7 +2560,7 @@ namespace Astroid {
 
     if (!edit_mode && focused_message && focused_message->in_notmuch) {
 
-      if (!state[focused_message].unread_checked && !is_hidden(focused_message)) {
+      if (!state[focused_message].unread_checked && state[focused_message].expanded) {
 
         chrono::duration<double> elapsed = chrono::steady_clock::now() - focus_time;
 
@@ -2742,7 +2736,7 @@ namespace Astroid {
 
     if (focused_position > 0) {
       auto m = mthread->messages[focused_position - 1];
-      if (!focus_top && !is_hidden (focused_message)) {
+      if (!focus_top && state[focused_message].expanded) {
         focus_element (m, state[m].elements.size ()-1); // start at bottom
       } else {
         focus_message (m); // start at top
@@ -2752,90 +2746,45 @@ namespace Astroid {
 
   /* end focus handeling   */
 
-  /* message hiding  */
-  // TODO: [JS]
-  bool ThreadView::is_hidden (refptr<Message> m) {
-# if 0
-    ustring mid = "message_" + m->mid;
-
-    WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
-
-    WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
-
-    WebKitDOMDOMTokenList * class_list =
-      webkit_dom_element_get_class_list (e);
-
-    GError * gerr = NULL;
-
-    bool r = webkit_dom_dom_token_list_contains (class_list, "hide", (gerr = NULL, &gerr));
-
-    g_object_unref (class_list);
-    g_object_unref (e);
-    g_object_unref (d);
-
-    return r;
-# endif
-  }
-
-  // TODO: [JS]
-  bool ThreadView::toggle_hidden (
-      refptr<Message> m,
-      ToggleState t)
-  {
-# if 0
+  /* message expanding and collapsing  */
+  bool ThreadView::expand (refptr<Message> m) {
     /* returns true if the message was expanded in the first place */
 
-    if (!m) m = focused_message;
-    ustring mid = "message_" + m->mid;
+    bool wasexpanded  = state[m].expanded;
 
-    // reset element focus
-    state[m].current_element = 0; // empty focus
+    if (!wasexpanded) {
+      state[m].expanded = true;
+      std::string js = "Astroid.expand_message (" + m->safe_mid () + ");";
+      run_javascript (js);
 
-    WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
-
-    WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
-
-    WebKitDOMDOMTokenList * class_list =
-      webkit_dom_element_get_class_list (e);
-
-    GError * gerr = NULL;
-
-    bool wasexpanded;
-
-    if (webkit_dom_dom_token_list_contains (class_list, "hide", (gerr = NULL, &gerr)))
-    {
-      wasexpanded = false;
-
-      /* reset class */
-      if (t == ToggleToggle || t == ToggleShow) {
-        webkit_dom_dom_token_list_remove (class_list, "hide",
-            (gerr = NULL, &gerr));
-      }
-
-    } else {
-      wasexpanded = true;
-
-      /* set class  */
-      if (t == ToggleToggle || t == ToggleHide) {
-        webkit_dom_dom_token_list_add (class_list, "hide",
-            (gerr = NULL, &gerr));
-      }
+      /* if the message was unexpanded, it would not have been marked as read */
+      if (unread_delay == 0.0) unread_check ();
     }
 
-    g_object_unref (class_list);
-    g_object_unref (e);
-    g_object_unref (d);
-
-
-    /* if the message was unexpanded, it would not have been marked as read */
-    if (unread_delay == 0.0) unread_check ();
-
     return wasexpanded;
-# endif
-    return false; // TODO
   }
 
-  /* end message hiding  */
+  bool ThreadView::collapse (refptr<Message> m) {
+    /* returns true if the message was expanded in the first place */
+    bool wasexpanded  = state[m].expanded;
+
+    if (wasexpanded) {
+      state[m].expanded = false;
+      std::string js = "Astroid.collapse_message (" + m->safe_mid () + ");";
+      run_javascript (js);
+    }
+
+    return wasexpanded;
+  }
+
+  bool ThreadView::toggle (refptr<Message> m)
+  {
+    /* returns true if the message was expanded in the first place */
+    if (state[m].expanded) return collapse (m);
+    else                   return expand (m);
+  }
+
+  /* end message expanding and collapsing  */
 
   void ThreadView::save_all_attachments () { //
     /* save all attachments of current focused message */
@@ -3015,8 +2964,7 @@ namespace Astroid {
       /* expand all messages, these should be closed - except the focused one
        * when a search is cancelled */
       for (auto m : mthread->messages) {
-        state[m].search_expanded = is_hidden (m);
-        toggle_hidden (m, ToggleShow);
+        state[m].search_expanded = !expand (m);
       }
 
       LOG (debug) << "tv: searching for: " << k;
@@ -3039,7 +2987,7 @@ namespace Astroid {
       } else {
         /* un-expand messages again */
         for (auto m : mthread->messages) {
-          if (state[m].search_expanded) toggle_hidden (m, ToggleHide);
+          if (state[m].search_expanded) collapse (m);
           state[m].search_expanded = false;
         }
 
