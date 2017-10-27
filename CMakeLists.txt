@@ -44,6 +44,8 @@ pkg_check_modules (GMIME3     REQUIRED  gmime-3.0>=3.0.0)
 pkg_check_modules (WEBKITGTK3 REQUIRED  webkitgtk-3.0)
 pkg_check_modules (SASS       REQUIRED  libsass)
 
+find_package ( Threads )
+
 find_package ( Boost REQUIRED
   COMPONENTS
   filesystem
@@ -93,7 +95,6 @@ add_compile_options (
 
 add_compile_options (
   -Wall
-  -pthread
   -g
   -Wextra
   )
@@ -216,6 +217,7 @@ target_link_libraries (
   ${VTE2_LIBRARIES}
   ${SASS_LIBRARIES}
   ${Boost_LIBRARIES}
+  ${CMAKE_THREAD_LIBS_INIT}
   )
 
 ##
