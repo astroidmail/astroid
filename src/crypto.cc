@@ -238,7 +238,7 @@ namespace Astroid {
         mo,
         sign,
         userid.c_str (),
-        GMIME_ENCRYPT_NONE,
+        GMIME_ENCRYPT_THROW_KEYIDS, // ignored in Gmime 2.6
         recpa,
         err);
 
