@@ -7,6 +7,17 @@ cmake_minimum_required (VERSION 3.9)
 # don't use obscure build types, but only Debug and Release
 #
 set (CMAKE_CONFIGURATION_TYPES Debug Release CACHE TYPE INTERNAL FORCE)
+message (STATUS "Available config types: ${CMAKE_CONFIGURATION_TYPES}")
+
+##
+# make sure the user deliberately selects a  build type
+#
+if (NOT CMAKE_BUILD_TYPE)
+    message ( WARNING "No CMAKE_BUILD_TYPE value specified, defaulting to Debug." )
+    set (CMAKE_BUILD_TYPE "Debug" CACHE STRING "Choose the type of build." FORCE)
+else ()
+    message ( STATUS "The CMake build type is: ${CMAKE_BUILD_TYPE}" )
+endif ()
 
 ##
 # project name
@@ -32,7 +43,6 @@ option (DISABLE_EMBEDDED_EDITOR "Disable embedded editor (default = enabled)" OF
 # welcome message
 #
 message (STATUS "Building ${PROJECT_NAME} ${PROJECT_VERSION}")
-message (STATUS "Generating with config types: ${CMAKE_CONFIGURATION_TYPES}")
 
 ##
 # check for required packages and libraries
