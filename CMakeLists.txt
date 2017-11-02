@@ -112,9 +112,10 @@ configure_file (
     src/build_config.hh
     )
 
-include (CheckIncludeFiles)
-check_include_files (sass_context.h SASSCTX_SASS_CONTEXT_H)
-check_include_files (sass/context.h SASSCTX_CONTEXT_H)
+include (CheckIncludeFile)
+set ( CMAKE_REQUIRED_INCLUDES ${SASS_INCLUDE_DIRS} )
+check_include_file (sass_context.h SASSCTX_SASS_CONTEXT_H)
+check_include_file (sass/context.h SASSCTX_CONTEXT_H)
 if( SASSCTX_SASS_CONTEXT_H )
   add_definitions ( -DSASSCTX_SASS_CONTEXT_H )
 elseif( SASSCTX_CONTEXT_H )
