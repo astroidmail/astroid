@@ -57,6 +57,13 @@ find_package ( Boost REQUIRED
   system
   )
 
+if(APPLE)
+  # with homebrew, libtettext is keg-only, i.e. not symlinked into
+  # /usr/local, and it does not provide any pkg-config infromation of
+  # its own; hence we have to locate it manually
+  set ( Gettext_LDFLAGS "-L/usr/local/opt/gettext/lib" )
+endif(APPLE)
+  
 find_library ( NOTMUCH_LIB notmuch )
 if(NOT NOTMUCH_LIB)
   message (FATAL_ERROR "notmuch library not found")
@@ -199,13 +206,6 @@ add_executable(
   src/utils/gmime/gmime-filter-html-bq.c
   src/utils/gmime/gtrie.c
   src/utils/gmime/url-scanner.c
-  )
-
-# usually, link _directories is not needed; but gettext does not write
-# pkg-config info of its own, so we add the lib paths from glibmm,
-# which links to gettext (so that is included, too)
-link_directories (
-  ${GLIBMM2_LIBRARY_DIRS}
   )
 
 target_link_libraries (
