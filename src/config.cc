@@ -181,7 +181,7 @@ namespace Astroid {
     default_config.put ("thread_index.cell.tags_upper_color", "#e5e5e5");
     default_config.put ("thread_index.cell.tags_lower_color", "#333333");
     default_config.put ("thread_index.cell.tags_alpha", "0.5");
-    default_config.put ("thread_index.cell.hidden_tags", "attachment,flagged,unread");
+    default_config.put ("thread_index.cell.hidden_tags", "unread");
 
 
     /* editor */
