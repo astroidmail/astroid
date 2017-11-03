@@ -4,6 +4,9 @@
 
 # include <notmuch.h>
 
+// Build with: g++ test_notmuch_standalone.cc -o test_notmuch_standalone -lnotmuch
+
+
 /* there was a bit of a round-dance of with the _st versions of these returning
  * to the old name, but with different signature */
 # if (LIBNOTMUCH_MAJOR_VERSION < 5)
