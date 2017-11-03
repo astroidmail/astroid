@@ -250,6 +250,7 @@ if not get_option('disable-tests')
             [ 'address',        'test_address',         [ 'tests/test_address.cc' ]],
             [ 'dates',          'test_dates',           [ 'tests/test_dates.cc' ]],
             [ 'crypto',         'test_crypto',          [ 'tests/test_crypto.cc' ]],
+            [ 'gmime version matches notmuch', 'test_gmime_version',   [ 'tests/test_gmime_version.cc' ]],
           ]
 
   foreach t : tests
