@@ -25,19 +25,25 @@ endif ()
 project (astroid)
 
 ##
-# retrieve current project version from git
+# version number
 #
-execute_process (
-  COMMAND git describe --abbrev=8 --tags --always
-  OUTPUT_VARIABLE PROJECT_VERSION
-  OUTPUT_STRIP_TRAILING_WHITESPACE
-  )
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+  # debug build - retrieve current project version from git
+  execute_process (
+    COMMAND git describe --abbrev=8 --tags --always
+    OUTPUT_VARIABLE PROJECT_VERSION
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+else ()
+  # release build - use hard-coded version string
+  set ( PROJECT_VERSION "0.10.2" )
+endif ()
 
 ##
 # cmake -D...=ON|OFF command line feature switches and their default values
 #
-option (DISABLE_TERMINAL "Disable embedded terminal (default = enabled)" OFF)
-option (DISABLE_EMBEDDED_EDITOR "Disable embedded editor (default = enabled)" OFF)
+option (DISABLE_TERMINAL         "Disable embedded terminal (default = enabled)"  OFF)
+option (DISABLE_EMBEDDED_EDITOR  "Disable embedded editor (default = enabled)"    OFF)
 
 ##
 # welcome message
@@ -100,6 +106,16 @@ endif()
 #
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
+
+include_directories (
+  ${GTKMM3_INCLUDE_DIRS}
+  ${GLIBMM2_INCLUDE_DIRS}
+  ${GMIME3_INCLUDE_DIRS}
+  ${WEBKITGTK3_INCLUDE_DIRS}
+  ${VTE2_INCLUDE_DIRS}
+  ${SASS_INCLUDE_DIRS}
+  ${Boost_INCLUDE_DIRS}
+  )
 
 add_compile_options (
   ${GTKMM3_CFLAGS}
@@ -221,18 +237,23 @@ add_executable(
 target_link_libraries (
   astroid
   ${NOTMUCH_LIB}
-  ${WEBKITGTK3_LIBRARIES}
-  ${GTKMM3_LIBRARIES}
-  ${GLIBMM2_LIBRARIES}
-  ${GMIME3_LIBRARIES}
-  ${VTE2_LIBRARIES}
-  ${SASS_LIBRARIES}
+  ${WEBKITGTK3_LDFLAGS}
+  ${GTKMM3_LDFLAGS}
+  ${GLIBMM2_LDFLAGS}
+  ${GMIME3_LDFLAGS}
+  ${VTE2_LDFLAGS}
+  ${SASS_LDFLAGS}
   ${Boost_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT}
+  ${Gettext_LDFLAGS}
   )
 
 ##
 # conditional compilation based on feature switches
+#
+
+##
+# embedded editor
 #
 if(DISABLE_EMBEDDED_EDITOR)
   add_definitions ( -DDISABLE_EMBEDDED )
