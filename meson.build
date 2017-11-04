@@ -39,6 +39,13 @@ if cc.has_function ('notmuch_database_index_file', dependencies : notmuch, prefi
   add_global_arguments ('-DHAVE_NOTMUCH_INDEX_FILE', language: 'cpp')
 endif
 
+r = cc.run (files('tests/test_gmime_version.cc'), dependencies : [ notmuch, gmime ])
+if r.returncode () == 0
+  message ('gmime version matches between astroid and notmuch: YES')
+else
+  error ('gmime version matches between astroid and notmuch: NO. You must compile and link both astroid and notmuch against the same gmime version.')
+endif
+
 deps = [ gmime, boost, boost_po, gtk, gtkmm, webkit, threads, notmuch ]
 
 vte = dependency ('vte-2.91', required: false)
