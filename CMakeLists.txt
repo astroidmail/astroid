@@ -170,6 +170,7 @@ include_directories (
   src/plugin
   src/utils
   src/utils/gmime
+  ${CMAKE_BINARY_DIR}/src	# needed to find the generated build_config.hh
   )
 
 add_executable(
