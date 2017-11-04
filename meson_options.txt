@@ -1,0 +1,6 @@
+option ('disable-tests', type : 'boolean', value : 'false', description : 'Disable tests')
+option ('disable-plugins', type : 'boolean', value : 'false', description : 'Disable plugins')
+option ('disable-terminal', type : 'boolean', value : 'false', description : 'Disable built in terminal')
+option ('disable-embedded-editor', type : 'boolean', value : 'false', description : 'Disable embedded editor')
+option ('disable-libsass', type : 'boolean', value : 'false', description : 'Disable libsass and use sassc')
+option ('scss-compiler', type : 'string', value : 'sassc', description : 'SCSS compiler to use when libsass is disabled')
