@@ -70,7 +70,20 @@ message (STATUS "Building ${PROJECT_NAME} ${PROJECT_VERSION}")
 find_package ( PkgConfig REQUIRED )
 pkg_check_modules (GTKMM3     REQUIRED  gtkmm-3.0>=3.10)
 pkg_check_modules (GLIBMM2    REQUIRED  glibmm-2.4)
-pkg_check_modules (GMIME3     REQUIRED  gmime-3.0>=3.0.0)
+
+pkg_check_modules (GMIME                gmime-3.0>=3.0.0)
+if (NOT GMIME_FOUND)
+  # fall back to gmime 2
+  pkg_check_modules (GMIME                gmime-2.6>=2.6.0)
+endif()
+
+if (NOT GMIME_FOUND)
+  message (
+    FATAL_ERROR
+    "Gmime 3 or Gmime 2.6 required"
+    )
+endif()
+
 pkg_check_modules (WEBKITGTK3 REQUIRED  webkitgtk-3.0)
 pkg_check_modules (SASS       REQUIRED  libsass)
 
@@ -93,7 +106,7 @@ if(APPLE)
   # its own; hence we have to locate it manually
   set ( Gettext_LDFLAGS "-L/usr/local/opt/gettext/lib" )
 endif(APPLE)
-  
+
 find_library ( NOTMUCH_LIB notmuch )
 if(NOT NOTMUCH_LIB)
   message (FATAL_ERROR "notmuch library not found")
@@ -124,7 +137,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
 include_directories (
   ${GTKMM3_INCLUDE_DIRS}
   ${GLIBMM2_INCLUDE_DIRS}
-  ${GMIME3_INCLUDE_DIRS}
+  ${GMIME_INCLUDE_DIRS}
   ${WEBKITGTK3_INCLUDE_DIRS}
   ${VTE2_INCLUDE_DIRS}
   ${SASS_INCLUDE_DIRS}
@@ -134,7 +147,7 @@ include_directories (
 add_compile_options (
   ${GTKMM3_CFLAGS}
   ${GLIBMM2_CFLAGS}
-  ${GMIME3_CFLAGS}
+  ${GMIME_CFLAGS}
   ${WEBKITGTK3_CFLAGS}
   ${VTE2_CFLAGS}
   ${SASS_CFLAGS}
@@ -178,7 +191,7 @@ else()
     FATAL_ERROR
     "libsass must be installed: could not find header file. You can disable libsass with --disable-libsass, however, that requires a SCSS compiler like 'sassc' which can be specified with --scss-compiler=<path to compiler>."
     )
-endif()  
+endif()
 
 include_directories (
   src/
@@ -195,7 +208,7 @@ include_directories (
 
 add_executable(
   astroid
-  
+
   src/account_manager.cc
   src/astroid.cc
   src/chunk.cc
@@ -261,7 +274,7 @@ target_link_libraries (
   ${WEBKITGTK3_LDFLAGS}
   ${GTKMM3_LDFLAGS}
   ${GLIBMM2_LDFLAGS}
-  ${GMIME3_LDFLAGS}
+  ${GMIME_LDFLAGS}
   ${VTE2_LDFLAGS}
   ${SASS_LDFLAGS}
   ${Boost_LIBRARIES}
