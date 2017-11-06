@@ -580,7 +580,7 @@ g_mime_filter_html_bq_new (guint32 flags, guint32 colour)
 	GMimeFilterHTMLBQ *filter;
 	guint i;
 
-	filter = g_object_newv (GMIME_TYPE_FILTER_HTML_BQ, 0, NULL);
+	filter = g_object_new (GMIME_TYPE_FILTER_HTML_BQ, NULL);
 	filter->flags = flags;
 	filter->colour = colour;
 
