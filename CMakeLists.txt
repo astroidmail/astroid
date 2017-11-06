@@ -74,13 +74,13 @@ pkg_check_modules (GLIBMM2    REQUIRED  glibmm-2.4)
 pkg_check_modules (GMIME                gmime-3.0>=3.0.0)
 if (NOT GMIME_FOUND)
   # fall back to gmime 2
-  pkg_check_modules (GMIME                gmime-2.6>=2.6.0)
+  pkg_check_modules (GMIME              gmime-2.6>=2.6.0)
 endif()
 
 if (NOT GMIME_FOUND)
   message (
     FATAL_ERROR
-    "Gmime 3 or Gmime 2.6 required"
+    "GMime 3 or GMime 2.6 required"
     )
 endif()
 
@@ -170,6 +170,49 @@ add_definitions (
   -DDEBUG
   )
 endif ()
+
+## Check if notmuch is compiled against the same GMime library
+include(CheckCXXSourceRuns)
+set (CMAKE_REQUIRED_INCLUDES ${GMIME_INCLUDE_DIRS})
+set (CMAKE_REQUIRED_FLAGS    ${GMIME_CFLAGS})
+set (CMAKE_REQUIRED_FLAGS    ${GMIME_LDFLAGS})
+CHECK_CXX_SOURCE_RUNS(
+  "
+  # include <notmuch.h>
+  # include <gmime/gmime.h>
+
+  # include <iostream>
+
+  /* test if we are linked against the same GMime version as notmuch */
+
+  # if (GMIME_MAJOR_VERSION < 3)
+  # define g_mime_init() g_mime_init(0)
+  # define internet_address_list_parse(f,str) internet_address_list_parse_string(str)
+  # define internet_address_list_to_string(ia,f,encode) internet_address_list_to_string(ia,encode)
+  # endif
+
+  int main () {
+    g_mime_init ();
+
+    const char * a = \"Test <hey@asdf.da>\";
+    InternetAddressList * ia = internet_address_list_parse (NULL, a);
+
+    const char * addrs = internet_address_list_to_string (ia, NULL, false);
+
+    std::cout << \"address: \" << addrs << std::endl;
+
+    return 0;
+  }
+  "
+
+  GMIME_MATCHES)
+
+if (NOT GMIME_MATCHES)
+  message (
+    FATAL_ERROR
+    "You must compile and link against the same GMime version (e.g. 2.6 or 3) with both notmuch and astroid."
+    )
+endif()
 
 set ( GIT_DESC ${PROJECT_VERSION} )
 set ( PREFIX ${CMAKE_INSTALL_PREFIX} )
