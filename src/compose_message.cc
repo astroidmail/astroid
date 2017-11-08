@@ -122,6 +122,9 @@ namespace Astroid {
       body_content += sf.str ();
     }
 
+    markdown_success = false;
+    markdown_error   = "";
+
 
     /* create text part */
     GMimeStream * contentStream = g_mime_stream_mem_new_with_buffer(body_content.c_str(), body_content.size());
@@ -191,8 +194,11 @@ namespace Astroid {
         ch_stderr->read_to_end (_err);
         ch_stderr->close ();
 
-        if (!_err.empty ())
+        if (!_err.empty ()) {
           LOG (error) << "cm: md: " << _err;
+          markdown_error   = _err;
+          markdown_success = false;
+        }
 
         LOG (debug) << "cm: md: got html: " << _html;
 
@@ -201,7 +207,12 @@ namespace Astroid {
       } catch (Glib::SpawnError &ex) {
         LOG (error) << "cm: md: could not convert to markdown!";
         contentStream = g_mime_stream_mem_new_with_buffer("", 0);
+
+        markdown_success = false;
+        markdown_error   = "Failed to spawn markdown processor.";
       }
+
+      markdown_success = true;
 
       /* add output to html part */
       GMimeDataWrapper * contentWrapper = g_mime_data_wrapper_new_with_stream(contentStream, GMIME_CONTENT_ENCODING_DEFAULT);

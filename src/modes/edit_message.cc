@@ -783,6 +783,10 @@ namespace Astroid {
     /* build message */
     finalize_message (c);
 
+    if (c->markdown && !c->markdown_success) {
+      set_warning ("Failed processing markdown: " + UstringUtils::replace (c->markdown_error, "\n", "<br />"));
+    }
+
     if (c->encrypt || c->sign) {
       if (!c->encryption_success) {
         set_warning ("Failed encrypting: " + UstringUtils::replace (c->encryption_error, "\n", "<br />"));
@@ -1061,6 +1065,12 @@ namespace Astroid {
     ComposeMessage * c = make_message ();
 
     if (c == NULL) return false;
+
+    if (c->markdown && !c->markdown_success) {
+      set_warning ("Cannot send, failed processing markdown: " + UstringUtils::replace (c->markdown_error, "\n", "<br />"));
+      delete c;
+      return false;
+    }
 
     if (c->encrypt || c->sign) {
       if (!c->encryption_success) {

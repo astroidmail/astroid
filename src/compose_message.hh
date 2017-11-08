@@ -58,6 +58,9 @@ namespace Astroid {
       bool encrypt = false;
       bool sign    = false;
 
+      bool markdown_success = false;
+      ustring markdown_error = "";
+
       struct Attachment {
         public:
           Attachment ();
