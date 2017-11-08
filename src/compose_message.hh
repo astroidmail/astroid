@@ -54,6 +54,7 @@ namespace Astroid {
       void set_references (ustring);
 
       bool include_signature = false;
+      bool markdown = false;
       bool encrypt = false;
       bool sign    = false;
 

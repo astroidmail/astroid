@@ -122,6 +122,7 @@ namespace Astroid {
 
     builder->get_widget ("editor_box", editor_box);
     builder->get_widget ("switch_signature", switch_signature);
+    builder->get_widget ("switch_markdown", switch_markdown);
     /*
     builder->get_widget ("editor_rev", editor_rev);
     builder->get_widget ("thread_rev", thread_rev);
@@ -267,6 +268,9 @@ namespace Astroid {
     /* editor->start_editor_when_ready = true; */
 
     switch_signature->property_active().signal_changed ().connect (
+        sigc::mem_fun (*this, &EditMessage::switch_signature_set));
+
+    switch_markdown->property_active().signal_changed ().connect (
         sigc::mem_fun (*this, &EditMessage::switch_signature_set));
 
     switch_encrypt->property_active().signal_changed ().connect (
@@ -465,6 +469,14 @@ namespace Astroid {
             switch_signature->set_active (!switch_signature->get_active ());
           }
           return true;
+        });
+
+    keys.register_key ("M", "edit_message.toggle_markdown",
+        "Toggle markdown",
+        [&] (Key) {
+            switch_markdown->set_active (!switch_markdown->get_active ());
+
+            return true;
         });
 
     keys.register_key ("E", "edit_message.toggle_encrypt",
@@ -1164,6 +1176,7 @@ namespace Astroid {
     } else {
       c->include_signature = false;
     }
+    c->markdown = switch_markdown->get_active ();
 
     if (c->account->has_gpg) {
       c->encrypt = switch_encrypt->get_active ();

@@ -122,6 +122,8 @@ namespace Astroid {
       body_content += sf.str ();
     }
 
+
+    /* create text part */
     GMimeStream * contentStream = g_mime_stream_mem_new_with_buffer(body_content.c_str(), body_content.size());
     GMimePart * messagePart = g_mime_part_new_with_type ("text", "plain");
 
@@ -133,11 +135,89 @@ namespace Astroid {
     g_mime_part_set_content_encoding (messagePart, GMIME_CONTENT_ENCODING_QUOTEDPRINTABLE);
     g_mime_part_set_content (messagePart, contentWrapper);
 
-    g_mime_message_set_mime_part(message, GMIME_OBJECT(messagePart));
-
-    g_object_unref(messagePart);
     g_object_unref(contentWrapper);
     g_object_unref(contentStream);
+
+
+    if (markdown) {
+      GMimeMultipart * mp = g_mime_multipart_new_with_subtype ("alternative");
+
+      /* add text part */
+      g_mime_multipart_add (mp, GMIME_OBJECT(messagePart));
+      g_object_unref (messagePart);
+      messagePart = GMIME_PART(mp);
+
+      /* construct HTML part */
+      GMimePart * html = g_mime_part_new_with_type ("text", "html");
+      g_mime_object_set_content_type_parameter ((GMimeObject *) html, "charset", astroid->config().get<string>("editor.charset").c_str());
+      g_mime_object_set_content_type_parameter ((GMimeObject *) html, "format", "flowed");
+
+      GMimeStream * contentStream;
+
+      /* pipe through markdown to html generator */
+      int pid;
+      int stdin;
+      int stdout;
+      int stderr;
+      vector<string> args = Glib::shell_parse_argv (astroid->config().get<string>("editor.markdown"));
+      try {
+        Glib::spawn_async_with_pipes ("",
+                          args,
+                          Glib::SPAWN_DO_NOT_REAP_CHILD |
+                          Glib::SPAWN_SEARCH_PATH,
+                          sigc::slot <void> (),
+                          &pid,
+                          &stdin,
+                          &stdout,
+                          &stderr
+                          );
+
+        refptr<Glib::IOChannel> ch_stdin;
+        refptr<Glib::IOChannel> ch_stdout;
+        refptr<Glib::IOChannel> ch_stderr;
+        ch_stdin  = Glib::IOChannel::create_from_fd (stdin);
+        ch_stdout = Glib::IOChannel::create_from_fd (stdout);
+        ch_stderr = Glib::IOChannel::create_from_fd (stderr);
+
+        ch_stdin->write (body_content);
+        ch_stdin->close ();
+
+        ustring _html;
+        ch_stdout->read_to_end (_html);
+        ch_stdout->close ();
+
+
+        ustring _err;
+        ch_stderr->read_to_end (_err);
+        ch_stderr->close ();
+
+        if (!_err.empty ())
+          LOG (error) << "cm: md: " << _err;
+
+        LOG (debug) << "cm: md: got html: " << _html;
+
+        contentStream = g_mime_stream_mem_new_with_buffer(_html.c_str(), _html.size());
+
+      } catch (Glib::SpawnError &ex) {
+        LOG (error) << "cm: md: could not convert to markdown!";
+        contentStream = g_mime_stream_mem_new_with_buffer("", 0);
+      }
+
+      /* add output to html part */
+      GMimeDataWrapper * contentWrapper = g_mime_data_wrapper_new_with_stream(contentStream, GMIME_CONTENT_ENCODING_DEFAULT);
+
+      g_mime_part_set_content_encoding (html, GMIME_CONTENT_ENCODING_QUOTEDPRINTABLE);
+      g_mime_part_set_content (html, contentWrapper);
+
+      g_object_unref(contentWrapper);
+      g_object_unref(contentStream);
+
+      /* add html part to message */
+      g_mime_multipart_add (mp, GMIME_OBJECT (html));
+    }
+
+    g_mime_message_set_mime_part(message, GMIME_OBJECT(messagePart));
+    g_object_unref(messagePart);
   }
 
   void ComposeMessage::load_message (ustring _mid, ustring fname) {

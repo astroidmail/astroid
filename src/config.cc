@@ -200,6 +200,8 @@ namespace Astroid {
     default_config.put ("editor.attachment_words", "attach");
     default_config.put ("editor.attachment_directory", "~");
 
+    default_config.put ("editor.markdown", "marked");
+
     /* mail composition */
     default_config.put ("mail.reply.quote_line", "Excerpts from %1's message of %2:"); // %1 = author, %2 = pretty_verbose_date
     default_config.put ("mail.reply.mailinglist_reply_to_sender", true);
