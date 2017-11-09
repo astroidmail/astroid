@@ -143,11 +143,11 @@ namespace Astroid {
 
 
     if (markdown) {
+      GMimePart * text = messagePart;
       GMimeMultipart * mp = g_mime_multipart_new_with_subtype ("alternative");
 
       /* add text part */
       g_mime_multipart_add (mp, GMIME_OBJECT(messagePart));
-      g_object_unref (messagePart);
       messagePart = GMIME_PART(mp);
 
       /* construct HTML part */
@@ -162,7 +162,8 @@ namespace Astroid {
       int stdin;
       int stdout;
       int stderr;
-      vector<string> args = Glib::shell_parse_argv (astroid->config().get<string>("editor.markdown"));
+      markdown_success = true;
+      vector<string> args = Glib::shell_parse_argv (astroid->config().get<string>("editor.markdown_processor"));
       try {
         Glib::spawn_async_with_pipes ("",
                           args,
@@ -198,33 +199,38 @@ namespace Astroid {
           LOG (error) << "cm: md: " << _err;
           markdown_error   = _err;
           markdown_success = false;
+        } else {
+
+          LOG (debug) << "cm: md: got html: " << _html;
+
+          contentStream = g_mime_stream_mem_new_with_buffer(_html.c_str(), _html.size());
         }
 
-        LOG (debug) << "cm: md: got html: " << _html;
-
-        contentStream = g_mime_stream_mem_new_with_buffer(_html.c_str(), _html.size());
-
       } catch (Glib::SpawnError &ex) {
-        LOG (error) << "cm: md: could not convert to markdown!";
-        contentStream = g_mime_stream_mem_new_with_buffer("", 0);
+        LOG (error) << "cm: md: failed to spawn markdown processor: " << ex.what ();
 
         markdown_success = false;
-        markdown_error   = "Failed to spawn markdown processor.";
+        markdown_error   = "Failed to spawn markdown processor: " + ex.what();
       }
 
-      markdown_success = true;
+      if (markdown_success) {
+        /* add output to html part */
+        GMimeDataWrapper * contentWrapper = g_mime_data_wrapper_new_with_stream(contentStream, GMIME_CONTENT_ENCODING_DEFAULT);
 
-      /* add output to html part */
-      GMimeDataWrapper * contentWrapper = g_mime_data_wrapper_new_with_stream(contentStream, GMIME_CONTENT_ENCODING_DEFAULT);
+        g_mime_part_set_content_encoding (html, GMIME_CONTENT_ENCODING_QUOTEDPRINTABLE);
+        g_mime_part_set_content (html, contentWrapper);
 
-      g_mime_part_set_content_encoding (html, GMIME_CONTENT_ENCODING_QUOTEDPRINTABLE);
-      g_mime_part_set_content (html, contentWrapper);
+        g_object_unref(contentWrapper);
+        g_object_unref(contentStream);
 
-      g_object_unref(contentWrapper);
-      g_object_unref(contentStream);
-
-      /* add html part to message */
-      g_mime_multipart_add (mp, GMIME_OBJECT (html));
+        /* add html part to message */
+        g_mime_multipart_add (mp, GMIME_OBJECT (html));
+        g_object_unref (text);
+      } else {
+        /* revert to only text part */
+        g_object_unref (messagePart);
+        messagePart = text;
+      }
     }
 
     g_mime_message_set_mime_part(message, GMIME_OBJECT(messagePart));
