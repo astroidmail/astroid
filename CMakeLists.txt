@@ -58,6 +58,7 @@ endif()
 option (DISABLE_TERMINAL         "Disable embedded terminal (default = enabled)"  OFF)
 option (DISABLE_EMBEDDED_EDITOR  "Disable embedded editor (default = enabled)"    OFF)
 option (DISABLE_PLUGINS          "Disable plugins (default = enabled)"            OFF)
+option (ENABLE_PROFILING         "Enable profiling (default = disabled)"          OFF)
 
 ##
 # welcome message
@@ -170,6 +171,12 @@ add_definitions (
   -DDEBUG
   )
 endif ()
+
+if (ENABLE_PROFILING)
+  message (STATUS "Enabling profiling.")
+  add_compile_options ( -pg )
+  set (CMAKE_EXE_LINKER_FLAGS "-pg")
+endif()
 
 ## Check if notmuch is compiled against the same GMime library
 include(CheckCXXSourceRuns)
