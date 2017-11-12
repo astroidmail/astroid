@@ -2596,7 +2596,7 @@ namespace Astroid {
       std::function<void (GObject *, GAsyncResult *)> cb)
   {
     if (cb != NULL && js_cb != NULL) {
-      throw webkit_error ("javascript call expecting return value was run before previous javascript has returned expected value");
+      throw webkit_error ("javascript call expecting return value was run before previous javascript had returned expected value");
     }
 
     js_cb = cb;
@@ -2661,6 +2661,28 @@ namespace Astroid {
 
   void ThreadView::focus_change_cb (std::string e) {
     LOG (debug) << "tv: got focus_change, element: " << e;
+
+    auto vs = VectorUtils::split_and_trim (e, ",");
+    for (auto m : mthread->messages) {
+      if (vs[0] == m->safe_mid ()) {
+        focused_message = m;
+        if (vs[0] != vs[1]) {
+          unsigned int i = 0;
+          for (auto e : state[m].elements) {
+            if (e.element_id () == vs[1]) {
+              state[m].current_element = i;
+            }
+            i++;
+          }
+
+          if (i >= state[m].elements.size ()) {
+            throw logic_error ("tv: got element beyond elments size for message");
+          }
+        } else {
+          state[m].current_element = 0;
+        }
+      }
+    }
 
     /* focused_message = m; */
     /* state[focused_message].current_element = e; */
@@ -2754,7 +2776,7 @@ namespace Astroid {
 
     if (!wasexpanded) {
       state[m].expanded = true;
-      std::string js = "Astroid.expand_message (" + m->safe_mid () + ");";
+      std::string js = "Astroid.expand_message ('" + m->safe_mid () + "');";
       run_javascript (js);
 
       /* if the message was unexpanded, it would not have been marked as read */
@@ -2770,7 +2792,7 @@ namespace Astroid {
 
     if (wasexpanded) {
       state[m].expanded = false;
-      std::string js = "Astroid.collapse_message (" + m->safe_mid () + ");";
+      std::string js = "Astroid.collapse_message ('" + m->safe_mid () + "');";
       run_javascript (js);
     }
 
