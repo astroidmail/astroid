@@ -41,6 +41,8 @@ const setFocusAllBut = focused => mid => L.set(
   ],
   focused)
 
+const setExpand      = expanded => mid => L.set(['flags', L.define({}), mid, 'expanded'], expanded)
+
 export const Model = {
   messages: [
     'messages',
@@ -79,6 +81,9 @@ export const Model = {
 
   focus: setFocus(true),
   defocus: setFocus(false),
+
+  expand : setExpand(true),
+  collapse : setExpand(false),
 
   focusAllBut: setFocusAllBut(true),
   defocusAllBut: setFocusAllBut(false)

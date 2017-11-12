@@ -2675,9 +2675,6 @@ namespace Astroid {
             i++;
           }
 
-          if (i >= state[m].elements.size ()) {
-            throw logic_error ("tv: got element beyond elments size for message");
-          }
         } else {
           state[m].current_element = 0;
         }

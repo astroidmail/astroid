@@ -30,6 +30,8 @@ export function init(context) {
     add_message: R.curry(add_message)(context),
     clear_messages: R.curry(clear_messages)(context),
     indent_state: R.curry(indent_state)(context),
+    expand_message : R.curry(expand_message)(context),
+    collapse_message : R.curry(collapse_message)(context),
     remove_message: R.curry(remove_message)(context),
     set_warning: R.curry(set_warning)(context),
     hide_warning: R.curry(hide_warning)(context),
@@ -121,6 +123,26 @@ function clear_messages(context) {
  */
 function indent_state(context, mid, doIndent) {
   log.info('indent_state', ...arguments)
+}
+
+/**
+ *
+ * @param {Astroid.Context} context
+ * @param {String} mid the message id to expand
+ */
+function expand_message(context, mid) {
+  log.info('expand_message', ...arguments)
+  set_expanded (context, mid, true);
+}
+
+/**
+ *
+ * @param {Astroid.Context} context
+ * @param {String} mid the message id to collapse
+ */
+function collapse_message(context, mid) {
+  log.info('collapse_message', ...arguments)
+  set_expanded (context, mid, false);
 }
 
 /**
@@ -286,3 +308,16 @@ function scroll_up() {
   console.log('going... UP')
   window.scrollBy(0, -50)
 }
+
+function set_expanded (context, mid, expand) {
+  const { state } = context
+
+  if (expand) {
+    state.modify(Model.expand(mid))
+  } else {
+    state.modify(Model.collapse(mid))
+  }
+
+  console.log('expand', mid, expand)
+}
+
