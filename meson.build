@@ -31,7 +31,7 @@ boost_po = cc.find_library ('boost_program_options')
 
 gtk     = dependency ('gtk+-3.0')
 gtkmm   = dependency ('gtkmm-3.0')
-webkit  = dependency ('webkitgtk-3.0')
+webkit  = dependency ('webkit2gtk-4.0')
 threads = dependency ('threads')
 
 notmuch = cc.find_library ('notmuch', required : true)
@@ -56,6 +56,10 @@ else
   deps += vte
 endif
 
+if get_option ('debug-webkit')
+  add_global_arguments ('-DDEBUG_WEBKIT', language : 'cpp')
+endif
+
 if get_option ('disable-embedded-editor')
   add_global_arguments ('-DDISABLE_EMBEDDED', language: 'cpp')
 endif
@@ -66,7 +70,7 @@ if get_option ('disable-libsass')
   add_global_arguments ('-DDISABLE_LIBSASS', language : 'cpp')
   css = custom_target ('css',
       output : 'thread-view.css',
-      input :  'ui/thread-view.scss',
+      input :  'ui/thread-view/src/thread-view.scss',
       command : [sassc, '@INPUT@', '@OUTPUT@' ],
       build_by_default : true,
       install : true,
@@ -104,8 +108,6 @@ src = [
     'src/modes/log_view.cc',
     'src/modes/mode.cc',
     'src/modes/thread_view/thread_view.cc',
-    'src/modes/thread_view/web_inspector.cc',
-    'src/modes/thread_view/dom_utils.cc',
     'src/modes/thread_view/theme.cc',
     'src/modes/paned_mode.cc',
     'src/modes/thread_index/thread_index_list_cell_renderer.cc',
@@ -190,14 +192,16 @@ endif
 
 ## Installaing data files
 ui_src = [
-    'ui/thread-view.html',
+    'ui/thread-view/dist/index.html',
+    'ui/thread-view/dist/astroid.js',
+    'ui/thread-view/dist/thread-view.css',
     'ui/edit-message.glade',
     'ui/no-mail.png'
     ]
 
-if not get_option ('disable-libsass')
-  ui_src += 'ui/thread-view.scss'
-endif
+#if not get_option ('disable-libsass')
+  #ui_src += 'ui/thread-view/dist/thread-view.css'
+#endif
 
 install_data (ui_src, install_dir : join_paths(get_option('datadir'), 'astroid', 'ui'))
 

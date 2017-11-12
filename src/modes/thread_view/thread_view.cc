@@ -4,14 +4,18 @@
 # include <vector>
 # include <algorithm>
 # include <chrono>
+# include <mutex>
+# include <condition_variable>
+# include <functional>
 
 # include <gtkmm.h>
-# include <webkit/webkit.h>
+# include <webkit2/webkit2.h>
+# include <JavaScriptCore/JSStringRef.h>
+# include <JavaScriptCore/JSContextRef.h>
 # include <gio/gio.h>
+# include <boost/property_tree/ptree.hpp>
 
 # include "thread_view.hh"
-# include "web_inspector.hh"
-# include "dom_utils.hh"
 # include "theme.hh"
 
 # include "main_window.hh"
@@ -42,6 +46,7 @@
 # include "theme.hh"
 
 using namespace std;
+using boost::property_tree::ptree;
 
 namespace Astroid {
 
@@ -70,98 +75,79 @@ namespace Astroid {
 
     pack_start (scroll, true, true, 0);
 
-    /* set up webkit web view (using C api) */
-    webview = WEBKIT_WEB_VIEW (webkit_web_view_new ());
+    /* WebKit: set up webkit web view */
 
-    /* dpi */
+    /* content manager for adding theme and script */
+    webcontent = webkit_user_content_manager_new ();
+
+    /* add style sheet */
+    WebKitUserStyleSheet * style = webkit_user_style_sheet_new (
+        theme.thread_view_css.c_str(),
+        WEBKIT_USER_CONTENT_INJECT_TOP_FRAME,
+        WEBKIT_USER_STYLE_LEVEL_AUTHOR,
+        NULL, NULL);
+    webkit_user_content_manager_add_style_sheet (webcontent, style);
+
+    /* add javascript library */
     /*
-    WebKitViewportAttributes* attributes = webkit_web_view_get_viewport_attributes (webview);
+    WebKitUserScript * js = webkit_user_script_new (
+        theme.thread_view_js.c_str (),
+        WEBKIT_USER_CONTENT_INJECT_TOP_FRAME,
+        WEBKIT_USER_SCRIPT_INJECT_AT_DOCUMENT_START,
+        NULL, NULL);
+    webkit_user_content_manager_add_script (webcontent, js);
+        */
 
-    gint dpi;
-    gfloat dpr;
-    g_object_get (G_OBJECT (attributes), "device-dpi", &dpi, NULL);
-    g_object_get (G_OBJECT (attributes), "device-pixel-ratio", &dpr, NULL);
+    /* create webview */
+    webview = WEBKIT_WEB_VIEW (webkit_web_view_new_with_user_content_manager (webcontent));
 
-    LOG (debug) << "web: dpi: " << dpi << ", dpr: " << dpr;
-    auto win = get_screen ();
-    double gdpi = win->get_resolution ();
-
-    LOG (debug) << "gdk: dpi: " << gdpi;
-
-    g_object_set (G_OBJECT (attributes), "device-dpi", (int)gdpi, NULL);
-
-    webkit_viewport_attributes_recompute (attributes);
-
-    g_object_get (G_OBJECT (attributes), "device-dpi", &dpi, NULL);
-    g_object_get (G_OBJECT (attributes), "device-pixel-ratio", &dpr, NULL);
-
-    LOG (debug) << "web: dpi: " << dpi << ", dpr: " << dpr;
-
-    bool valid;
-    g_object_get (G_OBJECT (attributes), "valid", &valid, NULL);
-    LOG (debug) << "web: valid: " << valid;
-    */
-
-    websettings = WEBKIT_WEB_SETTINGS (webkit_web_settings_new ());
-    g_object_set (G_OBJECT(websettings),
-        "enable-scripts", TRUE,
-        "enable-java-applet", FALSE,
+    websettings = WEBKIT_SETTINGS (webkit_settings_new_with_settings (
+        "enable-javascript", TRUE,
+        "enable-java", FALSE,
         "enable-plugins", FALSE,
         "auto-load-images", TRUE,
-        "enable-display-of-insecure-content", FALSE,
         "enable-dns-prefetching", FALSE,
         "enable-fullscreen", FALSE,
         "enable-html5-database", FALSE,
         "enable-html5-local-storage", FALSE,
-     /* "enable-mediastream", FALSE, */
         "enable-mediasource", FALSE,
         "enable-offline-web-application-cache", FALSE,
         "enable-page-cache", FALSE,
         "enable-private-browsing", TRUE,
-        "enable-running-of-insecure-content", FALSE,
-        "enable-display-of-insecure-content", FALSE,
         "enable-xss-auditor", TRUE,
         "media-playback-requires-user-gesture", TRUE,
         "enable-developer-extras", TRUE, // TODO: should only enabled conditionally
-
-        NULL);
+        NULL));
 
     webkit_web_view_set_settings (webview, websettings);
 
-
     gtk_container_add (GTK_CONTAINER (scroll.gobj()), GTK_WIDGET(webview));
+
+# ifdef DEBUG_WEBKIT
+    /* Always show the inspector */
+    WebKitWebInspector *inspector = webkit_web_view_get_inspector (WEBKIT_WEB_VIEW(webview));
+    webkit_web_inspector_show (WEBKIT_WEB_INSPECTOR(inspector));
+# endif
 
     scroll.show_all ();
 
     wk_loaded = false;
 
-    g_signal_connect (webview, "notify::load-status",
+    g_signal_connect (webview, "load-changed",
         G_CALLBACK(ThreadView_on_load_changed),
         (gpointer) this );
 
 
     add_events (Gdk::KEY_PRESS_MASK);
 
-    /* set up ThreadViewInspector */
-    thread_view_inspector.setup (this);
-
     /* navigation requests */
-    g_signal_connect (webview, "navigation-policy-decision-requested",
-        G_CALLBACK(ThreadView_navigation_request),
-        (gpointer) this);
+    /* g_signal_connect (webview, "permissions-request", */
+    /*     G_CALLBACK(ThreadView_permission_request), */
+    /*     (gpointer) this); */
 
-    g_signal_connect (webview, "new-window-policy-decision-requested",
-        G_CALLBACK(ThreadView_navigation_request),
+    g_signal_connect (webview, "decide-policy",
+        G_CALLBACK(ThreadView_decide_policy),
         (gpointer) this);
-
-    g_signal_connect (webview, "resource-request-starting",
-        G_CALLBACK(ThreadView_resource_request_starting),
-        (gpointer) this);
-
-    /* scrolled window */
-    auto vadj = scroll.get_vadjustment ();
-    vadj->signal_changed().connect (
-        sigc::mem_fun (this, &ThreadView::on_scroll_vadjustment_changed));
 
     /* load attachment icon */
     ustring icon_string = "mail-attachment-symbolic";
@@ -189,14 +175,8 @@ namespace Astroid {
 
   }
 
-  //
-
   ThreadView::~ThreadView () { //
     LOG (debug) << "tv: deconstruct.";
-    // TODO: possibly still some errors here in paned mode
-    //g_object_unref (webview); // probably garbage collected since it has a parent widget
-    //g_object_unref (websettings);
-    if (container) g_object_unref (container);
   }
 
   void ThreadView::pre_close () {
@@ -206,197 +186,162 @@ namespace Astroid {
 # endif
   }
 
-  //
-
   /* navigation requests  */
-  extern "C" void ThreadView_resource_request_starting (
-      WebKitWebView         *web_view,
-      WebKitWebFrame        *web_frame,
-      WebKitWebResource     *web_resource,
-      WebKitNetworkRequest  *request,
-      WebKitNetworkResponse *response,
-      gpointer               user_data) {
-
-    ((ThreadView*) user_data)->resource_request_starting (
-      web_view,
-      web_frame,
-      web_resource,
-      request,
-      response);
-  }
-
-  void ThreadView::resource_request_starting (
-      WebKitWebView         * /* web_view */,
-      WebKitWebFrame        * /* web_frame */,
-      WebKitWebResource     * /* web_resource */,
-      WebKitNetworkRequest  * request,
-      WebKitNetworkResponse * response) {
-
-    if (response != NULL) {
-      /* a previously handled request */
-      return;
-    }
-
-    const gchar * uri_c = webkit_network_request_get_uri (request);
-    ustring uri (uri_c);
-
-    // prefix of local uris for loading image thumbnails
-    vector<ustring> allowed_uris =
-      {
-        home_uri,
-        "data:image/png;base64",
-        "data:image/jpeg;base64",
-      };
-
-    if (enable_gravatar) {
-      allowed_uris.push_back ("https://www.gravatar.com/avatar/");
-    }
-
-    if (enable_code_prettify) {
-      allowed_uris.push_back (code_prettify_uri.substr (0, code_prettify_uri.rfind ("/")));
-    }
-
-# ifndef DISABLE_PLUGINS
-    /* get plugin allowed uris */
-    std::vector<ustring> puris = plugins->get_allowed_uris ();
-    if (puris.size() > 0) {
-      LOG (debug) << "tv: plugin allowed uris: " << VectorUtils::concat_tags (puris);
-      allowed_uris.insert (allowed_uris.end (), puris.begin (), puris.end ());
-    }
-# endif
-
-    // TODO: show cid type images and inline-attachments
-
-    /* is this request allowed */
-    if (find_if (allowed_uris.begin (), allowed_uris.end (),
-          [&](ustring &a) {
-            return (uri.substr (0, a.length ()) == a);
-          }) != allowed_uris.end ())
-    {
-
-      /* LOG (debug) << "tv: request: allowed: " << uri; */
-      return; // yes
-
-    } else {
-      if (show_remote_images) {
-        // TODO: use an approved-url (like geary) to only allow imgs, not JS
-        //       or other content.
-        LOG (warn) << "tv: remote images allowed, approving _all_ requests: " << uri;
-        return; // yes
-      } else {
-        LOG (debug)<< "tv: request: denied: " << uri;
-        webkit_network_request_set_uri (request, "about:blank"); // no
-      }
-    }
-  }
-
   void ThreadView::reload_images () {
-
-    GError * err = NULL;
-    WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
-
-    for (auto &m : mthread->messages) {
-
-      ustring div_id = "message_" + m->mid;
-      WebKitDOMElement * me = webkit_dom_document_get_element_by_id (d, div_id.c_str());
-
-      WebKitDOMNodeList * imgs = webkit_dom_element_query_selector_all (me, "img", (err = NULL, &err));
-
-      gulong l = webkit_dom_node_list_get_length (imgs);
-      for (gulong i = 0; i < l; i++) {
-
-        WebKitDOMNode * in = webkit_dom_node_list_item (imgs, i);
-        WebKitDOMElement * ine = WEBKIT_DOM_ELEMENT (in);
-
-        if (ine != NULL) {
-          gchar * src = webkit_dom_element_get_attribute (ine, "src");
-          if (src != NULL) {
-            webkit_dom_element_set_attribute (ine, "src", "", (err = NULL, &err));
-            webkit_dom_element_set_attribute (ine, "src", src, (err = NULL, &err));
-          }
-
-          // TODO: cid type images or attachment references are not loaded
-        }
-
-        g_object_unref (in);
-      }
-
-      g_object_unref (imgs);
-      g_object_unref (me);
-    }
-
-    g_object_unref (d);
+    /* TODO: [JS]: Reload all images */
   }
 
-  extern "C" gboolean ThreadView_navigation_request (
+  extern "C" gboolean ThreadView_permission_request (
       WebKitWebView * w,
-      WebKitWebFrame * frame,
-      WebKitNetworkRequest * request,
-      WebKitWebNavigationAction * navigation_action,
-      WebKitWebPolicyDecision * policy_decision,
+      WebKitPermissionRequest * request,
       gpointer user_data) {
 
-    return ((ThreadView*)user_data)->navigation_request (
-        w,
-        frame,
-        request,
-        navigation_action,
-        policy_decision);
+    return ((ThreadView*) user_data)->permission_request (w, request);
   }
 
-  gboolean ThreadView::navigation_request (
+  gboolean ThreadView::permission_request (
       WebKitWebView * /* w */,
-      WebKitWebFrame * /* frame */,
-      WebKitNetworkRequest * request,
-      WebKitWebNavigationAction * navigation_action,
-      WebKitWebPolicyDecision * policy_decision) {
+      WebKitPermissionRequest * request) {
 
-    if (webkit_web_navigation_action_get_reason (navigation_action)
-        == WEBKIT_WEB_NAVIGATION_REASON_LINK_CLICKED) {
+    /* these requests are typically full-screen or location requests */
+    webkit_permission_request_allow (request);
 
-      webkit_web_policy_decision_ignore (policy_decision);
+    return true;
+  }
 
-      const gchar * uri_c = webkit_network_request_get_uri (
-          request );
+  extern "C" gboolean ThreadView_decide_policy (
+      WebKitWebView * w,
+      WebKitPolicyDecision * decision,
+      WebKitPolicyDecisionType decision_type,
+      gpointer user_data) {
 
-      ustring uri (uri_c);
-      LOG (info) << "tv: navigating to: " << uri;
+    return ((ThreadView *) user_data)->decide_policy (w, decision, decision_type);
+  }
 
-      ustring scheme = Glib::uri_parse_scheme (uri);
+  gboolean ThreadView::decide_policy (
+      WebKitWebView * /* w */,
+      WebKitPolicyDecision *   decision,
+      WebKitPolicyDecisionType decision_type)
+  {
 
-      if (scheme == "mailto") {
-
-        uri = uri.substr (scheme.length ()+1, uri.length () - scheme.length()-1);
-        UstringUtils::trim(uri);
-
-        main_window->add_mode (new EditMessage (main_window, uri));
-
-      } else if (scheme == "id" || scheme == "mid" ) {
-        main_window->add_mode (new ThreadIndex (main_window, uri));
-
-      } else if (scheme == "http" || scheme == "https" || scheme == "ftp") {
-        open_link (uri);
-
-      } else {
-
-        LOG (error) << "tv: unknown uri scheme. not opening.";
-      }
-
-      return true;
-
-    } else {
-      LOG (info) << "tv: navigation action: " <<
-        webkit_web_navigation_action_get_reason (navigation_action);
+    switch (decision_type) {
+      case WEBKIT_POLICY_DECISION_TYPE_NAVIGATION_ACTION: // navigate to {{{
+        {
+          WebKitNavigationPolicyDecision * navigation_decision = WEBKIT_NAVIGATION_POLICY_DECISION (decision);
+          WebKitNavigationAction * nav_action = webkit_navigation_policy_decision_get_navigation_action (navigation_decision);
 
 
-      const gchar * uri_c = webkit_network_request_get_uri (
-          request );
+          // TODO: [W2]: should this request be used or ignored? Currently ignoring if we
+          //             handle ourselves.
 
-      ustring uri (uri_c);
-      LOG (info) << "tv: navigating to: " << uri;
+          if (webkit_navigation_action_get_navigation_type (nav_action)
+              == WEBKIT_NAVIGATION_TYPE_LINK_CLICKED) {
+
+            webkit_policy_decision_ignore (decision);
+
+            const gchar * uri_c = webkit_uri_request_get_uri (
+                webkit_navigation_action_get_request (nav_action));
+
+
+            ustring uri (uri_c);
+            LOG (info) << "tv: navigating to: " << uri;
+
+            ustring scheme = Glib::uri_parse_scheme (uri);
+
+            if (scheme == "mailto") {
+
+              uri = uri.substr (scheme.length ()+1, uri.length () - scheme.length()-1);
+              UstringUtils::trim(uri);
+
+              main_window->add_mode (new EditMessage (main_window, uri));
+
+            } else if (scheme == "id" || scheme == "mid" ) {
+              main_window->add_mode (new ThreadIndex (main_window, uri));
+
+            } else if (scheme == "http" || scheme == "https" || scheme == "ftp") {
+              open_link (uri);
+
+            } else {
+
+              LOG (error) << "tv: unknown uri scheme. not opening.";
+            }
+          }
+        } // }}}
+        break;
+
+      case WEBKIT_POLICY_DECISION_TYPE_NEW_WINDOW_ACTION:
+        webkit_policy_decision_ignore (decision);
+        break;
+
+      case WEBKIT_POLICY_DECISION_TYPE_RESPONSE: // {{{
+        {
+          /* request to load any resources or similar */
+          WebKitResponsePolicyDecision * response = WEBKIT_RESPONSE_POLICY_DECISION (decision);
+          WebKitURIRequest * request = webkit_response_policy_decision_get_request (response);
+
+          const gchar * uri_c = webkit_uri_request_get_uri (request);
+          ustring uri (uri_c);
+
+          // prefix of local uris for loading image thumbnails
+          vector<ustring> allowed_uris =
+            {
+              home_uri,
+              "data:image/png;base64",
+              "data:image/jpeg;base64",
+            };
+
+          if (enable_gravatar) {
+            allowed_uris.push_back ("https://www.gravatar.com/avatar/");
+          }
+
+          if (enable_code_prettify) {
+            allowed_uris.push_back (code_prettify_uri.substr (0, code_prettify_uri.rfind ("/")));
+          }
+
+# ifndef DISABLE_PLUGINS
+          /* get plugin allowed uris */
+          std::vector<ustring> puris = plugins->get_allowed_uris ();
+          if (puris.size() > 0) {
+            LOG (debug) << "tv: plugin allowed uris: " << VectorUtils::concat_tags (puris);
+            allowed_uris.insert (allowed_uris.end (), puris.begin (), puris.end ());
+          }
+# endif
+
+          // TODO: show cid type images and inline-attachments
+
+          /* is this request allowed */
+          if (find_if (allowed_uris.begin (), allowed_uris.end (),
+                [&](ustring &a) {
+                  return (uri.substr (0, a.length ()) == a);
+                }) != allowed_uris.end ())
+          {
+
+            /* LOG (debug) << "tv: request: allowed: " << uri; */
+            webkit_policy_decision_use (decision);
+
+          } else {
+            if (show_remote_images) {
+              // TODO: use an approved-url (like geary) to only allow imgs, not JS
+              //       or other content.
+              LOG (warn) << "tv: remote images allowed, approving _all_ requests: " << uri;
+              webkit_policy_decision_use (decision);
+            } else {
+              LOG (debug)<< "tv: request: denied: " << uri;
+              webkit_policy_decision_ignore (decision);
+              /* webkit_network_request_set_uri (request, "about:blank"); // no */
+            }
+          }
+        } // }}}
+        break;
+
+      default:
+        /* webkit_policy_decision_ignore (decision); */
+        /* return true; // stop event */
+        // TODO: [W2] when do we ignore and when do we use?
+        return false;
     }
 
-    return false;
+    return false; // stop event
   }
 
   void ThreadView::open_link (ustring uri) {
@@ -447,50 +392,37 @@ namespace Astroid {
   /* end navigation requests  */
 
   /* message loading  */
-  /* is this callback setup safe?
+  /*
+   * By the C++ standard this callback-setup is not necessarily safe, but it seems
+   * to be for both g++ and clang++.
    *
    * http://stackoverflow.com/questions/2068022/in-c-is-it-safe-portable-to-use-static-member-function-pointer-for-c-api-call
    *
    * http://gtk.10911.n7.nabble.com/Using-g-signal-connect-in-class-td57137.html
    *
-   * to be portable we have to use a free function declared extern "C". a
+   * To be portable we have to use a free function declared extern "C". A
    * static member function is likely to work at least on gcc/g++, but not
    * necessarily elsewhere.
    *
    */
 
   extern "C" bool ThreadView_on_load_changed (
-      GtkWidget *       w,
-      GParamSpec *      p,
-      gpointer          data )
+      WebKitWebView * w,
+      WebKitLoadEvent load_event,
+      gpointer user_data)
   {
-    return ((ThreadView *) data)->on_load_changed (w, p);
+    return ((ThreadView *) user_data)->on_load_changed (w, load_event);
   }
 
   bool ThreadView::on_load_changed (
-      GtkWidget *       /* w */,
-      GParamSpec *      /* p */)
+      WebKitWebView * /* w */,
+      WebKitLoadEvent load_event)
   {
-    WebKitLoadStatus ev = webkit_web_view_get_load_status (webview);
-    LOG (debug) << "tv: on_load_changed: " << ev;
-    switch (ev) {
+    LOG (debug) << "tv: on_load_changed: " << load_event;
+    switch (load_event) {
       case WEBKIT_LOAD_FINISHED:
         LOG (debug) << "tv: load finished.";
         {
-
-          /* load css style */
-          GError *err = NULL;
-          WebKitDOMDocument *d = webkit_web_view_get_dom_document (webview);
-          WebKitDOMElement  *e = webkit_dom_document_create_element (d, theme.STYLE_NAME, &err);
-
-          WebKitDOMText *t = webkit_dom_document_create_text_node
-            (d, theme.thread_view_css.c_str());
-
-          webkit_dom_node_append_child (WEBKIT_DOM_NODE(e), WEBKIT_DOM_NODE(t), (err = NULL, &err));
-
-          WebKitDOMHTMLHeadElement * head = webkit_dom_document_get_head (d);
-          webkit_dom_node_append_child (WEBKIT_DOM_NODE(head), WEBKIT_DOM_NODE(e), (err = NULL, &err));
-
           /* load code_prettify if enabled */
           if (enable_code_prettify) {
             bool only_tags_ok = false;
@@ -513,32 +445,12 @@ namespace Astroid {
             if (only_tags_ok) {
               code_is_on = true;
 
-              WebKitDOMElement * me = webkit_dom_document_create_element (d, "SCRIPT", (err = NULL, &err));
+              // TODO: Load code prettify
 
-              webkit_dom_element_set_attribute (me, "type", "text/javascript",
-                  (err = NULL, &err));
-              webkit_dom_element_set_attribute (me, "src", code_prettify_uri.c_str(),
-                  (err = NULL, &err));
-
-              webkit_dom_node_append_child (WEBKIT_DOM_NODE(head), WEBKIT_DOM_NODE(me), (err = NULL, &err));
-
-
-              g_object_unref (me);
+              /* webkit_dom_element_set_attribute (me, "src", code_prettify_uri.c_str(), */
+              /*     (err = NULL, &err)); */
             }
           }
-
-          /* get container for message divs */
-          container = WEBKIT_DOM_HTML_DIV_ELEMENT(webkit_dom_document_get_element_by_id (d, "message_container"));
-
-          if (container == NULL) {
-            LOG (warn) << "render: could not find container!";
-          }
-
-
-          g_object_unref (d);
-          g_object_unref (e);
-          g_object_unref (t);
-          g_object_unref (head);
 
           /* render */
           wk_loaded = true;
@@ -586,115 +498,16 @@ namespace Astroid {
       if (me == Message::MessageChangedEvent::MESSAGE_TAGS_CHANGED) {
         if (m->in_notmuch && m->tid == thread->thread_id) {
           LOG (debug) << "tv: got message updated.";
-
-          // the message is already refreshed internally
-
-          ustring mid = "message_" + m->mid;
-          WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
-          WebKitDOMElement * div_message = webkit_dom_document_get_element_by_id (d, mid.c_str());
+          // Note that the message has already been refreshed internally
 
           refptr<Message> _m = refptr<Message> (m);
           _m->reference (); // since m is owned by caller
 
-          message_render_tags (_m, div_message);
-          message_update_css_tags (_m, div_message);
-
-          g_object_unref (div_message);
-          g_object_unref (d);
-
+          update_message (_m);
         }
       }
     }
   }
-
-  void ThreadView::message_update_css_tags (refptr<Message> m, WebKitDOMElement * div_message) {
-    /* check for tag changes that control display */
-    GError *err;
-
-    WebKitDOMDOMTokenList * class_list =
-      webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(div_message));
-
-    /* patches may be rendered somewhat differently */
-    if (m->is_patch ()) {
-      if (!webkit_dom_dom_token_list_contains (class_list, "patch", (err = NULL, &err))) {
-        webkit_dom_dom_token_list_add (class_list, "patch",
-            (err = NULL, &err));
-      }
-    } else {
-      webkit_dom_dom_token_list_remove (class_list, "patch",
-          (err = NULL, &err));
-    }
-
-    /* message subject deviates from thread subject */
-    if (m->is_different_subject ()) {
-      if (!webkit_dom_dom_token_list_contains (class_list, "different_subject", (err = NULL, &err))) {
-        webkit_dom_dom_token_list_add (class_list, "different_subject",
-            (err = NULL, &err));
-      }
-    } else {
-      webkit_dom_dom_token_list_remove (class_list, "different_subject",
-          (err = NULL, &err));
-    }
-
-    /* reset notmuch tags */
-    for (unsigned int i = 0; i < webkit_dom_dom_token_list_get_length (class_list); i++)
-    {
-      const char * _t = webkit_dom_dom_token_list_item (class_list, i);
-      ustring t (_t);
-
-      if (t.find ("nm-", 0) != std::string::npos) {
-        webkit_dom_dom_token_list_remove (class_list, _t, (err = NULL, &err));
-      }
-    }
-
-    for (ustring t : m->tags) {
-      t = UstringUtils::replace (t, "/", "-");
-      t = UstringUtils::replace (t, ".", "-");
-      t = Glib::Markup::escape_text (t);
-
-      t = "nm-" + t;
-      webkit_dom_dom_token_list_add (class_list, t.c_str (), (err = NULL, &err));
-    }
-
-    g_object_unref (class_list);
-  }
-
-  void ThreadView::message_render_tags (refptr<Message> m, WebKitDOMElement * div_message) {
-    if (m->in_notmuch) {
-      unsigned char cv[] = { 0xff, 0xff, 0xff };
-
-      ustring tags_s;
-
-# ifndef DISABLE_PLUGINS
-      if (!plugins->format_tags (m->tags, "#ffffff", false, tags_s)) {
-#  endif
-
-        tags_s = VectorUtils::concat_tags_color (m->tags, false, 0, cv);
-
-# ifndef DISABLE_PLUGINS
-      }
-# endif
-
-      GError *err;
-
-      WebKitDOMHTMLElement * tags = DomUtils::select (
-          WEBKIT_DOM_NODE (div_message),
-          ".header_container .tags");
-
-      webkit_dom_html_element_set_inner_html (tags, tags_s.c_str (), (err = NULL, &err));
-
-      g_object_unref (tags);
-
-      tags = DomUtils::select (
-          WEBKIT_DOM_NODE (div_message),
-          ".header_container .header div#Tags .value");
-
-      webkit_dom_html_element_set_inner_html (tags, tags_s.c_str (), (err = NULL, &err));
-
-      g_object_unref (tags);
-    }
-  }
-
   /* end message loading  */
 
   /* rendering  */
@@ -702,8 +515,6 @@ namespace Astroid {
   /* general message adding and rendering  */
   void ThreadView::render () {
     LOG (info) << "render: loading html..";
-    if (container) g_object_unref (container);
-    container = NULL;
     wk_loaded = false;
 
     /* home uri used for thread view - request will be relative this
@@ -712,16 +523,18 @@ namespace Astroid {
         astroid->standard_paths ().config_dir.c_str(),
         UstringUtils::random_alphanumeric (120));
 
-    webkit_web_view_load_html_string (webview, theme.thread_view_html.c_str (), home_uri.c_str());
-    ready     = false;
+    ready = false;
+    webkit_web_view_load_html (webview, theme.thread_view_html.c_str (), home_uri.c_str());
   }
 
   void ThreadView::render_messages () {
     LOG (debug) << "render: html loaded, building messages..";
-    if (!container || !wk_loaded) {
-      LOG (error) << "tv: div container and web kit not loaded.";
+    if (!wk_loaded) {
+      LOG (error) << "tv: web kit not loaded.";
       return;
     }
+
+    run_javascript (theme.thread_view_js.c_str());
 
     /* set message state vector */
     state.clear ();
@@ -731,52 +544,39 @@ namespace Astroid {
               mthread->messages.end(),
               [&](refptr<Message> m) {
                 add_message (m);
-                state.insert (std::pair<refptr<Message>, MessageState> (m, MessageState ()));
-
-                if (!edit_mode) {
-                  m->signal_message_changed ().connect (
-                      sigc::mem_fun (this, &ThreadView::on_message_changed));
-                }
               });
 
     update_all_indent_states ();
 
     if (!focused_message) {
-      if (!candidate_startup) {
-        LOG (debug) << "tv: no message expanded, showing newest message.";
+      LOG (debug) << "tv: no message focused, showing newest message.";
 
-        focused_message = *max_element (
-            mthread->messages.begin (),
-            mthread->messages.end (),
-            [](refptr<Message> &a, refptr<Message> &b)
-              {
-                return ( a->time < b->time );
-              });
+      focused_message = *max_element (
+          mthread->messages.begin (),
+          mthread->messages.end (),
+          [](refptr<Message> &a, refptr<Message> &b)
+            {
+              return ( a->time < b->time );
+            });
 
-        toggle_hidden (focused_message, ToggleShow);
+      expand (focused_message);
 
-      } else {
-        focused_message = candidate_startup;
-      }
+      focus_message (focused_message);
     }
-
-    bool sc = scroll_to_message (focused_message, true);
 
     emit_ready ();
 
-    if (sc) {
-      if (!unread_setup) {
-        /* there's potentially a small chance that scroll_to_message gets an
-         * on_scroll_vadjustment_change emitted before we get here. probably not, since
-         * it is the same thread - but still.. */
-        unread_setup = true;
+    if (!unread_setup) {
+      /* there's potentially a small chance that scroll_to_message gets an
+       * on_scroll_vadjustment_change emitted before we get here. probably not, since
+       * it is the same thread - but still.. */
+      unread_setup = true;
 
-        if (unread_delay > 0) {
-          Glib::signal_timeout ().connect (
-              sigc::mem_fun (this, &ThreadView::unread_check), std::max (80., (unread_delay * 1000.) / 2));
-        } else {
-          unread_check ();
-        }
+      if (unread_delay > 0) {
+        Glib::signal_timeout ().connect (
+            sigc::mem_fun (this, &ThreadView::unread_check), std::max (80., (unread_delay * 1000.) / 2));
+      } else {
+        unread_check ();
       }
     }
   }
@@ -787,151 +587,129 @@ namespace Astroid {
     }
   }
 
+  // TODO: [JS] [REIMPLEMENT]
   void ThreadView::update_indent_state (refptr<Message> m) {
+    string js = "Astroid.indent_state ('" + m->safe_mid () + "'," + ( indent_messages ? string("true") : string("false")) + ");";
 
-    ustring mid = "message_" + m->mid;
-    GError * err = NULL;
-
-    WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
-    WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
-
-    /* set indentation based on level */
-    if (indent_messages && m->level > 0) {
-      webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (e),
-          "style", ustring::compose ("margin-left: %1px", int(m->level * INDENT_PX)).c_str(), (err = NULL, &err));
-    } else {
-      webkit_dom_element_remove_attribute (WEBKIT_DOM_ELEMENT (e), "style");
-    }
-
-    g_object_unref (e);
-    g_object_unref (d);
-
+    run_javascript (js);
   }
 
   void ThreadView::add_message (refptr<Message> m) {
     LOG (debug) << "tv: adding message: " << m->mid;
 
-    ustring div_id = "message_" + m->mid;
-
-    WebKitDOMNode * insert_before = webkit_dom_node_get_last_child (
-        WEBKIT_DOM_NODE (container));
-
-    WebKitDOMHTMLElement * div_message = DomUtils::make_message_div (webview);
-
-    GError * err = NULL;
-    webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT(div_message),
-        "id", div_id.c_str(), &err);
-
-    /* insert message div */
-    webkit_dom_node_insert_before (WEBKIT_DOM_NODE(container),
-        WEBKIT_DOM_NODE(div_message),
-        insert_before,
-        (err = NULL, &err));
-
-    set_message_html (m, div_message);
-
-    /* insert mime messages */
-    if (!m->missing_content) {
-      insert_mime_messages (m, div_message);
-    }
-
-    /* insert attachments */
-    if (!m->missing_content) {
-      bool has_attachment = insert_attachments (m, div_message);
-
-      /* add attachment icon */
-      if (has_attachment) {
-        set_attachment_icon (m, div_message);
-      }
-    }
-
-    /* marked */
-    load_marked_icon (m, div_message);
+    state.insert (std::pair<refptr<Message>, MessageState> (m, MessageState ()));
 
     if (!edit_mode) {
-      /* optionally hide / collapse the message */
-      if (!(m->has_tag("unread") || (expand_flagged && m->has_tag("flagged")))) {
-
-        /* hide message */
-        WebKitDOMDOMTokenList * class_list =
-          webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(div_message));
-
-        webkit_dom_dom_token_list_add (class_list, "hide",
-            (err = NULL, &err));
-
-        g_object_unref (class_list);
-      } else {
-        if (!candidate_startup)
-          candidate_startup = m;
-      }
-
-      /* focus first unread message */
-      if (!focused_message) {
-        if (m->has_tag ("unread")) {
-          focused_message = m;
-        }
-      }
-    } else {
-      focused_message = m;
+      m->signal_message_changed ().connect (
+          sigc::mem_fun (this, &ThreadView::on_message_changed));
     }
 
-    g_object_unref (insert_before);
-    g_object_unref (div_message);
-  } //
+    ptree mjs = build_message (m); // this populates the MessageState with elements.
 
-  /* main message generation  */
-  void ThreadView::set_message_html (
-      refptr<Message> m,
-      WebKitDOMHTMLElement * div_message)
-  {
-    GError *err;
+    std::stringstream js;
+    js << "Astroid.add_message(";
+    write_json (js, mjs);
+    js << ");";
 
-    /* load message into div */
-    ustring header;
-    WebKitDOMHTMLElement * div_email_container =
-      DomUtils::select (WEBKIT_DOM_NODE(div_message), "div.email_container");
+    run_javascript (js.str ());
+  }
 
-    /* build header */
-    Address sender (m->sender);
-    insert_header_address (header, "From", sender, true);
+  void ThreadView::update_message (refptr<Message> m) {
+    LOG (debug) << "tv: updating message: " << m->mid;
 
-    if (m->reply_to.size () > 0) {
-      Address reply_to (m->reply_to);
-      if (reply_to.email () != sender.email())
-        insert_header_address (header, "Reply-To", reply_to, false);
+    // reset element list
+    state[m].elements.clear ();
+    ptree mjs = build_message (m); // this populates the MessageState with elements.
+    state[m].current_element = std::max((unsigned int) (state[m].elements.size () - 1), state[m].current_element);
+
+    std::stringstream js;
+    js << "Astroid.add_message(";
+    write_json (js, mjs);
+    js << ");";
+
+    run_javascript (js.str ());
+
+    // if the updated message was focused, the currently focused element may
+    // have changed.
+    if (m == focused_message)
+      focus_element (focused_message, state[focused_message].current_element);
+  }
+
+  void ThreadView::remove_message (refptr<Message> m) {
+    LOG (debug) << "tv: remove message: " << m->mid;
+    state.erase (m);
+
+    // TODO: escape message id EVERYWHERE!!
+    // JS: Return new focused element.
+    std::string js = "Astroid.remove_message (" + m->safe_mid () + ");";
+    webkit_web_view_run_javascript (webview, js.c_str (), NULL, NULL, NULL);
+
+    run_javascript (js, std::bind (&ThreadView::focus_change_cb, this, std::placeholders::_1));
+  }
+
+  ptree ThreadView::build_message (refptr<Message> m) { // {{{
+    ptree mjs;
+    mjs.put ("id", m->safe_mid ());
+
+    ptree from_node; // list of objects
+    {
+      Address sender (m->sender);
+      ptree contact_node; // Contact object
+      contact_node.put ("address", sender.email ());
+      contact_node.put ("name", sender.fail_safe_name ());
+      Utils::extend_ptree (from_node, contact_node);
     }
+    mjs.add_child("from", from_node);
 
-    insert_header_address_list (header, "To", AddressList(m->to()), false);
-
-    if (internet_address_list_length (m->cc()) > 0) {
-      insert_header_address_list (header, "Cc", AddressList(m->cc()), false);
+    ptree to_node; // list of objects
+    for (Address &recipient: AddressList(m->to()).addresses) {
+      ptree contact_node; // Contact object
+      contact_node.put ("address", recipient.email ());
+      contact_node.put ("name", recipient.fail_safe_name ());
+      Utils::extend_ptree (to_node, contact_node);
     }
+    mjs.add_child("to", to_node);
 
-    if (internet_address_list_length (m->bcc()) > 0) {
-      insert_header_address_list (header, "Bcc", AddressList(m->bcc()), false);
+    ptree cc_node; // list of objects
+    for (Address &recipient: AddressList(m->cc()).addresses) {
+      ptree contact_node; // Contact object
+      contact_node.put ("address", recipient.email ());
+      contact_node.put ("name", recipient.fail_safe_name ());
+      Utils::extend_ptree (cc_node, contact_node);
     }
+    mjs.add_child("cc", cc_node);
 
-    insert_header_date (header, m);
-
-    if (m->subject.length() > 0) {
-      insert_header_row (header, "Subject", m->subject, false);
-
-      WebKitDOMHTMLElement * subject = DomUtils::select (
-          WEBKIT_DOM_NODE (div_message),
-          ".header_container .subject");
-
-      ustring s = Glib::Markup::escape_text(m->subject);
-      if (static_cast<int>(s.size()) > MAX_PREVIEW_LEN)
-        s = s.substr(0, MAX_PREVIEW_LEN - 3) + "...";
-
-      webkit_dom_html_element_set_inner_html (subject, s.c_str(), (err = NULL, &err));
-
-      g_object_unref (subject);
+    ptree bcc_node; // list of objects
+    for (Address &recipient: AddressList(m->bcc()).addresses) {
+      ptree contact_node; // Contact object
+      contact_node.put ("address", recipient.email ());
+      contact_node.put ("name", recipient.fail_safe_name ());
+      Utils::extend_ptree (bcc_node, contact_node);
     }
+    mjs.add_child("bcc", bcc_node);
 
+    mjs.put("date.pretty", m->pretty_date ());
+    mjs.put("date.verbose",  m->pretty_verbose_date (true));
+    mjs.put("date.timestamp", "");
+
+    mjs.put("subject", m->subject);
+
+    ptree tags_node;
     if (m->in_notmuch) {
-      header += create_header_row ("Tags", "", false, false, true);
+      for (ustring &tag : m->tags) {
+        ptree tag_node;
+        tag_node.put ("tag", tag);
+
+        unsigned char cv[] = { 0xff, 0xff, 0xff }; // assuming tag-background is white
+        auto clrs = Utils::get_tag_color (tag, cv);
+        tag_node.put ("fg", clrs.first);
+        tag_node.put ("bg", clrs.second);
+
+        Utils::extend_ptree (tags_node, tag_node);
+      }
     }
+    mjs.add_child ("tags", tags_node);
+
 
     /* avatar */
     {
@@ -949,122 +727,95 @@ namespace Astroid {
         }
       }
 
-      if (!uri.empty ()) {
-        WebKitDOMHTMLImageElement * av = WEBKIT_DOM_HTML_IMAGE_ELEMENT (
-            DomUtils::select (
-            WEBKIT_DOM_NODE (div_message),
-            ".avatar"));
-
-        webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (av), "src",
-            uri.c_str (),
-            (err = NULL, &err));
-
-        g_object_unref (av);
-      }
+      mjs.put("gravatar", uri);
     }
 
-    /* insert header html*/
-    WebKitDOMHTMLElement * table_header =
-      DomUtils::select (WEBKIT_DOM_NODE(div_email_container),
-          ".header_container .header");
+    mjs.put ("focused", false);
+    mjs.put ("missing_content", m->missing_content);
+    mjs.put ("patch", m->is_patch ());
+    mjs.put ("level", m->level);
+    mjs.put ("in-reply-to", m->inreplyto);
 
-    webkit_dom_html_element_set_inner_html (
-        table_header,
-        header.c_str(),
-        (err = NULL, &err));
+    /* preview */
+    ustring bp = m->viewable_text (false, false);
+    if (static_cast<int>(bp.size()) > MAX_PREVIEW_LEN)
+      bp = bp.substr(0, MAX_PREVIEW_LEN - 3) + "...";
 
-    message_render_tags (m, WEBKIT_DOM_ELEMENT(div_message));
-    message_update_css_tags (m, WEBKIT_DOM_ELEMENT(div_message));
+    while (true) {
+      size_t i = bp.find ("<br>");
 
-    /* if message is missing body, set warning and don't add any content */
+      if (i == ustring::npos) break;
 
-    WebKitDOMHTMLElement * span_body =
-      DomUtils::select (WEBKIT_DOM_NODE(div_email_container), ".body");
-
-    WebKitDOMHTMLElement * preview = DomUtils::select (
-        WEBKIT_DOM_NODE (div_message),
-        ".header_container .preview");
-
-    {
-      if (!edit_mode &&
-           any_of (Db::draft_tags.begin (),
-                   Db::draft_tags.end (),
-                   [&](ustring t) {
-                     return m->has_tag (t);
-                   }))
-      {
-
-        /* set warning */
-        set_warning (m, "This message is a draft, edit it with E or delete with D.");
-
-      }
+      bp.erase (i, 4);
     }
 
-    if (m->missing_content) {
-      /* set preview */
-      webkit_dom_html_element_set_inner_html (preview, "<i>Message content is missing.</i>", (err = NULL, &err));
+    bp = Glib::Markup::escape_text (bp);
+    mjs.put("preview", bp);
 
-      /* set warning */
-      set_warning (m, "The message file is missing, only fields cached in the notmuch database are shown. Most likely your database is out of sync.");
+    /* building body */
+    ptree body = build_mime_tree (m, m->root, true);
+    mjs.add_child ("body", body);
 
-      /* add an explenation to the body */
-      GError *err;
+    /* add mime messages */
+    ptree mime_messages;
+    for (refptr<Chunk> &c : m->mime_messages ()) {
+      ptree message;
 
-      WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
-      WebKitDOMHTMLElement * body_container =
-        DomUtils::clone_select (WEBKIT_DOM_NODE(d), "#body_template");
+      message.put ("filename", c->get_filename ());
+      message.put ("size", Utils::format_size(c->get_file_size ()));
 
-      webkit_dom_element_remove_attribute (WEBKIT_DOM_ELEMENT (body_container),
-          "id");
+      /* add signature and encryption status */
+      message.put ("signed", c->issigned);
+      if (c->issigned)
+        message.add_child ("signature", get_signature_state (c));
 
-      webkit_dom_html_element_set_inner_html (
-          body_container,
-          "<i>Message content is missing.</i>",
-          (err = NULL, &err));
+      message.put ("encrypted", c->isencrypted);
+      if (c->isencrypted)
+        message.add_child ("encryption", get_encryption_state (c));
 
-      webkit_dom_node_append_child (WEBKIT_DOM_NODE (span_body),
-          WEBKIT_DOM_NODE (body_container), (err = NULL, &err));
+      MessageState::Element e (MessageState::ElementType::MimeMessage, c->id);
+      state[m].elements.push_back (e);
 
-      g_object_unref (body_container);
-      g_object_unref (d);
+      message.put ("eid", e.id);
 
-    } else {
-
-      /* build message body */
-      create_message_part_html (m, m->root, span_body, true);
-
-      /* preview */
-      LOG (debug) << "tv: make preview..";
-
-      ustring bp = m->viewable_text (false, false);
-      if (static_cast<int>(bp.size()) > MAX_PREVIEW_LEN)
-        bp = bp.substr(0, MAX_PREVIEW_LEN - 3) + "...";
-
-      while (true) {
-        size_t i = bp.find ("<br>");
-
-        if (i == ustring::npos) break;
-
-        bp.erase (i, 4);
-      }
-
-      bp = Glib::Markup::escape_text (bp);
-
-      webkit_dom_html_element_set_inner_html (preview, bp.c_str(), (err = NULL, &err));
+      LOG (debug) << "tv: added mime message: " << e.id;
+      Utils::extend_ptree (mime_messages, message);
     }
+    mjs.add_child ("mime_messages", mime_messages);
 
-    g_object_unref (preview);
-    g_object_unref (span_body);
-    g_object_unref (table_header);
-  } //
+    /* add attachments */
+    ptree attachments;
+    for (refptr<Chunk> &c : m->attachments ()) {
+      ptree attachment;
+      attachment.put ("filename", c->get_filename ());
+      attachment.put ("size", Utils::format_size (c->get_file_size ()));
+      attachment.put ("thumbnail", get_attachment_thumbnail (c));
 
-  /* generating message parts  */
-  void ThreadView::create_message_part_html (
-      refptr<Message> message,
-      refptr<Chunk> c,
-      WebKitDOMHTMLElement * span_body,
-      bool /* check_siblings */)
-  {
+      refptr<Glib::ByteArray> attachment_data = c->contents ();
+
+      /* add signature and encryption status */
+      attachment.put ("signed", c->issigned);
+      if (c->issigned)
+        attachment.add_child ("signature", get_signature_state (c));
+
+      attachment.put ("encrypted", c->isencrypted);
+      if (c->isencrypted)
+        attachment.add_child ("encryption", get_encryption_state (c));
+
+      MessageState::Element e (MessageState::ElementType::Attachment, c->id);
+      state[m].elements.push_back (e);
+
+      attachment.put ("eid", e.id);
+
+      LOG (debug) << "tv: added attachment: " << e.id;
+      Utils::extend_ptree (attachments, attachment);
+    }
+    mjs.add_child ("attachments", attachments);
+
+    return mjs;
+  } // }}}
+
+  ptree ThreadView::build_mime_tree (refptr<Message> m, refptr<Chunk> c, bool root) { // {{{
 
     ustring mime_type;
     if (c->content_type) {
@@ -1076,329 +827,287 @@ namespace Astroid {
     LOG (debug) << "create message part: " << c->id << " (siblings: " << c->siblings.size() << ") (kids: " << c->kids.size() << ")" <<
       " (attachment: " << c->attachment << ")" << " (viewable: " << c->viewable << ")" << " (mimetype: " << mime_type << ")";
 
-    if (c->attachment) return;
+    ptree part;
+    part.put ("mime_type", "text/plain");
+    part.put ("preferred", true);
+    part.put ("encrypted", false);
+    part.put ("signed", false);
+    part.put ("content", "");
+    part.put ("sibling", !c->siblings.empty ());
+    part.add_child ("children", ptree());
 
-    // TODO: redundant sibling checking
+    /*
+     * this should not happen on the root part, but a broken message may be constructed
+     * in such a way.
+     */
+    if (root && c->attachment) {
+      /* return empty root part */
+      return part;
+    } else if (c->attachment) {
+      return ptree ();
+    }
 
-    /* check if we're the preferred sibling */
-    bool use = false;
 
-    if (c->siblings.size() >= 1) {
-      /* todo: use last preferred sibling */
-      if (c->preferred) {
-        use = true;
-      } else {
-        use = false;
+    if (c->viewable) {
+      part.put ("mime_type", mime_type);
+      part.put ("preferred", c->preferred);
+
+      part.put ("signed", c->issigned);
+      if (c->issigned)
+        part.add_child ("signature", get_signature_state (c));
+
+      part.put ("encrypted", c->isencrypted);
+      if (c->isencrypted)
+        part.add_child ("encryption", get_encryption_state (c));
+
+      /* TODO: filter_code_tags */
+      part.put ("content", c->viewable_text (mime_type == "text/plain", true));
+
+      /* make element */
+      MessageState::Element e (MessageState::ElementType::Part, c->id);
+      state[m].elements.push_back (e);
+
+      part.put ("eid", e.id);
+
+      LOG (debug) << "tv: added part: " << e.id;
+    }
+
+    /* recurse into children after first part so that we get the correct order
+     * on elements */
+
+    ptree children;
+
+    for (auto &k : c->kids) {
+      ptree child = build_mime_tree (m, k, false);
+      if (!child.empty ()) {
+        Utils::extend_ptree (children, child);
       }
+    }
+
+    if (c->viewable) {
+
+      part.put_child ("children", children);
+
     } else {
-      use = true;
+      /*
+       * we flatten the structure, replacing empty wrappers with an array of
+       * their children.
+       */
+
+      part = children;
     }
 
-    if (use) {
-      if (c->viewable && c->preferred) {
-        create_body_part (message, c, span_body);
-      } else if (c->viewable) {
-        create_sibling_part (message, c, span_body);
-      }
+    return part;
+  } // }}}
 
-      for (auto &k: c->kids) {
-        create_message_part_html (message, k, span_body, true);
-      }
-    } else {
-      create_sibling_part (message, c, span_body);
-    }
-  }
+  ptree ThreadView::get_encryption_state (refptr<Chunk> c) { // {{{
+    refptr<Crypto> cr = c->crypt;
 
-  void ThreadView::create_body_part (
-      refptr<Message> message,
-      refptr<Chunk> c,
-      WebKitDOMHTMLElement * span_body)
-  {
-    // <span id="body_template" class="body_part"></span>
+    ptree encryption;
+    encryption.put ("decrypted", cr->decrypted);
 
-    LOG (debug) << "create body part: " << c->id;
+    ptree recipients;
 
-    GError *err;
+    if (cr->decrypted) {
+      GMimeCertificateList * rlist = cr->rlist;
+      for (int i = 0; i < g_mime_certificate_list_length (rlist); i++) {
 
-    WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
-    WebKitDOMHTMLElement * body_container =
-      DomUtils::clone_select (WEBKIT_DOM_NODE(d), "#body_template");
+        GMimeCertificate * ce = g_mime_certificate_list_get_certificate (rlist, i);
 
-    webkit_dom_element_remove_attribute (WEBKIT_DOM_ELEMENT (body_container),
-        "id");
+        const char * c = NULL;
+        ustring fp = (c = g_mime_certificate_get_fingerprint (ce), c ? c : "");
+        ustring nm = (c = g_mime_certificate_get_name (ce), c ? c : "");
+        ustring em = (c = g_mime_certificate_get_email (ce), c ? c : "");
+        ustring ky = (c = g_mime_certificate_get_key_id (ce), c ? c : "");
 
-    ustring body = c->viewable_text (true, true);
+        ptree _r;
+        _r.put ("name", nm);
+        _r.put ("email", em);
+        _r.put ("key", ky);
 
-    if (code_is_on) {
-      if (message->is_patch ()) {
-        LOG (debug) << "tv: message is patch, syntax highlighting.";
-        body.insert (0, code_start_tag);
-        body.insert (body.length()-1, code_stop_tag);
-
-      } else {
-        filter_code_tags (body);
+        Utils::extend_ptree (recipients, _r);
       }
     }
 
-    webkit_dom_html_element_set_inner_html (
-        body_container,
-        body.c_str(),
-        (err = NULL, &err));
+    encryption.put_child ("recipients", recipients);
 
-    /* check encryption */
-    //
-    //  <div id="encrypt_template" class=encrypt_container">
-    //      <div class="message"></div>
-    //  </div>
-    if (c->isencrypted || c->issigned) {
-      WebKitDOMHTMLElement * encrypt_container =
-        DomUtils::clone_select (WEBKIT_DOM_NODE(d), "#encrypt_template");
+    return encryption;
+  } // }}}
 
-      webkit_dom_element_remove_attribute (WEBKIT_DOM_ELEMENT (encrypt_container),
-          "id");
+  ptree ThreadView::get_signature_state (refptr<Chunk> c) { // {{{
+    ptree signature;
 
-      // add to message state
-      MessageState::Element e (MessageState::ElementType::Encryption, c->id);
-      state[message].elements.push_back (e);
-      LOG (debug) << "tv: added encrypt: " << c->id;
+    refptr<Crypto> cr = c->crypt;
 
-      webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (encrypt_container),
-        "id", e.element_id().c_str(),
-        (err = NULL, &err));
+    signature.put ("verified", cr->verified);
 
-      WebKitDOMDOMTokenList * class_list_e =
-        webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(encrypt_container));
+    ptree signatures;
 
+    for (int i = 0; i < g_mime_signature_list_length (cr->slist); i++) {
+      GMimeSignature * s = g_mime_signature_list_get_signature (cr->slist, i);
+      GMimeCertificate * ce = NULL;
+      if (s) ce = g_mime_signature_get_certificate (s);
 
+      ptree _sign;
+      _sign.add ("name", "");
+      _sign.add ("email", "");
+      _sign.add ("key", "");
+      _sign.add ("status", "");
+      _sign.add ("trust", "");
 
-      ustring content = "";
+      ptree sig_errors;
 
-      ustring sign_string = "";
-      ustring enc_string  = "";
+      ustring nm, em, ky;
+      ustring gd = "";
 
-      vector<ustring> all_sig_errors;
+      if (ce) {
+        const char * c = NULL;
+        nm = (c = g_mime_certificate_get_name (ce), c ? c : "");
+        em = (c = g_mime_certificate_get_email (ce), c ? c : "");
+        ky = (c = g_mime_certificate_get_key_id (ce), c ? c : "");
 
-      if (c->issigned) {
-
-        refptr<Crypto> cr = c->crypt;
-
-        if (cr->verified) {
-          sign_string += "<span class=\"header\">Signature verification succeeded.</span>";
-        } else {
-          sign_string += "<span class=\"header\">Signature verification failed!</span>";
-        }
-
-        for (int i = 0; i < g_mime_signature_list_length (cr->slist); i++) {
-          GMimeSignature * s = g_mime_signature_list_get_signature (cr->slist, i);
-          GMimeCertificate * ce = NULL;
-          if (s) ce = g_mime_signature_get_certificate (s);
-
-          ustring nm, em, ky;
-          ustring gd = "";
-          ustring err = "";
-          vector<ustring> sig_errors;
-
-          if (ce) {
-            const char * c = NULL;
-            nm = (c = g_mime_certificate_get_name (ce), c ? c : "");
-            em = (c = g_mime_certificate_get_email (ce), c ? c : "");
-            ky = (c = g_mime_certificate_get_key_id (ce), c ? c : "");
-
+        _sign.put ("name", nm);
+        _sign.put ("email", em);
+        _sign.put ("key", ky);
 
 # if (GMIME_MAJOR_VERSION < 3)
-            switch (g_mime_signature_get_status (s)) {
-              case GMIME_SIGNATURE_STATUS_GOOD:
-                gd = "Good";
-                break;
+        switch (g_mime_signature_get_status (s)) {
+          case GMIME_SIGNATURE_STATUS_GOOD:
+            gd = "good";
+            break;
 
-              case GMIME_SIGNATURE_STATUS_BAD:
-                gd = "Bad";
-                // fall through
+          case GMIME_SIGNATURE_STATUS_BAD:
+            gd = "bad";
+            // fall through
 
-              case GMIME_SIGNATURE_STATUS_ERROR:
-                if (gd.empty ()) gd = "Erroneous";
+          case GMIME_SIGNATURE_STATUS_ERROR:
+            if (gd.empty ()) gd = "erroneous";
 
-                GMimeSignatureError e = g_mime_signature_get_errors (s);
-                if (e & GMIME_SIGNATURE_ERROR_EXPSIG)
-                  sig_errors.push_back ("expired");
-                if (e & GMIME_SIGNATURE_ERROR_NO_PUBKEY)
-                  sig_errors.push_back ("no-pub-key");
-                if (e & GMIME_SIGNATURE_ERROR_EXPKEYSIG)
-                  sig_errors.push_back ("expired-key-sig");
-                if (e & GMIME_SIGNATURE_ERROR_REVKEYSIG)
-                  sig_errors.push_back ("revoked-key-sig");
-                if (e & GMIME_SIGNATURE_ERROR_UNSUPP_ALGO)
-                  sig_errors.push_back ("unsupported-algo");
-                if (!sig_errors.empty ()) {
-                  err = "[Error: " + VectorUtils::concat (sig_errors, ",") + "]";
-                }
-                break;
+            GMimeSignatureError e = g_mime_signature_get_errors (s);
+            if (e & GMIME_SIGNATURE_ERROR_EXPSIG)
+              Utils::extend_ptree (sig_errors, "expired");
+            if (e & GMIME_SIGNATURE_ERROR_NO_PUBKEY)
+              Utils::extend_ptree (sig_errors, "no-pub-key");
+            if (e & GMIME_SIGNATURE_ERROR_EXPKEYSIG)
+              Utils::extend_ptree (sig_errors, "expired-key-sig");
+            if (e & GMIME_SIGNATURE_ERROR_REVKEYSIG)
+              Utils::extend_ptree (sig_errors, "revoked-key-sig");
+            if (e & GMIME_SIGNATURE_ERROR_UNSUPP_ALGO)
+              Utils::extend_ptree (sig_errors, "unsupported-algo");
+            break;
 # else
-            GMimeSignatureStatus stat = g_mime_signature_get_status (s);
-            if (g_mime_signature_status_good (stat)) {
-                gd = "Good";
-            } else if (g_mime_signature_status_bad (stat) || g_mime_signature_status_error (stat)) {
+        GMimeSignatureStatus stat = g_mime_signature_get_status (s);
+        if (g_mime_signature_status_good (stat)) {
+            gd = "good";
+        } else if (g_mime_signature_status_bad (stat) || g_mime_signature_status_error (stat)) {
 
-              if (g_mime_signature_status_bad (stat)) gd = "Bad";
-              else gd = "Erroneous";
+          if (g_mime_signature_status_bad (stat)) gd = "bad";
+          else gd = "erroneous";
 
-              if (stat & GMIME_SIGNATURE_STATUS_KEY_REVOKED) sig_errors.push_back ("revoked-key");
-              if (stat & GMIME_SIGNATURE_STATUS_KEY_EXPIRED) sig_errors.push_back ("expired-key");
-              if (stat & GMIME_SIGNATURE_STATUS_SIG_EXPIRED) sig_errors.push_back ("expired-sig");
-              if (stat & GMIME_SIGNATURE_STATUS_KEY_MISSING) sig_errors.push_back ("key-missing");
-              if (stat & GMIME_SIGNATURE_STATUS_CRL_MISSING) sig_errors.push_back ("crl-missing");
-              if (stat & GMIME_SIGNATURE_STATUS_CRL_TOO_OLD) sig_errors.push_back ("crl-too-old");
-              if (stat & GMIME_SIGNATURE_STATUS_BAD_POLICY)  sig_errors.push_back ("bad-policy");
-              if (stat & GMIME_SIGNATURE_STATUS_SYS_ERROR)   sig_errors.push_back ("sys-error");
-              if (stat & GMIME_SIGNATURE_STATUS_TOFU_CONFLICT) sig_errors.push_back ("tofu-conflict");
-
-              if (!sig_errors.empty ()) {
-                err = "[Error: " + VectorUtils::concat (sig_errors, ",") + "]";
-              }
+          if (stat & GMIME_SIGNATURE_STATUS_KEY_REVOKED)
+            Utils::extend_ptree (sig_errors, "revoked-key");
+          if (stat & GMIME_SIGNATURE_STATUS_KEY_EXPIRED)
+            Utils::extend_ptree (sig_errors, "expired-key");
+          if (stat & GMIME_SIGNATURE_STATUS_SIG_EXPIRED)
+            Utils::extend_ptree (sig_errors, "expired-sig");
+          if (stat & GMIME_SIGNATURE_STATUS_KEY_MISSING)
+            Utils::extend_ptree (sig_errors, "key-missing");
+          if (stat & GMIME_SIGNATURE_STATUS_CRL_MISSING)
+            Utils::extend_ptree (sig_errors, "crl-missing");
+          if (stat & GMIME_SIGNATURE_STATUS_CRL_TOO_OLD)
+            Utils::extend_ptree (sig_errors, "crl-too-old");
+          if (stat & GMIME_SIGNATURE_STATUS_BAD_POLICY)
+            Utils::extend_ptree (sig_errors, "bad-policy");
+          if (stat & GMIME_SIGNATURE_STATUS_SYS_ERROR)
+            Utils::extend_ptree (sig_errors, "sys-error");
+          if (stat & GMIME_SIGNATURE_STATUS_TOFU_CONFLICT)
+            Utils::extend_ptree (sig_errors, "tofu-conflict");
 # endif
-            }
-          } else {
-            err = "[Error: Could not get certificate]";
-          }
+        }
+      } else {
+        Utils::extend_ptree (sig_errors, "bad-certificate");
+      }
 
 # if (GMIME_MAJOR_VERSION < 3)
-          GMimeCertificateTrust t = g_mime_certificate_get_trust (ce);
-          ustring trust = "";
-          switch (t) {
-            case GMIME_CERTIFICATE_TRUST_NONE: trust = "none"; break;
-            case GMIME_CERTIFICATE_TRUST_NEVER: trust = "never"; break;
-            case GMIME_CERTIFICATE_TRUST_UNDEFINED: trust = "undefined"; break;
-            case GMIME_CERTIFICATE_TRUST_MARGINAL: trust = "marginal"; break;
-            case GMIME_CERTIFICATE_TRUST_FULLY: trust = "fully"; break;
-            case GMIME_CERTIFICATE_TRUST_ULTIMATE: trust = "ultimate"; break;
-          }
+      GMimeCertificateTrust t = g_mime_certificate_get_trust (ce);
+      ustring trust = "";
+      switch (t) {
+        case GMIME_CERTIFICATE_TRUST_NONE: trust = "none"; break;
+        case GMIME_CERTIFICATE_TRUST_NEVER: trust = "never"; break;
+        case GMIME_CERTIFICATE_TRUST_UNDEFINED: trust = "undefined"; break;
+        case GMIME_CERTIFICATE_TRUST_MARGINAL: trust = "marginal"; break;
+        case GMIME_CERTIFICATE_TRUST_FULLY: trust = "fully"; break;
+        case GMIME_CERTIFICATE_TRUST_ULTIMATE: trust = "ultimate"; break;
+      }
 # else
-          GMimeTrust t = g_mime_certificate_get_trust (ce);
-          ustring trust = "";
-          switch (t) {
-            case GMIME_TRUST_UNKNOWN: trust = "unknown"; break;
-            case GMIME_TRUST_UNDEFINED: trust = "undefined"; break;
-            case GMIME_TRUST_NEVER: trust = "never"; break;
-            case GMIME_TRUST_MARGINAL: trust = "marginal"; break;
-            case GMIME_TRUST_FULL: trust = "full"; break;
-            case GMIME_TRUST_ULTIMATE: trust = "ultimate"; break;
-          }
+      GMimeTrust t = g_mime_certificate_get_trust (ce);
+      ustring trust = "";
+      switch (t) {
+        case GMIME_TRUST_UNKNOWN: trust = "unknown"; break;
+        case GMIME_TRUST_UNDEFINED: trust = "undefined"; break;
+        case GMIME_TRUST_NEVER: trust = "never"; break;
+        case GMIME_TRUST_MARGINAL: trust = "marginal"; break;
+        case GMIME_TRUST_FULL: trust = "full"; break;
+        case GMIME_TRUST_ULTIMATE: trust = "ultimate"; break;
+      }
 # endif
-
-
-          sign_string += ustring::compose (
-              "<br />%1 signature from: %2 (%3) [0x%4] [trust: %5] %6",
-              gd, nm, em, ky, trust, err);
-
-
-          all_sig_errors.insert (all_sig_errors.end(), sig_errors.begin (), sig_errors.end ());
-        }
-      }
-
-      if (c->isencrypted) {
-        refptr<Crypto> cr = c->crypt;
-
-        if (c->issigned) enc_string = "<span class=\"header\">Signed and Encrypted.</span>";
-        else             enc_string = "<span class=\"header\">Encrypted.</span>";
-
-        if (cr->decrypted) {
-
-          GMimeCertificateList * rlist = cr->rlist;
-          for (int i = 0; i < g_mime_certificate_list_length (rlist); i++) {
-
-            GMimeCertificate * ce = g_mime_certificate_list_get_certificate (rlist, i);
-
-            const char * c = NULL;
-            ustring fp = (c = g_mime_certificate_get_fingerprint (ce), c ? c : "");
-            ustring nm = (c = g_mime_certificate_get_name (ce), c ? c : "");
-            ustring em = (c = g_mime_certificate_get_email (ce), c ? c : "");
-            ustring ky = (c = g_mime_certificate_get_key_id (ce), c ? c : "");
-
-            enc_string += ustring::compose ("<br /> Encrypted for: %1 (%2) [0x%3]",
-                nm, em, ky);
-          }
-
-          if (c->issigned) enc_string += "<br /><br />";
-
-        } else {
-          enc_string += "Encrypted: Failed decryption.";
-        }
-
-      }
-
-      content = enc_string + sign_string;
-
-      WebKitDOMHTMLElement * message_cont =
-        DomUtils::select (WEBKIT_DOM_NODE (encrypt_container), ".message");
-
-      webkit_dom_html_element_set_inner_html (
-          message_cont,
-          content.c_str(),
-          (err = NULL, &err));
-
-
-      webkit_dom_node_append_child (WEBKIT_DOM_NODE (span_body),
-          WEBKIT_DOM_NODE (encrypt_container), (err = NULL, &err));
-
-      /* add encryption tag to encrypted part */
-      WebKitDOMDOMTokenList * class_list =
-        webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(body_container));
-
-      if (c->isencrypted) {
-        webkit_dom_dom_token_list_add (class_list_e, "encrypted",
-            (err = NULL, &err));
-        webkit_dom_dom_token_list_add (class_list, "encrypted",
-            (err = NULL, &err));
-
-        if (!c->crypt->decrypted) {
-          webkit_dom_dom_token_list_add (class_list_e, "decrypt_failed",
-              (err = NULL, &err));
-          webkit_dom_dom_token_list_add (class_list, "decrypt_failed",
-              (err = NULL, &err));
-        }
-      }
-
-      if (c->issigned) {
-        webkit_dom_dom_token_list_add (class_list_e, "signed",
-            (err = NULL, &err));
-
-        webkit_dom_dom_token_list_add (class_list, "signed",
-            (err = NULL, &err));
-
-        if (!c->crypt->verified) {
-          webkit_dom_dom_token_list_add (class_list_e, "verify_failed",
-              (err = NULL, &err));
-          webkit_dom_dom_token_list_add (class_list, "verify_failed",
-              (err = NULL, &err));
-
-          /* add specific errors */
-          std::sort (all_sig_errors.begin (), all_sig_errors.end ());
-          all_sig_errors.erase (unique (all_sig_errors.begin (), all_sig_errors.end ()), all_sig_errors.end ());
-
-          for (ustring & e : all_sig_errors) {
-            webkit_dom_dom_token_list_add (class_list_e, e.c_str (),
-                (err = NULL, &err));
-            webkit_dom_dom_token_list_add (class_list, e.c_str (),
-                (err = NULL, &err));
-          }
-        }
-      }
-
-      g_object_unref (class_list);
-      g_object_unref (class_list_e);
-      g_object_unref (encrypt_container);
-      g_object_unref (message_cont);
-
+      _sign.put ("status", gd);
+      _sign.put ("trust", trust);
+      _sign.put_child ("errors", sig_errors);
+      Utils::extend_ptree (signatures, _sign);
     }
 
-    webkit_dom_node_append_child (WEBKIT_DOM_NODE (span_body),
-        WEBKIT_DOM_NODE (body_container), (err = NULL, &err));
+    signature.put_child ("signatures", signatures);
 
-    g_object_unref (body_container);
-    g_object_unref (d);
-  }
+    return signature;
+  } // }}}
 
-  void ThreadView::filter_code_tags (ustring &body) {
+  ustring ThreadView::get_attachment_thumbnail (refptr<Chunk> c) { // {{{
+    /* set the preview image or icon on the attachment display element */
+    const char * _mtype = g_mime_content_type_get_media_type (c->content_type);
+    ustring mime_type;
+    if (_mtype == NULL) {
+      mime_type = "application/octet-stream";
+    } else {
+      mime_type = ustring(g_mime_content_type_get_mime_type (c->content_type));
+    }
+
+    LOG (debug) << "tv: set attachment, mime_type: " << mime_type << ", mtype: " << _mtype;
+
+    gchar * content;
+    gsize   content_size;
+    ustring image_content_type;
+
+    if ((_mtype != NULL) && (ustring(_mtype) == "image")) {
+      auto mis = Gio::MemoryInputStream::create ();
+
+      refptr<Glib::ByteArray> data = c->contents ();
+      mis->add_data (data->get_data (), data->size ());
+
+      try {
+
+        auto pb = Gdk::Pixbuf::create_from_stream_at_scale (mis, THUMBNAIL_WIDTH, -1, true, refptr<Gio::Cancellable>());
+        pb = pb->apply_embedded_orientation ();
+
+        pb->save_to_buffer (content, content_size, "png");
+        image_content_type = "image/png";
+      } catch (Gdk::PixbufError &ex) {
+
+        LOG (error) << "tv: could not create icon from attachmed image.";
+        attachment_icon->save_to_buffer (content, content_size, "png"); // default type is png
+        image_content_type = "image/png";
+      }
+    } else {
+      // TODO: guess icon from mime type. Using standard icon for now.
+
+      attachment_icon->save_to_buffer (content, content_size, "png"); // default type is png
+      image_content_type = "image/png";
+    }
+
+    return assemble_data_uri (image_content_type, content, content_size);
+  } // }}}
+
+  void ThreadView::filter_code_tags (ustring &body) { // {{{
     time_t t0 = clock ();
     ustring code_tag = code_prettify_code_tag;
     ustring start_tag = code_start_tag;
@@ -1443,580 +1152,50 @@ namespace Astroid {
 
     LOG (debug) << "tv: code filter done, time: " << ((clock() - t0) * 1000 / CLOCKS_PER_SEC) << " ms.";
 
-  }
+  } // }}}
 
+  // TODO: [JS] [REIMPLEMENT]
   void ThreadView::display_part (refptr<Message> message, refptr<Chunk> c, MessageState::Element el) {
-    GError * err;
 
-    WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
-    ustring mid = "message_" + message->mid;
-
-    WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
-
-    WebKitDOMHTMLElement * div_email_container =
-      DomUtils::select (WEBKIT_DOM_NODE(e), "div.email_container");
-
-    WebKitDOMHTMLElement * span_body =
-      DomUtils::select (WEBKIT_DOM_NODE(div_email_container), ".body");
-
-    WebKitDOMElement * sibling =
-      webkit_dom_document_get_element_by_id (d, el.element_id().c_str());
-
-    webkit_dom_node_remove_child (WEBKIT_DOM_NODE (span_body),
-        WEBKIT_DOM_NODE(sibling), (err = NULL, &err));
-
-    state[message].elements.erase (
-        std::remove(
-          state[message].elements.begin(),
-          state[message].elements.end(), el),
-        state[message].elements.end());
-
-    state[message].current_element = 0;
-
-    if (c->viewable) {
-      create_body_part (message, c, span_body);
-    }
-
-    /* this shows parts that are nested directly below the part
-     * as well. otherwise multipart/mixed with html's would
-     * require two enters. */
-
-    for (auto &k: c->kids) {
-      if (k->viewable) {
-        create_body_part (message, k, span_body);
-      } else {
-        create_message_part_html (message, k, span_body, true);
-      }
-    }
-
-    g_object_unref (sibling);
-    g_object_unref (span_body);
-    g_object_unref (div_email_container);
-    g_object_unref (e);
-    g_object_unref (d);
   }
-
-  void ThreadView::create_sibling_part (refptr<Message> message, refptr<Chunk> sibling, WebKitDOMHTMLElement * span_body) {
-
-    LOG (debug) << "create sibling part: " << sibling->id;
-    //
-    //  <div id="sibling_template" class=sibling_container">
-    //      <div class="message"></div>
-    //  </div>
-
-    GError *err;
-
-    WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
-    WebKitDOMHTMLElement * sibling_container =
-      DomUtils::clone_select (WEBKIT_DOM_NODE(d), "#sibling_template");
-
-    webkit_dom_element_remove_attribute (WEBKIT_DOM_ELEMENT (sibling_container),
-        "id");
-
-    // add to message state
-    MessageState::Element e (MessageState::ElementType::Part, sibling->id);
-    state[message].elements.push_back (e);
-    LOG (debug) << "tv: added sibling: " << state[message].elements.size();
-
-    webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (sibling_container),
-      "id", e.element_id().c_str(),
-      (err = NULL, &err));
-
-    ustring content = ustring::compose ("Alternative part (type: %1) - potentially sketchy.",
-        Glib::Markup::escape_text(sibling->get_content_type ()),
-        e.element_id ());
-
-    WebKitDOMHTMLElement * message_cont =
-      DomUtils::select (WEBKIT_DOM_NODE (sibling_container), ".message");
-
-    webkit_dom_html_element_set_inner_html (
-        message_cont,
-        content.c_str(),
-        (err = NULL, &err));
-
-
-    webkit_dom_node_append_child (WEBKIT_DOM_NODE (span_body),
-        WEBKIT_DOM_NODE (sibling_container), (err = NULL, &err));
-
-    g_object_unref (message_cont);
-    g_object_unref (sibling_container);
-    g_object_unref (d);
-  } //
 
   /* info and warning  */
+  // TODO: [JS] [REIMPLEMENT] Possibly use GtkInfoBar
   void ThreadView::set_warning (refptr<Message> m, ustring txt)
   {
-    LOG (debug) << "tv: set warning: " << txt;
-    ustring mid = "message_" + m->mid;
-
-    WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
-    WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
-
-    WebKitDOMHTMLElement * warning = DomUtils::select (
-        WEBKIT_DOM_NODE (e),
-        ".email_warning");
-
-    GError * err;
-    webkit_dom_html_element_set_inner_html (warning, txt.c_str(), (err = NULL, &err));
-
-    WebKitDOMDOMTokenList * class_list =
-      webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(warning));
-
-    webkit_dom_dom_token_list_add (class_list, "show",
-        (err = NULL, &err));
-
-    g_object_unref (class_list);
-    g_object_unref (warning);
-    g_object_unref (e);
-    g_object_unref (d);
+    ustring js = "Astroid.set_warning(" + m->safe_mid () + ", " + txt + ");";
+    webkit_web_view_run_javascript (webview, js.c_str (), NULL, NULL, NULL);
   }
+
 
   void ThreadView::hide_warning (refptr<Message> m)
   {
-    ustring mid = "message_" + m->mid;
-
-    WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
-    WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
-
-    WebKitDOMHTMLElement * warning = DomUtils::select (
-        WEBKIT_DOM_NODE (e),
-        ".email_warning");
-
-    GError * err;
-    webkit_dom_html_element_set_inner_html (warning, "", (err = NULL, &err));
-
-    WebKitDOMDOMTokenList * class_list =
-      webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(warning));
-
-    webkit_dom_dom_token_list_remove (class_list, "show",
-        (err = NULL, &err));
-
-    g_object_unref (class_list);
-    g_object_unref (warning);
-    g_object_unref (e);
-    g_object_unref (d);
+    ustring js = "Astroid.hide_warning(" + m->safe_mid () + ");";
+    webkit_web_view_run_javascript (webview, js.c_str (), NULL, NULL, NULL);
   }
 
+  // TODO: [JS] [REIMPLEMENT] Same as warning
   void ThreadView::set_info (refptr<Message> m, ustring txt)
   {
     LOG (debug) << "tv: set info: " << txt;
-
-    ustring mid = "message_" + m->mid;
-
-    WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
-    WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
-
-    if (e == NULL) {
-      LOG (warn) << "tv: could not get email div.";
-    }
-
-    WebKitDOMHTMLElement * info = DomUtils::select (
-        WEBKIT_DOM_NODE (e),
-        ".email_info");
-
-    GError * err;
-    webkit_dom_html_element_set_inner_html (info, txt.c_str(), (err = NULL, &err));
-
-    WebKitDOMDOMTokenList * class_list =
-      webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(info));
-
-    webkit_dom_dom_token_list_add (class_list, "show",
-        (err = NULL, &err));
-
-    g_object_unref (class_list);
-    g_object_unref (info);
-    g_object_unref (e);
-    g_object_unref (d);
+    ustring js = "Astroid.set_info(" + m->safe_mid () + ", " + txt + ");";
+    webkit_web_view_run_javascript (webview, js.c_str (), NULL, NULL, NULL);
   }
 
   void ThreadView::hide_info (refptr<Message> m) {
-    ustring mid = "message_" + m->mid;
-
-    WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
-    WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
-
-    if (e == NULL) {
-      LOG (warn) << "tv: could not get email div.";
-    }
-
-    WebKitDOMHTMLElement * info = DomUtils::select (
-        WEBKIT_DOM_NODE (e),
-        ".email_info");
-
-    GError * err;
-    webkit_dom_html_element_set_inner_html (info, "", (err = NULL, &err));
-
-    WebKitDOMDOMTokenList * class_list =
-      webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(info));
-
-    webkit_dom_dom_token_list_remove (class_list, "show",
-        (err = NULL, &err));
-
-    g_object_unref (class_list);
-    g_object_unref (info);
-    g_object_unref (e);
-    g_object_unref (d);
+    ustring js = "Astroid.hide_info(" + m->safe_mid () + ");";
+    webkit_web_view_run_javascript (webview, js.c_str (), NULL, NULL, NULL);
   }
   /* end info and warning  */
 
-  /* headers  */
-  void ThreadView::insert_header_date (ustring & header, refptr<Message> m)
-  {
-    ustring value = ustring::compose (
-                "<span class=\"hidden_only\">%1</span>"
-                "<span class=\"not_hidden_only\">%2</span>",
-                m->pretty_date (),
-                m->pretty_verbose_date (true));
-
-    header += create_header_row ("Date", value, true, false);
-  }
-
-  void ThreadView::insert_header_address (
-      ustring &header,
-      ustring title,
-      Address address,
-      bool important) {
-
-    AddressList al (address);
-
-    insert_header_address_list (header, title, al, important);
-  }
-
-  void ThreadView::insert_header_address_list (
-      ustring &header,
-      ustring title,
-      AddressList addresses,
-      bool important) {
-
-    ustring value;
-    bool first = true;
-
-    for (Address &address : addresses.addresses) {
-      if (address.full_address().size() > 0) {
-        if (!first) {
-          value += ", ";
-        } else {
-          first = false;
-        }
-
-        value +=
-          ustring::compose ("<a href=\"mailto:%3\">%4%1%5 &lt;%2&gt;</a>",
-            Glib::Markup::escape_text (address.fail_safe_name ()),
-            Glib::Markup::escape_text (address.email ()),
-            Glib::Markup::escape_text (address.full_address()),
-            (important ? "<b>" : ""),
-            (important ? "</b>" : "")
-            );
-      }
-    }
-
-    header += create_header_row (title, value, important, false);
-  }
-
-  void ThreadView::insert_header_row (
-      ustring &header,
-      ustring title,
-      ustring value,
-      bool important) {
-
-    header += create_header_row (title, value, important, true);
-
-  }
-
-
-  ustring ThreadView::create_header_row (
-      ustring title,
-      ustring value,
-      bool important,
-      bool escape,
-      bool noprint) {
-
-    return ustring::compose (
-        "<div class=\"field %1 %2\" id=\"%3\">"
-        "  <div class=\"title\">%3:</div>"
-        "  <div class=\"value\">%4</div>"
-        "</div>",
-        (important ? "important" : ""),
-        (noprint ? "noprint" : ""),
-        Glib::Markup::escape_text (title),
-        header_row_value (value, escape)
-        );
-  }
-
-  ustring ThreadView::header_row_value (ustring value, bool escape)  {
-    return (escape ? Glib::Markup::escape_text (value) : value);
-  }
-
-  /* headers end  */
-
-  /* attachments  */
-  void ThreadView::set_attachment_icon (
-      refptr<Message> /* message */,
-      WebKitDOMHTMLElement * div_message)
-
-  {
-    GError *err;
-
-    WebKitDOMHTMLElement * attachment_icon_img = DomUtils::select (
-        WEBKIT_DOM_NODE (div_message),
-        ".attachment.icon.first");
-
-    gchar * content;
-    gsize   content_size;
-    attachment_icon->save_to_buffer (content, content_size, "png");
-    ustring image_content_type = "image/png";
-
-    WebKitDOMHTMLImageElement *img = WEBKIT_DOM_HTML_IMAGE_ELEMENT (attachment_icon_img);
-
-    err = NULL;
-    webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (img), "src",
-        DomUtils::assemble_data_uri (image_content_type, content, content_size).c_str(), &err);
-
-    g_object_unref (attachment_icon_img);
-
-    attachment_icon_img = DomUtils::select (
-        WEBKIT_DOM_NODE (div_message),
-        ".attachment.icon.sec");
-    img = WEBKIT_DOM_HTML_IMAGE_ELEMENT (attachment_icon_img);
-
-    err = NULL;
-    webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (img), "src",
-        DomUtils::assemble_data_uri (image_content_type, content, content_size).c_str(), &err);
-
-    WebKitDOMDOMTokenList * class_list =
-      webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(div_message));
-
-    /* set class  */
-    webkit_dom_dom_token_list_add (class_list, "attachment",
-        (err = NULL, &err));
-
-    g_object_unref (class_list);
-    g_object_unref (attachment_icon_img);
-  }
-
-
-  bool ThreadView::insert_attachments (
-      refptr<Message> message,
-      WebKitDOMHTMLElement * div_message)
-
-  {
-    // <div class="attachment_container">
-    //     <div class="top_border"></div>
-    //     <table class="attachment" data-attachment-id="">
-    //         <tr>
-    //             <td class="preview">
-    //                 <img src="" />
-    //             </td>
-    //             <td class="info">
-    //                 <div class="filename"></div>
-    //                 <div class="filesize"></div>
-    //             </td>
-    //         </tr>
-    //     </table>
-    // </div>
-
-    GError *err;
-
-    WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
-    WebKitDOMHTMLElement * attachment_container =
-      DomUtils::clone_select (WEBKIT_DOM_NODE(d), "#attachment_template");
-    WebKitDOMHTMLElement * attachment_template =
-      DomUtils::select (WEBKIT_DOM_NODE(attachment_container), ".attachment");
-
-    webkit_dom_element_remove_attribute (WEBKIT_DOM_ELEMENT (attachment_container),
-        "id");
-    webkit_dom_node_remove_child (WEBKIT_DOM_NODE (attachment_container),
-        WEBKIT_DOM_NODE(attachment_template), (err = NULL, &err));
-
-    int attachments = 0;
-
-    /* generate an attachment table for each attachment */
-    for (refptr<Chunk> &c : message->attachments ()) {
-      WebKitDOMHTMLElement * attachment_table =
-        DomUtils::clone_node (WEBKIT_DOM_NODE (attachment_template));
-
-      attachments++;
-
-      WebKitDOMHTMLElement * info_fname =
-        DomUtils::select (WEBKIT_DOM_NODE (attachment_table), ".info .filename");
-
-      ustring fname = c->get_filename ();
-      if (fname.size () == 0) {
-        fname = "Unnamed attachment";
-      }
-
-      fname = Glib::Markup::escape_text (fname);
-
-      webkit_dom_html_element_set_inner_text (info_fname, fname.c_str(), (err = NULL, &err));
-
-      WebKitDOMHTMLElement * info_fsize =
-        DomUtils::select (WEBKIT_DOM_NODE (attachment_table), ".info .filesize");
-
-      refptr<Glib::ByteArray> attachment_data = c->contents ();
-
-      ustring fsize = Utils::format_size (attachment_data->size ());
-
-      webkit_dom_html_element_set_inner_text (info_fsize, fsize.c_str(), (err = NULL, &err));
-
-
-      // add attachment to message state
-      MessageState::Element e (MessageState::ElementType::Attachment, c->id);
-      state[message].elements.push_back (e);
-      LOG (debug) << "tv: added attachment: " << state[message].elements.size();
-
-      webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (attachment_table),
-        "data-attachment-id", e.element_id().c_str(),
-        (err = NULL, &err));
-      webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (attachment_table),
-        "id", e.element_id().c_str(),
-        (err = NULL, &err));
-
-      // set image
-      WebKitDOMHTMLImageElement * img =
-        WEBKIT_DOM_HTML_IMAGE_ELEMENT(
-        DomUtils::select (WEBKIT_DOM_NODE (attachment_table), ".preview img"));
-
-      set_attachment_src (c, attachment_data, img);
-
-      // add the attachment table
-      webkit_dom_node_append_child (WEBKIT_DOM_NODE (attachment_container),
-          WEBKIT_DOM_NODE (attachment_table), (err = NULL, &err));
-
-
-      if (c->issigned || c->isencrypted) {
-        /* add encryption or signed tag to attachment */
-        WebKitDOMDOMTokenList * class_list =
-          webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(attachment_table));
-
-        if (c->isencrypted) {
-          webkit_dom_dom_token_list_add (class_list, "encrypted",
-              (err = NULL, &err));
-        }
-
-        if (c->issigned) {
-          webkit_dom_dom_token_list_add (class_list, "signed",
-              (err = NULL, &err));
-        }
-
-        g_object_unref (class_list);
-      }
-
-      g_object_unref (img);
-      g_object_unref (info_fname);
-      g_object_unref (info_fsize);
-      g_object_unref (attachment_table);
-
-    }
-
-    if (attachments > 0) {
-      webkit_dom_node_append_child (WEBKIT_DOM_NODE (div_message),
-          WEBKIT_DOM_NODE (attachment_container), (err = NULL, &err));
-    }
-
-    g_object_unref (attachment_template);
-    g_object_unref (attachment_container);
-    g_object_unref (d);
-
-    return (attachments > 0);
-  }
-
-  void ThreadView::set_attachment_src (
-      refptr<Chunk> c,
-      refptr<Glib::ByteArray> data,
-      WebKitDOMHTMLImageElement *img)
-  {
-    /* set the preview image or icon on the attachment display element */
-
-    const char * _mtype = g_mime_content_type_get_media_type (c->content_type);
-    ustring mime_type;
-    if (_mtype == NULL) {
-      mime_type = "application/octet-stream";
-    } else {
-      mime_type = ustring(g_mime_content_type_get_mime_type (c->content_type));
-    }
-
-    LOG (debug) << "tv: set attachment, mime_type: " << mime_type << ", mtype: " << _mtype;
-
-    gchar * content;
-    gsize   content_size;
-    ustring image_content_type;
-
-    if ((_mtype != NULL) && (ustring(_mtype) == "image")) {
-      auto mis = Gio::MemoryInputStream::create ();
-      mis->add_data (data->get_data (), data->size ());
-
-      try {
-
-        auto pb = Gdk::Pixbuf::create_from_stream_at_scale (mis, THUMBNAIL_WIDTH, -1, true, refptr<Gio::Cancellable>());
-        pb = pb->apply_embedded_orientation ();
-
-        pb->save_to_buffer (content, content_size, "png");
-        image_content_type = "image/png";
-
-        GError * gerr;
-        WebKitDOMDOMTokenList * class_list =
-          webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(img));
-        /* set class  */
-        webkit_dom_dom_token_list_add (class_list, "thumbnail",
-            (gerr = NULL, &gerr));
-
-        g_object_unref (class_list);
-
-      } catch (Gdk::PixbufError &ex) {
-
-        LOG (error) << "tv: could not create icon from attachmed image.";
-
-        attachment_icon->save_to_buffer (content, content_size, "png"); // default type is png
-        image_content_type = "image/png";
-
-      }
-    } else {
-
-      /*
-      const char * _gio_content_type = g_content_type_from_mime_type (mime_type.c_str());
-      ustring gio_content_type;
-      if (_gio_content_type == NULL) {
-        gio_content_type = "application/octet-stream";
-      } else {
-        gio_content_type = ustring(_gio_content_type);
-      }
-      GIcon * icon = g_content_type_get_icon (gio_content_type.c_str());
-
-      ustring icon_string;
-      if (icon == NULL) {
-        icon_string = "mail-attachment-symbolic";
-      } else {
-        icon_string = g_icon_to_string (icon);
-        g_object_unref (icon);
-      }
-
-      if (icon_string.size() < 1) {
-        icon_string = "mail-attachment-symbolic";
-      }
-
-
-      LOG (debug) << "icon: " << icon_string << flush;
-      */
-
-      // TODO: use guessed icon
-
-      attachment_icon->save_to_buffer (content, content_size, "png"); // default type is png
-      image_content_type = "image/png";
-
-    }
-
-    GError * err = NULL;
-    webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (img), "src",
-        DomUtils::assemble_data_uri (image_content_type, content, content_size).c_str(), &err);
-
-  }
-  /* attachments end  */
 
   /* marked  */
+  // TODO: [JS] [REIMPLEMENT]
   void ThreadView::load_marked_icon (
       refptr<Message> /* message */,
       WebKitDOMHTMLElement * div_message)
   {
+# if 0
     GError *err;
 
     WebKitDOMHTMLElement * marked_icon_img = DomUtils::select (
@@ -2044,9 +1223,12 @@ namespace Astroid {
         DomUtils::assemble_data_uri (image_content_type, content, content_size).c_str(), &err);
 
     g_object_unref (marked_icon_img);
+# endif
   }
 
+  // TODO: [JS] [REIMPLEMENT]
   void ThreadView::update_marked_state (refptr<Message> m) {
+# if 0
     GError *err;
     ustring mid = "message_" + m->mid;
 
@@ -2069,81 +1251,11 @@ namespace Astroid {
     g_object_unref (class_list);
     g_object_unref (e);
     g_object_unref (d);
-
+# endif
   }
 
 
   //
-
-  /* mime messages  */
-  void ThreadView::insert_mime_messages (
-      refptr<Message> message,
-      WebKitDOMHTMLElement * div_message)
-
-  {
-    WebKitDOMHTMLElement * div_email_container =
-      DomUtils::select (WEBKIT_DOM_NODE(div_message), "div.email_container");
-
-    WebKitDOMHTMLElement * span_body =
-      DomUtils::select (WEBKIT_DOM_NODE(div_email_container), ".body");
-
-    for (refptr<Chunk> &c : message->mime_messages ()) {
-      LOG (debug) << "create mime message part: " << c->id;
-      //
-      //  <div id="mime_template" class=mime_container">
-      //      <div class="top_border"></div>
-      //      <div class="message"></div>
-      //  </div>
-
-      GError *err;
-
-      WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
-      WebKitDOMHTMLElement * mime_container =
-        DomUtils::clone_select (WEBKIT_DOM_NODE(d), "#mime_template");
-
-      webkit_dom_element_remove_attribute (WEBKIT_DOM_ELEMENT (mime_container),
-          "id");
-
-      // add attachment to message state
-      MessageState::Element e (MessageState::ElementType::MimeMessage, c->id);
-      state[message].elements.push_back (e);
-      LOG (debug) << "tv: added mime message: " << state[message].elements.size();
-
-      webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (mime_container),
-        "id", e.element_id().c_str(),
-        (err = NULL, &err));
-
-      ustring content = ustring::compose ("MIME message (subject: %1, size: %2 B) - potentially sketchy.",
-          Glib::Markup::escape_text(c->get_filename ()),
-          c->get_file_size (),
-          e.element_id ());
-
-      WebKitDOMHTMLElement * message_cont =
-        DomUtils::select (WEBKIT_DOM_NODE (mime_container), ".message");
-
-      webkit_dom_html_element_set_inner_html (
-          message_cont,
-          content.c_str(),
-          (err = NULL, &err));
-
-
-      webkit_dom_node_append_child (WEBKIT_DOM_NODE (span_body),
-          WEBKIT_DOM_NODE (mime_container), (err = NULL, &err));
-
-      g_object_unref (message_cont);
-      g_object_unref (mime_container);
-      g_object_unref (d);
-
-    }
-
-    g_object_unref (span_body);
-    g_object_unref (div_email_container);
-
-  }
-
-
-  /*  */
-
 
   /* end rendering  */
 
@@ -2155,6 +1267,18 @@ namespace Astroid {
   void ThreadView::register_keys () { // {{{
     keys.title = "Thread View";
 
+# ifdef DEBUG_WEBKIT
+    keys.register_key ("C-r", "thread_view.reload",
+        "Reload everything",
+        [&] (Key) {
+          LOG (debug) << "tv: reloading..";
+          theme.load (true);
+
+          load_message_thread (mthread);
+          return true;
+        });
+# endif
+
     keys.register_key ("j", "thread_view.down",
         "Scroll down or move focus to next element",
         [&] (Key) {
@@ -2165,26 +1289,16 @@ namespace Astroid {
     keys.register_key ("C-j", "thread_view.next_element",
         "Move focus to next element",
         [&] (Key) {
-          /* move focus to next element and optionally scroll to it */
+          /* move focus to next element and scroll to it if necessary */
 
-          ustring eid = focus_next_element (true);
-          if (eid != "") {
-            scroll_to_element (eid, false);
-          }
+          focus_next_element (true);
           return true;
         });
 
     keys.register_key ("J", { Key (GDK_KEY_Down) }, "thread_view.scroll_down",
         "Scroll down",
         [&] (Key) {
-          auto adj = scroll.get_vadjustment ();
-          double v = adj->get_value ();
-          adj->set_value (adj->get_value() + adj->get_step_increment ());
-
-          if (v < adj->get_value ()) {
-            update_focus_to_view ();
-          }
-
+          // TODO
           return true;
         });
 
@@ -2192,9 +1306,7 @@ namespace Astroid {
         "thread_view.page_down",
         "Page down",
         [&] (Key) {
-          auto adj = scroll.get_vadjustment ();
-          adj->set_value (adj->get_value() + adj->get_page_increment ());
-          update_focus_to_view ();
+          // TODO
           return true;
         });
 
@@ -2208,10 +1320,7 @@ namespace Astroid {
     keys.register_key ("C-k", "thread_view.previous_element",
         "Move focus to previous element",
         [&] (Key) {
-          ustring eid = focus_previous_element (true);
-          if (eid != "") {
-            scroll_to_element (eid, false);
-          }
+          focus_previous_element (true);
           return true;
         });
 
@@ -2219,11 +1328,7 @@ namespace Astroid {
         "thread_view.scroll_up",
         "Scroll up",
         [&] (Key) {
-          auto adj = scroll.get_vadjustment ();
-          if (!(adj->get_value () == adj->get_lower ())) {
-            adj->set_value (adj->get_value() - adj->get_step_increment ());
-            update_focus_to_view ();
-          }
+          // TODO
           return true;
         });
 
@@ -2231,9 +1336,7 @@ namespace Astroid {
         "thread_view.page_up",
         "Page up",
         [&] (Key) {
-          auto adj = scroll.get_vadjustment ();
-          adj->set_value (adj->get_value() - adj->get_page_increment ());
-          update_focus_to_view ();
+          // TODO
           return true;
         });
 
@@ -2241,10 +1344,7 @@ namespace Astroid {
         "thread_view.home",
         "Scroll home",
         [&] (Key) {
-          auto adj = scroll.get_vadjustment ();
-          adj->set_value (adj->get_lower ());
-          focused_message = mthread->messages[0];
-          update_focus_status ();
+          focus_message (mthread->messages[0]);
           return true;
         });
 
@@ -2252,10 +1352,7 @@ namespace Astroid {
         "thread_view.end",
         "Scroll to end",
         [&] (Key) {
-          auto adj = scroll.get_vadjustment ();
-          adj->set_value (adj->get_upper ());
-          focused_message = mthread->messages[mthread->messages.size()-1];
-          update_focus_status ();
+          focus_message (mthread->messages[mthread->messages.size()-1]);
           return true;
         });
 
@@ -2287,7 +1384,7 @@ namespace Astroid {
         [&] (Key) {
           if (edit_mode) return false;
 
-          toggle_hidden ();
+          toggle (focused_message);
 
           return true;
         });
@@ -2301,18 +1398,18 @@ namespace Astroid {
           if (all_of (mthread->messages.begin(),
                       mthread->messages.end (),
                       [&](refptr<Message> m) {
-                        return is_hidden (m);
+                        return !state[m].expanded;
                       }
                 )) {
             /* all are hidden */
             for (auto m : mthread->messages) {
-              toggle_hidden (m, ToggleShow);
+              expand (m);
             }
 
           } else {
             /* some are shown */
             for (auto m : mthread->messages) {
-              toggle_hidden (m, ToggleHide);
+              collapse (m);
             }
           }
 
@@ -2384,8 +1481,7 @@ namespace Astroid {
     keys.register_key ("n", "thread_view.next_message",
         "Focus next message",
         [&] (Key) {
-          focus_next ();
-          scroll_to_message (focused_message);
+          focus_next_message ();
           return true;
         });
 
@@ -2393,27 +1489,20 @@ namespace Astroid {
         "Focus next message (and expand if necessary)",
         [&] (Key) {
           if (state[focused_message].scroll_expanded) {
-            toggle_hidden (focused_message, ToggleHide);
+            collapse (focused_message);
             state[focused_message].scroll_expanded = false;
-            in_scroll = true;
           }
 
-          focus_next ();
+          focus_next_message ();
 
-          if (is_hidden (focused_message)) {
-            toggle_hidden (focused_message, ToggleShow);
-            state[focused_message].scroll_expanded = true;
-            in_scroll = true;
-          }
-          scroll_to_message (focused_message);
+          state[focused_message].scroll_expanded = !expand (focused_message);
           return true;
         });
 
     keys.register_key ("p", "thread_view.previous_message",
         "Focus previous message",
         [&] (Key) {
-          focus_previous (true);
-          scroll_to_message (focused_message);
+          focus_previous_message (true);
           return true;
         });
 
@@ -2421,19 +1510,13 @@ namespace Astroid {
         "Focus previous message (and expand if necessary)",
         [&] (Key) {
           if (state[focused_message].scroll_expanded) {
-            toggle_hidden (focused_message, ToggleHide);
+            collapse (focused_message);
             state[focused_message].scroll_expanded = false;
-            in_scroll = true;
           }
 
-          focus_previous ();
+          focus_previous_message ();
 
-          if (is_hidden (focused_message)) {
-            toggle_hidden (focused_message, ToggleShow);
-            state[focused_message].scroll_expanded = true;
-            in_scroll = true;
-          }
-          scroll_to_message (focused_message);
+          state[focused_message].scroll_expanded = !expand (focused_message);
           return true;
         });
 
@@ -2444,8 +1527,7 @@ namespace Astroid {
 
           for (auto &m : mthread->messages) {
             if (foundme && m->has_tag ("unread")) {
-              focused_message = m;
-              scroll_to_message (focused_message);
+              focus_message (m);
               break;
             }
 
@@ -2466,8 +1548,7 @@ namespace Astroid {
           for (auto mi = mthread->messages.rbegin ();
               mi != mthread->messages.rend (); mi++) {
             if (foundme && (*mi)->has_tag ("unread")) {
-              focused_message = *mi;
-              scroll_to_message (focused_message);
+              focus_message (*mi);
               break;
             }
 
@@ -2851,10 +1932,14 @@ namespace Astroid {
             }
           }
 
+# if 0
           GError * err = NULL;
           WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
+# endif
 
           for (auto &m : toprint) {
+          // TODO: [JS] [REIMPLEMENT]
+# if 0
             ustring mid = "message_" + m->mid;
             WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
             WebKitDOMDOMTokenList * class_list =
@@ -2862,9 +1947,10 @@ namespace Astroid {
 
             webkit_dom_dom_token_list_add (class_list, "print",
                 (err = NULL, &err));
+# endif
 
             /* expand */
-            state[m].print_expanded = !toggle_hidden (m, ToggleShow);
+            state[m].print_expanded = !expand (m);
 
           }
 
@@ -2875,8 +1961,11 @@ namespace Astroid {
           }
 
           /* open print window */
+          // TODO: [W2] Fix print
+# if 0
           WebKitWebFrame * frame = webkit_web_view_get_main_frame (webview);
           webkit_web_frame_print (frame);
+# endif
 
           if (indented) {
             indent_messages = true;
@@ -2886,10 +1975,11 @@ namespace Astroid {
           for (auto &m : toprint) {
 
             if (state[m].print_expanded) {
-              toggle_hidden (m, ToggleHide);
+              collapse (m);
               state[m].print_expanded = false;
             }
 
+# if 0
             ustring mid = "message_" + m->mid;
             WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
             WebKitDOMDOMTokenList * class_list =
@@ -2900,9 +1990,12 @@ namespace Astroid {
 
             g_object_unref (class_list);
             g_object_unref (e);
+# endif
           }
 
+# if 0
           g_object_unref (d);
+# endif
 
           return true;
         });
@@ -2968,6 +2061,8 @@ namespace Astroid {
         "thread_view.print",
         "Print focused message",
         [&] (Key) {
+        // TODO: [W2]
+# if 0
           GError * err = NULL;
           WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
 
@@ -3007,6 +2102,7 @@ namespace Astroid {
           g_object_unref (class_list);
           g_object_unref (e);
           g_object_unref (d);
+# endif
 
           return true;
         });
@@ -3253,7 +2349,7 @@ namespace Astroid {
 
   } // }}}
 
-  bool ThreadView::element_action (ElementAction a) { //
+  bool ThreadView::element_action (ElementAction a) { // {{{
     LOG (debug) << "tv: activate item.";
 
     if (!(focused_message)) {
@@ -3261,9 +2357,9 @@ namespace Astroid {
       return true;
     }
 
-    if (!edit_mode && is_hidden (focused_message)) {
+    if (!edit_mode && !state[focused_message].expanded) {
       if (a == EEnter) {
-        toggle_hidden ();
+        toggle (focused_message);
       } else if (a == ESave) {
         /* save message to */
         focused_message->save ();
@@ -3294,7 +2390,7 @@ namespace Astroid {
       if (state[focused_message].current_element == 0) {
         if (!edit_mode && a == EEnter) {
           /* nothing selected, closing message */
-          toggle_hidden ();
+          toggle (focused_message);
         } else if (a == ESave) {
           /* save message to */
           focused_message->save ();
@@ -3457,297 +2553,14 @@ namespace Astroid {
       emit_element_action (state[focused_message].current_element, a);
     }
     return true;
-  } // 
-
-  /* focus handling  */
-
-  void ThreadView::on_scroll_vadjustment_changed () {
-    if (in_scroll) {
-      in_scroll = false;
-      LOG (debug) << "tv: re-doing scroll.";
-
-      if (scroll_arg != "") {
-        if (scroll_to_element (scroll_arg, _scroll_when_visible)) {
-          scroll_arg = "";
-          _scroll_when_visible = false;
-
-          if (!unread_setup) {
-            unread_setup = true;
-
-            if (unread_delay > 0) {
-              Glib::signal_timeout ().connect (
-                  sigc::mem_fun (this, &ThreadView::unread_check), std::max (80., (unread_delay * 1000.) / 2));
-            }
-
-            // unread_delay == 0 is checked in update_focus_status ()
-          }
-        }
-      }
-    }
-
-    if (in_search && in_search_match) {
-      /* focus message in vertical center */
-
-      update_focus_to_center ();
-
-      in_search_match = false;
-    }
-  }
-
-  void ThreadView::update_focus_to_center () {
-    /* focus the message which is currently vertically centered */
-
-    if (edit_mode) return;
-
-    WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
-
-    auto adj = scroll.get_vadjustment ();
-    double scrolled = adj->get_value ();
-    double height   = adj->get_page_size (); // 0 when there is
-
-    if (height == 0) height = scroll.get_height ();
-
-    double center = scrolled + (height / 2);
-
-    for (auto &m : mthread->messages) {
-      ustring mid = "message_" + m->mid;
-
-      WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
-
-      double clientY = webkit_dom_element_get_offset_top (e);
-      double clientH = webkit_dom_element_get_client_height (e);
-
-      // LOG (debug) << "y = " << clientY;
-      // LOG (debug) << "h = " << clientH;
-
-      g_object_unref (e);
-
-      if ((clientY < center) && ((clientY + clientH) > center))
-      {
-        // LOG (debug) << "message: " << m->date() << " now in view.";
-
-        focused_message = m;
-
-        break;
-      }
-    }
-
-    g_object_unref (d);
-
-    update_focus_status ();
-  }
-
-  void ThreadView::update_focus_to_view () {
-    /* check if currently focused message has gone out of focus
-     * and update focus */
-    if (edit_mode) {
-      return;
-    }
-
-    /* loop through elements from the top and test whether the top
-     * of it is within the view
-     */
-
-    WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
-
-    auto adj = scroll.get_vadjustment ();
-    double scrolled = adj->get_value ();
-    double height   = adj->get_page_size (); // 0 when there is
-                                             // no paging.
-
-    //LOG (debug) << "scrolled = " << scrolled << ", height = " << height;
-
-    /* check currently focused message */
-    bool take_next = false;
-
-    /* take first */
-    if (!focused_message) {
-      //LOG (debug) << "tv: u_f_t_v: none focused, take first initially.";
-      focused_message = mthread->messages[0];
-      update_focus_status ();
-    }
-
-    /* check if focused message is still visible */
-    ustring mid = "message_" + focused_message->mid;
-
-    WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
-
-    double clientY = webkit_dom_element_get_offset_top (e);
-    double clientH = webkit_dom_element_get_client_height (e);
-
-    g_object_unref (e);
-
-    //LOG (debug) << "y = " << clientY;
-    //LOG (debug) << "h = " << clientH;
-
-    // height = 0 if there is no paging: all messages are in view.
-    if ((height == 0) || ( (clientY <= (scrolled + height)) && ((clientY + clientH) >= scrolled) )) {
-      //LOG (debug) << "message: " << focused_message->date() << " still in view.";
-    } else {
-      //LOG (debug) << "message: " << focused_message->date() << " out of view.";
-      take_next = true;
-    }
-
-
-    /* find first message that is in view and update
-     * focused status */
-    if (take_next) {
-      int focused_position = find (
-          mthread->messages.begin (),
-          mthread->messages.end (),
-          focused_message) - mthread->messages.begin ();
-      int cur_position = 0;
-
-      bool found = false;
-      bool redo_focus_tags = false;
-
-      for (auto &m : mthread->messages) {
-        ustring mid = "message_" + m->mid;
-
-        WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
-
-        double clientY = webkit_dom_element_get_offset_top (e);
-        double clientH = webkit_dom_element_get_client_height (e);
-
-        // LOG (debug) << "y = " << clientY;
-        // LOG (debug) << "h = " << clientH;
-
-        WebKitDOMDOMTokenList * class_list =
-          webkit_dom_element_get_class_list (e);
-
-        GError * gerr = NULL;
-
-        /* search for the last message that is currently in view
-         * if the focused message is now below / beyond the view.
-         * otherwise, take first that is in view now. */
-
-        if ((!found || cur_position < focused_position) &&
-            ( (height == 0) || ((clientY <= (scrolled + height)) && ((clientY + clientH) >= scrolled)) ))
-        {
-          // LOG (debug) << "message: " << m->date() << " now in view.";
-
-          if (found) redo_focus_tags = true;
-          found = true;
-          focused_message = m;
-
-          /* set class  */
-          webkit_dom_dom_token_list_add (class_list, "focused",
-              (gerr = NULL, &gerr));
-
-        } else {
-          /* reset class */
-          webkit_dom_dom_token_list_remove (class_list, "focused",
-              (gerr = NULL, &gerr));
-        }
-
-        g_object_unref (class_list);
-        g_object_unref (e);
-
-        cur_position++;
-      }
-
-      g_object_unref (d);
-
-      if (redo_focus_tags) update_focus_status ();
-    }
-  }
-
-  void ThreadView::update_focus_status () {
-    /* update focus to currently set element (no scrolling ) */
-    WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
-    for (auto &m : mthread->messages) {
-      ustring mid = "message_" + m->mid;
-
-      WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
-
-      WebKitDOMDOMTokenList * class_list =
-        webkit_dom_element_get_class_list (e);
-
-      GError * gerr = NULL;
-
-      if (focused_message == m)
-      {
-        if (!edit_mode) {
-          /* set class  */
-          webkit_dom_dom_token_list_add (class_list, "focused",
-              (gerr = NULL, &gerr));
-        }
-
-        /* check elements */
-        unsigned int eno = 0;
-        for (auto el : state[m].elements) {
-          if (eno > 0) {
-
-            WebKitDOMElement * ee = webkit_dom_document_get_element_by_id (d, el.element_id().c_str());
-
-            WebKitDOMDOMTokenList * e_class_list =
-              webkit_dom_element_get_class_list (ee);
-
-            if (eno == state[m].current_element) {
-              webkit_dom_dom_token_list_add (e_class_list, "focused",
-                  (gerr = NULL, &gerr));
-
-            } else {
-
-              /* reset class */
-              webkit_dom_dom_token_list_remove (e_class_list, "focused",
-                  (gerr = NULL, &gerr));
-
-            }
-
-            g_object_unref (e_class_list);
-            g_object_unref (ee);
-          }
-
-          eno++;
-        }
-
-      } else {
-        /* reset class */
-        if (!edit_mode) {
-          webkit_dom_dom_token_list_remove (class_list, "focused",
-              (gerr = NULL, &gerr));
-        }
-
-        /* check elements */
-        unsigned int eno = 0;
-        for (auto el : state[m].elements) {
-          if (eno > 0) {
-
-            WebKitDOMElement * ee = webkit_dom_document_get_element_by_id (d, el.element_id().c_str());
-
-            WebKitDOMDOMTokenList * e_class_list =
-              webkit_dom_element_get_class_list (ee);
-
-            /* reset class */
-            webkit_dom_dom_token_list_remove (e_class_list, "focused",
-                (gerr = NULL, &gerr));
-
-            g_object_unref (e_class_list);
-            g_object_unref (ee);
-          }
-
-          eno++;
-        }
-      }
-
-      g_object_unref (class_list);
-      g_object_unref (e);
-    }
-
-    g_object_unref (d);
-
-    /* update focus time for unread counter */
-    focus_time = chrono::steady_clock::now ();
-    if (unread_delay == 0.0) unread_check ();
-  }
+  } // }}}
 
   bool ThreadView::unread_check () {
     if (!ready) return false; // disconnect
 
     if (!edit_mode && focused_message && focused_message->in_notmuch) {
 
-      if (!state[focused_message].unread_checked && !is_hidden(focused_message)) {
+      if (!state[focused_message].unread_checked && state[focused_message].expanded) {
 
         chrono::duration<double> elapsed = chrono::steady_clock::now() - focus_time;
 
@@ -3764,171 +2577,161 @@ namespace Astroid {
     return true;
   }
 
-  ustring ThreadView::focus_next_element (bool force_change) {
-    ustring eid;
-
-    if (!is_hidden (focused_message) || edit_mode) {
-      /* if the message is expanded, check if we should move focus
-       * to the next element */
-
-      MessageState * s = &(state[focused_message]);
-
-      //LOG (debug) << "focus next: current element: " << s->current_element << " of " << s->elements.size();
-      /* are there any more elements */
-      if (s->current_element < (s->elements.size()-1)) {
-        /* check if the next element is in full view */
-
-        MessageState::Element * next_e = &(s->elements[s->current_element + 1]);
-
-        WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
-
-        auto adj = scroll.get_vadjustment ();
-
-        eid = next_e->element_id ();
-
-        bool change_focus = force_change;
-
-        if (!force_change) {
-          WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, eid.c_str());
-
-          double scrolled = adj->get_value ();
-          double height   = adj->get_page_size (); // 0 when there is
-                                                   // no paging.
-
-          double clientY = webkit_dom_element_get_offset_top (e);
-          double clientH = webkit_dom_element_get_client_height (e);
-
-          g_object_unref (e);
-          g_object_unref (d);
-
-          if (height > 0) {
-            if (  (clientY >= scrolled) &&
-                ( (clientY + clientH) <= (scrolled + height) ))
-            {
-              change_focus = true;
-            }
-          } else {
-            change_focus = true;
-          }
-        }
-
-        //LOG (debug) << "focus_next_element: change: " << change_focus;
-
-        if (change_focus) {
-          s->current_element++;
-          update_focus_status ();
-          return eid;
-        }
-      }
-    }
-
-    /* no focus change, standard behaviour */
-    auto adj = scroll.get_vadjustment ();
-    double v = adj->get_value ();
-    adj->set_value (adj->get_value() + adj->get_step_increment ());
-
-    if (force_change  || (v == adj->get_value ())) {
-      /* we're at the bottom, just move focus down */
-      bool last = find (
-          mthread->messages.begin (),
-          mthread->messages.end (),
-          focused_message) == (mthread->messages.end () - 1);
-
-
-      if (!last) eid = focus_next ();
-    } else {
-      update_focus_to_view ();
-    }
-
-    return eid;
+  void ThreadView::run_javascript (string js)
+  {
+    run_javascript (js, (std::function<void (GObject *, GAsyncResult *)>) NULL);
   }
 
-  ustring ThreadView::focus_previous_element (bool force_change) {
-    ustring eid;
-
-    if (!is_hidden (focused_message) || edit_mode) {
-      /* if the message is expanded, check if we should move focus
-       * to the previous element */
-
-      MessageState * s = &(state[focused_message]);
-
-      //LOG (debug) << "focus prev: current elemenet: " << s->current_element;
-      /* are there any more elements */
-      if (s->current_element > 0) {
-        /* check if the prev element is in full view */
-
-        MessageState::Element * next_e = &(s->elements[s->current_element - 1]);
-
-        bool change_focus = force_change;
-
-        if (!force_change) {
-          if (next_e->type != MessageState::ElementType::Empty) {
-            WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
-
-            auto adj = scroll.get_vadjustment ();
-
-            eid = next_e->element_id ();
-
-            WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, eid.c_str());
-
-            double scrolled = adj->get_value ();
-            double height   = adj->get_page_size (); // 0 when there is
-                                                     // no paging.
-
-            double clientY = webkit_dom_element_get_offset_top (e);
-            double clientH = webkit_dom_element_get_client_height (e);
-
-            g_object_unref (e);
-            g_object_unref (d);
-
-            if (height > 0) {
-              if (  (clientY >= scrolled) &&
-                  ( (clientY + clientH) <= (scrolled + height) ))
-              {
-                change_focus = true;
-              }
-            } else {
-              change_focus = true;
-            }
-          } else {
-            change_focus = true;
-          }
-        }
-
-        //LOG (debug) << "focus_prev_element: change: " << change_focus;
-
-        if (change_focus) {
-          s->current_element--;
-          update_focus_status ();
-          return eid;
-        }
-      }
-    }
-
-    /* standard behaviour */
-    auto adj = scroll.get_vadjustment ();
-    if (force_change || (adj->get_value () == adj->get_lower ())) {
-      /* we're at the top, move focus up */
-      ustring mid = focus_previous (false);
-      ThreadView::MessageState::Element * e =
-        state[focused_message].get_current_element ();
-      if (e != NULL) {
-        eid = e->element_id ();
-      } else {
-        eid = mid; // if no element selected, focus message
-      }
-    } else {
-      adj->set_value (adj->get_value() - adj->get_step_increment ());
-      update_focus_to_view ();
-    }
-
-    return eid;
+  void ThreadView::run_javascript (
+      string js,
+      std::function<void (std::string)> cb)
+  {
+    run_javascript (js,
+                    std::bind (&ThreadView::run_javascript_cb_s,
+                      this, std::placeholders::_1, std::placeholders::_2, cb));
   }
 
-  ustring ThreadView::focus_next () {
-    //LOG (debug) << "tv: focus_next.";
+  void ThreadView::run_javascript (
+      string js,
+      std::function<void (GObject *, GAsyncResult *)> cb)
+  {
+    if (cb != NULL && js_cb != NULL) {
+      throw webkit_error ("javascript call expecting return value was run before previous javascript had returned expected value");
+    }
 
-    if (edit_mode) return "";
+    js_cb = cb;
+
+    LOG (debug) << "tv: js: running: " << js;
+    webkit_web_view_run_javascript (webview, js.c_str (), NULL, ThreadView_js_finished, this);
+  }
+
+  void ThreadView_js_finished (GObject * o, GAsyncResult * r, gpointer data) {
+    ((ThreadView *) data)->run_javascript_cb (o, r);
+  }
+
+  void ThreadView::run_javascript_cb (GObject * o, GAsyncResult * r) {
+    LOG (debug) << "tv: js: done." << std::endl;
+
+    if (js_cb) {
+      js_cb (o, r);
+      js_cb = NULL;
+    }
+  }
+
+  void ThreadView::run_javascript_cb_s (
+      GObject * object,
+      GAsyncResult * result,
+      std::function<void (std::string)> cb)
+  {
+    WebKitJavascriptResult *js_result;
+    JSValueRef              value;
+    JSGlobalContextRef      context;
+    GError                 *error = NULL;
+
+    js_result = webkit_web_view_run_javascript_finish (WEBKIT_WEB_VIEW (object), result, &error);
+    if (!js_result) {
+      throw webkit_error (ustring::compose ("error running javascript: %1", error->message).c_str());
+      return;
+    }
+
+    context = webkit_javascript_result_get_global_context (js_result);
+    value = webkit_javascript_result_get_value (js_result);
+    std::string s_value = "";
+    if (JSValueIsString (context, value)) {
+      JSStringRef js_str_value;
+      gchar      *str_value;
+      gsize       str_length;
+
+      js_str_value = JSValueToStringCopy (context, value, NULL);
+      str_length = JSStringGetMaximumUTF8CStringSize (js_str_value);
+      str_value = (gchar *)g_malloc (str_length);
+      JSStringGetUTF8CString (js_str_value, str_value, str_length);
+      JSStringRelease (js_str_value);
+
+      s_value = str_value;
+      g_free (str_value);
+    } else {
+      throw webkit_error ("error running javascript: expected string return value");
+    }
+
+    webkit_javascript_result_unref (js_result);
+
+    cb (s_value);
+  }
+
+  void ThreadView::focus_change_cb (std::string e) {
+    LOG (debug) << "tv: got focus_change, element: " << e;
+
+    auto vs = VectorUtils::split_and_trim (e, ",");
+    for (auto m : mthread->messages) {
+      if (vs[0] == m->safe_mid ()) {
+        focused_message = m;
+        if (vs[0] != vs[1]) {
+          unsigned int i = 0;
+          for (auto e : state[m].elements) {
+            if (e.element_id () == vs[1]) {
+              state[m].current_element = i;
+            }
+            i++;
+          }
+
+        } else {
+          state[m].current_element = 0;
+        }
+      }
+    }
+
+    /* focused_message = m; */
+    /* state[focused_message].current_element = e; */
+  }
+
+  void ThreadView::focus_next_element (bool force_change) {
+    /*
+     * Jump to next element (if no scrolling is necessary),
+     * otherwise scroll the viewport a small increment.
+     *
+     * If force_change is true, then always move focus to the next element.
+     *
+     * The function should return the currently selected message and element.
+     *
+     */
+
+    LOG (info) << "tv: focus next element, force_change=" << force_change;
+
+    string js = "Astroid.focus_next_element(" + ( force_change ? string("true") : string("false")) + ");";
+
+    run_javascript (js, std::bind (&ThreadView::focus_change_cb, this, std::placeholders::_1));
+  }
+
+  // TODO: [JS]
+  void ThreadView::focus_previous_element (bool force_change) {
+    /* Inverse of focus_next_element */
+
+    LOG (debug) << "tv: focus previous element, force_change=" << force_change;
+
+    string js = "Astroid.focus_previous_element(" + ( force_change ? string("true") : string("false")) + ");";
+    run_javascript (js, std::bind (&ThreadView::focus_change_cb, this, std::placeholders::_1));
+  }
+
+  void ThreadView::focus_element (refptr<Message> m, unsigned int e) {
+    LOG (debug) << "tv: focus element, e=" << e;
+
+    string js = ustring::compose ("Astroid.focus_element (%1, %2);",
+        m->safe_mid (), e);
+
+    // TODO [JS]
+    LOG (error) << "tv: focus element NOT IMPLEMENTED!";
+    /* run_javascript (js, std::bind (&ThreadView::focus_change_cb, this, std::placeholders::_1)); */
+  }
+
+  void ThreadView::focus_message (refptr<Message> m) {
+    focus_element (m, 0);
+  }
+
+  void ThreadView::focus_next_message () {
+    LOG (debug) << "tv: focus_next_message";
+
+    if (edit_mode) return;
 
     int focused_position = find (
         mthread->messages.begin (),
@@ -3936,18 +2739,14 @@ namespace Astroid {
         focused_message) - mthread->messages.begin ();
 
     if (focused_position < static_cast<int>((mthread->messages.size ()-1))) {
-      focused_message = mthread->messages[focused_position + 1];
-      state[focused_message].current_element = 0; // start at top
-      update_focus_status ();
+      focus_message (mthread->messages[focused_position + 1]);
     }
 
-    return "message_" + focused_message->mid;
   }
 
-  ustring ThreadView::focus_previous (bool focus_top) {
-    //LOG (debug) << "tv: focus previous.";
-
-    if (edit_mode) return "";
+  void ThreadView::focus_previous_message (bool focus_top) {
+    LOG (debug) << "tv: focus_previous_message";
+    if (edit_mode) return;
 
     int focused_position = find (
         mthread->messages.begin (),
@@ -3955,202 +2754,56 @@ namespace Astroid {
         focused_message) - mthread->messages.begin ();
 
     if (focused_position > 0) {
-      focused_message = mthread->messages[focused_position - 1];
-      if (!focus_top && !is_hidden (focused_message)) {
-        state[focused_message].current_element = state[focused_message].elements.size()-1; // start at bottom
+      auto m = mthread->messages[focused_position - 1];
+      if (!focus_top && state[focused_message].expanded) {
+        focus_element (m, state[m].elements.size ()-1); // start at bottom
       } else {
-        state[focused_message].current_element = 0; // start at top
+        focus_message (m); // start at top
       }
-      update_focus_status ();
-    }
-
-    return "message_" + focused_message->mid;
-  }
-
-  bool ThreadView::scroll_to_message (refptr<Message> m, bool scroll_when_visible) {
-    focused_message = m;
-
-    if (edit_mode) return false;
-
-    if (!focused_message) {
-      LOG (warn) << "tv: focusing: no message selected for focus.";
-      return false;
-    }
-
-    LOG (debug) << "tv: focusing: " << m->date ();
-
-    WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
-
-    ustring mid = "message_" + m->mid;
-
-    WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
-
-    g_object_unref (e);
-    g_object_unref (d);
-
-    return scroll_to_element (mid, scroll_when_visible);
-  }
-
-  bool ThreadView::scroll_to_element (
-      ustring eid,
-      bool scroll_when_visible)
-  {
-    /* returns false when rendering is incomplete and scrolling
-     * doesn't work */
-
-    if (eid == "") {
-      LOG (error) << "tv: attempted to scroll to unspecified id.";
-      return false;
-
-    }
-
-    WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
-    WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, eid.c_str());
-
-    auto adj = scroll.get_vadjustment ();
-    double scrolled = adj->get_value ();
-    double height   = adj->get_page_size (); // 0 when there is
-                                             // no paging.
-    double upper    = adj->get_upper ();
-
-    double clientY = webkit_dom_element_get_offset_top (e);
-    double clientH = webkit_dom_element_get_client_height (e);
-
-    if (height > 0) {
-      if (scroll_when_visible) {
-        if ((clientY + clientH - height) > upper) {
-          /* message is last, can't scroll past bottom */
-          adj->set_value (upper);
-        } else {
-          adj->set_value (clientY);
-        }
-      } else {
-        /* only scroll if parts of the message are out view */
-        if (clientY < scrolled) {
-          /* top is above view  */
-          adj->set_value (clientY);
-
-        } else if ((clientY + clientH) > (scrolled + height)) {
-          /* bottom is below view */
-
-          // if message is of less height than page, scroll so that
-          // bottom is aligned with bottom
-
-          if (clientH < height) {
-            adj->set_value (clientY + clientH - height);
-          } else {
-            // otherwise align top with top
-            if ((clientY + clientH - height) > upper) {
-              /* message is last, can't scroll past bottom */
-              adj->set_value (upper);
-            } else {
-              adj->set_value (clientY);
-            }
-          }
-        }
-      }
-    }
-
-    update_focus_status ();
-
-    g_object_unref (e);
-    g_object_unref (d);
-
-    /* the height does not seem to make any sense, but is still more
-     * than empty. we need to re-do the calculation when everything
-     * has been rendered and re-calculated. */
-    if (height == 1) {
-      in_scroll = true;
-      scroll_arg = eid;
-      _scroll_when_visible = scroll_when_visible;
-      return false;
-
-    } else {
-
-      return true;
-
     }
   }
 
   /* end focus handeling   */
 
-  /* message hiding  */
-  bool ThreadView::is_hidden (refptr<Message> m) {
-    ustring mid = "message_" + m->mid;
-
-    WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
-
-    WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
-
-    WebKitDOMDOMTokenList * class_list =
-      webkit_dom_element_get_class_list (e);
-
-    GError * gerr = NULL;
-
-    bool r = webkit_dom_dom_token_list_contains (class_list, "hide", (gerr = NULL, &gerr));
-
-    g_object_unref (class_list);
-    g_object_unref (e);
-    g_object_unref (d);
-
-    return r;
-  }
-
-  bool ThreadView::toggle_hidden (
-      refptr<Message> m,
-      ToggleState t)
-  {
+  /* message expanding and collapsing  */
+  bool ThreadView::expand (refptr<Message> m) {
     /* returns true if the message was expanded in the first place */
 
-    if (!m) m = focused_message;
-    ustring mid = "message_" + m->mid;
+    bool wasexpanded  = state[m].expanded;
 
-    // reset element focus
-    state[m].current_element = 0; // empty focus
+    if (!wasexpanded) {
+      state[m].expanded = true;
+      std::string js = "Astroid.expand_message ('" + m->safe_mid () + "');";
+      run_javascript (js);
 
-    WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
-
-    WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
-
-    WebKitDOMDOMTokenList * class_list =
-      webkit_dom_element_get_class_list (e);
-
-    GError * gerr = NULL;
-
-    bool wasexpanded;
-
-    if (webkit_dom_dom_token_list_contains (class_list, "hide", (gerr = NULL, &gerr)))
-    {
-      wasexpanded = false;
-
-      /* reset class */
-      if (t == ToggleToggle || t == ToggleShow) {
-        webkit_dom_dom_token_list_remove (class_list, "hide",
-            (gerr = NULL, &gerr));
-      }
-
-    } else {
-      wasexpanded = true;
-
-      /* set class  */
-      if (t == ToggleToggle || t == ToggleHide) {
-        webkit_dom_dom_token_list_add (class_list, "hide",
-            (gerr = NULL, &gerr));
-      }
+      /* if the message was unexpanded, it would not have been marked as read */
+      if (unread_delay == 0.0) unread_check ();
     }
-
-    g_object_unref (class_list);
-    g_object_unref (e);
-    g_object_unref (d);
-
-
-    /* if the message was unexpanded, it would not have been marked as read */
-    if (unread_delay == 0.0) unread_check ();
 
     return wasexpanded;
   }
 
-  /* end message hiding  */
+  bool ThreadView::collapse (refptr<Message> m) {
+    /* returns true if the message was expanded in the first place */
+    bool wasexpanded  = state[m].expanded;
+
+    if (wasexpanded) {
+      state[m].expanded = false;
+      std::string js = "Astroid.collapse_message ('" + m->safe_mid () + "');";
+      run_javascript (js);
+    }
+
+    return wasexpanded;
+  }
+
+  bool ThreadView::toggle (refptr<Message> m)
+  {
+    /* returns true if the message was expanded in the first place */
+    if (state[m].expanded) return collapse (m);
+    else                   return expand (m);
+  }
+
+  /* end message expanding and collapsing  */
 
   void ThreadView::save_all_attachments () { //
     /* save all attachments of current focused message */
@@ -4314,8 +2967,12 @@ namespace Astroid {
     in_search = false;
     in_search_match = false;
     search_q  = "";
+
+    // TODO: [W2]
+# if 0
     webkit_web_view_set_highlight_text_matches (webview, false);
     webkit_web_view_unmark_text_matches (webview);
+# endif
   }
 
   void ThreadView::on_search (ustring k) {
@@ -4326,12 +2983,13 @@ namespace Astroid {
       /* expand all messages, these should be closed - except the focused one
        * when a search is cancelled */
       for (auto m : mthread->messages) {
-        state[m].search_expanded = is_hidden (m);
-        toggle_hidden (m, ToggleShow);
+        state[m].search_expanded = !expand (m);
       }
 
       LOG (debug) << "tv: searching for: " << k;
-      int n = webkit_web_view_mark_text_matches (webview, k.c_str (), false, 0);
+      // TODO: [W2]
+      /* int n = webkit_web_view_mark_text_matches (webview, k.c_str (), false, 0); */
+      int n = 0; // TODO
 
       LOG (debug) << "tv: search, found: " << n << " matches.";
 
@@ -4340,14 +2998,15 @@ namespace Astroid {
       if (in_search) {
         search_q = k;
 
-        webkit_web_view_set_highlight_text_matches (webview, true);
+        // TODO: [W2]
+        /* webkit_web_view_set_highlight_text_matches (webview, true); */
 
         next_search_match ();
 
       } else {
         /* un-expand messages again */
         for (auto m : mthread->messages) {
-          if (state[m].search_expanded) toggle_hidden (m, ToggleHide);
+          if (state[m].search_expanded) collapse (m);
           state[m].search_expanded = false;
         }
 
@@ -4366,16 +3025,32 @@ namespace Astroid {
      */
 
     in_search_match = true;
-    webkit_web_view_search_text (webview, search_q.c_str (), false, true, true);
+    // TODO: [W2]
+    /* webkit_web_view_search_text (webview, search_q.c_str (), false, true, true); */
   }
 
   void ThreadView::prev_search_match () {
     if (!in_search) return;
 
     in_search_match = true;
-    webkit_web_view_search_text (webview, search_q.c_str (), false, false, true);
+    // TODO: [W2]
+    /* webkit_web_view_search_text (webview, search_q.c_str (), false, false, true); */
   }
 
-  /*  */
+  /* Utils */
+  std::string ThreadView::assemble_data_uri (ustring mime_type, gchar * &data, gsize len) {
+
+    std::string base64 = "data:" + mime_type + ";base64," + Glib::Base64::encode (std::string(data, len));
+
+    return base64;
+  }
+
+  /***************
+   * Exceptions
+   ***************/
+
+  webkit_error::webkit_error (const char * w) : std::runtime_error (w)
+  {
+  }
 }
 

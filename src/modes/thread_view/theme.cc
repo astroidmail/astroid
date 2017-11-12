@@ -25,22 +25,28 @@ using namespace boost::filesystem;
 
 namespace Astroid {
   std::atomic<bool> Theme::theme_loaded (false);
-  const char * Theme::thread_view_html_f = "ui/thread-view.html";
+  const char * Theme::thread_view_html_f = "ui/thread-view/dist/index.html";
+  const char * Theme::thread_view_js_f   = "ui/thread-view/dist/astroid.js";
 # ifndef DISABLE_LIBSASS
-  const char * Theme::thread_view_scss_f  = "ui/thread-view.scss";
+  const char * Theme::thread_view_scss_f  = "ui/thread-view/src/thread-view.scss";
 # else
-  const char * Theme::thread_view_css_f  = "ui/thread-view.css";
+  const char * Theme::thread_view_css_f  = "ui/thread-view/dist/thread-view.css";
 # endif
   ustring Theme::thread_view_html;
+  ustring Theme::thread_view_js;
   ustring Theme::thread_view_css;
 
   Theme::Theme () {
+    load (false);
+  }
+
+  void Theme::load (bool reload) {
     using bfs::path;
     using std::endl;
     LOG (debug) << "theme: loading..";
 
     /* load html and css (from scss) */
-    if (!theme_loaded) {
+    if (reload || !theme_loaded) {
       path tv_html = Resource (true, thread_view_html_f).get_path ();
 
       if (!check_theme_version (tv_html)) {
@@ -48,6 +54,8 @@ namespace Astroid {
         LOG (error) << "tv: html file version does not match!";
 
       }
+
+      path tv_js = Resource (false, thread_view_js_f).get_path ();
 
 # ifndef DISABLE_LIBSASS
       path tv_scss = Resource (true, thread_view_scss_f).get_path ();
@@ -66,6 +74,7 @@ namespace Astroid {
       }
 # endif
 
+      /* load html */
       {
         std::ifstream tv_html_f (tv_html.c_str());
         std::istreambuf_iterator<char> eos; // default is eos
@@ -75,6 +84,17 @@ namespace Astroid {
         tv_html_f.close ();
       }
 
+      /* load JS */
+      {
+        std::ifstream tv_js_f (tv_js.c_str());
+        std::istreambuf_iterator<char> eos; // default is eos
+        std::istreambuf_iterator<char> tv_iit (tv_js_f);
+
+        thread_view_js.append (tv_iit, eos);
+        tv_js_f.close ();
+      }
+
+      /* load style sheet */
 # ifndef DISABLE_LIBSASS
       thread_view_css = process_scss (tv_scss.c_str ());
 # else

@@ -30,3 +30,6 @@ tmp-*
 
 build*
 
+ui/bundle*js
+ui/vendor/*
+ui/*compiler*

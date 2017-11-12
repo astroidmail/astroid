@@ -1,4 +1,4 @@
-/* ui-version: 4 (do not change when modifying theme for yourself) */
+/* ui-version: 5 (do not change when modifying theme for yourself) */
 /* Variables */
 @if not(global-variable-exists(background-color)) {
   $background-color: #ccc !global;
@@ -813,16 +813,20 @@ body.nohide .email .compressed_note > span {
     }
 }
 
+.tags-list {
+    span {
+        &:not(:first-child) {
+            margin-left: 5px;
+        }
+        padding: 2px;
+    }
+}
+
 .header {
     overflow: hidden;
     font-size: 90%;
-
-    #Tags {
-	.value span {
-	    padding: 2px;
-	}
-    }
 }
+
 .header .field {
     clear: both;
     overflow: hidden;
@@ -1152,3 +1156,20 @@ License: http://cssload.net/en/terms_of_use
 }
 
 /* /Spinner */
+
+iframe[seamless]{
+    background-color: transparent;
+    border: 0px none transparent;
+    padding: 0px;
+    overflow: hidden;
+    width: 100%;
+}
+
+iframe.message-iframe {
+    width: 65%;
+    min-width: 500px;
+    margin-top: 0px;
+    margin-left: 15px;
+    margin-right: 15px;
+    margin-bottom: 15px;
+}
