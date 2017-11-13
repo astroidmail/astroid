@@ -229,7 +229,7 @@ if (NOT GMIME_MATCHES)
     )
 endif()
 
-if (ENABLE_PROFILING)a
+if (ENABLE_PROFILING)
   message (STATUS "Enabling profiling.")
   add_compile_options ( -pg )
   set (CMAKE_EXE_LINKER_FLAGS "-pg")
