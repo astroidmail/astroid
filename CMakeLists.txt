@@ -20,6 +20,11 @@ else ()
 endif ()
 
 ##
+# where supporting modules live
+#
+set (CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+
+##
 # project name
 #
 project (astroid)
@@ -40,10 +45,19 @@ else ()
 endif ()
 
 ##
+# plugin API namespace and version
+#
+if(NOT DISABLE_PLUGINS)
+  set (PLUGIN_NAMESPACE    "Astroid")
+  set (PLUGIN_API_VERSION  "0.1")
+endif()
+
+##
 # cmake -D...=ON|OFF command line feature switches and their default values
 #
 option (DISABLE_TERMINAL         "Disable embedded terminal (default = enabled)"  OFF)
 option (DISABLE_EMBEDDED_EDITOR  "Disable embedded editor (default = enabled)"    OFF)
+option (DISABLE_PLUGINS          "Disable plugins (default = enabled)"            OFF)
 
 ##
 # welcome message
@@ -128,15 +142,21 @@ add_compile_options (
 
 add_compile_options (
   -Wall
-  -g
   -Wextra
   )
 
 add_definitions (
-  -DDISABLE_PLUGINS
   -DBOOST_LOG_DYN_LINK
+  )
+
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+add_compile_options (
+  -g
+  )
+add_definitions (
   -DDEBUG
   )
+endif ()
 
 set ( GIT_DESC ${PROJECT_VERSION} )
 set ( PREFIX ${CMAKE_INSTALL_PREFIX} )
@@ -272,3 +292,90 @@ else(DISABLE_EMBEDDED_EDITOR)
       )
   endif(APPLE)
 endif(DISABLE_EMBEDDED_EDITOR)
+
+##
+# plugins
+#
+if(DISABLE_PLUGINS)
+  add_definitions ( -DDISABLE_PLUGINS )
+  message (STATUS "Disabling plugins.")
+else()
+  if(APPLE)
+    # with homebrew, libffi is keg-only, i.e. not symlinked into
+    # /usr/local; hence we have to tell pkg-config where to look for
+    # it
+    list ( APPEND CMAKE_PREFIX_PATH /usr/local/opt/libffi )
+  endif()
+  include (FindGObjectIntrospection)   # this performs a pkg_check_modules()
+  pkg_check_modules (PEAS libpeas-1.0>=1.0.0)
+  if(INTROSPECTION_FOUND AND PEAS_FOUND)
+    #
+    # GObject introspection
+    #
+    include (GObjectIntrospectionMacros)
+    set (GIR_NAME "${PLUGIN_NAMESPACE}-${PLUGIN_API_VERSION}.gir")
+    set (${GIR_NAME}_NAMESPACE      ${PLUGIN_NAMESPACE})
+    set (${GIR_NAME}_VERSION        ${PLUGIN_API_VERSION})
+    set (${GIR_NAME}_INCLUDEPKGS    GObject-2.0 GMime-3.0)
+    set (${GIR_NAME}_PROGRAM        ${CMAKE_CURRENT_BINARY_DIR}/gir_main)
+    set (${GIR_NAME}_FILES
+      src/plugin/astroid_activatable.c
+      src/plugin/thread_view_activatable.c
+      src/plugin/thread_index_activatable.c
+      src/plugin/astroid_activatable.h
+      src/plugin/thread_view_activatable.h
+      src/plugin/thread_index_activatable.h
+      src/plugin/gir_main.c
+      )
+    list ( APPEND INTROSPECTION_GIRS ${GIR_NAME} )
+    set (INTROSPECTION_SCANNER_ARGS --warn-all)
+    gir_add_introspections (INTROSPECTION_GIRS)   # magic happens here
+    #
+    # additional source files for astroid (plugin framework)
+    #
+    target_sources (
+      astroid
+      PRIVATE
+      src/plugin/astroid_activatable.c
+      src/plugin/manager.cc
+      src/plugin/thread_index_activatable.c
+      src/plugin/thread_view_activatable.c
+      )
+    #
+    # link astroid against libpeas
+    #
+    if(APPLE)
+      # with homebrew, libffi is keg-only, i.e. not symlinked into
+      # /usr/local; hence we have to tell the compiler where to look
+      # for header files
+      include_directories ( ${PEAS_INCLUDE_DIRS} )
+    endif(APPLE)
+    target_link_libraries (
+      astroid
+      ${PEAS_LDFLAGS}
+      )
+    #
+    # build gir_main executable for introspection
+    #
+    add_executable (
+      gir_main
+      ${${GIR_NAME}_FILES}
+      )
+    target_link_libraries (
+      gir_main
+      ${WEBKITGTK3_LDFLAGS}
+      ${GTKMM3_LDFLAGS}
+      ${PEAS_LDFLAGS}
+      ${INTROSPECTION_LIBS}
+      ${Gettext_LDFAGS}
+      )
+    #
+    # depenedecies for proper build order
+    #
+    add_dependencies ( gir-typelibs gir_main )
+    add_dependencies ( astroid  gir-typelibs )
+  else(INTROSPECTION_FOUND AND PEAS_FOUND)
+    add_definitions ( -DDISABLE_PLUGINS )
+    message (WARNING "Required packages not found; disabling plugins.")
+  endif(INTROSPECTION_FOUND AND PEAS_FOUND)
+endif(DISABLE_PLUGINS)
