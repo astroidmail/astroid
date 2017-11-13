@@ -154,31 +154,39 @@ add_compile_options (
   ${SASS_CFLAGS}
   )
 
+#
+# default options
+#
 add_compile_options (
   -Wall
-  -Wextra
   )
-
 add_definitions (
   -DBOOST_LOG_DYN_LINK
   )
-
+#
+# debug builds
+#
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
 add_compile_options (
+  -Wextra
   -g
   )
 add_definitions (
   -DDEBUG
   )
 endif ()
-
-if (ENABLE_PROFILING)
-  message (STATUS "Enabling profiling.")
-  add_compile_options ( -pg )
-  set (CMAKE_EXE_LINKER_FLAGS "-pg")
+#
+# release builds
+#
+if (CMAKE_BUILD_TYPE STREQUAL "Release")
+add_compile_options (
+  -O2
+  )
 endif()
 
-## Check if notmuch is compiled against the same GMime library
+##
+# Check if notmuch is compiled against the same GMime library
+#
 include(CheckCXXSourceRuns)
 set (CMAKE_REQUIRED_INCLUDES ${GMIME_INCLUDE_DIRS})
 set (CMAKE_REQUIRED_FLAGS    ${GMIME_CFLAGS})
@@ -219,6 +227,12 @@ if (NOT GMIME_MATCHES)
     FATAL_ERROR
     "You must compile and link against the same GMime version (e.g. 2.6 or 3) with both notmuch and astroid."
     )
+endif()
+
+if (ENABLE_PROFILING)
+  message (STATUS "Enabling profiling.")
+  add_compile_options ( -pg )
+  set (CMAKE_EXE_LINKER_FLAGS "-pg")
 endif()
 
 set ( GIT_DESC ${PROJECT_VERSION} )
@@ -407,7 +421,7 @@ else()
     # additional source files for astroid (plugin framework)
     #
     target_sources (
-      astroid
+      astr
       PRIVATE
       src/plugin/astroid_activatable.c
       src/plugin/manager.cc
@@ -417,14 +431,9 @@ else()
     #
     # link astroid against libpeas
     #
-    if(APPLE)
-      # with homebrew, libffi is keg-only, i.e. not symlinked into
-      # /usr/local; hence we have to tell the compiler where to look
-      # for header files
-      include_directories ( ${PEAS_INCLUDE_DIRS} )
-    endif(APPLE)
+    include_directories ( ${PEAS_INCLUDE_DIRS} )
     target_link_libraries (
-      astroid
+      astr
       ${PEAS_LDFLAGS}
       )
     #
