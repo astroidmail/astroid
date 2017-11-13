@@ -244,6 +244,7 @@ if not get_option('disable-tests')
 
   tests = [ [ 'generic test',   'test_generic',         [ 'tests/test_generic.cc' ]],
             [ 'compose testing', 'test_composed_message',     [ 'tests/test_composed_message.cc' ]],
+            [ 'markdown',       'test_markdown',        [ 'tests/test_markdown.cc' ]],
             [ 'non existant file', 'test_non_existant_file',  [ 'tests/test_non_existant_file.cc' ]],
             [ 'open db',        'test_open_db',         [ 'tests/test_open_db.cc' ]],
             [ 'convert error',  'test_convert_error',   [ 'tests/test_convert_error.cc' ]],
