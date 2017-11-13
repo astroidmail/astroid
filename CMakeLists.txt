@@ -154,25 +154,39 @@ add_compile_options (
   ${SASS_CFLAGS}
   )
 
+#
+# default options
+#
 add_compile_options (
   -Wall
-  -Wextra
   )
-
 add_definitions (
   -DBOOST_LOG_DYN_LINK
   )
-
+#
+# debug builds
+#
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
 add_compile_options (
+  -Wextra
   -g
   )
 add_definitions (
   -DDEBUG
   )
 endif ()
+#
+# release builds
+#
+if (CMAKE_BUILD_TYPE STREQUAL "Release")
+add_compile_options (
+  -O2
+  )
+endif()
 
-## Check if notmuch is compiled against the same GMime library
+##
+# Check if notmuch is compiled against the same GMime library
+#
 include(CheckCXXSourceRuns)
 set (CMAKE_REQUIRED_INCLUDES ${GMIME_INCLUDE_DIRS})
 set (CMAKE_REQUIRED_FLAGS    ${GMIME_CFLAGS})
@@ -215,7 +229,7 @@ if (NOT GMIME_MATCHES)
     )
 endif()
 
-if (ENABLE_PROFILING)
+if (ENABLE_PROFILING)a
   message (STATUS "Enabling profiling.")
   add_compile_options ( -pg )
   set (CMAKE_EXE_LINKER_FLAGS "-pg")
