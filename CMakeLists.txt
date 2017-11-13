@@ -58,6 +58,7 @@ endif()
 option (DISABLE_TERMINAL         "Disable embedded terminal (default = enabled)"  OFF)
 option (DISABLE_EMBEDDED_EDITOR  "Disable embedded editor (default = enabled)"    OFF)
 option (DISABLE_PLUGINS          "Disable plugins (default = enabled)"            OFF)
+option (ENABLE_PROFILING         "Enable profiling (default = disabled)"          OFF)
 
 ##
 # welcome message
@@ -212,6 +213,12 @@ if (NOT GMIME_MATCHES)
     FATAL_ERROR
     "You must compile and link against the same GMime version (e.g. 2.6 or 3) with both notmuch and astroid."
     )
+endif()
+
+if (ENABLE_PROFILING)
+  message (STATUS "Enabling profiling.")
+  add_compile_options ( -pg )
+  set (CMAKE_EXE_LINKER_FLAGS "-pg")
 endif()
 
 set ( GIT_DESC ${PROJECT_VERSION} )
