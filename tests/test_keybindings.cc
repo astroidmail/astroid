@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_SUITE(TestTestKeybindings)
     /* test run hook */
     ustring test_thread = "001";
 
-    auto f = [&] (Key k, ustring cmd) {
+    auto f = [&] (Key, ustring cmd) {
       LOG (test) << "key: run-hook got back: " << cmd;
 
       ustring final_cmd = ustring::compose (cmd, test_thread);
