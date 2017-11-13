@@ -452,3 +452,8 @@ else()
     message (WARNING "Required packages not found; disabling plugins.")
   endif(INTROSPECTION_FOUND AND PEAS_FOUND)
 endif(DISABLE_PLUGINS)
+
+# Tests
+enable_testing()
+add_subdirectory (tests)
+
