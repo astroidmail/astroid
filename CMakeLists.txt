@@ -75,9 +75,11 @@ pkg_check_modules (GTKMM3     REQUIRED  gtkmm-3.0>=3.10)
 pkg_check_modules (GLIBMM2    REQUIRED  glibmm-2.4)
 
 pkg_check_modules (GMIME                gmime-3.0>=3.0.0)
+set (GMIME_VER 3.0)
 if (NOT GMIME_FOUND)
   # fall back to gmime 2
   pkg_check_modules (GMIME              gmime-2.6>=2.6.0)
+  set (GMIME_VER 2.6)
 endif()
 
 if (NOT GMIME_FOUND)
@@ -405,7 +407,7 @@ else()
     set (GIR_NAME "${PLUGIN_NAMESPACE}-${PLUGIN_API_VERSION}.gir")
     set (${GIR_NAME}_NAMESPACE      ${PLUGIN_NAMESPACE})
     set (${GIR_NAME}_VERSION        ${PLUGIN_API_VERSION})
-    set (${GIR_NAME}_INCLUDEPKGS    GObject-2.0 GMime-3.0)
+    set (${GIR_NAME}_INCLUDEPKGS    GObject-2.0 GMime-${GMIME_VER})
     set (${GIR_NAME}_PROGRAM        ${CMAKE_CURRENT_BINARY_DIR}/gir_main)
     set (${GIR_NAME}_FILES
       src/plugin/astroid_activatable.c
