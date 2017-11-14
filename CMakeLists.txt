@@ -421,12 +421,7 @@ else()
     #
     # link astroid against libpeas
     #
-    if(APPLE)
-      # with homebrew, libffi is keg-only, i.e. not symlinked into
-      # /usr/local; hence we have to tell the compiler where to look
-      # for header files
-      include_directories ( ${PEAS_INCLUDE_DIRS} )
-    endif(APPLE)
+    include_directories ( ${PEAS_INCLUDE_DIRS} )
     target_link_libraries (
       astroid
       ${PEAS_LDFLAGS}
