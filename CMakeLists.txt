@@ -466,6 +466,22 @@ else()
   endif(INTROSPECTION_FOUND AND PEAS_FOUND)
 endif(DISABLE_PLUGINS)
 
+# Installing
+install ( TARGETS astroid
+  RUNTIME DESTINATION bin )
+
+install (DIRECTORY ui/icons
+  DESTINATION share/astroid/ui
+  )
+
+install (FILES ui/astroid.desktop
+  DESTINATION share/applications
+  )
+
+install (FILES ui/thread-view.html ui/edit-message.glade ui/no-mail.png
+  DESTINATION share/astroid
+  )
+
 # Tests
 enable_testing()
 add_subdirectory (tests)
