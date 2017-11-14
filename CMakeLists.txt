@@ -9,6 +9,8 @@ cmake_minimum_required (VERSION 3.9)
 set (CMAKE_CONFIGURATION_TYPES Debug Release CACHE TYPE INTERNAL FORCE)
 message (STATUS "Available config types: ${CMAKE_CONFIGURATION_TYPES}")
 
+set (CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 ##
 # make sure the user deliberately selects a  build type
 #
