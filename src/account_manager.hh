@@ -26,9 +26,11 @@ namespace Astroid {
 
       bool      signature_separate = false;
       bfs::path signature_file;
+      bfs::path signature_file_markdown;
       bool      signature_default_on;
       bool      signature_attach;
       bool      has_signature = false;
+      bool      has_signature_markdown = false;
 
       ustring   select_query = "";
 

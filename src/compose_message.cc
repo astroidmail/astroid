@@ -107,7 +107,7 @@ namespace Astroid {
   void ComposeMessage::build () {
     LOG (debug) << "cm: build..";
 
-    std::string body_content(body.str());
+    std::string text_body_content(body.str());
 
     /* attached signatures are handled in ::finalize */
     if (include_signature && account && !account->signature_attach) {
@@ -117,9 +117,9 @@ namespace Astroid {
       sf << s.rdbuf ();
       s.close ();
       if (account->signature_separate) {
-	body_content += "-- \n";
+	text_body_content += "-- \n";
       }
-      body_content += sf.str ();
+      text_body_content += sf.str ();
     }
 
     markdown_success = false;
@@ -127,7 +127,7 @@ namespace Astroid {
 
 
     /* create text part */
-    GMimeStream * contentStream = g_mime_stream_mem_new_with_buffer(body_content.c_str(), body_content.size());
+    GMimeStream * contentStream = g_mime_stream_mem_new_with_buffer(text_body_content.c_str(), text_body_content.size());
     GMimePart * messagePart = g_mime_part_new_with_type ("text", "plain");
 
     g_mime_object_set_content_type_parameter ((GMimeObject *) messagePart, "charset", astroid->config().get<string>("editor.charset").c_str());
@@ -143,6 +143,21 @@ namespace Astroid {
 
 
     if (markdown) {
+      std::string md_body_content(body.str());
+
+      /* attached signatures are handled in ::finalize */
+      if (include_signature && account && !account->signature_attach && account->has_signature_markdown) {
+        LOG (debug) << "cm: adding inline signature (markdown) from: " << account->signature_file_markdown.c_str ();
+        std::ifstream s (account->signature_file_markdown.c_str ());
+        std::ostringstream sf;
+        sf << s.rdbuf ();
+        s.close ();
+        if (account->signature_separate) {
+    md_body_content += "-- \n";
+        }
+        md_body_content += sf.str ();
+      }
+
       GMimePart * text = messagePart;
       GMimeMultipart * mp = g_mime_multipart_new_with_subtype ("alternative");
 
@@ -183,7 +198,7 @@ namespace Astroid {
         ch_stdout = Glib::IOChannel::create_from_fd (stdout);
         ch_stderr = Glib::IOChannel::create_from_fd (stderr);
 
-        ch_stdin->write (body_content);
+        ch_stdin->write (md_body_content);
         ch_stdin->close ();
 
         ustring _html;

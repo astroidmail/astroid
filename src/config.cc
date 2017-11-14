@@ -402,7 +402,7 @@ namespace Astroid {
       LOG (warn) << "config: astroid now reads standard notmuch options from notmuch config, it is configured through: 'astroid.notmuch_config' and is now set to the default: ~/.notmuch-config. please validate!";
     }
 
-    if (version < 9) {
+    if (version < 10) {
       /* check accounts signature */
       ptree apt = config.get_child ("accounts");
 
@@ -471,6 +471,18 @@ namespace Astroid {
           } catch (const boost::property_tree::ptree_bad_path &ex) {
 
             ustring key = ustring::compose ("accounts.%1.select_query", kv.first);
+            config.put (key.c_str (), "");
+          }
+        }
+
+        if (version < 10) {
+          try {
+
+            ustring sto = kv.second.get<string> ("signature_file_markdown");
+
+          } catch (const boost::property_tree::ptree_bad_path &ex) {
+
+            ustring key = ustring::compose ("accounts.%1.signature_file_markdown", kv.first);
             config.put (key.c_str (), "");
           }
         }

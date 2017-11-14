@@ -44,6 +44,7 @@ namespace Astroid {
 
       a->signature_separate = kv.second.get<bool> ("signature_separate");
       a->signature_file = Utils::expand(bfs::path (kv.second.get<string> ("signature_file")));
+      a->signature_file_markdown = Utils::expand(bfs::path (kv.second.get<string> ("signature_file_markdown")));
       a->signature_default_on = kv.second.get<bool> ("signature_default_on");
       a->signature_attach     = kv.second.get<bool> ("signature_attach");
 
@@ -57,6 +58,18 @@ namespace Astroid {
         if (bfs::exists (a->signature_file) &&
             bfs::is_regular_file (a->signature_file))
           a->has_signature = true;
+      }
+
+      if (a->signature_file_markdown.string ().size ()) {
+        /* if relative, assume relative to config dir */
+        if (!a->signature_file_markdown.is_absolute ()) {
+          a->signature_file_markdown = astroid->standard_paths ().config_dir / a->signature_file_markdown;
+        }
+
+
+        if (bfs::exists (a->signature_file_markdown) &&
+            bfs::is_regular_file (a->signature_file_markdown))
+          a->has_signature_markdown = true; // requires text signature
       }
 
       a->gpgkey = kv.second.get<string> ("gpgkey");
