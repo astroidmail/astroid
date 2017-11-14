@@ -61,6 +61,8 @@ option (DISABLE_TERMINAL         "Disable embedded terminal (default = enabled)"
 option (DISABLE_EMBEDDED_EDITOR  "Disable embedded editor (default = enabled)"    OFF)
 option (DISABLE_PLUGINS          "Disable plugins (default = enabled)"            OFF)
 option (ENABLE_PROFILING         "Enable profiling (default = disabled)"          OFF)
+option (DISABLE_LIBSASS          "Disable libsass, requires a sassc compiler (default = enabled)" OFF)
+set (SCSS_COMPILER "sassc" CACHE STRING "SCSS compiler to use when libsass is disabled (default = sassc)")
 
 ##
 # welcome message
@@ -247,18 +249,25 @@ configure_file (
     )
 
 include (CheckIncludeFile)
-set ( CMAKE_REQUIRED_INCLUDES ${SASS_INCLUDE_DIRS} )
-check_include_file (sass_context.h SASSCTX_SASS_CONTEXT_H)
-check_include_file (sass/context.h SASSCTX_CONTEXT_H)
-if( SASSCTX_SASS_CONTEXT_H )
-  add_definitions ( -DSASSCTX_SASS_CONTEXT_H )
-elseif( SASSCTX_CONTEXT_H )
-  add_definitions ( -DSASSCTX_CONTEXT_H )
-else()
-  message (
-    FATAL_ERROR
-    "libsass must be installed: could not find header file. You can disable libsass with --disable-libsass, however, that requires a SCSS compiler like 'sassc' which can be specified with --scss-compiler=<path to compiler>."
-    )
+if(NOT DISABLE_LIBSASS)
+
+  set ( CMAKE_REQUIRED_INCLUDES ${SASS_INCLUDE_DIRS} )
+  check_include_file (sass_context.h SASSCTX_SASS_CONTEXT_H)
+  check_include_file (sass/context.h SASSCTX_CONTEXT_H)
+  if( SASSCTX_SASS_CONTEXT_H )
+    add_definitions ( -DSASSCTX_SASS_CONTEXT_H )
+  elseif( SASSCTX_CONTEXT_H )
+    add_definitions ( -DSASSCTX_CONTEXT_H )
+  else()
+    message (
+      FATAL_ERROR
+      "libsass must be installed: could not find header file. You can disable libsass with -DDISABLE_LIBSASS=ON, however, that requires a SCSS compiler like 'sassc' which can be specified with -DSCSS_COMPILER=<path to compiler>."
+      )
+  endif()
+
+else ()
+  add_definitions ( -DDISABLE_LIBSASS )
+  # the css target is defined after astroid target has been defined
 endif()
 
 include_directories (
@@ -363,6 +372,12 @@ target_link_libraries (
 ##
 # conditional compilation based on feature switches
 #
+
+if(DISABLE_LIBSASS)
+  message (STATUS "Generating thread-view.css")
+  add_custom_command ( TARGET astroid
+    COMMAND ${SCSS_COMPILER} ${CMAKE_SOURCE_DIR}/ui/thread-view.scss ${CMAKE_BINARY_DIR}/thread-view.css )
+endif()
 
 ##
 # embedded editor
@@ -481,6 +496,14 @@ install (FILES ui/astroid.desktop
 install (FILES ui/thread-view.html ui/edit-message.glade ui/no-mail.png
   DESTINATION share/astroid
   )
+
+if(DISABLE_LIBSASS)
+  install (FILES ${CMAKE_BINARY_DIR}/thread-view.css
+    DESTINATION share/astroid )
+else()
+  install (FILES ui/thread-view.scss
+    DESTINATION share/astroid)
+endif()
 
 # Tests
 enable_testing()
