@@ -511,7 +511,7 @@ install (FILES ui/astroid.desktop
   )
 
 install (FILES ui/thread-view.html ui/edit-message.glade ui/no-mail.png
-  DESTINATION share/astroid
+  DESTINATION share/astroid/ui
   )
 
 if(DISABLE_LIBSASS)
