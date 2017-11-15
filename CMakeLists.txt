@@ -10,6 +10,11 @@ set (CMAKE_CONFIGURATION_TYPES Debug Release CACHE TYPE INTERNAL FORCE)
 message (STATUS "Available config types: ${CMAKE_CONFIGURATION_TYPES}")
 
 ##
+# generate a compile_commands.json file (needed for ninja)
+#
+set (CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+##
 # make sure the user deliberately selects a  build type
 #
 if (NOT CMAKE_BUILD_TYPE)
@@ -59,6 +64,9 @@ option (DISABLE_TERMINAL         "Disable embedded terminal (default = enabled)"
 option (DISABLE_EMBEDDED_EDITOR  "Disable embedded editor (default = enabled)"    OFF)
 option (DISABLE_PLUGINS          "Disable plugins (default = enabled)"            OFF)
 option (ENABLE_PROFILING         "Enable profiling (default = disabled)"          OFF)
+option (DISABLE_LIBSASS          "Disable libsass, requires a sassc compiler (default = enabled)" OFF)
+
+set (SCSS_COMPILER "sassc" CACHE STRING "SCSS compiler to use when libsass is disabled (default = sassc)")
 
 ##
 # welcome message
@@ -73,16 +81,17 @@ pkg_check_modules (GTKMM3     REQUIRED  gtkmm-3.0>=3.10)
 pkg_check_modules (GLIBMM2    REQUIRED  glibmm-2.4)
 
 pkg_check_modules (GMIME                gmime-3.0>=3.0.0)
+set (GMIME_VER 3.0)
 if (NOT GMIME_FOUND)
   # fall back to gmime 2
   pkg_check_modules (GMIME              gmime-2.6>=2.6.0)
-endif()
-
-if (NOT GMIME_FOUND)
-  message (
-    FATAL_ERROR
-    "GMime 3 or GMime 2.6 required"
-    )
+  set (GMIME_VER 2.6)
+  if (NOT GMIME_FOUND)
+    message (
+      FATAL_ERROR
+      "GMime 3 or GMime 2.6 required"
+      )
+  endif()
 endif()
 
 pkg_check_modules (WEBKITGTK3 REQUIRED  webkitgtk-3.0)
@@ -108,13 +117,23 @@ if(APPLE)
   set ( Gettext_LDFLAGS "-L/usr/local/opt/gettext/lib" )
 endif(APPLE)
 
-find_library ( NOTMUCH_LIB notmuch )
-if(NOT NOTMUCH_LIB)
+find_path ( NOTMUCH_INCLUDE_DIR notmuch.h )
+find_library ( NOTMUCH_LIBRARY notmuch )
+include(FindPackageHandleStandardArgs)
+# handle the QUIETLY and REQUIRED arguments and set NOTMUCH_FOUND to TRUE
+# if all listed variables are TRUE
+find_package_handle_standard_args(notmuch  DEFAULT_MSG
+                                  NOTMUCH_LIBRARY NOTMUCH_INCLUDE_DIR)
+if(NOT NOTMUCH_FOUND)
   message (FATAL_ERROR "notmuch library not found")
 endif()
+mark_as_advanced( NOTMUCH_INCLUDE_DIR NOTMUCH_LIBRARY )
+set( NOTMUCH_LIBRARIES ${NOTMUCH_LIBRARY} )
+set( NOTMUCH_INCLUDE_DIRS ${NOTMUCH_INCLUDE_DIR} )
 
 include ( CheckSymbolExists )
-set ( CMAKE_REQUIRED_LIBRARIES ${NOTMUCH_LIB} )
+set ( CMAKE_REQUIRED_INCLUDES ${NOTMUCH_INCLUDE_DIRS} )
+set ( CMAKE_REQUIRED_LIBRARIES ${NOTMUCH_LIBRARIES} )
 check_symbol_exists ( notmuch_database_index_file notmuch.h NOTMUCH_INDEX_FILE_API )
 if(NOTMUCH_INDEX_FILE_API)
   add_definitions ( -DHAVE_NOTMUCH_INDEX_FILE )
@@ -188,9 +207,13 @@ endif()
 # Check if notmuch is compiled against the same GMime library
 #
 include(CheckCXXSourceRuns)
-set (CMAKE_REQUIRED_INCLUDES ${GMIME_INCLUDE_DIRS})
-set (CMAKE_REQUIRED_FLAGS    ${GMIME_CFLAGS})
-set (CMAKE_REQUIRED_FLAGS    ${GMIME_LDFLAGS})
+unset ( CMAKE_REQUIRED_FLAGS )
+unset ( CMAKE_REQUIRED_INCLUDES )
+unset ( CMAKE_REQUIRED_LIBRARIES )
+list ( APPEND CMAKE_REQUIRED_FLAGS     ${GMIME_CFLAGS} )
+list ( APPEND CMAKE_REQUIRED_INCLUDES  ${GMIME_INCLUDE_DIRS} ${NOTMUCH_INCLUDE_DIRS} )
+list ( APPEND CMAKE_REQUIRED_LIBRARIES ${NOTMUCH_LIBRARIES} ${GMIME_LDFLAGS} )
+
 CHECK_CXX_SOURCE_RUNS(
   "
   # include <notmuch.h>
@@ -243,18 +266,23 @@ configure_file (
     )
 
 include (CheckIncludeFile)
-set ( CMAKE_REQUIRED_INCLUDES ${SASS_INCLUDE_DIRS} )
-check_include_file (sass_context.h SASSCTX_SASS_CONTEXT_H)
-check_include_file (sass/context.h SASSCTX_CONTEXT_H)
-if( SASSCTX_SASS_CONTEXT_H )
-  add_definitions ( -DSASSCTX_SASS_CONTEXT_H )
-elseif( SASSCTX_CONTEXT_H )
-  add_definitions ( -DSASSCTX_CONTEXT_H )
-else()
-  message (
-    FATAL_ERROR
-    "libsass must be installed: could not find header file. You can disable libsass with --disable-libsass, however, that requires a SCSS compiler like 'sassc' which can be specified with --scss-compiler=<path to compiler>."
-    )
+if(NOT DISABLE_LIBSASS)
+  set ( CMAKE_REQUIRED_INCLUDES ${SASS_INCLUDE_DIRS} )
+  check_include_file (sass_context.h SASSCTX_SASS_CONTEXT_H)
+  check_include_file (sass/context.h SASSCTX_CONTEXT_H)
+  if( SASSCTX_SASS_CONTEXT_H )
+    add_definitions ( -DSASSCTX_SASS_CONTEXT_H )
+  elseif( SASSCTX_CONTEXT_H )
+    add_definitions ( -DSASSCTX_CONTEXT_H )
+  else()
+    message (
+      FATAL_ERROR
+      "libsass must be installed: could not find header file. You can disable libsass with -DDISABLE_LIBSASS=ON, however, that requires a SCSS compiler like 'sassc' which can be specified with -DSCSS_COMPILER=<path to compiler>."
+      )
+  endif()
+else ()
+  add_definitions ( -DDISABLE_LIBSASS )
+  # the css target is defined after astroid target has been defined
 endif()
 
 include_directories (
@@ -270,8 +298,8 @@ include_directories (
   ${CMAKE_BINARY_DIR}/src	# needed to find the generated build_config.hh
   )
 
-add_executable(
-  astroid
+add_library(
+  hypocycloid
 
   src/account_manager.cc
   src/astroid.cc
@@ -281,7 +309,6 @@ add_executable(
   src/config.cc
   src/crypto.cc
   src/db.cc
-  src/main.cc
   src/main_window.cc
   src/message_thread.cc
   src/poll.cc
@@ -332,9 +359,17 @@ add_executable(
   src/utils/gmime/url-scanner.c
   )
 
+add_executable (
+  astroid
+
+  src/main.cc
+  )
+
 target_link_libraries (
   astroid
-  ${NOTMUCH_LIB}
+
+  hypocycloid
+  ${NOTMUCH_LIBRARIES}
   ${WEBKITGTK3_LDFLAGS}
   ${GTKMM3_LDFLAGS}
   ${GLIBMM2_LDFLAGS}
@@ -351,6 +386,15 @@ target_link_libraries (
 #
 
 ##
+# pre-compiled style sheets (instead of dynamic at run-time)
+#
+if(DISABLE_LIBSASS)
+  message (STATUS "Generating thread-view.css")
+  add_custom_command ( TARGET astroid
+    COMMAND ${SCSS_COMPILER} ${CMAKE_SOURCE_DIR}/ui/thread-view.scss ${CMAKE_BINARY_DIR}/thread-view.css )
+endif()
+
+##
 # embedded editor
 #
 if(DISABLE_EMBEDDED_EDITOR)
@@ -362,7 +406,7 @@ else(DISABLE_EMBEDDED_EDITOR)
     add_definitions ( -DDISABLE_EMBEDDED )
   else(APPLE)
     target_sources (
-      astroid
+      hypocycloid
       PRIVATE
       src/modes/editor/editor.cc
       src/modes/editor/plugin.cc
@@ -393,7 +437,7 @@ else()
     set (GIR_NAME "${PLUGIN_NAMESPACE}-${PLUGIN_API_VERSION}.gir")
     set (${GIR_NAME}_NAMESPACE      ${PLUGIN_NAMESPACE})
     set (${GIR_NAME}_VERSION        ${PLUGIN_API_VERSION})
-    set (${GIR_NAME}_INCLUDEPKGS    GObject-2.0 GMime-3.0)
+    set (${GIR_NAME}_INCLUDEPKGS    GObject-2.0 GMime-${GMIME_VER})
     set (${GIR_NAME}_PROGRAM        ${CMAKE_CURRENT_BINARY_DIR}/gir_main)
     set (${GIR_NAME}_FILES
       src/plugin/astroid_activatable.c
@@ -411,7 +455,7 @@ else()
     # additional source files for astroid (plugin framework)
     #
     target_sources (
-      astroid
+      hypocycloid
       PRIVATE
       src/plugin/astroid_activatable.c
       src/plugin/manager.cc
@@ -451,3 +495,35 @@ else()
     message (WARNING "Required packages not found; disabling plugins.")
   endif(INTROSPECTION_FOUND AND PEAS_FOUND)
 endif(DISABLE_PLUGINS)
+
+##
+# Installing stuff
+#
+install ( TARGETS astroid
+  RUNTIME DESTINATION bin )
+
+install (DIRECTORY ui/icons
+  DESTINATION share/astroid/ui
+  )
+
+install (FILES ui/astroid.desktop
+  DESTINATION share/applications
+  )
+
+install (FILES ui/thread-view.html ui/edit-message.glade ui/no-mail.png
+  DESTINATION share/astroid
+  )
+
+if(DISABLE_LIBSASS)
+  install (FILES ${CMAKE_BINARY_DIR}/thread-view.css
+    DESTINATION share/astroid )
+else()
+  install (FILES ui/thread-view.scss
+    DESTINATION share/astroid)
+endif()
+
+##
+# Tests
+#
+enable_testing()
+add_subdirectory (tests)

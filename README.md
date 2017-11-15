@@ -33,30 +33,29 @@ $ git clone https://github.com/astroidmail/astroid.git
 ### compiling
 
 ```sh
-$ meson build
-$ cd build/
-$ ninja
+$ cd astroid
+$ cmake -H. -Bbuild -GNinja # to use the ninja backend
+$ cmake --build build
 ```
 
-or run `meson configure` from `build/` to set any build options. Subsequent builds can be done by running `ninja` from the build directory.
+run `cmake -DOPTION=VALUE .` from `build/` to set any build options (list with `cmake -L`). Subsequent builds can be done by running `ninja` (or `make` if you are using that) from the build directory.
 
 to run the tests do:
 
 ```sh
-$ ninja test
+$ cd build
+$ ctest
 ```
 
 ### installing
 
 Configure with a prefix and install:
 ```sh
-$ meson build --prefix=/usr
-$ cd build/
-$ ninja
-$ ninja install
+$ cmake -H. -Bbuild -GNinja -DCMAKE_INSTALL_PREFIX=/usr/local
+$ cmake --build build --target install
 ```
 
-this will install the `astroid` binary into `/usr/bin/`, and data files into `/usr/share/astroid/`. refer to the [installing section](https://github.com/astroidmail/astroid/wiki/Compiling-and-Installing) in the wiki for more information.
+this will install the `astroid` binary into `/usr/local/bin/`, and data files into `/usr/local/share/astroid/`. refer to the [installing section](https://github.com/astroidmail/astroid/wiki/Compiling-and-Installing) in the wiki for more information.
 
 ### configuration
 
@@ -65,7 +64,7 @@ The initial run of `astroid` will create a new configuration file in `$XDG_CONFI
 ### execution and usage
 
 ```sh
-$ ./astroid
+$ ./build/astroid
 ```
 
 press `?` to get a list of available key bindings in the current mode, navigate up and down using `j` and `k`. refer to the [usage section](https://github.com/astroidmail/astroid/wiki#usage) in the wiki for more information on usage and customization.

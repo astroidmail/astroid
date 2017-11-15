@@ -1,3 +1,8 @@
+==
+
+* Allow HTML parts to be composed using Markdown.
+* Use color to indicate whether a message is marked in thread-index.
+
 == v0.10.2 / 2017-10-11
 
 * Fix build issues on Mac OS.
