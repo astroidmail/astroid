@@ -1,5 +1,6 @@
 ==
 
+* Move to the CMake build system. Meson is deprecated.
 * Allow HTML parts to be composed using Markdown.
 * Use color to indicate whether a message is marked in thread-index.
 
