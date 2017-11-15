@@ -516,10 +516,10 @@ install (FILES ui/thread-view.html ui/edit-message.glade ui/no-mail.png
 
 if(DISABLE_LIBSASS)
   install (FILES ${CMAKE_BINARY_DIR}/thread-view.css
-    DESTINATION share/astroid )
+    DESTINATION share/astroid/ui )
 else()
   install (FILES ui/thread-view.scss
-    DESTINATION share/astroid)
+    DESTINATION share/astroid/ui)
 endif()
 
 ##
