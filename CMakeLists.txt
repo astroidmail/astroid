@@ -4,6 +4,11 @@
 cmake_minimum_required (VERSION 3.9)
 
 ##
+# project name
+#
+project (astroid)
+
+##
 # don't use obscure build types, but only Debug and Release
 #
 set (CMAKE_CONFIGURATION_TYPES Debug Release CACHE TYPE INTERNAL FORCE)
@@ -28,11 +33,6 @@ endif ()
 # where supporting modules live
 #
 set (CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
-
-##
-# project name
-#
-project (astroid)
 
 ##
 # version number
