@@ -124,7 +124,7 @@ namespace Astroid {
       bool has_tag (ustring);
 
     private:
-      ustring subject;
+      ustring subject = "";
       ustring first_subject = "";
       void set_first_subject (ustring);
       bool first_subject_set = false;

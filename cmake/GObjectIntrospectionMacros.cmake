@@ -122,7 +122,7 @@ macro(_gir_add_introspections girs_list)
       VERBATIM
       )
     add_custom_target(${_gir_name}_gir DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${_gir})
-    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${_gir} DESTINATION ${SHARE_INSTALL_DIR}/gir-1.0)
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${_gir} DESTINATION share/gir-1.0)
 
     string(REPLACE ".gir" ".typelib" _typelib "${_gir}")
     add_custom_command(

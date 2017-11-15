@@ -54,8 +54,12 @@ namespace Astroid {
       void set_references (ustring);
 
       bool include_signature = false;
+      bool markdown = false;
       bool encrypt = false;
       bool sign    = false;
+
+      bool markdown_success = false;
+      ustring markdown_error = "";
 
       struct Attachment {
         public:

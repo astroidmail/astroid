@@ -43,6 +43,7 @@ namespace Astroid {
 
       Gtk::ComboBox *from_combo, *reply_mode_combo;
       Gtk::Switch   *switch_signature;
+      Gtk::Switch   *switch_markdown;
       Gtk::Switch   *switch_encrypt;
       Gtk::Switch   *switch_sign;
       Gtk::Revealer *fields_revealer;

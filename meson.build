@@ -39,6 +39,13 @@ if cc.has_function ('notmuch_database_index_file', dependencies : notmuch, prefi
   add_global_arguments ('-DHAVE_NOTMUCH_INDEX_FILE', language: 'cpp')
 endif
 
+r = cc.run (files('tests/test_gmime_version.cc'), dependencies : [ notmuch, gmime ])
+if r.returncode () == 0
+  message ('gmime version matches between astroid and notmuch: YES')
+else
+  error ('gmime version matches between astroid and notmuch: NO. You must compile and link both astroid and notmuch against the same gmime version.')
+endif
+
 deps = [ gmime, boost, boost_po, gtk, gtkmm, webkit, threads, notmuch ]
 
 vte = dependency ('vte-2.91', required: false)
@@ -237,6 +244,7 @@ if not get_option('disable-tests')
 
   tests = [ [ 'generic test',   'test_generic',         [ 'tests/test_generic.cc' ]],
             [ 'compose testing', 'test_composed_message',     [ 'tests/test_composed_message.cc' ]],
+            [ 'markdown',       'test_markdown',        [ 'tests/test_markdown.cc' ]],
             [ 'non existant file', 'test_non_existant_file',  [ 'tests/test_non_existant_file.cc' ]],
             [ 'open db',        'test_open_db',         [ 'tests/test_open_db.cc' ]],
             [ 'convert error',  'test_convert_error',   [ 'tests/test_convert_error.cc' ]],
@@ -250,6 +258,7 @@ if not get_option('disable-tests')
             [ 'address',        'test_address',         [ 'tests/test_address.cc' ]],
             [ 'dates',          'test_dates',           [ 'tests/test_dates.cc' ]],
             [ 'crypto',         'test_crypto',          [ 'tests/test_crypto.cc' ]],
+            [ 'gmime version matches notmuch', 'test_gmime_version',   [ 'tests/test_gmime_version.cc' ]],
           ]
 
   foreach t : tests
