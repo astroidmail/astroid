@@ -134,7 +134,6 @@ namespace Astroid {
     id = edit_id++;
 
     ustring _mid = "";
-    msg_time = time(0);
 
 # ifndef DISABLE_PLUGINS
     if (!astroid->plugin_manager->astroid_extension->generate_mid (_mid)) {
@@ -173,14 +172,16 @@ namespace Astroid {
         }
       }
 
-
       ustring user = astroid->config ().get<string> ("mail.message_id_user");
       UstringUtils::trim (user);
-      if (user.empty ()) user = "astroid";
 
-      _mid = UstringUtils::random_alphanumeric (10);
+      _mid = UstringUtils::random_rfc5322_atext (40);   // 40 gives 253 bits entropy
 
-      _mid = ustring::compose ("%1.%2.%3@%4", msg_time, _mid, user, hostname);
+      if (user.empty ()) {
+        _mid = ustring::compose ("%1@%2", _mid, hostname);
+      } else {
+        _mid = ustring::compose ("%1.%2@%3", _mid, user, hostname);
+      }
 
 # ifndef DISABLE_PLUGINS
     }
@@ -1207,7 +1208,8 @@ namespace Astroid {
   /* }}} */
 
   void EditMessage::make_tmpfile () {
-    tmpfile_path = tmpfile_path / path(msg_id);
+    tmpfile_path = tmpfile_path / path(UstringUtils::random_alphanumeric (10)
+				       + editor_config.get <std::string>("external_tmpfile_suffix"));
 
     LOG (info) << "em: tmpfile: " << tmpfile_path;
 

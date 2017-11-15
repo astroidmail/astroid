@@ -126,7 +126,6 @@ namespace Astroid {
 
       static  int edit_id; // must be incremented each time a new editor is started
       int     id;          // id of this instance
-      time_t  msg_time;
 
       void editor_toggle (bool); // enable or disable editor or thread view
 

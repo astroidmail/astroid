@@ -194,6 +194,7 @@ namespace Astroid {
     default_config.put ("editor.cmd", "gvim -f -c 'set ft=mail' '+set fileencoding=utf-8' '+set enc=utf-8' '+set ff=unix' '+set fo+=w' %1");
     default_config.put ("editor.external_editor", true); // should be true on Wayland
 # endif
+    default_config.put ("editor.external_tmpfile_suffix", "@msg.draft"); // suffix of tmp files passed to external editors; default: '@msg.draft'
 
     default_config.put ("editor.charset", "utf-8");
     default_config.put ("editor.save_draft_on_force_quit", true);
@@ -210,7 +211,7 @@ namespace Astroid {
     default_config.put ("mail.forward.disposition", "inline");
     default_config.put ("mail.sent_tags", "sent");
     default_config.put ("mail.message_id_fqdn", ""); // custom fqdn for the message id: default: local hostname
-    default_config.put ("mail.message_id_user", ""); // custom user for the message id: default: 'astroid'
+    default_config.put ("mail.message_id_user", "astroid"); // custom user for the message id: default: 'astroid'
     default_config.put ("mail.user_agent", "default");
     default_config.put ("mail.send_delay", 2); // wait seconds before sending, allowing to cancel
 

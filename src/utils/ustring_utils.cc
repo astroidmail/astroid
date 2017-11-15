@@ -66,6 +66,24 @@ namespace Astroid {
     return str;
   }
 
+  ustring UstringUtils::random_rfc5322_atext (int length) {
+    ustring str;
+    uint32_t r;
+    
+    // 81 allowed charaters for the message id as per RFC 5322
+    const string _chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890!#$%&'*+-/=?^_`{|}~";
+    
+    for (int i = 0; i < length; i++) {
+      r = arc4random_uniform(_chars.length());   // This is recommended over constructions
+                                                 // like "arc4random() % upper_bound" as it
+                                                 // avoids "modulo bias" when the upper
+                                                 // bound is not a power of two.
+      str += _chars[r];
+    }
+
+    return str;
+  }
+
   /* http://stackoverflow.com/a/15372760/377927 */
   ustring UstringUtils::replace (ustring subject, const ustring& search,
                           const ustring& replace) {
