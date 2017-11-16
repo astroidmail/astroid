@@ -148,6 +148,7 @@ namespace Astroid {
 
       default_config.put ("accounts.charlie.signature_separate", false);
       default_config.put ("accounts.charlie.signature_file", "");
+      default_config.put ("accounts.charlie.signature_file_markdown", "");
       default_config.put ("accounts.charlie.signature_default_on", true);
       default_config.put ("accounts.charlie.signature_attach", false);
 
