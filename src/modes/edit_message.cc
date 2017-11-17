@@ -8,6 +8,7 @@
 # include <gtkmm.h>
 
 # include <boost/filesystem.hpp>
+# include <boost/algorithm/string/replace.hpp>
 
 # include "astroid.hh"
 # include "config.hh"
@@ -135,25 +136,40 @@ namespace Astroid {
 
     ustring _mid = "";
 
+    /* defaults */
+    accounts = astroid->accounts;
+
 # ifndef DISABLE_PLUGINS
     if (!astroid->plugin_manager->astroid_extension->generate_mid (_mid)) {
 # endif
 
-      char _hostname[1024];
-      _hostname[1023] = 0;
-      gethostname (_hostname, 1023);
-
-      char _domainname[1024];
-      _domainname[1023] = 0;
-      if (getdomainname (_domainname, 1023) < 0) {
-        *_domainname = '\0';
-      }
-
+      //
+      // generate left-hand side of the message id
+      //
+      // get value for right-hand side from config file
       ustring hostname = astroid->config ().get <string> ("mail.message_id_fqdn");
       UstringUtils::trim (hostname);
+      // if hostname contains a "%1", insert the FQDN of the default
+      // account's email address
+      if (hostname.find ("%1", 0) != std::string::npos) {
+        Account &a = (accounts->accounts)[accounts->default_account];
+        hostname = ustring::compose (hostname,
+                                     boost::replace_all_copy (string(fqdn_of_address(a.email)), "%", "%%"));
+      }
+      // fallback value if hostname is (still) empty
       if (hostname.empty ()) {
+        char _hostname[1024];
+        _hostname[1023] = 0;
+        gethostname (_hostname, 1023);
+
         if (*_hostname != 0) {
           hostname = _hostname;
+        
+          char _domainname[1024];
+          _domainname[1023] = 0;
+          if (getdomainname (_domainname, 1023) < 0) {
+            *_domainname = '\0';
+          }
 
           if (*_domainname != 0) {
             ustring d (_domainname);
@@ -172,11 +188,16 @@ namespace Astroid {
         }
       }
 
+      //
+      // generate right-ahnd side of the message id
+      //
       ustring user = astroid->config ().get<string> ("mail.message_id_user");
       UstringUtils::trim (user);
-
       _mid = UstringUtils::random_rfc5322_atext (40);   // 40 gives 253 bits entropy
 
+      //
+      // assemble message id string
+      //
       if (user.empty ()) {
         _mid = ustring::compose ("%1@%2", _mid, hostname);
       } else {
@@ -219,9 +240,6 @@ namespace Astroid {
 
     thread_view->signal_element_action().connect (
         sigc::mem_fun (this, &EditMessage::on_element_action));
-
-    /* defaults */
-    accounts = astroid->accounts;
 
     /* from combobox */
     from_store = Gtk::ListStore::create (from_columns);
@@ -720,15 +738,50 @@ namespace Astroid {
       account_no ++;
     }
 
+    update_message_id_rhs_from_sender(a->email);
+    
     bool same_account = (rn == from_combo->get_active_row_number ());
     LOG (debug) << "same account: " << same_account;
     if (!same_account) {
       reset_signature ();
     }
-
+    
     return same_account;
   }
 
+  void EditMessage::update_message_id_rhs_from_sender (ustring _from) {
+    ustring hostname = astroid->config ().get <string> ("mail.message_id_fqdn");
+
+    // if the mail.message_id_fqdn parameter contains "%1", update the
+    // msg_id with the expanded value of mail.message_id_fqdn, using
+    // the FQDN from the new _from address
+    if (   ( ! _from.empty())
+        && (hostname.find ("%1", 0) != std::string::npos)
+        && ( ! msg_id.empty())
+       ) {
+      // replace "%1" in the config string with the FQDN part of the
+      // _from address
+      ustring msg_id_rhs = ustring::compose (hostname,
+                                             boost::replace_all_copy (string(fqdn_of_address(_from)), "%", "%%"));
+
+      // replace the RHS (everything to the right of the "@") of the
+      // msg_id with the expanded config string
+      ustring msg_id_lhs = msg_id.substr(0, msg_id.find("@"));
+      msg_id = ustring::compose ("%1@%2", msg_id_lhs, msg_id_rhs);
+    }
+  }
+
+  ustring EditMessage::fqdn_of_address (ustring _addr) {
+    size_t atpos = _addr.find("@");
+    ustring fqdn;
+
+    if ( ! _addr.empty()) {
+      fqdn = _addr.substr(atpos + 1, _addr.length() - atpos);
+    }
+
+    return fqdn;
+  }
+  
   void EditMessage::reset_signature () {
     /* should not be run unless the account has been changed */
     auto it = from_combo->get_active ();
@@ -1209,7 +1262,7 @@ namespace Astroid {
 
   void EditMessage::make_tmpfile () {
     tmpfile_path = tmpfile_path / path(UstringUtils::random_alphanumeric (10)
-				       + editor_config.get <std::string>("external_tmpfile_suffix"));
+                                       + editor_config.get <std::string>("external_tmpfile_suffix"));
 
     LOG (info) << "em: tmpfile: " << tmpfile_path;
 
