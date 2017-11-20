@@ -55,16 +55,16 @@ $ cmake -H. -Bbuild -GNinja -DCMAKE_INSTALL_PREFIX=/usr/local
 $ cmake --build build --target install
 ```
 
-this will install the `astroid` binary into `/usr/local/bin/`, and data files into `/usr/local/share/astroid/`. refer to the [installing section](https://github.com/astroidmail/astroid/wiki/Compiling-and-Installing) in the wiki for more information.
+this will install the `astroid` binary into `/usr/local/bin/`, and data files into `/usr/local/share/astroid/`. Refer to the [installing section](https://github.com/astroidmail/astroid/wiki/Compiling-and-Installing) in the wiki for more information.
 
 ### configuration
 
-The initial run of `astroid` will create a new configuration file in `$XDG_CONFIG_HOME/astroid` (normally: `~/.config/astroid/`. refer to the [configuration section](https://github.com/astroidmail/astroid/wiki/Astroid-setup) in the wiki for more information.
+The initial run of `astroid` will create a new configuration file in `$XDG_CONFIG_HOME/astroid` (normally: `~/.config/astroid/`). Refer to the [configuration section](https://github.com/astroidmail/astroid/wiki/Astroid-setup) in the wiki for more information.
 
 ### execution and usage
 
 ```sh
-$ ./build/astroid
+$ ./build/astroid # to run from source repository
 ```
 
 press `?` to get a list of available key bindings in the current mode, navigate up and down using `j` and `k`. refer to the [usage section](https://github.com/astroidmail/astroid/wiki#usage) in the wiki for more information on usage and customization.
