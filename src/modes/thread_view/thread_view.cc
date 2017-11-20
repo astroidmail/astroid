@@ -562,6 +562,10 @@ namespace Astroid {
 
     auto _mthread = refptr<MessageThread>(new MessageThread (thread));
     _mthread->load_messages (&db);
+
+    if (unread_setup) unread_checker.disconnect ();
+    unread_setup = false; // reset
+
     load_message_thread (_mthread);
   }
 
@@ -772,7 +776,7 @@ namespace Astroid {
         unread_setup = true;
 
         if (unread_delay > 0) {
-          Glib::signal_timeout ().connect (
+          unread_checker = Glib::signal_timeout ().connect (
               sigc::mem_fun (this, &ThreadView::unread_check), std::max (80., (unread_delay * 1000.) / 2));
         } else {
           unread_check ();
@@ -3743,7 +3747,10 @@ namespace Astroid {
   }
 
   bool ThreadView::unread_check () {
-    if (!ready) return false; // disconnect
+    if (!ready) {
+      unread_setup = false;
+      return false; // disconnect
+    }
 
     if (!edit_mode && focused_message && focused_message->in_notmuch) {
 

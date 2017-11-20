@@ -67,6 +67,7 @@ namespace Astroid {
       std::chrono::time_point<std::chrono::steady_clock> focus_time;
       bool unread_check ();
       bool unread_setup = false;
+      sigc::connection unread_checker;
 
       /* resources */
       ustring home_uri;           // relative url for requests
