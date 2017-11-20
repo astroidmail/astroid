@@ -38,7 +38,7 @@ $ cmake -H. -Bbuild -GNinja # to use the ninja backend
 $ cmake --build build
 ```
 
-run `cmake -DOPTION=VALUE .` from `build/` to set any build options (list with `cmake -L`). Subsequent builds can be done by running `ninja` (or `make` if you are using that) from the build directory.
+run `cmake -DOPTION=VALUE ..` from `build/` to set any build options (list with `cmake -L`). Subsequent builds can be done by running `ninja` (or `make` if you are using that) from the build directory.
 
 to run the tests do:
 
