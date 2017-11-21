@@ -77,6 +77,12 @@ namespace Astroid {
 
           std::size_t fnd;
 
+          /* cut off comments appended to the end of the line */
+          fnd = line.find ("#");
+          if (fnd != std::string::npos) {
+            line = line.substr (0, fnd);
+          }
+
           /* check if this is a run line */
           fnd = line.find (".run");
           if (fnd != std::string::npos) {
@@ -136,12 +142,6 @@ namespace Astroid {
             user_run_bindings.push_back (std::make_pair (k, target));
 
             continue;
-          }
-
-          /* cut off comments appended to the end of the line */
-          fnd = line.find ("#");
-          if (fnd != std::string::npos) {
-            line = line.substr (0, fnd);
           }
 
           LOG (debug) << "ky: parsing line: " << line;
