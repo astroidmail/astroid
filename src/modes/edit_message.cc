@@ -189,7 +189,7 @@ namespace Astroid {
       }
 
       //
-      // generate right-ahnd side of the message id
+      // generate right-hand side of the message id
       //
       ustring user = astroid->config ().get<string> ("mail.message_id_user");
       UstringUtils::trim (user);
@@ -607,8 +607,8 @@ namespace Astroid {
         return false;
 
       } else {
-        /* msg_id might come from external client or server */
-        ddir = ddir / path(Utils::safe_fname (msg_id));
+        ddir = ddir / path(UstringUtils::random_file_name (editor_config.get
+                                                           <std::string>("external_tmpfile_suffix")));
         fname = ddir.c_str ();
 
         add_to_notmuch = true;
@@ -781,7 +781,7 @@ namespace Astroid {
 
     return fqdn;
   }
-  
+ 
   void EditMessage::reset_signature () {
     /* should not be run unless the account has been changed */
     auto it = from_combo->get_active ();
@@ -1261,8 +1261,8 @@ namespace Astroid {
   /* }}} */
 
   void EditMessage::make_tmpfile () {
-    tmpfile_path = tmpfile_path / path(UstringUtils::random_alphanumeric (10)
-                                       + editor_config.get <std::string>("external_tmpfile_suffix"));
+    tmpfile_path = tmpfile_path / path(UstringUtils::random_file_name (editor_config.get
+								       <std::string>("external_tmpfile_suffix")));
 
     LOG (info) << "em: tmpfile: " << tmpfile_path;
 

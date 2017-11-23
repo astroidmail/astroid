@@ -19,8 +19,10 @@ namespace Astroid {
       static void trim (ustring &);
       static void trim_left (ustring &);
       static void trim_right (ustring &);
-      static ustring random_alphanumeric (int);
-      static ustring random_rfc5322_atext (int);
+      static ustring random_string_from_charset (const ustring, const int);
+      static ustring random_alphanumeric (const int);
+      static ustring random_rfc5322_atext (const int);
+      static ustring random_file_name (const ustring);
       static ustring replace (ustring subject, const ustring& search,
                           const ustring& replace);
 

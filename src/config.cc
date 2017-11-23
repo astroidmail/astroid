@@ -194,7 +194,7 @@ namespace Astroid {
     default_config.put ("editor.cmd", "gvim -f -c 'set ft=mail' '+set fileencoding=utf-8' '+set enc=utf-8' '+set ff=unix' '+set fo+=w' %1");
     default_config.put ("editor.external_editor", true); // should be true on Wayland
 # endif
-    default_config.put ("editor.external_tmpfile_suffix", "@msg.draft"); // suffix of tmp files passed to external editors; default: '@msg.draft'
+    default_config.put ("editor.external_tmpfile_suffix", ".eml"); // suffix of tmp files passed to external editors; default: '.eml'
 
     default_config.put ("editor.charset", "utf-8");
     default_config.put ("editor.save_draft_on_force_quit", true);
