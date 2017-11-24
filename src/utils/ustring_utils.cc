@@ -2,6 +2,8 @@
 # include <vector>
 # include <algorithm>
 
+# include <stdlib.h>
+
 # include "astroid.hh"
 # include "proto.hh"
 # include "ustring_utils.hh"

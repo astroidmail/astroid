@@ -745,7 +745,7 @@ namespace Astroid {
     if (!same_account) {
       reset_signature ();
     }
-    
+
     return same_account;
   }
 
