@@ -100,6 +100,7 @@ namespace Astroid {
       ComposeMessage * setup_message ();
       void             finalize_message (ComposeMessage *);
       ComposeMessage * make_message ();
+      ComposeMessage * make_draft_message ();
 
       ComposeMessage * sending_message;
       std::atomic<bool> sending_in_progress;
@@ -155,6 +156,8 @@ namespace Astroid {
 
       bool message_sent = false;
       void lock_message_after_send ();
+
+      ComposeMessage * make_message (bool draft);
 
     private:
       void on_from_combo_changed ();
