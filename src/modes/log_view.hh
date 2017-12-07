@@ -41,7 +41,7 @@ namespace Astroid {
       void release_modal () override;
       void pre_close ()     override;
 
-      std::shared_ptr <LogViewSink> lv;
+      boost::shared_ptr <LogViewSink> lv;
       boost::shared_ptr <lv_sink_t> sink;
 
     protected:

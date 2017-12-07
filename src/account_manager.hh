@@ -20,14 +20,19 @@ namespace Astroid {
       bool isdefault;
 
       bool save_sent;
-      ustring save_sent_to;
+      bfs::path save_sent_to;
       std::vector<ustring> additional_sent_tags;
-      ustring save_drafts_to;
+      bfs::path save_drafts_to;
 
+      bool      signature_separate = false;
       bfs::path signature_file;
+      bfs::path signature_file_markdown;
       bool      signature_default_on;
       bool      signature_attach;
       bool      has_signature = false;
+      bool      has_signature_markdown = false;
+
+      ustring   select_query = "";
 
       ustring gpgkey;
       bool has_gpg = false;
@@ -47,6 +52,8 @@ namespace Astroid {
       int default_account;
       Account * get_account_for_address (ustring);
       Account * get_account_for_address (Address);
+
+      Account * get_assosciated_account (refptr<Message>);
 
       bool is_me (Address &);
   };

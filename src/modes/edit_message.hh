@@ -5,10 +5,9 @@
 # include <atomic>
 # include <memory>
 # include <fstream>
+# include <mutex>
 
-# include <gtkmm/socket.h>
 # include <glibmm/iochannel.h>
-
 # include <boost/filesystem.hpp>
 
 # include "proto.hh"
@@ -17,6 +16,7 @@
 # include "mode.hh"
 # include "editor/editor.hh"
 # include "editor/plugin.hh"
+# include "editor/external.hh"
 # include "compose_message.hh"
 # include "account_manager.hh"
 # include "thread_view/thread_view.hh"
@@ -24,23 +24,37 @@
 namespace Astroid {
   class EditMessage : public Mode {
     friend Editor;
+# ifndef DISABLE_EMBEDDED
     friend Plugin;
+# endif
+    friend External;
 
     public:
-      EditMessage (MainWindow *);
-      EditMessage (MainWindow *, ustring to);
+      EditMessage (MainWindow *, bool edit_when_ready = true);
+      EditMessage (MainWindow *, ustring to, ustring from = "", ustring cc = "", ustring bcc = "");
       EditMessage (MainWindow *, refptr<Message> _msg);
       ~EditMessage ();
 
+    protected:
+      void edit_when_ready ();
+
+    public:
       Gtk::Box * box_message;
 
       Gtk::ComboBox *from_combo, *reply_mode_combo;
       Gtk::Switch   *switch_signature;
+      Gtk::Switch   *switch_markdown;
       Gtk::Switch   *switch_encrypt;
       Gtk::Switch   *switch_sign;
       Gtk::Revealer *fields_revealer;
       Gtk::Revealer *reply_revealer;
       Gtk::Revealer *encryption_revealer;
+
+# ifndef DISABLE_EMBEDDED
+      bool embed_editor = true;
+# else
+      const bool embed_editor = false;
+# endif
 
       Editor * editor;
       bool editor_active = false;
@@ -76,17 +90,24 @@ namespace Astroid {
       refptr<Gtk::ListStore> from_store;
       int account_no;
 
-      void set_from (Account *);
-      void set_from (Address);
+      bool set_from (Account *);
+      bool set_from (Address);
 
       bool check_fields ();
+      std::vector<ustring> attachment_words = { "attach" }; // defined in config
+
       bool send_message ();
+      ComposeMessage * setup_message ();
+      void             finalize_message (ComposeMessage *);
       ComposeMessage * make_message ();
+      ComposeMessage * make_draft_message ();
 
       ComposeMessage * sending_message;
       std::atomic<bool> sending_in_progress;
       void send_message_finished (bool result);
+      void update_send_message_status (bool warn, ustring msg);
 
+      /* make a draft message that can be edited */
       void prepare_message ();
 
       /* draft */
@@ -108,15 +129,20 @@ namespace Astroid {
       int     id;          // id of this instance
       time_t  msg_time;
 
-      void editor_toggle (bool); // enable or disable editor or
-                                 // thread view
+      void editor_toggle (bool); // enable or disable editor or thread view
+
       void fields_show ();       // show fields
       void fields_hide ();       // hide fields
       void read_edited_message (); // load data from message after
                                    // it has been edited.
+      std::mutex message_draft_m;  // locks message draft
+      std::atomic<bool> in_read;   // true if we are already in read
       void on_tv_ready ();
-      ustring warning_str;
-      ustring info_str;
+      void set_warning (ustring);
+      void set_info (ustring);
+
+      ustring warning_str = "";
+      ustring info_str = "";
 
       AccountManager * accounts;
 
@@ -130,6 +156,8 @@ namespace Astroid {
 
       bool message_sent = false;
       void lock_message_after_send ();
+
+      ComposeMessage * make_message (bool draft);
 
     private:
       void on_from_combo_changed ();

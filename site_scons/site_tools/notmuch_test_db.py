@@ -8,7 +8,7 @@ def nmAction(target, source, env):
   set up notmuch test db in target directory
   '''
 
-  config = os.path.abspath(os.path.join (os.path.curdir, 'test/mail/test_config'))
+  config = os.path.abspath(os.path.join (os.path.curdir, 'tests/mail/test_config'))
 
   env['ENV']['NOTMUCH_CONFIG'] = config
 
@@ -17,15 +17,15 @@ def nmAction(target, source, env):
   myenv['NOTMUCH_CONFIG'] = config
 
   # remove old db
-  print "Remove test/mail/.notmuch.."
-  shutil.rmtree ('test/mail/test_mail/.notmuch', ignore_errors = True)
+  print "Remove tests/mail/.notmuch.."
+  shutil.rmtree ('tests/mail/test_mail/.notmuch', ignore_errors = True)
 
-  t = open ('test/mail/test_config.template', 'r')
-  o = open ('test/mail/test_config', 'w')
+  t = open ('tests/mail/test_config.template', 'r')
+  o = open ('tests/mail/test_config', 'w')
 
   for l in t.readlines ():
     if l == 'path=\n':
-      o.write ("path=" + os.path.abspath (os.path.join (os.path.curdir, 'test/mail/test_mail')) + "\n")
+      o.write ("path=" + os.path.abspath (os.path.join (os.path.curdir, 'tests/mail/test_mail')) + "\n")
     else:
       o.write (l)
 

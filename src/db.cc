@@ -47,18 +47,28 @@ namespace Astroid {
       throw invalid_argument ("db: error: HOME environment variable not set.");
     }
 
-    ustring db_path = ustring (config.get<string> ("database.path"));
-
-    /* replace ~ with home */
-    if (db_path[0] == '~') {
-      path_db = path(home) / path(db_path.substr(1,db_path.size()));
-    } else {
-      path_db = path(db_path);
+    if (!astroid->has_notmuch_config ()) {
+      throw database_error ("db: error: no notmuch config file found.");
     }
 
+    ustring db_path;
+    try {
+      db_path = ustring (config.get<string> ("database.path"));
+    } catch (const boost::property_tree::ptree_bad_path &ex) {
+      throw database_error ("db: error: no database path specified");
+    }
+
+    LOG (info) << "db path: " << db_path;
+
+    path_db = Utils::expand (path (db_path));
     path_db = absolute (path_db);
 
-    ustring excluded_tags_s = config.get<string> ("search.exclude_tags");
+    ustring excluded_tags_s;
+    try {
+      excluded_tags_s = config.get<string> ("search.exclude_tags");
+    } catch (const boost::property_tree::ptree_bad_path &ex) {
+      throw database_error ("db: error: no search.exclude_tags defined in notmuch-config");
+    }
     excluded_tags = VectorUtils::split_and_trim (excluded_tags_s, ";");
     sort (excluded_tags.begin (), excluded_tags.end ());
 
@@ -67,7 +77,11 @@ namespace Astroid {
     sent_tags = VectorUtils::split_and_trim (sent_tags_s, ",");
     sort (sent_tags.begin (), sent_tags.end ());
 
-    maildir_synchronize_flags = config.get<bool> ("maildir.synchronize_flags");
+    try {
+      maildir_synchronize_flags = config.get<bool> ("maildir.synchronize_flags");
+    } catch (const boost::property_tree::ptree_bad_path &ex) {
+      throw database_error ("db: error: no maildir.maildir_synchronize_flags defined in notmuch-config");
+    }
   }
 
   Db::Db (DbMode _mode) {
@@ -75,9 +89,10 @@ namespace Astroid {
 
     time_t start = clock ();
 
-    nm_db     = NULL;
+    nm_db = NULL;
+
     if (mode == DATABASE_READ_ONLY) {
-      open_db_read_only ();
+      open_db_read_only (true);
     } else if (mode == DATABASE_READ_WRITE) {
       open_db_write (true);
     } else {
@@ -112,16 +127,16 @@ namespace Astroid {
       if (s == NOTMUCH_STATUS_XAPIAN_EXCEPTION) {
         LOG (error) << "db: error: could not open db r/w, waited " <<
                 time << " of maximum " <<
-                db_write_open_timeout << " seconds.";
+                db_open_timeout << " seconds.";
 
-        chrono::seconds duration (db_write_open_delay);
+        chrono::seconds duration (db_open_delay);
         this_thread::sleep_for (duration);
 
-        time += db_write_open_delay;
+        time += db_open_delay;
 
       }
 
-    } while (block && (s == NOTMUCH_STATUS_XAPIAN_EXCEPTION) && (time <= db_write_open_timeout));
+    } while (block && (s == NOTMUCH_STATUS_XAPIAN_EXCEPTION) && (time <= db_open_timeout));
 
     if (s != NOTMUCH_STATUS_SUCCESS) {
       LOG (error) << "db: error: failed opening database for writing, have you configured the notmuch database path correctly?";
@@ -129,27 +144,43 @@ namespace Astroid {
       release_rw_lock (rw_lock);
       throw database_error ("failed to open database for writing");
 
-
       return false;
     }
 
     return true;
   }
 
-  bool Db::open_db_read_only () {
+  bool Db::open_db_read_only (bool block) {
     Db::acquire_ro_lock ();
 
-    notmuch_status_t s =
-      notmuch_database_open (
-        path_db.c_str(),
-        notmuch_database_mode_t::NOTMUCH_DATABASE_MODE_READ_ONLY,
-        &nm_db);
+    notmuch_status_t s;
+
+    int time = 0;
+
+    do {
+      s = notmuch_database_open (
+          path_db.c_str(),
+          notmuch_database_mode_t::NOTMUCH_DATABASE_MODE_READ_ONLY,
+          &nm_db);
+
+      if (s == NOTMUCH_STATUS_XAPIAN_EXCEPTION) {
+        LOG (error) << "db: error: could not open db r/o, waited " <<
+                time << " of maximum " <<
+                db_open_timeout << " seconds.";
+
+        chrono::seconds duration (db_open_delay);
+        this_thread::sleep_for (duration);
+
+        time += db_open_delay;
+
+      }
+    } while (block && (s == NOTMUCH_STATUS_XAPIAN_EXCEPTION) && (time <= db_open_timeout));
 
     if (s != NOTMUCH_STATUS_SUCCESS) {
       LOG (error) << "db: error: failed opening database for reading, have you configured the notmuch database path correctly?";
 
-      throw database_error ("failed to open database (read-only)");
-
+      release_ro_lock ();
+      throw database_error ("failed to open database (in read-only mode)");
 
       return false;
     }
@@ -215,15 +246,12 @@ namespace Astroid {
     close ();
   }
 
-# ifdef HAVE_NOTMUCH_GET_REV
   unsigned long Db::get_revision () {
     const char *uuid;
     unsigned long revision = notmuch_database_get_revision (nm_db, &uuid);
 
     return revision;
   }
-
-# endif
 
   void Db::load_tags () {
     notmuch_tags_t * nm_tags = notmuch_database_get_all_tags (nm_db);
@@ -261,8 +289,9 @@ namespace Astroid {
   ustring Db::add_message_with_tags (ustring fname, vector<ustring> tags) {
     notmuch_message_t * msg;
 
-    notmuch_status_t s = notmuch_database_add_message (nm_db,
+    notmuch_status_t s = notmuch_database_index_file (nm_db,
         fname.c_str (),
+        notmuch_database_get_default_indexopts (nm_db),
         &msg);
 
     if ((s != NOTMUCH_STATUS_SUCCESS) && (s != NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID)) {
@@ -285,7 +314,7 @@ namespace Astroid {
       s = notmuch_message_tags_to_maildir_flags (msg);
     }
 
-    /* emit signal */
+    /* return mid */
     const char * mid = notmuch_message_get_message_id (msg);
     ustring _mid;
 
@@ -314,6 +343,46 @@ namespace Astroid {
     return add_message_with_tags (fname, draft_tags);
   }
 
+  bool Db::message_in_query (ustring query_in, ustring mid) {
+    /* check if message is in query */
+    string query_s;
+
+    UstringUtils::trim(query_in);
+
+    if (query_in.length() == 0 || query_in == "*") {
+      query_s = "id:" + mid;
+    } else {
+      query_s = "id:" + mid  + " AND (" + query_in + ")";
+    }
+
+    time_t t0 = clock ();
+
+    LOG (debug) << "db: checking if message: " << mid << " matches query: " << query_in;
+
+    notmuch_query_t * query = notmuch_query_create (nm_db, query_s.c_str());
+    for (ustring &t : excluded_tags) {
+      notmuch_query_add_tag_exclude (query, t.c_str());
+    }
+    notmuch_query_set_omit_excluded (query, NOTMUCH_EXCLUDE_TRUE);
+
+    unsigned int c = 0;
+    notmuch_status_t st = NOTMUCH_STATUS_SUCCESS;
+
+    st = notmuch_query_count_messages (query, &c);
+    if (st != NOTMUCH_STATUS_SUCCESS) c = 0;
+
+    if (c > 1) {
+      throw database_error ("db: got more than one message for message id.");
+    }
+
+    /* free resources */
+    notmuch_query_destroy (query);
+
+    LOG (debug) << "db: message in query check: " << ((clock() - t0) * 1000.0 / CLOCKS_PER_SEC) << " ms.";
+
+    return (st == NOTMUCH_STATUS_SUCCESS) && (c == 1);
+
+  }
 
   bool Db::thread_in_query (ustring query_in, ustring thread_id) {
     /* check if thread id is in query */
@@ -340,12 +409,8 @@ namespace Astroid {
     unsigned int c = 0;
     notmuch_status_t st = NOTMUCH_STATUS_SUCCESS;
 
-# ifdef HAVE_QUERY_COUNT_THREADS_ST
-    st = notmuch_query_count_threads_st (query, &c);
+    st = notmuch_query_count_threads (query, &c);
     if (st != NOTMUCH_STATUS_SUCCESS) c = 0;
-# else
-    c = notmuch_query_count_threads (query);
-# endif
 
     if (c > 1) {
       throw database_error ("db: got more than one thread for thread id.");
@@ -368,16 +433,11 @@ namespace Astroid {
     notmuch_threads_t * nm_threads;
     notmuch_status_t st = NOTMUCH_STATUS_SUCCESS;
 
-# ifdef HAVE_QUERY_THREADS_ST
-    /* available since notmuch 0.21 */
-    st = notmuch_query_search_threads_st (query, &nm_threads);
-# else
-    nm_threads = notmuch_query_search_threads (query);
-# endif
+    st = notmuch_query_search_threads (query, &nm_threads);
 
     if ((st != NOTMUCH_STATUS_SUCCESS) || nm_threads == NULL) {
       notmuch_query_destroy (query);
-      LOG (error) << "db: could not find thread: " << thread_id << ", status: " << st;
+      LOG (error) << "db: could not find thread: " << thread_id << ", status: " << notmuch_status_to_string(st);
 
       func (NULL);
 
@@ -766,6 +826,27 @@ namespace Astroid {
     astroid->actions->emit_thread_updated (db, thread_id);
   }
 
+  bool NotmuchThread::matches (std::vector<ustring> &k) {
+    if (index_str.empty ()) {
+      index_str = subject;
+      for (auto &a : authors)  index_str += get<0>(a);
+      for (auto &t : tags)     index_str += t;
+      index_str += thread_id;
+      index_str = index_str.lowercase ();
+    }
+
+    /* match all keys (AND) */
+    return std::all_of (k.begin (), k.end (),
+        [&] (ustring &kk)
+          {
+            return index_str.find (kk) != string::npos;
+          });
+  }
+
+  bool NotmuchThread::in_query (Db * db, ustring query) {
+    return db->thread_in_query (query, thread_id);
+  }
+
   ustring NotmuchThread::str () {
     return "threadid:" + thread_id;
   }
@@ -773,9 +854,128 @@ namespace Astroid {
   /****************
    * NotmuchMessage
    ****************/
+  NotmuchMessage::NotmuchMessage (notmuch_message_t * m) {
+    load (m);
+  }
+
   NotmuchMessage::NotmuchMessage (refptr<Message> m) {
-    mid  = m->mid;
-    tags = m->tags;
+    mid       = m->mid;
+    tags      = m->tags;
+    thread_id = m->tid;
+    subject   = m->subject;
+    sender    = m->sender;
+    time      = m->time;
+    filename  = m->fname;
+
+    unread     = false;
+    attachment = false;
+    flagged    = false;
+
+    for (auto &t : tags) {
+      if (t == "unread")      unread = true;
+      if (t == "flagged")     flagged = true;
+      if (t == "attachment")  attachment = true;
+
+      if (attachment && unread && flagged) break;
+    }
+  }
+
+  void NotmuchMessage::load (notmuch_message_t * m) {
+    const char * c;
+
+    c = notmuch_message_get_message_id (m);
+    if (c == NULL) {
+      LOG (error) << "nmm: got NULL for mid.";
+      throw database_error ("nmm: got NULL mid");
+    }
+    mid = c;
+
+    c = notmuch_message_get_thread_id (m);
+    if (c == NULL) {
+      LOG (error) << "nmm: got NULL thread id.";
+      throw database_error ("nmm: NULL thread_id");
+    }
+    thread_id = c;
+
+    c = notmuch_message_get_header (m, "Subject");
+    if (c != NULL) subject = c;
+
+    c = notmuch_message_get_header (m, "From");
+    if (c != NULL) sender = c;
+
+    time = notmuch_message_get_date (m);
+
+    c = notmuch_message_get_filename (m);
+    if (c != NULL) filename = c;
+
+    unread     = false;
+    attachment = false;
+    flagged    = false;
+    tags       = get_tags (m); // sets up unread, attachment and flagged
+  }
+
+  vector<ustring> NotmuchMessage::get_tags (notmuch_message_t * m) {
+    notmuch_tags_t *  tags;
+    const char *      tag;
+
+    vector<ustring> ttags;
+
+    for (tags = notmuch_message_get_tags (m);
+         notmuch_tags_valid (tags);
+         notmuch_tags_move_to_next (tags))
+    {
+      tag = notmuch_tags_get (tags); // tag belongs to tags
+
+      if (tag != NULL) {
+        if (string(tag) == "unread") {
+          unread = true;
+        } else if (string(tag) == "attachment") {
+          attachment = true;
+        } else if (string(tag) == "flagged") {
+          flagged = true;
+        }
+
+        ttags.push_back (ustring(tag));
+
+      }
+    }
+
+    notmuch_tags_destroy (tags);
+
+    sort (ttags.begin (), ttags.end ());
+
+    return ttags;
+  }
+
+  bool NotmuchMessage::matches (std::vector<ustring> &k) {
+    if (index_str.empty ()) {
+      index_str = subject + sender;
+      for (auto &t : tags) index_str += t;
+      index_str += thread_id;
+      index_str += mid;
+      index_str = index_str.lowercase ();
+    }
+
+    /* match all keys (AND) */
+    return std::all_of (k.begin (), k.end (),
+        [&] (ustring &kk)
+          {
+            return index_str.find (kk) != string::npos;
+          });
+  }
+
+  void NotmuchMessage::refresh (Db * db) {
+    /* do a new db query and update all fields */
+    db->on_message (mid,
+        [&](notmuch_message_t * m) {
+
+          refresh (m);
+
+        });
+  }
+
+  void NotmuchMessage::refresh (notmuch_message_t * msg) {
+    load (msg);
   }
 
   /* tag actions */
@@ -869,15 +1069,19 @@ namespace Astroid {
     astroid->actions->emit_message_updated (db, mid);
   }
 
+  bool NotmuchMessage::in_query (Db * db, ustring query) {
+    return db->message_in_query (query, mid);
+  }
+
   ustring NotmuchMessage::str () {
     return "mid:" + mid;
   }
 
 
   /***************
-   * NotmuchTaggable
+   * NotmuchItem
    ***************/
-  bool NotmuchTaggable::has_tag (ustring tag) {
+  bool NotmuchItem::has_tag (ustring tag) {
     return (find(tags.begin (), tags.end (), tag) != tags.end ());
   }
 

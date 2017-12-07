@@ -29,6 +29,7 @@ namespace Astroid {
   class Address {
     public:
       Address ();
+      Address (const char * full_address);
       Address (ustring full_address);
       Address (ustring name, ustring email);
       Address (InternetAddress *);
@@ -45,11 +46,14 @@ namespace Astroid {
       ustring _name   = "";
       ustring _email  = "";
       bool _valid     = false;
+
+      void parse (const char * str);
   };
 
   class AddressList {
     public:
       AddressList ();
+      AddressList (const char *);
       AddressList (ustring);
       AddressList (InternetAddressList *);
       AddressList (Address);
@@ -57,11 +61,16 @@ namespace Astroid {
       std::vector<Address> addresses;
       ustring str ();
       int size ();
+      bool empty ();
 
+      AddressList& operator=  (const AddressList &);
       AddressList& operator+= (const Address &);
       AddressList& operator+= (const AddressList &);
-      AddressList  operator+ (const Address &) const;
-      AddressList  operator+ (const AddressList &) const;
+      AddressList  operator+  (const Address &) const;
+      AddressList  operator+  (const AddressList &) const;
+
+      AddressList  operator-  (const AddressList &);
+      AddressList& operator-= (const AddressList &);
 
       void remove_me ();
       void remove_duplicates ();

@@ -5,11 +5,12 @@ from subprocess import *
 def getGitDesc():
   return Popen('git describe --abbrev=8 --tags --always', stdout=PIPE, shell=True).stdout.read ().strip ()
 
-env = Environment ()
-
 AddOption ("--release", action="store", dest="release", default="git", help="Make a release (default: git describe output)")
 AddOption ("--enable-debug", action="store", dest="debug", default=None, help="Enable the -g flag for debugging (default: true when release is git)")
 AddOption ("--prefix", action="store", dest="prefix", default = '/usr/local', help="Directory to install astroid under")
+
+AddOption ("--profiler", action="store_true", dest="profile", default = False,
+    help = "Compile with profiling support (-pg)")
 
 AddOption ("--disable-libsass", action='store_true', dest='disable_libsass',
     default = False, help = "Disable libsass and the dependency on libsass, requires a scss compiler")
@@ -19,10 +20,27 @@ AddOption ('--scss-compiler', action='store', dest='scss_compiler',
 AddOption ("--disable-plugins", action = 'store_true', dest = 'disable_plugins',
     default = False, help = "Disable plugins")
 
-disable_libsass = GetOption ("disable_libsass")
-scss = GetOption ('scss_compiler')
+AddOption ("--disable-terminal", action='store_true', dest='disable_terminal',
+    default = False, help = "Disable built-in VTE based terminal")
 
-disable_plugins = GetOption ("disable_plugins")
+AddOption ("--disable-embedded-editor", action='store_true', dest='disable_embedded',
+    default = False, help = "Disable embedded editor")
+
+AddOption ("--propagate-environment", action = 'store_true', dest = 'propagate_environment',
+    default = False, help = "Propagate external environment variables to the build environment")
+
+envargs = {}
+if GetOption ("propagate_environment"):
+    envargs['ENV'] = os.environ
+
+env = Environment (**envargs)
+
+disable_libsass  = GetOption ("disable_libsass")
+scss             = GetOption ('scss_compiler')
+profile          = GetOption ('profile')
+disable_terminal = GetOption ("disable_terminal")
+disable_plugins  = GetOption ("disable_plugins")
+disable_embedded = GetOption ("disable_embedded")
 
 prefix = GetOption ("prefix")
 
@@ -47,26 +65,26 @@ print "debug flag enabled: " + str(debug)
 
 if 'clean_test' in COMMAND_LINE_TARGETS:
   print "cleaning out tests.."
-  for fn in os.listdir('./test/'):
+  for fn in os.listdir('./tests/'):
     if '.passed' in fn:
       print "delting: " + fn
-      os.remove (os.path.join ('./test', fn))
+      os.remove (os.path.join ('./tests', fn))
 
-  for fn in os.listdir('./test/mail/'):
+  for fn in os.listdir('./tests/mail/'):
     if '.passed' in fn or '.setup' in fn:
       print "delting: " + fn
-      os.remove (os.path.join ('./test/mail/', fn))
+      os.remove (os.path.join ('./tests/mail/', fn))
 
   # clean notmuch dir
   print "cleaning out notmuch dir.."
   import shutil
-  if os.path.exists ("./test/mail/test_mail/.notmuch"):
-    shutil.rmtree ("./test/mail/test_mail/.notmuch")
+  if os.path.exists ("./tests/mail/test_mail/.notmuch"):
+    shutil.rmtree ("./tests/mail/test_mail/.notmuch")
 
   # remove gpg
   print "cleaning out gnupg dir.."
-  if os.path.exists ("./test/test_home/gnupg"):
-    shutil.rmtree ("./test/test_home/gnupg")
+  if os.path.exists ("./tests/test_home/gnupg"):
+    shutil.rmtree ("./tests/test_home/gnupg")
 
   exit ()
 
@@ -150,49 +168,6 @@ def CheckPKG(context, name):
   context.Result( ret )
   return ret
 
-nm_db_get_revision_test_src = """
-# include <notmuch.h>
-
-int main (int argc, char ** argv)
-{
-  notmuch_database_t * nm_db;
-  const char * uuid;
-  notmuch_database_get_revision (nm_db, &uuid);
-
-  return 0;
-}
-"""
-
-nm_query_threads_st = """
-# include <notmuch.h>
-
-int main (int argc, char ** argv)
-{
-  notmuch_query_t * q;
-  notmuch_threads_t * t;
-  notmuch_status_t st;
-
-  st = notmuch_query_search_threads_st (q, &t);
-
-  return 0;
-}
-"""
-
-nm_query_count_threads_st = """
-# include <notmuch.h>
-
-int main (int argc, char ** argv)
-{
-  notmuch_query_t * q;
-  unsigned int c;
-  notmuch_status_t st;
-
-  st = notmuch_query_count_threads_st (q, &c);
-
-  return 0;
-}
-"""
-
 # http://www.scons.org/doc/1.2.0/HTML/scons-user/x4076.html
 def check_notmuch (ctx, title, src):
   ctx.Message ("Checking for C function %s.." % title)
@@ -217,13 +192,35 @@ if not conf.CheckPKG('glibmm-2.4'):
   print "glibmm-2.4 not found."
   Exit (1)
 
-if not conf.CheckPKG('gmime-2.6 >= 2.6.18'):
-  print "gmime-2.6 not found."
+gmime_version = ''
+if conf.CheckPKG ('gmime-3.0 >= 3.0.0'):
+  env.ParseConfig ('pkg-config --libs --cflags gmime-3.0')
+  gmime_version = '3.0'
+
+elif conf.CheckPKG ('gmime-2.6 >= 2.6.18'):
+  env.ParseConfig ('pkg-config --libs --cflags gmime-2.6')
+  gmime_version = '2.6'
+  print ("warning: gmime-2.6 will not be supported in the future.")
+
+else:
+  print "gmime not found."
   Exit (1)
 
 if not conf.CheckPKG('webkitgtk-3.0'):
   print "webkitgtk not found."
   Exit (1)
+
+if not disable_terminal:
+  if not conf.CheckPKG ('vte-2.91'):
+    print ("warning: vte3 not found: disabling built-in terminal.")
+    disable_terminal = True
+
+if disable_terminal:
+  print "warning: built-in terminal disabled."
+  env.AppendUnique (CPPFLAGS = [ '-DDISABLE_VTE' ])
+
+if disable_embedded:
+  env.AppendUnique (CPPFLAGS = [ '-DDISABLE_EMBEDDED' ])
 
 if not disable_libsass:
   if conf.CheckLibWithHeader ('libsass', 'sass_context.h', 'c'):
@@ -231,11 +228,10 @@ if not disable_libsass:
   elif conf.CheckLibWithHeader ('libsass', 'sass/context.h', 'c'):
     env.AppendUnique (CPPFLAGS = [ '-DSASSCTX_CONTEXT_H' ])
   else:
-    print "libsass must be installed: could not find header file. you can disable libsass with --disable-libsass, however, that requires a SCSS compiler like 'sassc'."
+    print "libsass must be installed: could not find header file. you can disable libsass with --disable-libsass, however, that requires a SCSS compiler like 'sassc' which can be specified with --scss-compiler=<path to compiler>."
     Exit (1)
 
 else:
-
   print "warning: libsass is disabled, will generate SCSS at build time using: '%s'.." % scss
   env.AppendUnique (CPPFLAGS = [ '-DDISABLE_LIBSASS' ])
 
@@ -252,6 +248,8 @@ else:
   if not conf.CheckPKG('gobject-introspection-1.0'):
     print 'gobject-introspection-1.0 not found.'
     Exit (1)
+  else:
+    env.ParseConfig ('pkg-config --libs --cflags gobject-introspection-1.0')
 
   if not conf.CheckPKG('libpeas-1.0'):
     print 'libpeas-1.0 not found.'
@@ -263,32 +261,32 @@ if not conf.CheckLibWithHeader ('notmuch', 'notmuch.h', 'c'):
   print "notmuch does not seem to be installed."
   Exit (1)
 
-if conf.CheckNotmuch ('notmuch_database_get_revision',
-                      nm_db_get_revision_test_src):
-  have_get_rev = True
-  env.AppendUnique (CPPFLAGS = [ '-DHAVE_NOTMUCH_GET_REV' ])
-else:
-  have_get_rev = False
-  print "notmuch_database_get_revision() not available. A recent notmuch with lastmod capabilities will result in easier updating of new threads and smoother polls."
 
-if conf.CheckNotmuch ('notmuch_query_search_threads_st',
-                      nm_query_threads_st):
-  env.AppendUnique (CPPFLAGS = [ '-DHAVE_QUERY_THREADS_ST' ])
-else:
-  print "notmuch_query_*_st status versions are not available, some error checking is not possible - and tests will fail. consider upgrading notmuch to a version equal or later than 0.21."
+n_index_src = """
+# include <notmuch.h>
 
-if conf.CheckNotmuch ('notmuch_query_count_threads_st',
-                      nm_query_count_threads_st):
-  env.AppendUnique (CPPFLAGS = [ '-DHAVE_QUERY_COUNT_THREADS_ST' ])
-else:
-  print "notmuch_query_*_count__st status versions are not available, some error checking is not possible - and tests will fail. consider upgrading notmuch to a version equal or later than 0.21."
+int main () {
+  notmuch_database_t * db;
+  notmuch_message_t  * m;
+  notmuch_database_index_file (db, "asdf", notmuch_database_get_default_indexopts (db), &m);
+
+  return 0;
+}
+"""
+
+if conf.CheckNotmuch ("notmuch_database_index_file", n_index_src):
+  env.AppendUnique (CPPFLAGS = [ '-DHAVE_NOTMUCH_INDEX_FILE' ])
 
 # external libraries
 env.ParseConfig ('pkg-config --libs --cflags glibmm-2.4')
 env.ParseConfig ('pkg-config --libs --cflags gtkmm-3.0')
-env.ParseConfig ('pkg-config --libs --cflags gmime-2.6')
+
+
 env.ParseConfig ('pkg-config --libs --cflags webkitgtk-3.0')
-env.ParseConfig ('pkg-config --libs --cflags libsass')
+if not disable_libsass:
+  env.ParseConfig ('pkg-config --libs --cflags libsass')
+if not disable_terminal:
+  env.ParseConfig ('pkg-config --libs --cflags vte-2.91')
 
 if not conf.CheckLib ('boost_filesystem', language = 'c++'):
   print "boost_filesystem does not seem to be installed."
@@ -320,12 +318,12 @@ if not conf.CheckLib ('boost_date_time', language = 'c++'):
 
 libs   = ['notmuch',
           'boost_filesystem',
-          'boost_system',
           'boost_program_options',
           'boost_log_setup',
           'boost_log',
           'boost_thread',
           'boost_date_time',
+          'boost_system',
           'stdc++']
 
 env.AppendUnique (LIBS = libs)
@@ -333,6 +331,11 @@ env.AppendUnique (CPPFLAGS = ['-Wall', '-std=c++11', '-pthread', '-DBOOST_LOG_DY
 
 if debug:
   env.AppendUnique (CPPFLAGS = ['-g', '-Wextra', '-DDEBUG'])
+
+if profile:
+  print ("profiling enabled.")
+  env.AppendUnique (CPPFLAGS = ['-pg'])
+  env.AppendUnique (LINKFLAGS = ['-pg'])
 
 env = conf.Finish ()
 
@@ -358,7 +361,8 @@ source = (
           Glob('src/modes/thread_view/*.cc', strings = True) +
           Glob('src/modes/editor/*.cc', strings = True) +
           Glob('src/actions/*.cc', strings = True) +
-          Glob('src/utils/*.cc', strings = True)
+          Glob('src/utils/*.cc', strings = True) +
+          Glob('src/utils/gmime/*.cc', strings = True)
           )
 
 if not disable_plugins:
@@ -377,7 +381,7 @@ source_objs +=  [cenv.Object (s) for s in csource]
 ## GIR for libpeas plugins
 def add_gobject_introspection(env, gi_name, version,
                               sources, includepaths, program,
-                              pkgs, includes):
+                              pkgs, includes, gmime_version):
 
   # borrowed from:
   # http://fossies.org/linux/privat/mypaint-1.2.0.tar.gz/mypaint-1.2.0/brushlib/SConscript?m=t
@@ -389,10 +393,10 @@ def add_gobject_introspection(env, gi_name, version,
   prgname = os.path.splitext (prgname)[0]
 
   includeflags = ' '.join(['-I%s' % s for s in includepaths])
-  gi_includes = ' '.join(['--include=%s' % s for s in includes])
+  gi_includes  = ' '.join(['--include=%s' % s for s in includes])
 
   scanner_cmd = """LD_LIBRARY_PATH=./ g-ir-scanner -o $TARGET --warn-all \
-      --namespace=%(gi_name)s  --include=GObject-2.0 --include=GMime-2.6 --nsversion=%(version)s \
+      --namespace=%(gi_name)s  --include=GObject-2.0 --include=GMime-%(gmime_version)s --nsversion=%(version)s \
       %(pkgs)s %(includeflags)s  \
       --program=./%(prgname)s $SOURCES""" % locals()
 
@@ -412,7 +416,7 @@ if not disable_plugins:
 
   ## generate GIR and typelib
   gir, typelib = add_gobject_introspection (env, "Astroid", "0.1",
-     girsource + Glob('src/plugin/*.h', strings = True), ['src/'], girm, ['gobject-introspection-1.0', 'gmime-2.6'], [])
+     girsource + Glob('src/plugin/*.h', strings = True), ['src/'], girm, ['gobject-introspection-1.0', 'gmime-%s' % gmime_version], [], gmime_version)
 
 
 
@@ -431,6 +435,23 @@ if not disable_plugins:
   env.Depends ('astroid', gir)
   env.Depends ('astroid', typelib)
 
+
+## summary
+print ""
+print "    debug   ..: ", debug
+print "    release ..: ", release
+print "    version ..: ", GIT_DESC
+print "    profile ..: ", profile
+print "    libsass ..: ", (not disable_libsass)
+print "    scss .....: ", scss, "( use:", disable_libsass, ")"
+print "    plugins ..: ", (not disable_plugins)
+print "    terminal .: ", (not disable_terminal)
+print "    embedded .: ", (not disable_embedded)
+print "    gmime ....: ", gmime_version
+print "    prefix ...: ", prefix
+print ""
+
+
 Export ('env')
 Export ('astroid')
 
@@ -439,14 +460,14 @@ Export ('astroid')
 testEnv = env.Clone()
 testEnv.Append (CPPPATH = '../src')
 testEnv.Tool ('unittest',
-              toolpath=['test/bt/'],
-              UTEST_MAIN_SRC=File('test/bt/boostautotestmain.cc'),
+              toolpath=['tests/bt/'],
+              UTEST_MAIN_SRC=File('tests/bt/boostautotestmain.cc'),
               LIBS=['boost_unit_test_framework']
 )
 
 Export ('testEnv')
 # grab stuff from sub-directories.
-env.SConscript(dirs = ['test'])
+env.SConscript(dirs = ['tests'])
 
 ## Install target
 idir_prefix     = prefix
@@ -454,11 +475,18 @@ idir_bin        = os.path.join (prefix, 'bin')
 idir_shr        = os.path.join (prefix, 'share/astroid')
 idir_ui         = os.path.join (idir_shr, 'ui')
 idir_app        = os.path.join (prefix, 'share/applications')
+idir_icon       = os.path.join (prefix, 'share/icons/hicolor')
 
 inst_bin = env.Install (idir_bin, astroid)
 inst_shr = env.Install (idir_ui,  Glob ('ui/*.glade') +
                                   Glob ('ui/*.png') +
                                   Glob ('ui/*.html'))
+
+# icons are installed in two locations
+inst_shr += env.Install (os.path.join(idir_ui, 'icons'),  Glob ('ui/icons/*'))
+
+inst_shr += env.InstallAs (os.path.join (idir_icon, '512x512/apps/astroid.png'), 'ui/icons/icon_color.png')
+inst_shr += env.InstallAs (os.path.join (idir_icon, 'scalable/apps/astroid.svg'), 'ui/icons/icon_color.svg')
 
 if not disable_plugins:
   inst_shr += env.Install (os.path.join (prefix, 'share/gir-1.0'), gir)

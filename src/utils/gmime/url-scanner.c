@@ -30,6 +30,7 @@
 #include "gtrie.h"
 #include "url-scanner.h"
 
+# include "utils/compiler.h"
 
 struct _UrlScanner {
 	GPtrArray *patterns;
@@ -41,11 +42,11 @@ UrlScanner *
 url_scanner_new (void)
 {
 	UrlScanner *scanner;
-	
+
 	scanner = g_new (UrlScanner, 1);
 	scanner->patterns = g_ptr_array_new ();
 	scanner->trie = g_trie_new (TRUE);
-	
+
 	return scanner;
 }
 
@@ -54,7 +55,7 @@ void
 url_scanner_free (UrlScanner *scanner)
 {
 	g_return_if_fail (scanner != NULL);
-	
+
 	g_ptr_array_free (scanner->patterns, TRUE);
 	g_trie_free (scanner->trie);
 	g_free (scanner);
@@ -65,7 +66,7 @@ void
 url_scanner_add (UrlScanner *scanner, urlpattern_t *pattern)
 {
 	g_return_if_fail (scanner != NULL);
-	
+
 	g_trie_add (scanner->trie, pattern->pattern, scanner->patterns->len);
 	g_ptr_array_add (scanner->patterns, pattern);
 }
@@ -77,25 +78,25 @@ url_scanner_scan (UrlScanner *scanner, const char *in, size_t inlen, urlmatch_t 
 	const char *pos, *inend;
 	urlpattern_t *pat;
 	int pattern_id;
-	
+
 	g_return_val_if_fail (scanner != NULL, FALSE);
 	g_return_val_if_fail (in != NULL, FALSE);
-	
+
 	if (!(pos = g_trie_search (scanner->trie, in, inlen, &pattern_id)))
 		return FALSE;
-	
+
 	pat = g_ptr_array_index (scanner->patterns, pattern_id);
-	
+
 	match->pattern = pat->pattern;
 	match->prefix = pat->prefix;
-	
+
 	inend = in + inlen;
 	if (!pat->start (in, pos, inend, match))
 		return FALSE;
-	
+
 	if (!pat->end (in, pos, inend, match))
 		return FALSE;
-	
+
 	return TRUE;
 }
 
@@ -153,12 +154,12 @@ static gboolean
 is_open_brace (char c)
 {
 	unsigned int i;
-	
+
 	for (i = 0; i < G_N_ELEMENTS (url_braces); i++) {
 		if (c == url_braces[i].open)
 			return TRUE;
 	}
-	
+
 	return FALSE;
 }
 
@@ -166,14 +167,14 @@ static char
 url_stop_at_brace (const char *in, size_t so)
 {
 	int i;
-	
+
 	if (so > 0) {
 		for (i = 0; i < 4; i++) {
 			if (in[so - 1] == url_braces[i].open)
 				return url_braces[i].close;
 		}
 	}
-	
+
 	return '\0';
 }
 
@@ -183,35 +184,35 @@ url_addrspec_start (const char *in, const char *pos, const char *inend, urlmatch
 {
   (void) (inend);
 	register const char *inptr = pos;
-	
+
 	g_assert (*inptr == '@');
-	
+
 	if (inptr == in)
 		return FALSE;
-	
+
 	inptr--;
-	
+
 	while (inptr > in) {
 		if (is_atom (*inptr))
 			inptr--;
 		else
 			break;
-		
+
 		while (inptr > in && is_atom (*inptr))
 			inptr--;
-		
+
 		if (inptr > in && *inptr == '.')
 			inptr--;
 	}
-	
+
 	if (!is_atom (*inptr) || is_open_brace (*inptr))
 		inptr++;
-	
+
 	if (inptr == pos)
 		return FALSE;
-	
+
 	match->um_so = (inptr - in);
-	
+
 	return TRUE;
 }
 
@@ -221,33 +222,33 @@ url_addrspec_end (const char *in, const char *pos, const char *inend, urlmatch_t
 	const char *inptr = pos;
 	int parts = 0, digits;
 	gboolean got_dot = FALSE;
-	
+
 	g_assert (*inptr == '@');
-	
+
 	inptr++;
-	
+
 	if (*inptr == '[') {
 		/* domain literal */
 		do {
 			inptr++;
-			
+
 			digits = 0;
 			while (inptr < inend && is_digit (*inptr) && digits < 3) {
 				inptr++;
 				digits++;
 			}
-			
+
 			parts++;
-			
+
 			if (*inptr != '.' && parts != 4)
 				return FALSE;
 		} while (parts < 4);
-		
+
 		if (inptr < inend && *inptr == ']')
 			inptr++;
 		else
 			return FALSE;
-		
+
 		got_dot = TRUE;
 	} else {
 		while (inptr < inend) {
@@ -255,10 +256,10 @@ url_addrspec_end (const char *in, const char *pos, const char *inend, urlmatch_t
 				inptr++;
 			else
 				break;
-			
+
 			while (inptr < inend && is_domain (*inptr))
 				inptr++;
-			
+
 			if (inptr < inend && *inptr == '.' && is_domain (inptr[1])) {
 				if (*inptr == '.')
 					got_dot = TRUE;
@@ -266,12 +267,12 @@ url_addrspec_end (const char *in, const char *pos, const char *inend, urlmatch_t
 			}
 		}
 	}
-	
+
 	if (inptr == pos + 1 || !got_dot)
 		return FALSE;
-	
+
 	match->um_eo = (inptr - in);
-	
+
 	return TRUE;
 }
 
@@ -291,7 +292,7 @@ url_file_start (const char *in, const char *pos, const char *inend, urlmatch_t *
 {
   (void) (inend);
 	match->um_so = (pos - in);
-	
+
 	return TRUE;
 }
 
@@ -300,22 +301,22 @@ url_file_end (const char *in, const char *pos, const char *inend, urlmatch_t *ma
 {
 	register const char *inptr = pos;
 	char close_brace;
-	
+
 	inptr += strlen (match->pattern);
-	
+
 	if (*inptr == '/')
 		inptr++;
-	
+
 	close_brace = url_stop_at_brace (in, match->um_so);
-	
+
 	while (inptr < inend && is_urlsafe (*inptr) && *inptr != close_brace)
 		inptr++;
-	
+
 	if (inptr == pos)
 		return FALSE;
-	
+
 	match->um_eo = (inptr - in);
-	
+
 	return TRUE;
 }
 
@@ -324,7 +325,7 @@ url_web_start (const char *in, const char *pos, const char *inend, urlmatch_t *m
 {
   (void) (inend);
 	match->um_so = (pos - in);
-	
+
 	return TRUE;
 }
 
@@ -338,11 +339,11 @@ url_web_end (const char *in, const char *pos, const char *inend, urlmatch_t *mat
 	char close_brace;
 	int port, val, n;
 	char *end;
-	
+
 	inptr += strlen (match->pattern);
-	
+
 	close_brace = url_stop_at_brace (in, match->um_so);
-	
+
 	/* find the end of the domain */
 	if (is_digit (*inptr)) {
 		goto ip_literal2;
@@ -352,26 +353,26 @@ url_web_end (const char *in, const char *pos, const char *inend, urlmatch_t *mat
 		while (inptr < inend) {
 			if (!is_atom (*inptr))
 				break;
-			
+
 			inptr++;
-			
+
 			while (inptr < inend && is_atom (*inptr))
 				inptr++;
-			
+
 			if ((inptr + 1) < inend && *inptr == '.' && is_atom (inptr[1]))
 				inptr++;
 		}
-		
+
 		if (*inptr != '@')
 			inptr = save;
 		else
 			inptr++;
-		
+
 		if (*inptr == '[') {
 			/* IPv6 (or possibly IPv4) address literal */
 			goto ip_literal;
 		}
-		
+
 		if (is_domain (*inptr)) {
 			/* domain name or IPv4 address */
 			goto domain;
@@ -380,7 +381,7 @@ url_web_end (const char *in, const char *pos, const char *inend, urlmatch_t *mat
 	ip_literal:
 		openbracket = TRUE;
 		inptr++;
-		
+
 		if (is_digit (*inptr)) {
 		ip_literal2:
 			/* could be IPv4 or IPv6 */
@@ -397,30 +398,30 @@ url_web_end (const char *in, const char *pos, const char *inend, urlmatch_t *mat
 		} else {
 			return FALSE;
 		}
-		
+
 		switch (*end) {
 		case '.': /* IPv4 address literal */
 			n = 1;
 			do {
 				if (val > 255 || *end != '.')
 					return FALSE;
-				
+
 				inptr = end + 1;
 				if ((val = strtol (inptr, &end, 10)) < 0)
 					return FALSE;
-				
+
 				n++;
 			} while (n < 4);
-			
+
 			if (val > 255 || n < 4 || (openbracket && *end != ']'))
 				return FALSE;
-			
+
 			inptr = end + 1;
 			break;
 		case ':': /* IPv6 address literal */
 			if (!openbracket)
 				return FALSE;
-			
+
 			do {
 				if (end[1] != ':') {
 					inptr = end + 1;
@@ -431,10 +432,10 @@ url_web_end (const char *in, const char *pos, const char *inend, urlmatch_t *mat
 					end++;
 				}
 			} while (end > inptr && *end == ':');
-			
+
 			if (*end != ']')
 				return FALSE;
-			
+
 			inptr = end + 1;
 			break;
 		default:
@@ -445,82 +446,83 @@ url_web_end (const char *in, const char *pos, const char *inend, urlmatch_t *mat
 		while (inptr < inend) {
 			if (!is_domain (*inptr))
 				break;
-			
+
 			inptr++;
-			
+
 			while (inptr < inend && is_domain (*inptr))
 				inptr++;
-			
+
 			if ((inptr + 1) < inend && *inptr == '.' && (is_domain (inptr[1]) || inptr[1] == '/'))
 				inptr++;
 		}
 	} else {
 		return FALSE;
 	}
-	
+
 	if (inptr < inend) {
 		switch (*inptr) {
 		case ':': /* we either have a port or a password */
 			inptr++;
-			
+
 			if (is_digit (*inptr) || passwd) {
 				port = (*inptr++ - '0');
-				
+
 				while (inptr < inend && is_digit (*inptr) && port < 65536)
 					port = (port * 10) + (*inptr++ - '0');
-				
+
 				if (!passwd && (port >= 65536 || *inptr == '@')) {
 					if (inptr < inend) {
 						/* this must be a password? */
 						goto passwd;
 					}
-					
+
 					inptr--;
 				}
 			} else {
 			passwd:
 				passwd = TRUE;
 				save = inptr;
-				
+
 				while (inptr < inend && is_atom (*inptr))
 					inptr++;
-				
+
 				if ((inptr + 2) < inend) {
 					if (*inptr == '@') {
 						inptr++;
 						if (is_domain (*inptr))
 							goto domain;
 					}
-					
+
 					return FALSE;
 				}
 			}
-			
+
 			if (inptr >= inend || *inptr != '/')
 				break;
-			
+
 			/* we have a '/' so there could be a path - fall through */
+      FALLTHROUGH;
 		case '/': /* we've detected a path component to our url */
 			inptr++;
-			
+
 			while (inptr < inend && is_urlsafe (*inptr) && *inptr != close_brace)
 				inptr++;
-			
+
 			break;
 		default:
 			break;
 		}
 	}
-	
+
 	/* urls are extremely unlikely to end with any
 	 * punctuation, so strip any trailing
 	 * punctuation off. Also strip off any closing
 	 * braces or quotes. */
 	while (inptr > pos && strchr (",.:;?!-|)}]'\"", inptr[-1]))
 		inptr--;
-	
+
 	match->um_eo = (inptr - in);
-	
+
 	return TRUE;
 }
 
@@ -541,7 +543,7 @@ static void
 table_init_bits (unsigned int mask, const char *vals)
 {
 	int i;
-	
+
 	for (i = 0; vals[i] != '\0'; i++)
 		url_scanner_table[(unsigned char) vals[i]] |= mask;
 }
@@ -550,7 +552,7 @@ static void
 url_scanner_table_init (void)
 {
 	int i;
-	
+
 	for (i = 0; i < 256; i++) {
 		url_scanner_table[i] = 0;
 		if (i < 32)
@@ -564,16 +566,16 @@ url_scanner_table_init (void)
 		if (i == 127)
 			url_scanner_table[i] |= IS_CTRL;
 	}
-	
+
 	url_scanner_table[' '] |= IS_SPACE;
 	url_scanner_table['-'] |= IS_DOMAIN;
-	
+
 	/* not defined to be special in rfc0822, but when scanning
            backwards to find the beginning of the email address we do
            not want to include this char if we come accross it - so
            this is kind of a hack, but it's ok */
 	url_scanner_table['/'] |= IS_SPECIAL;
-	
+
 	table_init_bits (IS_LWSP, CHARS_LWSP);
 	table_init_bits (IS_SPECIAL, CHARS_SPECIAL);
 	table_init_bits (IS_URLSAFE, CHARS_URLSAFE);
@@ -582,16 +584,16 @@ url_scanner_table_init (void)
 int main (int argc, char **argv)
 {
 	int i;
-	
+
 	url_scanner_table_init ();
-	
+
 	printf ("static unsigned char url_scanner_table[256] = {");
 	for (i = 0; i < 256; i++) {
 		printf ("%s%3d%s", (i % 16) ? "" : "\n\t",
 			url_scanner_table[i], i != 255 ? "," : "\n");
 	}
 	printf ("};\n\n");
-	
+
 	return 0;
 }
 

@@ -36,9 +36,9 @@ namespace Astroid {
       pcolumn->add_attribute (renderer_text->property_markup(), m_columns.m_col_name);
     }
 
-    tv.append_column ("Query", m_columns.m_col_query);
-    tv.append_column ("Unread messages", m_columns.m_col_unread_messages);
+    tv.append_column ("Unread messages", m_columns.m_col_unread_messages_s);
     tv.append_column ("Total messages ", m_columns.m_col_total_messages);
+    tv.append_column ("Query", m_columns.m_col_query);
 
     tv.set_headers_visible (false);
     tv.set_sensitive (true);
@@ -313,6 +313,108 @@ namespace Astroid {
           return true;
         });
 
+    keys.register_key (Key (GDK_KEY_Tab),
+        "searches.next_unread",
+        "Jump to next unread thread",
+        [&] (Key) {
+          Gtk::TreePath thispath, path;
+          Gtk::TreeIter fwditer;
+          Gtk::TreeViewColumn *c;
+
+          tv.get_cursor (path, c);
+          path.next ();
+          fwditer = store->get_iter (path);
+          thispath = path;
+
+          Gtk::ListStore::Row row;
+
+          bool found = false;
+          while (fwditer) {
+            row = *fwditer;
+
+            if (row[m_columns.m_col_unread_messages] > 0) {
+              found = true;
+              path = store->get_path (fwditer);
+              tv.set_cursor (path);
+              break;
+            }
+
+            fwditer++;
+          }
+
+          /* wrap, and check from start */
+          if (!found) {
+            fwditer = store->children().begin ();
+
+            while (fwditer && store->get_path(fwditer) < thispath) {
+              row = *fwditer;
+
+              if (row[m_columns.m_col_unread_messages] > 0) {
+                found = true;
+                path = store->get_path (fwditer);
+                tv.set_cursor (path);
+                break;
+              }
+
+              fwditer++;
+            }
+          }
+
+          return true;
+        });
+
+    keys.register_key (Key (false, false, (guint) GDK_KEY_ISO_Left_Tab),
+        "searches.previous_unread",
+        "Jump to previous unread thread",
+        [&] (Key) {
+          Gtk::TreePath thispath, path;
+          Gtk::TreeIter iter;
+          Gtk::TreeViewColumn *c;
+
+          tv.get_cursor (path, c);
+          path.prev ();
+          iter = store->get_iter (path);
+          thispath = path;
+
+          Gtk::ListStore::Row row;
+
+          bool found = false;
+          while (iter) {
+            row = *iter;
+
+            if (row[m_columns.m_col_unread_messages] > 0) {
+              path = store->get_path (iter);
+              tv.set_cursor (path);
+              found = true;
+              break;
+            }
+
+            iter--;
+          }
+
+          /* wrap, and check from end */
+          if (!found) {
+            iter = store->children().end ();
+            iter--;
+
+            while (iter && store->get_path(iter) > thispath) {
+              row = *iter;
+
+              if (row[m_columns.m_col_unread_messages] > 0) {
+                path = store->get_path (iter);
+                tv.set_cursor (path);
+                found = true;
+                break;
+              }
+
+              iter--;
+            }
+          }
+
+          return true;
+        });
+
+
     keys.register_key (Key (GDK_KEY_Return), { Key (GDK_KEY_KP_Enter) },
         "searches.open",
         "Open query",
@@ -396,6 +498,7 @@ namespace Astroid {
     store->clear ();
     load_startup_queries ();
     load_saved_searches ();
+    refresh_stats ();
 
     tv.set_cursor (path);
   }
@@ -408,49 +511,28 @@ namespace Astroid {
     row[m_columns.m_col_query] = query;
     row[m_columns.m_col_saved] = saved;
     row[m_columns.m_col_history] = history;
-
-    unsigned int total_messages, unread_messages;
-    notmuch_status_t st = NOTMUCH_STATUS_SUCCESS;
-
-    /* get stats */
-    Db db;
-    notmuch_query_t * query_t =  notmuch_query_create (db.nm_db, query.c_str ());
-    for (ustring & t : db.excluded_tags) {
-      notmuch_query_add_tag_exclude (query_t, t.c_str());
-    }
-    notmuch_query_set_omit_excluded (query_t, NOTMUCH_EXCLUDE_TRUE);
-
-# ifdef HAVE_QUERY_COUNT_THREADS_ST
-    st = notmuch_query_count_messages_st (query_t, &total_messages); // destructive
-    if (st != NOTMUCH_STATUS_SUCCESS) total_messages = 0;
-# else
-    total_messages = notmuch_query_count_messages (query_t);
-# endif
-    notmuch_query_destroy (query_t);
-
-    ustring unread_q_s = "(" + query + ") AND tag:unread";
-    notmuch_query_t * unread_q = notmuch_query_create (db.nm_db, unread_q_s.c_str());
-    for (ustring & t : db.excluded_tags) {
-      notmuch_query_add_tag_exclude (unread_q, t.c_str());
-    }
-    notmuch_query_set_omit_excluded (unread_q, NOTMUCH_EXCLUDE_TRUE);
-# ifdef HAVE_QUERY_COUNT_THREADS_ST
-    st = notmuch_query_count_messages_st (unread_q, &unread_messages); // destructive
-    if (st != NOTMUCH_STATUS_SUCCESS) unread_messages = 0;
-# else
-    unread_messages = notmuch_query_count_messages (unread_q);
-# endif
-    notmuch_query_destroy (unread_q);
-
-    row[m_columns.m_col_unread_messages] = ustring::compose ("(unread: %1)", unread_messages);
-    row[m_columns.m_col_total_messages] = ustring::compose ("(total: %1)", total_messages);
   }
 
-  void SavedSearches::on_thread_changed (Db *, ustring) {
-    refresh_stats ();
+  void SavedSearches::on_thread_changed (Db * db, ustring) {
+    refresh_stats_db (db);
   }
 
   void SavedSearches::refresh_stats () {
+    Db db;
+    refresh_stats_db (&db);
+  }
+
+  void SavedSearches::refresh_stats_db (Db *db) {
+    LOG (debug) << "searches: refreshing..";
+
+    if (!main_window->is_current (this)) {
+      LOG (debug) << "searches: skipping, not visible.";
+      needs_refresh = true;
+      return;
+    }
+
+    needs_refresh = false;
+
     for (auto row : store->children ()) {
       if (row[m_columns.m_col_description]) continue;
 
@@ -460,35 +542,27 @@ namespace Astroid {
       notmuch_status_t st = NOTMUCH_STATUS_SUCCESS;
 
       /* get stats */
-      Db db;
-      notmuch_query_t * query_t =  notmuch_query_create (db.nm_db, query.c_str ());
-      for (ustring & t : db.excluded_tags) {
+      notmuch_query_t * query_t =  notmuch_query_create (db->nm_db, query.c_str ());
+      for (ustring & t : db->excluded_tags) {
         notmuch_query_add_tag_exclude (query_t, t.c_str());
       }
       notmuch_query_set_omit_excluded (query_t, NOTMUCH_EXCLUDE_TRUE);
-# ifdef HAVE_QUERY_COUNT_THREADS_ST
-      st = notmuch_query_count_messages_st (query_t, &total_messages); // destructive
+      st = notmuch_query_count_messages (query_t, &total_messages); // destructive
       if (st != NOTMUCH_STATUS_SUCCESS) total_messages = 0;
-# else
-      total_messages = notmuch_query_count_messages (query_t);
-# endif
       notmuch_query_destroy (query_t);
 
       ustring unread_q_s = "(" + query + ") AND tag:unread";
-      notmuch_query_t * unread_q = notmuch_query_create (db.nm_db, unread_q_s.c_str());
-      for (ustring & t : db.excluded_tags) {
+      notmuch_query_t * unread_q = notmuch_query_create (db->nm_db, unread_q_s.c_str());
+      for (ustring & t : db->excluded_tags) {
         notmuch_query_add_tag_exclude (unread_q, t.c_str());
       }
       notmuch_query_set_omit_excluded (unread_q, NOTMUCH_EXCLUDE_TRUE);
-# ifdef HAVE_QUERY_COUNT_THREADS_ST
-      st = notmuch_query_count_messages_st (unread_q, &unread_messages); // destructive
+      st = notmuch_query_count_messages (unread_q, &unread_messages); // destructive
       if (st != NOTMUCH_STATUS_SUCCESS) unread_messages = 0;
-# else
-      unread_messages = notmuch_query_count_messages (unread_q);
-# endif
       notmuch_query_destroy (unread_q);
 
-      row[m_columns.m_col_unread_messages] = ustring::compose ("(unread: %1)", unread_messages);
+      row[m_columns.m_col_unread_messages] = unread_messages;
+      row[m_columns.m_col_unread_messages_s] = ustring::compose ("(unread: %1)", unread_messages);
       row[m_columns.m_col_total_messages] = ustring::compose ("(total: %1)", total_messages);
     }
   }
@@ -643,6 +717,7 @@ namespace Astroid {
   }
 
   void SavedSearches::grab_modal () {
+    if (needs_refresh) refresh_stats ();
     add_modal_grab ();
     grab_focus ();
   }

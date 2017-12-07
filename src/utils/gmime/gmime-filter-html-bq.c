@@ -29,9 +29,10 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "url-scanner.h"
+# include "url-scanner.h"
 # include <gmime/gmime-filter-html.h>
-#include "gmime-filter-html-bq.h"
+# include "gmime-filter-html-bq.h"
+# include "utils/compiler.h"
 
 #ifdef ENABLE_WARNINGS
 #define w(x) x
@@ -200,7 +201,9 @@ citation_depth (const char *in, const char *inend)
 		return 0;
 
 	while (inptr < inend && *inptr != '\n') {
-		if (*inptr == ' ')
+
+    /* remove an arbitrary number of spaces between '>' and next '>' */
+		while (*inptr == ' ' && inptr < inend)
 			inptr++;
 
 		if (inptr >= inend || *inptr++ != '>')
@@ -210,6 +213,34 @@ citation_depth (const char *in, const char *inend)
 	}
 
 	return depth;
+}
+
+static char *
+citation_cut (char *in, const char *inend)
+{
+	register char *inptr = in;
+  register char *start;
+
+	/* check that it isn't an escaped From line */
+	if (!strncmp (inptr, ">From", 5))
+		return inptr;
+
+	while (inptr < inend && *inptr != '\n') {
+
+    /* remove an arbitrary number of spaces between '>' and next '>' */
+    start = inptr;
+		while (*inptr == ' ' && inptr < inend)
+			inptr++;
+
+		if (inptr >= inend || *inptr != '>') {
+      if (*start == ' ' && start < inend) start++;
+      inptr = start; // not followed by '>', revert.
+			break;
+    }
+
+		inptr++;
+	}
+	return inptr;
 }
 
 static inline gunichar
@@ -302,6 +333,7 @@ writeln (GMimeFilter *filter, const char *in, const char *end, char *outptr, cha
 				break;
 			}
 			/* otherwise, FALL THROUGH */
+      FALLTHROUGH;
 		case ' ':
 			if (html->flags & GMIME_FILTER_HTML_CONVERT_SPACES) {
 				if (inptr == (instart + 1) || (inptr < inend && (*inptr == ' ' || *inptr == '\t'))) {
@@ -311,6 +343,7 @@ writeln (GMimeFilter *filter, const char *in, const char *end, char *outptr, cha
 				}
 			}
 			/* otherwise, FALL THROUGH */
+      FALLTHROUGH;
 		default:
 			if (u >= 0x20 && u < 0x80) {
 				*outptr++ = (char) (u & 0xff);
@@ -375,11 +408,7 @@ html_convert (GMimeFilter *filter, char *in, size_t inlen, size_t prespace,
           outptr = g_stpcpy (outptr, bq);
         }
 
-        /* remove '>' */
-        while (start < inptr && *start == '>' ) start++;
-
-        /* remove leading space */
-        if (start < inptr && *start == ' ') start++;
+        start = citation_cut(start, inptr);
 
       } else if (html->prev_cit_depth > depth) {
 
@@ -390,18 +419,10 @@ html_convert (GMimeFilter *filter, char *in, size_t inlen, size_t prespace,
           html->prev_cit_depth--;
         }
 
-        /* remove '>' */
-        while (start < inptr && *start == '>') start++;
-
-        /* remove leading space */
-        if (start < inptr && *start == ' ') start++;
+        start = citation_cut(start, inptr);
 
       } else if (depth > 0) {
-        /* we are still at the same depth: remove '>' */
-        while (start < inptr && *start == '>') start++;
-
-        /* remove leading space */
-        if (start < inptr && *start == ' ') start++;
+        start = citation_cut(start, inptr);
 
 			} else if (start < inptr && *start == '>') {
 				/* >From line */
@@ -559,7 +580,7 @@ g_mime_filter_html_bq_new (guint32 flags, guint32 colour)
 	GMimeFilterHTMLBQ *filter;
 	guint i;
 
-	filter = g_object_newv (GMIME_TYPE_FILTER_HTML_BQ, 0, NULL);
+	filter = g_object_new (GMIME_TYPE_FILTER_HTML_BQ, NULL);
 	filter->flags = flags;
 	filter->colour = colour;
 

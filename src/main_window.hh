@@ -7,11 +7,28 @@
 # include <gtkmm/window.h>
 # include <gtkmm/notebook.h>
 
+# ifndef DISABLE_VTE
+# include <vte/vte.h>
+# endif
+# include <boost/filesystem.hpp>
+
 # include "proto.hh"
 # include "command_bar.hh"
 # include "modes/mode.hh"
 # include "modes/keybindings.hh"
 # include "actions/action_manager.hh"
+
+namespace bfs = boost::filesystem;
+
+# ifndef DISABLE_VTE
+extern "C" {
+  void mw_on_terminal_child_exit (VteTerminal *, gint, gpointer);
+  void mw_on_terminal_commit (VteTerminal *, gchar **, guint, gpointer);
+# if VTE_CHECK_VERSION(0,48,0)
+  void mw_on_terminal_spawn_callback (VteTerminal *, GPid pid, GError *, gpointer);
+# endif
+}
+# endif
 
 namespace Astroid {
   class Notebook : public Gtk::Notebook {
@@ -45,10 +62,18 @@ namespace Astroid {
       Gtk::Box vbox;
       Notebook notebook;
 
+      typedef enum _active {
+        Window,
+        Command,
+# ifndef DISABLE_VTE
+        Terminal,
+# endif
+      } Active;
+
       /* command bar */
       CommandBar command;
 
-      bool is_command = false;
+      Active active_mode = Window;
       void enable_command (CommandBar::CommandMode, ustring,
           std::function<void(ustring)>);
       void enable_command (CommandBar::CommandMode, ustring, ustring,
@@ -56,6 +81,23 @@ namespace Astroid {
       void disable_command ();
       void on_command_mode_changed ();
 
+      /* terminal */
+# ifndef DISABLE_VTE
+      GPid      terminal_pid;
+      bfs::path terminal_cwd;
+
+      void enable_terminal ();
+      void disable_terminal ();
+      void on_terminal_child_exit (VteTerminal *, gint);
+      void on_terminal_commit (VteTerminal *, gchar **, guint);
+      void on_terminal_spawn_callback (VteTerminal *, GPid, GError *);
+
+    private:
+      Gtk::Revealer * rev_terminal;
+      GtkWidget *     vte_term;
+# endif
+
+    public:
       /* actions */
       ActionManager * actions;
 
@@ -64,10 +106,10 @@ namespace Astroid {
 
       void add_mode (Mode *);
       void del_mode (int);
-      void remove_all_modes ();
       void close_page (bool = false);
       void close_page (Mode *, bool = false);
       bool jump_to_page (Key, int);
+      bool is_current (Mode *);
 
       void ungrab_active ();
       void grab_active (int);
@@ -79,10 +121,13 @@ namespace Astroid {
       Glib::Dispatcher update_title_dispatcher;
 
       Keybindings keys;
+      Keybindings clipboard;
 
     private:
       bool on_my_focus_in_event (GdkEventFocus *);
       bool on_my_focus_out_event (GdkEventFocus *);
+      bool _has_focus = false;
+
       void on_my_switch_page (Gtk::Widget *, guint);
 
       void on_update_title ();

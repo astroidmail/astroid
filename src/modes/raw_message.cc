@@ -5,6 +5,7 @@
 # include "astroid.hh"
 # include "raw_message.hh"
 # include "message_thread.hh"
+# include "utils/ustring_utils.hh"
 
 using namespace std;
 namespace bfs = boost::filesystem;
@@ -105,32 +106,17 @@ namespace Astroid {
     /* add filenames */
     s << "Filename: " << fname << endl << endl;
 
-    ifstream f (fname);
-    std::filebuf  * pbuf = f.rdbuf ();
-    size_t fsz = pbuf->pubseekoff (0, f.end, f.in);
-    pbuf->pubseekpos (0, f.in);
+    std::string data = Glib::file_get_contents (fname);
 
-    char * fbuf = new char[fsz];
-    pbuf->sgetn (fbuf, fsz);
-    f.close ();
+    auto cnv = UstringUtils::data_to_ustring (data.size (), data.c_str ());
 
-    /* convert */
-    gsize read, written;
-    GError * err = NULL;
-    gchar * out = g_convert_with_fallback (fbuf, fsz, "UTF-8", "ASCII", NULL,
-                                           &read, &written, &err);
-    if (out != NULL) {
-      s.write (out, written);
+    if (cnv.first) {
+      s << cnv.second;
     } else {
-      LOG (error) << "raw: could not convert: " << fbuf;
       s << "Error: Could not convert input to UTF-8.";
     }
 
     buf->set_text ( s.str () );
-
-    delete [] fbuf;
-
-    g_free (out);
   }
 
   RawMessage::RawMessage (MainWindow *mw, refptr<Message> _msg) : RawMessage (mw) {
@@ -143,31 +129,21 @@ namespace Astroid {
 
     refptr<Gtk::TextBuffer> buf = tv.get_buffer ();
 
-    auto c = msg->raw_contents ();
-
     stringstream s;
 
     /* add filenames */
     s << "Filename: " << msg->fname << endl << endl;
 
-    gchar * in = (gchar *) c->get_data ();
-    int len = c->size ();
+    auto c = msg->raw_contents ();
+    auto cnv = UstringUtils::bytearray_to_ustring (c);
 
-    /* convert */
-    gsize read, written;
-    GError * err = NULL;
-    gchar * out = g_convert_with_fallback (in, len, "UTF-8", "ASCII", NULL,
-                                           &read, &written, &err);
-    if (out != NULL) {
-      s.write (out, written);
+    if (cnv.first) {
+      s << cnv.second;
     } else {
-      LOG (error) << "raw: could not convert: " << in;
       s << "Error: Could not convert input to UTF-8.";
     }
 
     buf->set_text ( s.str () );
-
-    g_free (out);
   }
 
   RawMessage::~RawMessage () {

@@ -4,6 +4,12 @@
 # include <gtkmm/widget.h>
 # include <gtkmm/notebook.h>
 
+# ifndef DISABLE_VTE
+# include <vte/vte.h>
+# endif
+
+# include <boost/filesystem.hpp>
+
 # include "astroid.hh"
 # include "poll.hh"
 # include "main_window.hh"
@@ -16,8 +22,29 @@
 # include "command_bar.hh"
 # include "actions/action.hh"
 # include "actions/action_manager.hh"
+# include "utils/resource.hh"
 
 using namespace std;
+namespace bfs = boost::filesystem;
+
+# ifndef DISABLE_VTE
+extern "C" {
+  void mw_on_terminal_child_exit (VteTerminal * t, gint a, gpointer mw) {
+    ((Astroid::MainWindow *) mw)->on_terminal_child_exit (t, a);
+  }
+
+  void mw_on_terminal_commit (VteTerminal * t, gchar ** tx, guint sz, gpointer mw) {
+    ((Astroid::MainWindow *) mw)->on_terminal_commit (t, tx, sz);
+  }
+
+# if VTE_CHECK_VERSION(0,48,0)
+  void mw_on_terminal_spawn_callback (VteTerminal * t, GPid pid, GError * err, gpointer mw)
+  {
+    ((Astroid::MainWindow *) mw)->on_terminal_spawn_callback (t, pid, err);
+  }
+# endif
+}
+# endif
 
 namespace Astroid {
   atomic<uint> MainWindow::nextid (0);
@@ -75,10 +102,13 @@ namespace Astroid {
     set_title ("");
     set_default_size (1200, 800);
 
-    Glib::RefPtr<Gtk::IconTheme> theme = Gtk::IconTheme::get_default();
-    Glib::RefPtr<Gdk::Pixbuf> pixbuf = theme->load_icon (
-        "mail-send-symbolic", 42, Gtk::ICON_LOOKUP_USE_BUILTIN );
-    set_icon (pixbuf);
+    path icon = Resource (false, "ui/icons/icon_color.png").get_path ();
+    try {
+      refptr<Gdk::Pixbuf> pixbuf = Gdk::Pixbuf::create_from_file (icon.c_str (), 42, 42, true);
+      set_icon (pixbuf);
+    } catch (Gdk::PixbufError &e) {
+      LOG (error) << "mw: could not set icon: " << e.what ();
+    }
 
     vbox.set_orientation (Gtk::ORIENTATION_VERTICAL);
 
@@ -138,6 +168,15 @@ namespace Astroid {
     rev_multi->set_reveal_child (false);
     vbox.pack_end (*rev_multi, false, true, 0);
 
+    /* terminal */
+# ifndef DISABLE_VTE
+    rev_terminal = Gtk::manage (new Gtk::Revealer ());
+    rev_terminal->set_transition_type (Gtk::REVEALER_TRANSITION_TYPE_SLIDE_UP);
+    rev_terminal->set_reveal_child (false);
+    vbox.pack_end (*rev_terminal, false, true, 0);
+
+    terminal_cwd = bfs::current_path ();
+# endif
 
     add (vbox);
 
@@ -169,10 +208,11 @@ namespace Astroid {
         "main_window.quit_ask",
         "Quit astroid",
         [&] (Key) {
-          if (astroid->app->get_windows().size () > 1) {
+          if (astroid->get_windows().size () > 1) {
             /* other windows, just close this one */
             quit ();
           } else {
+            LOG (debug) << "really quit?: " << id;
             ask_yes_no ("Really quit?", [&](bool yes){ if (yes) quit (); });
           }
           return true;
@@ -283,7 +323,7 @@ namespace Astroid {
           return true;
         });
 
-    keys.register_key ("C-f", "main_window.show_saved_searches",
+    keys.register_key ("M-s", "main_window.show_saved_searches",
         "Show saved searches",
         [&] (Key) {
           add_mode (new SavedSearches (this));
@@ -342,12 +382,49 @@ namespace Astroid {
           return true;
         });
 
+    keys.register_key ("C-c", "main_window.cancel_poll",
+        "Cancel ongoing poll",
+        [&] (Key) {
+          astroid->poll->cancel_poll ();
+          return true;
+        });
+
     keys.register_key ("C-o", "main_window.open_new_window",
         "Open new main window",
         [&] (Key) {
           astroid->open_new_window ();
           return true;
         });
+
+    keys.register_key ("\"", "main_window.clipboard",
+        "Set target clipboard",
+        [&] (Key k) {
+          multi_key (clipboard, k);
+          return true;
+        });
+
+    clipboard.register_key ("+", "main_window.clipboard.clipboard",
+        "Set target clipboard to CLIPBOARD (default)",
+        [&] (Key) {
+          astroid->clipboard_target = GDK_SELECTION_CLIPBOARD;
+          return true;
+        });
+
+    clipboard.register_key ("*", "main_window.clipboard.primary",
+        "Set target clipboard to PRIMARY",
+        [&] (Key) {
+          astroid->clipboard_target = GDK_SELECTION_PRIMARY;
+          return true;
+        });
+
+# ifndef DISABLE_VTE
+    keys.register_key ("|", "main_window.open_terminal",
+        "Open terminal",
+        [&] (Key) {
+          enable_terminal ();
+          return true;
+        });
+# endif
 
     // }}}
   }
@@ -366,6 +443,11 @@ namespace Astroid {
     }
 
     return true;
+  }
+
+  bool MainWindow::is_current (Mode * m) {
+    int i = notebook.get_current_page ();
+    return (m == ((Mode *) notebook.get_nth_page (i)));
   }
 
   void MainWindow::set_title (ustring t) {
@@ -392,23 +474,22 @@ namespace Astroid {
   void MainWindow::enable_command (CommandBar::CommandMode m, ustring title, ustring cmd, function<void(ustring)> f) {
     ungrab_active ();
     command.enable_command (m, title, cmd, f);
-    is_command = true;
+    active_mode = Command;
     command.add_modal_grab ();
   }
 
   void MainWindow::enable_command (CommandBar::CommandMode m, ustring cmd, function<void(ustring)> f) {
     ungrab_active ();
     command.enable_command (m, cmd, f);
-    is_command = true;
+    active_mode = Command;
     command.add_modal_grab ();
   }
 
   void MainWindow::disable_command () {
     // hides itself
-    command.disable_command ();
     command.remove_modal_grab();
     set_active (current);
-    is_command = false;
+    active_mode = Window;
   }
 
   void MainWindow::on_command_mode_changed () {
@@ -417,13 +498,126 @@ namespace Astroid {
     }
   }
 
+  /* Terminal {{{ */
+# ifndef DISABLE_VTE
+  void MainWindow::enable_terminal () {
+    rev_terminal->set_reveal_child (true);
+    ungrab_active ();
+    active_mode = Terminal;
+
+    vte_term = vte_terminal_new ();
+    gtk_container_add (GTK_CONTAINER(rev_terminal->gobj ()), vte_term);
+    rev_terminal->show_all ();
+
+    vte_terminal_set_size (VTE_TERMINAL (vte_term), 1, 10);
+
+    /* start shell */
+    char * shell = vte_get_user_shell ();
+
+    char * args[2] = { shell, NULL };
+    char * envs[1] = { NULL };
+
+    LOG (info) << "mw: starting terminal..: " << shell;
+
+    if (!bfs::exists (terminal_cwd)) {
+      terminal_cwd = bfs::current_path ();
+    }
+
+# if VTE_CHECK_VERSION(0,48,0)
+    vte_terminal_spawn_async (VTE_TERMINAL(vte_term),
+        VTE_PTY_DEFAULT,
+        terminal_cwd.c_str(),
+        args,
+        envs,
+        G_SPAWN_DEFAULT,
+        NULL,
+        NULL,
+        NULL,
+        -1,
+        NULL,
+        mw_on_terminal_spawn_callback,
+        this);
+# else
+    GError * err = NULL;
+    vte_terminal_spawn_sync (VTE_TERMINAL(vte_term),
+        VTE_PTY_DEFAULT,
+        terminal_cwd.c_str(),
+        args,
+        envs,
+        G_SPAWN_DEFAULT,
+        NULL,
+        NULL,
+        &terminal_pid,
+        NULL,
+        (err = NULL, &err));
+
+    on_terminal_spawn_callback (VTE_TERMINAL(vte_term), terminal_pid, err);
+
+# endif
+
+    gtk_widget_grab_focus (vte_term);
+    gtk_grab_add (vte_term);
+  }
+
+  void MainWindow::on_terminal_spawn_callback (VteTerminal * vte_term, GPid pid, GError * err)
+  {
+    if (err) {
+      LOG (error) << "mw: terminal: " << err->message;
+      disable_terminal ();
+    } else {
+      terminal_pid = pid;
+
+      LOG (debug) << "mw: terminal started: " << terminal_pid;
+      g_signal_connect (vte_term, "child-exited",
+          G_CALLBACK (mw_on_terminal_child_exit),
+          (gpointer) this);
+
+      g_signal_connect (vte_term, "commit",
+          G_CALLBACK (mw_on_terminal_commit),
+          (gpointer) this);
+
+    }
+  }
+
+  void MainWindow::disable_terminal () {
+    LOG (info) << "mw: disabling terminal..";
+    rev_terminal->set_reveal_child (false);
+    set_active (current);
+    active_mode = Window;
+    gtk_grab_remove (vte_term);
+
+    gtk_widget_destroy (vte_term);
+  }
+
+  void MainWindow::on_terminal_child_exit (VteTerminal *, gint) {
+    LOG (info) << "mw: terminal exited (cwd: " << terminal_cwd.c_str () << ")";
+    disable_terminal ();
+  }
+
+  void MainWindow::on_terminal_commit (VteTerminal *, gchar **, guint) {
+    bfs::path pth = bfs::path(ustring::compose ("/proc/%1/cwd", terminal_pid).c_str ());
+
+    if (bfs::exists (pth)) {
+      terminal_cwd = bfs::canonical (pth);
+    }
+  }
+# endif
+
+  // }}}
+
   void MainWindow::quit () {
-    LOG (info) << "mw: quit.";
+    LOG (info) << "mw: quit: " << id;
     in_quit = true;
 
-    astroid->app->remove_window (*this);
-    remove_all_modes ();
-    close ();
+    /* focus out */
+    ungrab_active ();
+
+    /* remove all modes */
+    /* for (int n = notebook.get_n_pages(); n > 0; n--) { */
+    /*   close_page (true); */
+    /* } */
+
+    close (); // Gtk::Window::close ()
   }
 
   void MainWindow::on_yes () {
@@ -479,7 +673,14 @@ namespace Astroid {
       }
 
       return true; // swallow all keys
+
+# ifndef DISABLE_VTE
+    } else if (active_mode == Terminal) {
+      return true;
     }
+# else
+    }
+# endif
 
     return false;
   }
@@ -487,7 +688,7 @@ namespace Astroid {
   bool MainWindow::on_key_press (GdkEventKey * event) {
     if (mode_key_handler (event)) return true;
 
-    if (is_command) {
+    if (active_mode == Command) {
       command.command_handle_event (event);
       return true;
     }
@@ -560,7 +761,7 @@ namespace Astroid {
     multi_keybindings = kb;
 
     rev_multi->set_reveal_child (true);
-    label_multi->set_text (kb.short_help ());
+    label_multi->set_markup (kb.short_help ());
 
     return true;
   }
@@ -581,21 +782,11 @@ namespace Astroid {
         LOG (warn) << "mw: attempt to remove negative page";
       }
     } else {
-      if (!in_quit && astroid->app->get_windows().size () > 1) {
+      if (!in_quit && astroid->get_windows().size () > 1) {
         LOG (debug) << "mw: other windows available, closing this one.";
         quit ();
       }
     }
-  }
-
-  void MainWindow::remove_all_modes () {
-    // used by Astroid::quit to deconstruct all modes before
-    // exiting.
-
-    for (int n = notebook.get_n_pages(); n > 0; n--) {
-      close_page (true);
-    }
-
   }
 
   void MainWindow::close_page (Mode * m, bool force) {
@@ -629,7 +820,7 @@ namespace Astroid {
 
     //LOG (debug) << "mw: grab modal to: " << n;
 
-    if (has_focus() || (get_focus() && get_focus()->has_focus())) {
+    if (_has_focus) {
       /* we have focus */
       ((Mode*) notebook.get_nth_page (n))->grab_modal();
     } else {
@@ -643,7 +834,7 @@ namespace Astroid {
   }
 
   void MainWindow::set_active (int n) {
-    //LOG (debug) << "mw: set active: " << n << ", current: " << current;
+    LOG (debug) << "mw: set active: " << n << ", current: " << current;
 
     if (n >= 0 && n <= notebook.get_n_pages()-1) {
 
@@ -660,13 +851,15 @@ namespace Astroid {
   }
 
   bool MainWindow::on_my_focus_in_event (GdkEventFocus * /* event */) {
-    if (active) set_active (current);
-    //LOG (debug) << "mw: focus-in: " << id;
+    _has_focus = true;
+    if (!in_quit && active) set_active (current);
+    LOG (debug) << "mw: focus-in: " << id << " active: " << active << ", in_quit: " << in_quit;
     return false;
   }
 
   bool MainWindow::on_my_focus_out_event (GdkEventFocus * /* event */) {
     //LOG (debug) << "mw: focus-out: " << id;
+    _has_focus = false;
     if ((current < notebook.get_n_pages ()) && (current >= 0))
       ((Mode*) notebook.get_nth_page (current))->release_modal();
     return false;

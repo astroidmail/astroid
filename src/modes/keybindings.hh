@@ -104,6 +104,7 @@ namespace Astroid {
                          std::function<bool (Key, ustring)>);
 
       bool handle (GdkEventKey *);
+      bool handle (ustring name);
 
       void clear ();
 
@@ -119,10 +120,6 @@ namespace Astroid {
 
       static std::atomic<bool> user_bindings_loaded;
       static const char * user_bindings_file;
-
-    public:
-      static std::map<guint, ustring> keyval_to_keynames;
-      static std::map<ustring, guint> keynames_to_keyval;
   };
 }
 

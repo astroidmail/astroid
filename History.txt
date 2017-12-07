@@ -1,11 +1,116 @@
 ==
 
+* Move to the CMake build system. Meson is deprecated.
+* Allow HTML parts to be composed using Markdown.
+* Use color to indicate whether a message is marked in thread-index.
+
+== v0.10.2 / 2017-10-11
+
+* Fix build issues on Mac OS.
+* Gmime 2 used weird timezone for sent email.
+* Add Meson build system as alternative.
+
+== v0.10.1 / 2017-09-24
+
+* Fix compilation errors against older versions of notmuch and gmime.
+
+== v0.10 / 2017-09-21
+
+* Support GMime 3 with backwards compatability with GMime 2. This orients us
+  towards GMime 3, and support for GMime 2 will be dropped in the future.
+
+* Attach messages by mids with 'A' in new emails.
+
+* Colorful tags in tag editor and in searching
+
+* Tags in the tag editor is now separated by spaces (comma still works)
+
+* New configuration option 'signature_separate' determines if inline
+  signatures will be separated from the message by a line containing '-- '.
+
+* Configurable query associated with account can be used to select account as
+  From: when replying or forwarding e-mail.
+
+* Default clipboard target: CLIPBOARD since this is the only one accessible by keyboard
+  in GTK.
+
+* Select target for yank operations with '"'
+
+* Track focus changes manually
+
+== v0.9.1 / 2017-04-30
+
+* Support old vte3.
+* Support old _st versions on Arch.
+
+== v0.9 / 2017-04-28
+
+* Drop use of old deprecated non _st functions, use their new names. Will
+  require 0.24 or newer.
+
+* No longer support pre-lastmod notmuches.
+
+* Catch missing content errors for messages, not fail.
+
+* Wait and block R/O database opening, not fail.
+
+* Defer changed_thread events on thread-index while still loading.
+
+* Do not update tags in thread-view when not ready.
+
+* configuration option thread_view.expand_flagged determines whether flagged
+  messages are expanded by default.
+
+* Better handle poll thread. Make sure to clean up connections here and in send_message.
+
+* Polling can be cancelled with C-c in main window.
+
+* Archive or close thread and then directly open next or next unread thread
+  in originating thread-index.
+
+== v0.8 / 2017-03-17
+
+* New logo and icons by Elio Qoshi ( http://patreon.com/ura )
+
+* Run hook for thread-view (Hugo Roy)
+
+* Session-persistent folder history for attaching files and saving
+  attachments. default is configurable.
+
+* Remove duplicates when reply-all'ing.
+
+* Handle mailto when astroid is already running.
+
+* `scons --propagate-environment` uses environment from build environment.
+
+* Show pane-focus with blue bar at top, swap focus with M-space. The
+  keybinding is now located at 'pane.swap_focus'.
+
+* Add optional drop-down terminal ('|') which has session-persistent
+  working directory. Will silently be disabled if VTE is missing.
+
+* Delay sending of message with configured time, in order to be able to
+  cancel wrongly sent messages.
+
+* New --start-polling, --stop-polling and --refresh LASTMOD options which
+  makes external polling mechanisms work better.
+
+* All notmuch tags are added to message CSS with 'nm-' prefix and some sanitation to allow thread-view customizing based on tag.
+
+* Reply-To mailing list.
+
+* Fix crypto and performance bugs among many others.
+
+== v0.7 / 2017-01-02
+
 * Messages are marked unread after a delay (default 2 sec) in
   thread-view. They can be manually toggled with 'N'.
 
-* Use Tab and S-Tab to jump between unread messages in thread-view.
+* Edit drafts using an external editor (optional).
 
-* Open element with 'Space', also in editor.
+* Filter thread-index incrementally using 'C-f'.
+
+* Use Tab and S-Tab to jump between unread messages in thread-view.
 
 * Yank raw or decoded message or element to primary clipboard with 'Y'
   or 'y', useful for applying patches.
@@ -21,16 +126,44 @@
 
 * Use Boost::log for logging.
 
+* Some hints about usage are shown (level of detail can be configured)
+
+* 'c' in thread-view composes message to sender (or receiver if sender
+    is you).
+
+* Taeer Bar-Yam <taeer@necsi.edu>: Allow any key name defined by GDK to
+  be entered.
+
+* Thread-view: '*' toggle 'flagged' on message, 'a' toggle inbox on
+  whole thread.
+
+* Removed MathJax support, since it is not widely used. Can be enabled
+  manually by adding sourcing the script in the thread-view theme file.
+
+* When replying, match encryption / signature level.
+
+* Open element with 'Space', also in editor.
+
+* Check for missing fields and for attachment words before sending.
+
+* Kim Ebert: Make sure all messages are loaded.
+
+* M. Dietrich, G. Hope: Fix buggy quoting of arbitrarily spaced '>'s.
+
+* Close thread-view after deleting draft.
+
+* Hugo Roy: Improve attachment, mime-message, and url display.
+
 == v0.6 / 2016-07-23
 
 * Use any editor (general XEmbed support in edit-message window): Emacs
   works.
 
 * Plugins: Python and Lua plugins can now be made, parts of ThreadIndex
-  and ThreadView are exposed allowing extesion of the user interface and
+  and ThreadView are exposed allowing extension of the user interface and
   advanced customization. Check out the plugins available at GitHub.
 
-* Crypto: GPG encryption and signing is added. Decryption and and
+* Crypto: GPG encryption and signing is added. Decryption and
   signature status is shown in greater detail.
 
 * Repository moved to github.com/astroidmail.

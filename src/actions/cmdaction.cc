@@ -9,10 +9,12 @@ namespace Astroid {
     mid = _mid;
     need_db    = false;
     need_db_rw = true;
+    successful = false;
   }
 
   bool CmdAction::doit (Db *) {
-    return cmd.run ();
+    successful = cmd.run ();
+    return successful;
   }
 
   bool CmdAction::undo (Db *) {
@@ -24,12 +26,23 @@ namespace Astroid {
   }
 
   void CmdAction::emit (Db * db) {
-    if (thread_id != "") {
-      astroid->actions->emit_thread_updated (db, thread_id);
-    }
+    /* if there is a thread_id given: we cannot know if only the thread or only
+     * the messages has been modified in the hook. we therefore always have to
+     * emit a full 'thread-update' signal. this _should_ cause all messages in
+     * the thread, including the one passed as mid, to be updated. emitting a
+     * second 'messsage-updated' is therefore redundant in these cases.
+     */
+    if (successful) {
+      if (thread_id != "") {
+        // will also cause all messages in thread to be updated
+        astroid->actions->emit_thread_updated (db, thread_id);
+        return;
+      }
 
-    if (mid != "") {
-      astroid->actions->emit_message_updated (db, mid);
+      if (mid != "") {
+        // will also emit thread_changed
+        astroid->actions->emit_message_updated (db, mid);
+      }
     }
   }
 }

@@ -2,49 +2,63 @@
 
 # include "astroid.hh"
 
+# include <thread>
 # include <mutex>
+# include <condition_variable>
 # include <chrono>
-# include <glibmm/threads.h>
 # include <glibmm/iochannel.h>
 
 namespace Astroid {
-  class Poll {
+  class Poll : public sigc::trackable {
     public:
       Poll (bool auto_polling_enabled);
+      void close ();
 
       bool poll ();
       void toggle_auto_poll ();
+      bool get_auto_poll ();
 
       const char * poll_script = "poll.sh";
       static const int DEFAULT_POLL_INTERVAL; // 60
+
+      void start_polling ();
+      void stop_polling ();
+      void refresh (unsigned long before);
+      void cancel_poll ();
 
     private:
       std::mutex m_dopoll;
 
       int poll_interval = 0;
       bool auto_polling_enabled = true;
+      bool external_polling = false;
 
-      void do_poll ();
       bool periodic_polling ();
 
       std::chrono::time_point<std::chrono::steady_clock> t0; // start time of poll
       std::chrono::time_point<std::chrono::steady_clock> last_poll;
 
-# ifdef HAVE_NOTMUCH_GET_REV
-      unsigned long last_good_before_poll_revision = 0;
       unsigned long before_poll_revision = 0;
-# endif
+      void refresh_threads ();
 
-      int pid;
-      int stdin;
+      std::mutex  poll_cancel_m;
+      std::condition_variable poll_cancel_cv;
+
+      void do_poll ();
+      void poll_child_done (GPid pid, int child_status);
+
+      GPid pid;
       int stdout;
       int stderr;
       refptr<Glib::IOChannel> ch_stdout;
       refptr<Glib::IOChannel> ch_stderr;
+      sigc::connection c_ch_stdout;
+      sigc::connection c_ch_stderr;
+
+      Glib::Dispatcher d_refresh;
 
       bool log_out (Glib::IOCondition);
       bool log_err (Glib::IOCondition);
-      void child_watch (GPid, int);
 
       bool poll_state;
       void set_poll_state (bool);

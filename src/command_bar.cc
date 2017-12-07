@@ -38,14 +38,19 @@ namespace Astroid {
         sigc::mem_fun (this, &CommandBar::entry_key_press)
         );
 
-    /* set up tags */
-    Db db (Db::DbMode::DATABASE_READ_ONLY);
-    db.load_tags ();
+    entry.signal_changed ().connect (
+        sigc::mem_fun (this, &CommandBar::entry_changed));
 
-    tag_completion = refptr<TagCompletion> (new TagCompletion());
-    search_completion = refptr<SearchCompletion> (new SearchCompletion());
-    text_search_completion = refptr<SearchTextCompletion> (new SearchTextCompletion ());
-    difftag_completion = refptr<DiffTagCompletion> (new DiffTagCompletion ());
+    /* set up tags */
+    {
+      Db db (Db::DbMode::DATABASE_READ_ONLY);
+      db.load_tags ();
+    }
+
+    tag_completion          = refptr<TagCompletion> (new TagCompletion());
+    search_completion       = refptr<SearchCompletion> (new SearchCompletion());
+    text_search_completion  = refptr<SearchTextCompletion> (new SearchTextCompletion ());
+    difftag_completion      = refptr<DiffTagCompletion> (new DiffTagCompletion ());
   }
 
   void CommandBar::set_main_window (MainWindow * mw) {
@@ -64,7 +69,6 @@ namespace Astroid {
     /* handle input */
     ustring cmd = get_text ();
     LOG (debug) << "cb: cmd (in mode: " << mode << "): " << cmd;
-    set_search_mode (false); // emits changed -> disables search
 
     switch (mode) {
       case CommandMode::Search:
@@ -78,18 +82,12 @@ namespace Astroid {
         }
         break;
 
-      /*
-      case CommandMode::Generic:
-        {
-          handle_command (cmd);
-        }
-        break;
-      */
-
+      case CommandMode::Filter:
       case CommandMode::SearchText:
         {
           text_search_completion->add_query (cmd);
         }
+      case CommandMode::AttachMids:
       case CommandMode::DiffTag:
       case CommandMode::Tag:
         {
@@ -99,6 +97,8 @@ namespace Astroid {
 
     if (callback != NULL) callback (cmd);
     callback = NULL;
+
+    set_search_mode (false); // emits changed -> disables search
   }
 
   void CommandBar::enable_command (
@@ -122,6 +122,13 @@ namespace Astroid {
 
     switch (mode) {
 
+      case CommandMode::AttachMids:
+        {
+          entry.set_icon_from_icon_name ("mail-attachment-symbolic");
+          start_generic (cmd);
+        }
+        break;
+
       case CommandMode::Search:
         {
           mode_label.set_text ("");
@@ -131,6 +138,7 @@ namespace Astroid {
         }
         break;
 
+      case CommandMode::Filter:
       case CommandMode::SearchText:
         {
           mode_label.set_text ("Find text");
@@ -139,19 +147,10 @@ namespace Astroid {
           start_text_searching (cmd);
         }
         break;
-      /*
-      case CommandMode::Generic:
-        {
-          mode_label.set_text ("");
-          entry.set_icon_from_icon_name ("system-run-symbolic");
-          entry.set_text (cmd);
-        }
-        break;
-      */
 
       case CommandMode::Tag:
         {
-          mode_label.set_text ("Change tags:");
+          mode_label.set_text ("Change tags");
           entry.set_icon_from_icon_name ("system-run-symbolic");
 
           start_tagging (cmd);
@@ -160,7 +159,7 @@ namespace Astroid {
 
       case CommandMode::DiffTag:
         {
-          mode_label.set_text ("Change tags (+/-):");
+          mode_label.set_text ("Change tags (+/-)");
           entry.set_icon_from_icon_name ("system-run-symbolic");
 
           start_difftagging (cmd);
@@ -177,6 +176,12 @@ namespace Astroid {
     entry.set_completion (refptr<Gtk::EntryCompletion>());
   }
 
+  void CommandBar::start_generic (ustring cmd) {
+    entry.set_text (cmd);
+    entry.set_completion (refptr<Gtk::EntryCompletion> ());
+    current_completion.reset ();
+  }
+
   void CommandBar::start_searching (ustring searchstring) {
     entry.set_text (searchstring);
 
@@ -187,6 +192,8 @@ namespace Astroid {
     search_completion->history_pos = 0;
     entry.set_completion (search_completion);
     current_completion = search_completion;
+
+    search_completion->color_tags ();
   }
 
   void CommandBar::start_text_searching (ustring searchstring) {
@@ -201,59 +208,30 @@ namespace Astroid {
   }
 
   void CommandBar::start_tagging (ustring tagstring) {
-    /* TODO: set up text tags */
-    entry.set_text (tagstring);
-
     /* set up completion */
     tag_completion->load_tags (Db::tags);
     entry.set_completion (tag_completion);
     current_completion = tag_completion;
+
+    entry.set_text (tagstring);
+
+    tag_completion->color_tags ();
   }
 
   void CommandBar::start_difftagging (ustring tagstring) {
-    entry.set_text (tagstring);
-
     /* set up completion */
     difftag_completion->load_tags (Db::tags);
     entry.set_completion (difftag_completion);
     current_completion = difftag_completion;
-  }
 
-  /*
-  void CommandBar::handle_command (ustring cmd) {
-    LOG (debug) << "cb: command: " << cmd;
+    entry.set_text (tagstring);
 
-    UstringUtils::utokenizer tok (cmd);
-
-# define adv_or_return it++; if (it == tok.end()) return;
-
-    auto it = tok.begin ();
-    if (it == tok.end ()) return;
-
-    if (*it == "help") {
-      main_window->add_mode (new HelpMode (main_window));
-
-    } else if (*it == "archive") {
-      adv_or_return;
-
-      if (*it == "thread") {
-        adv_or_return;
-
-        ustring thread_id = *it;
-
-        LOG (info) << "cb: toggle archive on thread: " << thread_id;
-      }
-
-    } else {
-      LOG (error)  << "cb: unknown command: " << cmd;
-    }
-  }
-  */
-
-  void CommandBar::disable_command () {
+    difftag_completion->color_tags ();
   }
 
   bool CommandBar::entry_key_press (GdkEventKey * event) {
+    LOG (debug) << "cb: got key: " << event->keyval;
+
     switch (event->keyval) {
       case GDK_KEY_Tab:
         {
@@ -290,6 +268,7 @@ namespace Astroid {
             return false;
           }
         }
+        break;
 
       case GDK_KEY_Down:
         {
@@ -313,6 +292,7 @@ namespace Astroid {
             return false;
           }
         }
+        break;
 
       default:
         {
@@ -321,13 +301,31 @@ namespace Astroid {
             refptr<SearchCompletion> s = refptr<SearchCompletion>::cast_dynamic (current_completion);
             s->orig_text = "";
             s->history_pos = 0;
+
           }
+
           break;
         }
     }
 
     return false;
   }
+
+  void CommandBar::entry_changed () {
+    if (mode == CommandMode::Filter) {
+      /* filter on the fly */
+
+      ustring cmd = get_text ();
+      if (callback != NULL) callback (cmd);
+
+    } else if (mode == CommandMode::Tag || mode == CommandMode::DiffTag || mode == CommandMode::Search) {
+
+      if (current_completion)
+        refptr<TagCompletion>::cast_dynamic (current_completion)->color_tags ();
+
+    }
+  }
+
 
   bool CommandBar::command_handle_event (GdkEventKey * event) {
     return handle_event (event);
@@ -368,17 +366,13 @@ namespace Astroid {
     }
   }
 
-  /* take the next match in the list and return its index */
-  /*
-  unsigned int CommandBar::GenericCompletion::roll_completion (ustring_sz pos) {
-    return 0;
-  }
-  */
-
 
   /********************
    * Tag Completion
    ********************/
+  bool      CommandBar::TagCompletion::canvas_color_set = false;
+  Gdk::RGBA CommandBar::TagCompletion::canvas_color;
+
   CommandBar::TagCompletion::TagCompletion ()
   {
     completion_model = Gtk::ListStore::create (m_columns);
@@ -407,56 +401,55 @@ namespace Astroid {
     }
   }
 
-  /* searches backwards to the previous ',' and extracts the
+  /* searches backwards to the previous ' ' and extracts the
    * part of the partially entered tag to be matched on.
    */
-  ustring CommandBar::TagCompletion::get_partial_tag (ustring c, ustring_sz &outpos) {
+  ustring CommandBar::TagCompletion::get_partial_tag (ustring_sz &outpos) {
     Gtk::Entry * e = get_entry ();
     if (e == NULL) return "";
 
     ustring in = e->get_text ();
-    c = in;
 
-    if (c.size() == 0) {
+    if (in.size() == 0) {
       outpos = 0;
-      return c;
+      return in;
     }
 
     int cursor     = e->get_position ();
-    if (cursor == -1) cursor = c.size();
+    if (cursor == -1) cursor = in.size();
 
-    outpos = c.find_last_of (break_on, cursor-1);
+    outpos = in.find_last_of (break_on, cursor-1);
     if (outpos == ustring::npos) outpos = 0;
 
 
-    ustring_sz endpos = c.find_first_of (break_on, outpos+2);
-    if (endpos == ustring::npos) endpos = c.size();
+    ustring_sz endpos = in.find_first_of (break_on, outpos+2);
+    if (endpos == ustring::npos) endpos = in.size();
 
     if (outpos >= endpos) {
       return "";
     }
 
-    if (break_on.find_first_of (c[outpos]) != ustring::npos) {
+    if (break_on.find_first_of (in[outpos]) != ustring::npos) {
       outpos++; // skip delimiter
       endpos--;
     }
 
-    c = c.substr (outpos, endpos);
-    UstringUtils::trim_left (c);
+    in = in.substr (outpos, endpos);
+    UstringUtils::trim_left (in);
 
     /* LOG (debug) << "cursor: " << cursor << ", outpos: " << outpos << ", in: " << in << ", o: " << c; */
-    return c;
+    return in;
   }
 
   bool CommandBar::TagCompletion::match (
-      const ustring& raw_key, const
+      const ustring&, const
       Gtk::TreeModel::const_iterator& iter)
   {
     if (iter)
     {
 
       ustring_sz pos;
-      ustring key = get_partial_tag (raw_key, pos);
+      ustring key = get_partial_tag (pos);
 
       Gtk::TreeModel::Row row = *iter;
 
@@ -468,7 +461,7 @@ namespace Astroid {
       // the key is lower-case, even if the user input is not.
       filter_string_start = filter_string_start.lowercase();
 
-      if(key == filter_string_start)
+      if(key.lowercase () == filter_string_start)
         return true; // a match was found.
     }
 
@@ -487,7 +480,7 @@ namespace Astroid {
 
       ustring t = entry->get_text ();
       ustring_sz pos;
-      ustring key = get_partial_tag (t, pos);
+      ustring key = get_partial_tag (pos);
 
       LOG (debug) << "match selected: " << t << ", key: " << key << ", pos: " << pos;
 
@@ -518,36 +511,90 @@ namespace Astroid {
     return true;
   }
 
+  void CommandBar::TagCompletion::color_tags () {
+    Gtk::Entry * entry = get_entry ();
+    if (entry == NULL) return;
+
+    if (!canvas_color_set) {
+      canvas_color     = entry->get_style_context()->get_background_color ();
+      canvas_color_set = true;
+    }
+
+    ustring txt = entry->get_text ();
+
+    /* set up attrlist */
+    Pango::AttrList attrs;
+
+    /* walk through unfinished tag list and style each tag */
+    ustring_sz pos = 0;
+    ustring_sz end = pos;
+    ustring_sz len = txt.size ();
+
+    while (pos < len) {
+      /* find beginning of tag */
+      pos = txt.find_first_not_of (break_on, pos);
+
+      if (pos == ustring::npos) break;
+
+      /* find end of tag */
+      end = txt.find_first_of (break_on, pos);
+
+      if (end == ustring::npos)
+        end = txt.length ();
+
+      ustring tag = txt.substr (pos, (end - pos));
+
+      /* grapheme positions */
+      ustring_sz gstart = txt.substr (0, pos).bytes ();
+
+      color_tag (tag, gstart, attrs);
+
+      pos = end+1;
+    }
+
+    entry->set_attributes (attrs);
+  }
+
+  void CommandBar::TagCompletion::color_tag (ustring tag,
+    ustring_sz gstart, Pango::AttrList &attrs) {
+
+    unsigned char cv[3] = { (unsigned char) (canvas_color.get_red_u ()   * 255 / 65535),
+                            (unsigned char) (canvas_color.get_green_u () * 255 / 65535),
+                            (unsigned char) (canvas_color.get_blue_u ()  * 255 / 65535) };
+
+    auto colors = Utils::get_tag_color_rgba (tag, cv);
+
+    auto fg = colors.first;
+    auto bg = colors.second;
+
+    ustring_sz gend   = gstart + tag.bytes ();
+
+    auto fga = Pango::Attribute::Attribute::create_attr_foreground (fg.get_red_u (), fg.get_green_u (), fg.get_blue_u ());
+    fga.set_start_index (gstart);
+    fga.set_end_index   (gend);
+
+    auto bga = Pango::Attribute::Attribute::create_attr_background (bg.get_red_u (), bg.get_green_u (), bg.get_blue_u ());
+    bga.set_start_index (gstart);
+    bga.set_end_index   (gend);
+
+    auto bgalpha = Pango::Attribute::Attribute::create_attr_background_alpha (bg.get_alpha_u ());
+    bgalpha.set_start_index (gstart);
+    bgalpha.set_end_index   (gend);
+
+    attrs.insert (bga);
+    attrs.insert (bgalpha);
+    attrs.insert (fga);
+  }
+
 
   /********************
    * Diff tagging
    ********************/
   CommandBar::DiffTagCompletion::DiffTagCompletion ()
   {
-    completion_model = Gtk::ListStore::create (m_columns);
-    set_model (completion_model);
-    set_text_column (m_columns.m_tag);
-    set_match_func (sigc::mem_fun (*this,
-          &CommandBar::DiffTagCompletion::match));
-
-    set_popup_completion (true);
-    set_popup_single_match (true);
-    set_minimum_key_length (1);
     break_on = "+- ";
   }
 
-  void CommandBar::DiffTagCompletion::load_tags (vector<ustring> _tags) {
-    tags = _tags;
-    sort (tags.begin(), tags.end());
-
-    completion_model->clear ();
-
-    /* fill model with tags */
-    for (ustring t : tags) {
-      auto row = *(completion_model->append ());
-      row[m_columns.m_tag] = t;
-    }
-  }
 
   /********************
    * Search Completion
@@ -555,16 +602,8 @@ namespace Astroid {
 
   CommandBar::SearchCompletion::SearchCompletion ()
   {
-    completion_model = Gtk::ListStore::create (m_columns);
-    set_model (completion_model);
-    set_text_column (m_columns.m_tag);
     set_match_func (sigc::mem_fun (*this,
           &CommandBar::SearchCompletion::match));
-
-    //set_inline_completion (true);
-    set_popup_completion (true);
-    set_popup_single_match (true);
-    set_minimum_key_length (1);
   }
 
   void CommandBar::SearchCompletion::load_history () {
@@ -572,23 +611,10 @@ namespace Astroid {
     std::reverse (history.begin (), history.end ());
   }
 
-  void CommandBar::SearchCompletion::load_tags (vector<ustring> _tags) {
-    tags = _tags;
-    sort (tags.begin(), tags.end());
-
-    completion_model->clear ();
-
-    /* fill model with tags */
-    for (ustring t : tags) {
-      auto row = *(completion_model->append ());
-      row[m_columns.m_tag] = t;
-    }
-  }
-
   /* searches backwards to the previous ',' and extracts the
    * part of the partially entered tag to be matched on.
    */
-  bool CommandBar::SearchCompletion::get_partial_tag (ustring c, ustring &out, ustring_sz &outpos) {
+  bool CommandBar::SearchCompletion::get_partial_tag (ustring &out, ustring_sz &outpos) {
     // example input
     // (tag:asdf) and tag:asdfb and asdf
     //
@@ -598,15 +624,14 @@ namespace Astroid {
     int cursor     = e->get_position ();
 
     ustring in = e->get_text ();
-    c = in;
 
-    if (cursor == -1) cursor = c.size();
+    if (cursor == -1) cursor = in.size();
 
-    outpos = c.rfind ("tag:", cursor);
+    outpos = in.rfind ("tag:", cursor);
     if (outpos == ustring::npos) return false;
 
     /* check if we find any breaks between tag and current position */
-    ustring_sz endpos = c.find_first_of (") ", outpos); // break completion on these chars
+    ustring_sz endpos = in.find_first_of (") ", outpos); // break completion on these chars
     if (endpos != ustring::npos) {
       if (endpos < static_cast<ustring_sz>(cursor)) {
         //LOG (debug) << "break between tag and cursor";
@@ -614,13 +639,13 @@ namespace Astroid {
       }
     } else {
       /* if we're at end, use remainder of string */
-      endpos = c.size();
+      endpos = in.size();
     }
 
-    c = c.substr (outpos+4, endpos-outpos-4);
-    UstringUtils::trim (c);
+    in = in.substr (outpos+4, endpos-outpos-4);
+    UstringUtils::trim (in);
 
-    out = c;
+    out = in;
 
     // LOG (debug) << "cursor: " << cursor << ", outpos: " << outpos << ", in: " << in << ", o: " << c;
 
@@ -628,12 +653,12 @@ namespace Astroid {
   }
 
   bool CommandBar::SearchCompletion::match (
-      const ustring& raw_key,
+      const ustring&,
       const Gtk::TreeModel::const_iterator& iter)
   {
     ustring key;
     ustring_sz pos;
-    bool in_tag_search = get_partial_tag (raw_key, key, pos);
+    bool in_tag_search = get_partial_tag (key, pos);
 
     if (in_tag_search && iter)
     {
@@ -648,7 +673,7 @@ namespace Astroid {
       // the key is lower-case, even if the user input is not.
       filter_string_start = filter_string_start.lowercase();
 
-      if(key == filter_string_start)
+      if(key.lowercase () == filter_string_start)
         return true; // a match was found.
     }
 
@@ -668,7 +693,7 @@ namespace Astroid {
       ustring t = entry->get_text ();
       ustring key;
       ustring_sz    pos;
-      bool in_tag_search = get_partial_tag (t, key, pos);
+      bool in_tag_search = get_partial_tag (key, pos);
 
       //LOG (debug) << "match selected: " << t << ", in_tag: " << in_tag_search << ", key: " << key << ", pos: " << pos;
 
@@ -689,6 +714,54 @@ namespace Astroid {
     }
 
     return true;
+  }
+
+  void CommandBar::SearchCompletion::color_tags () {
+    Gtk::Entry * entry = get_entry ();
+    if (entry == NULL) return;
+
+    if (!canvas_color_set) {
+      canvas_color     = entry->get_style_context()->get_background_color ();
+      canvas_color_set = true;
+    }
+
+    ustring txt = entry->get_text ();
+
+    /* set up attrlist */
+    Pango::AttrList attrs;
+
+    /* walk through unfinished tag list and style each tag */
+    ustring_sz pos = 0;
+    ustring_sz end = pos;
+    ustring_sz len = txt.size ();
+
+    ustring break_on = " )";
+
+    while (pos < len) {
+      /* find beginning of tag */
+      pos = txt.find ("tag:", pos);
+
+      if (pos == ustring::npos) break;
+
+      pos += 4;
+
+      /* find end of tag */
+      end = txt.find_first_of (break_on, pos);
+
+      if (end == ustring::npos)
+        end = txt.length ();
+
+      ustring tag = txt.substr (pos, (end - pos));
+
+      /* grapheme positions */
+      ustring_sz gstart = txt.substr (0, pos).bytes ();
+
+      color_tag (tag, gstart, attrs);
+
+      pos = end+1;
+    }
+
+    entry->set_attributes (attrs);
   }
 
   /********************

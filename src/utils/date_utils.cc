@@ -2,6 +2,7 @@
 
 # include <boost/property_tree/ptree.hpp>
 # include <glibmm/datetime.h>
+# include <time.h>
 
 # include "astroid.hh"
 # include "config.hh"
@@ -11,6 +12,16 @@ using namespace std;
 using boost::property_tree::ptree;
 
 namespace Astroid {
+
+  ustring Date::asctime (time_t t) {
+    struct tm * temp_t = localtime (&t);
+    struct tm local_time = *temp_t;
+
+    char * asc = std::asctime (&local_time);
+
+    return ustring (asc);
+  }
+
   /*
    * create a pretty string in local time.
    *
@@ -24,6 +35,7 @@ namespace Astroid {
       "%l:%M %P", // Datetime format for 12-hour time, i.e. 8:31 am
       "%H:%M",    // Datetime format for 24-hour time, i.e. 16:35
       "%l:%M %P", // Datetime format for the locale default, i.e. 8:31 am or 16:35,
+      // year format will be covered specially.
     };
   const vector<ustring> Date::pretty_verbose_dates =
     {
@@ -35,6 +47,9 @@ namespace Astroid {
 
       // Verbose datetime format for the locale default (full month, day and time)
       "%B %-e, %Y %-l:%M %P",
+
+      // Verbose datetime format for year, 24-hour time, i.e. November 8, 2010 16:35
+      "%B %-e, %Y %-H:%M",
     };
 
   // Date format for dates within the current year, i.e. Nov 8
@@ -72,10 +87,10 @@ namespace Astroid {
 			return "Now";
 
 		case CoarseDate::MINUTES:
-			return ustring::compose("%1m ago", (ulong) (diff / 60));
+			return ustring::compose("%1m ago", (unsigned long) (diff / 60));
 
 		case CoarseDate::HOURS:
-			return ustring::compose("%1h ago", (ulong) (diff / (60 * 60)));
+			return ustring::compose("%1h ago", (unsigned long) (diff / (60 * 60)));
 
 		case CoarseDate::TODAY:
 			fmt = pretty_dates[clock_format];

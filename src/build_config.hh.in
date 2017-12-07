@@ -1,0 +1,4 @@
+# pragma once
+# define GIT_DESC "@GIT_DESC@"
+# define PREFIX "@PREFIX@"
+

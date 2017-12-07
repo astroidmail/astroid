@@ -1,7 +1,6 @@
 # pragma once
 
 # include <gtkmm.h>
-# include <webkit/webkit.h>
 
 # include "astroid.hh"
 # include "proto.hh"

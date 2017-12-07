@@ -1,0 +1,72 @@
+#-------------------------------------------------------------------------------
+# Unit tests
+Import('testEnv')
+Import('env')
+Import('astroid')
+Import('source')
+Import('source_objs')
+Import('debug')
+testEnv = testEnv.Clone()
+testEnv.AppendUnique(LIBPATH=[env.Dir('../lib')], LIBS=[])
+testEnv.PrependENVPath('LD_LIBRARY_PATH', env.Dir('.').abspath)
+
+# set output level of tests
+# http://www.boost.org/doc/libs/1_34_1/libs/test/doc/components/utf/parameters/log_level.html
+if debug:
+  testEnv['ENV']['BOOST_TEST_LOG_LEVEL'] = 'all'
+
+# We can add single file unit tests very easily.
+#testEnv.addUnitTest('test.cpp')
+# also, multiple files can be compiled into a single test suite.
+#files = Split('''
+#        one_test.cpp
+#        two_test.cpp
+#        ''')
+#testEnv.addUnitTest('test_suite', files)
+# you can also use glob to add all the files in the folder.
+
+testEnv.Tool ('notmuch_test_db')
+testEnv.Tool ('shellscript')
+
+test_db = testEnv.NotmuchTestDb ('mail/test_config.template')
+testEnv.Alias ('test_db', test_db)
+testEnv.Alias ('test', 'test_db')
+
+testEnv.Alias ('test', astroid)
+
+testEnv.addUnitTest ('test_generic', ['test_generic.cc', source_objs])
+
+composed_files = Glob('test_composed*.cc')
+testEnv.addUnitTest ('test_composed', [composed_files, source_objs])
+
+testEnv.addUnitTest ('test_crypto', ['test_crypto.cc', source_objs])
+
+testEnv.addUnitTest ('test_non_existant_file', ['test_non_existant_file.cc', source_objs])
+
+testEnv.addUnitTest ('test_open_db', ['test_open_db.cc', source_objs])
+
+testEnv.addUnitTest ('test_convert_error', ['test_convert_error.cc', source_objs])
+
+testEnv.addUnitTest ('test_no_newline_msg', ['test_no_newline_msg.cc', source_objs])
+
+testEnv.addUnitTest ('test_mime_message', ['test_mime_message.cc', source_objs])
+
+testEnv.addUnitTest ('test_theme', ['test_theme.cc', source_objs])
+
+testEnv.addUnitTest ('test_keybindings', ['test_keybindings.cc', source_objs])
+
+testEnv.addUnitTest ('test_bad_content_id', ['test_bad_content_id.cc', source_objs])
+
+testEnv.addUnitTest ('test_notmuch', ['test_notmuch.cc', source_objs])
+
+test_nm_standalone = testEnv.Program (source = ['test_notmuch_standalone.cc', source_objs], target = 'test_notmuch_standalone')
+
+nm_standalone_run = testEnv.addSh ('test_notmuch_standalone.sh')
+env.Depends (nm_standalone_run, test_nm_standalone)
+testEnv.Alias ('test', nm_standalone_run)
+
+testEnv.addUnitTest ('test_address', ['test_address.cc', source_objs])
+
+testEnv.addUnitTest ('test_dates', ['test_dates.cc', source_objs])
+
+# all the tests added above are automatically added to the 'test' alias

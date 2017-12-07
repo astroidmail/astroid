@@ -22,13 +22,18 @@
 # include "utils/utils.hh"
 # include "utils/address.hh"
 # include "utils/vector_utils.hh"
+# include "utils/ustring_utils.hh"
 # include "utils/gravatar.hh"
+# include "utils/cmd.hh"
+# include "utils/gmime/gmime-compat.h"
 # ifndef DISABLE_PLUGINS
   # include "plugin/manager.hh"
 # endif
 # include "actions/action.hh"
+# include "actions/cmdaction.hh"
 # include "actions/tag_action.hh"
 # include "actions/toggle_action.hh"
+# include "actions/difftag_action.hh"
 # include "modes/mode.hh"
 # include "modes/reply_message.hh"
 # include "modes/forward_message.hh"
@@ -46,16 +51,10 @@ namespace Astroid {
     open_html_part_external = config.get<bool> ("open_html_part_external");
     open_external_link = config.get<string> ("open_external_link");
 
-    enable_mathjax = config.get<bool> ("mathjax.enable");
-    mathjax_uri_prefix = config.get<string> ("mathjax.uri_prefix");
-
-    ustring mj_only_tags = config.get<string> ("mathjax.for_tags");
-    if (mj_only_tags.length() > 0) {
-      mathjax_only_tags = VectorUtils::split_and_trim (mj_only_tags, ",");
-    }
-
     enable_code_prettify = config.get<bool> ("code_prettify.enable");
     enable_code_prettify_for_patches = config.get<bool> ("code_prettify.enable_for_patches");
+
+    expand_flagged = config.get<bool> ("expand_flagged");
 
     ustring cp_only_tags = config.get<string> ("code_prettify.for_tags");
     if (cp_only_tags.length() > 0) {
@@ -69,7 +68,7 @@ namespace Astroid {
 
     ready = false;
 
-    pack_start (scroll, true, true, 5);
+    pack_start (scroll, true, true, 0);
 
     /* set up webkit web view (using C api) */
     webview = WEBKIT_WEB_VIEW (webkit_web_view_new ());
@@ -188,8 +187,6 @@ namespace Astroid {
     plugins = new PluginManager::ThreadViewExtension (this);
 # endif
 
-    astroid->actions->signal_thread_updated ().connect (
-        sigc::mem_fun (this, &ThreadView::on_thread_updated));
   }
 
   //
@@ -253,10 +250,6 @@ namespace Astroid {
 
     if (enable_gravatar) {
       allowed_uris.push_back ("https://www.gravatar.com/avatar/");
-    }
-
-    if (enable_mathjax) {
-      allowed_uris.push_back (mathjax_uri_prefix);
     }
 
     if (enable_code_prettify) {
@@ -498,51 +491,13 @@ namespace Astroid {
           WebKitDOMHTMLHeadElement * head = webkit_dom_document_get_head (d);
           webkit_dom_node_append_child (WEBKIT_DOM_NODE(head), WEBKIT_DOM_NODE(e), (err = NULL, &err));
 
-          /* load mathjax if enabled */
-          if (enable_mathjax) {
-            bool only_tags_ok = false;
-            if (mathjax_only_tags.size () > 0) {
-              if (mthread->in_notmuch) {
-                for (auto &t : mathjax_only_tags) {
-                  if (mthread->thread->has_tag (t)) {
-                    only_tags_ok = true;
-                    break;
-                  }
-                }
-              } else {
-                /* enable for messages not in db */
-                only_tags_ok = true;
-              }
-            } else {
-              only_tags_ok = true;
-            }
-
-            if (only_tags_ok) {
-              math_is_on = true;
-
-              WebKitDOMElement * me = webkit_dom_document_create_element (d, "SCRIPT", (err = NULL, &err));
-
-              ustring mathjax_uri = mathjax_uri_prefix + "MathJax.js";
-
-              webkit_dom_element_set_attribute (me, "type", "text/javascript",
-                  (err = NULL, &err));
-              webkit_dom_element_set_attribute (me, "src", mathjax_uri.c_str(),
-                  (err = NULL, &err));
-
-              webkit_dom_node_append_child (WEBKIT_DOM_NODE(head), WEBKIT_DOM_NODE(me), (err = NULL, &err));
-
-
-              g_object_unref (me);
-            }
-          }
-
           /* load code_prettify if enabled */
           if (enable_code_prettify) {
             bool only_tags_ok = false;
             if (code_prettify_only_tags.size () > 0) {
               if (mthread->in_notmuch) {
                 for (auto &t : code_prettify_only_tags) {
-                  if (mthread->thread->has_tag (t)) {
+                  if (mthread->has_tag (t)) {
                     only_tags_ok = true;
                     break;
                   }
@@ -607,13 +562,19 @@ namespace Astroid {
 
     auto _mthread = refptr<MessageThread>(new MessageThread (thread));
     _mthread->load_messages (&db);
+
+    if (unread_setup) unread_checker.disconnect ();
+    unread_setup = false; // reset
+
     load_message_thread (_mthread);
   }
 
   void ThreadView::load_message_thread (refptr<MessageThread> _mthread) {
+    ready = false;
+    mthread.clear ();
     mthread = _mthread;
 
-    ustring s = mthread->subject;
+    ustring s = mthread->get_subject();
 
     set_label (s);
 
@@ -621,87 +582,121 @@ namespace Astroid {
   }
 
   void ThreadView::on_message_changed (
-      Db * db,
+      Db * /* db */,
       Message * m,
       Message::MessageChangedEvent me)
   {
-    if (!edit_mode) { // edit mode doesn't show tags
+    if (!edit_mode && ready) { // edit mode doesn't show tags
       if (me == Message::MessageChangedEvent::MESSAGE_TAGS_CHANGED) {
-        if (m->in_notmuch) {
+        if (m->in_notmuch && m->tid == thread->thread_id) {
           LOG (debug) << "tv: got message updated.";
-          refptr<Message> rm = refptr<Message> (m);
-          rm->reference ();
 
-          message_refresh_tags (db, rm);
+          // the message is already refreshed internally
+
+          ustring mid = "message_" + m->mid;
+          WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
+          WebKitDOMElement * div_message = webkit_dom_document_get_element_by_id (d, mid.c_str());
+
+          refptr<Message> _m = refptr<Message> (m);
+          _m->reference (); // since m is owned by caller
+
+          message_render_tags (_m, div_message);
+          message_update_css_tags (_m, div_message);
+
+          g_object_unref (div_message);
+          g_object_unref (d);
+
         }
       }
     }
   }
 
-  void ThreadView::on_thread_updated (Db * db, ustring thread_id) {
-    if (!edit_mode) { // edit mode doesn't show tags
-      if (thread && thread_id == thread->thread_id) {
-        LOG (debug) << "tv: got thread updated.";
-        /* thread was updated, check for:
-         * - changed tags
-         * - check if something should be done becasue of changed tags
-         * - messages have been added
-         * - messages have been removed
-         *
-         * if anything happens before the webview is ready it will not be shown.
-         *
-         */
+  void ThreadView::message_update_css_tags (refptr<Message> m, WebKitDOMElement * div_message) {
+    /* check for tag changes that control display */
+    GError *err;
 
-        for (auto &m : mthread->messages) {
-          m->refresh (db);
-          message_refresh_tags (db, m);
-        }
+    WebKitDOMDOMTokenList * class_list =
+      webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(div_message));
+
+    /* patches may be rendered somewhat differently */
+    if (m->is_patch ()) {
+      if (!webkit_dom_dom_token_list_contains (class_list, "patch", (err = NULL, &err))) {
+        webkit_dom_dom_token_list_add (class_list, "patch",
+            (err = NULL, &err));
+      }
+    } else {
+      webkit_dom_dom_token_list_remove (class_list, "patch",
+          (err = NULL, &err));
+    }
+
+    /* message subject deviates from thread subject */
+    if (m->is_different_subject ()) {
+      if (!webkit_dom_dom_token_list_contains (class_list, "different_subject", (err = NULL, &err))) {
+        webkit_dom_dom_token_list_add (class_list, "different_subject",
+            (err = NULL, &err));
+      }
+    } else {
+      webkit_dom_dom_token_list_remove (class_list, "different_subject",
+          (err = NULL, &err));
+    }
+
+    /* reset notmuch tags */
+    for (unsigned int i = 0; i < webkit_dom_dom_token_list_get_length (class_list); i++)
+    {
+      const char * _t = webkit_dom_dom_token_list_item (class_list, i);
+      ustring t (_t);
+
+      if (t.find ("nm-", 0) != std::string::npos) {
+        webkit_dom_dom_token_list_remove (class_list, _t, (err = NULL, &err));
       }
     }
+
+    for (ustring t : m->tags) {
+      t = UstringUtils::replace (t, "/", "-");
+      t = UstringUtils::replace (t, ".", "-");
+      t = Glib::Markup::escape_text (t);
+
+      t = "nm-" + t;
+      webkit_dom_dom_token_list_add (class_list, t.c_str (), (err = NULL, &err));
+    }
+
+    g_object_unref (class_list);
   }
 
-  void ThreadView::message_refresh_tags (Db *, refptr<Message> m) {
+  void ThreadView::message_render_tags (refptr<Message> m, WebKitDOMElement * div_message) {
+    if (m->in_notmuch) {
+      unsigned char cv[] = { 0xff, 0xff, 0xff };
 
-    if (!wk_loaded || !ready) return;
-
-    unsigned char cv[] = { 0xff, 0xff, 0xff };
-
-    ustring tags_s;
+      ustring tags_s;
 
 # ifndef DISABLE_PLUGINS
-    if (!plugins->format_tags (m->tags, "#ffffff", false, tags_s)) {
+      if (!plugins->format_tags (m->tags, "#ffffff", false, tags_s)) {
 #  endif
 
-      tags_s = VectorUtils::concat_tags_color (m->tags, false, 0, cv);
+        tags_s = VectorUtils::concat_tags_color (m->tags, false, 0, cv);
 
 # ifndef DISABLE_PLUGINS
-    }
+      }
 # endif
 
-    GError *err;
-    ustring mid = "message_" + m->mid;
+      GError *err;
 
-    WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
-    WebKitDOMElement * div_message = webkit_dom_document_get_element_by_id (d, mid.c_str());
+      WebKitDOMHTMLElement * tags = DomUtils::select (
+          WEBKIT_DOM_NODE (div_message),
+          ".header_container .tags");
 
+      webkit_dom_html_element_set_inner_html (tags, tags_s.c_str (), (err = NULL, &err));
 
-    WebKitDOMHTMLElement * tags = DomUtils::select (
-        WEBKIT_DOM_NODE (div_message),
-        ".header_container .tags");
+      g_object_unref (tags);
 
-    webkit_dom_html_element_set_inner_html (tags, tags_s.c_str (), (err = NULL, &err));
+      tags = DomUtils::select (
+          WEBKIT_DOM_NODE (div_message),
+          ".header_container .header div#Tags .value");
 
-    g_object_unref (tags);
+      webkit_dom_html_element_set_inner_html (tags, tags_s.c_str (), (err = NULL, &err));
 
-    tags = DomUtils::select (
-        WEBKIT_DOM_NODE (div_message),
-        ".header_container .header div#Tags .value");
-
-    webkit_dom_html_element_set_inner_html (tags, tags_s.c_str (), (err = NULL, &err));
-
-    g_object_unref (tags);
-    g_object_unref (div_message);
-    g_object_unref (d);
+      g_object_unref (tags);
+    }
   }
 
   /* end message loading  */
@@ -734,6 +729,7 @@ namespace Astroid {
 
     /* set message state vector */
     state.clear ();
+    focused_message.clear ();
 
     for_each (mthread->messages.begin(),
               mthread->messages.end(),
@@ -758,7 +754,7 @@ namespace Astroid {
             mthread->messages.end (),
             [](refptr<Message> &a, refptr<Message> &b)
               {
-                return ( a->received_time < b->received_time );
+                return ( a->time < b->time );
               });
 
         toggle_hidden (focused_message, ToggleShow);
@@ -768,14 +764,25 @@ namespace Astroid {
       }
     }
 
-    scroll_to_message (focused_message, true);
-
-    if (unread_delay > 0) {
-      Glib::signal_timeout ().connect (
-          sigc::mem_fun (this, &ThreadView::unread_check), std::max (80., (unread_delay * 1000.) / 2));
-    }
+    bool sc = scroll_to_message (focused_message, true);
 
     emit_ready ();
+
+    if (sc) {
+      if (!unread_setup) {
+        /* there's potentially a small chance that scroll_to_message gets an
+         * on_scroll_vadjustment_change emitted before we get here. probably not, since
+         * it is the same thread - but still.. */
+        unread_setup = true;
+
+        if (unread_delay > 0) {
+          unread_checker = Glib::signal_timeout ().connect (
+              sigc::mem_fun (this, &ThreadView::unread_check), std::max (80., (unread_delay * 1000.) / 2));
+        } else {
+          unread_check ();
+        }
+      }
+    }
   }
 
   void ThreadView::update_all_indent_states () {
@@ -847,7 +854,7 @@ namespace Astroid {
 
     if (!edit_mode) {
       /* optionally hide / collapse the message */
-      if (!(has (m->tags, ustring("unread")) || has(m->tags, ustring("flagged")))) {
+      if (!(m->has_tag("unread") || (expand_flagged && m->has_tag("flagged")))) {
 
         /* hide message */
         WebKitDOMDOMTokenList * class_list =
@@ -864,7 +871,7 @@ namespace Astroid {
 
       /* focus first unread message */
       if (!focused_message) {
-        if (has (m->tags, ustring("unread"))) {
+        if (m->has_tag ("unread")) {
           focused_message = m;
         }
       }
@@ -927,27 +934,7 @@ namespace Astroid {
     }
 
     if (m->in_notmuch) {
-      unsigned char cv[] = { 0xff, 0xff, 0xff };
-      ustring tags_s;
-
-# ifndef DISABLE_PLUGINS
-      if (!plugins->format_tags (m->tags, "#ffffff", false, tags_s)) {
-#  endif
-        tags_s = VectorUtils::concat_tags_color (m->tags, false, 0, cv);
-# ifndef DISABLE_PLUGINS
-      }
-# endif
-
-      header += create_header_row ("Tags", tags_s, false, false, true);
-
-
-      WebKitDOMHTMLElement * tags = DomUtils::select (
-          WEBKIT_DOM_NODE (div_message),
-          ".header_container .tags");
-
-      webkit_dom_html_element_set_inner_html (tags,tags_s.c_str(), (err = NULL, &err));
-
-      g_object_unref (tags);
+      header += create_header_row ("Tags", "", false, false, true);
     }
 
     /* avatar */
@@ -990,6 +977,9 @@ namespace Astroid {
         header.c_str(),
         (err = NULL, &err));
 
+    message_render_tags (m, WEBKIT_DOM_ELEMENT(div_message));
+    message_update_css_tags (m, WEBKIT_DOM_ELEMENT(div_message));
+
     /* if message is missing body, set warning and don't add any content */
 
     WebKitDOMHTMLElement * span_body =
@@ -1004,7 +994,7 @@ namespace Astroid {
            any_of (Db::draft_tags.begin (),
                    Db::draft_tags.end (),
                    [&](ustring t) {
-                     return has (m->tags, t);
+                     return m->has_tag (t);
                    }))
       {
 
@@ -1082,7 +1072,7 @@ namespace Astroid {
 
     ustring mime_type;
     if (c->content_type) {
-      mime_type = ustring(g_mime_content_type_to_string (c->content_type));
+      mime_type = ustring(g_mime_content_type_get_mime_type (c->content_type));
     } else {
       mime_type = "application/octet-stream";
     }
@@ -1190,6 +1180,8 @@ namespace Astroid {
       ustring sign_string = "";
       ustring enc_string  = "";
 
+      vector<ustring> all_sig_errors;
+
       if (c->issigned) {
 
         refptr<Crypto> cr = c->crypt;
@@ -1208,12 +1200,16 @@ namespace Astroid {
           ustring nm, em, ky;
           ustring gd = "";
           ustring err = "";
+          vector<ustring> sig_errors;
+
           if (ce) {
             const char * c = NULL;
             nm = (c = g_mime_certificate_get_name (ce), c ? c : "");
             em = (c = g_mime_certificate_get_email (ce), c ? c : "");
             ky = (c = g_mime_certificate_get_key_id (ce), c ? c : "");
 
+
+# if (GMIME_MAJOR_VERSION < 3)
             switch (g_mime_signature_get_status (s)) {
               case GMIME_SIGNATURE_STATUS_GOOD:
                 gd = "Good";
@@ -1227,21 +1223,49 @@ namespace Astroid {
                 if (gd.empty ()) gd = "Erroneous";
 
                 GMimeSignatureError e = g_mime_signature_get_errors (s);
-                if (e & GMIME_SIGNATURE_ERROR_EXPSIG) err += "expired,";
-                if (e & GMIME_SIGNATURE_ERROR_NO_PUBKEY) err += "no-pub-key,";
-                if (e & GMIME_SIGNATURE_ERROR_EXPKEYSIG) err += "expired-key-sig,";
-                if (e & GMIME_SIGNATURE_ERROR_REVKEYSIG) err += "revoked-key-sig,";
-                if (e & GMIME_SIGNATURE_ERROR_UNSUPP_ALGO) err += "unsupported-algo,";
-                if (!err.empty ()) {
-                  err = err.substr (0, err.size () -1);
-                  err = "[Error: " + err + "]";
+                if (e & GMIME_SIGNATURE_ERROR_EXPSIG)
+                  sig_errors.push_back ("expired");
+                if (e & GMIME_SIGNATURE_ERROR_NO_PUBKEY)
+                  sig_errors.push_back ("no-pub-key");
+                if (e & GMIME_SIGNATURE_ERROR_EXPKEYSIG)
+                  sig_errors.push_back ("expired-key-sig");
+                if (e & GMIME_SIGNATURE_ERROR_REVKEYSIG)
+                  sig_errors.push_back ("revoked-key-sig");
+                if (e & GMIME_SIGNATURE_ERROR_UNSUPP_ALGO)
+                  sig_errors.push_back ("unsupported-algo");
+                if (!sig_errors.empty ()) {
+                  err = "[Error: " + VectorUtils::concat (sig_errors, ",") + "]";
                 }
                 break;
+# else
+            GMimeSignatureStatus stat = g_mime_signature_get_status (s);
+            if (g_mime_signature_status_good (stat)) {
+                gd = "Good";
+            } else if (g_mime_signature_status_bad (stat) || g_mime_signature_status_error (stat)) {
+
+              if (g_mime_signature_status_bad (stat)) gd = "Bad";
+              else gd = "Erroneous";
+
+              if (stat & GMIME_SIGNATURE_STATUS_KEY_REVOKED) sig_errors.push_back ("revoked-key");
+              if (stat & GMIME_SIGNATURE_STATUS_KEY_EXPIRED) sig_errors.push_back ("expired-key");
+              if (stat & GMIME_SIGNATURE_STATUS_SIG_EXPIRED) sig_errors.push_back ("expired-sig");
+              if (stat & GMIME_SIGNATURE_STATUS_KEY_MISSING) sig_errors.push_back ("key-missing");
+              if (stat & GMIME_SIGNATURE_STATUS_CRL_MISSING) sig_errors.push_back ("crl-missing");
+              if (stat & GMIME_SIGNATURE_STATUS_CRL_TOO_OLD) sig_errors.push_back ("crl-too-old");
+              if (stat & GMIME_SIGNATURE_STATUS_BAD_POLICY)  sig_errors.push_back ("bad-policy");
+              if (stat & GMIME_SIGNATURE_STATUS_SYS_ERROR)   sig_errors.push_back ("sys-error");
+              if (stat & GMIME_SIGNATURE_STATUS_TOFU_CONFLICT) sig_errors.push_back ("tofu-conflict");
+
+              if (!sig_errors.empty ()) {
+                err = "[Error: " + VectorUtils::concat (sig_errors, ",") + "]";
+              }
+# endif
             }
           } else {
             err = "[Error: Could not get certificate]";
           }
 
+# if (GMIME_MAJOR_VERSION < 3)
           GMimeCertificateTrust t = g_mime_certificate_get_trust (ce);
           ustring trust = "";
           switch (t) {
@@ -1252,6 +1276,18 @@ namespace Astroid {
             case GMIME_CERTIFICATE_TRUST_FULLY: trust = "fully"; break;
             case GMIME_CERTIFICATE_TRUST_ULTIMATE: trust = "ultimate"; break;
           }
+# else
+          GMimeTrust t = g_mime_certificate_get_trust (ce);
+          ustring trust = "";
+          switch (t) {
+            case GMIME_TRUST_UNKNOWN: trust = "unknown"; break;
+            case GMIME_TRUST_UNDEFINED: trust = "undefined"; break;
+            case GMIME_TRUST_NEVER: trust = "never"; break;
+            case GMIME_TRUST_MARGINAL: trust = "marginal"; break;
+            case GMIME_TRUST_FULL: trust = "full"; break;
+            case GMIME_TRUST_ULTIMATE: trust = "ultimate"; break;
+          }
+# endif
 
 
           sign_string += ustring::compose (
@@ -1259,9 +1295,7 @@ namespace Astroid {
               gd, nm, em, ky, trust, err);
 
 
-          g_object_unref (ce);
-          g_object_unref (s);
-
+          all_sig_errors.insert (all_sig_errors.end(), sig_errors.begin (), sig_errors.end ());
         }
       }
 
@@ -1340,6 +1374,17 @@ namespace Astroid {
               (err = NULL, &err));
           webkit_dom_dom_token_list_add (class_list, "verify_failed",
               (err = NULL, &err));
+
+          /* add specific errors */
+          std::sort (all_sig_errors.begin (), all_sig_errors.end ());
+          all_sig_errors.erase (unique (all_sig_errors.begin (), all_sig_errors.end ()), all_sig_errors.end ());
+
+          for (ustring & e : all_sig_errors) {
+            webkit_dom_dom_token_list_add (class_list_e, e.c_str (),
+                (err = NULL, &err));
+            webkit_dom_dom_token_list_add (class_list, e.c_str (),
+                (err = NULL, &err));
+          }
         }
       }
 
@@ -1659,7 +1704,7 @@ namespace Astroid {
         }
 
         value +=
-          ustring::compose ("<a href=\"mailto:%3\">%4%1%5 (%2)</a>",
+          ustring::compose ("<a href=\"mailto:%3\">%4%1%5 &lt;%2&gt;</a>",
             Glib::Markup::escape_text (address.fail_safe_name ()),
             Glib::Markup::escape_text (address.email ()),
             Glib::Markup::escape_text (address.full_address()),
@@ -1891,7 +1936,7 @@ namespace Astroid {
     if (_mtype == NULL) {
       mime_type = "application/octet-stream";
     } else {
-      mime_type = ustring(g_mime_content_type_to_string (c->content_type));
+      mime_type = ustring(g_mime_content_type_get_mime_type (c->content_type));
     }
 
     LOG (debug) << "tv: set attachment, mime_type: " << mime_type << ", mtype: " << _mtype;
@@ -2111,7 +2156,7 @@ namespace Astroid {
     else return Mode::on_key_press_event (event);
   }
 
-  void ThreadView::register_keys () { //
+  void ThreadView::register_keys () { // {{{
     keys.title = "Thread View";
 
     keys.register_key ("j", "thread_view.down",
@@ -2218,7 +2263,7 @@ namespace Astroid {
           return true;
         });
 
-    keys.register_key (Key (GDK_KEY_Return), { Key (GDK_KEY_KP_Enter) },
+    keys.register_key (Key (GDK_KEY_Return), { Key (GDK_KEY_KP_Enter), Key (true, false, (guint) GDK_KEY_space) },
         "thread_view.activate",
         "Open/expand/activate focused element",
         [&] (Key) {
@@ -2231,7 +2276,7 @@ namespace Astroid {
           return element_action (ESave);
         });
 
-    keys.register_key ("d", "thread_view.delete",
+    keys.register_key ("d", "thread_view.delete_attachment",
         "Delete attachment (if editing)",
         [&] (Key) {
           if (edit_mode) {
@@ -2239,12 +2284,6 @@ namespace Astroid {
             return element_action (EDelete);
           }
           return false;
-        });
-
-    keys.register_key (Key(GDK_KEY_space), "thread_view.open",
-        "Open attachment or message",
-        [&] (Key) {
-          return element_action (EOpen);
         });
 
     keys.register_key ("e", "thread_view.expand",
@@ -2266,18 +2305,18 @@ namespace Astroid {
           if (all_of (mthread->messages.begin(),
                       mthread->messages.end (),
                       [&](refptr<Message> m) {
-                        return !is_hidden (m);
+                        return is_hidden (m);
                       }
                 )) {
-            /* all are shown */
+            /* all are hidden */
             for (auto m : mthread->messages) {
-              toggle_hidden (m, ToggleHide);
+              toggle_hidden (m, ToggleShow);
             }
 
           } else {
-            /* some are hidden */
+            /* some are shown */
             for (auto m : mthread->messages) {
-              toggle_hidden (m, ToggleShow);
+              toggle_hidden (m, ToggleHide);
             }
           }
 
@@ -2299,10 +2338,30 @@ namespace Astroid {
         "Toggle mark on all messages",
         [&] (Key) {
           if (!edit_mode) {
+
+            bool any = false;
+            bool all = true;
+
             for (auto &s : state) {
-              s.second.marked = !s.second.marked;
-              update_marked_state (s.first);
+              if (s.second.marked) {
+                any = true;
+              } else {
+                all = false;
+              }
+
+              if (any && !all) break;
             }
+
+            for (auto &s : state) {
+              if (any && !all) {
+                s.second.marked = true;
+                update_marked_state (s.first);
+              } else {
+                s.second.marked = !s.second.marked;
+                update_marked_state (s.first);
+              }
+            }
+
 
             return true;
           }
@@ -2357,7 +2416,7 @@ namespace Astroid {
     keys.register_key ("p", "thread_view.previous_message",
         "Focus previous message",
         [&] (Key) {
-          focus_previous ();
+          focus_previous (true);
           scroll_to_message (focused_message);
           return true;
         });
@@ -2388,7 +2447,7 @@ namespace Astroid {
           bool foundme = false;
 
           for (auto &m : mthread->messages) {
-            if (foundme && has (m->tags, ustring("unread"))) {
+            if (foundme && m->has_tag ("unread")) {
               focused_message = m;
               scroll_to_message (focused_message);
               break;
@@ -2410,7 +2469,7 @@ namespace Astroid {
 
           for (auto mi = mthread->messages.rbegin ();
               mi != mthread->messages.rend (); mi++) {
-            if (foundme && has ((*mi)->tags, ustring("unread"))) {
+            if (foundme && (*mi)->has_tag ("unread")) {
               focused_message = *mi;
               scroll_to_message (focused_message);
               break;
@@ -2421,6 +2480,42 @@ namespace Astroid {
             }
           }
 
+          return true;
+        });
+
+    keys.register_key ("c", "thread_view.compose_to_sender",
+        "Compose a new message to the sender of the message (or all recipients if sender is you)",
+        [&] (Key) {
+          if (!edit_mode) {
+            Address sender = focused_message->sender;
+            Address from;
+            AddressList to, cc, bcc;
+
+            /* Send to original sender if message is not from own account,
+               otherwise use all recipients as in the original */
+            if (astroid->accounts->is_me (sender)) {
+              from = sender;
+              to   = AddressList(focused_message->to  ());
+              cc   = AddressList(focused_message->cc  ());
+              bcc  = AddressList(focused_message->bcc ());
+            } else {
+              /* Not from me, just use orginal sender */
+              to += sender;
+
+              /* find the 'first' me */
+              AddressList tos = focused_message->all_to_from ();
+
+              for (Address f : tos.addresses) {
+                if (astroid->accounts->is_me (f)) {
+                  from = f;
+                  break;
+                }
+              }
+            }
+	    main_window->add_mode (new EditMessage (main_window, to.str (),
+						    from.full_address (),
+						    cc.str(), bcc.str()));
+          }
           return true;
         });
 
@@ -2442,6 +2537,30 @@ namespace Astroid {
           /* reply to currently focused message */
           if (!edit_mode) {
             main_window->add_mode (new ReplyMessage (main_window, focused_message, ReplyMessage::ReplyMode::Rep_All));
+
+            return true;
+          }
+          return false;
+        });
+
+    keys.register_key ("R", "thread_view.reply_sender",
+        "Reply to sender of current message",
+        [&] (Key) {
+          /* reply to currently focused message */
+          if (!edit_mode) {
+            main_window->add_mode (new ReplyMessage (main_window, focused_message, ReplyMessage::ReplyMode::Rep_Sender));
+
+            return true;
+          }
+          return false;
+        });
+
+    keys.register_key ("M", "thread_view.reply_mailinglist",
+        "Reply to mailinglist of current message",
+        [&] (Key) {
+          /* reply to currently focused message */
+          if (!edit_mode) {
+            main_window->add_mode (new ReplyMessage (main_window, focused_message, ReplyMessage::ReplyMode::Rep_MailingList));
 
             return true;
           }
@@ -2523,13 +2642,14 @@ namespace Astroid {
             if (any_of (Db::draft_tags.begin (),
                         Db::draft_tags.end (),
                         [&](ustring t) {
-                          return has (focused_message->tags, t);
+                          return focused_message->has_tag (t);
                         }))
             {
               ask_yes_no ("Do you want to delete this draft? (any changes will be lost)",
                   [&](bool yes) {
                     if (yes) {
                       EditMessage::delete_draft (focused_message);
+                      close ();
                     }
                   });
 
@@ -2537,6 +2657,19 @@ namespace Astroid {
             }
           }
           return false;
+        });
+
+    keys.register_run ("thread_view.run",
+	[&] (Key, ustring cmd) {
+          if (!edit_mode && focused_message) {
+
+            cmd = ustring::compose (cmd, focused_message->tid, focused_message->mid);
+
+            astroid->actions->doit (refptr<Action> (new CmdAction (
+              Cmd ("thread_view.run", cmd), focused_message->tid, focused_message->mid)));
+
+            }
+          return true;
         });
 
     multi_keys.register_key ("t", "thread_view.multi.toggle",
@@ -2550,6 +2683,114 @@ namespace Astroid {
               update_marked_state (m);
             }
           }
+          return true;
+        });
+
+    multi_keys.register_key ("+", "thread_view.multi.tag",
+        "Tag",
+        [&] (Key) {
+          /* TODO: Move this into a function in a similar way as multi_key_handler
+           * for threadindex */
+
+
+          /* ask for tags */
+          main_window->enable_command (CommandBar::CommandMode::DiffTag,
+              "",
+              [&](ustring tgs) {
+                LOG (debug) << "tv: got difftags: " << tgs;
+
+                vector<refptr<NotmuchItem>> messages;
+
+                for (auto &ms : state) {
+                  refptr<Message> m = ms.first;
+                  MessageState    s = ms.second;
+                  if (s.marked) {
+                    messages.push_back (m->nmmsg);
+                  }
+                }
+
+                refptr<Action> ma = refptr<DiffTagAction> (DiffTagAction::create (messages, tgs));
+                if (ma) {
+                  main_window->actions->doit (ma);
+                }
+              });
+
+          return true;
+        });
+
+    multi_keys.register_key ("C-y", "thread_view.multi.yank_mids",
+        "Yank message id's",
+        [&] (Key) {
+          ustring ids = "";
+
+          for (auto &m : mthread->messages) {
+            MessageState s = state[m];
+            if (s.marked) {
+              ids += m->mid + ", ";
+            }
+          }
+
+          ids = ids.substr (0, ids.length () - 2);
+
+          auto cp = Gtk::Clipboard::get (astroid->clipboard_target);
+          cp->set_text (ids);
+
+          LOG (info) << "tv: " << ids << " copied to clipboard.";
+
+          return true;
+        });
+
+    multi_keys.register_key ("y", "thread_view.multi.yank",
+        "Yank",
+        [&] (Key) {
+          ustring y = "";
+
+          for (auto &m : mthread->messages) {
+            MessageState s = state[m];
+            if (s.marked) {
+              y += m->viewable_text (false, true);
+              y += "\n";
+            }
+          }
+
+          /* remove last newline */
+          y = y.substr (0, y.size () - 1);
+
+          auto cp = Gtk::Clipboard::get (astroid->clipboard_target);
+          cp->set_text (y);
+
+          LOG (info) << "tv: yanked marked messages to clipobard.";
+
+          return true;
+        });
+
+    multi_keys.register_key ("Y", "thread_view.multi.yank_raw",
+        "Yank raw",
+        [&] (Key) {
+          /* tries to export the messages as an mbox file */
+          ustring y = "";
+
+          for (auto &m : mthread->messages) {
+            MessageState s = state[m];
+            if (s.marked) {
+              auto d   = m->raw_contents ();
+              auto cnv = UstringUtils::bytearray_to_ustring (d);
+              if (cnv.first) {
+                y += ustring::compose ("From %1  %2",
+                    Address(m->sender).email(),
+                    m->date_asctime ()); // asctime adds a \n
+
+                y += UstringUtils::unixify (cnv.second);
+                y += "\n";
+              }
+            }
+          }
+
+          auto cp = Gtk::Clipboard::get (astroid->clipboard_target);
+          cp->set_text (y);
+
+          LOG (info) << "tv: yanked raw marked messages to clipobard.";
+
           return true;
         });
 
@@ -2574,6 +2815,7 @@ namespace Astroid {
 
             dialog.add_button ("_Cancel", Gtk::RESPONSE_CANCEL);
             dialog.add_button ("_Select", Gtk::RESPONSE_OK);
+            dialog.set_current_folder (astroid->runtime_paths ().save_dir.c_str ());
 
             int result = dialog.run ();
 
@@ -2582,6 +2824,8 @@ namespace Astroid {
                 {
                   string dir = dialog.get_filename ();
                   LOG (info) << "tv: saving messages to: " << dir;
+
+                  astroid->runtime_paths ().save_dir = bfs::path (dialog.get_current_folder ());
 
                   for (refptr<Message> m : tosave) {
                     m->save_to (dir);
@@ -2604,9 +2848,8 @@ namespace Astroid {
         "Print marked messages",
         [&] (Key) {
           vector<refptr<Message>> toprint;
-          for (auto &ms : state) {
-            refptr<Message> m = ms.first;
-            MessageState    s = ms.second;
+          for (auto &m : mthread->messages) {
+            MessageState s = state[m];
             if (s.marked) {
               toprint.push_back (m);
             }
@@ -2670,7 +2913,7 @@ namespace Astroid {
 
     keys.register_key (Key (GDK_KEY_semicolon),
           "thread_view.multi",
-          "Apply action to marked threads",
+          "Apply action to marked messages",
           [&] (Key k) {
             if (any_of (state.begin(), state.end(),
                   [](std::pair<refptr<Message>, ThreadView::MessageState> ms)
@@ -2690,9 +2933,36 @@ namespace Astroid {
         [&] (Key) {
           if (!edit_mode && focused_message) {
 
-            main_window->actions->doit (refptr<Action>(new ToggleAction (refptr<NotmuchTaggable>(new NotmuchMessage(focused_message)), "unread")));
+            main_window->actions->doit (refptr<Action>(new ToggleAction (refptr<NotmuchItem>(new NotmuchMessage(focused_message)), "unread")));
             state[focused_message].unread_checked = true;
 
+          }
+
+          return true;
+        });
+
+    keys.register_key ("*",
+        "thread_view.flag",
+        "Toggle the 'flagged' tag on the message",
+        [&] (Key) {
+          if (!edit_mode && focused_message) {
+
+            main_window->actions->doit (refptr<Action>(new ToggleAction (refptr<NotmuchItem>(new NotmuchMessage(focused_message)), "flagged")));
+
+          }
+
+          return true;
+        });
+
+    keys.register_key ("a",
+        "thread_view.archive_thread",
+        "Toggle 'inbox' tag on the whole thread",
+        [&] (Key) {
+
+          if (!edit_mode && focused_message) {
+            if (thread) {
+              main_window->actions->doit (refptr<Action>(new ToggleAction(thread, "inbox")));
+            }
           }
 
           return true;
@@ -2753,7 +3023,7 @@ namespace Astroid {
             return false;
           }
 
-          ustring tag_list = VectorUtils::concat_tags (focused_message->tags) + ", ";
+          ustring tag_list = VectorUtils::concat_tags (focused_message->tags) + " ";
 
           main_window->enable_command (CommandBar::CommandMode::Tag,
               "Change tags for message:",
@@ -2761,7 +3031,7 @@ namespace Astroid {
               [&](ustring tgs) {
                 LOG (debug) << "ti: got tags: " << tgs;
 
-                vector<ustring> tags = VectorUtils::split_and_trim (tgs, ",");
+                vector<ustring> tags = VectorUtils::split_and_trim (tgs, ",| ");
 
                 /* remove empty */
                 tags.erase (std::remove (tags.begin (), tags.end (), ""), tags.end ());
@@ -2791,7 +3061,7 @@ namespace Astroid {
                     rem.size () == 0) {
                   LOG (debug) << "ti: nothing to do.";
                 } else {
-                  main_window->actions->doit (refptr<Action>(new TagAction (refptr<NotmuchTaggable>(new NotmuchMessage(focused_message)), add, rem)));
+                  main_window->actions->doit (refptr<Action>(new TagAction (refptr<NotmuchItem>(new NotmuchMessage(focused_message)), add, rem)));
                 }
 
                 /* make sure that the unread tag is not modified after manually editing tags */
@@ -2802,9 +3072,14 @@ namespace Astroid {
         });
 
     keys.register_key ("C-f",
-        "thread_view.search.search",
+        "thread_view.search.search_or_next",
         "Search for text or go to next match",
-        sigc::mem_fun (this, &ThreadView::search));
+        std::bind (&ThreadView::search, this, std::placeholders::_1, true));
+
+    keys.register_key (UnboundKey (),
+        "thread_view.search.search",
+        "Search for text",
+        std::bind (&ThreadView::search, this, std::placeholders::_1, false));
 
 
     keys.register_key (GDK_KEY_Escape, "thread_view.search.cancel",
@@ -2829,33 +3104,158 @@ namespace Astroid {
         });
 
     keys.register_key ("y", "thread_view.yank",
-        "Yank current element or message text to primary clipboard",
+        "Yank current element or message text to clipboard",
         [&] (Key) {
           element_action (EYank);
           return true;
         });
 
     keys.register_key ("Y", "thread_view.yank_raw",
-        "Yank raw content of current element or message to primary clipboard",
+        "Yank raw content of current element or message to clipboard",
         [&] (Key) {
           element_action (EYankRaw);
           return true;
         });
 
     keys.register_key ("C-y", "thread_view.yank_mid",
-        "Yank the Message-ID of the focused message to primary clipboard",
+        "Yank the Message-ID of the focused message to clipboard",
         [&] (Key) {
-          auto cp = Gtk::Clipboard::get (GDK_SELECTION_PRIMARY);
+          auto cp = Gtk::Clipboard::get (astroid->clipboard_target);
           cp->set_text (focused_message->mid);
 
-          LOG (info) << "tv: " << focused_message->mid << " copied to primary clipboard.";
+          LOG (info) << "tv: " << focused_message->mid << " copied to clipboard.";
 
           return true;
         });
 
-  }
+    keys.register_key (Key (":"),
+          "thread_view.multi_next_thread",
+          "Open next after..",
+          [&] (Key k) {
+            multi_key (next_multi, k);
 
-  //
+            return true;
+          });
+
+    next_multi.title = "Thread";
+    next_multi.register_key (Key ("a"),
+        "thread_view.multi_next_thread.archive",
+        "Archive, goto next",
+        [&] (Key) {
+          keys.handle ("thread_view.archive_thread");
+          emit_index_action (IA_Next);
+
+          return true;
+        });
+
+    next_multi.register_key (Key ("A"),
+        "thread_view.multi_next_thread.archive_next_unread_thread",
+        "Archive, goto next unread",
+        [&] (Key) {
+          keys.handle ("thread_view.archive_thread");
+          emit_index_action (IA_NextUnread);
+
+          return true;
+        });
+
+    next_multi.register_key (Key ("x"),
+        "thread_view.multi_next_thread.close",
+        "Archive, close",
+        [&] (Key) {
+          keys.handle ("thread_view.archive_thread");
+          close ();
+
+          return true;
+        });
+
+    next_multi.register_key (Key ("j"),
+        "thread_view.multi_next_thread.next_thread",
+        "Goto next",
+        [&] (Key) {
+          emit_index_action (IA_Next);
+
+          return true;
+        });
+
+    next_multi.register_key (Key ("k"),
+        "thread_view.multi_next_thread.previous_thread",
+        "Goto previous",
+        [&] (Key) {
+          emit_index_action (IA_Previous);
+
+          return true;
+        });
+
+    next_multi.register_key (Key (GDK_KEY_Tab),
+        "thread_view.multi_next_thread.next_unread",
+        "Goto next unread",
+        [&] (Key) {
+          emit_index_action (IA_NextUnread);
+
+          return true;
+        });
+
+    next_multi.register_key (Key (false, false, (guint) GDK_KEY_ISO_Left_Tab),
+        "thread_view.multi_next_thread.previous_unread",
+        "Goto previous unread",
+        [&] (Key) {
+          emit_index_action (IA_PreviousUnread);
+
+          return true;
+        });
+
+    /* make aliases in main namespace */
+    keys.register_key (UnboundKey (),
+        "thread_view.archive_then_next",
+        "Alias for thread_view.multi_next_thread.archive",
+        [&] (Key) {
+          return next_multi.handle ("thread_view.multi_next_thread.archive");
+        });
+
+    keys.register_key (UnboundKey (),
+        "thread_view.archive_then_next_unread",
+        "Alias for thread_view.multi_next_thread.archive_next_unread",
+        [&] (Key) {
+          return next_multi.handle ("thread_view.multi_next_thread.archive_next_unread_thread");
+        });
+
+    keys.register_key (UnboundKey (),
+        "thread_view.archive_and_close",
+        "Alias for thread_view.multi_next_thread.close",
+        [&] (Key) {
+          return next_multi.handle ("thread_view.multi_next_thread.close");
+        });
+
+    keys.register_key (UnboundKey (),
+        "thread_view.next_thread",
+        "Alias for thread_view.multi_next_thread.next_thread",
+        [&] (Key) {
+          return next_multi.handle ("thread_view.multi_next_thread.next_thread");
+        });
+
+    keys.register_key (UnboundKey (),
+        "thread_view.previous_thread",
+        "Alias for thread_view.multi_next_thread.previous_thread",
+        [&] (Key) {
+          return next_multi.handle ("thread_view.multi_next_thread.previous_thread");
+        });
+
+    keys.register_key (UnboundKey (),
+        "thread_view.next_unread_thread",
+        "Alias for thread_view.multi_next_thread.next_unread",
+        [&] (Key) {
+          return next_multi.handle ("thread_view.multi_next_thread.next_unread");
+        });
+
+    keys.register_key (UnboundKey (),
+        "thread_view.previous_unread_thread",
+        "Alias for thread_view.multi_next_thread.previous_unread",
+        [&] (Key) {
+          return next_multi.handle ("thread_view.multi_next_thread.previous_unread");
+        });
+
+
+  } // }}}
 
   bool ThreadView::element_action (ElementAction a) { //
     LOG (debug) << "tv: activate item.";
@@ -2871,6 +3271,27 @@ namespace Astroid {
       } else if (a == ESave) {
         /* save message to */
         focused_message->save ();
+
+      } else if (a == EYankRaw) {
+        auto    cp = Gtk::Clipboard::get (astroid->clipboard_target);
+        ustring t  = "";
+
+        auto d   = focused_message->raw_contents ();
+        auto cnv = UstringUtils::bytearray_to_ustring (d);
+        if (cnv.first) {
+          t = UstringUtils::unixify (cnv.second);
+        }
+
+        cp->set_text (t);
+
+      } else if (a == EYank) {
+
+        auto cp = Gtk::Clipboard::get (astroid->clipboard_target);
+        ustring t;
+
+        t = focused_message->viewable_text (false, true);
+
+        cp->set_text (t);
       }
 
     } else {
@@ -2882,22 +3303,20 @@ namespace Astroid {
           /* save message to */
           focused_message->save ();
         } else if (a == EYankRaw) {
-          auto cp = Gtk::Clipboard::get (GDK_SELECTION_PRIMARY);
-          ustring t;
+          auto    cp = Gtk::Clipboard::get (astroid->clipboard_target);
+          ustring t  = "";
 
           auto d = focused_message->raw_contents ();
-          if (d->size () == 0) {
-            t = "";
-          } else {
-            char * dd = (char*) d->get_data ();
-            t = dd;
+          auto cnv = UstringUtils::bytearray_to_ustring (d);
+          if (cnv.first) {
+            t = UstringUtils::unixify (cnv.second);
           }
 
           cp->set_text (t);
 
         } else if (a == EYank) {
 
-          auto cp = Gtk::Clipboard::get (GDK_SELECTION_PRIMARY);
+          auto cp = Gtk::Clipboard::get (astroid->clipboard_target);
           ustring t;
 
           t = focused_message->viewable_text (false, true);
@@ -2910,15 +3329,13 @@ namespace Astroid {
 
           refptr<Chunk> c = focused_message->get_chunk_by_id (
               state[focused_message].elements[state[focused_message].current_element].id);
-          auto cp = Gtk::Clipboard::get (GDK_SELECTION_PRIMARY);
-          ustring t;
+          auto cp = Gtk::Clipboard::get (astroid->clipboard_target);
+          ustring t = "";
 
-          auto d = c->contents ();
-          if (d->size () == 0) {
-            t = "";
-          } else {
-            char * dd = (char*) d->get_data ();
-            t = dd;
+          auto d   = c->contents ();
+          auto cnv = UstringUtils::bytearray_to_ustring (d);
+          if (cnv.first) {
+            t = cnv.second;
           }
 
           cp->set_text (t);
@@ -2927,7 +3344,7 @@ namespace Astroid {
 
           refptr<Chunk> c = focused_message->get_chunk_by_id (
               state[focused_message].elements[state[focused_message].current_element].id);
-          auto cp = Gtk::Clipboard::get (GDK_SELECTION_PRIMARY);
+          auto cp = Gtk::Clipboard::get (astroid->clipboard_target);
           ustring t;
 
           if (c->viewable) {
@@ -2943,7 +3360,7 @@ namespace Astroid {
           switch (state[focused_message].elements[state[focused_message].current_element].type) {
             case MessageState::ElementType::Attachment:
               {
-                if ((!edit_mode && a == EEnter) || a == EOpen) {
+                if (a == EEnter) {
                   /* open attachment */
 
                   refptr<Chunk> c = focused_message->get_chunk_by_id (
@@ -2970,7 +3387,7 @@ namespace Astroid {
               break;
             case MessageState::ElementType::Part:
               {
-                if ((!edit_mode && a == EEnter) || a == EOpen) {
+                if (a == EEnter) {
                   /* open part */
 
                   refptr<Chunk> c = focused_message->get_chunk_by_id (
@@ -3006,7 +3423,7 @@ namespace Astroid {
 
             case MessageState::ElementType::MimeMessage:
               {
-                if ((!edit_mode && a == EEnter) || a == EOpen) {
+                if (a == EEnter) {
                   /* open part */
                   refptr<Chunk> c = focused_message->get_chunk_by_id (
                       state[focused_message].elements[state[focused_message].current_element].id);
@@ -3057,6 +3474,17 @@ namespace Astroid {
         if (scroll_to_element (scroll_arg, _scroll_when_visible)) {
           scroll_arg = "";
           _scroll_when_visible = false;
+
+          if (!unread_setup) {
+            unread_setup = true;
+
+            if (unread_delay > 0) {
+              Glib::signal_timeout ().connect (
+                  sigc::mem_fun (this, &ThreadView::unread_check), std::max (80., (unread_delay * 1000.) / 2));
+            }
+
+            // unread_delay == 0 is checked in update_focus_status ()
+          }
         }
       }
     }
@@ -3319,7 +3747,10 @@ namespace Astroid {
   }
 
   bool ThreadView::unread_check () {
-    if (!ready) return false; // disconnect
+    if (!ready) {
+      unread_setup = false;
+      return false; // disconnect
+    }
 
     if (!edit_mode && focused_message && focused_message->in_notmuch) {
 
@@ -3328,9 +3759,9 @@ namespace Astroid {
         chrono::duration<double> elapsed = chrono::steady_clock::now() - focus_time;
 
         if (unread_delay == 0.0 || elapsed.count () > unread_delay) {
-          if (has (focused_message->tags, ustring("unread"))) {
+          if (focused_message->has_tag ("unread")) {
 
-            main_window->actions->doit (refptr<Action>(new TagAction (refptr<NotmuchTaggable>(new NotmuchMessage(focused_message)), {}, { "unread" })), false);
+            main_window->actions->doit (refptr<Action>(new TagAction (refptr<NotmuchItem>(new NotmuchMessage(focused_message)), {}, { "unread" })), false);
             state[focused_message].unread_checked = true;
           }
         }
@@ -3530,9 +3961,9 @@ namespace Astroid {
         mthread->messages.end (),
         focused_message) - mthread->messages.begin ();
 
-    if (!focus_top && focused_position > 0) {
+    if (focused_position > 0) {
       focused_message = mthread->messages[focused_position - 1];
-      if (!is_hidden (focused_message)) {
+      if (!focus_top && !is_hidden (focused_message)) {
         state[focused_message].current_element = state[focused_message].elements.size()-1; // start at bottom
       } else {
         state[focused_message].current_element = 0; // start at top
@@ -3543,14 +3974,14 @@ namespace Astroid {
     return "message_" + focused_message->mid;
   }
 
-  void ThreadView::scroll_to_message (refptr<Message> m, bool scroll_when_visible) {
+  bool ThreadView::scroll_to_message (refptr<Message> m, bool scroll_when_visible) {
     focused_message = m;
 
-    if (edit_mode) return;
+    if (edit_mode) return false;
 
     if (!focused_message) {
       LOG (warn) << "tv: focusing: no message selected for focus.";
-      return;
+      return false;
     }
 
     LOG (debug) << "tv: focusing: " << m->date ();
@@ -3564,7 +3995,7 @@ namespace Astroid {
     g_object_unref (e);
     g_object_unref (d);
 
-    scroll_to_element (mid, scroll_when_visible);
+    return scroll_to_element (mid, scroll_when_visible);
   }
 
   bool ThreadView::scroll_to_element (
@@ -3726,7 +4157,7 @@ namespace Astroid {
     return wasexpanded;
   }
 
-  /* end message hinding  */
+  /* end message hiding  */
 
   void ThreadView::save_all_attachments () { //
     /* save all attachments of current focused message */
@@ -3748,6 +4179,7 @@ namespace Astroid {
 
     dialog.add_button ("_Cancel", Gtk::RESPONSE_CANCEL);
     dialog.add_button ("_Select", Gtk::RESPONSE_OK);
+    dialog.set_current_folder (astroid->runtime_paths ().save_dir.c_str ());
 
     int result = dialog.run ();
 
@@ -3756,6 +4188,8 @@ namespace Astroid {
         {
           string dir = dialog.get_filename ();
           LOG (info) << "tv: saving attachments to: " << dir;
+
+          astroid->runtime_paths ().save_dir = bfs::path (dialog.get_current_folder ());
 
           /* TODO: check if the file exists and ask to overwrite. currently
            *       we are failing silently (except an error message in the log)
@@ -3804,8 +4238,8 @@ namespace Astroid {
 
   void ThreadView::emit_ready () {
     LOG (info) << "tv: ready emitted.";
-    m_signal_ready.emit ();
     ready = true;
+    m_signal_ready.emit ();
   }
 
   ThreadView::type_element_action
@@ -3817,6 +4251,15 @@ namespace Astroid {
   void ThreadView::emit_element_action (unsigned int element, ElementAction action) {
     LOG (debug) << "tv: element action emitted: " << element << ", action: enter";
     m_element_action.emit (element, action);
+  }
+
+  ThreadView::type_index_action ThreadView::signal_index_action () {
+    return m_index_action;
+  }
+
+  bool ThreadView::emit_index_action (IndexAction action) {
+    LOG (debug) << "tv: index action: " << action;
+    return m_index_action.emit (this, action);
   }
 
   /* end signals  */
@@ -3852,8 +4295,8 @@ namespace Astroid {
   /* end MessageState  */
 
   /* Searching  */
-  bool ThreadView::search (Key) {
-    if (in_search) {
+  bool ThreadView::search (Key, bool next) {
+    if (in_search && next) {
       next_search_match ();
       return true;
     }

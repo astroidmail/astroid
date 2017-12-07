@@ -1,0 +1,36 @@
+# comment
+
+thread_index.next=J
+thread_index.next=k # alias and end of line comment
+
+thread_index.asdf = j
+
+# test
+test.a = k
+test.b=j
+test.b=j # double, should throw exception
+
+
+
+# unbound
+test.unbound2=1
+test.to_be_unbound=
+
+# test some run targets
+
+test.run(echo %1)=n
+test.run(echo %1)=y
+
+# reasign a key to a hook
+test.run(echo %1)=4
+test.run(echo %1)=5
+
+
+# replacing an existing non-userdefined binding
+test.foo=0
+test.foo2=2
+
+# test special chars
+test.spec1=Tab
+test.spec2=C-Tab
+

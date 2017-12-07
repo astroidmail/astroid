@@ -11,7 +11,7 @@ def shAction(target, source, env):
 
   # run notmuch
   myenv = os.environ.copy()
-  myenv['NOTMUCH_CONFIG'] = 'test/mail/test_config'
+  myenv['NOTMUCH_CONFIG'] = 'tests/mail/test_config'
 
   process = Popen (str(source[0]), env = myenv, shell = True)
 

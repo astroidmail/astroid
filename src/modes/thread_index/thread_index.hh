@@ -9,6 +9,7 @@
 
 # include "modes/paned_mode.hh"
 # include "query_loader.hh"
+# include "modes/thread_view/thread_view.hh"
 # ifndef DISABLE_PLUGINS
   # include "plugin/manager.hh"
 # endif
@@ -23,9 +24,6 @@ namespace Astroid {
       QueryLoader queryloader;
 
       void open_thread (refptr<NotmuchThread>, bool new_tab, bool new_window = false);
-      ThreadView * thread_view;
-      bool thread_view_loaded  = false;
-      bool thread_view_visible = false;
 
       Glib::RefPtr<ThreadIndexListStore> list_store;
       ThreadIndexListView * list_view;
@@ -41,8 +39,11 @@ namespace Astroid {
       PluginManager::ThreadIndexExtension * plugins;
 # endif
 
-    private:
       void on_stats_ready ();
+
+      bool on_index_action (ThreadView * tv, ThreadView::IndexAction);
+
+    private:
       void on_first_thread_ready ();
   };
 }

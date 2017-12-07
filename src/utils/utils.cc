@@ -4,10 +4,16 @@
 # include <string>
 # include <iostream>
 # include <iomanip>
+# include <exception>
 
 # include <glib.h>
 # include <boost/property_tree/ptree.hpp>
+# include <boost/filesystem.hpp>
+# ifndef DISABLE_PLUGINS
+  # include "plugin/manager.hh"
+# endif
 
+namespace bfs = boost::filesystem;
 using boost::property_tree::ptree;
 using std::endl;
 
@@ -65,19 +71,71 @@ namespace Astroid {
     return _f;
   }
 
-  std::pair<ustring, ustring> Utils::get_tag_color (ustring t, unsigned char cv[3]) {
-    unsigned char * tc = Crypto::get_md5_digest_char (t);
+  bfs::path Utils::expand (bfs::path in) {
+    ustring s = in.c_str ();
+    if (s.size () < 1) return in;
 
-    unsigned char upper[3] = {
-      (unsigned char) tags_upper_color.get_red (),
-      (unsigned char) tags_upper_color.get_green (),
-      (unsigned char) tags_upper_color.get_blue (),
+    const char * home = getenv ("HOME");
+    if (home == NULL) {
+      LOG (error) << "error: HOME variable not set.";
+      throw std::invalid_argument ("error: HOME environment variable not set.");
+    }
+
+    if (s[0] == '~') {
+      s = ustring(home) + s.substr (1, s.size () - 1);
+      return bfs::path (s);
+    } else {
+      return in;
+    }
+  }
+
+  ustring Utils::rgba_to_hex (Gdk::RGBA c) {
+    std::ostringstream str;
+    str << "#";
+
+    str << std::hex << std::setfill('0') << std::setw(2) <<
+      ((int) c.get_red_u () * 255 / 65535) ;
+    str << std::hex << std::setfill('0') << std::setw(2) <<
+      ((int) c.get_green_u () * 255 / 65535) ;
+    str << std::hex << std::setfill('0') << std::setw(2) <<
+      ((int) c.get_blue_u () * 255 / 65535) ;
+
+    str << std::hex << std::setfill('0') << std::setw(2) <<
+      (int) (c.get_alpha () * 255);
+
+    return str.str ();
+  }
+
+  std::pair<Gdk::RGBA, Gdk::RGBA> Utils::get_tag_color_rgba (ustring t, unsigned char cv[3])
+  {
+    # ifndef DISABLE_PLUGINS
+
+    Gdk::RGBA canvas;
+    canvas.set_red_u   ( cv[0] * 65535 / 255 );
+    canvas.set_green_u ( cv[1] * 65535 / 255 );
+    canvas.set_blue_u  ( cv[2] * 65535 / 255 );
+
+    auto clrs = astroid->plugin_manager->astroid_extension->get_tag_colors (t, rgba_to_hex (canvas));
+
+    if (!clrs.first.empty () || !clrs.second.empty ()) {
+      return std::make_pair (Gdk::RGBA (clrs.first), Gdk::RGBA (clrs.second));
+    }
+    # endif
+
+    auto     _tc = Crypto::get_md5_digest_b (t);
+    gsize    len;
+    guint8 * tc  = (guint8 *) _tc->get_data (len);
+
+    guint8 upper[3] = {
+      (guint8) tags_upper_color.get_red (),
+      (guint8) tags_upper_color.get_green (),
+      (guint8) tags_upper_color.get_blue (),
       };
 
-    unsigned char lower[3] = {
-      (unsigned char) tags_lower_color.get_red (),
-      (unsigned char) tags_lower_color.get_green (),
-      (unsigned char) tags_lower_color.get_blue (),
+    guint8 lower[3] = {
+      (guint8) tags_lower_color.get_red (),
+      (guint8) tags_lower_color.get_green (),
+      (guint8) tags_lower_color.get_blue (),
       };
 
     /*
@@ -86,34 +144,36 @@ namespace Astroid {
      * luminocity of background color.
      */
 
-    unsigned char bg[3];
+    guint8 bg[3];
 
     for (int k = 0; k < 3; k++) {
       bg[k] = tc[k] * (upper[k] - lower[k]) + lower[k];
     }
 
+    Gdk::RGBA bc;
+    bc.set_rgba_u ( bg[0] * (65535) / (255),
+                    bg[1] * (65535) / (255),
+                    bg[2] * (65535) / (255),
+                    (unsigned short) (tags_alpha * (65535)));
+
     float lum = ((bg[0] * tags_alpha + (1-tags_alpha) * cv[0] ) * .2126 + (bg[1] * tags_alpha + (1-tags_alpha) * cv[1]) * .7152 + (bg[2] * tags_alpha + (1-tags_alpha) * cv[0]) * .0722) / 255.0;
     /* float avg = (bg[0] + bg[1] + bg[2]) / (3 * 255.0); */
 
-    std::ostringstream bg_str;
-    bg_str << "#";
 
-    for (int k = 0; k < 3; k++) {
-      bg_str << std::hex << std::setfill('0') << std::setw(2) << ((int)bg[k]);
-    }
-
-    bg_str << std::hex << std::setfill('0') << std::setw(2) << (int) (tags_alpha * 255);
-
-    delete tc;
-
-    ustring fc;
+    Gdk::RGBA fc;
     if (lum > 0.5) {
-      fc = "#000000";
+      fc.set ("#000000");
     } else {
-      fc = "#f2f2f2";
+      fc.set ("#f2f2f2");
     }
 
-    return std::make_pair (fc, bg_str.str ());
+    return std::make_pair (fc, bc);
+  }
+
+  std::pair<ustring, ustring> Utils::get_tag_color (ustring t, guint8 cv[3]) {
+    auto clrs = get_tag_color_rgba (t, cv);
+
+    return std::make_pair (rgba_to_hex (clrs.first), rgba_to_hex (clrs.second));
   }
 }
 

@@ -215,6 +215,32 @@ namespace Astroid {
     return false;
   }
 
+  std::pair<ustring, ustring> PluginManager::AstroidExtension::get_tag_colors (ustring tag, ustring bg) {
+    std::pair<ustring, ustring> clrs = { "", "" };
+
+    if (!active || astroid->plugin_manager->disabled) return clrs;
+
+    for (PeasPluginInfo * p : astroid->plugin_manager->astroid_plugins) {
+      PeasExtension * pe = peas_extension_set_get_extension (extensions, p);
+
+      GList * mclrs = astroid_activatable_get_tag_colors (ASTROID_ACTIVATABLE(pe), tag.c_str (), bg.c_str ());
+
+      if (mclrs != NULL) {
+        std::vector<ustring> _mclrs = Glib::ListHandler<ustring>::list_to_vector (mclrs, Glib::OWNERSHIP_NONE);
+
+        if (_mclrs.size () != 2) {
+          LOG (error) << "plugins: AstroidPlugin returend other than two elements for tag color.";
+          continue;
+        }
+
+        clrs.first  = _mclrs[0];
+        clrs.second = _mclrs[1];
+      }
+    }
+
+    return clrs;
+  }
+
   /* ********************
    * ThreadIndexExtension
    * ********************/

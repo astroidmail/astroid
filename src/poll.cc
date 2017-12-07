@@ -1,5 +1,6 @@
 # include <mutex>
 # include <chrono>
+# include <sys/wait.h>
 
 # include <boost/filesystem.hpp>
 # include <glibmm/spawn.h>
@@ -17,7 +18,6 @@ using namespace boost::filesystem;
 
 namespace Astroid {
   const int Poll::DEFAULT_POLL_INTERVAL = 60;
-
   Poll::Poll (bool _auto_polling_enabled) {
     LOG (info) << "poll: setting up.";
 
@@ -43,6 +43,51 @@ namespace Astroid {
     }
 
     d_poll_state.connect (sigc::mem_fun (this, &Poll::poll_state_dispatch));
+    d_refresh.connect (sigc::mem_fun (this, &Poll::refresh_threads));
+  }
+
+  void Poll::close () {
+  }
+
+  void Poll::start_polling () {
+    /* external polling is started - will eventually be completed
+     * by a call to stop_polling */
+
+    if (external_polling) {
+      LOG (error) << "poll: external polling already running!";
+      return;
+    }
+
+    LOG (info) << "poll: external polling started..";
+    if (m_dopoll.try_lock ()) {
+
+      external_polling = true;
+      set_poll_state (true);
+
+      Db db (Db::DbMode::DATABASE_READ_ONLY);
+      before_poll_revision = db.get_revision ();
+      LOG (debug) << "poll: revision before poll: " << before_poll_revision;
+
+    } else {
+      LOG (error) << "poll: uh oh! poll is already running, better disable internal polling if you use external polling - expect hard crashes!";
+      return;
+    }
+  }
+
+  void Poll::stop_polling () {
+    /* external polling is now stopped */
+    if (!external_polling) {
+      LOG (error) << "poll: indicated stopped external polling, but no start external polling was registered!";
+      return;
+    }
+
+    LOG (info) << "poll: external polling stopped.";
+
+    refresh_threads ();
+    external_polling = false;
+    set_poll_state (false);
+    m_dopoll.unlock ();
+
   }
 
   bool Poll::periodic_polling () {
@@ -69,6 +114,26 @@ namespace Astroid {
     auto_polling_enabled = !auto_polling_enabled;
   }
 
+  bool Poll::get_auto_poll () {
+    return auto_polling_enabled;
+  }
+
+  void Poll::cancel_poll () {
+    LOG (warn) << "poll: cancel polling pid: " << pid;
+    std::lock_guard<std::mutex> lk (poll_cancel_m);
+
+    if (pid > 0) {
+
+      int r = kill (pid, SIGKILL);
+
+      if (r == 0) {
+        LOG (warn) << "poll: poll script killed.";
+      } else {
+        LOG (error) << "poll: could not kill poll script.";
+      }
+    }
+  }
+
   bool Poll::poll () {
     LOG (debug) << "poll: requested..";
 
@@ -77,8 +142,13 @@ namespace Astroid {
 
     if (m_dopoll.try_lock ()) {
 
-      Glib::Threads::Thread::create (
-          sigc::mem_fun (this, &Poll::do_poll));
+      {
+        Db db (Db::DbMode::DATABASE_READ_ONLY);
+        before_poll_revision = db.get_revision ();
+      }
+      LOG (debug) << "poll: revision before poll: " << before_poll_revision;
+
+      do_poll ();
 
       return true;
 
@@ -91,19 +161,14 @@ namespace Astroid {
   }
 
   void Poll::do_poll () {
+    std::unique_lock<std::mutex> lk (poll_cancel_m);
+
     set_poll_state (true);
 
     t0 = chrono::steady_clock::now ();
 
     path poll_script_uri = astroid->standard_paths().config_dir / path(poll_script);
-
     LOG (info) << "poll: polling: " << poll_script_uri.c_str ();
-
-# ifdef HAVE_NOTMUCH_GET_REV
-    Db db (Db::DbMode::DATABASE_READ_ONLY);
-    before_poll_revision = db.get_revision ();
-    LOG (debug) << "poll: revision before poll: " << before_poll_revision;
-# endif
 
     if (!is_regular_file (poll_script_uri)) {
       LOG (error) << "poll: poll script does not exist or is not a regular file.";
@@ -120,7 +185,7 @@ namespace Astroid {
                         Glib::SPAWN_DO_NOT_REAP_CHILD,
                         sigc::slot <void> (),
                         &pid,
-                        &stdin,
+                        NULL,
                         &stdout,
                         &stderr
                         );
@@ -129,20 +194,64 @@ namespace Astroid {
       set_poll_state (false);
       m_dopoll.unlock ();
       return;
+    } catch (Glib::Error &ex) {
+      LOG (error) << "poll: exception while running poll script: " <<  ex.what ();
+      set_poll_state (false);
+      m_dopoll.unlock ();
+      return;
     }
 
-    /* connect channels */
-    Glib::signal_io().connect (sigc::mem_fun (this, &Poll::log_out), stdout, Glib::IO_IN | Glib::IO_HUP);
-    Glib::signal_io().connect (sigc::mem_fun (this, &Poll::log_err), stderr, Glib::IO_IN | Glib::IO_HUP);
-    Glib::signal_child_watch().connect (sigc::mem_fun (this, &Poll::child_watch), pid);
+    lk.unlock ();
 
+    /* connect channels */
     ch_stdout = Glib::IOChannel::create_from_fd (stdout);
     ch_stderr = Glib::IOChannel::create_from_fd (stderr);
+
+    c_ch_stdout = Glib::signal_io().connect (sigc::mem_fun (this, &Poll::log_out), stdout, Glib::IO_IN | Glib::IO_HUP);
+    c_ch_stderr = Glib::signal_io().connect (sigc::mem_fun (this, &Poll::log_err), stderr, Glib::IO_IN | Glib::IO_HUP);
+
+    Glib::signal_child_watch ().connect (sigc::mem_fun (this, &Poll::poll_child_done), pid);
+  }
+
+  void Poll::poll_child_done (GPid pid, int child_status) {
+    g_spawn_close_pid (pid);
+
+    c_ch_stderr.disconnect();
+    c_ch_stdout.disconnect();
+
+    if (ch_stdout) {
+      ch_stdout->close ();
+      ch_stdout.clear ();
+    }
+
+    if (ch_stderr) {
+      ch_stderr->close ();
+      ch_stderr.clear ();
+    }
+
+    ::close (stdout);
+    ::close (stderr);
+
+    chrono::duration<double> elapsed = chrono::steady_clock::now() - t0;
+    last_poll = chrono::steady_clock::now ();
+
+    if (child_status != 0) {
+      LOG (error) << "poll: poll script did not exit successfully.";
+    }
+
+    LOG (info) << "poll: done (time: " << elapsed.count() << " s) (status: " << child_status << ")";
+
+    pid = 0;
+    set_poll_state (false);
+
+    d_refresh (); /* signal refresh */
+    m_dopoll.unlock ();
   }
 
   bool Poll::log_out (Glib::IOCondition cond) {
     if (cond == Glib::IO_HUP) {
       ch_stdout.clear();
+      LOG (debug) << "poll: (stdout) got HUP";
       return false;
     }
 
@@ -163,6 +272,7 @@ namespace Astroid {
   bool Poll::log_err (Glib::IOCondition cond) {
     if (cond == Glib::IO_HUP) {
       ch_stderr.clear();
+      LOG (debug) << "poll: (stderr) got HUP";
       return false;
     }
 
@@ -179,88 +289,69 @@ namespace Astroid {
     return true;
   }
 
-  void Poll::child_watch (GPid pid, int child_status) {
-    chrono::duration<double> elapsed = chrono::steady_clock::now() - t0;
-    last_poll = chrono::steady_clock::now ();
-
-    if (child_status != 0) {
-      LOG (error) << "poll: poll script did not exit successfully.";
+  void Poll::refresh (unsigned long before) {
+    if (external_polling) {
+      LOG (error) << "poll: external polling in progress, --refresh should not be used in combination with --start-polling or --stop-polling";
+      return;
     }
 
-    // TODO:
-    // - use lastmod to figure out how many messages have been added or changed
-    //   during poll.
-    LOG (info) << "poll: done (time: " << elapsed.count() << " s) (child status: " << child_status << ")";
-    set_poll_state (false);
+    if (m_dopoll.try_lock ()) {
+      LOG (info) << "poll: refreshing threads since: " << before;
 
-    /* close process */
-    Glib::spawn_close_pid (pid);
+      before_poll_revision = before;
+      refresh_threads ();
 
-    if (child_status == 0) {
+      m_dopoll.unlock ();
 
-# ifdef HAVE_NOTMUCH_GET_REV
+    } else {
+      LOG (error) << "poll: polling already in progress, cannot refresh.";
+      return;
+    }
+  }
 
-      /* first poll */
-      if (last_good_before_poll_revision == 0)
-        last_good_before_poll_revision = before_poll_revision;
+  void Poll::refresh_threads () {
 
-      /* update all threads that have been changed */
-      Db db (Db::DbMode::DATABASE_READ_ONLY);
+    /* update all threads that have been changed */
+    Db db (Db::DbMode::DATABASE_READ_ONLY);
 
-      unsigned long revnow = db.get_revision ();
-      LOG (debug) << "poll: revision after poll: " << revnow;
+    unsigned long revnow = db.get_revision ();
+    LOG (debug) << "poll: refreshing.. revision after poll: " << revnow;
 
-      if (revnow > last_good_before_poll_revision) {
+    if (revnow > before_poll_revision) {
 
-        ustring query = ustring::compose ("lastmod:%1..%2",
-            before_poll_revision,
-            revnow);
+      ustring query = ustring::compose ("lastmod:%1..%2",
+          before_poll_revision,
+          revnow);
 
-        notmuch_query_t * qry = notmuch_query_create (db.nm_db, query.c_str ());
+      notmuch_query_t * qry = notmuch_query_create (db.nm_db, query.c_str ());
 
-        unsigned int total_threads;
-        notmuch_status_t st = NOTMUCH_STATUS_SUCCESS;
-# ifdef HAVE_QUERY_COUNT_THREADS_ST
-        st = notmuch_query_count_threads_st (qry, &total_threads);
-# else
-        total_threads = notmuch_query_count_threads (qry);
-# endif
+      unsigned int total_threads;
+      notmuch_status_t st = NOTMUCH_STATUS_SUCCESS;
+      st = notmuch_query_count_threads (qry, &total_threads);
 
-        LOG (info) << "poll: " << total_threads << " threads changed, updating..";
+      LOG (info) << "poll: " << total_threads << " threads changed, updating..";
 
-        if (st == NOTMUCH_STATUS_SUCCESS && total_threads > 0) {
-          notmuch_threads_t * threads;
-          notmuch_thread_t  * thread;
-# ifdef HAVE_QUERY_THREADS_ST
-          st = notmuch_query_search_threads_st (qry, &threads);
-# else
-          threads = notmuch_query_search_threads (qry);
-# endif
+      if (st == NOTMUCH_STATUS_SUCCESS && total_threads > 0) {
+        notmuch_threads_t * threads;
+        notmuch_thread_t  * thread;
+        st = notmuch_query_search_threads (qry, &threads);
 
-          for (;
-               (st == NOTMUCH_STATUS_SUCCESS) && notmuch_threads_valid (threads);
-               notmuch_threads_move_to_next (threads)) {
+        for (;
+             (st == NOTMUCH_STATUS_SUCCESS) && notmuch_threads_valid (threads);
+             notmuch_threads_move_to_next (threads)) {
 
-            thread = notmuch_threads_get (threads);
+          thread = notmuch_threads_get (threads);
 
-            const char * t = notmuch_thread_get_thread_id (thread);
+          const char * t = notmuch_thread_get_thread_id (thread);
 
-            ustring tt (t);
-            astroid->actions->emit_thread_updated (&db, tt);
-          }
+          ustring tt (t);
+          astroid->actions->emit_thread_updated (&db, tt);
         }
-
-        notmuch_query_destroy (qry);
-
       }
 
-      last_good_before_poll_revision = revnow;
-# else
-      astroid->actions->signal_refreshed_dispatcher ();
-# endif
-    }
+      notmuch_query_destroy (qry);
 
-    m_dopoll.unlock ();
+    }
   }
 
   void Poll::poll_state_dispatch () {

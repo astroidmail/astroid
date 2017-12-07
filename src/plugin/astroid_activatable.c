@@ -134,3 +134,26 @@ astroid_activatable_generate_mid (AstroidActivatable * activatable)
 
   return NULL;
 }
+
+/**
+ * astroid_activatable_get_tag_colors:
+ * @activatable: A #AstroidThreadViewActivatable.
+ * @tag : A #utf8.
+ * @bg : A #utf8.
+ *
+ * Returns: (element-type utf8) (transfer container): List of forground and background color for tag.
+ */
+GList *
+astroid_activatable_get_tag_colors (AstroidActivatable * activatable, const char * tag, const char * bg)
+{
+	AstroidActivatableInterface *iface;
+
+	if (!ASTROID_IS_ACTIVATABLE (activatable)) return NULL;
+
+	iface = ASTROID_ACTIVATABLE_GET_IFACE (activatable);
+	if (iface->get_tag_colors)
+		return iface->get_tag_colors (activatable, tag, bg);
+
+  return NULL;
+}
+

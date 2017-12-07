@@ -1,4 +1,4 @@
-/* ui-version: 3 (do not change when modifying theme for yourself) */
+/* ui-version: 4 (do not change when modifying theme for yourself) */
 /* Variables */
 @if not(global-variable-exists(background-color)) {
   $background-color: #ccc !global;
@@ -52,6 +52,18 @@
 
 @if not(global-variable-exists(focused-solid)) {
   $focused-solid: #4a90d9 !global;
+}
+
+@if not(global-variable-exists(attachment-color)) {
+  $attachment-color:  rgba(0,0,0,0.18) !global;
+}
+
+@if not(global-variable-exists(sibling-color)) {
+  $sibling-color: lighten( $focused-solid, 20%) !global;
+}
+
+@if not(global-variable-exists(mime-color)) {
+  $mime-color: lighten( #FFFF00, 15%) !global;
 }
 
 @if not(global-variable-exists(encrypted)) {
@@ -201,20 +213,45 @@ hr {
         font-size: 90%;
     }
 
-    /* use a left border indicator for focused/unfocused email */
-    padding-left: 7px;
+    .email_container {
+	.header_container, .body {
+	    border-left: 6px solid transparent;
+	}
+	.email_warning {
+	    padding-left: 6px;
+	}
+    }
+    .attachment_container {
+	border-left: 6px solid transparent;
+    }
+
     &.focused {
-      padding-left: 1px;
-      border-left: 6px solid;
-      box-shadow: 0 0 0 transparent !important;
+      padding-left: 0px;
+      border-left: 0px;
+      /* box-shadow: 0 0 0 transparent !important; */
+
+      .email_container, .attachment_container {
+	border-left: 6px solid $focused-solid;
+
+	.header_container, .body {
+	    border-left: 0px;
+	}
+	.email_warning {
+	    padding-left: 0px;
+	}
+      }
     }
     &.hide {
       background-color: darken( $recv-normal, 5% ) !important;
-      border-color: $email-solid;
+      padding-left: 7px;
+      border-left: 6px solid transparent;
+	.email_container, .header_container, .body {
+	    border-left: 0;
+	}
     }
-    &.focused, &.hide {
-      border-left-color: $focused-solid;
-      }
+    &.focused.hide {
+      border-left: 6px solid $focused-solid;
+    }
 
     .body {
       padding: 15px;
@@ -320,7 +357,7 @@ hr {
 }
 
 .focused {
-    box-shadow: 5px 3px 3px rgba(71,71,173,1) !important;
+    /* box-shadow: 0 0 10px rgba(71,71,173,1) !important; */
 }
 
 .avatar {
@@ -350,6 +387,11 @@ body:not(.nohide) .email.hide .header_container .avatar {
     padding-top: 25px;
     overflow-x: auto;
     overflow-y: hidden;
+
+    .body_part a[href*="//"] {
+	word-break: break-all;
+    }
+    
 }
 
 .email .remote_images {
@@ -592,9 +634,18 @@ body.nohide .email .compressed_note > span {
     /*font-size: small;*/
     font-size: 0.8em;
     cursor: pointer;
-    border: 1px solid transparent;
-    border-radius: 4px;
     display: inline;
+    background-color: transparent;
+    border-width: 1px;
+    border-style: solid;
+    border-radius: 4px;
+    border-color: transparent;
+
+    &.focused {
+	background-color: lighten( $attachment-color, 90% );
+	border-color: $attachment-color;
+	box-shadow: inset 0px 0px 1px rgba(255,255,255,0.8);
+    }
 }
 
 .email > .attachment_container > .attachment:hover,
@@ -717,16 +768,32 @@ body.nohide .email .compressed_note > span {
     display: none;
 }
 
-.email > .email_container > .body > .sibling_container {
+.email > .email_container > .body > .sibling_container, .email > .email_container > .body > .mime_container {
     display: block;
     vertical-align: middle;
     text-align: center;
-    padding-bottom: 5px;
-    padding-top: 5px;
-    margin-top: 5px;
-    margin-bottom: 5px;
-    background-color: #8CE7FF;
-    border: 1px solid black;
+    padding: 0px;
+    margin-top: 15px;
+    margin-bottom: 0;
+    background-color: lighten( $sibling-color, 15% );
+    border-width: 0 0 1px 0px;
+    border-style: solid;
+    border-color: darken( $sibling-color, 20% );
+    border-radius: 4px;
+    color: darken( $sibling-color, 80% );
+
+    .message {
+	padding-top: 6px;
+	padding-bottom: 6px;
+	font-size: 90%;
+    }
+
+    &.focused/*, &:hover /* click not supported yet */ {
+	background-color: lighten( $sibling-color, 5% );
+	.message {
+	    border-color: darken( $sibling-color, 50% );
+	}
+    }
 }
 
 #mime_container {
@@ -734,19 +801,27 @@ body.nohide .email .compressed_note > span {
 }
 
 .email > .email_container > .body > .mime_container {
-    display: block;
-    vertical-align: middle;
-    text-align: center;
-    padding-bottom: 5px;
-    padding-top: 5px;
-    margin-top: 5px;
-    margin-bottom: 5px;
-    background-color: gray;
-    border: 1px solid black;
+    background-color: lighten( $mime-color, 20% );
+    border-color: darken( $mime-color, 20% );
+    color: darken( $mime-color, 80% );
+
+    &.focused/*, &:hover /* click not supported yet */ {
+	background-color: lighten( $mime-color, 1% );
+	.message {
+	    border-color: darken( $mime-color, 50% );
+	}
+    }
 }
 
 .header {
     overflow: hidden;
+    font-size: 90%;
+
+    #Tags {
+	.value span {
+	    padding: 2px;
+	}
+    }
 }
 .header .field {
     clear: both;

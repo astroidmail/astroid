@@ -4,6 +4,7 @@
 # include <map>
 # include <vector>
 # include <string>
+# include <chrono>
 
 # include <gtkmm.h>
 # include <webkit/webkit.h>
@@ -49,7 +50,7 @@ namespace Astroid {
       void load_thread (refptr<NotmuchThread>);
       void load_message_thread (refptr<MessageThread>);
 
-      refptr<NotmuchThread> thread;
+      refptr<NotmuchThread> thread; // will be refreshed through mthread
       refptr<MessageThread> mthread;
 
       Gtk::ScrolledWindow scroll;
@@ -65,14 +66,13 @@ namespace Astroid {
       double unread_delay = .5;
       std::chrono::time_point<std::chrono::steady_clock> focus_time;
       bool unread_check ();
+      bool unread_setup = false;
+      sigc::connection unread_checker;
 
       /* resources */
-      bool    enable_mathjax;
-      ustring mathjax_uri_prefix;
-      std::vector<ustring> mathjax_only_tags;
       ustring home_uri;           // relative url for requests
-      bool    math_is_on = false; // for this thread
 
+      bool    expand_flagged;
       bool    enable_code_prettify;
       std::vector<ustring> code_prettify_only_tags;
       ustring code_prettify_uri = "https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js";
@@ -98,7 +98,7 @@ namespace Astroid {
       ThreadViewInspector thread_view_inspector;
 
       /* message manipulation and location */
-      void scroll_to_message (refptr<Message>, bool = false);
+      bool scroll_to_message (refptr<Message>, bool = false);
       bool scroll_to_element (ustring, bool = false);
 
       bool    in_scroll = false;
@@ -123,6 +123,10 @@ namespace Astroid {
       bool toggle_hidden (refptr<Message> = refptr<Message> (), ToggleState = ToggleToggle);
       bool is_hidden (refptr<Message>);
 
+      /* focused message */
+      refptr<Message> candidate_startup; // startup
+
+    public:
       /* message display state */
       struct MessageState {
         public:
@@ -168,10 +172,6 @@ namespace Astroid {
 
       std::map<refptr<Message>, MessageState> state;
 
-      /* focused message */
-      refptr<Message> candidate_startup; // startup
-
-    public:
       refptr<Message> focused_message;
 
       /* set the warning header of the message */
@@ -185,7 +185,6 @@ namespace Astroid {
       /* activate message or selected element */
       typedef enum {
         EEnter = 0,
-        EOpen,
         ESave,
         EDelete,
         EYankRaw,
@@ -220,7 +219,8 @@ namespace Astroid {
       void insert_header_date (ustring &, refptr<Message>);
       ustring create_header_row (ustring title, ustring value, bool important, bool escape, bool noprint = false);
       ustring header_row_value (ustring value, bool escape);
-      void message_refresh_tags (Db *, refptr<Message>);
+      void message_render_tags (refptr<Message>, WebKitDOMElement * div_message);
+      void message_update_css_tags (refptr<Message>, WebKitDOMElement * div_message);
 
       bool open_html_part_external;
       void display_part (refptr<Message>, refptr<Chunk>, MessageState::Element);
@@ -288,14 +288,14 @@ namespace Astroid {
 
     private:
       Keybindings multi_keys;
+      Keybindings next_multi;
       void register_keys ();
 
       /* changed signals */
       void on_message_changed (Db *, Message *, Message::MessageChangedEvent);
-      void on_thread_updated (Db *, ustring);
 
       /* search */
-      bool search (Key);
+      bool search (Key, bool);
       void on_search (ustring);
       void reset_search ();
 
@@ -320,9 +320,23 @@ namespace Astroid {
 
       void emit_element_action (unsigned int element, ElementAction action);
 
+      /* actions for originating thread-index */
+      typedef enum {
+        IA_Next = 0,
+        IA_Previous,
+        IA_NextUnread,
+        IA_PreviousUnread,
+      } IndexAction;
+
+      typedef sigc::signal <bool, ThreadView *, IndexAction> type_index_action;
+      type_index_action signal_index_action ();
+
+      bool emit_index_action (IndexAction action);
+
     protected:
       type_signal_ready m_signal_ready;
       type_element_action m_element_action;
+      type_index_action m_index_action;
   };
 }
 

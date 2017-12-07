@@ -27,8 +27,6 @@ namespace Astroid {
       unsigned int total_messages;
       unsigned int unread_messages;
 
-      void refresh_stats ();
-
       refptr<ThreadIndexListStore> list_store;
       ThreadIndexListView * list_view;
 
@@ -36,15 +34,13 @@ namespace Astroid {
       std::vector<ustring> sort_strings = { "oldest", "newest", "messageid", "unsorted" };
 
       Glib::Dispatcher first_thread_ready;
-
-      Glib::Dispatcher make_stats;
-      bool waiting_stats = false;
-
       Glib::Dispatcher stats_ready;
 
       bool loading ();
+
     private:
       ustring query;
+      void refresh_stats_db (Db *);
 
       std::atomic<bool> run;
       bool in_destructor = false;
@@ -59,8 +55,13 @@ namespace Astroid {
       void to_list_adder ();
       Glib::Dispatcher queue_has_data;
 
-      /* signal handlers */
+      /* this is a list of threads that got a changed signal
+       * while loading */
+      Glib::Dispatcher deferred_threads_d;
+      void update_deferred_changed_threads ();
+      std::queue<ustring> changed_threads;
 
+      /* signal handlers */
       void on_thread_changed (Db *, ustring);
       void on_refreshed ();
   };

@@ -17,7 +17,7 @@
 namespace Astroid {
   ForwardMessage::ForwardMessage (MainWindow * mw,
       refptr<Message> _msg,
-      FwdDisposition disp) : EditMessage (mw)
+      FwdDisposition disp) : EditMessage (mw, false)
   {
     using std::endl;
     using std::string;
@@ -51,7 +51,7 @@ namespace Astroid {
           boost::replace_all_copy (string(msg->pretty_verbose_date()), "%", "%%"));
 
       /* date format */
-      Glib::DateTime dt = Glib::DateTime::create_now_local (msg->received_time);
+      Glib::DateTime dt = Glib::DateTime::create_now_local (msg->time);
       quoting_a = dt.format (quoting_a);
 
       quoted  << quoting_a.raw ()
@@ -80,14 +80,8 @@ namespace Astroid {
     }
 
 
-    /* try to figure which account the message was sent to, using
-     * first match. */
-    for (Address &a : msg->all_to_from().addresses) {
-      if (accounts->is_me (a)) {
-        set_from (a);
-        break;
-      }
-    }
+    /* determine which account to use */
+    set_from (accounts->get_assosciated_account (msg));
 
     /* reload message */
     prepare_message ();
@@ -98,6 +92,8 @@ namespace Astroid {
         sigc::mem_fun (this, &ForwardMessage::on_message_sent_attempt_received));
 
     keys.title = "Forward mode";
+
+    edit_when_ready ();
   }
 
   void ForwardMessage::on_message_sent_attempt_received (bool res) {

@@ -18,6 +18,7 @@ namespace Astroid {
       Cmd cmd;
       ustring thread_id;
       ustring mid;
+      bool successful;
 
   };
 }

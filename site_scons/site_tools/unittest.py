@@ -1,5 +1,6 @@
 import os
 import subprocess
+import resource
 from subprocess import Popen
 
 def unitTestAction(target, source, env):
@@ -18,26 +19,33 @@ def unitTestAction(target, source, env):
     myenv[k] = v
 
   # add notmuch path
-  config = os.path.abspath(os.path.join (os.path.curdir, 'test/mail/test_config'))
+  config = os.path.abspath(os.path.join (os.path.curdir, 'tests/mail/test_config'))
   myenv['NOTMUCH_CONFIG'] = config
 
   # setup gpg
   setupGPG (myenv)
 
+  # set a low number of maximum open files
+  resource.setrlimit (resource.RLIMIT_NOFILE, (64, 64));
+
   app = str(source[0].abspath)
   process = subprocess.Popen (app, shell = True, env = myenv)
   process.wait ()
   ret = process.returncode
+
+  tearDownGPG (myenv)
+
   if ret == 0:
     open(str(target[0]),'w').write("PASSED\n")
   else:
     return 1
 
 def setupGPG (env):
-  home = os.path.join (os.path.curdir, 'test/test_home')
+  home = os.path.join (os.path.curdir, 'tests/test_home')
   gpgh = os.path.abspath(os.path.join (home, 'gnupg'))
   env['GNUPGHOME'] = gpgh
   env['GPG_AGENT_INFO'] = ''
+
 
   if not os.path.exists (os.path.join (gpgh, '.ready')):
     print "test: setting up gpg environment in: " + gpgh
@@ -54,7 +62,19 @@ def setupGPG (env):
 
     Popen ("gpg --batch --always-trust --import two.pub", env = env, shell = True, cwd = gpgh).wait ()
 
+    print ("test: gnupg: setting always-trust")
+    with open (os.path.join (gpgh, 'gpg.conf'), 'w') as fd:
+      fd.write ('always-trust\n')
+
   open (os.path.join (gpgh, '.ready'), 'w').write ('ready')
+
+def tearDownGPG (env):
+  home = os.path.join (os.path.curdir, 'tests/test_home')
+  gpgh = os.path.abspath(os.path.join (home, 'gnupg'))
+  env['GNUPGHOME'] = gpgh
+
+  # Kill gpg agent
+  Popen ("gpgconf --kill all", env = env, shell = True, cwd = gpgh).wait ()
 
 
 def unitTestActionString(target, source, env):

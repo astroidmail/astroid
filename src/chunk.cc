@@ -7,6 +7,7 @@
 
 # include <glib.h>
 # include <gmime/gmime.h>
+# include "utils/gmime/gmime-compat.h"
 # include "utils/gmime/gmime-filter-html-bq.h"
 
 # include "astroid.hh"
@@ -32,13 +33,18 @@ namespace Astroid {
 
     if (mp == NULL) {
       LOG (error) << "chunk (" << id << "): got NULL mime_object.";
-      throw std::logic_error ("chunk: got NULL mime_object");
+
+      viewable   = true;
+      attachment = false;
+
+    } else {
+      g_object_ref (mime_object);
     }
 
     content_type = g_mime_object_get_content_type (mime_object);
 
     if (content_type) {
-      LOG (debug) << "chunk (" << id << "): content-type: " << g_mime_content_type_to_string (content_type);
+      LOG (debug) << "chunk (" << id << "): content-type: " << g_mime_content_type_get_mime_type (content_type);
     } else {
       LOG (warn) << "chunk (" << id << "): content-type not specified, could be mime-message.";
     }
@@ -241,14 +247,14 @@ namespace Astroid {
 
     GMimeStream * content_stream = NULL;
 
-    if (GMIME_IS_PART(mime_object)) {
+    if (mime_object != NULL && GMIME_IS_PART(mime_object)) {
       LOG (debug) << "chunk: body: part";
 
 
       if (g_mime_content_type_is_type (content_type, "text", "plain")) {
         LOG (debug) << "chunk: plain text (out html: " << html << ")";
 
-        GMimeDataWrapper * content = g_mime_part_get_content_object (
+        GMimeDataWrapper * content = g_mime_part_get_content (
             (GMimePart *) mime_object);
 
         const char * charset = g_mime_object_get_content_type_parameter(GMIME_OBJECT(mime_object), "charset");
@@ -304,7 +310,7 @@ namespace Astroid {
         } else {
 
           /* CRLF to LF */
-          GMimeFilter * crlf_filter = g_mime_filter_crlf_new (false, false);
+          GMimeFilter * crlf_filter = g_mime_filter_dos2unix_new (false);
           g_mime_stream_filter_add (GMIME_STREAM_FILTER (filter_stream),
               crlf_filter);
           g_object_unref (crlf_filter);
@@ -318,7 +324,7 @@ namespace Astroid {
       } else if (g_mime_content_type_is_type (content_type, "text", "html")) {
         LOG (debug) << "chunk: html text";
 
-        GMimeDataWrapper * content = g_mime_part_get_content_object (
+        GMimeDataWrapper * content = g_mime_part_get_content (
             (GMimePart *) mime_object);
 
         const char * charset = g_mime_object_get_content_type_parameter(GMIME_OBJECT(mime_object), "charset");
@@ -443,13 +449,13 @@ namespace Astroid {
 
     if (GMIME_IS_PART (mime_object)) {
 
-      GMimeDataWrapper * content = g_mime_part_get_content_object (GMIME_PART (mime_object));
+      GMimeDataWrapper * content = g_mime_part_get_content (GMIME_PART (mime_object));
 
       g_mime_data_wrapper_write_to_stream (content, mem);
 
     } else {
 
-      g_mime_object_write_to_stream (mime_object, mem);
+      g_mime_object_write_to_stream (mime_object, NULL, mem);
       g_mime_stream_flush (mem);
 
     }
@@ -463,7 +469,7 @@ namespace Astroid {
 
     g_object_unref (mem);
 
-    LOG (info) << "chunk: contents: loaded " << data->size () << " bytes in " << ( (clock () - t0) * 1000.0 / CLOCKS_PER_SEC ) << " s.";
+    LOG (info) << "chunk: contents: loaded " << data->size () << " bytes in " << ( (clock () - t0) * 1000.0 / CLOCKS_PER_SEC ) << " ms.";
 
     return data;
   }
@@ -630,7 +636,8 @@ namespace Astroid {
   }
 
   ustring Chunk::get_content_type () {
-    return ustring (g_mime_content_type_to_string (content_type));
+    if (content_type == NULL) return "";
+    else return ustring (g_mime_content_type_get_mime_type (content_type));
   }
 
   void Chunk::save () {
@@ -643,6 +650,7 @@ namespace Astroid {
 
     dialog.set_do_overwrite_confirmation (true);
     dialog.set_current_name (Utils::safe_fname (get_filename ()));
+    dialog.set_current_folder (astroid->runtime_paths ().save_dir.c_str ());
 
     int result = dialog.run ();
 
@@ -654,6 +662,8 @@ namespace Astroid {
 
           /* the dialog asks whether to overwrite or not */
           save_to (fname, true);
+
+          astroid->runtime_paths ().save_dir = bfs::path (dialog.get_current_folder ());
 
           break;
         }
@@ -679,7 +689,7 @@ namespace Astroid {
   Chunk::~Chunk () {
     LOG (debug) << "chunk: deconstruct.";
     // these should not be unreffed.
-    // g_object_unref (mime_object);
+    if (mime_object) g_object_unref (mime_object);
     // g_object_unref (content_type);
   }
 }

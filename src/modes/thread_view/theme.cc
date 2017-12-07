@@ -107,8 +107,6 @@ namespace Astroid {
     sass_option_set_precision(options, 1);
     sass_option_set_source_comments(options, true);
 
-    sass_file_context_set_options(file_ctx, options);
-
     int status = sass_compile_file_context (file_ctx);
 
     if (status != 0) {

@@ -19,32 +19,7 @@ namespace Astroid {
   std::vector<Key>  Keybindings::user_bindings;
   std::vector<std::pair<Key, ustring>> Keybindings::user_run_bindings;
 
-  std::map<guint, ustring> Keybindings::keyval_to_keynames = {
-    { GDK_KEY_Down,   "Down" },
-    { GDK_KEY_Up,     "Up" },
-    { GDK_KEY_Tab,    "Tab" },
-    { GDK_KEY_ISO_Left_Tab, "ISO_Left_Tab" },
-    { GDK_KEY_Home,   "Home" },
-    { GDK_KEY_End,    "End" },
-    { GDK_KEY_Return, "Return" },
-    { GDK_KEY_KP_Enter, "KP_Enter" },
-    { GDK_KEY_Page_Up, "Page_Up" },
-    { GDK_KEY_Page_Down, "Page_Down" },
-    { GDK_KEY_Escape, "Esc" },
-    { GDK_KEY_equal, "Equal" },
-    { GDK_KEY_minus, "Minus" },
-    { GDK_KEY_space, "Space" },
-  };
-
-  std::map<ustring, guint> Keybindings::keynames_to_keyval;
-
   void Keybindings::init () {
-    /* build keynames_to_keyval */
-    keynames_to_keyval.clear ();
-    for (auto &s : keyval_to_keynames) {
-      keynames_to_keyval.insert (std::make_pair (s.second, s.first));
-    }
-
     if (!user_bindings_loaded) {
       user_bindings_loaded = true;
 
@@ -102,6 +77,12 @@ namespace Astroid {
 
           std::size_t fnd;
 
+          /* cut off comments appended to the end of the line */
+          fnd = line.find ("#");
+          if (fnd != std::string::npos) {
+            line = line.substr (0, fnd);
+          }
+
           /* check if this is a run line */
           fnd = line.find (".run");
           if (fnd != std::string::npos) {
@@ -147,6 +128,10 @@ namespace Astroid {
             UstringUtils::trim (target);
 
             Key k (keyspec);
+            if (k.key == GDK_KEY_VoidSymbol) {
+              LOG (error) << "ky: user bindings: invalid key name: " << keyspec;
+              continue;
+            }
 
             LOG (debug) << "ky: run: " << name << "(" << k.str () << "): " << target;
 
@@ -159,21 +144,34 @@ namespace Astroid {
             continue;
           }
 
-          /* cut off comments appended to the end of the line */
-          fnd = line.find ("#");
-          if (fnd != std::string::npos) {
-            line = line.substr (0, fnd);
-          }
-
           LOG (debug) << "ky: parsing line: " << line;
           vector<ustring> parts = VectorUtils::split_and_trim (line, "=");
 
-          if (parts.size () != 2) {
-            LOG (error) << "ky: user bindings: too many parts in: " << line;
+          ustring spec;
+
+          if (parts.size () == 1) {
+            spec = "";
+          } else if (parts.size () > 2 || parts.empty ()) {
+            LOG (error) << "ky: user bindings: invalid number of parts in: " << line;
             continue;
+          } else {
+            spec = parts[1];
           }
 
-          Key k = Key (parts[1]);
+          UstringUtils::trim (spec);
+
+          Key k;
+
+          if (spec.empty ()) {
+            k = UnboundKey ();
+          } else {
+            k = Key (spec);
+            if (k.key == GDK_KEY_VoidSymbol) {
+              LOG (error) << "ky: user bindings: invalid key name: " << spec;
+              continue;
+            }
+          }
+
           k.name = parts[0];
 
           user_bindings.push_back (k);
@@ -194,7 +192,7 @@ namespace Astroid {
   }
 
   ustring Keybindings::short_help () {
-    ustring h;
+    ustring h = "<b>" + title + "</b>: ";
 
     bool first = true;
 
@@ -315,6 +313,12 @@ namespace Astroid {
     if (res != user_bindings.end ()) {
       userdefined = true;
       Key uk = (*res);
+
+      if (uk.unbound) {
+        /* user defined and unbound, key binding is dropped */
+        LOG (debug) << "ky: key: " << k.str () << " dropped.";
+        return;
+      }
 
       k.key  = uk.key;
       k.ctrl = uk.ctrl;
@@ -547,6 +551,23 @@ namespace Astroid {
     return false;
   }
 
+  bool Keybindings::handle (ustring name) {
+    if (keys.empty ()) return false;
+
+    auto s = std::find_if (keys.begin (), keys.end (), [&](std::pair<Key, std::function<bool (Key)>> p) { return p.first.name == name; });
+
+    if (s != keys.end ()) {
+      if (!s->first.isalias) {
+        return s->second (s->first);
+      } else {
+        auto m = keys.find (*(s->first.master_key));
+        return m->second (s->first);
+      }
+    } else {
+      throw keyspec_error (ustring::compose ("tried to handle unknown key name: %1", name).c_str());
+    }
+  }
+
   // }}}
 
   /* Key {{{ */
@@ -558,7 +579,8 @@ namespace Astroid {
     } else {
       /* check if key is in map */
       UstringUtils::trim (k);
-      guint kk = Keybindings::keynames_to_keyval.at (k);
+      const char * k_str = k.c_str ();
+      guint kk = gdk_keyval_from_name (k_str);
 
       return kk;
     }
@@ -678,11 +700,12 @@ namespace Astroid {
     if (isgraph (k)) {
       s += k;
     } else {
-      try {
-        ustring kk = Keybindings::keyval_to_keynames.at (key);
-        s += kk;
-      } catch (std::exception &ex) {
-        s += ustring::compose ("%1", key);
+      gchar * c = gdk_keyval_name (key);
+      if (c == NULL) {
+        LOG (error) << "invalid key: " << key << " for: " << name;
+        throw keyspec_error ("invalid key");
+      } else {
+        s += ustring (c);
       }
     }
 

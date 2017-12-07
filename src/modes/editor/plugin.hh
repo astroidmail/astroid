@@ -1,5 +1,7 @@
 # pragma once
 
+# ifndef DISABLE_EMBEDDED
+
 # include <gtkmm/socket.h>
 
 # include "editor.hh"
@@ -11,7 +13,6 @@ namespace Astroid {
 
     public:
       Plugin (EditMessage * em, ustring server);
-      ~Plugin ();
 
       bool ready () override;
       bool started () override;
@@ -19,6 +20,8 @@ namespace Astroid {
       void stop () override;
 
       void focus () override;
+
+      Gtk::Box bin;
 
     protected:
       EditMessage * em;
@@ -43,4 +46,6 @@ namespace Astroid {
       std::string editor_args;
   };
 }
+
+# endif
 

@@ -10,6 +10,7 @@
 
 # include "config.hh"
 # include "poll.hh"
+# include "utils/utils.hh"
 
 using namespace std;
 using namespace boost::filesystem;
@@ -48,7 +49,7 @@ namespace Astroid {
 
       path cur_path (current_path() );
 
-      std_paths.home = cur_path / path("test/test_home");
+      std_paths.home = cur_path / path("tests/test_home");
 
       LOG (debug) << "cf: using home and config_dir directory: " << std_paths.home.c_str ();
 
@@ -106,6 +107,9 @@ namespace Astroid {
       std_paths.runtime_dir = path(runtime) / path("astroid");
     }
 
+    /* save to and attach from directory */
+    std_paths.save_dir   = std_paths.home;
+    std_paths.attach_dir = std_paths.home;
   }
 
   ptree Config::setup_default_config (bool initial) {
@@ -115,6 +119,9 @@ namespace Astroid {
     default_config.put ("astroid.notmuch_config" , nm_cfg);
 
     default_config.put ("astroid.debug.dryrun_sending", false);
+
+    /* only show hints with a level higher than this */
+    default_config.put ("astroid.hints.level", 0);
 
     if (initial) {
       /* initial default options - these are only set when a new
@@ -129,7 +136,7 @@ namespace Astroid {
       default_config.put ("accounts.charlie.email", "root@localhost");
       default_config.put ("accounts.charlie.gpgkey", "");
       default_config.put ("accounts.charlie.always_gpg_sign", false);
-      default_config.put ("accounts.charlie.sendmail", "msmtp -t");
+      default_config.put ("accounts.charlie.sendmail", "msmtp -i -t");
       default_config.put ("accounts.charlie.default", true);
       default_config.put ("accounts.charlie.save_sent", false);
       default_config.put ("accounts.charlie.save_sent_to",
@@ -139,9 +146,13 @@ namespace Astroid {
       default_config.put ("accounts.charlie.save_drafts_to",
           "/home/root/Mail/drafts/");
 
+      default_config.put ("accounts.charlie.signature_separate", false);
       default_config.put ("accounts.charlie.signature_file", "");
+      default_config.put ("accounts.charlie.signature_file_markdown", "");
       default_config.put ("accounts.charlie.signature_default_on", true);
       default_config.put ("accounts.charlie.signature_attach", false);
+
+      default_config.put ("accounts.charlie.select_query", "");
 
       /* default searches, also only set if initial */
       default_config.put("startup.queries.inbox", "tag:inbox");
@@ -175,20 +186,33 @@ namespace Astroid {
 
 
     /* editor */
-    default_config.put ("editor.cmd", "gvim -geom 10x10 --servername %2 --socketid %3 -f -c 'set ft=mail' '+set fileencoding=utf-8' '+set ff=unix' '+set enc=utf-8' %1");
     // also useful: '+/^\\s*\\n/' '+nohl'
-    //
+# ifndef DISABLE_EMBEDDED
+    default_config.put ("editor.cmd", "gvim -geom 10x10 --servername %2 --socketid %3 -f -c 'set ft=mail' '+set fileencoding=utf-8' '+set ff=unix' '+set enc=utf-8' '+set fo+=w' %1");
+    default_config.put ("editor.external_editor", false); // should be true on Wayland
+# else
+    default_config.put ("editor.cmd", "gvim -f -c 'set ft=mail' '+set fileencoding=utf-8' '+set enc=utf-8' '+set ff=unix' '+set fo+=w' %1");
+    default_config.put ("editor.external_editor", true); // should be true on Wayland
+# endif
+
     default_config.put ("editor.charset", "utf-8");
     default_config.put ("editor.save_draft_on_force_quit", true);
 
+    default_config.put ("editor.attachment_words", "attach");
+    default_config.put ("editor.attachment_directory", "~");
+
+    default_config.put ("editor.markdown_processor", "marked");
+
     /* mail composition */
     default_config.put ("mail.reply.quote_line", "Excerpts from %1's message of %2:"); // %1 = author, %2 = pretty_verbose_date
+    default_config.put ("mail.reply.mailinglist_reply_to_sender", true);
     default_config.put ("mail.forward.quote_line", "Forwarding %1's message of %2:"); // %1 = author, %2 = pretty_verbose_date
     default_config.put ("mail.forward.disposition", "inline");
     default_config.put ("mail.sent_tags", "sent");
     default_config.put ("mail.message_id_fqdn", ""); // custom fqdn for the message id: default: local hostname
     default_config.put ("mail.message_id_user", ""); // custom user for the message id: default: 'astroid'
     default_config.put ("mail.user_agent", "default");
+    default_config.put ("mail.send_delay", 2); // wait seconds before sending, allowing to cancel
 
     /* polling */
     default_config.put ("poll.interval", Poll::DEFAULT_POLL_INTERVAL); // seconds
@@ -209,17 +233,9 @@ namespace Astroid {
      *   command. */
     default_config.put ("thread_view.open_external_link", "xdg-open");
 
+    default_config.put ("thread_view.default_save_directory", "~");
+
     default_config.put ("thread_view.indent_messages", false);
-
-    /* mathjax */
-    default_config.put ("thread_view.mathjax.enable", true);
-
-    // MathJax.js will be added to this uri when the script is loaded
-    default_config.put ("thread_view.mathjax.uri_prefix", "https://cdn.mathjax.org/mathjax/2.6-latest/");
-
-    // a comma-separated list of tags which mathjax is enabled for, if empty,
-    // allow for all messages.
-    default_config.put ("thread_view.mathjax.for_tags", "");
 
     /* code prettify */
     default_config.put ("thread_view.code_prettify.enable", true);
@@ -237,6 +253,9 @@ namespace Astroid {
 
     /* mark unread */
     default_config.put ("thread_view.mark_unread_delay", .5);
+
+    /* expand flagged messages by default */
+    default_config.put ("thread_view.expand_flagged", true);
 
     /* crypto */
     default_config.put ("crypto.gpg.path", "gpg2");
@@ -263,8 +282,10 @@ namespace Astroid {
       config = setup_default_config (true);
       config.put ("poll.interval", 0);
       config.put ("accounts.charlie.gpgkey", "gaute@astroidmail.bar");
-      std::string test_nmcfg_path = path(current_path() / path ("test/mail/test_config")).string();
+      config.put ("mail.send_delay", 0);
+      std::string test_nmcfg_path = path(current_path() / path ("tests/mail/test_config")).string();
       boost::property_tree::read_ini (test_nmcfg_path, notmuch_config);
+      has_notmuch_config = true;
       return;
     }
 
@@ -302,10 +323,23 @@ namespace Astroid {
       }
     }
 
+    /* load save_dir */
+    std_paths.save_dir = Utils::expand(bfs::path (config.get<string>("thread_view.default_save_directory")));
+    run_paths.save_dir = std_paths.save_dir;
+
+    /* load attach_dir */
+    std_paths.attach_dir = Utils::expand(bfs::path (config.get<string>("editor.attachment_directory")));
+    run_paths.attach_dir = std_paths.attach_dir;
+
     /* read notmuch config */
-    boost::property_tree::read_ini (
-      config.get<std::string> ("astroid.notmuch_config"),
-      notmuch_config);
+    if (is_regular_file (config.get<std::string> ("astroid.notmuch_config"))) {
+      boost::property_tree::read_ini (
+        config.get<std::string> ("astroid.notmuch_config"),
+        notmuch_config);
+      has_notmuch_config = true;
+    } else {
+      has_notmuch_config = false;
+    }
   }
 
 
@@ -369,7 +403,7 @@ namespace Astroid {
       LOG (warn) << "config: astroid now reads standard notmuch options from notmuch config, it is configured through: 'astroid.notmuch_config' and is now set to the default: ~/.notmuch-config. please validate!";
     }
 
-    if (version < 6) {
+    if (version < 10) {
       /* check accounts signature */
       ptree apt = config.get_child ("accounts");
 
@@ -415,6 +449,42 @@ namespace Astroid {
 
             ustring key = ustring::compose ("accounts.%1.always_gpg_sign", kv.first);
             config.put (key.c_str (), false);
+          }
+        }
+
+        if (version < 8) {
+          try {
+
+            ustring ss = kv.second.get<string> ("signature_separate");
+
+          } catch (const boost::property_tree::ptree_bad_path &ex) {
+
+            ustring key = ustring::compose ("accounts.%1.signature_separate", kv.first);
+            config.put (key.c_str (), false);
+          }
+        }
+
+        if (version < 9) {
+          try {
+
+            ustring ss = kv.second.get<string> ("select_query");
+
+          } catch (const boost::property_tree::ptree_bad_path &ex) {
+
+            ustring key = ustring::compose ("accounts.%1.select_query", kv.first);
+            config.put (key.c_str (), "");
+          }
+        }
+
+        if (version < 10) {
+          try {
+
+            ustring sto = kv.second.get<string> ("signature_file_markdown");
+
+          } catch (const boost::property_tree::ptree_bad_path &ex) {
+
+            ustring key = ustring::compose ("accounts.%1.signature_file_markdown", kv.first);
+            config.put (key.c_str (), "");
           }
         }
       }

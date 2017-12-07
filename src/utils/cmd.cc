@@ -30,7 +30,12 @@ namespace Astroid {
     int exit;
 
     string _cmd = cmd;
-    Glib::spawn_command_line_sync (_cmd, &_stdout, &_stderr, &exit);
+    try {
+      Glib::spawn_command_line_sync (_cmd, &_stdout, &_stderr, &exit);
+    } catch (Glib::SpawnError &ex) {
+      if (exit == 0) exit = -1;
+      LOG (error) << "cmd: " << prefix << "failed to execute: '" << _cmd << "': " << ex.what ();
+    }
 
     if (!_stdout.empty ()) {
       for (auto &l : VectorUtils::split_and_trim (_stdout, "\n")) {
@@ -44,7 +49,7 @@ namespace Astroid {
       }
     }
 
-    return exit;
+    return (exit == 0);
   }
 
   ustring Cmd::substitute (const ustring _cmd) {

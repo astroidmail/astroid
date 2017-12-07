@@ -37,6 +37,10 @@ namespace Astroid {
 
       void reload ();
       void refresh_stats ();
+    private:
+      void refresh_stats_db (Db *);
+      bool needs_refresh = false;
+    public:
       bool show_all_history = false;
 
       int page_jump_rows;
@@ -56,6 +60,7 @@ namespace Astroid {
             add (m_col_name);
             add (m_col_query);
             add (m_col_unread_messages);
+            add (m_col_unread_messages_s);
             add (m_col_total_messages);
           }
 
@@ -64,7 +69,8 @@ namespace Astroid {
           Gtk::TreeModelColumn<bool>          m_col_history;
           Gtk::TreeModelColumn<Glib::ustring> m_col_name;
           Gtk::TreeModelColumn<Glib::ustring> m_col_query;
-          Gtk::TreeModelColumn<Glib::ustring> m_col_unread_messages;
+          Gtk::TreeModelColumn<int>           m_col_unread_messages;
+          Gtk::TreeModelColumn<Glib::ustring> m_col_unread_messages_s;
           Gtk::TreeModelColumn<Glib::ustring> m_col_total_messages;
 
       };

@@ -2,6 +2,7 @@
 # include "db.hh"
 
 # include "query_loader.hh"
+# include "thread_index.hh"
 # include "thread_index_list_view.hh"
 # include "config.hh"
 # include "actions/action_manager.hh"
@@ -43,8 +44,8 @@ namespace Astroid {
     queue_has_data.connect (
         sigc::mem_fun (this, &QueryLoader::to_list_adder));
 
-    make_stats.connect (
-        sigc::mem_fun (this, &QueryLoader::refresh_stats));
+    deferred_threads_d.connect (
+        sigc::mem_fun (this, &QueryLoader::update_deferred_changed_threads));
 
     astroid->actions->signal_thread_changed ().connect (
         sigc::mem_fun (this, &QueryLoader::on_thread_changed));
@@ -91,52 +92,37 @@ namespace Astroid {
     reload ();
   }
 
-  void QueryLoader::refresh_stats () {
+  void QueryLoader::refresh_stats_db (Db * db) {
     LOG (debug) << "ql: refresh stats..";
-    Db db (Db::DATABASE_READ_ONLY);
 
     notmuch_status_t st = NOTMUCH_STATUS_SUCCESS;
 
-    notmuch_query_t * query_t =  notmuch_query_create (db.nm_db, query.c_str ());
-    for (ustring & t : db.excluded_tags) {
+    notmuch_query_t * query_t =  notmuch_query_create (db->nm_db, query.c_str ());
+    for (ustring & t : db->excluded_tags) {
       notmuch_query_add_tag_exclude (query_t, t.c_str());
     }
     notmuch_query_set_omit_excluded (query_t, NOTMUCH_EXCLUDE_TRUE);
-# ifdef HAVE_QUERY_COUNT_THREADS_ST
-    st = notmuch_query_count_messages_st (query_t, &total_messages); // destructive
+    st = notmuch_query_count_messages (query_t, &total_messages); // destructive
     if (st != NOTMUCH_STATUS_SUCCESS) total_messages = 0;
-# else
-    total_messages = notmuch_query_count_messages (query_t);
-# endif
     notmuch_query_destroy (query_t);
 
     ustring unread_q_s = "(" + query + ") AND tag:unread";
-    notmuch_query_t * unread_q = notmuch_query_create (db.nm_db, unread_q_s.c_str());
-    for (ustring & t : db.excluded_tags) {
+    notmuch_query_t * unread_q = notmuch_query_create (db->nm_db, unread_q_s.c_str());
+    for (ustring & t : db->excluded_tags) {
       notmuch_query_add_tag_exclude (unread_q, t.c_str());
     }
     notmuch_query_set_omit_excluded (unread_q, NOTMUCH_EXCLUDE_TRUE);
-# ifdef HAVE_QUERY_COUNT_THREADS_ST
-    st = notmuch_query_count_messages_st (unread_q, &unread_messages); // destructive
+    st = notmuch_query_count_messages (unread_q, &unread_messages); // destructive
     if (st != NOTMUCH_STATUS_SUCCESS) unread_messages = 0;
-# else
-    unread_messages = notmuch_query_count_messages (unread_q);
-# endif
     notmuch_query_destroy (unread_q);
-
-    if (!in_destructor) stats_ready.emit ();
-
-    waiting_stats = false;
   }
 
   void QueryLoader::loader () {
     std::lock_guard<std::mutex> loader_lk (loader_m);
 
-    make_stats ();
-
-    /* important: we cannot safely output debug info from this thread */
-
     Db db (Db::DATABASE_READ_ONLY);
+    refresh_stats_db (&db);
+    if (!in_destructor) stats_ready.emit ();
 
     /* set up query */
     notmuch_query_t * nmquery;
@@ -152,11 +138,7 @@ namespace Astroid {
 
     /* slow */
     notmuch_status_t st = NOTMUCH_STATUS_SUCCESS;
-# ifdef HAVE_QUERY_THREADS_ST
-    st = notmuch_query_search_threads_st (nmquery, &threads);
-# else
-    threads = notmuch_query_search_threads (nmquery);
-# endif
+    st = notmuch_query_search_threads (nmquery, &threads);
 
     if (st != NOTMUCH_STATUS_SUCCESS) {
       LOG (error) << "ql: could not get threads for query: " << query;
@@ -197,10 +179,8 @@ namespace Astroid {
     }
 
     /* closing query */
-    notmuch_threads_destroy (threads);
+    if (st == NOTMUCH_STATUS_SUCCESS) notmuch_threads_destroy (threads);
     notmuch_query_destroy (nmquery);
-
-    run = false;
 
     if (!in_destructor)
       stats_ready.emit (); // update loading status
@@ -208,6 +188,11 @@ namespace Astroid {
     // catch any remaining entries
     if (!in_destructor)
       queue_has_data.emit ();
+
+    run = false; // on_thread_changed will not check lock
+
+    if (!in_destructor)
+      deferred_threads_d.emit ();
   }
 
   void QueryLoader::to_list_adder () {
@@ -234,6 +219,21 @@ namespace Astroid {
 
       if ((loaded_threads % 100) == 0) {
         LOG (debug) << "ql: loaded " << loaded_threads << " threads.";
+        if (!in_destructor && !list_view->filter_txt.empty()) stats_ready.emit ();
+      }
+    }
+  }
+
+  void QueryLoader::update_deferred_changed_threads () {
+    /* lock and check for changed threads */
+    if (!in_destructor) {
+      Db db (Db::DATABASE_READ_ONLY);
+
+      while (!changed_threads.empty ()) {
+        ustring tid = changed_threads.front ();
+        changed_threads.pop ();
+        LOG (debug) << "ql: deferred update of: " << tid;
+        on_thread_changed (&db, tid);
       }
     }
   }
@@ -256,6 +256,12 @@ namespace Astroid {
     if (in_destructor) return;
 
     LOG (info) << "ql (" << id << "): " << query << ", got changed thread signal: " << thread_id;
+
+    if (loading ()) {
+      LOG (debug) << "ql: still loading, deferring thread_changed to until load is done.";
+      changed_threads.push (thread_id);
+      return;
+    }
 
     /* we now have three options:
      * - a new thread has been added (unlikely)
@@ -364,9 +370,9 @@ namespace Astroid {
       }
     }
 
-    if (changed && !waiting_stats) {
-      waiting_stats = true;
-      make_stats.emit ();
+    if (changed) {
+      refresh_stats_db (db); // we should already be running on the gui thread
+      list_view->thread_index->on_stats_ready ();
     }
   }
 }

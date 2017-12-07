@@ -75,7 +75,7 @@ namespace Astroid {
 
       int left_icons_size;
       int left_icons_width;
-      const int left_icons_width_n = 3;
+      const int left_icons_width_n = 2;
       const int left_icons_padding = 1;
       int padding;
 
@@ -103,6 +103,8 @@ namespace Astroid {
       ustring subject_color; // configurable
       ustring subject_color_selected; // configurable
       ustring background_color_selected; // configurable
+      ustring background_color_marked          = "#fff584";
+      ustring background_color_marked_selected = "#bcb559";
 
       void render_background (
           const ::Cairo::RefPtr< ::Cairo::Context>&cr,

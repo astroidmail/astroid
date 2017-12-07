@@ -159,6 +159,8 @@ namespace Astroid {
   }
 
   void ActionManager::close () {
+    if (!run) return;
+
     LOG (debug) << "actions: cleaning up remaining actions..";
     emit = false;
 
@@ -172,7 +174,7 @@ namespace Astroid {
   }
 
 
-  /* signals */
+  /* thread signals */
   ActionManager::type_signal_thread_updated
     ActionManager::signal_thread_updated ()
   {

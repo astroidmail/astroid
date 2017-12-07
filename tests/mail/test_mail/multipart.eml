@@ -1,0 +1,78 @@
+Date: Wed, 07 Dec 2016 12:36:13 -0800
+From: Hugo Roy <notifications@github.com>
+Reply-To: astroidmail/astroid <reply+0000ddfb9f3582ff57a48fd50b73439b980ffa0333c12f9a92cf00000001146034bd92a169ce0b85458e@reply.github.com>
+To: astroidmail/astroid <astroid@noreply.github.com>
+Cc: Gaute Hope <eg@gaute.vetsj.com>, 
+ Comment <comment@noreply.github.com>
+Message-ID: <astroidmail/astroid/issues/237/265565752@github.com>
+In-Reply-To: <astroidmail/astroid/issues/237@github.com>
+References: <astroidmail/astroid/issues/237@github.com>
+Subject: Re: [astroidmail/astroid] Email as attachment (#237)
+Mime-Version: 1.0
+Content-Type: multipart/alternative;
+ boundary="--==_mimepart_584872bdbc081_555e3fd4d9ccf13018989";
+ charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Precedence: list
+X-GitHub-Sender: hugoroy
+X-GitHub-Recipient: gauteh
+X-GitHub-Reason: comment
+List-ID: astroidmail/astroid <astroid.astroidmail.github.com>
+List-Archive: https://github.com/astroidmail/astroid
+List-Post: <mailto:reply+0000ddfb9f3582ff57a48fd50b73439b980ffa0333c12f9a92cf00000001146034bd92a169ce0b85458e@reply.github.com>
+List-Unsubscribe: <mailto:unsub+0000ddfb9f3582ff57a48fd50b73439b980ffa0333c12f9a92cf00000001146034bd92a169ce0b85458e@reply.github.com>,
+ <https://github.com/notifications/unsubscribe/AADd-2T8IoW83M8xkHcuGibEXcKTFN5Dks5rFxi9gaJpZM4LDRym>
+X-Auto-Response-Suppress: All
+X-GitHub-Recipient-Address: eg@gaute.vetsj.com
+X-SG-EID: ZSukC93qdq8bK9Ka8+oNiPoz7qEGBUQTfFlUCp/zfIuHPYw4ucWbbS+g7q7e2datMOWuhg/z32ISN5
+ uU5+pgAIlvrdURotyKz4w3NOtihxWMbwa6yMKIM26nrTQ1L6ojW21fTTkM16F67Tf31AEebjQ25eP3
+ PFY48pu/i4uZGHLXXQgMWEEfqNQgz7BE6D7PXSnD2nADR5L1ZSr3XLXg9aqzApvg9PwfcsSTu2KEkf
+ 4=
+X-Keywords: \Important,\Inbox,dev/astroid
+
+----==_mimepart_584872bdbc081_555e3fd4d9ccf13018989
+Content-Type: text/plain;
+ charset=UTF-8
+Content-Transfer-Encoding: 7bit
+
+1. save an email as file.eml
+2. write a new email
+3. attach file.eml
+4. save as draft
+4. quit astroid
+5. open draft again
+6. edit the draft
+7. here it is.
+
+
+-- 
+You are receiving this because you commented.
+Reply to this email directly or view it on GitHub:
+https://github.com/astroidmail/astroid/issues/237#issuecomment-265565752
+----==_mimepart_584872bdbc081_555e3fd4d9ccf13018989
+Content-Type: text/html;
+ charset=UTF-8
+Content-Transfer-Encoding: 7bit
+
+<ol>
+<li>save an email as file.eml</li>
+<li>write a new email</li>
+<li>attach file.eml</li>
+<li>save as draft</li>
+<li>quit astroid</li>
+<li>open draft again</li>
+<li>edit the draft</li>
+<li>here it is.</li>
+</ol>
+
+<p style="font-size:small;-webkit-text-size-adjust:none;color:#666;">&mdash;<br />You are receiving this because you commented.<br />Reply to this email directly, <a href="https://github.com/astroidmail/astroid/issues/237#issuecomment-265565752">view it on GitHub</a>, or <a href="https://github.com/notifications/unsubscribe-auth/AADd-0c4m0Nhf4P6o45WuEotg4D-qSlLks5rFxi9gaJpZM4LDRym">mute the thread</a>.<img alt="" height="1" src="https://github.com/notifications/beacon/AADd-0rYjXk4XikWgZ7UeYg-ejQKdhY6ks5rFxi9gaJpZM4LDRym.gif" width="1" /></p>
+<div itemscope itemtype="http://schema.org/EmailMessage">
+<div itemprop="action" itemscope itemtype="http://schema.org/ViewAction">
+  <link itemprop="url" href="https://github.com/astroidmail/astroid/issues/237#issuecomment-265565752"></link>
+  <meta itemprop="name" content="View Issue"></meta>
+</div>
+<meta itemprop="description" content="View this Issue on GitHub"></meta>
+</div>
+
+<script type="application/json" data-scope="inboxmarkup">{"api_version":"1.0","publisher":{"api_key":"05dde50f1d1a384dd78767c55493e4bb","name":"GitHub"},"entity":{"external_key":"github/astroidmail/astroid","title":"astroidmail/astroid","subtitle":"GitHub repository","main_image_url":"https://cloud.githubusercontent.com/assets/143418/17495839/a5054eac-5d88-11e6-95fc-7290892c7bb5.png","avatar_image_url":"https://cloud.githubusercontent.com/assets/143418/15842166/7c72db34-2c0b-11e6-9aed-b52498112777.png","action":{"name":"Open in GitHub","url":"https://github.com/astroidmail/astroid"}},"updates":{"snippets":[{"icon":"PERSON","message":"@hugoroy in #237: 1. save an email as file.eml\r\n2. write a new email\r\n3. attach file.eml\r\n4. save as draft\r\n4. quit astroid\r\n5. open draft again\r\n6. edit the draft\r\n7. here it is.\r\n"}],"action":{"name":"View Issue","url":"https://github.com/astroidmail/astroid/issues/237#issuecomment-265565752"}}}</script>
+----==_mimepart_584872bdbc081_555e3fd4d9ccf13018989--

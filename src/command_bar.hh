@@ -3,8 +3,7 @@
  * is sub classed from Gtk::SearchBar, provides a command and search bar
  * with an entry that takes completions.
  *
- * will in different modes accept full searches, buffer searches, commands
- * or arguments for commands.
+ * will in different modes accept full searches, buffer searches.
  *
  */
 
@@ -23,9 +22,10 @@ namespace Astroid {
       enum CommandMode {
         Search = 0,
         SearchText,
-        //Generic,
+        Filter,
         Tag,        /* apply or remove tags */
         DiffTag,    /* apply or remove tags using + or - */
+        AttachMids,
       };
 
       CommandBar ();
@@ -44,16 +44,16 @@ namespace Astroid {
 
       void enable_command (CommandMode, ustring cmd, std::function<void(ustring)>);
       void enable_command (CommandMode, ustring title, ustring cmd, std::function<void(ustring)>);
-      void disable_command ();
-
-      //void handle_command (ustring);
 
       ustring get_text ();
-      void set_text (ustring);
+      void    set_text (ustring);
+
+      void    start_generic (ustring);
 
       /* relay to search bar event handler */
       bool command_handle_event (GdkEventKey *);
       bool entry_key_press (GdkEventKey *);
+      void entry_changed ();
 
     private:
       void reset_bar ();
@@ -99,12 +99,19 @@ namespace Astroid {
           ModelColumns m_columns;
 
           ustring break_on = ", ";
-          ustring get_partial_tag (ustring, ustring_sz&);
+          ustring get_partial_tag (ustring_sz&);
 
           bool match (const ustring&, const
               Gtk::TreeModel::const_iterator&) override;
 
           bool on_match_selected(const Gtk::TreeModel::iterator& iter) override;
+
+          /* color tags */
+          static Gdk::RGBA  canvas_color;
+          static bool       canvas_color_set;
+
+          virtual void color_tags ();
+          void color_tag (ustring tg, ustring_sz start, Pango::AttrList &attrs);
       };
 
       refptr<TagCompletion> tag_completion;
@@ -112,7 +119,7 @@ namespace Astroid {
       /********************
        * Completer for diff Tag editing:
        *
-       * +tag1 -tag1
+       * +tag1 -tag2
        ********************
        */
 
@@ -120,34 +127,6 @@ namespace Astroid {
       class DiffTagCompletion : public TagCompletion {
         public:
           DiffTagCompletion ();
-
-          void load_tags (std::vector<ustring>);
-          std::vector<ustring> tags; // must be sorted
-
-          // tree model columns, for the EntryCompletion's filter model
-          class ModelColumns : public Gtk::TreeModel::ColumnRecord
-          {
-            public:
-
-              ModelColumns ()
-              { add(m_tag); }
-
-              Gtk::TreeModelColumn<Glib::ustring> m_tag;
-          };
-
-          ModelColumns m_columns;
-
-          /* ustring break_on = "+- "; */
-
-          /*
-          ustring get_partial_tag (ustring, ustring_sz&);
-
-          bool match (const ustring&, const
-              Gtk::TreeModel::const_iterator&) override;
-
-          bool on_match_selected(const Gtk::TreeModel::iterator& iter) override;
-          */
-
       };
       refptr<DiffTagCompletion> difftag_completion;
 
@@ -157,7 +136,7 @@ namespace Astroid {
        ********************/
       void start_searching (ustring);
 
-      class SearchCompletion : public GenericCompletion {
+      class SearchCompletion : public TagCompletion {
         public:
           SearchCompletion ();
 
@@ -167,29 +146,14 @@ namespace Astroid {
           unsigned int history_pos;
           std::vector <ustring> history;
 
-
-          void load_tags (std::vector<ustring>);
-          std::vector<ustring> tags; // must be sorted
-
-          // tree model columns, for the EntryCompletion's filter model
-          class ModelColumns : public Gtk::TreeModel::ColumnRecord
-          {
-            public:
-
-              ModelColumns ()
-              { add(m_tag); }
-
-              Gtk::TreeModelColumn<Glib::ustring> m_tag;
-          };
-
-          ModelColumns m_columns;
-
-          bool get_partial_tag (ustring, ustring&, ustring_sz&);
+          bool get_partial_tag (ustring&, ustring_sz&);
 
           bool match (const ustring&, const
               Gtk::TreeModel::const_iterator&) override;
 
           bool on_match_selected(const Gtk::TreeModel::iterator& iter) override;
+
+          void color_tags () override;
       };
 
       refptr<SearchCompletion> search_completion;

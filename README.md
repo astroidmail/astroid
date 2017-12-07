@@ -1,69 +1,71 @@
-# astroid mua
+<img src="https://github.com/astroidmail/astroid/raw/master/ui/icons/horizontal_color.png" width="400px" alt="astroid logo" />
 
-# getting started
+> _Astroid_ is a lightweight and fast **Mail User Agent** that provides a graphical interface to searching, displaying and composing email, organized in threads and tags. _Astroid_ uses the [notmuch](http://notmuchmail.org/) backend for blazingly fast searches through tons of email. _Astroid_ searches, displays and composes emails - and rely on other programs for fetching, syncing and sending email. Check out [Astroid in your general mail setup](https://github.com/astroidmail/astroid/wiki/Astroid-in-your-general-mail-setup) for a suggested complete e-mail solution.
 
-> Astroid is a lightweight and fast Mail User Agent that provides a graphical interface to searching, display and composing email, organized in thread and tags. Astorid uses the [notmuch](http://notmuchmail.org/) backend for blazingly fast searches through tons of email. Astroid searches, displays and compose emails - and rely on other programs for fetching, syncing and sending email. Check out [Astroid in your general mail setup](https://github.com/astroidmail/astroid/wiki/Astroid-in-your-general-mail-setup) for a suggested complete  mail solution.
+The [tour of how to install, configure and use astroid](https://github.com/astroidmail/astroid/wiki) provides detailed information on setup and usage, while brief instructions are provided [below](#acquiring-astroid).
 
-Check out the [tour of how to install, configure and use astroid](https://github.com/astroidmail/astroid/wiki). Brief instructions are provided [below](#acquiring-astroid).
-
-## main features and goals include:
+## main features
 * lightweight and fast!
-* fully operatable by [keyboard](https://github.com/astroidmail/astroid/wiki/Customizing-key-bindings).
-* graphical interface, inspired by sup. but allow buffers to be separeted and placed in several windows.
-* display html mail and some attachments inline.
-* render math using MathJax.
+* fully operable by [keyboard](https://github.com/astroidmail/astroid/wiki/Customizing-key-bindings).
+* graphical interface. buffers can be placed in separate windows.
+* display html mail and common attachments inline.
 * syntax highlighting of code (markdown style) and patches.
 * [themable and configurable](https://github.com/astroidmail/astroid/wiki/Customizing-the-user-interface).
 * built-in [crypto (PGP/MIME) support](https://github.com/astroidmail/astroid/wiki/Signing%2C-Encrypting-and-Decrypting).
-* editors: [embed vim or emacs](https://github.com/astroidmail/astroid/wiki/Customizing-editor) (or anything else that supports XEmbed).
+* editors: [embedded or external vim or emacs](https://github.com/astroidmail/astroid/wiki/Customizing-editor) (or your favourite editor).
 * [python and lua plugins](https://github.com/astroidmail/astroid/wiki/Plugins).
 * and much more...
 
-### more screenshots
-  <a href="https://raw.githubusercontent.com/astroidmail/astroid/master/doc/astroid-thread-view.png">
-    <img src="https://raw.githubusercontent.com/astroidmail/astroid/master/doc/astroid-thread-view.png" width="49%">
-  </a> <a href="https://raw.githubusercontent.com/astroidmail/astroid/master/doc/astroid-searching.png">
-    <img src="https://raw.githubusercontent.com/astroidmail/astroid/master/doc/astroid-searching.png" width="49%" style="float: right;">
-  </a>
-  <a href="https://raw.githubusercontent.com/astroidmail/astroid/master/doc/astroid-editor-vim.png">
-    <img src="https://raw.githubusercontent.com/astroidmail/astroid/master/doc/astroid-editor-vim.png" width="49%">
-  </a> <a href="https://raw.githubusercontent.com/astroidmail/astroid/master/doc/astroid-compose-code-highlight.png">
-    <img src="https://raw.githubusercontent.com/astroidmail/astroid/master/doc/astroid-compose-code-highlight.png" width="49%" style="float: right;">
+  <a href="https://raw.githubusercontent.com/astroidmail/astroid/master/doc/full-demo-external.png">
+    <img alt="Astroid (with external editor)" src="https://raw.githubusercontent.com/astroidmail/astroid/master/doc/full-demo-external.png">
   </a>
 
 ## acquiring astroid
 
-get astroid from:
+get astroid by doing:
 
-` $ git clone https://github.com/astroidmail/astroid.git `
+```sh
+$ git clone https://github.com/astroidmail/astroid.git
+```
 
 ## installation and usage
 
 ### compiling
 
-` $ scons `
+```sh
+$ cd astroid
+$ cmake -H. -Bbuild -GNinja # to use the ninja backend
+$ cmake --build build
+```
+
+run `cmake -DOPTION=VALUE ..` from `build/` to set any build options (list with `cmake -L`). Subsequent builds can be done by running `ninja` (or `make` if you are using that) from the build directory.
 
 to run the tests do:
 
-` $ scons test `
+```sh
+$ cd build
+$ ctest
+```
 
 ### installing
 
 Configure with a prefix and install:
-```
-$ scons --prefix=/usr build
-$ scons --prefix=/usr install
+```sh
+$ cmake -H. -Bbuild -GNinja -DCMAKE_INSTALL_PREFIX=/usr/local
+$ cmake --build build --target install
 ```
 
-this will install the `astroid` binary into `/usr/bin/` and data files into `/usr/share/astroid/`. refer to the [installing section](https://github.com/astroidmail/astroid/wiki/Compiling-and-Installing) in the wiki for more information.
+this will install the `astroid` binary into `/usr/local/bin/`, and data files into `/usr/local/share/astroid/`. Refer to the [installing section](https://github.com/astroidmail/astroid/wiki/Compiling-and-Installing) in the wiki for more information.
 
 ### configuration
 
-running astroid will make a new configuration file in `$XDG_CONFIG_HOME/astroid` (normally: `~/.config/astroid/`. refer to the [configuration section](https://github.com/astroidmail/astroid/wiki/Astroid-setup) in the wiki for more information.
+The initial run of `astroid` will create a new configuration file in `$XDG_CONFIG_HOME/astroid` (normally: `~/.config/astroid/`). Refer to the [configuration section](https://github.com/astroidmail/astroid/wiki/Astroid-setup) in the wiki for more information.
 
-### running and usage
+### execution and usage
 
-` $ ./astroid `
+```sh
+$ ./build/astroid # to run from source repository
+```
 
 press `?` to get a list of available key bindings in the current mode, navigate up and down using `j` and `k`. refer to the [usage section](https://github.com/astroidmail/astroid/wiki#usage) in the wiki for more information on usage and customization.
 
@@ -87,9 +89,12 @@ This project adheres to [Contributor Covenant Code of Conduct v1.4](http://contr
   provided inspiration for [notmuch] which is a mail indexer. astroid is
   using [notmuch] as a backend.
 
-  Some parts of the user interface and layout have been copied from or has been
-  inspired by the [Geary] mail client. Also, some inspiration and code stems from
-  ner, another notmuch email client.
+  Some parts of the user interface and layout have been has been
+  inspired by the [Geary] mail client. Also, some inspiration and code stems from ner (another notmuch email client).
+
+## licensing
+
+See [LICENSE.md](./LICENSE.md) for licensing information.
 
 [sup]: http://sup-heliotrope.github.io
 [notmuch]: http://notmuchmail.org/
@@ -97,7 +102,6 @@ This project adheres to [Contributor Covenant Code of Conduct v1.4](http://contr
 [gmime]: http://spruce.sourceforge.net/gmime/
 [webkit]: http://webkitgtk.org/
 [GPL]: https://www.gnu.org/copyleft/gpl.html
-[scons]: http://www.scons.org/
 [git]: http://git-scm.com/
 [C++11]: http://en.wikipedia.org/wiki/C%2B%2B11
 [boost]: http://www.boost.org/
@@ -105,6 +109,3 @@ This project adheres to [Contributor Covenant Code of Conduct v1.4](http://contr
 [glib]: https://developer.gnome.org/glib/
 [boost::property_tree]: http://www.boost.org/doc/libs/1_56_0/doc/html/property_tree.html
 
-## licensing
-
-See [LICENSE.md](./LICENSE.md) for licensing information.

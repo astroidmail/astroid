@@ -16,62 +16,101 @@
 # include "config.hh"
 # include "proto.hh"
 
+/* there was a bit of a round-dance of with the _st versions of these returning
+ * to the old name, but with different signature */
+# if (LIBNOTMUCH_MAJOR_VERSION < 5)
+# define notmuch_query_search_threads(x,y) notmuch_query_search_threads_st(x,y)
+# define notmuch_query_count_threads(x,y) notmuch_query_count_threads_st(x,y)
+# define notmuch_query_search_messages(x,y) notmuch_query_search_messages_st(x,y)
+# define notmuch_query_count_messages(x,y) notmuch_query_count_messages_st(x,y)
+# endif
+
+# ifndef HAVE_NOTMUCH_INDEX_FILE
+# define notmuch_database_index_file(d,f,o,m) notmuch_database_add_message(d,f,m)
+# endif
+
 namespace Astroid {
-  class NotmuchTaggable : public Glib::Object {
+  class NotmuchItem : public Glib::Object {
     public:
-      std::vector <ustring> tags;
-      bool has_tag (ustring);
+      ustring thread_id;
+      ustring subject;
+
+      bool    unread;
+      bool    attachment;
+      bool    flagged;
+
+      virtual void refresh (Db *) = 0;
+
+      std::vector<ustring>  tags;
+      bool                  has_tag (ustring);
 
       virtual bool remove_tag (Db *, ustring) = 0;
-      virtual bool add_tag (Db *, ustring) = 0;
+      virtual bool add_tag (Db *, ustring)    = 0;
 
       virtual void emit_updated (Db *) = 0;
 
       virtual ustring str () = 0;
+      virtual bool    matches (std::vector<ustring> &k) = 0;
+      virtual bool    in_query (Db *, ustring) = 0;
   };
 
   /* the notmuch message object should get by on the db only */
-  class NotmuchMessage : public NotmuchTaggable {
+  class NotmuchMessage : public NotmuchItem {
     public:
+      NotmuchMessage (notmuch_message_t *);
       NotmuchMessage (refptr<Message>);
 
       ustring mid;
+      ustring sender = "";
+      time_t  time;
+      ustring filename = "";
 
-      bool remove_tag (Db *, ustring) override;
-      bool add_tag (Db *, ustring) override;
-      void emit_updated (Db *) override;
+      void load (notmuch_message_t *);
+      void refresh (Db *) override;
+      void refresh (notmuch_message_t *);
+
+      bool remove_tag (Db *, ustring)   override;
+      bool add_tag (Db *, ustring)      override;
+      void emit_updated (Db *)          override;
+
       ustring str () override;
+      bool matches (std::vector<ustring> &k) override;
+      bool in_query (Db *, ustring) override;
+
+    private:
+      std::vector<ustring> get_tags (notmuch_message_t *);
+
+      ustring index_str = "";
   };
 
   /* the notmuch thread object should get by on the db only */
-  class NotmuchThread : public NotmuchTaggable {
+  class NotmuchThread : public NotmuchItem {
     public:
       NotmuchThread (notmuch_thread_t *);
       ~NotmuchThread ();
 
-      ustring thread_id;
-
-      ustring subject;
       time_t  newest_date;
       time_t  oldest_date;
-      bool    unread;
-      bool    attachment;
-      bool    flagged;
       int     total_messages;
       std::vector<std::tuple<ustring,bool>> authors;
 
-      void refresh (Db *);
       void load (notmuch_thread_t *);
+      void refresh (Db *) override;
 
       bool remove_tag (Db *, ustring) override;
       bool add_tag (Db *, ustring) override;
       void emit_updated (Db *) override;
+
       ustring str () override;
+      bool matches (std::vector<ustring> &k) override;
+      bool in_query (Db *, ustring) override;
 
     private:
       int check_total_messages (notmuch_thread_t *);
       std::vector<std::tuple<ustring,bool>> get_authors (notmuch_thread_t *);
       std::vector<ustring> get_tags (notmuch_thread_t *);
+
+      ustring index_str = "";
   };
 
   class Db {
@@ -89,10 +128,9 @@ namespace Astroid {
       void on_message (ustring, std::function <void(notmuch_message_t *)>);
 
       bool thread_in_query (ustring, ustring);
+      bool message_in_query (ustring, ustring);
 
-# ifdef HAVE_NOTMUCH_GET_REV
       unsigned long get_revision ();
-# endif
 
       notmuch_database_t * nm_db;
 
@@ -131,7 +169,7 @@ namespace Astroid {
        *  + There can only be one read-write db open at the time.
        *
        *  + It is not possible to have read-only db's open when there is a
-       *    read-only db open.
+       *    read-write db open.
        *
        * If you open one read-only db, and try to open a read-write db in the
        * same thread without closing the read-only db there will be a deadlock.
@@ -153,11 +191,11 @@ namespace Astroid {
       DbMode mode;
 
       bool open_db_write (bool);
-      bool open_db_read_only ();
+      bool open_db_read_only (bool);
       bool closed = false;
 
-      const int db_write_open_timeout = 120; // seconds
-      const int db_write_open_delay   = 1;   // seconds
+      const int db_open_timeout = 120; // seconds
+      const int db_open_delay   = 1;   // seconds
 
   };
 

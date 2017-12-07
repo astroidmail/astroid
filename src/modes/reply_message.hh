@@ -35,6 +35,8 @@ namespace Astroid {
       void on_receiver_combo_changed ();
 
       void on_message_sent_attempt_received (bool);
+
+      bool mailinglist_reply_to_sender;
   };
 }
 
