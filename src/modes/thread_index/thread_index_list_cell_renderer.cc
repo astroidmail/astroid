@@ -166,7 +166,7 @@ namespace Astroid {
       }
     } else {
       if (!marked) {
-        bg.set_grey_p (1.);
+        set = false;
       } else {
         bg = Gdk::Color (background_color_marked);
       }
