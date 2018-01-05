@@ -161,7 +161,6 @@ namespace Astroid {
     /* thread index */
     default_config.put ("thread_index.page_jump_rows", 6);
     default_config.put ("thread_index.sort_order", "newest");
-    default_config.put ("thread_index.thread_load_step", 250);
 
     default_config.put ("general.time.clock_format", "local"); // or 24h, 12h
     default_config.put ("general.time.same_year", "%b %-e");
