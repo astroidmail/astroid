@@ -177,6 +177,8 @@ namespace Astroid {
     default_config.put ("thread_index.cell.subject_color", "#807d74");
     default_config.put ("thread_index.cell.subject_color_selected", "#000000");
     default_config.put ("thread_index.cell.background_color_selected", "");
+    default_config.put ("thread_index.cell.background_color_marked", "#fff584");
+    default_config.put ("thread_index.cell.background_color_marked_selected", "#bcb559");
 
     default_config.put ("thread_index.cell.tags_length", 80);
     default_config.put ("thread_index.cell.tags_upper_color", "#e5e5e5");
