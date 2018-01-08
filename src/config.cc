@@ -217,6 +217,7 @@ namespace Astroid {
 
     /* polling */
     default_config.put ("poll.interval", Poll::DEFAULT_POLL_INTERVAL); // seconds
+    default_config.put ("poll.always_full_refresh", false); // always do full refresh after poll, slow.
 
     /* attachments
      *
