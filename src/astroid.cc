@@ -402,14 +402,19 @@ namespace Astroid {
   }
 
   Astroid::~Astroid () {
-    delete accounts;
+    if (accounts) delete accounts;
+
     delete m_config;
 
-    if (poll) poll->close ();
-    delete poll;
+    if (poll) {
+      poll->close ();
+      delete poll;
+    }
 
-    if (actions) actions->close ();
-    delete actions;
+    if (actions) {
+      actions->close ();
+      delete actions;
+    }
   }
 
   int Astroid::on_command_line (const refptr<Gio::ApplicationCommandLine> & cmd) {
