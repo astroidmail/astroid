@@ -404,7 +404,7 @@ namespace Astroid {
   Astroid::~Astroid () {
     if (accounts) delete accounts;
 
-    delete m_config;
+    if (m_config) delete m_config;
 
     if (poll) {
       poll->close ();
