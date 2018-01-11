@@ -84,8 +84,10 @@ endif()
 find_package ( PkgConfig REQUIRED )
 pkg_check_modules (GTKMM3     REQUIRED  gtkmm-3.0>=3.10)
 pkg_check_modules (GLIBMM2    REQUIRED  glibmm-2.4)
-pkg_check_modules (WEBKITGTK3 REQUIRED  webkitgtk-3.0)
+pkg_check_modules (WEBKIT2GTK REQUIRED  webkit2gtk-4.0)
 pkg_check_modules (SASS       REQUIRED  libsass)
+pkg_check_modules (GIOMM2     REQUIRED  giomm-2.4)
+pkg_check_modules (GIOUNIX    REQUIRED  gio-unix-2.0)
 
 string (REGEX REPLACE "([0-9]+\.[0-9]+)\.[0-9]+" "\\1" GMIME_MAJOR_MINOR ${Notmuch_GMIME_VERSION})
 pkg_check_modules (GMIME      REQUIRED  gmime-${GMIME_MAJOR_MINOR}>=${Notmuch_GMIME_VERSION})
@@ -102,6 +104,14 @@ find_package ( Boost REQUIRED
   date_time
   system
   )
+
+find_package (Protobuf REQUIRED)
+set (PROTO_FILES
+  src/modes/thread_view/webextension/messages.proto
+  )
+
+PROTOBUF_GENERATE_CPP (PROTO_SRC PROTO_HDR ${PROTO_FILES})
+
 
 if(APPLE)
   # with homebrew, libgettext is keg-only, i.e. not symlinked into
@@ -128,18 +138,23 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
 include_directories (
   ${GTKMM3_INCLUDE_DIRS}
   ${GLIBMM2_INCLUDE_DIRS}
+  ${GIOMM2_INCLUDE_DIRS}
+  ${GIOUNIX_INCLUDE_DIRS}
   ${GMIME_INCLUDE_DIRS}
-  ${WEBKITGTK3_INCLUDE_DIRS}
+  ${WEBKIT2GTK_INCLUDE_DIRS}
   ${VTE2_INCLUDE_DIRS}
   ${SASS_INCLUDE_DIRS}
   ${Boost_INCLUDE_DIRS}
+  ${PROTOBUF_INCLUDE_DIRS}
   )
 
 add_compile_options (
   ${GTKMM3_CFLAGS}
   ${GLIBMM2_CFLAGS}
+  ${GIOMM2_CFLAGS}
+  ${GIOUNIX_CFLAGS}
   ${GMIME_CFLAGS}
-  ${WEBKITGTK3_CFLAGS}
+  ${WEBKIT2GTK_CFLAGS}
   ${VTE2_CFLAGS}
   ${SASS_CFLAGS}
   )
@@ -214,10 +229,12 @@ include_directories (
   src/modes/editor
   src/modes/thread_index
   src/modes/thread_view
+  src/modes/thread_view/webextension
   src/plugin
   src/utils
   src/utils/gmime
   ${CMAKE_BINARY_DIR}/src	# needed to find the generated build_config.hh
+  ${CMAKE_BINARY_DIR}	    # needed to find protobuf files
   )
 
 add_library(
@@ -253,10 +270,11 @@ add_library(
   src/modes/thread_index/thread_index_list_cell_renderer.cc
   src/modes/thread_index/thread_index_list_view.cc
 
-  src/modes/thread_view/dom_utils.cc
   src/modes/thread_view/theme.cc
   src/modes/thread_view/thread_view.cc
-  src/modes/thread_view/web_inspector.cc
+  src/modes/thread_view/page_client.cc
+  src/modes/thread_view/webextension/ae_protocol.cc
+  src/modes/thread_view/webextension/dom_utils.cc
 
   src/actions/action.cc
   src/actions/action_manager.cc
@@ -279,6 +297,10 @@ add_library(
   src/utils/gmime/gmime-filter-html-bq.c
   src/utils/gmime/gtrie.c
   src/utils/gmime/url-scanner.c
+
+  ${PROTO_SRC}
+  ${PROTO_HDR}
+  ${PROTO_FILES}
   )
 
 add_executable (
@@ -292,16 +314,51 @@ target_link_libraries (
 
   hypocycloid
   ${Notmuch_LIBRARIES}
-  ${WEBKITGTK3_LDFLAGS}
+  ${WEBKIT2GTK_LDFLAGS}
   ${GTKMM3_LDFLAGS}
   ${GLIBMM2_LDFLAGS}
+  ${GIOMM2_LDFLAGS}
+  ${GIOUINX_LDFLAGS}
   ${GMIME_LDFLAGS}
   ${VTE2_LDFLAGS}
   ${SASS_LDFLAGS}
   ${Boost_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT}
   ${Gettext_LDFLAGS}
+  ${PROTOBUF_LIBRARIES}
   )
+
+## Build Web Extension
+add_library (
+  tvextension SHARED
+
+  src/modes/thread_view/webextension/tvextension.cc
+  src/modes/thread_view/webextension/ae_protocol.cc
+  src/modes/thread_view/webextension/dom_utils.cc
+  ${PROTO_SRC}
+  ${PROTO_HDR}
+  ${PROTO_FILES}
+  )
+
+target_link_libraries (
+  tvextension
+
+  ${WEBKIT2GTK_LDFLAGS}
+  ${GLIBMM2_LDFLAGS}
+  ${GIOMM2_LDFLAGS}
+  ${GIOUINX_LDFLAGS}
+  ${CMAKE_THREAD_LIBS_INIT}
+  ${PROTOBUF_LIBRARIES}
+  ${GTKMM3_LDFLAGS}
+  )
+
+target_compile_definitions (
+  tvextension PUBLIC
+
+  ASTROID_WEBEXTENSION
+  )
+
+add_dependencies (astroid tvextension)
 
 # Xcode needs to be explicitly told about the header files in order to
 # show them in the project and automatically display them in the
@@ -315,6 +372,10 @@ endif()
 ##
 # conditional compilation based on feature switches
 #
+if(DEBUG_WEBKIT)
+  add_definitions ( -DDEBUG_WEBKIT )
+  message (STATUS "Enabling debug WebKit.")
+endif()
 
 ##
 # pre-compiled style sheets (instead of dynamic at run-time)
@@ -410,7 +471,7 @@ else()
       )
     target_link_libraries (
       gir_main
-      ${WEBKITGTK3_LDFLAGS}
+      ${WEBKIT2GTK_LDFLAGS}
       ${GTKMM3_LDFLAGS}
       ${PEAS_LDFLAGS}
       ${INTROSPECTION_LIBS}
