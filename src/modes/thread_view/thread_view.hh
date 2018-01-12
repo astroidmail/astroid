@@ -18,6 +18,7 @@
 # include "modes/mode.hh"
 # include "message_thread.hh"
 # include "theme.hh"
+# include "page_client.hh"
 # ifndef DISABLE_PLUGINS
   # include "plugin/manager.hh"
 # endif
@@ -45,10 +46,6 @@ namespace Astroid {
       GObject *       o,
       GAsyncResult *  result,
       gpointer        user_data);
-
-  extern "C" void ThreadView_init_web_extensions (
-      WebKitWebContext *,
-      gpointer);
 
 
   class ThreadView : public Mode {
@@ -103,7 +100,7 @@ namespace Astroid {
       void pre_close () override;
 
       /* Web extension */
-      void init_web_extensions (WebKitWebContext * context);
+      PageClient page_client;
 
     private:
       /* focus and message state */

@@ -9,6 +9,12 @@ using namespace boost::filesystem;
 using std::endl;
 
 namespace Astroid {
+  const char * Resource::argv0;
+
+  void Resource::init (const char * _a) {
+    argv0 = _a;
+  }
+
   Resource::Resource (bool has_user, path def) {
     path prefix = path(PREFIX) / path ("share/astroid");
 
@@ -70,6 +76,16 @@ namespace Astroid {
 
   path Resource::get_path () {
     return finalpath;
+  }
+
+  path Resource::get_exe_dir () {
+    path full = system_complete ( path (argv0) );
+    return full.parent_path();
+  }
+
+  path Resource::get_cwd () {
+    path full = current_path();
+    return full;
   }
 }
 

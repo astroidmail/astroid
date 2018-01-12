@@ -34,6 +34,7 @@
 # include "actions/action.hh"
 # include "utils/date_utils.hh"
 # include "utils/utils.hh"
+# include "utils/resource.hh"
 
 # ifndef DISABLE_PLUGINS
   # include "plugin/manager.hh"
@@ -135,6 +136,8 @@ namespace Astroid {
 
   int Astroid::run (int argc, char **argv) { // {{{
     register_application ();
+
+    Resource::init (argv[0]);
 
     po::variables_map vm;
 
