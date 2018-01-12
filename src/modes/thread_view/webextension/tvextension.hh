@@ -11,9 +11,24 @@ web_page_created_callback (WebKitWebExtension *extension,
                            gpointer            user_data);
 
 G_MODULE_EXPORT void
-webkit_web_extension_initialize (WebKitWebExtension *extension, gpointer pipes);
+webkit_web_extension_initialize_with_user_data (WebKitWebExtension *extension, gpointer pipes);
 
-gint32 ext_read, ext_write;
 
 }
+
+class AstroidExtension {
+  public:
+    AstroidExtension (WebKitWebExtension *, gpointer);
+
+    void page_created (WebKitWebExtension *, WebKitWebPage *, gpointer);
+
+  private:
+    WebKitWebExtension * extension;
+    WebKitWebPage * page;
+
+    /* pipes to main astroid process */
+    gint32 ext_read, ext_write;
+};
+
+AstroidExtension * ext;
 

@@ -41,8 +41,8 @@ namespace Astroid {
 
     // TODO: Close pipes
 
-    GVariant * ext_read  = g_variant_new ("%d", (gint32) client[0]);
-    GVariant * ext_write = g_variant_new ("%d", (gint32) extension[1]);
+    GVariant * ext_read  = g_variant_new_int32 ((gint32) client[0]);
+    GVariant * ext_write = g_variant_new_int32 ((gint32) extension[1]);
     GVariant * ext_pipes_a[2] = { ext_read, ext_write};
 
     GVariant * ext_pipes = g_variant_new_tuple (ext_pipes_a, 2);
