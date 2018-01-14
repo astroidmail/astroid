@@ -12,6 +12,8 @@ namespace Astroid {
     public:
       Theme ();
 
+      void load (bool reload);
+
       static std::atomic<bool> theme_loaded;
       static const char *  thread_view_html_f;
 # ifndef DISABLE_LIBSASS

@@ -35,12 +35,16 @@ namespace Astroid {
   ustring Theme::thread_view_css;
 
   Theme::Theme () {
+    load (false);
+  }
+
+  void Theme::load (bool reload) {
     using bfs::path;
     using std::endl;
     LOG (debug) << "theme: loading..";
 
     /* load html and css (from scss) */
-    if (!theme_loaded) {
+    if (reload || !theme_loaded) {
       path tv_html = Resource (true, thread_view_html_f).get_path ();
 
       if (!check_theme_version (tv_html)) {
@@ -66,6 +70,7 @@ namespace Astroid {
       }
 # endif
 
+      /* load html */
       {
         std::ifstream tv_html_f (tv_html.c_str());
         std::istreambuf_iterator<char> eos; // default is eos
@@ -75,6 +80,7 @@ namespace Astroid {
         tv_html_f.close ();
       }
 
+      /* load style sheet */
 # ifndef DISABLE_LIBSASS
       thread_view_css = process_scss (tv_scss.c_str ());
 # else
