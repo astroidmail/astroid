@@ -3,10 +3,12 @@
 # include "date_utils.hh"
 
 # include <boost/filesystem.hpp>
+# include <boost/property_tree/ptree.hpp>
 
 # pragma once
 
 namespace bfs = boost::filesystem;
+using boost::property_tree::ptree;
 
 namespace Astroid {
 
@@ -32,6 +34,18 @@ namespace Astroid {
       static Pango::Color tags_upper_color;
       static Pango::Color tags_lower_color;
 
+      /* property tree */
+      static void extend_ptree (ptree &p, ptree &v) {
+        p.push_back (std::make_pair ("", v));
+      }
+
+      template <class T>
+      static void extend_ptree (ptree &p, T v) {
+        ptree a;
+        a.put ("", v);
+
+        p.push_back (std::make_pair ("", a));
+      }
   };
 }
 
