@@ -4,6 +4,9 @@
 # include <gmodule.h>
 # include <iostream>
 # include <glib.h>
+# include <glibmm.h>
+# include <giomm.h>
+# include <giomm/socket.h>
 
 extern "C" {
 
@@ -30,21 +33,62 @@ webkit_web_extension_initialize_with_user_data (
 }
 
 AstroidExtension::AstroidExtension (WebKitWebExtension * e,
-    gpointer pipes) {
+    gpointer gaddr) {
   extension = e;
+
+  using std::cout;
+  using std::endl;
 
   std::cout << "ae: inititalize" << std::endl;
 
-  /* retrieve pipes */
-  std::cout << "type: " << g_variant_get_type_string ((GVariant *)pipes) << std::endl;
+  Gio::init ();
 
-  GVariant * ext_read_v  = g_variant_get_child_value ((GVariant *) pipes, 0);
-  GVariant * ext_write_v = g_variant_get_child_value ((GVariant *) pipes, 1);
+  /* retrieve socket address */
+  std::cout << "type: " << g_variant_get_type_string ((GVariant *)gaddr) << std::endl;
 
-  ext_read  = g_variant_get_int32 (ext_read_v);
-  ext_write = g_variant_get_int32 (ext_write_v);
+  gsize sz;
+  const char * caddr = g_variant_get_string ((GVariant *) gaddr, &sz);
+  std::cout << "addr: " << caddr << std::endl;
+
+  refptr<Gio::UnixSocketAddress> addr = Gio::UnixSocketAddress::create (caddr,
+      Gio::UNIX_SOCKET_ADDRESS_PATH);
+
+  /* connect to socket */
+  std::cout << "ae: connecting.." << std::endl;
+  cli = Gio::SocketClient::create ();
+
+  try {
+    sock = cli->connect (addr);
+  } catch (Gio::Error &ex) {
+    cout << "ae: error: " << ex.what () << endl;
+  }
+
+  ext_io = Glib::IOChannel::create_from_fd (sock->get_socket()->get_fd ());
+
+  Glib::signal_io().connect (sigc::mem_fun (this, &AstroidExtension::ext_read_event), ext_io, Glib::IO_IN | Glib::IO_HUP);
 
   std::cout << "ae: init done" << std::endl;
+}
+
+bool AstroidExtension::ext_read_event (Glib::IOCondition cond) {
+  if (cond == Glib::IO_HUP) {
+    /* ch_stdout.clear(); */
+    /* LOG (debug) << "poll: (stdout) got HUP"; */
+    return false;
+  }
+
+  if ((cond & Glib::IO_IN) == 0) {
+    /* LOG (error) << "poll: invalid fifo response"; */
+  } else {
+    Glib::ustring buf;
+
+    ext_io->read_line(buf);
+    if (*(--buf.end()) == '\n') buf.erase (--buf.end());
+
+    std::cout << "ae: " << buf << std::endl;
+
+  }
+  return true;
 }
 
 void AstroidExtension::page_created (WebKitWebExtension * /* extension */,

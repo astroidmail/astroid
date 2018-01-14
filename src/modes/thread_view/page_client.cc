@@ -4,8 +4,15 @@
 # include <webkit2/webkit2.h>
 # include <unistd.h>
 # include <glib.h>
+# include <glibmm.h>
+# include <giomm.h>
+# include <giomm/socket.h>
+# include <boost/filesystem.hpp>
+
+using namespace boost::filesystem;
 
 namespace Astroid {
+  int PageClient::id = 0;
 
   PageClient::PageClient () {
 
@@ -23,6 +30,11 @@ namespace Astroid {
     ((PageClient *) user_data)->init_web_extensions (context);
   }
 
+  PageClient::~PageClient () {
+    if (!socket_addr.empty () && exists (socket_addr.c_str ())) {
+      unlink (socket_addr.c_str ());
+    }
+  }
 
   void PageClient::init_web_extensions (WebKitWebContext * context) {
 
@@ -35,21 +47,46 @@ namespace Astroid {
         Resource::get_exe_dir().c_str());
 # endif
 
-    /* set up pipes */
-    pipe (extension);
-    pipe (client);
+    /* set up unix socket */
+    id++;
 
-    // TODO: Close pipes
+    socket_addr = ustring::compose ("/tmp/astroid.%1", id);
 
-    GVariant * ext_read  = g_variant_new_int32 ((gint32) client[0]);
-    GVariant * ext_write = g_variant_new_int32 ((gint32) extension[1]);
-    GVariant * ext_pipes_a[2] = { ext_read, ext_write};
+    refptr<Gio::UnixSocketAddress> addr = Gio::UnixSocketAddress::create (socket_addr,
+        Gio::UNIX_SOCKET_ADDRESS_PATH);
 
-    GVariant * ext_pipes = g_variant_new_tuple (ext_pipes_a, 2);
+    refptr<Gio::SocketAddress> eaddr;
+
+    LOG (debug) << "pc: socket: " << addr->get_path ();
+
+    srv = Gio::SocketListener::create ();
+    srv->add_address (addr, Gio::SocketType::SOCKET_TYPE_STREAM,
+      Gio::SocketProtocol::SOCKET_PROTOCOL_DEFAULT,
+      eaddr);
+
+    /* listen */
+    srv->accept_async (sigc::mem_fun (this, &PageClient::extension_connect));
+
+    /* send socket address (TODO: include key) */
+    GVariant * gaddr = g_variant_new_string (addr->get_path ().c_str ());
 
     webkit_web_context_set_web_extensions_initialization_user_data (
         context,
-        ext_pipes);
+        gaddr);
+  }
+
+  void PageClient::extension_connect (refptr<Gio::AsyncResult> &res) {
+    LOG (warn) << "pc: got extension connect";
+
+    ext = refptr<Gio::UnixConnection>::cast_dynamic (srv->accept_finish (res));
+
+
+    /* set up IOChannel */
+    cli = Glib::IOChannel::create_from_fd (ext->get_socket()->get_fd ());
+  }
+
+  void PageClient::write () {
+    cli->write ("asdf");
   }
 
 }

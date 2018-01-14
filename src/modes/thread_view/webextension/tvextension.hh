@@ -2,6 +2,11 @@
 
 # include <webkit2/webkit-web-extension.h>
 # include <gmodule.h>
+# include <glibmm.h>
+# include <giomm.h>
+# include <giomm/socket.h>
+
+# define refptr Glib::RefPtr
 
 extern "C" {
 
@@ -26,8 +31,11 @@ class AstroidExtension {
     WebKitWebExtension * extension;
     WebKitWebPage * page;
 
-    /* pipes to main astroid process */
-    gint32 ext_read, ext_write;
+    refptr<Gio::SocketClient> cli;
+    refptr<Gio::SocketConnection> sock;
+    refptr<Glib::IOChannel> ext_io;
+
+    bool ext_read_event (Glib::IOCondition);
 };
 
 AstroidExtension * ext;

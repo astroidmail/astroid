@@ -2,6 +2,10 @@
 
 # include <webkit2/webkit2.h>
 # include <glib.h>
+# include <glibmm.h>
+# include <giomm.h>
+
+# include "astroid.hh"
 
 namespace Astroid {
 
@@ -9,17 +13,26 @@ namespace Astroid {
       WebKitWebContext *,
       gpointer);
 
-  class PageClient {
+  class PageClient : public sigc::trackable {
     public:
       PageClient ();
+      ~PageClient ();
 
       void init_web_extensions (WebKitWebContext * context);
+      void write ();
 
     private:
-      /* pipes */
-      gint32 extension[2]; // extension writes
-      gint32 client[2];    // client writes
+      static int id;
 
+      ustring socket_addr;
+
+      refptr<Glib::IOChannel> cli;
+
+      refptr<Gio::SocketListener> srv;
+      refptr<Gio::UnixConnection> ext;
+      void extension_connect (refptr<Gio::AsyncResult> &res);
+
+      /* bool cli_read (Glib::IOCondition); */
   };
 
 }

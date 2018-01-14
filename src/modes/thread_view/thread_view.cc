@@ -1269,6 +1269,7 @@ namespace Astroid {
     keys.register_key ("j", "thread_view.down",
         "Scroll down or move focus to next element",
         [&] (Key) {
+          page_client.write ();
           focus_next_element ();
           return true;
         });
@@ -2607,6 +2608,7 @@ namespace Astroid {
     LOG (info) << "tv: focus next element, force_change=" << force_change;
 
     string js = "Astroid.focus_next_element(" + ( force_change ? string("true") : string("false")) + ");";
+
 
     /* run_javascript (js, std::bind (&ThreadView::focus_change_cb, this, std::placeholders::_1)); */
   }
