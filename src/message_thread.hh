@@ -1,6 +1,5 @@
 # pragma once
 
-
 # include <notmuch.h>
 # include <gmime/gmime.h>
 
@@ -23,6 +22,7 @@ namespace Astroid {
 
       ustring fname;
       ustring mid;
+      ustring safe_mid ();
       ustring tid;
       refptr<NotmuchMessage> nmmsg;
       bool    in_notmuch;
