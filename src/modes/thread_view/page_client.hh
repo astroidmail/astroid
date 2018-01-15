@@ -22,6 +22,9 @@ namespace Astroid {
       void init_web_extensions (WebKitWebContext * context);
       void write ();
 
+      /* ThreadView interface */
+      void update_marked_state (refptr<Message> m, bool marked);
+
     private:
       static int id;
 

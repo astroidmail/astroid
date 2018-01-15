@@ -115,10 +115,41 @@ void AstroidExtension::reader () {
         }
         break;
 
+      case AeProtocol::MessageTypes::Mark:
+        {
+          AstroidMessages::Mark m;
+          m.ParseFromString (buffer);
+          handle_mark (m);
+        }
+        break;
+
       default:
         break; // unknown message
     }
   }
+}
+
+void AstroidExtension::handle_mark (AstroidMessages::Mark &m) {
+  GError *err;
+  ustring mid = "message_" + m.mid();
+
+  WebKitDOMDocument * d = webkit_web_page_get_dom_document (page);
+
+  WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
+
+  WebKitDOMDOMTokenList * class_list =
+    webkit_dom_element_get_class_list (e);
+
+  /* set class  */
+  if (m.marked()) {
+    webkit_dom_dom_token_list_add (class_list, (err = NULL, &err), "marked");
+  } else {
+    webkit_dom_dom_token_list_remove (class_list, (err = NULL, &err), "marked");
+  }
+
+  g_object_unref (class_list);
+  g_object_unref (e);
+  g_object_unref (d);
 }
 
 void AstroidExtension::page_created (WebKitWebExtension * /* extension */,

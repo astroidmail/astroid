@@ -1215,29 +1215,8 @@ namespace Astroid {
 
   // TODO: [JS] [REIMPLEMENT]
   void ThreadView::update_marked_state (refptr<Message> m) {
+    page_client.update_marked_state (m, state[m].marked);
 # if 0
-    GError *err;
-    ustring mid = "message_" + m->mid;
-
-    WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
-
-    WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
-
-    WebKitDOMDOMTokenList * class_list =
-      webkit_dom_element_get_class_list (e);
-
-    /* set class  */
-    if (state[m].marked) {
-      webkit_dom_dom_token_list_add (class_list, "marked",
-          (err = NULL, &err));
-    } else {
-      webkit_dom_dom_token_list_remove (class_list, "marked",
-          (err = NULL, &err));
-    }
-
-    g_object_unref (class_list);
-    g_object_unref (e);
-    g_object_unref (d);
 # endif
   }
 

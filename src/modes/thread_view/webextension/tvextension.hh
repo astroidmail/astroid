@@ -7,6 +7,8 @@
 # include <giomm/socket.h>
 # include <thread>
 
+# include "messages.pb.h"
+
 # define refptr Glib::RefPtr
 
 extern "C" {
@@ -41,6 +43,9 @@ class AstroidExtension {
     std::thread reader_t;
     void        reader ();
     bool        run = true;
+
+
+    void handle_mark (AstroidMessages::Mark &m);
 };
 
 AstroidExtension * ext;

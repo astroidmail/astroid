@@ -15,6 +15,8 @@
 # include "modes/thread_view/webextension/ae_protocol.hh"
 # include "messages.pb.h"
 
+# include "message_thread.hh"
+
 using namespace boost::filesystem;
 
 namespace Astroid {
@@ -137,6 +139,14 @@ namespace Astroid {
     m.set_msg ("here is the message!");
 
     AeProtocol::send_message (AeProtocol::MessageTypes::Debug, m, ostream);
+  }
+
+  void PageClient::update_marked_state (refptr<Message> m, bool marked) {
+    AstroidMessages::Mark msg;
+    msg.set_mid (m->safe_mid ());
+    msg.set_marked (marked);
+
+    AeProtocol::send_message (AeProtocol::MessageTypes::Mark, msg, ostream);
   }
 
 }

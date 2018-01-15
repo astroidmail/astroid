@@ -5,7 +5,11 @@ package AstroidMessages;
 message Focus {
   string mid = 1;
   bool   focus = 2;
+}
 
+message Mark {
+  string mid = 1;
+  bool   marked = 2;
 }
 
 message Debug {
