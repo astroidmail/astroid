@@ -2,7 +2,6 @@
 
 # include <webkit2/webkit-web-extension.h>
 
-
 # include <gmodule.h>
 # include <iostream>
 # include <glib.h>
@@ -12,7 +11,9 @@
 # include <thread>
 
 # include "modes/thread_view/webextension/ae_protocol.hh"
+# include "modes/thread_view/webextension/dom_utils.hh"
 # include "messages.pb.h"
+
 
 using std::cout;
 using std::endl;

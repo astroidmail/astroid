@@ -1,9 +1,9 @@
-# include "dom_utils.hh"
-# include "astroid.hh"
+# include <webkit2/webkit-web-extension.h>
 
 # include <string>
 # include <gio/gio.h>
-# include <webkit/webkit.h>
+
+# include "dom_utils.hh"
 
 using std::endl;
 
@@ -16,9 +16,9 @@ namespace Astroid {
   }
 
   /* clone and create html elements */
-  WebKitDOMHTMLElement * DomUtils::make_message_div (WebKitWebView * webview) {
+  WebKitDOMHTMLElement * DomUtils::make_message_div (WebKitWebPage * webpage) {
     /* clone div from template in html file */
-    WebKitDOMDocument *d = webkit_web_view_get_dom_document (webview);
+    WebKitDOMDocument *d = webkit_web_page_get_dom_document (webpage);
     WebKitDOMHTMLElement *e = clone_select (WEBKIT_DOM_NODE(d),
         "#email_template");
     g_object_unref (d);
@@ -37,7 +37,8 @@ namespace Astroid {
       WebKitDOMNode * node,
       bool            deep) {
 
-    return WEBKIT_DOM_HTML_ELEMENT(webkit_dom_node_clone_node (node, deep));
+    GError * gerr = NULL;
+    return WEBKIT_DOM_HTML_ELEMENT(webkit_dom_node_clone_node_with_error (node, deep, &gerr));
   }
 
   WebKitDOMHTMLElement * DomUtils::select (
@@ -60,8 +61,8 @@ namespace Astroid {
                                             &gerr));
     }
 
-    if (gerr != NULL)
-      LOG (error) << "tv: clone_s_s_err: " << gerr->message;
+    /* if (gerr != NULL) */
+    /*   LOG (error) << "tv: clone_s_s_err: " << gerr->message; */
 
     return e;
   }

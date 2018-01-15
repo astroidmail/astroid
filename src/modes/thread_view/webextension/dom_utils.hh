@@ -2,7 +2,7 @@
 
 # include <string>
 # include <gio/gio.h>
-# include <webkit/webkit.h>
+# include <webkit2/webkit-web-extension.h>
 
 # include "proto.hh"
 
@@ -11,7 +11,7 @@ namespace Astroid {
     public:
       static std::string assemble_data_uri (ustring, gchar *&, gsize);
 
-      static WebKitDOMHTMLElement * make_message_div (WebKitWebView *);
+      static WebKitDOMHTMLElement * make_message_div (WebKitWebPage *);
 
       /* webkit dom utils */
       static WebKitDOMHTMLElement * clone_select (
