@@ -8,6 +8,8 @@
 # include <giomm.h>
 # include <giomm/socket.h>
 
+# include "messages.pb.h"
+
 extern "C" {
 
 static void
@@ -63,6 +65,7 @@ AstroidExtension::AstroidExtension (WebKitWebExtension * e,
     cout << "ae: error: " << ex.what () << endl;
   }
 
+
   ext_io = Glib::IOChannel::create_from_fd (sock->get_socket()->get_fd ());
 
   Glib::signal_io().connect (sigc::mem_fun (this, &AstroidExtension::ext_read_event), ext_io, Glib::IO_IN | Glib::IO_HUP);
@@ -72,13 +75,15 @@ AstroidExtension::AstroidExtension (WebKitWebExtension * e,
 
 bool AstroidExtension::ext_read_event (Glib::IOCondition cond) {
   if (cond == Glib::IO_HUP) {
-    /* ch_stdout.clear(); */
+    ext_io.clear();
     /* LOG (debug) << "poll: (stdout) got HUP"; */
     return false;
   }
 
   if ((cond & Glib::IO_IN) == 0) {
     /* LOG (error) << "poll: invalid fifo response"; */
+    ext_io.clear ();
+    return false;
   } else {
     Glib::ustring buf;
 

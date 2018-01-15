@@ -86,7 +86,7 @@ namespace Astroid {
   }
 
   void PageClient::write () {
-    cli->write ("asdf");
+    cli->write ("asdf\n");
   }
 
 }
