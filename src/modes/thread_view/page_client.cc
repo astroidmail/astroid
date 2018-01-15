@@ -8,6 +8,12 @@
 # include <giomm.h>
 # include <giomm/socket.h>
 # include <boost/filesystem.hpp>
+# include <iostream>
+# include <thread>
+
+# include "astroid.hh"
+# include "modes/thread_view/webextension/ae_protocol.hh"
+# include "messages.pb.h"
 
 using namespace boost::filesystem;
 
@@ -34,6 +40,8 @@ namespace Astroid {
     if (!socket_addr.empty () && exists (socket_addr.c_str ())) {
       unlink (socket_addr.c_str ());
     }
+
+    run = false;
   }
 
   void PageClient::init_web_extensions (WebKitWebContext * context) {
@@ -80,13 +88,55 @@ namespace Astroid {
 
     ext = refptr<Gio::UnixConnection>::cast_dynamic (srv->accept_finish (res));
 
+    istream = ext->get_input_stream ();
+    ostream = ext->get_output_stream ();
 
-    /* set up IOChannel */
-    cli = Glib::IOChannel::create_from_fd (ext->get_socket()->get_fd ());
+    /* setting up reader */
+    reader_t = std::thread (&PageClient::reader, this);
+  }
+
+  void PageClient::reader () {
+    while (run) {
+      gchar buffer[2049]; buffer[0] = '\0';
+      gsize read = 0;
+
+      /* read size of message */
+      gsize sz;
+      read = istream->read ((char*)&sz, sizeof (sz));
+
+      if (read != sizeof(sz)) break;;
+
+      /* read message type */
+      AeProtocol::MessageTypes mt;
+      read = istream->read ((char*)&mt, sizeof (mt));
+      if (read != sizeof (mt)) break;
+
+      /* read message */
+      bool s = istream->read_all (buffer, sz, read);
+
+      if (!s) break;
+
+      /* parse message */
+      switch (mt) {
+        case AeProtocol::MessageTypes::Debug:
+          {
+            AstroidMessages::Debug m;
+            m.ParseFromString (buffer);
+            LOG (debug) << "pc: ae: " << m.msg ();
+          }
+          break;
+
+        default:
+          break; // unknown message
+      }
+    }
   }
 
   void PageClient::write () {
-    cli->write ("asdf\n");
+    AstroidMessages::Debug m;
+    m.set_msg ("here is the message!");
+
+    AeProtocol::send_message (AeProtocol::MessageTypes::Debug, m, ostream);
   }
 
 }

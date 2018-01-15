@@ -4,6 +4,7 @@
 # include <glib.h>
 # include <glibmm.h>
 # include <giomm.h>
+# include <thread>
 
 # include "astroid.hh"
 
@@ -26,13 +27,16 @@ namespace Astroid {
 
       ustring socket_addr;
 
-      refptr<Glib::IOChannel> cli;
-
       refptr<Gio::SocketListener> srv;
       refptr<Gio::UnixConnection> ext;
       void extension_connect (refptr<Gio::AsyncResult> &res);
 
-      /* bool cli_read (Glib::IOCondition); */
+      refptr<Gio::InputStream>  istream;
+      refptr<Gio::OutputStream> ostream;
+
+      void        reader ();
+      std::thread reader_t;
+      bool        run;
   };
 
 }

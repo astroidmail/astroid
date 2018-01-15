@@ -1,10 +1,14 @@
-syntax = "proto2";
+syntax = "proto3";
 
-package astroid;
+package AstroidMessages;
 
 message Focus {
-  required string mid = 1;
-  required bool   focus = 2;
+  string mid = 1;
+  bool   focus = 2;
 
+}
+
+message Debug {
+  string msg = 1;
 }
 

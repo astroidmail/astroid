@@ -5,6 +5,7 @@
 # include <glibmm.h>
 # include <giomm.h>
 # include <giomm/socket.h>
+# include <thread>
 
 # define refptr Glib::RefPtr
 
@@ -33,9 +34,13 @@ class AstroidExtension {
 
     refptr<Gio::SocketClient> cli;
     refptr<Gio::SocketConnection> sock;
-    refptr<Glib::IOChannel> ext_io;
 
-    bool ext_read_event (Glib::IOCondition);
+    refptr<Gio::InputStream>  istream;
+    refptr<Gio::OutputStream> ostream;
+
+    std::thread reader_t;
+    void        reader ();
+    bool        run = true;
 };
 
 AstroidExtension * ext;

@@ -1,14 +1,23 @@
 # include "tvextension.hh"
 
 # include <webkit2/webkit-web-extension.h>
+
+
 # include <gmodule.h>
 # include <iostream>
 # include <glib.h>
 # include <glibmm.h>
 # include <giomm.h>
 # include <giomm/socket.h>
+# include <thread>
 
+# include "modes/thread_view/webextension/ae_protocol.hh"
 # include "messages.pb.h"
+
+using std::cout;
+using std::endl;
+
+using namespace Astroid;
 
 extern "C" {
 
@@ -38,9 +47,6 @@ AstroidExtension::AstroidExtension (WebKitWebExtension * e,
     gpointer gaddr) {
   extension = e;
 
-  using std::cout;
-  using std::endl;
-
   std::cout << "ae: inititalize" << std::endl;
 
   Gio::init ();
@@ -61,39 +67,57 @@ AstroidExtension::AstroidExtension (WebKitWebExtension * e,
 
   try {
     sock = cli->connect (addr);
+
+    istream = sock->get_input_stream ();
+    ostream = sock->get_output_stream ();
+
+    /* setting up reader thread */
+    reader_t = std::thread (&AstroidExtension::reader, this);
+
   } catch (Gio::Error &ex) {
     cout << "ae: error: " << ex.what () << endl;
   }
 
-
-  ext_io = Glib::IOChannel::create_from_fd (sock->get_socket()->get_fd ());
-
-  Glib::signal_io().connect (sigc::mem_fun (this, &AstroidExtension::ext_read_event), ext_io, Glib::IO_IN | Glib::IO_HUP);
-
   std::cout << "ae: init done" << std::endl;
 }
 
-bool AstroidExtension::ext_read_event (Glib::IOCondition cond) {
-  if (cond == Glib::IO_HUP) {
-    ext_io.clear();
-    /* LOG (debug) << "poll: (stdout) got HUP"; */
-    return false;
+void AstroidExtension::reader () {
+  cout << "ae: reader thread: started." << endl;
+
+  while (run) {
+    gchar buffer[2049]; buffer[0] = '\0';
+    gsize read = 0;
+
+    /* read size of message */
+    gsize sz;
+    read = istream->read ((char*)&sz, sizeof (sz));
+
+    if (read != sizeof(sz)) break;;
+
+    /* read message type */
+    AeProtocol::MessageTypes mt;
+    read = istream->read ((char*)&mt, sizeof (mt));
+    if (read != sizeof (mt)) break;
+
+    /* read message */
+    bool s = istream->read_all (buffer, sz, read);
+
+    if (!s) break;
+
+    /* parse message */
+    switch (mt) {
+      case AeProtocol::MessageTypes::Debug:
+        {
+          AstroidMessages::Debug m;
+          m.ParseFromString (buffer);
+          cout << "ae: " << m.msg () << endl;
+        }
+        break;
+
+      default:
+        break; // unknown message
+    }
   }
-
-  if ((cond & Glib::IO_IN) == 0) {
-    /* LOG (error) << "poll: invalid fifo response"; */
-    ext_io.clear ();
-    return false;
-  } else {
-    Glib::ustring buf;
-
-    ext_io->read_line(buf);
-    if (*(--buf.end()) == '\n') buf.erase (--buf.end());
-
-    std::cout << "ae: " << buf << std::endl;
-
-  }
-  return true;
 }
 
 void AstroidExtension::page_created (WebKitWebExtension * /* extension */,
