@@ -12,7 +12,93 @@ message Mark {
   bool   marked = 2;
 }
 
+message Hidden {
+  string mid = 1;
+  bool   hidden = 2;
+}
+
 message Debug {
   string msg = 1;
 }
+
+message Address {
+  string name = 1;
+  string email = 2;
+}
+
+message AddressList {
+  repeated Address addresses = 1;
+};
+
+message Tag {
+  string tag = 1;
+  string fg  = 2;
+  string bg  = 3;
+}
+
+message Signature {
+
+}
+
+message Encryption {
+
+}
+
+message MimeMessage {
+  int32  eid = 1;
+  string filename = 2;
+  string size = 3;
+
+  bool      signed = 4;
+  Signature signature = 5;
+
+  bool        encrypted = 6;
+  Encryption  encryption = 7;
+}
+
+message Attachment {
+  int32  eid = 1;
+  string filename = 2;
+  string size = 3;
+
+  bool      signed = 4;
+  Signature signature = 5;
+
+  bool        encrypted = 6;
+  Encryption  encryption = 7;
+
+  string thumbnail = 8;
+}
+
+message Message {
+  string mid = 1;
+
+  Address     sender = 2;
+  AddressList to = 3;
+  AddressList cc = 4;
+  AddressList bcc = 5;
+  Address     reply_to = 20;
+
+  string date_pretty = 6;
+  string date_verbose = 7;
+  string date_timestamp = 8;
+
+  string subject = 9;
+
+  repeated Tag tags = 10;
+
+  string gravatar = 11;
+  bool   focused  = 12;
+  bool   missing_content = 13;
+  bool   patch = 14;
+  int32  level = 15;
+  string in_reply_to = 16;
+
+  string preview = 17;
+
+  repeated MimeMessage mime_messages = 18;
+  repeated Attachment  attachments = 19;
+}
+
+
 

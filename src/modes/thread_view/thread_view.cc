@@ -592,14 +592,46 @@ namespace Astroid {
           sigc::mem_fun (this, &ThreadView::on_message_changed));
     }
 
-    ptree mjs = build_message (m); // this populates the MessageState with elements.
+    page_client.add_message (m);
 
-    /* std::stringstream js; */
-    /* js << "Astroid.add_message("; */
-    /* write_json (js, mjs); */
-    /* js << ");"; */
+    if (!edit_mode) {
+      /* optionally hide / collapse the message */
+      if (!(m->has_tag("unread") || (expand_flagged && m->has_tag("flagged")))) {
 
-    /* run_javascript (js.str ()); */
+        page_client.set_hidden_state (m, true);
+      } else {
+        // TODO:
+        /* if (!candidate_startup) */
+        /*   candidate_startup = m; */
+      }
+
+      /* focus first unread message */
+      if (!focused_message) {
+        if (m->has_tag ("unread")) {
+          focused_message = m;
+        }
+      }
+    } else {
+      focused_message = m;
+    }
+
+    page_client.focus (focused_message);
+
+    {
+      if (!edit_mode &&
+           any_of (Db::draft_tags.begin (),
+                   Db::draft_tags.end (),
+                   [&](ustring t) {
+                     return m->has_tag (t);
+                   }))
+      {
+
+        /* set warning */
+        set_warning (m, "This message is a draft, edit it with E or delete with D.");
+
+      }
+    }
+
   }
 
   void ThreadView::update_message (refptr<Message> m) {
@@ -725,8 +757,8 @@ namespace Astroid {
 
     /* preview */
     ustring bp = m->viewable_text (false, false);
-    if (static_cast<int>(bp.size()) > MAX_PREVIEW_LEN)
-      bp = bp.substr(0, MAX_PREVIEW_LEN - 3) + "...";
+    /* if (static_cast<int>(bp.size()) > MAX_PREVIEW_LEN) */
+    /*   bp = bp.substr(0, MAX_PREVIEW_LEN - 3) + "..."; */
 
     while (true) {
       size_t i = bp.find ("<br>");
@@ -1213,13 +1245,6 @@ namespace Astroid {
 # endif
   }
 
-  // TODO: [JS] [REIMPLEMENT]
-  void ThreadView::update_marked_state (refptr<Message> m) {
-    page_client.update_marked_state (m, state[m].marked);
-# if 0
-# endif
-  }
-
 
   //
 
@@ -1388,7 +1413,7 @@ namespace Astroid {
         [&] (Key) {
           if (!edit_mode) {
             state[focused_message].marked = !(state[focused_message].marked);
-            update_marked_state (focused_message);
+            page_client.set_marked_state (focused_message, state[focused_message].marked);
             return true;
           }
           return false;
@@ -1415,11 +1440,10 @@ namespace Astroid {
             for (auto &s : state) {
               if (any && !all) {
                 s.second.marked = true;
-                update_marked_state (s.first);
               } else {
                 s.second.marked = !s.second.marked;
-                update_marked_state (s.first);
               }
+              page_client.set_marked_state (s.first, s.second.marked);
             }
 
 
@@ -1724,7 +1748,7 @@ namespace Astroid {
             MessageState    s = ms.second;
             if (s.marked) {
               state[m].marked = false;
-              update_marked_state (m);
+              page_client.set_marked_state (m, state[m].marked);
             }
           }
           return true;

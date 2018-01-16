@@ -141,7 +141,7 @@ namespace Astroid {
     AeProtocol::send_message (AeProtocol::MessageTypes::Debug, m, ostream);
   }
 
-  void PageClient::update_marked_state (refptr<Message> m, bool marked) {
+  void PageClient::set_marked_state (refptr<Message> m, bool marked) {
     AstroidMessages::Mark msg;
     msg.set_mid (m->safe_mid ());
     msg.set_marked (marked);
@@ -149,5 +149,36 @@ namespace Astroid {
     AeProtocol::send_message (AeProtocol::MessageTypes::Mark, msg, ostream);
   }
 
+  void PageClient::set_hidden_state (refptr<Message> m, bool hidden) {
+    AstroidMessages::Hidden msg;
+    msg.set_mid (m->safe_mid ());
+    msg.set_hidden (hidden);
+
+    AeProtocol::send_message (AeProtocol::MessageTypes::Hidden, msg, ostream);
+  }
+
+  void PageClient::focus (refptr<Message> m) {
+    AstroidMessages::Focus msg;
+    msg.set_mid (m->safe_mid ());
+    msg.set_focus (true);
+
+    AeProtocol::send_message (AeProtocol::MessageTypes::Focus, msg, ostream);
+  }
+
+  void PageClient::add_message (refptr<Message> m) {
+    AeProtocol::send_message (AeProtocol::MessageTypes::AddMessage, make_message (m), ostream);
+  }
+
+  AstroidMessages::Message PageClient::make_message (refptr<Message> m) {
+    AstroidMessages::Message msg;
+
+    msg.set_mid (m->safe_mid());
+
+    Address sender (m->sender);
+    msg.mutable_sender()->set_name  (sender.fail_safe_name ());
+    msg.mutable_sender()->set_email (sender.email ());
+
+    return msg;
+  }
 }
 

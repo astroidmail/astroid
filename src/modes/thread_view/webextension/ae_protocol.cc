@@ -6,7 +6,7 @@
 
 namespace Astroid {
 
-  void AeProtocol::send_message (MessageTypes mt, ::google::protobuf::Message &m, Glib::RefPtr<Gio::OutputStream> ostream) {
+  void AeProtocol::send_message (MessageTypes mt, const ::google::protobuf::Message &m, Glib::RefPtr<Gio::OutputStream> ostream) {
 
     std::string o;
 

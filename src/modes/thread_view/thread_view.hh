@@ -60,9 +60,6 @@ namespace Astroid {
 
       Gtk::ScrolledWindow scroll;
 
-      const int MAX_PREVIEW_LEN = 80;
-
-      const int INDENT_PX       = 20;
       bool      indent_messages;
 
       bool edit_mode = false;
@@ -222,7 +219,6 @@ namespace Astroid {
       /* marked */
       refptr<Gdk::Pixbuf> marked_icon;
       void load_marked_icon (refptr<Message>, WebKitDOMHTMLElement *);
-      void update_marked_state (refptr<Message>);
 
       refptr<Gdk::Pixbuf> attachment_icon;
 

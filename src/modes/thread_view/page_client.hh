@@ -8,8 +8,11 @@
 
 # include "astroid.hh"
 
-namespace Astroid {
+namespace AstroidMessages {
+  class Message; // prototype
+}
 
+namespace Astroid {
   extern "C" void PageClient_init_web_extensions (
       WebKitWebContext *,
       gpointer);
@@ -23,7 +26,14 @@ namespace Astroid {
       void write ();
 
       /* ThreadView interface */
-      void update_marked_state (refptr<Message> m, bool marked);
+      void add_message (refptr<Message> m);
+
+      void set_marked_state (refptr<Message> m, bool marked);
+      void set_hidden_state (refptr<Message> m, bool hidden);
+      void focus (refptr<Message> m);
+
+    private:
+      AstroidMessages::Message make_message (refptr<Message> m);
 
     private:
       static int id;

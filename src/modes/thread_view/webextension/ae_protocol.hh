@@ -10,9 +10,11 @@ namespace Astroid {
         Debug = 0,
         Focus,
         Mark,
+        Hidden,
+        AddMessage,
       } MessageTypes;
 
-      static void send_message (MessageTypes mt, ::google::protobuf::Message &m, Glib::RefPtr<Gio::OutputStream> ostream);
+      static void send_message (MessageTypes mt, const ::google::protobuf::Message &m, Glib::RefPtr<Gio::OutputStream> ostream);
   };
 }
 
