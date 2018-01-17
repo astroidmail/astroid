@@ -81,7 +81,6 @@ message Message {
 
   string date_pretty = 6;
   string date_verbose = 7;
-  string date_timestamp = 8;
 
   string subject = 9;
 

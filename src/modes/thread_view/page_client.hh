@@ -22,6 +22,8 @@ namespace Astroid {
       PageClient ();
       ~PageClient ();
 
+      ThreadView * thread_view;
+
       void init_web_extensions (WebKitWebContext * context);
       void write ();
 
@@ -31,6 +33,8 @@ namespace Astroid {
       void set_marked_state (refptr<Message> m, bool marked);
       void set_hidden_state (refptr<Message> m, bool hidden);
       void focus (refptr<Message> m);
+
+      bool enable_gravatar = false;
 
     private:
       AstroidMessages::Message make_message (refptr<Message> m);

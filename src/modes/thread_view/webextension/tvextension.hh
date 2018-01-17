@@ -48,8 +48,7 @@ class AstroidExtension {
     void        reader ();
     bool        run = true;
 
-    void load_page ();
-    WebKitDOMHTMLDivElement * container;
+    WebKitDOMNode * container;
 
     void handle_mark (AstroidMessages::Mark &m);
     void handle_hidden (AstroidMessages::Hidden &m);

@@ -15,7 +15,17 @@
 # include "modes/thread_view/webextension/ae_protocol.hh"
 # include "messages.pb.h"
 
+# include "thread_view.hh"
 # include "message_thread.hh"
+# include "utils/utils.hh"
+# include "utils/address.hh"
+# include "utils/vector_utils.hh"
+# include "utils/ustring_utils.hh"
+# include "utils/gravatar.hh"
+
+# ifndef DISABLE_PLUGINS
+  # include "plugin/manager.hh"
+# endif
 
 using namespace boost::filesystem;
 
@@ -158,11 +168,15 @@ namespace Astroid {
   }
 
   void PageClient::focus (refptr<Message> m) {
-    AstroidMessages::Focus msg;
-    msg.set_mid (m->safe_mid ());
-    msg.set_focus (true);
+    if (m) {
+      AstroidMessages::Focus msg;
+      msg.set_mid (m->safe_mid ());
+      msg.set_focus (true);
 
-    AeProtocol::send_message (AeProtocol::MessageTypes::Focus, msg, ostream);
+      AeProtocol::send_message (AeProtocol::MessageTypes::Focus, msg, ostream);
+    } else {
+      LOG (warn) << "pc: tried to focus unset message";
+    }
   }
 
   void PageClient::add_message (refptr<Message> m) {
@@ -177,6 +191,58 @@ namespace Astroid {
     Address sender (m->sender);
     msg.mutable_sender()->set_name  (sender.fail_safe_name ());
     msg.mutable_sender()->set_email (sender.email ());
+
+    for (Address &recipient: AddressList(m->to()).addresses) {
+      AstroidMessages::Address * a = msg.mutable_to()->add_addresses();
+      a->set_name (recipient.fail_safe_name ());
+      a->set_email (recipient.email ());
+    }
+
+    for (Address &recipient: AddressList(m->cc()).addresses) {
+      AstroidMessages::Address * a = msg.mutable_cc()->add_addresses();
+      a->set_name (recipient.fail_safe_name ());
+      a->set_email (recipient.email ());
+    }
+
+    for (Address &recipient: AddressList(m->bcc()).addresses) {
+      AstroidMessages::Address * a = msg.mutable_bcc()->add_addresses();
+      a->set_name (recipient.fail_safe_name ());
+      a->set_email (recipient.email ());
+    }
+
+    msg.set_date_pretty (m->pretty_date ());
+    msg.set_date_verbose (m->pretty_verbose_date (true));
+
+    msg.set_subject (m->subject);
+
+    for (ustring &tag : m->tags) {
+      AstroidMessages::Tag * t = msg.add_tags ();
+      t->set_tag (tag);
+
+      unsigned char cv[] = { 0xff, 0xff, 0xff }; // assuming tag-background is white
+      auto clrs = Utils::get_tag_color (tag, cv);
+      t->set_fg (clrs.first);
+      t->set_bg (clrs.second);
+    }
+
+    /* avatar */
+    {
+      ustring uri = "";
+      auto se = Address(m->sender);
+# ifdef DISABLE_PLUGINS
+      if (false) {
+# else
+      if (thread_view->plugins->get_avatar_uri (se.email (), Gravatar::DefaultStr[Gravatar::Default::RETRO], 48, m, uri)) {
+# endif
+        ; // all fine, use plugins avatar
+      } else {
+        if (enable_gravatar) {
+          uri = Gravatar::get_image_uri (se.email (),Gravatar::Default::RETRO , 48);
+        }
+      }
+
+      msg.set_gravatar (uri);
+    }
 
     return msg;
   }

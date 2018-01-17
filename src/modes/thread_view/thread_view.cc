@@ -50,6 +50,8 @@ using boost::property_tree::ptree;
 namespace Astroid {
 
   ThreadView::ThreadView (MainWindow * mw) : Mode (mw) { //
+    page_client.thread_view = this;
+
     const ptree& config = astroid->config ("thread_view");
     indent_messages = config.get<bool> ("indent_messages");
     open_html_part_external = config.get<bool> ("open_html_part_external");
@@ -67,7 +69,7 @@ namespace Astroid {
 
     code_prettify_code_tag = config.get<string> ("code_prettify.code_tag");
 
-    enable_gravatar = config.get<bool>("gravatar.enable");
+    page_client.enable_gravatar = config.get<bool>("gravatar.enable");
     unread_delay = config.get<double>("mark_unread_delay");
 
     ready = false;
@@ -279,7 +281,7 @@ namespace Astroid {
               "data:image/jpeg;base64",
             };
 
-          if (enable_gravatar) {
+          if (page_client.enable_gravatar) {
             allowed_uris.push_back ("https://www.gravatar.com/avatar/");
           }
 
@@ -741,7 +743,7 @@ namespace Astroid {
 # endif
         ; // all fine, use plugins avatar
       } else {
-        if (enable_gravatar) {
+        if (page_client.enable_gravatar) {
           uri = Gravatar::get_image_uri (se.email (),Gravatar::Default::RETRO , 48);
         }
       }

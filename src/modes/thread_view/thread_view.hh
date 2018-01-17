@@ -86,8 +86,6 @@ namespace Astroid {
       bool    code_is_on = false; // for this thread
       void    filter_code_tags (ustring &); // look for code tags
 
-      bool    enable_gravatar;
-
       Theme theme;
 
 # ifndef DISABLE_PLUGINS

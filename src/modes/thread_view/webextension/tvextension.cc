@@ -163,20 +163,28 @@ void AstroidExtension::handle_mark (AstroidMessages::Mark &m) {
   g_object_unref (d);
 }
 
-void AstroidExtension::load_page () {
+void AstroidExtension::add_message (AstroidMessages::Message &m) {
+  cout << "ae: adding message: " << m.mid () << endl;
+
   WebKitDOMDocument *d = webkit_web_page_get_dom_document (page);
 
-  /* get container for message divs */
-  container = WEBKIT_DOM_HTML_DIV_ELEMENT(webkit_dom_document_get_element_by_id (d, "message_container"));
+  cout << "ae: page: " << d << endl;
+  cout << "ae: src: " << webkit_dom_element_get_inner_html (WEBKIT_DOM_ELEMENT (webkit_dom_document_get_body(d))) << endl;
 
-  g_object_unref (d);
-}
 
-void AstroidExtension::add_message (AstroidMessages::Message &m) {
+  WebKitDOMNode * t = webkit_dom_node_get_last_child (WEBKIT_DOM_NODE(d));
+  cout << "ae: last child: " << t << webkit_dom_node_get_node_name (t)<<  endl;
+
+  /* WebKitDOMElement * container = webkit_dom_document_get_element_by_id (d, "message_container"); */
+  WebKitDOMHTMLElement * container = DomUtils::select (WEBKIT_DOM_NODE(webkit_dom_document_get_body(d)), "message_container");
+  cout << "ae: container: " << container << endl;
+
+  return;
+
   ustring div_id = "message_" + m.mid();
 
   WebKitDOMNode * insert_before = webkit_dom_node_get_last_child (
-      WEBKIT_DOM_NODE (container));
+      WEBKIT_DOM_NODE(container));
 
   WebKitDOMHTMLElement * div_message = DomUtils::make_message_div (page);
 
@@ -209,6 +217,7 @@ void AstroidExtension::add_message (AstroidMessages::Message &m) {
   g_object_unref (insert_before);
   g_object_unref (div_message);
   g_object_unref (container);
+  g_object_unref (d);
 }
 
 
@@ -391,10 +400,23 @@ void AstroidExtension::handle_hidden (AstroidMessages::Hidden &msg) {
   */
 }
 
+void AstroidExtension::insert_mime_messages (AstroidMessages::Message m,
+    WebKitDOMHTMLElement * div_message) {
+}
+
 void AstroidExtension::insert_attachments (AstroidMessages::Message m,
     WebKitDOMHTMLElement * div_message) {
 
   set_attachment_icon (m, div_message); // TODO: if has attachments
+}
+
+void AstroidExtension::set_attachment_icon (AstroidMessages::Message m,
+    WebKitDOMHTMLElement * div_message) {
+}
+
+void AstroidExtension::load_marked_icon (AstroidMessages::Message m,
+    WebKitDOMHTMLElement * div_message) {
+
 }
 
 /* headers  */
@@ -500,7 +522,6 @@ void AstroidExtension::page_created (WebKitWebExtension * /* extension */,
     gpointer /* user_data */) {
 
   page = _page;
-  load_page ();
 
   std::cout << "ae: page created" << std::endl;
 

@@ -2,6 +2,7 @@
 
 # include <string>
 # include <gio/gio.h>
+# include <iostream>
 
 # include "dom_utils.hh"
 
@@ -61,8 +62,8 @@ namespace Astroid {
                                             &gerr));
     }
 
-    /* if (gerr != NULL) */
-    /*   LOG (error) << "tv: clone_s_s_err: " << gerr->message; */
+    if (gerr != NULL)
+      std::cout << "ae: dom-utils: clone_s_s_err: " << gerr->message << std::endl;
 
     return e;
   }
