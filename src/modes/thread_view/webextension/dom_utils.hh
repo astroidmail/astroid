@@ -26,6 +26,9 @@ namespace Astroid {
       static WebKitDOMHTMLElement * select (
           WebKitDOMNode * node,
           ustring         selector);
+
+      static WebKitDOMElement * get_by_id (
+          WebKitDOMDocument * n, ustring id);
   };
 }
 

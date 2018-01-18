@@ -168,18 +168,13 @@ void AstroidExtension::add_message (AstroidMessages::Message &m) {
 
   WebKitDOMDocument *d = webkit_web_page_get_dom_document (page);
 
-  cout << "ae: page: " << d << endl;
-  cout << "ae: src: " << webkit_dom_element_get_inner_html (WEBKIT_DOM_ELEMENT (webkit_dom_document_get_body(d))) << endl;
+  /* there seems to be a bug in webkit2 where get_element_by_id() is unable to
+   * find the DIV by id
+   *
+   * WebKitDOMElement * container = webkit_dom_document_get_element_by_id (d, "message_container");
+   */
 
-
-  WebKitDOMNode * t = webkit_dom_node_get_last_child (WEBKIT_DOM_NODE(d));
-  cout << "ae: last child: " << t << webkit_dom_node_get_node_name (t)<<  endl;
-
-  /* WebKitDOMElement * container = webkit_dom_document_get_element_by_id (d, "message_container"); */
-  WebKitDOMHTMLElement * container = DomUtils::select (WEBKIT_DOM_NODE(webkit_dom_document_get_body(d)), "message_container");
-  cout << "ae: container: " << container << endl;
-
-  return;
+  WebKitDOMElement * container = DomUtils::get_by_id (d, "message_container");
 
   ustring div_id = "message_" + m.mid();
 
