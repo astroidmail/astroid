@@ -175,17 +175,21 @@ void AstroidExtension::add_message (AstroidMessages::Message &m) {
    */
 
   WebKitDOMElement * container = DomUtils::get_by_id (d, "message_container");
+  cout << "container: " << container << endl;
 
   ustring div_id = "message_" + m.mid();
 
   WebKitDOMNode * insert_before = webkit_dom_node_get_last_child (
       WEBKIT_DOM_NODE(container));
 
-  WebKitDOMHTMLElement * div_message = DomUtils::make_message_div (page);
+  WebKitDOMHTMLElement * div_message = DomUtils::make_message_div (d);
+
+  cout << "message: " << div_message << endl;
 
   GError * err = NULL;
-  webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT(div_message),
-      "id", div_id.c_str(), &err);
+  /* webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT(div_message), */
+  /*     "id", div_id.c_str(), &err); */
+  webkit_dom_element_set_id (WEBKIT_DOM_ELEMENT (div_message), div_id.c_str());
 
   /* insert message div */
   webkit_dom_node_insert_before (WEBKIT_DOM_NODE(container),
@@ -226,7 +230,9 @@ void AstroidExtension::set_message_html (
   /* load message into div */
   ustring header;
   WebKitDOMHTMLElement * div_email_container =
-    DomUtils::select (WEBKIT_DOM_NODE(div_message), "div.email_container");
+    DomUtils::select_by_classes (WEBKIT_DOM_NODE(div_message), { "email_container" });
+
+  cout << "email_container: " << div_email_container << endl;
 
   /* build header */
   insert_header_address (header, "From", m.sender(), true);
@@ -251,9 +257,11 @@ void AstroidExtension::set_message_html (
   if (m.subject().size() > 0) {
     insert_header_row (header, "Subject", m.subject(), false);
 
-    WebKitDOMHTMLElement * subject = DomUtils::select (
+    WebKitDOMHTMLElement * subject = DomUtils::select_by_classes (
         WEBKIT_DOM_NODE (div_message),
-        ".header_container .subject");
+        { "header_container",  "subject"});
+
+    cout << "subject: " << subject << endl;
 
     ustring s = Glib::Markup::escape_text(m.subject());
     if (static_cast<int>(s.size()) > MAX_PREVIEW_LEN)
@@ -302,8 +310,10 @@ void AstroidExtension::set_message_html (
 
   /* insert header html*/
   WebKitDOMHTMLElement * table_header =
-    DomUtils::select (WEBKIT_DOM_NODE(div_email_container),
-        ".header_container .header");
+    DomUtils::select_by_classes (WEBKIT_DOM_NODE(div_email_container),
+        { "header_container",  "header" });
+
+  cout << "table_header: " << table_header << endl;
 
   webkit_dom_element_set_inner_html (
       WEBKIT_DOM_ELEMENT(table_header),
@@ -316,11 +326,12 @@ void AstroidExtension::set_message_html (
   /* if message is missing body, set warning and don't add any content */
 
   WebKitDOMHTMLElement * span_body =
-    DomUtils::select (WEBKIT_DOM_NODE(div_email_container), ".body");
+    DomUtils::select_by_classes (WEBKIT_DOM_NODE(div_email_container),
+        { "body" });
 
-  WebKitDOMHTMLElement * preview = DomUtils::select (
-      WEBKIT_DOM_NODE (div_message),
-      ".header_container .preview");
+  WebKitDOMHTMLElement * preview =
+    DomUtils::select_by_classes (WEBKIT_DOM_NODE(div_email_container),
+        { "header_container", "preview" });
 
   if (m.missing_content()) {
     /* set preview */
@@ -329,12 +340,12 @@ void AstroidExtension::set_message_html (
     /* set warning */
     set_warning (m, "The message file is missing, only fields cached in the notmuch database are shown. Most likely your database is out of sync.");
 
-    /* add an explenation to the body */
+    /* add an explanation to the body */
     GError *err;
 
     WebKitDOMDocument * d = webkit_web_page_get_dom_document (page);
     WebKitDOMHTMLElement * body_container =
-      DomUtils::clone_select (WEBKIT_DOM_NODE(d), "#body_template");
+      DomUtils::clone_get_by_id (WEBKIT_DOM_NODE(d), "body_template");
 
     webkit_dom_element_remove_attribute (WEBKIT_DOM_ELEMENT (body_container),
         "id");
@@ -508,7 +519,6 @@ void AstroidExtension::set_warning (AstroidMessages::Message m, ustring w) {
 void AstroidExtension::set_error (AstroidMessages::Message m, ustring w) {
 
 }
-
 /* headers end  */
 
 
