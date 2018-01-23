@@ -189,25 +189,29 @@ namespace Astroid {
     msg.set_mid (m->safe_mid());
 
     Address sender (m->sender);
-    msg.mutable_sender()->set_name  (sender.fail_safe_name ());
+    msg.mutable_sender()->set_name (sender.fail_safe_name ());
     msg.mutable_sender()->set_email (sender.email ());
+    msg.mutable_sender ()->set_full_address (sender.full_address ());
 
     for (Address &recipient: AddressList(m->to()).addresses) {
       AstroidMessages::Address * a = msg.mutable_to()->add_addresses();
       a->set_name (recipient.fail_safe_name ());
       a->set_email (recipient.email ());
+      a->set_full_address (recipient.full_address ());
     }
 
     for (Address &recipient: AddressList(m->cc()).addresses) {
       AstroidMessages::Address * a = msg.mutable_cc()->add_addresses();
       a->set_name (recipient.fail_safe_name ());
       a->set_email (recipient.email ());
+      a->set_full_address (recipient.full_address ());
     }
 
     for (Address &recipient: AddressList(m->bcc()).addresses) {
       AstroidMessages::Address * a = msg.mutable_bcc()->add_addresses();
       a->set_name (recipient.fail_safe_name ());
       a->set_email (recipient.email ());
+      a->set_full_address (recipient.full_address ());
     }
 
     msg.set_date_pretty (m->pretty_date ());

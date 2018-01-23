@@ -24,6 +24,7 @@ message Debug {
 message Address {
   string name = 1;
   string email = 2;
+  string full_address = 3;
 }
 
 message AddressList {

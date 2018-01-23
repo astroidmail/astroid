@@ -187,8 +187,6 @@ void AstroidExtension::add_message (AstroidMessages::Message &m) {
   cout << "message: " << div_message << endl;
 
   GError * err = NULL;
-  /* webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT(div_message), */
-  /*     "id", div_id.c_str(), &err); */
   webkit_dom_element_set_id (WEBKIT_DOM_ELEMENT (div_message), div_id.c_str());
 
   /* insert message div */
@@ -428,13 +426,13 @@ void AstroidExtension::load_marked_icon (AstroidMessages::Message m,
 /* headers  */
 void AstroidExtension::insert_header_date (ustring & header, AstroidMessages::Message m)
 {
-  /* ustring value = ustring::compose ( */
-  /*             "<span class=\"hidden_only\">%1</span>" */
-  /*             "<span class=\"not_hidden_only\">%2</span>", */
-  /*             m.pretty_date (), */
-  /*             m.pretty_verbose_date (true)); */
+  ustring value = ustring::compose (
+              "<span class=\"hidden_only\">%1</span>"
+              "<span class=\"not_hidden_only\">%2</span>",
+              m.date_pretty (),
+              m.date_verbose ());
 
-  /* header += create_header_row ("Date", value, true, false); */
+  header += create_header_row ("Date", value, true, false);
 }
 
 void AstroidExtension::insert_header_address (
@@ -443,9 +441,13 @@ void AstroidExtension::insert_header_address (
     AstroidMessages::Address address,
     bool important) {
 
-  /* AddressList al (address); */
+  AstroidMessages::AddressList al;
+  AstroidMessages::Address * a = al.add_addresses ();
+  a->set_name (address.name());
+  a->set_full_address (address.full_address ());
+  a->set_email (address.email ());
 
-  /* insert_header_address_list (header, title, al, important); */
+  insert_header_address_list (header, title, al, important);
 }
 
 void AstroidExtension::insert_header_address_list (
@@ -457,24 +459,24 @@ void AstroidExtension::insert_header_address_list (
   ustring value;
   bool first = true;
 
-/*   for (Address &address : addresses.addresses) { */
-/*     if (address.full_address().size() > 0) { */
-/*       if (!first) { */
-/*         value += ", "; */
-/*       } else { */
-/*         first = false; */
-/*       } */
+  for (const AstroidMessages::Address address : addresses.addresses()) {
+    if (address.full_address().size() > 0) {
+      if (!first) {
+        value += ", ";
+      } else {
+        first = false;
+      }
 
-/*       value += */
-/*         ustring::compose ("<a href=\"mailto:%3\">%4%1%5 &lt;%2&gt;</a>", */
-/*           Glib::Markup::escape_text (address.fail_safe_name ()), */
-/*           Glib::Markup::escape_text (address.email ()), */
-/*           Glib::Markup::escape_text (address.full_address()), */
-/*           (important ? "<b>" : ""), */
-/*           (important ? "</b>" : "") */
-/*           ); */
-/*     } */
-/*   } */
+      value +=
+        ustring::compose ("<a href=\"mailto:%3\">%4%1%5 &lt;%2&gt;</a>",
+          Glib::Markup::escape_text (address.name ()),
+          Glib::Markup::escape_text (address.email ()),
+          Glib::Markup::escape_text (address.full_address()),
+          (important ? "<b>" : ""),
+          (important ? "</b>" : "")
+          );
+    }
+  }
 
   header += create_header_row (title, value, important, false, false);
 }
