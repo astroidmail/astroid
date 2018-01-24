@@ -43,6 +43,7 @@ webkit_web_extension_initialize_with_user_data (
       NULL);
 
 }
+
 }
 
 AstroidExtension::AstroidExtension (WebKitWebExtension * e,
@@ -52,9 +53,6 @@ AstroidExtension::AstroidExtension (WebKitWebExtension * e,
   std::cout << "ae: inititalize" << std::endl;
 
   Gio::init ();
-
-  /* set up theme */
-
 
   /* retrieve socket address */
   std::cout << "type: " << g_variant_get_type_string ((GVariant *)gaddr) << std::endl;
@@ -307,9 +305,7 @@ void AstroidExtension::set_message_html (
         WEBKIT_DOM_NODE (div_message),
         { "avatar" }));
 
-    webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (av), "src",
-        m.gravatar().c_str (),
-        (err = NULL, &err));
+    webkit_dom_html_image_element_set_src (av, m.gravatar().c_str());
 
     g_object_unref (av);
   }
