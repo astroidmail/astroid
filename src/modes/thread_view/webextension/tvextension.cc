@@ -8,6 +8,7 @@
 # include <glibmm.h>
 # include <giomm.h>
 # include <giomm/socket.h>
+# include <gtkmm.h>
 # include <thread>
 
 # include "modes/thread_view/webextension/ae_protocol.hh"
@@ -52,7 +53,22 @@ AstroidExtension::AstroidExtension (WebKitWebExtension * e,
 
   std::cout << "ae: inititalize" << std::endl;
 
+  Glib::init ();
+  Gtk::Main::init_gtkmm_internals ();
   Gio::init ();
+
+  /* load attachment icon */
+  Glib::RefPtr<Gtk::IconTheme> theme = Gtk::IconTheme::get_default();
+  attachment_icon = theme->load_icon (
+      "mail-attachment-symbolic",
+      ATTACHMENT_ICON_WIDTH,
+      Gtk::ICON_LOOKUP_USE_BUILTIN );
+
+  /* load marked icon */
+  marked_icon = theme->load_icon (
+      "object-select-symbolic",
+      ATTACHMENT_ICON_WIDTH,
+      Gtk::ICON_LOOKUP_USE_BUILTIN );
 
   /* retrieve socket address */
   std::cout << "type: " << g_variant_get_type_string ((GVariant *)gaddr) << std::endl;
@@ -423,8 +439,32 @@ void AstroidExtension::set_attachment_icon (AstroidMessages::Message m,
 }
 
 void AstroidExtension::load_marked_icon (AstroidMessages::Message m,
-    WebKitDOMHTMLElement * div_message) {
+  WebKitDOMHTMLElement * div_message) {
+  GError *err;
 
+  WebKitDOMHTMLElement * marked_icon_img = DomUtils::select_by_classes (
+      WEBKIT_DOM_NODE (div_message),
+      { "marked", "icon", "first"});
+
+  gchar * content;
+  gsize   content_size;
+  marked_icon->save_to_buffer (content, content_size, "png");
+  ustring image_content_type = "image/png";
+
+  WebKitDOMHTMLImageElement *img = WEBKIT_DOM_HTML_IMAGE_ELEMENT (marked_icon_img);
+
+  webkit_dom_html_image_element_set_src (img, DomUtils::assemble_data_uri (image_content_type, content, content_size).c_str());
+
+  g_object_unref (marked_icon_img);
+
+  marked_icon_img = DomUtils::select_by_classes (
+      WEBKIT_DOM_NODE (div_message),
+      { "marked", "icon", "sec" });
+  img = WEBKIT_DOM_HTML_IMAGE_ELEMENT (marked_icon_img);
+
+  webkit_dom_html_image_element_set_src (img, DomUtils::assemble_data_uri (image_content_type, content, content_size).c_str());
+
+  g_object_unref (marked_icon_img);
 }
 
 /* headers  */

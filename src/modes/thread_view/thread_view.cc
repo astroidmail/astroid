@@ -132,20 +132,6 @@ namespace Astroid {
         G_CALLBACK(ThreadView_decide_policy),
         (gpointer) this);
 
-    /* load attachment icon */
-    ustring icon_string = "mail-attachment-symbolic";
-
-    Glib::RefPtr<Gtk::IconTheme> theme = Gtk::IconTheme::get_default();
-    attachment_icon = theme->load_icon (
-        icon_string,
-        ATTACHMENT_ICON_WIDTH,
-        Gtk::ICON_LOOKUP_USE_BUILTIN );
-
-    /* load marked icon */
-    marked_icon = theme->load_icon (
-        "object-select-symbolic",
-        ATTACHMENT_ICON_WIDTH,
-        Gtk::ICON_LOOKUP_USE_BUILTIN );
 
     register_keys ();
 
@@ -802,7 +788,7 @@ namespace Astroid {
       ptree attachment;
       attachment.put ("filename", c->get_filename ());
       attachment.put ("size", Utils::format_size (c->get_file_size ()));
-      attachment.put ("thumbnail", get_attachment_thumbnail (c));
+      /* attachment.put ("thumbnail", get_attachment_thumbnail (c)); */
 
       refptr<Glib::ByteArray> attachment_data = c->contents ();
 
@@ -1075,50 +1061,6 @@ namespace Astroid {
     return signature;
   } // }}}
 
-  ustring ThreadView::get_attachment_thumbnail (refptr<Chunk> c) { // {{{
-    /* set the preview image or icon on the attachment display element */
-    const char * _mtype = g_mime_content_type_get_media_type (c->content_type);
-    ustring mime_type;
-    if (_mtype == NULL) {
-      mime_type = "application/octet-stream";
-    } else {
-      mime_type = ustring(g_mime_content_type_get_mime_type (c->content_type));
-    }
-
-    LOG (debug) << "tv: set attachment, mime_type: " << mime_type << ", mtype: " << _mtype;
-
-    gchar * content;
-    gsize   content_size;
-    ustring image_content_type;
-
-    if ((_mtype != NULL) && (ustring(_mtype) == "image")) {
-      auto mis = Gio::MemoryInputStream::create ();
-
-      refptr<Glib::ByteArray> data = c->contents ();
-      mis->add_data (data->get_data (), data->size ());
-
-      try {
-
-        auto pb = Gdk::Pixbuf::create_from_stream_at_scale (mis, THUMBNAIL_WIDTH, -1, true, refptr<Gio::Cancellable>());
-        pb = pb->apply_embedded_orientation ();
-
-        pb->save_to_buffer (content, content_size, "png");
-        image_content_type = "image/png";
-      } catch (Gdk::PixbufError &ex) {
-
-        LOG (error) << "tv: could not create icon from attachmed image.";
-        attachment_icon->save_to_buffer (content, content_size, "png"); // default type is png
-        image_content_type = "image/png";
-      }
-    } else {
-      // TODO: guess icon from mime type. Using standard icon for now.
-
-      attachment_icon->save_to_buffer (content, content_size, "png"); // default type is png
-      image_content_type = "image/png";
-    }
-
-    return assemble_data_uri (image_content_type, content, content_size);
-  } // }}}
 
   void ThreadView::filter_code_tags (ustring &body) { // {{{
     time_t t0 = clock ();
@@ -1200,47 +1142,6 @@ namespace Astroid {
     /* webkit_web_view_run_javascript (webview, js.c_str (), NULL, NULL, NULL); */
   }
   /* end info and warning  */
-
-
-  /* marked  */
-  // TODO: [JS] [REIMPLEMENT]
-  void ThreadView::load_marked_icon (
-      refptr<Message> /* message */,
-      WebKitDOMHTMLElement * div_message)
-  {
-# if 0
-    GError *err;
-
-    WebKitDOMHTMLElement * marked_icon_img = DomUtils::select (
-        WEBKIT_DOM_NODE (div_message),
-        ".marked.icon.first");
-
-    gchar * content;
-    gsize   content_size;
-    marked_icon->save_to_buffer (content, content_size, "png");
-    ustring image_content_type = "image/png";
-
-    WebKitDOMHTMLImageElement *img = WEBKIT_DOM_HTML_IMAGE_ELEMENT (marked_icon_img);
-
-    err = NULL;
-    webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (img), "src",
-        DomUtils::assemble_data_uri (image_content_type, content, content_size).c_str(), &err);
-
-    g_object_unref (marked_icon_img);
-    marked_icon_img = DomUtils::select (
-        WEBKIT_DOM_NODE (div_message),
-        ".marked.icon.sec");
-    img = WEBKIT_DOM_HTML_IMAGE_ELEMENT (marked_icon_img);
-    err = NULL;
-    webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (img), "src",
-        DomUtils::assemble_data_uri (image_content_type, content, content_size).c_str(), &err);
-
-    g_object_unref (marked_icon_img);
-# endif
-  }
-
-
-  //
 
   /* end rendering  */
 
@@ -2942,14 +2843,6 @@ namespace Astroid {
     in_search_match = true;
     // TODO: [W2]
     /* webkit_web_view_search_text (webview, search_q.c_str (), false, false, true); */
-  }
-
-  /* Utils */
-  std::string ThreadView::assemble_data_uri (ustring mime_type, gchar * &data, gsize len) {
-
-    std::string base64 = "data:" + mime_type + ";base64," + Glib::Base64::encode (std::string(data, len));
-
-    return base64;
   }
 
   /***************

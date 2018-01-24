@@ -3,6 +3,7 @@
 
 # include <webkit2/webkit2.h>
 # include <unistd.h>
+# include <gtkmm.h>
 # include <glib.h>
 # include <glibmm.h>
 # include <giomm.h>
@@ -13,10 +14,12 @@
 
 # include "astroid.hh"
 # include "modes/thread_view/webextension/ae_protocol.hh"
+# include "modes/thread_view/webextension/dom_utils.hh"
 # include "messages.pb.h"
 
 # include "thread_view.hh"
 # include "message_thread.hh"
+# include "chunk.hh"
 # include "utils/utils.hh"
 # include "utils/address.hh"
 # include "utils/vector_utils.hh"
@@ -33,6 +36,13 @@ namespace Astroid {
   int PageClient::id = 0;
 
   PageClient::PageClient () {
+
+    /* load attachment icon */
+    Glib::RefPtr<Gtk::IconTheme> theme = Gtk::IconTheme::get_default();
+    attachment_icon = theme->load_icon (
+        "mail-attachment-symbolic",
+        ATTACHMENT_ICON_WIDTH,
+        Gtk::ICON_LOOKUP_USE_BUILTIN );
 
     g_signal_connect (webkit_web_context_get_default (),
         "initialize-web-extensions",
@@ -259,5 +269,50 @@ namespace Astroid {
 
     return msg;
   }
+
+  ustring PageClient::get_attachment_thumbnail (refptr<Chunk> c) { // {{{
+    /* set the preview image or icon on the attachment display element */
+    const char * _mtype = g_mime_content_type_get_media_type (c->content_type);
+    ustring mime_type;
+    if (_mtype == NULL) {
+      mime_type = "application/octet-stream";
+    } else {
+      mime_type = ustring(g_mime_content_type_get_mime_type (c->content_type));
+    }
+
+    LOG (debug) << "tv: set attachment, mime_type: " << mime_type << ", mtype: " << _mtype;
+
+    gchar * content;
+    gsize   content_size;
+    ustring image_content_type;
+
+    if ((_mtype != NULL) && (ustring(_mtype) == "image")) {
+      auto mis = Gio::MemoryInputStream::create ();
+
+      refptr<Glib::ByteArray> data = c->contents ();
+      mis->add_data (data->get_data (), data->size ());
+
+      try {
+
+        auto pb = Gdk::Pixbuf::create_from_stream_at_scale (mis, THUMBNAIL_WIDTH, -1, true, refptr<Gio::Cancellable>());
+        pb = pb->apply_embedded_orientation ();
+
+        pb->save_to_buffer (content, content_size, "png");
+        image_content_type = "image/png";
+      } catch (Gdk::PixbufError &ex) {
+
+        LOG (error) << "tv: could not create icon from attachmed image.";
+        attachment_icon->save_to_buffer (content, content_size, "png"); // default type is png
+        image_content_type = "image/png";
+      }
+    } else {
+      // TODO: guess icon from mime type. Using standard icon for now.
+
+      attachment_icon->save_to_buffer (content, content_size, "png"); // default type is png
+      image_content_type = "image/png";
+    }
+
+    return DomUtils::assemble_data_uri (image_content_type, content, content_size);
+  } // }}}
 }
 

@@ -1,9 +1,13 @@
-# include <webkit2/webkit-web-extension.h>
-
 # include <string>
 # include <vector>
 # include <gio/gio.h>
 # include <iostream>
+
+#ifdef ASTROID_WEBEXTENSION
+# include <webkit2/webkit-web-extension.h>
+# else
+# include <webkit2/webkit2.h>
+# endif
 
 # include "dom_utils.hh"
 
@@ -18,6 +22,8 @@ namespace Astroid {
 
     return base64;
   }
+
+# ifdef ASTROID_WEBEXTENSION
 
   /* clone and create html elements */
   WebKitDOMHTMLElement * DomUtils::make_message_div (WebKitDOMDocument * d) {
@@ -138,6 +144,8 @@ namespace Astroid {
     g_object_unref (es);
     return en;
   }
+
+# endif
 
 }
 

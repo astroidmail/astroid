@@ -3,7 +3,12 @@
 # include <string>
 # include <vector>
 # include <gio/gio.h>
+
+#ifdef ASTROID_WEBEXTENSION
 # include <webkit2/webkit-web-extension.h>
+# else
+# include <webkit2/webkit2.h>
+# endif
 
 # include "proto.hh"
 
@@ -13,6 +18,8 @@ namespace Astroid {
   class DomUtils {
     public:
       static std::string assemble_data_uri (ustring, gchar *&, gsize);
+
+#ifdef ASTROID_WEBEXTENSION
 
       static WebKitDOMHTMLElement * make_message_div (WebKitDOMDocument *);
 
@@ -44,6 +51,7 @@ namespace Astroid {
 
       static WebKitDOMElement * get_by_id (
           WebKitDOMNode * n, ustring id);
+# endif
   };
 }
 

@@ -2,6 +2,7 @@
 
 # include <webkit2/webkit-web-extension.h>
 # include <gmodule.h>
+# include <gtkmm.h>
 # include <glibmm.h>
 # include <giomm.h>
 # include <giomm/socket.h>
@@ -62,6 +63,12 @@ class AstroidExtension {
         WebKitDOMHTMLElement * div_message);
     void insert_attachments (AstroidMessages::Message m,
         WebKitDOMHTMLElement * div_message);
+
+    refptr<Gdk::Pixbuf> marked_icon;
+    refptr<Gdk::Pixbuf> attachment_icon;
+
+    static const int ATTACHMENT_ICON_WIDTH = 35;
+
     void load_marked_icon (AstroidMessages::Message m,
         WebKitDOMHTMLElement * div_message);
     void set_attachment_icon (AstroidMessages::Message m,

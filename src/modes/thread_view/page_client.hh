@@ -4,6 +4,7 @@
 # include <glib.h>
 # include <glibmm.h>
 # include <giomm.h>
+# include <gtkmm.h>
 # include <thread>
 
 # include "astroid.hh"
@@ -38,7 +39,12 @@ namespace Astroid {
       bool enable_gravatar = false;
 
     private:
-      AstroidMessages::Message make_message (refptr<Message> m);
+      AstroidMessages::Message  make_message (refptr<Message> m);
+      ustring                   get_attachment_thumbnail (refptr<Chunk>);
+
+      static const int THUMBNAIL_WIDTH = 150; // px
+      static const int ATTACHMENT_ICON_WIDTH = 35;
+      refptr<Gdk::Pixbuf> attachment_icon;
 
     private:
       static int id;

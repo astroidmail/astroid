@@ -206,8 +206,6 @@ namespace Astroid {
       ptree               build_mime_tree (refptr<Message>, refptr<Chunk>, bool);
       ptree               get_encryption_state (refptr<Chunk>);
       ptree               get_signature_state (refptr<Chunk>);
-      ustring             get_attachment_thumbnail (refptr<Chunk>);
-      static std::string  assemble_data_uri (ustring, gchar *&, gsize);
 
 
       bool open_html_part_external;
@@ -216,14 +214,6 @@ namespace Astroid {
       void update_all_indent_states ();
       void update_indent_state (refptr<Message>);
 
-      /* marked */
-      refptr<Gdk::Pixbuf> marked_icon;
-      void load_marked_icon (refptr<Message>, WebKitDOMHTMLElement *);
-
-      refptr<Gdk::Pixbuf> attachment_icon;
-
-      static const int THUMBNAIL_WIDTH = 150; // px
-      static const int ATTACHMENT_ICON_WIDTH = 35;
 
       void save_all_attachments ();
     public:
