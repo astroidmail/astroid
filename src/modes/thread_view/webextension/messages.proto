@@ -21,6 +21,10 @@ message Debug {
   string msg = 1;
 }
 
+message StyleSheet {
+  string css = 1;
+}
+
 message Address {
   string name = 1;
   string email = 2;

@@ -50,6 +50,8 @@ class AstroidExtension {
 
     WebKitDOMNode * container;
 
+    void handle_stylesheet (AstroidMessages::StyleSheet &s);
+
     void handle_mark (AstroidMessages::Mark &m);
     void handle_hidden (AstroidMessages::Hidden &m);
 

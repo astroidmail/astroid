@@ -109,6 +109,7 @@ namespace Astroid {
 
   void PageClient::reader () {
     while (run) {
+      // TODO: avoid buffer overflows
       gchar buffer[2049]; buffer[0] = '\0';
       gsize read = 0;
 
@@ -142,6 +143,14 @@ namespace Astroid {
           break; // unknown message
       }
     }
+  }
+
+  void PageClient::load () {
+    /* load style sheet */
+    LOG (debug) << "pc: sending stylesheet..";
+    AstroidMessages::StyleSheet s;
+    s.set_css (thread_view->theme.thread_view_css.c_str ());
+    AeProtocol::send_message (AeProtocol::MessageTypes::StyleSheet, s, ostream);
   }
 
   void PageClient::write () {

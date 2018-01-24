@@ -28,6 +28,7 @@ namespace Astroid {
       void write ();
 
       /* ThreadView interface */
+      void load ();
       void add_message (refptr<Message> m);
 
       void set_marked_state (refptr<Message> m, bool marked);

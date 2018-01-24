@@ -17,6 +17,7 @@
 
 using std::cout;
 using std::endl;
+using std::flush;
 
 using namespace Astroid;
 
@@ -89,7 +90,6 @@ void AstroidExtension::reader () {
   cout << "ae: reader thread: started." << endl;
 
   while (run) {
-    gchar buffer[2049]; buffer[0] = '\0';
     gsize read = 0;
 
     /* read size of message */
@@ -104,6 +104,7 @@ void AstroidExtension::reader () {
     if (read != sizeof (mt)) break;
 
     /* read message */
+    gchar buffer[sz + 1]; buffer[sz] = '\0'; // TODO: set max buffer size
     bool s = istream->read_all (buffer, sz, read);
 
     if (!s) break;
@@ -126,6 +127,14 @@ void AstroidExtension::reader () {
         }
         break;
 
+      case AeProtocol::MessageTypes::StyleSheet:
+        {
+          AstroidMessages::StyleSheet s;
+          s.ParseFromString (buffer);
+          handle_stylesheet (s);
+        }
+        break;
+
       case AeProtocol::MessageTypes::AddMessage:
         {
           AstroidMessages::Message m;
@@ -138,6 +147,23 @@ void AstroidExtension::reader () {
         break; // unknown message
     }
   }
+}
+
+void AstroidExtension::handle_stylesheet (AstroidMessages::StyleSheet &s) {
+  /* load css style */
+  cout << "ae: adding stylesheet.." << flush;
+  GError *err = NULL;
+  WebKitDOMDocument *d = webkit_web_page_get_dom_document (page);
+  WebKitDOMElement  *e = webkit_dom_document_create_element (d, "STYLE", &err);
+
+  WebKitDOMText *t = webkit_dom_document_create_text_node
+    (d, s.css().c_str());
+
+  webkit_dom_node_append_child (WEBKIT_DOM_NODE(e), WEBKIT_DOM_NODE(t), (err = NULL, &err));
+
+  WebKitDOMHTMLHeadElement * head = webkit_dom_document_get_head (d);
+  webkit_dom_node_append_child (WEBKIT_DOM_NODE(head), WEBKIT_DOM_NODE(e), (err = NULL, &err));
+  cout << "done" << endl;
 }
 
 void AstroidExtension::handle_mark (AstroidMessages::Mark &m) {
@@ -275,36 +301,18 @@ void AstroidExtension::set_message_html (
   }
 
   /* avatar */
-  /*
-  {
-    ustring uri = "";
-    auto se = Address(m->sender);
-# ifdef DISABLE_PLUGINS
-    if (false) {
-# else
-    if (plugins->get_avatar_uri (se.email (), Gravatar::DefaultStr[Gravatar::Default::RETRO], 48, m, uri)) {
-# endif
-      ; // all fine, use plugins avatar
-    } else {
-      if (enable_gravatar) {
-        uri = Gravatar::get_image_uri (se.email (),Gravatar::Default::RETRO , 48);
-      }
-    }
+  if (!m.gravatar().empty ()) {
+    WebKitDOMHTMLImageElement * av = WEBKIT_DOM_HTML_IMAGE_ELEMENT (
+        DomUtils::select_by_classes (
+        WEBKIT_DOM_NODE (div_message),
+        { "avatar" }));
 
-    if (!uri.empty ()) {
-      WebKitDOMHTMLImageElement * av = WEBKIT_DOM_HTML_IMAGE_ELEMENT (
-          DomUtils::select (
-          WEBKIT_DOM_NODE (div_message),
-          ".avatar"));
+    webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (av), "src",
+        m.gravatar().c_str (),
+        (err = NULL, &err));
 
-      webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (av), "src",
-          uri.c_str (),
-          (err = NULL, &err));
-
-      g_object_unref (av);
-    }
+    g_object_unref (av);
   }
-    */
 
   /* insert header html*/
   WebKitDOMHTMLElement * table_header =

@@ -81,14 +81,6 @@ namespace Astroid {
     /* content manager for adding theme and script */
     webcontent = webkit_user_content_manager_new ();
 
-    /* add style sheet */
-    WebKitUserStyleSheet * style = webkit_user_style_sheet_new (
-        theme.thread_view_css.c_str(),
-        WEBKIT_USER_CONTENT_INJECT_TOP_FRAME,
-        WEBKIT_USER_STYLE_LEVEL_AUTHOR,
-        NULL, NULL);
-    webkit_user_content_manager_add_style_sheet (webcontent, style);
-
     /* create webview */
     webview = WEBKIT_WEB_VIEW (webkit_web_view_new_with_user_content_manager (webcontent));
 
@@ -445,8 +437,8 @@ namespace Astroid {
 
           /* render */
           wk_loaded = true;
+          page_client.load ();
           render_messages ();
-
         }
       default:
         break;

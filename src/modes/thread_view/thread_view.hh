@@ -49,6 +49,8 @@ namespace Astroid {
 
 
   class ThreadView : public Mode {
+    friend PageClient;
+
     public:
       ThreadView (MainWindow *);
       ~ThreadView ();
@@ -187,7 +189,7 @@ namespace Astroid {
       WebKitSettings *    websettings;
       WebKitUserContentManager * webcontent;
 
-    private:
+    protected:
       std::atomic<bool> wk_loaded;
 
       /* rendering */
