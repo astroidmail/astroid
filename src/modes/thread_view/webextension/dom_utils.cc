@@ -116,12 +116,7 @@ namespace Astroid {
 
 
   WebKitDOMElement * DomUtils::get_by_id (WebKitDOMDocument * d, ustring id) {
-    WebKitDOMElement * en;
-
-    WebKitDOMElement * b = WEBKIT_DOM_ELEMENT (webkit_dom_document_get_body (WEBKIT_DOM_DOCUMENT(d)));
-
-    en = get_by_id (WEBKIT_DOM_NODE(b), id);
-    g_object_unref (b);
+    WebKitDOMElement * en = webkit_dom_document_get_element_by_id (d, id.c_str());
 
     return en;
   }

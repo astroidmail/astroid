@@ -80,7 +80,6 @@ class AstroidExtension {
     void insert_header_address_list (ustring &header, ustring title, AstroidMessages::AddressList al, bool important);
     void insert_header_row (ustring &header, ustring title, ustring value, bool important);
     ustring create_header_row (ustring title, ustring value, bool important, bool escape, bool noprint = false);
-    ustring header_row_value (ustring value, bool escape);
 
     void set_warning (AstroidMessages::Message, ustring);
     void set_error (AstroidMessages::Message, ustring);

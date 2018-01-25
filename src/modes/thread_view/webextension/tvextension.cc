@@ -10,6 +10,7 @@
 # include <giomm/socket.h>
 # include <gtkmm.h>
 # include <thread>
+# include <functional>
 
 # include "modes/thread_view/webextension/ae_protocol.hh"
 # include "modes/thread_view/webextension/dom_utils.hh"
@@ -137,7 +138,9 @@ void AstroidExtension::reader () {
         {
           AstroidMessages::Mark m;
           m.ParseFromString (buffer);
-          handle_mark (m);
+          Glib::signal_idle().connect_once (
+              sigc::bind (
+                sigc::mem_fun(*this, &AstroidExtension::handle_mark), m));
         }
         break;
 
@@ -145,7 +148,9 @@ void AstroidExtension::reader () {
         {
           AstroidMessages::StyleSheet s;
           s.ParseFromString (buffer);
-          handle_stylesheet (s);
+          Glib::signal_idle().connect_once (
+              sigc::bind (
+                sigc::mem_fun(*this, &AstroidExtension::handle_stylesheet), s));
         }
         break;
 
@@ -153,7 +158,9 @@ void AstroidExtension::reader () {
         {
           AstroidMessages::Message m;
           m.ParseFromString (buffer);
-          add_message (m);
+          Glib::signal_idle().connect_once (
+              sigc::bind (
+                sigc::mem_fun(*this, &AstroidExtension::add_message), m));
         }
         break;
 
@@ -543,19 +550,15 @@ ustring AstroidExtension::create_header_row (
     bool noprint) {
 
   return ustring::compose (
-      "<div class=\"field %1 %2\" id=\"%3\">"
+      "<div class=\"field%1%2\" id=\"%3\">"
       "  <div class=\"title\">%3:</div>"
       "  <div class=\"value\">%4</div>"
       "</div>",
-      (important ? "important" : ""),
-      (noprint ? "noprint" : ""),
+      (important ? " important" : ""),
+      (noprint ? " noprint" : ""),
       Glib::Markup::escape_text (title),
-      header_row_value (value, escape)
+      (escape ? Glib::Markup::escape_text (value) : value)
       );
-}
-
-ustring AstroidExtension::header_row_value (ustring value, bool escape)  {
-  return (escape ? Glib::Markup::escape_text (value) : value);
 }
 
 void AstroidExtension::set_warning (AstroidMessages::Message m, ustring w) {
