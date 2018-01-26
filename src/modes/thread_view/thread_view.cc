@@ -622,12 +622,7 @@ namespace Astroid {
     ptree mjs = build_message (m); // this populates the MessageState with elements.
     state[m].current_element = std::max((unsigned int) (state[m].elements.size () - 1), state[m].current_element);
 
-    /* std::stringstream js; */
-    /* js << "Astroid.add_message("; */
-    /* write_json (js, mjs); */
-    /* js << ");"; */
-
-    /* run_javascript (js.str ()); */
+    page_client.update_message (m);
 
     // if the updated message was focused, the currently focused element may
     // have changed.

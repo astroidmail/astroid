@@ -72,8 +72,6 @@ AstroidExtension::AstroidExtension (WebKitWebExtension * e,
       Gtk::ICON_LOOKUP_USE_BUILTIN );
 
   /* retrieve socket address */
-  std::cout << "type: " << g_variant_get_type_string ((GVariant *)gaddr) << std::endl;
-
   gsize sz;
   const char * caddr = g_variant_get_string ((GVariant *) gaddr, &sz);
   std::cout << "addr: " << caddr << std::endl;
@@ -99,6 +97,15 @@ AstroidExtension::AstroidExtension (WebKitWebExtension * e,
   }
 
   std::cout << "ae: init done" << std::endl;
+}
+
+void AstroidExtension::page_created (WebKitWebExtension * /* extension */,
+    WebKitWebPage * _page,
+    gpointer /* user_data */) {
+
+  page = _page;
+
+  cout << "ae: page created: " << (int) webkit_web_page_get_id (page) << ": " << webkit_web_page_get_uri (page) << endl;
 }
 
 void AstroidExtension::reader () {
@@ -222,7 +229,6 @@ void AstroidExtension::add_message (AstroidMessages::Message &m) {
    */
 
   WebKitDOMElement * container = DomUtils::get_by_id (d, "message_container");
-  cout << "container: " << container << endl;
 
   ustring div_id = "message_" + m.mid();
 
@@ -230,8 +236,6 @@ void AstroidExtension::add_message (AstroidMessages::Message &m) {
       WEBKIT_DOM_NODE(container));
 
   WebKitDOMHTMLElement * div_message = DomUtils::make_message_div (d);
-
-  cout << "message: " << div_message << endl;
 
   GError * err = NULL;
   webkit_dom_element_set_id (WEBKIT_DOM_ELEMENT (div_message), div_id.c_str());
@@ -275,9 +279,7 @@ void AstroidExtension::set_message_html (
   /* load message into div */
   ustring header;
   WebKitDOMHTMLElement * div_email_container =
-    DomUtils::select_by_classes (WEBKIT_DOM_NODE(div_message), { "email_container" });
-
-  cout << "email_container: " << div_email_container << endl;
+    DomUtils::select (WEBKIT_DOM_NODE(div_message),  ".email_container");
 
   /* build header */
   insert_header_address (header, "From", m.sender(), true);
@@ -302,11 +304,9 @@ void AstroidExtension::set_message_html (
   if (m.subject().size() > 0) {
     insert_header_row (header, "Subject", m.subject(), false);
 
-    WebKitDOMHTMLElement * subject = DomUtils::select_by_classes (
+    WebKitDOMHTMLElement * subject = DomUtils::select (
         WEBKIT_DOM_NODE (div_message),
-        { "header_container",  "subject"});
-
-    cout << "subject: " << subject << endl;
+        ".header_container .subject");
 
     ustring s = Glib::Markup::escape_text(m.subject());
     if (static_cast<int>(s.size()) > MAX_PREVIEW_LEN)
@@ -324,9 +324,9 @@ void AstroidExtension::set_message_html (
   /* avatar */
   if (!m.gravatar().empty ()) {
     WebKitDOMHTMLImageElement * av = WEBKIT_DOM_HTML_IMAGE_ELEMENT (
-        DomUtils::select_by_classes (
+        DomUtils::select (
         WEBKIT_DOM_NODE (div_message),
-        { "avatar" }));
+        ".avatar" ));
 
     webkit_dom_html_image_element_set_src (av, m.gravatar().c_str());
 
@@ -335,10 +335,8 @@ void AstroidExtension::set_message_html (
 
   /* insert header html*/
   WebKitDOMHTMLElement * table_header =
-    DomUtils::select_by_classes (WEBKIT_DOM_NODE(div_email_container),
-        { "header_container",  "header" });
-
-  cout << "table_header: " << table_header << endl;
+    DomUtils::select (WEBKIT_DOM_NODE(div_email_container),
+        ".header_container .header" );
 
   webkit_dom_element_set_inner_html (
       WEBKIT_DOM_ELEMENT(table_header),
@@ -349,14 +347,13 @@ void AstroidExtension::set_message_html (
   /* message_update_css_tags (m, WEBKIT_DOM_ELEMENT(div_message)); */
 
   /* if message is missing body, set warning and don't add any content */
-
   WebKitDOMHTMLElement * span_body =
-    DomUtils::select_by_classes (WEBKIT_DOM_NODE(div_email_container),
-        { "body" });
+    DomUtils::select (WEBKIT_DOM_NODE(div_email_container),
+        ".body" );
 
   WebKitDOMHTMLElement * preview =
-    DomUtils::select_by_classes (WEBKIT_DOM_NODE(div_email_container),
-        { "header_container", "preview" });
+    DomUtils::select (WEBKIT_DOM_NODE(div_email_container),
+        ".header_container .preview" );
 
   if (m.missing_content()) {
     /* set preview */
@@ -370,7 +367,7 @@ void AstroidExtension::set_message_html (
 
     WebKitDOMDocument * d = webkit_web_page_get_dom_document (page);
     WebKitDOMHTMLElement * body_container =
-      DomUtils::clone_get_by_id (WEBKIT_DOM_NODE(d), "body_template");
+      DomUtils::clone_get_by_id (d, "body_template");
 
     webkit_dom_element_remove_attribute (WEBKIT_DOM_ELEMENT (body_container),
         "id");
@@ -449,9 +446,9 @@ void AstroidExtension::load_marked_icon (AstroidMessages::Message m,
   WebKitDOMHTMLElement * div_message) {
   GError *err;
 
-  WebKitDOMHTMLElement * marked_icon_img = DomUtils::select_by_classes (
+  WebKitDOMHTMLElement * marked_icon_img = DomUtils::select (
       WEBKIT_DOM_NODE (div_message),
-      { "marked", "icon", "first"});
+      ".marked.icon.first");
 
   gchar * content;
   gsize   content_size;
@@ -464,9 +461,9 @@ void AstroidExtension::load_marked_icon (AstroidMessages::Message m,
 
   g_object_unref (marked_icon_img);
 
-  marked_icon_img = DomUtils::select_by_classes (
+  marked_icon_img = DomUtils::select (
       WEBKIT_DOM_NODE (div_message),
-      { "marked", "icon", "sec" });
+      ".marked.icon.sec");
   img = WEBKIT_DOM_HTML_IMAGE_ELEMENT (marked_icon_img);
 
   webkit_dom_html_image_element_set_src (img, DomUtils::assemble_data_uri (image_content_type, content, content_size).c_str());
@@ -474,7 +471,8 @@ void AstroidExtension::load_marked_icon (AstroidMessages::Message m,
   g_object_unref (marked_icon_img);
 }
 
-/* headers  */
+
+/* headers  {{{ */
 void AstroidExtension::insert_header_date (ustring & header, AstroidMessages::Message m)
 {
   ustring value = ustring::compose (
@@ -560,7 +558,9 @@ ustring AstroidExtension::create_header_row (
       (escape ? Glib::Markup::escape_text (value) : value)
       );
 }
+/* headers end  }}} */
 
+/* warning and info {{{ */
 void AstroidExtension::set_warning (AstroidMessages::Message m, ustring w) {
 
 }
@@ -568,19 +568,5 @@ void AstroidExtension::set_warning (AstroidMessages::Message m, ustring w) {
 void AstroidExtension::set_error (AstroidMessages::Message m, ustring w) {
 
 }
-/* headers end  */
-
-
-void AstroidExtension::page_created (WebKitWebExtension * /* extension */,
-    WebKitWebPage * _page,
-    gpointer /* user_data */) {
-
-  page = _page;
-
-  std::cout << "ae: page created" << std::endl;
-
-  g_print ("Page %d created for %s\n",
-           (int) webkit_web_page_get_id (page),
-           webkit_web_page_get_uri (page));
-}
+/* }}} */
 

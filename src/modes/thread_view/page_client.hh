@@ -31,6 +31,7 @@ namespace Astroid {
       /* ThreadView interface */
       void load ();
       void add_message (refptr<Message> m);
+      void update_message (refptr<Message> m);
 
       void set_marked_state (refptr<Message> m, bool marked);
       void set_hidden_state (refptr<Message> m, bool hidden);
@@ -42,8 +43,8 @@ namespace Astroid {
       AstroidMessages::Message  make_message (refptr<Message> m);
       ustring                   get_attachment_thumbnail (refptr<Chunk>);
 
-      static const int THUMBNAIL_WIDTH = 150; // px
-      static const int ATTACHMENT_ICON_WIDTH = 35;
+      static const int THUMBNAIL_WIDTH        = 150; // px
+      static const int ATTACHMENT_ICON_WIDTH  = 35;
       refptr<Gdk::Pixbuf> attachment_icon;
 
     private:
@@ -60,7 +61,7 @@ namespace Astroid {
 
       void        reader ();
       std::thread reader_t;
-      bool        run;
+      bool        reader_run;
   };
 
 }

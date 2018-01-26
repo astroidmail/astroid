@@ -63,7 +63,7 @@ namespace Astroid {
       unlink (socket_addr.c_str ());
     }
 
-    run = false;
+    reader_run = false;
   }
 
   void PageClient::init_web_extensions (WebKitWebContext * context) {
@@ -118,7 +118,7 @@ namespace Astroid {
   }
 
   void PageClient::reader () {
-    while (run) {
+    while (reader_run) {
       // TODO: avoid buffer overflows
       gchar buffer[2049]; buffer[0] = '\0';
       gsize read = 0;
@@ -200,6 +200,10 @@ namespace Astroid {
 
   void PageClient::add_message (refptr<Message> m) {
     AeProtocol::send_message (AeProtocol::MessageTypes::AddMessage, make_message (m), ostream);
+  }
+
+  void PageClient::update_message (refptr<Message> m) {
+    AeProtocol::send_message (AeProtocol::MessageTypes::UpdateMessage, make_message (m), ostream);
   }
 
   AstroidMessages::Message PageClient::make_message (refptr<Message> m) {
