@@ -17,6 +17,8 @@
 # include "modes/thread_view/webextension/dom_utils.hh"
 # include "messages.pb.h"
 
+# include "astroid.hh"
+# include "config.hh"
 # include "thread_view.hh"
 # include "message_thread.hh"
 # include "chunk.hh"
@@ -68,21 +70,17 @@ namespace Astroid {
 
     reader_run = false;
 
-    if (!socket_addr.empty () && exists (socket_addr.c_str ())) {
-      LOG (debug) << "pc: closing";
+    LOG (debug) << "pc: closing";
 
-      if (reader_cancel)
-        reader_cancel->cancel ();
-      reader_t.join ();
+    if (reader_cancel)
+      reader_cancel->cancel ();
+    reader_t.join ();
 
-      istream.clear ();
-      ostream.clear ();
+    istream.clear ();
+    ostream.clear ();
 
-      ext->close ();
-      srv->close ();
-
-      unlink (socket_addr.c_str ());
-    }
+    ext->close ();
+    srv->close ();
   }
 
   void PageClient::init_web_extensions (WebKitWebContext * context) {
@@ -99,10 +97,13 @@ namespace Astroid {
     /* set up unix socket */
     LOG (warn) << "pc: id: " << id;
 
-    socket_addr = ustring::compose ("/tmp/astroid.%1", id);
+    socket_addr = ustring::compose ("%1/sockets/astroid.%2.%3",
+        astroid->standard_paths ().runtime_dir.c_str(),
+        id,
+        UstringUtils::random_alphanumeric (30));
 
     refptr<Gio::UnixSocketAddress> addr = Gio::UnixSocketAddress::create (socket_addr,
-        Gio::UNIX_SOCKET_ADDRESS_PATH);
+        Gio::UNIX_SOCKET_ADDRESS_ABSTRACT);
 
     refptr<Gio::SocketAddress> eaddr;
 

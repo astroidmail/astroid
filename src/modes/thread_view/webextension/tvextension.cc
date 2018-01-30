@@ -77,7 +77,7 @@ AstroidExtension::AstroidExtension (WebKitWebExtension * e,
   std::cout << "addr: " << caddr << std::endl;
 
   refptr<Gio::UnixSocketAddress> addr = Gio::UnixSocketAddress::create (caddr,
-      Gio::UNIX_SOCKET_ADDRESS_PATH);
+      Gio::UNIX_SOCKET_ADDRESS_ABSTRACT);
 
   /* connect to socket */
   std::cout << "ae: connecting.." << std::endl;
