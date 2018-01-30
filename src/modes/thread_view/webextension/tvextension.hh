@@ -29,6 +29,7 @@ webkit_web_extension_initialize_with_user_data (WebKitWebExtension *extension, g
 class AstroidExtension {
   public:
     AstroidExtension (WebKitWebExtension *, gpointer);
+    ~AstroidExtension ();
 
     void page_created (WebKitWebExtension *, WebKitWebPage *, gpointer);
 
@@ -48,6 +49,7 @@ class AstroidExtension {
     std::thread reader_t;
     void        reader ();
     bool        run = true;
+    refptr<Gio::Cancellable> reader_cancel;
 
     WebKitDOMNode * container;
 

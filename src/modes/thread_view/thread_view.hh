@@ -18,7 +18,6 @@
 # include "modes/mode.hh"
 # include "message_thread.hh"
 # include "theme.hh"
-# include "page_client.hh"
 # ifndef DISABLE_PLUGINS
   # include "plugin/manager.hh"
 # endif
@@ -97,7 +96,7 @@ namespace Astroid {
       void pre_close () override;
 
       /* Web extension */
-      PageClient page_client;
+      PageClient * page_client;
 
     private:
       /* focus and message state */

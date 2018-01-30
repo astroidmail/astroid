@@ -99,6 +99,19 @@ AstroidExtension::AstroidExtension (WebKitWebExtension * e,
   std::cout << "ae: init done" << std::endl;
 }
 
+AstroidExtension::~AstroidExtension () {
+  /* stop reader thread */
+  run = false;
+  if (reader_cancel)
+    reader_cancel->cancel ();
+  reader_t.join ();
+
+
+  /* close connection */
+  sock->close ();
+
+}
+
 void AstroidExtension::page_created (WebKitWebExtension * /* extension */,
     WebKitWebPage * _page,
     gpointer /* user_data */) {
@@ -116,18 +129,23 @@ void AstroidExtension::reader () {
 
     /* read size of message */
     gsize sz;
-    read = istream->read ((char*)&sz, sizeof (sz));
+    try {
+      read = istream->read ((char*)&sz, sizeof (sz), reader_cancel); // blocking
+    } catch (Gio::Error &e) {
+      cout << "ae: reader thread: " << e.what () << endl;
+      return;
+    }
 
     if (read != sizeof(sz)) break;;
 
     /* read message type */
     AeProtocol::MessageTypes mt;
-    read = istream->read ((char*)&mt, sizeof (mt));
+    read = istream->read ((char*)&mt, sizeof (mt), reader_cancel);
     if (read != sizeof (mt)) break;
 
     /* read message */
     gchar buffer[sz + 1]; buffer[sz] = '\0'; // TODO: set max buffer size
-    bool s = istream->read_all (buffer, sz, read);
+    bool s = istream->read_all (buffer, sz, read, reader_cancel);
 
     if (!s) break;
 

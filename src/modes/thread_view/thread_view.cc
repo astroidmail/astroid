@@ -50,7 +50,8 @@ using boost::property_tree::ptree;
 namespace Astroid {
 
   ThreadView::ThreadView (MainWindow * mw) : Mode (mw) { //
-    page_client.thread_view = this;
+    page_client = new PageClient ();
+    page_client->thread_view = this;
 
     const ptree& config = astroid->config ("thread_view");
     indent_messages = config.get<bool> ("indent_messages");
@@ -69,7 +70,7 @@ namespace Astroid {
 
     code_prettify_code_tag = config.get<string> ("code_prettify.code_tag");
 
-    page_client.enable_gravatar = config.get<bool>("gravatar.enable");
+    page_client->enable_gravatar = config.get<bool>("gravatar.enable");
     unread_delay = config.get<double>("mark_unread_delay");
 
     ready = false;
@@ -146,6 +147,8 @@ namespace Astroid {
 
   ThreadView::~ThreadView () { //
     LOG (debug) << "tv: deconstruct.";
+    g_object_unref (websettings);
+    g_object_unref (webcontent);
   }
 
   void ThreadView::pre_close () {
@@ -153,6 +156,8 @@ namespace Astroid {
     plugins->deactivate ();
     delete plugins;
 # endif
+
+    delete page_client;
   }
 
   /* navigation requests  */
@@ -259,7 +264,7 @@ namespace Astroid {
               "data:image/jpeg;base64",
             };
 
-          if (page_client.enable_gravatar) {
+          if (page_client->enable_gravatar) {
             allowed_uris.push_back ("https://www.gravatar.com/avatar/");
           }
 
@@ -423,8 +428,13 @@ namespace Astroid {
 
           /* render */
           wk_loaded = true;
-          page_client.load ();
-          render_messages ();
+
+          if (page_client->ready) {
+            page_client->load ();
+            render_messages ();
+
+            /* if page client is not yet ready it will call this when ready */
+          }
         }
       default:
         break;
@@ -572,13 +582,13 @@ namespace Astroid {
           sigc::mem_fun (this, &ThreadView::on_message_changed));
     }
 
-    page_client.add_message (m);
+    page_client->add_message (m);
 
     if (!edit_mode) {
       /* optionally hide / collapse the message */
       if (!(m->has_tag("unread") || (expand_flagged && m->has_tag("flagged")))) {
 
-        page_client.set_hidden_state (m, true);
+        page_client->set_hidden_state (m, true);
       } else {
         // TODO:
         /* if (!candidate_startup) */
@@ -595,7 +605,7 @@ namespace Astroid {
       focused_message = m;
     }
 
-    page_client.focus (focused_message);
+    page_client->focus (focused_message);
 
     {
       if (!edit_mode &&
@@ -622,7 +632,7 @@ namespace Astroid {
     ptree mjs = build_message (m); // this populates the MessageState with elements.
     state[m].current_element = std::max((unsigned int) (state[m].elements.size () - 1), state[m].current_element);
 
-    page_client.update_message (m);
+    page_client->update_message (m);
 
     // if the updated message was focused, the currently focused element may
     // have changed.
@@ -716,7 +726,7 @@ namespace Astroid {
 # endif
         ; // all fine, use plugins avatar
       } else {
-        if (page_client.enable_gravatar) {
+        if (page_client->enable_gravatar) {
           uri = Gravatar::get_image_uri (se.email (),Gravatar::Default::RETRO , 48);
         }
       }
@@ -1163,7 +1173,7 @@ namespace Astroid {
     keys.register_key ("j", "thread_view.down",
         "Scroll down or move focus to next element",
         [&] (Key) {
-          page_client.write ();
+          page_client->write ();
           focus_next_element ();
           return true;
         });
@@ -1303,7 +1313,7 @@ namespace Astroid {
         [&] (Key) {
           if (!edit_mode) {
             state[focused_message].marked = !(state[focused_message].marked);
-            page_client.set_marked_state (focused_message, state[focused_message].marked);
+            page_client->set_marked_state (focused_message, state[focused_message].marked);
             return true;
           }
           return false;
@@ -1333,7 +1343,7 @@ namespace Astroid {
               } else {
                 s.second.marked = !s.second.marked;
               }
-              page_client.set_marked_state (s.first, s.second.marked);
+              page_client->set_marked_state (s.first, s.second.marked);
             }
 
 
@@ -1638,7 +1648,7 @@ namespace Astroid {
             MessageState    s = ms.second;
             if (s.marked) {
               state[m].marked = false;
-              page_client.set_marked_state (m, state[m].marked);
+              page_client->set_marked_state (m, state[m].marked);
             }
           }
           return true;

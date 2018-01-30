@@ -37,6 +37,9 @@ namespace Astroid {
 
   PageClient::PageClient () {
 
+    id++;
+    ready = false;
+
     /* load attachment icon */
     Glib::RefPtr<Gtk::IconTheme> theme = Gtk::IconTheme::get_default();
     attachment_icon = theme->load_icon (
@@ -44,7 +47,7 @@ namespace Astroid {
         ATTACHMENT_ICON_WIDTH,
         Gtk::ICON_LOOKUP_USE_BUILTIN );
 
-    g_signal_connect (webkit_web_context_get_default (),
+    extension_connect_id = g_signal_connect (webkit_web_context_get_default (),
         "initialize-web-extensions",
         G_CALLBACK (PageClient_init_web_extensions),
         (gpointer) this);
@@ -59,11 +62,27 @@ namespace Astroid {
   }
 
   PageClient::~PageClient () {
-    if (!socket_addr.empty () && exists (socket_addr.c_str ())) {
-      unlink (socket_addr.c_str ());
-    }
+    LOG (debug) << "pc: destruct";
+    g_signal_handler_disconnect (webkit_web_context_get_default (),
+        extension_connect_id);
 
     reader_run = false;
+
+    if (!socket_addr.empty () && exists (socket_addr.c_str ())) {
+      LOG (debug) << "pc: closing";
+
+      if (reader_cancel)
+        reader_cancel->cancel ();
+      reader_t.join ();
+
+      istream.clear ();
+      ostream.clear ();
+
+      ext->close ();
+      srv->close ();
+
+      unlink (socket_addr.c_str ());
+    }
   }
 
   void PageClient::init_web_extensions (WebKitWebContext * context) {
@@ -78,7 +97,7 @@ namespace Astroid {
 # endif
 
     /* set up unix socket */
-    id++;
+    LOG (warn) << "pc: id: " << id;
 
     socket_addr = ustring::compose ("/tmp/astroid.%1", id);
 
@@ -114,18 +133,32 @@ namespace Astroid {
     ostream = ext->get_output_stream ();
 
     /* setting up reader */
+    reader_cancel = Gio::Cancellable::create ();
     reader_t = std::thread (&PageClient::reader, this);
+
+    ready = true;
+
+    if (thread_view->wk_loaded) {
+      load ();
+      thread_view->render_messages ();
+
+      /* usually this will be called from thread_view, but extension may not yet be ready */
+    }
   }
 
   void PageClient::reader () {
     while (reader_run) {
-      // TODO: avoid buffer overflows
-      gchar buffer[2049]; buffer[0] = '\0';
       gsize read = 0;
 
       /* read size of message */
       gsize sz;
-      read = istream->read ((char*)&sz, sizeof (sz));
+      try {
+        read = istream->read ((char*)&sz, sizeof (sz), reader_cancel); // blocking
+      } catch (Gio::Error &ex) {
+        LOG (warn) << "pc: " << ex.what ();
+        reader_run = false;
+        return;
+      }
 
       if (read != sizeof(sz)) break;;
 
@@ -135,6 +168,7 @@ namespace Astroid {
       if (read != sizeof (mt)) break;
 
       /* read message */
+      gchar buffer[sz + 1]; buffer[sz] = '\0'; // TODO: set max buffer size
       bool s = istream->read_all (buffer, sz, read);
 
       if (!s) break;

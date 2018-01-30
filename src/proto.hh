@@ -55,6 +55,7 @@ namespace Astroid {
   class ThreadIndexListCellRenderer;
   class ThreadIndexListView;
   class ThreadView;
+  class PageClient;
   class HelpMode;
   class EditMessage;
   class ReplyMessage;

@@ -6,6 +6,7 @@
 # include <giomm.h>
 # include <gtkmm.h>
 # include <thread>
+# include <atomic>
 
 # include "astroid.hh"
 
@@ -39,6 +40,8 @@ namespace Astroid {
 
       bool enable_gravatar = false;
 
+      std::atomic<bool> ready;
+
     private:
       AstroidMessages::Message  make_message (refptr<Message> m);
       ustring                   get_attachment_thumbnail (refptr<Chunk>);
@@ -55,6 +58,7 @@ namespace Astroid {
       refptr<Gio::SocketListener> srv;
       refptr<Gio::UnixConnection> ext;
       void extension_connect (refptr<Gio::AsyncResult> &res);
+      gulong extension_connect_id;
 
       refptr<Gio::InputStream>  istream;
       refptr<Gio::OutputStream> ostream;
@@ -62,6 +66,7 @@ namespace Astroid {
       void        reader ();
       std::thread reader_t;
       bool        reader_run;
+      refptr<Gio::Cancellable> reader_cancel;
   };
 
 }
