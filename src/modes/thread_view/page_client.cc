@@ -108,6 +108,7 @@ namespace Astroid {
 
     LOG (debug) << "pc: socket: " << addr->get_path ();
 
+    mode_t p = umask (0077);
     srv = Gio::SocketListener::create ();
     srv->add_address (addr, Gio::SocketType::SOCKET_TYPE_STREAM,
       Gio::SocketProtocol::SOCKET_PROTOCOL_DEFAULT,
@@ -115,6 +116,7 @@ namespace Astroid {
 
     /* listen */
     srv->accept_async (sigc::mem_fun (this, &PageClient::extension_connect));
+    umask (p);
 
     /* send socket address (TODO: include key) */
     GVariant * gaddr = g_variant_new_string (addr->get_path ().c_str ());
