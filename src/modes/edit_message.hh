@@ -100,6 +100,7 @@ namespace Astroid {
       ComposeMessage * setup_message ();
       void             finalize_message (ComposeMessage *);
       ComposeMessage * make_message ();
+      ComposeMessage * make_draft_message ();
 
       ComposeMessage * sending_message;
       std::atomic<bool> sending_in_progress;
@@ -156,7 +157,9 @@ namespace Astroid {
 
       void update_message_id_rhs_from_sender (ustring);
       ustring fqdn_of_address (ustring);
-    
+
+      ComposeMessage * make_message (bool draft);
+
     private:
       void on_from_combo_changed ();
       //bool on_from_combo_key_press (GdkEventKey *);

@@ -591,7 +591,7 @@ namespace Astroid {
   bool EditMessage::save_draft () {
     LOG (info) << "em: saving draft..";
     draft_saved = false;
-    ComposeMessage * c = make_message ();
+    ComposeMessage * c = make_draft_message ();
     ustring fname;
 
     bool add_to_notmuch = false;
@@ -1252,8 +1252,23 @@ namespace Astroid {
   }
 
   ComposeMessage * EditMessage::make_message () {
+    return make_message (false);
+  }
+
+  ComposeMessage * EditMessage::make_draft_message () {
+    return make_message (true);
+  }
+
+  ComposeMessage * EditMessage::make_message (bool draft = false) {
     ComposeMessage * c = setup_message ();
+    bool sigstate = c->account->has_signature;
+
+    if (draft) {
+      /* Do not save signature in a draft */
+      c->account->has_signature = false;
+    }
     finalize_message (c);
+    c->account->has_signature = sigstate;
 
     return c;
   }
@@ -1375,4 +1390,3 @@ namespace Astroid {
   // }}}
 
 }
-

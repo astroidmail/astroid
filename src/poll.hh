@@ -32,6 +32,7 @@ namespace Astroid {
       int poll_interval = 0;
       bool auto_polling_enabled = true;
       bool external_polling = false;
+      bool full_refresh = false;
 
       bool periodic_polling ();
 
@@ -40,6 +41,7 @@ namespace Astroid {
 
       unsigned long before_poll_revision = 0;
       void refresh_threads ();
+      void refresh_full ();
 
       std::mutex  poll_cancel_m;
       std::condition_variable poll_cancel_cv;

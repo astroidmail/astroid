@@ -161,7 +161,6 @@ namespace Astroid {
     /* thread index */
     default_config.put ("thread_index.page_jump_rows", 6);
     default_config.put ("thread_index.sort_order", "newest");
-    default_config.put ("thread_index.thread_load_step", 250);
 
     default_config.put ("general.time.clock_format", "local"); // or 24h, 12h
     default_config.put ("general.time.same_year", "%b %-e");
@@ -177,6 +176,8 @@ namespace Astroid {
     default_config.put ("thread_index.cell.subject_color", "#807d74");
     default_config.put ("thread_index.cell.subject_color_selected", "#000000");
     default_config.put ("thread_index.cell.background_color_selected", "");
+    default_config.put ("thread_index.cell.background_color_marked", "#fff584");
+    default_config.put ("thread_index.cell.background_color_marked_selected", "#bcb559");
 
     default_config.put ("thread_index.cell.tags_length", 80);
     default_config.put ("thread_index.cell.tags_upper_color", "#e5e5e5");
@@ -217,6 +218,7 @@ namespace Astroid {
 
     /* polling */
     default_config.put ("poll.interval", Poll::DEFAULT_POLL_INTERVAL); // seconds
+    default_config.put ("poll.always_full_refresh", false); // always do full refresh after poll, slow.
 
     /* attachments
      *

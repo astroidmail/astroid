@@ -26,6 +26,7 @@ namespace Astroid {
     poll_state = false;
 
     poll_interval = astroid->config ().get<int> ("poll.interval");
+    full_refresh  = astroid->config ().get<bool> ("poll.always_full_refresh");
     LOG (debug) << "poll: interval: " << poll_interval;
 
     // check every 1 seconds if periodic poll has changed
@@ -43,7 +44,11 @@ namespace Astroid {
     }
 
     d_poll_state.connect (sigc::mem_fun (this, &Poll::poll_state_dispatch));
-    d_refresh.connect (sigc::mem_fun (this, &Poll::refresh_threads));
+    if (!full_refresh) {
+      d_refresh.connect (sigc::mem_fun (this, &Poll::refresh_threads));
+    } else {
+      d_refresh.connect (sigc::mem_fun (this, &Poll::refresh_full));
+    }
   }
 
   void Poll::close () {
@@ -299,7 +304,11 @@ namespace Astroid {
       LOG (info) << "poll: refreshing threads since: " << before;
 
       before_poll_revision = before;
-      refresh_threads ();
+      if (before_poll_revision == 0) {
+        refresh_full ();
+      } else {
+        refresh_threads ();
+      }
 
       m_dopoll.unlock ();
 
@@ -307,6 +316,11 @@ namespace Astroid {
       LOG (error) << "poll: polling already in progress, cannot refresh.";
       return;
     }
+  }
+
+  void Poll::refresh_full () {
+    LOG (info) << "poll: requesting full refresh..";
+    astroid->actions->emit_refreshed ();
   }
 
   void Poll::refresh_threads () {

@@ -210,7 +210,9 @@ include(CheckCXXSourceRuns)
 unset ( CMAKE_REQUIRED_FLAGS )
 unset ( CMAKE_REQUIRED_INCLUDES )
 unset ( CMAKE_REQUIRED_LIBRARIES )
-list ( APPEND CMAKE_REQUIRED_FLAGS     ${GMIME_CFLAGS} )
+# try_run will get confused and pass flags to cmake instead if they are connected with ";"
+string ( REPLACE ";" "," NEW_CFLAGS "${GMIME_CFLAGS}" )
+list ( APPEND CMAKE_REQUIRED_FLAGS "${NEW_CFLAGS}" )
 list ( APPEND CMAKE_REQUIRED_INCLUDES  ${GMIME_INCLUDE_DIRS} ${NOTMUCH_INCLUDE_DIRS} )
 list ( APPEND CMAKE_REQUIRED_LIBRARIES ${NOTMUCH_LIBRARIES} ${GMIME_LDFLAGS} )
 
