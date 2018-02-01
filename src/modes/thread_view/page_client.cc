@@ -92,6 +92,9 @@ namespace Astroid {
     webkit_web_context_set_web_extensions_directory (
         context,
         Resource::get_exe_dir().c_str());
+
+# else
+    // TODO: Add install path
 # endif
 
     /* set up unix socket */
@@ -216,6 +219,7 @@ namespace Astroid {
   }
 
   void PageClient::set_hidden_state (refptr<Message> m, bool hidden) {
+    LOG (debug) << "pc: set hidden state";
     AstroidMessages::Hidden msg;
     msg.set_mid (m->safe_mid ());
     msg.set_hidden (hidden);

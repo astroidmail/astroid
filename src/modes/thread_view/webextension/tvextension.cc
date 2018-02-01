@@ -109,7 +109,6 @@ AstroidExtension::~AstroidExtension () {
 
   /* close connection */
   sock->close ();
-
 }
 
 void AstroidExtension::page_created (WebKitWebExtension * /* extension */,
@@ -118,7 +117,7 @@ void AstroidExtension::page_created (WebKitWebExtension * /* extension */,
 
   page = _page;
 
-  cout << "ae: page created: " << (int) webkit_web_page_get_id (page) << ": " << webkit_web_page_get_uri (page) << endl;
+  cout << "ae: page created." << endl;
 }
 
 void AstroidExtension::reader () {
@@ -126,6 +125,8 @@ void AstroidExtension::reader () {
 
   while (run) {
     gsize read = 0;
+
+    cout << "ae: reader waiting.." << endl;
 
     /* read size of message */
     gsize sz;
@@ -169,6 +170,16 @@ void AstroidExtension::reader () {
         }
         break;
 
+      case AeProtocol::MessageTypes::Hidden:
+        {
+          AstroidMessages::Hidden m;
+          m.ParseFromString (buffer);
+          Glib::signal_idle().connect_once (
+              sigc::bind (
+                sigc::mem_fun(*this, &AstroidExtension::handle_hidden), m));
+        }
+        break;
+
       case AeProtocol::MessageTypes::StyleSheet:
         {
           AstroidMessages::StyleSheet s;
@@ -193,11 +204,13 @@ void AstroidExtension::reader () {
         break; // unknown message
     }
   }
+
+  cout << "ae: reader thread exit." << endl;
 }
 
 void AstroidExtension::handle_stylesheet (AstroidMessages::StyleSheet &s) {
   /* load css style */
-  cout << "ae: adding stylesheet.." << flush;
+  cout << "ae: adding stylesheet.." << flush;;
   GError *err = NULL;
   WebKitDOMDocument *d = webkit_web_page_get_dom_document (page);
   WebKitDOMElement  *e = webkit_dom_document_create_element (d, "STYLE", &err);
@@ -210,6 +223,11 @@ void AstroidExtension::handle_stylesheet (AstroidMessages::StyleSheet &s) {
   WebKitDOMHTMLHeadElement * head = webkit_dom_document_get_head (d);
   webkit_dom_node_append_child (WEBKIT_DOM_NODE(head), WEBKIT_DOM_NODE(e), (err = NULL, &err));
   cout << "done" << endl;
+
+  g_object_unref (head);
+  g_object_unref (t);
+  g_object_unref (e);
+  g_object_unref (d);
 }
 
 void AstroidExtension::handle_mark (AstroidMessages::Mark &m) {
@@ -284,6 +302,8 @@ void AstroidExtension::add_message (AstroidMessages::Message &m) {
   g_object_unref (div_message);
   g_object_unref (container);
   g_object_unref (d);
+
+  cout << "ae: message added." << endl;
 }
 
 
@@ -434,16 +454,28 @@ void AstroidExtension::set_message_html (
 } //
 
 void AstroidExtension::handle_hidden (AstroidMessages::Hidden &msg) {
-  /* hide message */
-  /*
-  WebKitDOMDOMTokenList * class_list =
-    webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(div_message));
+  /* hide or show message */
+  cout << "ae: hidden: " << msg.mid () << ": " << msg.hidden() << endl;
+  ustring div_id = "message_" + msg.mid();
 
-  webkit_dom_dom_token_list_add (class_list, "hide",
-      (err = NULL, &err));
+  GError * err = NULL;
+
+  WebKitDOMDocument *d = webkit_web_page_get_dom_document (page);
+  WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, div_id.c_str());
+
+  WebKitDOMDOMTokenList * class_list =
+    webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(e));
+
+  if (msg.hidden ()) {
+    webkit_dom_dom_token_list_toggle (class_list, "hide", msg.hidden (), &err );
+  } else if (webkit_dom_dom_token_list_contains (class_list, "hide")) {
+    webkit_dom_dom_token_list_toggle (class_list, "hide", false, &err );
+  }
 
   g_object_unref (class_list);
-  */
+  g_object_unref (e);
+  g_object_unref (d);
+  cout << "ae: hidden done" << endl;
 }
 
 void AstroidExtension::insert_mime_messages (AstroidMessages::Message m,

@@ -590,6 +590,7 @@ namespace Astroid {
 
         page_client->set_hidden_state (m, true);
       } else {
+        page_client->set_hidden_state (m, false);
         // TODO:
         /* if (!candidate_startup) */
         /*   candidate_startup = m; */
@@ -2585,9 +2586,10 @@ namespace Astroid {
     bool wasexpanded  = state[m].expanded;
 
     if (!wasexpanded) {
+
+
       state[m].expanded = true;
-      std::string js = "Astroid.expand_message ('" + m->safe_mid () + "');";
-      /* run_javascript (js); */
+      page_client->set_hidden_state (m, false);
 
       /* if the message was unexpanded, it would not have been marked as read */
       if (unread_delay == 0.0) unread_check ();
@@ -2602,8 +2604,7 @@ namespace Astroid {
 
     if (wasexpanded) {
       state[m].expanded = false;
-      std::string js = "Astroid.collapse_message ('" + m->safe_mid () + "');";
-      /* run_javascript (js); */
+      page_client->set_hidden_state (m, true);
     }
 
     return wasexpanded;
