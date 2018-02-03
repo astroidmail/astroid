@@ -606,7 +606,7 @@ namespace Astroid {
       focused_message = m;
     }
 
-    page_client->focus (focused_message);
+    focus_message (focused_message);
 
     {
       if (!edit_mode &&
@@ -2509,33 +2509,38 @@ namespace Astroid {
      *
      */
 
-    LOG (info) << "tv: focus next element, force_change=" << force_change;
+    // TODO: check if in view
 
-    string js = "Astroid.focus_next_element(" + ( force_change ? string("true") : string("false")) + ");";
-
-
-    /* run_javascript (js, std::bind (&ThreadView::focus_change_cb, this, std::placeholders::_1)); */
+    if (state[focused_message].current_element == state[focused_message].elements.size () -1) {
+      focus_next_message ();
+    } else {
+      focus_element (focused_message, state[focused_message].current_element +1);
+    }
   }
 
-  // TODO: [JS]
   void ThreadView::focus_previous_element (bool force_change) {
     /* Inverse of focus_next_element */
 
-    LOG (debug) << "tv: focus previous element, force_change=" << force_change;
+    // TODO: if not in view, scroll instead
 
-    string js = "Astroid.focus_previous_element(" + ( force_change ? string("true") : string("false")) + ");";
-    /* run_javascript (js, std::bind (&ThreadView::focus_change_cb, this, std::placeholders::_1)); */
+    if (state[focused_message].current_element == 0)
+    {
+      focus_previous_message (true);
+      return;
+    } else {
+      focus_element (focused_message, state[focused_message].current_element -1);
+    }
   }
 
   void ThreadView::focus_element (refptr<Message> m, unsigned int e) {
-    LOG (debug) << "tv: focus element, e=" << e;
+    if (m) {
+      LOG (debug) << "tv: focus message: " << m->safe_mid () << ", element: " << e;
 
-    string js = ustring::compose ("Astroid.focus_element (%1, %2);",
-        m->safe_mid (), e);
+      page_client->set_focus (m, e);
 
-    // TODO [JS]
-    LOG (error) << "tv: focus element NOT IMPLEMENTED!";
-    /* run_javascript (js, std::bind (&ThreadView::focus_change_cb, this, std::placeholders::_1)); */
+      focused_message = m;
+      state[m].current_element = e;
+    }
   }
 
   void ThreadView::focus_message (refptr<Message> m) {

@@ -5,6 +5,7 @@ package AstroidMessages;
 message Focus {
   string mid = 1;
   bool   focus = 2;
+  int32  element = 3;
 }
 
 message Mark {
@@ -92,7 +93,6 @@ message Message {
   repeated Tag tags = 10;
 
   string gravatar = 11;
-  bool   focused  = 12;
   bool   missing_content = 13;
   bool   patch = 14;
   int32  level = 15;

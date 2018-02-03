@@ -227,11 +227,13 @@ namespace Astroid {
     AeProtocol::send_message (AeProtocol::MessageTypes::Hidden, msg, ostream);
   }
 
-  void PageClient::focus (refptr<Message> m) {
+  void PageClient::set_focus (refptr<Message> m, unsigned int e) {
     if (m) {
+      LOG (debug) << "pc: focusing: " << m->safe_mid () << ": " << e;
       AstroidMessages::Focus msg;
       msg.set_mid (m->safe_mid ());
       msg.set_focus (true);
+      msg.set_element (e);
 
       AeProtocol::send_message (AeProtocol::MessageTypes::Focus, msg, ostream);
     } else {

@@ -36,7 +36,7 @@ namespace Astroid {
 
       void set_marked_state (refptr<Message> m, bool marked);
       void set_hidden_state (refptr<Message> m, bool hidden);
-      void focus (refptr<Message> m);
+      void set_focus (refptr<Message> m, unsigned int);
 
       bool enable_gravatar = false;
 

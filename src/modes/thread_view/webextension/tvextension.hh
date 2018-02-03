@@ -57,6 +57,7 @@ class AstroidExtension {
 
     void handle_mark (AstroidMessages::Mark &m);
     void handle_hidden (AstroidMessages::Hidden &m);
+    void handle_focus (AstroidMessages::Focus &m);
 
     void add_message (AstroidMessages::Message &m);
     void set_message_html (AstroidMessages::Message m,

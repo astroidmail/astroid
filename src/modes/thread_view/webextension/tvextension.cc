@@ -180,6 +180,16 @@ void AstroidExtension::reader () {
         }
         break;
 
+      case AeProtocol::MessageTypes::Focus:
+        {
+          AstroidMessages::Focus m;
+          m.ParseFromString (buffer);
+          Glib::signal_idle().connect_once (
+              sigc::bind (
+                sigc::mem_fun(*this, &AstroidExtension::handle_focus), m));
+        }
+        break;
+
       case AeProtocol::MessageTypes::StyleSheet:
         {
           AstroidMessages::StyleSheet s;
@@ -476,6 +486,12 @@ void AstroidExtension::handle_hidden (AstroidMessages::Hidden &msg) {
   g_object_unref (e);
   g_object_unref (d);
   cout << "ae: hidden done" << endl;
+}
+
+void AstroidExtension::handle_focus (AstroidMessages::Focus &msg) {
+  cout << "ae: focusing: " << msg.mid() << ": " << msg.element () << endl;
+
+
 }
 
 void AstroidExtension::insert_mime_messages (AstroidMessages::Message m,
