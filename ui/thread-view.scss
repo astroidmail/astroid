@@ -54,13 +54,12 @@
   $focused-solid: #4a90d9 !global;
 }
 
-@if not(global-variable-exists(attachment-color)) {
-  $attachment-color:  $sibling-color !global;
-}
-
-
 @if not(global-variable-exists(sibling-color)) {
   $sibling-color: lighten( $focused-solid, 20%) !global;
+}
+
+@if not(global-variable-exists(attachment-color)) {
+  $attachment-color:  $sibling-color !global;
 }
 
 @if not(global-variable-exists(mime-color)) {
