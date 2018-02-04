@@ -59,6 +59,9 @@ namespace Astroid {
     subject_color_selected = ti.get<string> ("subject_color_selected");
     background_color_selected = ti.get<string> ("background_color_selected");
 
+    background_color_marked = ti.get<string> ("background_color_marked");
+    background_color_marked_selected = ti.get<string> ("background_color_marked_selected");
+
   }
 
   void ThreadIndexListCellRenderer::render_vfunc (
@@ -166,7 +169,7 @@ namespace Astroid {
       }
     } else {
       if (!marked) {
-        bg.set_grey_p (1.);
+        set = false;
       } else {
         bg = Gdk::Color (background_color_marked);
       }
