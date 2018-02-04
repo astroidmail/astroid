@@ -283,8 +283,7 @@ namespace Astroid {
 
     /* register keys {{{ */
     keys.title = "Edit mode";
-    keys.register_key (Key (GDK_KEY_Return), { Key (GDK_KEY_KP_Enter) },
-        "edit_message.edit",
+    keys.register_key ("e", "edit_message.edit",
         "Edit message in editor",
         [&] (Key) {
           if (!editor_active && !message_sent && !sending_in_progress.load()) {
@@ -768,7 +767,7 @@ namespace Astroid {
 
     if (!editor_active) {
       if (astroid->hint_level () < 1) {
-        set_info ("Edit message with 'Enter'.");
+        set_info ("Edit message with 'e'.");
       } else {
         set_info ("");
       }
