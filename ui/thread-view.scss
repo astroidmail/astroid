@@ -55,8 +55,9 @@
 }
 
 @if not(global-variable-exists(attachment-color)) {
-  $attachment-color:  rgba(0,0,0,0.18) !global;
+  $attachment-color:  $sibling-color !global;
 }
+
 
 @if not(global-variable-exists(sibling-color)) {
   $sibling-color: lighten( $focused-solid, 20%) !global;
@@ -642,8 +643,8 @@ body.nohide .email .compressed_note > span {
     border-color: transparent;
 
     &.focused {
-	background-color: lighten( $attachment-color, 90% );
-	border-color: $attachment-color;
+	background-color: lighten( $attachment-color, 5% );
+    border-color: darken( $attachment-color, 50% );
 	box-shadow: inset 0px 0px 1px rgba(255,255,255,0.8);
     }
 }
