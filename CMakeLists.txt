@@ -46,7 +46,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     )
 else ()
   # release build - use hard-coded version string
-  set ( PROJECT_VERSION "0.10.2" )
+  set ( PROJECT_VERSION "0.11.0" )
 endif ()
 
 ##

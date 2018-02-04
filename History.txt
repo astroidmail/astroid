@@ -1,8 +1,10 @@
-==
+== v0.11.0 / 2018-02-04
 
 * Move to the CMake build system. Meson is deprecated.
 * Allow HTML parts to be composed using Markdown.
 * Use color to indicate whether a message is marked in thread-index.
+* Always throw key-id when sending (using GMime 3)
+* Bunch of minor stuff
 
 == v0.10.2 / 2017-10-11
 
