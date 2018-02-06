@@ -504,10 +504,18 @@ endif(DISABLE_PLUGINS)
 install ( TARGETS astroid
   RUNTIME DESTINATION bin )
 
+# icons are installed in three locations
 install (DIRECTORY ui/icons
   DESTINATION share/astroid/ui
   )
-
+include (InstallSymbolicLink)
+install_symlink (../../../../astroid/ui/icons/icon_color.png
+  ${CMAKE_INSTALL_PREFIX}/share/icons/hicolor/512x512/apps/astroid.png
+  )
+install_symlink (../../../../astroid/ui/icons/icon_color.svg
+  ${CMAKE_INSTALL_PREFIX}/share/icons/hicolor/scalable/app/astroid.svg
+  )
+  
 install (FILES ui/astroid.desktop
   DESTINATION share/applications
   )
