@@ -155,8 +155,7 @@ namespace Astroid {
       bool message_sent = false;
       void lock_message_after_send ();
 
-      void update_message_id_rhs_from_sender (ustring);
-      ustring fqdn_of_address (ustring);
+      void generate_mid_from_account (Account *);
 
       ComposeMessage * make_message (bool draft);
 
