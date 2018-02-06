@@ -132,6 +132,10 @@ namespace Astroid {
 
     g_mime_object_set_content_type_parameter ((GMimeObject *) messagePart, "charset", astroid->config().get<string>("editor.charset").c_str());
 
+    if (astroid->config().get<bool> ("mail.format_flowed")) {
+      g_mime_object_set_content_type_parameter ((GMimeObject *) messagePart, "format", "flowed");
+    }
+
     GMimeDataWrapper * contentWrapper = g_mime_data_wrapper_new_with_stream(contentStream, GMIME_CONTENT_ENCODING_DEFAULT);
 
     g_mime_part_set_content_encoding (messagePart, GMIME_CONTENT_ENCODING_QUOTEDPRINTABLE);
@@ -167,6 +171,10 @@ namespace Astroid {
       /* construct HTML part */
       GMimePart * html = g_mime_part_new_with_type ("text", "html");
       g_mime_object_set_content_type_parameter ((GMimeObject *) html, "charset", astroid->config().get<string>("editor.charset").c_str());
+
+      if (astroid->config().get<bool> ("mail.format_flowed")) {
+        g_mime_object_set_content_type_parameter ((GMimeObject *) html, "format", "flowed");
+      }
 
       GMimeStream * contentStream;
 
