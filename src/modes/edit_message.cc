@@ -661,11 +661,13 @@ namespace Astroid {
     if (!accounts->is_me (a)) {
       LOG (error) << "em: from address is not a defined account.";
     }
-
+   
     return set_from (accounts->get_account_for_address (a));
   }
 
   bool EditMessage::set_from (Account * a) {
+    generate_mid_from_account(a);
+
     int rn = from_combo->get_active_row_number ();
 
     account_no = 0;
@@ -676,12 +678,11 @@ namespace Astroid {
       }
       account_no ++;
     }
-    
+
     bool same_account = (rn == from_combo->get_active_row_number ());
     LOG (debug) << "same account: " << same_account;
     if (!same_account) {
       reset_signature ();
-      generate_mid_from_account(a);
     }
 
     return same_account;
