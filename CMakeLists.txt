@@ -65,6 +65,7 @@ option (DISABLE_EMBEDDED_EDITOR  "Disable embedded editor (default = enabled)"  
 option (DISABLE_PLUGINS          "Disable plugins (default = enabled)"            OFF)
 option (ENABLE_PROFILING         "Enable profiling (default = disabled)"          OFF)
 option (DISABLE_LIBSASS          "Disable libsass, requires a sassc compiler (default = enabled)" OFF)
+option (USE_GMIME_26             "Force the use of GMime 2.6"                     OFF)
 
 set (SCSS_COMPILER "sassc" CACHE STRING "SCSS compiler to use when libsass is disabled (default = sassc)")
 
@@ -80,9 +81,12 @@ find_package ( PkgConfig REQUIRED )
 pkg_check_modules (GTKMM3     REQUIRED  gtkmm-3.0>=3.10)
 pkg_check_modules (GLIBMM2    REQUIRED  glibmm-2.4)
 
-pkg_check_modules (GMIME                gmime-3.0>=3.0.0)
-set (GMIME_VER 3.0)
-if (NOT GMIME_FOUND)
+if (NOT USE_GMIME_26)
+  pkg_check_modules (GMIME                gmime-3.0>=3.0.0)
+  set (GMIME_VER 3.0)
+endif ()
+
+if (USE_GMIME_26 OR ( NOT GMIME_FOUND ))
   # fall back to gmime 2
   pkg_check_modules (GMIME              gmime-2.6>=2.6.0)
   set (GMIME_VER 2.6)
