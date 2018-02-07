@@ -251,6 +251,26 @@ CHECK_CXX_SOURCE_RUNS(
 
   GMIME_MATCHES)
 
+## check if notmuch is compiled aginst gmime 2.6 or gmime 3
+include ( GetPrerequisites )
+set ( _nm_prereq "" )
+GET_PREREQUISITES(${NOTMUCH_LIBRARY} _nm_prereq FALSE FALSE "" "")
+
+if (_nm_prereq MATCHES "libgmime-3(.*)")
+  message (STATUS "Notmuch compiled against GMime 3.0")
+  if (GMIME_VER EQUAL 2.6)
+    set (GMIME_MATCHES FALSE)
+  endif()
+elseif (_nm_prereq MATCHES "libgmime-2(.*)")
+  message (STATUS "Notmuch compiled against GMime 2.6")
+  if (GMIME_VER EQUAL 3.0)
+    set (GMIME_MATCHES FALSE)
+  endif()
+else ()
+  message (FATAL_ERROR "Could not determine GMime version of notmuch")
+endif()
+
+
 if (NOT GMIME_MATCHES)
   message (
     FATAL_ERROR
