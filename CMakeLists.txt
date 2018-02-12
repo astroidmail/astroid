@@ -65,7 +65,6 @@ option (DISABLE_EMBEDDED_EDITOR  "Disable embedded editor (default = enabled)"  
 option (DISABLE_PLUGINS          "Disable plugins (default = enabled)"            OFF)
 option (ENABLE_PROFILING         "Enable profiling (default = disabled)"          OFF)
 option (DISABLE_LIBSASS          "Disable libsass, requires a sassc compiler (default = enabled)" OFF)
-option (USE_GMIME_26             "Force the use of GMime 2.6"                     OFF)
 
 set (SCSS_COMPILER "sassc" CACHE STRING "SCSS compiler to use when libsass is disabled (default = sassc)")
 
@@ -77,29 +76,19 @@ message (STATUS "Building ${PROJECT_NAME} ${PROJECT_VERSION}")
 ##
 # check for required packages and libraries
 #
+find_package( Notmuch REQUIRED )
+if (Notmuch_INDEX_FILE_API)
+  add_definitions ( -DHAVE_NOTMUCH_INDEX_FILE )
+endif()
+
 find_package ( PkgConfig REQUIRED )
 pkg_check_modules (GTKMM3     REQUIRED  gtkmm-3.0>=3.10)
 pkg_check_modules (GLIBMM2    REQUIRED  glibmm-2.4)
-
-if (NOT USE_GMIME_26)
-  pkg_check_modules (GMIME                gmime-3.0>=3.0.0)
-  set (GMIME_VER 3.0)
-endif ()
-
-if (USE_GMIME_26 OR ( NOT GMIME_FOUND ))
-  # fall back to gmime 2
-  pkg_check_modules (GMIME              gmime-2.6>=2.6.0)
-  set (GMIME_VER 2.6)
-  if (NOT GMIME_FOUND)
-    message (
-      FATAL_ERROR
-      "GMime 3 or GMime 2.6 required"
-      )
-  endif()
-endif()
-
 pkg_check_modules (WEBKITGTK3 REQUIRED  webkitgtk-3.0)
 pkg_check_modules (SASS       REQUIRED  libsass)
+
+string (REGEX REPLACE "([0-9]+\.[0-9]+)\.[0-9]+" "\\1" GMIME_MAJOR_MINOR ${Notmuch_GMIME_VERSION})
+pkg_check_modules (GMIME      REQUIRED  gmime-${GMIME_MAJOR_MINOR}>=${Notmuch_GMIME_VERSION})
 
 find_package ( Threads )
 
@@ -115,33 +104,11 @@ find_package ( Boost REQUIRED
   )
 
 if(APPLE)
-  # with homebrew, libtettext is keg-only, i.e. not symlinked into
-  # /usr/local, and it does not provide any pkg-config infromation of
+  # with homebrew, libgettext is keg-only, i.e. not symlinked into
+  # /usr/local, and it does not provide any pkg-config information of
   # its own; hence we have to locate it manually
   set ( Gettext_LDFLAGS "-L/usr/local/opt/gettext/lib" )
 endif(APPLE)
-
-find_path ( NOTMUCH_INCLUDE_DIR notmuch.h )
-find_library ( NOTMUCH_LIBRARY notmuch )
-include(FindPackageHandleStandardArgs)
-# handle the QUIETLY and REQUIRED arguments and set NOTMUCH_FOUND to TRUE
-# if all listed variables are TRUE
-find_package_handle_standard_args(notmuch  DEFAULT_MSG
-                                  NOTMUCH_LIBRARY NOTMUCH_INCLUDE_DIR)
-if(NOT NOTMUCH_FOUND)
-  message (FATAL_ERROR "notmuch library not found")
-endif()
-mark_as_advanced( NOTMUCH_INCLUDE_DIR NOTMUCH_LIBRARY )
-set( NOTMUCH_LIBRARIES ${NOTMUCH_LIBRARY} )
-set( NOTMUCH_INCLUDE_DIRS ${NOTMUCH_INCLUDE_DIR} )
-
-include ( CheckSymbolExists )
-set ( CMAKE_REQUIRED_INCLUDES ${NOTMUCH_INCLUDE_DIRS} )
-set ( CMAKE_REQUIRED_LIBRARIES ${NOTMUCH_LIBRARIES} )
-check_symbol_exists ( notmuch_database_index_file notmuch.h NOTMUCH_INDEX_FILE_API )
-if(NOTMUCH_INDEX_FILE_API)
-  add_definitions ( -DHAVE_NOTMUCH_INDEX_FILE )
-endif()
 
 pkg_check_modules (VTE2 vte-2.91)
 if(DISABLE_TERMINAL OR ( NOT VTE2_FOUND ))
@@ -205,77 +172,6 @@ if (CMAKE_BUILD_TYPE STREQUAL "Release")
 add_compile_options (
   -O2
   )
-endif()
-
-##
-# Check if notmuch is compiled against the same GMime library
-#
-include(CheckCXXSourceRuns)
-unset ( CMAKE_REQUIRED_FLAGS )
-unset ( CMAKE_REQUIRED_INCLUDES )
-unset ( CMAKE_REQUIRED_LIBRARIES )
-# try_run will get confused and pass flags to cmake instead if they are connected with ";"
-string ( REPLACE ";" "," NEW_CFLAGS "${GMIME_CFLAGS}" )
-list ( APPEND CMAKE_REQUIRED_FLAGS "${NEW_CFLAGS}" )
-list ( APPEND CMAKE_REQUIRED_INCLUDES  ${GMIME_INCLUDE_DIRS} ${NOTMUCH_INCLUDE_DIRS} )
-list ( APPEND CMAKE_REQUIRED_LIBRARIES ${NOTMUCH_LIBRARIES} ${GMIME_LDFLAGS} )
-
-CHECK_CXX_SOURCE_RUNS(
-  "
-  # include <notmuch.h>
-  # include <gmime/gmime.h>
-
-  # include <iostream>
-
-  /* test if we are linked against the same GMime version as notmuch */
-
-  # if (GMIME_MAJOR_VERSION < 3)
-  # define g_mime_init() g_mime_init(0)
-  # define internet_address_list_parse(f,str) internet_address_list_parse_string(str)
-  # define internet_address_list_to_string(ia,f,encode) internet_address_list_to_string(ia,encode)
-  # endif
-
-  int main () {
-    g_mime_init ();
-
-    const char * a = \"Test <hey@asdf.da>\";
-    InternetAddressList * ia = internet_address_list_parse (NULL, a);
-
-    const char * addrs = internet_address_list_to_string (ia, NULL, false);
-
-    std::cout << \"address: \" << addrs << std::endl;
-
-    return 0;
-  }
-  "
-
-  GMIME_MATCHES)
-
-## check if notmuch is compiled aginst gmime 2.6 or gmime 3
-include ( GetPrerequisites )
-set ( _nm_prereq "" )
-GET_PREREQUISITES(${NOTMUCH_LIBRARY} _nm_prereq FALSE FALSE "" "")
-
-if (_nm_prereq MATCHES "libgmime-3(.*)")
-  message (STATUS "Notmuch compiled against GMime 3.0")
-  if (GMIME_VER EQUAL 2.6)
-    set (GMIME_MATCHES FALSE)
-  endif()
-elseif (_nm_prereq MATCHES "libgmime-2(.*)")
-  message (STATUS "Notmuch compiled against GMime 2.6")
-  if (GMIME_VER EQUAL 3.0)
-    set (GMIME_MATCHES FALSE)
-  endif()
-else ()
-  message (FATAL_ERROR "Could not determine GMime version of notmuch")
-endif()
-
-
-if (NOT GMIME_MATCHES)
-  message (
-    FATAL_ERROR
-    "You must compile and link against the same GMime version (e.g. 2.6 or 3) with both notmuch and astroid."
-    )
 endif()
 
 if (ENABLE_PROFILING)
@@ -395,7 +291,7 @@ target_link_libraries (
   astroid
 
   hypocycloid
-  ${NOTMUCH_LIBRARIES}
+  ${Notmuch_LIBRARIES}
   ${WEBKITGTK3_LDFLAGS}
   ${GTKMM3_LDFLAGS}
   ${GLIBMM2_LDFLAGS}
@@ -463,7 +359,7 @@ else()
     set (GIR_NAME "${PLUGIN_NAMESPACE}-${PLUGIN_API_VERSION}.gir")
     set (${GIR_NAME}_NAMESPACE      ${PLUGIN_NAMESPACE})
     set (${GIR_NAME}_VERSION        ${PLUGIN_API_VERSION})
-    set (${GIR_NAME}_INCLUDEPKGS    GObject-2.0 GMime-${GMIME_VER})
+    set (${GIR_NAME}_INCLUDEPKGS    GObject-2.0 GMime-${GMIME_MAJOR_MINOR})
     set (${GIR_NAME}_PROGRAM        ${CMAKE_CURRENT_BINARY_DIR}/gir_main)
     set (${GIR_NAME}_FILES
       src/plugin/astroid_activatable.c
