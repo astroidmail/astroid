@@ -69,12 +69,12 @@ check_symbol_exists (notmuch_database_index_file notmuch.h Notmuch_INDEX_FILE_AP
 
 # GMime version notmuch was linked against
 include (GetPrerequisites)
-GET_PREREQUISITES(${Notmuch_LIBRARY} _notmuch_prerequisites 1 0 "" "")
+GET_PREREQUISITES(${Notmuch_LIBRARY} _notmuch_prerequisites 0 0 "" "")
 set (Notmuch_GMIME_VERSION  "unknown")
 if (_notmuch_prerequisites)
   string (REGEX REPLACE
-    ".*gmime.*([0-9]+\.[0-9]+\.[0-9]+).*"
-    "\\1" Notmuch_GMIME_VERSION ${_notmuch_prerequisites})
+    ".*gmime.*([0-9]+\.[0-9]+)(\.so)?(\.[0-9]+).*"
+    "\\1\\3" Notmuch_GMIME_VERSION ${_notmuch_prerequisites})
 else()
   message(WARNING "[ FindNotmuch.cmake:${CMAKE_CURRENT_LIST_LINE} ] "
     "Failed to determine needed libgmime version number, please report this as a bug.")
