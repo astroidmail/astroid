@@ -72,11 +72,20 @@ include (GetPrerequisites)
 GET_PREREQUISITES(${Notmuch_LIBRARY} _notmuch_prerequisites 0 0 "" "")
 set (Notmuch_GMIME_VERSION  "unknown")
 if (_notmuch_prerequisites)
-  string (REGEX REPLACE
-    ".*gmime.*([0-9]+\.[0-9]+)(\.so)?(\.[0-9]+).*"
-    "\\1\\3" Notmuch_GMIME_VERSION ${_notmuch_prerequisites})
+  foreach (_nm_prereq ${_notmuch_prerequisites})
+    if (_nm_prereq MATCHES
+      "^(.*/)?${CMAKE_SHARED_LIBRARY_PREFIX}gmime[-\\.]([0-9]+\\.[0-9]+)(\\${CMAKE_SHARED_LIBRARY_SUFFIX})?(\\.[0-9]+)(\\${CMAKE_SHARED_LIBRARY_SUFFIX})?$"
+    )
+      set (Notmuch_GMIME_VERSION "${CMAKE_MATCH_2}${CMAKE_MATCH_4}")
+      message (STATUS "Notmuch was built against GMime ${Notmuch_GMIME_VERSION}")
+    endif ()
+  endforeach (_nm_prereq)
 else()
   message(WARNING "[ FindNotmuch.cmake:${CMAKE_CURRENT_LIST_LINE} ] "
-    "Failed to determine needed libgmime version number, please report this as a bug.")
+    "Failed to determine libnotmuch prerequisites, please report this as a bug.")
 endif()
 unset (_notmuch_prerequisites)
+if (Notmuch_GMIME_VERSION EQUAL "unknown")
+  message(WARNING "[ FindNotmuch.cmake:${CMAKE_CURRENT_LIST_LINE} ] "
+    "Failed to determine needed libgmime version number, please report this as a bug.")
+endif ()
