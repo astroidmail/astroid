@@ -303,6 +303,15 @@ target_link_libraries (
   ${Gettext_LDFLAGS}
   )
 
+# Xcode needs to be explicitly told about the header files in order to
+# show them in the project and automatically display them in the
+# assitant editor
+if(CMAKE_GENERATOR STREQUAL "Xcode")
+  message(STATUS "Xcode build: adding headers to project")
+  file(GLOB_RECURSE my_header_files src/ "*.h" "*.hh")
+  target_sources(hypocycloid PRIVATE ${my_header_files})
+endif()
+
 ##
 # conditional compilation based on feature switches
 #
