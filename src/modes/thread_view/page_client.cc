@@ -100,6 +100,7 @@ namespace Astroid {
     /* set up unix socket */
     LOG (warn) << "pc: id: " << id;
 
+    // TODO: do-while socket_addr path exists
     socket_addr = ustring::compose ("%1/sockets/astroid.%2.%3",
         astroid->standard_paths ().runtime_dir.c_str(),
         id,

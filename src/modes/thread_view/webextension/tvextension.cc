@@ -240,29 +240,8 @@ void AstroidExtension::handle_stylesheet (AstroidMessages::StyleSheet &s) {
   g_object_unref (d);
 }
 
-void AstroidExtension::handle_mark (AstroidMessages::Mark &m) {
-  GError *err;
-  ustring mid = "message_" + m.mid();
 
-  WebKitDOMDocument * d = webkit_web_page_get_dom_document (page);
-
-  WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
-
-  WebKitDOMDOMTokenList * class_list =
-    webkit_dom_element_get_class_list (e);
-
-  /* set class  */
-  if (m.marked()) {
-    webkit_dom_dom_token_list_add (class_list, (err = NULL, &err), "marked");
-  } else {
-    webkit_dom_dom_token_list_remove (class_list, (err = NULL, &err), "marked");
-  }
-
-  g_object_unref (class_list);
-  g_object_unref (e);
-  g_object_unref (d);
-}
-
+// Message generation {{{
 void AstroidExtension::add_message (AstroidMessages::Message &m) {
   cout << "ae: adding message: " << m.mid () << endl;
 
@@ -463,36 +442,6 @@ void AstroidExtension::set_message_html (
   g_object_unref (table_header);
 } //
 
-void AstroidExtension::handle_hidden (AstroidMessages::Hidden &msg) {
-  /* hide or show message */
-  cout << "ae: hidden: " << msg.mid () << ": " << msg.hidden() << endl;
-  ustring div_id = "message_" + msg.mid();
-
-  GError * err = NULL;
-
-  WebKitDOMDocument *d = webkit_web_page_get_dom_document (page);
-  WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, div_id.c_str());
-
-  WebKitDOMDOMTokenList * class_list =
-    webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(e));
-
-  if (msg.hidden ()) {
-    webkit_dom_dom_token_list_toggle (class_list, "hide", msg.hidden (), &err );
-  } else if (webkit_dom_dom_token_list_contains (class_list, "hide")) {
-    webkit_dom_dom_token_list_toggle (class_list, "hide", false, &err );
-  }
-
-  g_object_unref (class_list);
-  g_object_unref (e);
-  g_object_unref (d);
-  cout << "ae: hidden done" << endl;
-}
-
-void AstroidExtension::handle_focus (AstroidMessages::Focus &msg) {
-  cout << "ae: focusing: " << msg.mid() << ": " << msg.element () << endl;
-
-
-}
 
 void AstroidExtension::insert_mime_messages (AstroidMessages::Message m,
     WebKitDOMHTMLElement * div_message) {
@@ -626,6 +575,8 @@ ustring AstroidExtension::create_header_row (
 }
 /* headers end  }}} */
 
+// }}}
+
 /* warning and info {{{ */
 void AstroidExtension::set_warning (AstroidMessages::Message m, ustring w) {
 
@@ -635,4 +586,56 @@ void AstroidExtension::set_error (AstroidMessages::Message m, ustring w) {
 
 }
 /* }}} */
+
+void AstroidExtension::handle_hidden (AstroidMessages::Hidden &msg) {
+  /* hide or show message */
+  cout << "ae: hidden: " << msg.mid () << ": " << msg.hidden() << endl;
+  ustring div_id = "message_" + msg.mid();
+
+  GError * err = NULL;
+
+  WebKitDOMDocument *d = webkit_web_page_get_dom_document (page);
+  WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, div_id.c_str());
+
+  WebKitDOMDOMTokenList * class_list =
+    webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(e));
+
+  if (msg.hidden ()) {
+    webkit_dom_dom_token_list_toggle (class_list, "hide", msg.hidden (), &err );
+  } else if (webkit_dom_dom_token_list_contains (class_list, "hide")) {
+    webkit_dom_dom_token_list_toggle (class_list, "hide", false, &err );
+  }
+
+  g_object_unref (class_list);
+  g_object_unref (e);
+  g_object_unref (d);
+  cout << "ae: hidden done" << endl;
+}
+
+void AstroidExtension::handle_mark (AstroidMessages::Mark &m) {
+  GError *err;
+  ustring mid = "message_" + m.mid();
+
+  WebKitDOMDocument * d = webkit_web_page_get_dom_document (page);
+
+  WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
+
+  WebKitDOMDOMTokenList * class_list =
+    webkit_dom_element_get_class_list (e);
+
+  /* set class  */
+  DomUtils::switch_class (class_list, "marked", m.marked());
+
+  g_object_unref (class_list);
+  g_object_unref (e);
+  g_object_unref (d);
+}
+
+void AstroidExtension::handle_focus (AstroidMessages::Focus &msg) {
+  cout << "ae: focusing: " << msg.mid() << ": " << msg.element () << endl;
+
+  /* clear focus from existing messages */
+
+
+}
 
