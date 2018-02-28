@@ -1,33 +1,26 @@
-# i use vi
+# I use vi
 *.swp
 *.swo
-# i use emacs
+
+# I use emacs
 *~
 
-astroid
-*.o
-src/build_config.hh
 
-.sconsign.dblite
-config.log
-.sconf_temp
+# profiling
 gmon.out
 prof.*
 
+# various tmp files
 *.pyc
 core*
-
 \#*\#
 
-compile_commands.json
-
-*.gir
-*.typelib
-girmain
 
 # generated from tests run in a chroot
 tmp-*
 
+# Common build dirs
 build*
-
 _build*
+compile_commands.json
+
