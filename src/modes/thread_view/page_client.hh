@@ -33,6 +33,7 @@ namespace Astroid {
       void load ();
       void add_message (refptr<Message> m);
       void update_message (refptr<Message> m);
+      void update_state ();
 
       void set_marked_state (refptr<Message> m, bool marked);
       void set_hidden_state (refptr<Message> m, bool hidden);

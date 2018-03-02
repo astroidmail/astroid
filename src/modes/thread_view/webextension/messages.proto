@@ -105,4 +105,38 @@ message Message {
 }
 
 
+/* This should match the state structures in thread_view.hh */
+message State {
+  message MessageState {
+    string mid = 1;
+
+    bool marked = 2;
+    bool expanded = 3;
+
+    int32 current_element = 4; // current element
+
+    message Element {
+      enum Type {
+        Empty       = 0;
+        Address     = 1;
+        Part        = 2;
+        Attachment  = 3;
+        MimeMessage = 4;
+        Encryption  = 5;
+      }
+
+      Type  type = 1;
+      int32 id   = 2;
+      string element_id = 3;
+    }
+
+    repeated Element elements = 5;
+  }
+
+  string                focused  = 1;
+  repeated MessageState messages = 2;
+}
+
+
+
 

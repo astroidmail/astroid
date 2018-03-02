@@ -190,6 +190,16 @@ void AstroidExtension::reader () {
         }
         break;
 
+      case AeProtocol::MessageTypes::State:
+        {
+          AstroidMessages::State m;
+          m.ParseFromString (buffer);
+          Glib::signal_idle().connect_once (
+              sigc::bind (
+                sigc::mem_fun(*this, &AstroidExtension::handle_state), m));
+        }
+        break;
+
       case AeProtocol::MessageTypes::StyleSheet:
         {
           AstroidMessages::StyleSheet s;
@@ -238,6 +248,10 @@ void AstroidExtension::handle_stylesheet (AstroidMessages::StyleSheet &s) {
   g_object_unref (t);
   g_object_unref (e);
   g_object_unref (d);
+}
+
+void AstroidExtension::handle_state (AstroidMessages::State &s) {
+  state = s;
 }
 
 

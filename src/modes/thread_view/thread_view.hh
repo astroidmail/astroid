@@ -115,7 +115,11 @@ namespace Astroid {
       bool toggle   (refptr<Message>);
 
     public:
-      /* message display state */
+      /* message display state
+       *
+       * IMPORTANT: This should match the structure in messages.proto
+       *
+       */
       struct MessageState {
         public:
           MessageState ();

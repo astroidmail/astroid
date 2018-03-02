@@ -211,6 +211,32 @@ namespace Astroid {
     AeProtocol::send_message (AeProtocol::MessageTypes::Debug, m, ostream);
   }
 
+  void PageClient::update_state () {
+    /* Make state structure */
+    AstroidMessages::State state;
+
+    state.set_focused (thread_view->focused_message->safe_mid ());
+
+    for (auto &ms : thread_view->state) {
+      AstroidMessages::State::MessageState * m = state.add_messages ();
+
+      m->set_mid (ms.first->safe_mid ());
+      m->set_marked (ms.second.marked);
+      m->set_expanded (ms.second.expanded);
+
+      for (auto &e : ms.second.elements) {
+        AstroidMessages::State::MessageState::Element * _e = m->add_elements ();
+
+        auto ref = _e->GetReflection();
+        ref->SetEnumValue (_e, _e->GetDescriptor()->FindFieldByName("type"), e.type);
+        _e->set_id (e.id);
+        _e->set_element_id (e.element_id ());
+      }
+    }
+
+    AeProtocol::send_message (AeProtocol::MessageTypes::State, state, ostream);
+  }
+
   void PageClient::set_marked_state (refptr<Message> m, bool marked) {
     AstroidMessages::Mark msg;
     msg.set_mid (m->safe_mid ());
