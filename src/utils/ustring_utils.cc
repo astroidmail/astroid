@@ -1,12 +1,8 @@
-# include <iostream>
-# include <vector>
-# include <algorithm>
 # include <random>
 
-# include "astroid.hh"
-# include "proto.hh"
 # include "ustring_utils.hh"
-# include "vector_utils.hh"
+
+# include <glibmm.h>
 
 using namespace std;
 
@@ -53,8 +49,8 @@ namespace Astroid {
       trim_right(str);
   }
 
-  ustring UstringUtils::random_alphanumeric (int length) {
-    ustring str;
+  Glib::ustring UstringUtils::random_alphanumeric (int length) {
+    Glib::ustring str;
 
     const string _chars = "abcdefghijklmnopqrstuvwxyz1234567890";
     random_device rd;
@@ -67,8 +63,8 @@ namespace Astroid {
   }
 
   /* http://stackoverflow.com/a/15372760/377927 */
-  ustring UstringUtils::replace (ustring subject, const ustring& search,
-                          const ustring& replace) {
+  Glib::ustring UstringUtils::replace (Glib::ustring subject, const Glib::ustring& search,
+                          const Glib::ustring& replace) {
     size_t pos = 0;
     while((pos = subject.find(search, pos)) != std::string::npos) {
          subject.replace(pos, search.length(), replace);
@@ -77,14 +73,14 @@ namespace Astroid {
     return subject;
   }
 
-  ustring UstringUtils::unixify (const ustring subject) {
+  Glib::ustring UstringUtils::unixify (const Glib::ustring subject) {
     /* replace CRs with newlines */
-    ustring s = replace (subject, "\r\n", "\n");
+    Glib::ustring s = replace (subject, "\r\n", "\n");
 
     return s;
   }
 
-  std::pair<bool, ustring> UstringUtils::data_to_ustring (unsigned int len, const char * data) {
+  std::pair<bool, Glib::ustring> UstringUtils::data_to_ustring (unsigned int len, const char * data) {
     std::string  u;
     bool success;
 
@@ -97,14 +93,14 @@ namespace Astroid {
       u = Glib::convert_with_fallback (u,  "UTF-8", "UTF-16");
       success = true;
     } catch (Glib::ConvertError &ex) {
-      LOG (error) << "ustring: could not convert data: " << ex.what ();
+      /* LOG (error) << "ustring: could not convert data: " << ex.what (); */
       success = false;
     }
 
     return std::make_pair (success, u);
   }
 
-  std::pair<bool, ustring> UstringUtils::bytearray_to_ustring (refptr<Glib::ByteArray> & ba) {
+  std::pair<bool, Glib::ustring> UstringUtils::bytearray_to_ustring (Glib::RefPtr<Glib::ByteArray> & ba) {
     gchar *      in   = (gchar *) ba->get_data ();
     unsigned int len  = ba->size ();
 

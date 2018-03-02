@@ -1,33 +1,22 @@
 # pragma once
 
-# include <boost/tokenizer.hpp>
-
-# include "astroid.hh"
+# include <glibmm.h>
 
 namespace Astroid {
   class UstringUtils {
     public:
-      /*
-       * ustring tokenizer: http://lists.boost.org/boost-users/2007/01/24698.php
-       *
-       */
-      typedef boost::tokenizer<
-        boost::char_delimiters_separator< Glib::ustring::value_type > ,
-        Glib::ustring::const_iterator ,
-        Glib::ustring > utokenizer;
+      static void trim (Glib::ustring &);
+      static void trim_left (Glib::ustring &);
+      static void trim_right (Glib::ustring &);
+      static Glib::ustring random_alphanumeric (int);
+      static Glib::ustring replace (Glib::ustring subject, const Glib::ustring& search,
+                          const Glib::ustring& replace);
 
-      static void trim (ustring &);
-      static void trim_left (ustring &);
-      static void trim_right (ustring &);
-      static ustring random_alphanumeric (int);
-      static ustring replace (ustring subject, const ustring& search,
-                          const ustring& replace);
-
-      static ustring unixify (const ustring subject);
+      static Glib::ustring unixify (const Glib::ustring subject);
 
       /* converts a byte array to a ustring */
-      static std::pair<bool, ustring> data_to_ustring (unsigned int len, const char * data);
-      static std::pair<bool, ustring> bytearray_to_ustring (refptr<Glib::ByteArray> &ba);
+      static std::pair<bool, Glib::ustring> data_to_ustring (unsigned int len, const char * data);
+      static std::pair<bool, Glib::ustring> bytearray_to_ustring (Glib::RefPtr<Glib::ByteArray> &ba);
   };
 }
 
