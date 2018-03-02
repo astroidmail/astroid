@@ -110,11 +110,6 @@ message State {
   message MessageState {
     string mid = 1;
 
-    bool marked = 2;
-    bool expanded = 3;
-
-    int32 current_element = 4; // current element
-
     message Element {
       enum Type {
         Empty       = 0;
@@ -125,15 +120,14 @@ message State {
         Encryption  = 5;
       }
 
-      Type  type = 1;
-      int32 id   = 2;
-      string element_id = 3;
+      Type   type = 1;
+      int32  id   = 2;
+      string sid  = 3;
     }
 
     repeated Element elements = 5;
   }
 
-  string                focused  = 1;
   repeated MessageState messages = 2;
 }
 

@@ -527,6 +527,8 @@ namespace Astroid {
                 add_message (m);
               });
 
+    page_client->update_state ();
+
     update_all_indent_states ();
 
     if (!focused_message) {
@@ -1174,7 +1176,6 @@ namespace Astroid {
     keys.register_key ("j", "thread_view.down",
         "Scroll down or move focus to next element",
         [&] (Key) {
-          page_client->write ();
           focus_next_element ();
           return true;
         });

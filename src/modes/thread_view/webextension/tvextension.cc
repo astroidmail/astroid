@@ -1,16 +1,18 @@
+# include <iostream>
+# include <thread>
+# include <functional>
+
 # include "tvextension.hh"
 
 # include <webkit2/webkit-web-extension.h>
 
 # include <gmodule.h>
-# include <iostream>
 # include <glib.h>
 # include <glibmm.h>
 # include <giomm.h>
 # include <giomm/socket.h>
 # include <gtkmm.h>
-# include <thread>
-# include <functional>
+
 
 # include "modes/thread_view/webextension/ae_protocol.hh"
 # include "modes/thread_view/webextension/dom_utils.hh"
@@ -601,7 +603,7 @@ void AstroidExtension::set_error (AstroidMessages::Message m, ustring w) {
 }
 /* }}} */
 
-void AstroidExtension::handle_hidden (AstroidMessages::Hidden &msg) {
+void AstroidExtension::handle_hidden (AstroidMessages::Hidden &msg) {/*{{{*/
   /* hide or show message */
   cout << "ae: hidden: " << msg.mid () << ": " << msg.hidden() << endl;
   ustring div_id = "message_" + msg.mid();
@@ -624,9 +626,9 @@ void AstroidExtension::handle_hidden (AstroidMessages::Hidden &msg) {
   g_object_unref (e);
   g_object_unref (d);
   cout << "ae: hidden done" << endl;
-}
+}/*}}}*/
 
-void AstroidExtension::handle_mark (AstroidMessages::Mark &m) {
+void AstroidExtension::handle_mark (AstroidMessages::Mark &m) {/*{{{*/
   GError *err;
   ustring mid = "message_" + m.mid();
 
@@ -643,13 +645,18 @@ void AstroidExtension::handle_mark (AstroidMessages::Mark &m) {
   g_object_unref (class_list);
   g_object_unref (e);
   g_object_unref (d);
-}
+}/*}}}*/
 
 void AstroidExtension::handle_focus (AstroidMessages::Focus &msg) {
   cout << "ae: focusing: " << msg.mid() << ": " << msg.element () << endl;
 
-  /* clear focus from existing messages */
-
-
+  apply_focus (msg.mid (), msg.element ());
 }
+
+void AstroidExtension::apply_focus (ustring mid, int element) {
+  for (auto &m : state.messages()) {
+    cout << "clearing focus from: " << m.mid() << endl;
+  }
+}
+
 
