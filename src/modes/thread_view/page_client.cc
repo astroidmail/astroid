@@ -317,14 +317,27 @@ namespace Astroid {
 
     msg.set_subject (m->subject);
 
-    for (ustring &tag : m->tags) {
-      AstroidMessages::Tag * t = msg.add_tags ();
-      t->set_tag (tag);
+    /* tags */
+    {
+      unsigned char cv[] = { 0xff, 0xff, 0xff };
 
-      unsigned char cv[] = { 0xff, 0xff, 0xff }; // assuming tag-background is white
-      auto clrs = Utils::get_tag_color (tag, cv);
-      t->set_fg (clrs.first);
-      t->set_bg (clrs.second);
+      ustring tags_s;
+
+# ifndef DISABLE_PLUGINS
+      if (!thread_view->plugins->format_tags (m->tags, "#ffffff", false, tags_s)) {
+#  endif
+
+        tags_s = VectorUtils::concat_tags_color (m->tags, false, 0, cv);
+
+# ifndef DISABLE_PLUGINS
+      }
+# endif
+
+      msg.set_tag_string (tags_s);
+
+      for (ustring &tag : m->tags) {
+        msg.add_tags (tag);
+      }
     }
 
     /* avatar */

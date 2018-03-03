@@ -88,6 +88,20 @@ namespace Astroid {
     return en;
   }
 
+  bool DomUtils::switch_class (WebKitDOMDOMTokenList * list, ustring c, bool v)
+  {
+    GError * err = NULL;
+
+    bool x = webkit_dom_dom_token_list_contains (list, c.c_str ());
+
+    if (v && !x) {
+      webkit_dom_dom_token_list_toggle (list, c.c_str (), true, &err );
+    } else if (x) {
+      webkit_dom_dom_token_list_toggle (list, c.c_str (), false, &err );
+    }
+
+    return x;
+  }
 # endif
 
 }

@@ -36,12 +36,6 @@ message AddressList {
   repeated Address addresses = 1;
 };
 
-message Tag {
-  string tag = 1;
-  string fg  = 2;
-  string bg  = 3;
-}
-
 message Signature {
 
 }
@@ -90,11 +84,13 @@ message Message {
 
   string subject = 9;
 
-  repeated Tag tags = 10;
+  repeated string tags = 10;
+  string          tag_string = 21;
 
   string gravatar = 11;
   bool   missing_content = 13;
   bool   patch = 14;
+  bool   different_subject = 22;
   int32  level = 15;
   string in_reply_to = 16;
 

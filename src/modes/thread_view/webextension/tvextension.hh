@@ -73,6 +73,11 @@ class AstroidExtension {
     void insert_attachments (AstroidMessages::Message m,
         WebKitDOMHTMLElement * div_message);
 
+    void message_render_tags (AstroidMessages::Message &m,
+        WebKitDOMHTMLElement * div_message);
+    void message_update_css_tags (AstroidMessages::Message &m,
+        WebKitDOMHTMLElement * div_message);
+
     refptr<Gdk::Pixbuf> marked_icon;
     refptr<Gdk::Pixbuf> attachment_icon;
 
