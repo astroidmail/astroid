@@ -432,25 +432,7 @@ void AstroidExtension::set_message_html (
     /* create_message_part_html (m, m->root, span_body, true); */
 
     /* preview */
-    /* LOG (debug) << "tv: make preview.."; */
-
-    /*
-    ustring bp = m.viewable_text (false, false);
-    if (static_cast<int>(bp.size()) > MAX_PREVIEW_LEN)
-      bp = bp.substr(0, MAX_PREVIEW_LEN - 3) + "...";
-
-    while (true) {
-      size_t i = bp.find ("<br>");
-
-      if (i == ustring::npos) break;
-
-      bp.erase (i, 4);
-    }
-
-    bp = Glib::Markup::escape_text (bp);
-
-    webkit_dom_element_set_inner_html (WEBKIT_DOM_ELEMENT(preview), bp.c_str(), (err = NULL, &err));
-    */
+    webkit_dom_element_set_inner_html (WEBKIT_DOM_ELEMENT(preview), m.preview().c_str(), (err = NULL, &err));
   }
 
   g_object_unref (preview);

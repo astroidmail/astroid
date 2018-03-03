@@ -47,6 +47,7 @@ namespace Astroid {
       AstroidMessages::Message  make_message (refptr<Message> m);
       ustring                   get_attachment_thumbnail (refptr<Chunk>);
 
+      static const int MAX_PREVIEW_LEN = 80;
       static const int THUMBNAIL_WIDTH        = 150; // px
       static const int ATTACHMENT_ICON_WIDTH  = 35;
       refptr<Gdk::Pixbuf> attachment_icon;

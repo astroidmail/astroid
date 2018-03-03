@@ -359,6 +359,23 @@ namespace Astroid {
       msg.set_gravatar (uri);
     }
 
+    /* set preview */
+    {
+      ustring bp = m->viewable_text (false, false);
+      if (static_cast<int>(bp.size()) > MAX_PREVIEW_LEN)
+        bp = bp.substr(0, MAX_PREVIEW_LEN - 3) + "...";
+
+      while (true) {
+        size_t i = bp.find ("<br>");
+
+        if (i == ustring::npos) break;
+
+        bp.erase (i, 4);
+      }
+
+      msg.set_preview (Glib::Markup::escape_text (bp));
+    }
+
     return msg;
   }
 
