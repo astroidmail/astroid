@@ -71,6 +71,12 @@ class AstroidExtension {
         WebKitDOMHTMLElement * div_message);
 
     void create_message_part_html (
+        const AstroidMessages::Message &m,
+        const AstroidMessages::Message::Chunk &c,
+        WebKitDOMHTMLElement * span_body);
+
+    void create_body_part (
+        const AstroidMessages::Message &message,
         const AstroidMessages::Message::Chunk &c,
         WebKitDOMHTMLElement * span_body);
 

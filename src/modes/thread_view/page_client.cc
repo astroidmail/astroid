@@ -317,6 +317,8 @@ namespace Astroid {
 
     msg.set_subject (m->subject);
 
+    msg.set_patch (m->is_patch ());
+
     /* tags */
     {
       unsigned char cv[] = { 0xff, 0xff, 0xff };
@@ -399,13 +401,20 @@ namespace Astroid {
     auto part = new AstroidMessages::Message::Chunk ();
 
     /* defaults */
-    part->set_mime_type ("text/plain");
-    part->set_preferred (true);
-    part->set_is_encrypted (false);
-    part->set_is_signed (false);
+    part->set_mime_type (mime_type);
     part->set_content ("");
-    part->set_sibling (!c->siblings.empty ());
+
     part->set_id (c->id);
+    part->set_sibling (!c->siblings.empty ());
+    part->set_viewable (c->viewable);
+    part->set_preferred (c->preferred);
+    part->set_attachment (c->attachment);
+    
+    // TODO: Add signature state
+    // TODO: Add encryption state
+    part->set_is_signed (c->issigned);
+    part->set_is_encrypted (c->isencrypted);
+
 
     if (root && c->attachment) {
       /* return empty root part */
@@ -416,17 +425,8 @@ namespace Astroid {
     }
 
     if (c->viewable) {
-      part->set_mime_type ("text/plain");
-      part->set_preferred (c->preferred);
-
-      part->set_is_signed (c->issigned);
-      // TODO: Add signature state
-
-      part->set_is_encrypted (c->isencrypted);
-      // TODO: Add encryption state
-
       // TODO: Filter code tags
-      part->set_content (c->viewable_text ("text/plain", true));
+      part->set_content (c->viewable_text (true, true));
 
       /* make state element */
       MessageState::Element e (MessageState::ElementType::Part, c->id);
