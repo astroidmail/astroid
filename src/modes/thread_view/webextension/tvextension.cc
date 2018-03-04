@@ -429,7 +429,7 @@ void AstroidExtension::set_message_html (
   } else {
 
     /* build message body */
-    /* create_message_part_html (m, m->root, span_body, true); */
+    create_message_part_html (m.root(), span_body);
 
     /* preview */
     webkit_dom_element_set_inner_html (WEBKIT_DOM_ELEMENT(preview), m.preview().c_str(), (err = NULL, &err));
@@ -498,6 +498,48 @@ void AstroidExtension::message_update_css_tags (AstroidMessages::Message &m,
   g_object_unref (class_list);
 }
 
+void AstroidExtension::create_message_part_html (
+    const AstroidMessages::Message::Chunk &c,
+    WebKitDOMHTMLElement * span_body)
+{
+
+  ustring mime_type = c.mime_type ();
+
+  cout << "create message part: " << c.id() << " (siblings: " << c.sibling() << ") (kids: " << c.kids().size() << ")" <<
+    " (attachment: " << c.attachment() << ")" << " (viewable: " << c.viewable() << ")" << " (mimetype: " << mime_type << ")" << endl;
+
+  /* if (c->attachment) return; */
+
+  /* // TODO: redundant sibling checking */
+
+  /* /1* check if we're the preferred sibling *1/ */
+  /* bool use = false; */
+
+  /* if (c->siblings.size() >= 1) { */
+  /*   /1* todo: use last preferred sibling *1/ */
+  /*   if (c->preferred) { */
+  /*     use = true; */
+  /*   } else { */
+  /*     use = false; */
+  /*   } */
+  /* } else { */
+  /*   use = true; */
+  /* } */
+
+  /* if (use) { */
+  /*   if (c->viewable && c->preferred) { */
+  /*     create_body_part (message, c, span_body); */
+  /*   } else if (c->viewable) { */
+  /*     create_sibling_part (message, c, span_body); */
+  /*   } */
+
+  /*   for (auto &k: c->kids) { */
+  /*     create_message_part_html (message, k, span_body, true); */
+  /*   } */
+  /* } else { */
+  /*   create_sibling_part (message, c, span_body); */
+  /* } */
+}
 void AstroidExtension::insert_mime_messages (AstroidMessages::Message m,
     WebKitDOMHTMLElement * div_message) {
 }

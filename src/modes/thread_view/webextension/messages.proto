@@ -98,6 +98,24 @@ message Message {
 
   repeated MimeMessage mime_messages = 18;
   repeated Attachment  attachments = 19;
+
+  message Chunk {
+    int32 id = 1;
+    string mime_type = 6;
+    bool viewable = 2;
+    bool preferred = 3;
+    bool attachment = 7;
+    bool is_encrypted = 8;
+    bool is_signed = 9; // 'signed' doesn't 
+    bool sibling = 11;
+
+    string content = 10;
+
+    repeated Chunk kids = 4;
+    repeated Chunk siblings = 5;
+  }
+
+  Chunk root = 23;
 }
 
 

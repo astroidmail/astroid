@@ -66,8 +66,14 @@ class AstroidExtension {
     void apply_focus (ustring mid, int element);
 
     void add_message (AstroidMessages::Message &m);
+
     void set_message_html (AstroidMessages::Message m,
         WebKitDOMHTMLElement * div_message);
+
+    void create_message_part_html (
+        const AstroidMessages::Message::Chunk &c,
+        WebKitDOMHTMLElement * span_body);
+
     void insert_mime_messages (AstroidMessages::Message m,
         WebKitDOMHTMLElement * div_message);
     void insert_attachments (AstroidMessages::Message m,

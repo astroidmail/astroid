@@ -376,7 +376,75 @@ namespace Astroid {
       msg.set_preview (Glib::Markup::escape_text (bp));
     }
 
+    /* build structure */
+    msg.set_allocated_root (build_mime_tree (m, m->root, true));
+
     return msg;
+  }
+
+  AstroidMessages::Message::Chunk * PageClient::build_mime_tree (refptr<Message> m, refptr<Chunk> c, bool root)
+  {
+    typedef ThreadView::MessageState MessageState;
+
+    ustring mime_type;
+    if (c->content_type) {
+      mime_type = ustring(g_mime_content_type_get_mime_type (c->content_type));
+    } else {
+      mime_type = "application/octet-stream";
+    }
+
+    LOG (debug) << "create message part: " << c->id << " (siblings: " << c->siblings.size() << ") (kids: " << c->kids.size() << ")" <<
+      " (attachment: " << c->attachment << ")" << " (viewable: " << c->viewable << ")" << " (mimetype: " << mime_type << ")";
+
+    auto part = new AstroidMessages::Message::Chunk ();
+
+    /* defaults */
+    part->set_mime_type ("text/plain");
+    part->set_preferred (true);
+    part->set_is_encrypted (false);
+    part->set_is_signed (false);
+    part->set_content ("");
+    part->set_sibling (!c->siblings.empty ());
+    part->set_id (c->id);
+
+    if (root && c->attachment) {
+      /* return empty root part */
+      return part;
+    } else if (c->attachment) {
+      delete part;
+      return NULL;
+    }
+
+    if (c->viewable) {
+      part->set_mime_type ("text/plain");
+      part->set_preferred (c->preferred);
+
+      part->set_is_signed (c->issigned);
+      // TODO: Add signature state
+
+      part->set_is_encrypted (c->isencrypted);
+      // TODO: Add encryption state
+
+      // TODO: Filter code tags
+      part->set_content (c->viewable_text ("text/plain", true));
+
+      /* make state element */
+      MessageState::Element e (MessageState::ElementType::Part, c->id);
+      thread_view->state[m].elements.push_back (e);
+    }
+
+    /* recurse into children after first part so that we get the correct order
+     * on elements */
+    for (auto &k : c->kids) {
+      auto ch = build_mime_tree (m, k, false);
+      if (ch != NULL) {
+        auto nch = part->add_kids ();
+        *nch = *ch;
+        delete ch;
+      }
+    }
+
+    return part;
   }
 
   ustring PageClient::get_attachment_thumbnail (refptr<Chunk> c) { // {{{

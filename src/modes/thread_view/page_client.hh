@@ -10,9 +10,7 @@
 
 # include "astroid.hh"
 
-namespace AstroidMessages {
-  class Message; // prototype
-}
+# include "messages.pb.h"
 
 namespace Astroid {
   extern "C" void PageClient_init_web_extensions (
@@ -45,6 +43,7 @@ namespace Astroid {
 
     private:
       AstroidMessages::Message  make_message (refptr<Message> m);
+      AstroidMessages::Message::Chunk * build_mime_tree (refptr<Message> m, refptr<Chunk> c, bool root);
       ustring                   get_attachment_thumbnail (refptr<Chunk>);
 
       static const int MAX_PREVIEW_LEN = 80;
