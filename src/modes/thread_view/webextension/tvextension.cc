@@ -509,36 +509,18 @@ void AstroidExtension::create_message_part_html (
   cout << "create message part: " << c.id() << " (siblings: " << c.sibling() << ") (kids: " << c.kids().size() << ")" <<
     " (attachment: " << c.attachment() << ")" << " (viewable: " << c.viewable() << ")" << " (mimetype: " << mime_type << ")" << endl;
 
-  /* if (c->attachment) return; */
-
-  /* // TODO: redundant sibling checking */
-
-  /* check if we're the preferred sibling */
-  bool use = false;
-
-  if (c.sibling()) {
-    /* todo: use last preferred sibling */
-    if (c.preferred()) {
-      use = true;
-    } else {
-      use = false;
-    }
-  } else {
-    use = true;
-  }
-
-  if (use) {
+  if (c.use()) {
     if (c.viewable() && c.preferred()) {
       create_body_part (message, c, span_body);
     } else if (c.viewable()) {
-      /* TODO: create_sibling_part (message, c, span_body); */
+      create_sibling_part (message, c, span_body);
     }
 
     for (auto &k: c.kids()) {
       create_message_part_html (message, k, span_body);
     }
   } else {
-    /* TODO: create_sibling_part (message, c, span_body); */
+    create_sibling_part (message, c, span_body);
   }
 }
 
@@ -837,6 +819,49 @@ void AstroidExtension::create_body_part (
   g_object_unref (d);
 }
 
+void AstroidExtension::create_sibling_part (
+    const AstroidMessages::Message &message,
+    const AstroidMessages::Message::Chunk &sibling,
+    WebKitDOMHTMLElement * span_body) {
+
+  cout << "create sibling part: " << sibling.id () << endl;
+  //
+  //  <div id="sibling_template" class=sibling_container">
+  //      <div class="message"></div>
+  //  </div>
+
+  GError *err;
+
+  WebKitDOMDocument * d = webkit_web_page_get_dom_document (page);
+  WebKitDOMHTMLElement * sibling_container =
+    DomUtils::clone_select (WEBKIT_DOM_NODE(d), "#sibling_template");
+
+  webkit_dom_element_remove_attribute (WEBKIT_DOM_ELEMENT (sibling_container),
+      "id");
+
+  webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (sibling_container),
+    "id", sibling.sid().c_str(),
+    (err = NULL, &err));
+
+  ustring content = ustring::compose ("Alternative part (type: %1) - potentially sketchy.",
+      Glib::Markup::escape_text(sibling.mime_type ()),
+      sibling.sid());
+
+  WebKitDOMHTMLElement * message_cont =
+    DomUtils::select (WEBKIT_DOM_NODE (sibling_container), ".message");
+
+  webkit_dom_html_element_set_inner_html (
+      message_cont,
+      content.c_str(),
+      (err = NULL, &err));
+
+  webkit_dom_node_append_child (WEBKIT_DOM_NODE (span_body),
+      WEBKIT_DOM_NODE (sibling_container), (err = NULL, &err));
+
+  g_object_unref (message_cont);
+  g_object_unref (sibling_container);
+  g_object_unref (d);
+} //
 
 void AstroidExtension::insert_mime_messages (AstroidMessages::Message m,
     WebKitDOMHTMLElement * div_message) {
@@ -1045,21 +1070,21 @@ void AstroidExtension::apply_focus (ustring mid, int element) {
 
     g_object_unref (class_list);
 
-    /*
+    int ei = 1;
     for (auto &e : m.elements ()) {
-
-      if (e.id () == 0) continue;
+      if (e.id() < 0) continue; // all states contain an empty element at first.
 
       WebKitDOMElement * ee = webkit_dom_document_get_element_by_id (d, e.sid().c_str());
       WebKitDOMDOMTokenList * e_class_list =
         webkit_dom_element_get_class_list (ee);
 
-      DomUtils::switch_class (e_class_list, "focused", (m.mid () == mid && e.id () == element));
+      DomUtils::switch_class (e_class_list, "focused", (m.mid () == mid && ei == element));
 
       g_object_unref (e_class_list);
       g_object_unref (ee);
+
+      ei++;
     }
-    */
 
     g_object_unref (me);
   }

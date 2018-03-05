@@ -95,9 +95,9 @@ namespace Astroid {
     bool x = webkit_dom_dom_token_list_contains (list, c.c_str ());
 
     if (v && !x) {
-      webkit_dom_dom_token_list_toggle (list, c.c_str (), true, &err );
-    } else if (x) {
-      webkit_dom_dom_token_list_toggle (list, c.c_str (), false, &err );
+      webkit_dom_dom_token_list_add (list, &err, c.c_str (), NULL );
+    } else if (!v && x) {
+      webkit_dom_dom_token_list_remove (list, &err, c.c_str (), NULL );
     }
 
     return x;

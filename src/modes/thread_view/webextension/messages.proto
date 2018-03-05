@@ -101,6 +101,7 @@ message Message {
 
   message Chunk {
     int32 id = 1;
+    string sid = 13;
     string mime_type = 6;
     bool viewable = 2;
     bool preferred = 3;
@@ -108,6 +109,7 @@ message Message {
     bool is_encrypted = 8;
     bool is_signed = 9; // 'signed' doesn't 
     bool sibling = 11;
+    bool use = 12;
 
     string content = 10;
 

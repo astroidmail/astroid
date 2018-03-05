@@ -80,6 +80,11 @@ class AstroidExtension {
         const AstroidMessages::Message::Chunk &c,
         WebKitDOMHTMLElement * span_body);
 
+    void create_sibling_part (
+        const AstroidMessages::Message &message,
+        const AstroidMessages::Message::Chunk &c,
+        WebKitDOMHTMLElement * span_body);
+
     void insert_mime_messages (AstroidMessages::Message m,
         WebKitDOMHTMLElement * div_message);
     void insert_attachments (AstroidMessages::Message m,

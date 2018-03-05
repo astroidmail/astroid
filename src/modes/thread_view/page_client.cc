@@ -405,11 +405,12 @@ namespace Astroid {
     part->set_content ("");
 
     part->set_id (c->id);
+    part->set_sid (ustring::compose ("%1", c->id));
     part->set_sibling (!c->siblings.empty ());
     part->set_viewable (c->viewable);
     part->set_preferred (c->preferred);
     part->set_attachment (c->attachment);
-    
+
     // TODO: Add signature state
     // TODO: Add encryption state
     part->set_is_signed (c->issigned);
@@ -427,22 +428,54 @@ namespace Astroid {
     if (c->viewable) {
       // TODO: Filter code tags
       part->set_content (c->viewable_text (true, true));
+    }
 
-      /* make state element */
+    /* make state element */
+
+    /* Check if we are preferred part or sibling.
+     *
+     * If not used only a sibling part will be created.
+     *
+     */
+    bool use = false;
+
+    if (c->viewable) {
+      if (c->preferred) {
+        use = true;
+      } else {
+        use = false; // create sibling part
+      }
+    } else {
+      use = true;
+    }
+
+    part->set_use (use);
+
+
+    if (use) {
+      if (c->viewable && c->preferred) {
+        // shown
+      } else if (c->viewable) {
+        MessageState::Element e (MessageState::ElementType::Part, c->id);
+        thread_view->state[m].elements.push_back (e);
+      }
+
+      /* recurse into children after first part so that we get the correct order
+       * on elements */
+      for (auto &k : c->kids) {
+        auto ch = build_mime_tree (m, k, false);
+        if (ch != NULL) {
+          auto nch = part->add_kids ();
+          *nch = *ch;
+          delete ch;
+        }
+      }
+
+    } else {
       MessageState::Element e (MessageState::ElementType::Part, c->id);
       thread_view->state[m].elements.push_back (e);
     }
 
-    /* recurse into children after first part so that we get the correct order
-     * on elements */
-    for (auto &k : c->kids) {
-      auto ch = build_mime_tree (m, k, false);
-      if (ch != NULL) {
-        auto nch = part->add_kids ();
-        *nch = *ch;
-        delete ch;
-      }
-    }
 
     return part;
   }
