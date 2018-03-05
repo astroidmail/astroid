@@ -527,7 +527,7 @@ namespace Astroid {
     }
 
     vte_terminal_set_font (VTE_TERMINAL(vte_term), font_description.gobj ());
-    vte_terminal_set_size (VTE_TERMINAL (vte_term), 1, 10);
+    vte_terminal_set_size (VTE_TERMINAL (vte_term), 1, astroid->config("terminal").get<int> ("height"));
 
     /* start shell */
     char * shell = vte_get_user_shell ();

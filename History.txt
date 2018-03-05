@@ -1,6 +1,7 @@
 == **
 
 * `terminal.font_description` configures font of embedded terminal.
+* `termina.height` configures height of embedded terminal.
 
 == v0.11.1 / 2018-02-20
 

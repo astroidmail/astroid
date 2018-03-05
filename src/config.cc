@@ -159,6 +159,7 @@ namespace Astroid {
     }
 
     /* terminal */
+    default_config.put ("terminal.height", 10);
     default_config.put ("terminal.font_description", "default"); // https://developer.gnome.org/pango/stable/pango-Fonts.html#pango-font-description-from-string
 
     /* thread index */
