@@ -158,6 +158,9 @@ namespace Astroid {
       default_config.put("startup.queries.inbox", "tag:inbox");
     }
 
+    /* terminal */
+    default_config.put ("terminal.font_description", "default"); // https://developer.gnome.org/pango/stable/pango-Fonts.html#pango-font-description-from-string
+
     /* thread index */
     default_config.put ("thread_index.page_jump_rows", 6);
     default_config.put ("thread_index.sort_order", "newest");
