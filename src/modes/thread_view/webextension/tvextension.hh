@@ -112,9 +112,10 @@ class AstroidExtension {
     void insert_header_row (ustring &header, ustring title, ustring value, bool important);
     ustring create_header_row (ustring title, ustring value, bool important, bool escape, bool noprint = false);
 
-    void set_warning (AstroidMessages::Message, ustring);
-    void set_error (AstroidMessages::Message, ustring);
-
+    void set_warning (AstroidMessages::Info &);
+    void hide_warning (AstroidMessages::Info &);
+    void set_info (AstroidMessages::Info &);
+    void hide_info (AstroidMessages::Info &);
 };
 
 AstroidExtension * ext;

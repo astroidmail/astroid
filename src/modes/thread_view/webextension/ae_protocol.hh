@@ -8,6 +8,7 @@ namespace Astroid {
     public:
       typedef enum _MessageTypes {
         Debug = 0,
+        Info,
         StyleSheet,
         State,
         Focus,

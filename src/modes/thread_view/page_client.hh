@@ -37,6 +37,12 @@ namespace Astroid {
       void set_hidden_state (refptr<Message> m, bool hidden);
       void set_focus (refptr<Message> m, unsigned int);
 
+      void set_warning (refptr<Message>, ustring);
+      void hide_warning (refptr<Message>);
+      void set_info (refptr<Message>, ustring);
+      void hide_info (refptr<Message>);
+
+
       bool enable_gravatar = false;
 
       std::atomic<bool> ready;

@@ -223,6 +223,23 @@ void AstroidExtension::reader () {/*{{{*/
         }
         break;
 
+      case AeProtocol::MessageTypes::Info:
+        {
+          AstroidMessages::Info m;
+          m.ParseFromString (buffer);
+
+          if (m.warning ()) {
+            Glib::signal_idle().connect_once (
+                sigc::bind (
+                  sigc::mem_fun(*this, &AstroidExtension::set_warning), m));
+          } else {
+            Glib::signal_idle().connect_once (
+                sigc::bind (
+                  sigc::mem_fun(*this, &AstroidExtension::set_info), m));
+          }
+        }
+        break;
+
       default:
         break; // unknown message
     }
@@ -403,7 +420,12 @@ void AstroidExtension::set_message_html (
     webkit_dom_element_set_inner_html (WEBKIT_DOM_ELEMENT(preview), "<i>Message content is missing.</i>", (err = NULL, &err));
 
     /* set warning */
-    set_warning (m, "The message file is missing, only fields cached in the notmuch database are shown. Most likely your database is out of sync.");
+    AstroidMessages::Info i;
+    i.set_mid (m.mid());
+    i.set_set (true);
+    i.set_txt ("The message file is missing, only fields cached in the notmuch database are shown. Most likely your database is out of sync.");
+
+    set_warning (i);
 
     /* add an explanation to the body */
     GError *err;
@@ -1200,13 +1222,116 @@ ustring AstroidExtension::create_header_row (
 // }}}
 
 /* warning and info {{{ */
-void AstroidExtension::set_warning (AstroidMessages::Message m, ustring w) {
+void AstroidExtension::set_warning (AstroidMessages::Info &m) {
+  if (!m.set ()) {
+    hide_warning (m);
+    return;
+  }
 
+  ustring mid = "message_" + m.mid();
+  ustring txt = m.txt();
+
+  WebKitDOMDocument * d = webkit_web_page_get_dom_document (page);
+  WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
+
+  WebKitDOMHTMLElement * warning = DomUtils::select (
+      WEBKIT_DOM_NODE (e),
+      ".email_warning");
+
+  GError * err;
+  webkit_dom_html_element_set_inner_html (warning, txt.c_str(), (err = NULL, &err));
+
+  WebKitDOMDOMTokenList * class_list =
+    webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(warning));
+
+  DomUtils::switch_class (class_list, "show", true);
+
+  g_object_unref (class_list);
+  g_object_unref (warning);
+  g_object_unref (e);
+  g_object_unref (d);
 }
 
-void AstroidExtension::set_error (AstroidMessages::Message m, ustring w) {
+void AstroidExtension::hide_warning (AstroidMessages::Info &m)
+{
+  ustring mid = "message_" + m.mid();
 
+  WebKitDOMDocument * d = webkit_web_page_get_dom_document (page);
+  WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
+
+  WebKitDOMHTMLElement * warning = DomUtils::select (
+      WEBKIT_DOM_NODE (e),
+      ".email_warning");
+
+  GError * err;
+  webkit_dom_html_element_set_inner_html (warning, "", (err = NULL, &err));
+
+  WebKitDOMDOMTokenList * class_list =
+    webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(warning));
+
+  DomUtils::switch_class (class_list, "show", false);
+
+  g_object_unref (class_list);
+  g_object_unref (warning);
+  g_object_unref (e);
+  g_object_unref (d);
 }
+
+void AstroidExtension::set_info (AstroidMessages::Info &m)
+{
+  if (!m.set ()) {
+    hide_info (m);
+    return;
+  }
+
+  ustring mid = "message_" + m.mid();
+  ustring txt = m.txt();
+
+  WebKitDOMDocument * d = webkit_web_page_get_dom_document (page);
+  WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
+
+  WebKitDOMHTMLElement * info = DomUtils::select (
+      WEBKIT_DOM_NODE (e),
+      ".email_info");
+
+  GError * err;
+  webkit_dom_html_element_set_inner_html (info, txt.c_str(), (err = NULL, &err));
+
+  WebKitDOMDOMTokenList * class_list =
+    webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(info));
+
+  DomUtils::switch_class (class_list, "show", true);
+
+  g_object_unref (class_list);
+  g_object_unref (info);
+  g_object_unref (e);
+  g_object_unref (d);
+}
+
+void AstroidExtension::hide_info (AstroidMessages::Info &m) {
+  ustring mid = "message_" + m.mid();
+
+  WebKitDOMDocument * d = webkit_web_page_get_dom_document (page);
+  WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
+
+  WebKitDOMHTMLElement * info = DomUtils::select (
+      WEBKIT_DOM_NODE (e),
+      ".email_info");
+
+  GError * err;
+  webkit_dom_html_element_set_inner_html (info, "", (err = NULL, &err));
+
+  WebKitDOMDOMTokenList * class_list =
+    webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(info));
+
+  DomUtils::switch_class (class_list, "show", false);
+
+  g_object_unref (class_list);
+  g_object_unref (info);
+  g_object_unref (e);
+  g_object_unref (d);
+}
+
 /* }}} */
 
 void AstroidExtension::handle_hidden (AstroidMessages::Hidden &msg) {/*{{{*/

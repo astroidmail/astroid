@@ -515,6 +515,46 @@ namespace Astroid {
     return part;
   }
 
+  void PageClient::set_warning (refptr<Message> m, ustring txt) {
+    AstroidMessages::Info i;
+    i.set_mid (m->safe_mid ());
+    i.set_warning (true);
+    i.set_set (true);
+    i.set_txt (txt);
+
+    AeProtocol::send_message (AeProtocol::MessageTypes::Info, i, ostream);
+  }
+
+  void PageClient::hide_warning (refptr<Message> m) {
+    AstroidMessages::Info i;
+    i.set_mid (m->safe_mid ());
+    i.set_warning (true);
+    i.set_set (false);
+    i.set_txt ("");
+
+    AeProtocol::send_message (AeProtocol::MessageTypes::Info, i, ostream);
+  }
+
+  void PageClient::set_info (refptr<Message> m, ustring txt) {
+    AstroidMessages::Info i;
+    i.set_mid (m->safe_mid ());
+    i.set_warning (false);
+    i.set_set (true);
+    i.set_txt (txt);
+
+    AeProtocol::send_message (AeProtocol::MessageTypes::Info, i, ostream);
+  }
+
+  void PageClient::hide_info (refptr<Message> m) {
+    AstroidMessages::Info i;
+    i.set_mid (m->safe_mid ());
+    i.set_warning (false);
+    i.set_set (false);
+    i.set_txt ("");
+
+    AeProtocol::send_message (AeProtocol::MessageTypes::Info, i, ostream);
+  }
+
   ustring PageClient::get_attachment_thumbnail (refptr<Chunk> c) { // {{{
     /* set the preview image or icon on the attachment display element */
     const char * _mtype = g_mime_content_type_get_media_type (c->content_type);

@@ -1123,31 +1123,26 @@ namespace Astroid {
   }
 
   /* info and warning  */
-  // TODO: [JS] [REIMPLEMENT] Possibly use GtkInfoBar
   void ThreadView::set_warning (refptr<Message> m, ustring txt)
   {
-    /* ustring js = "Astroid.set_warning(" + m->safe_mid () + ", " + txt + ");"; */
-    /* webkit_web_view_run_javascript (webview, js.c_str (), NULL, NULL, NULL); */
+    LOG (debug) << "tv: set warning: " << txt;
+    page_client->set_warning (m, txt);
   }
 
 
   void ThreadView::hide_warning (refptr<Message> m)
   {
-    /* ustring js = "Astroid.hide_warning(" + m->safe_mid () + ");"; */
-    /* webkit_web_view_run_javascript (webview, js.c_str (), NULL, NULL, NULL); */
+    page_client->hide_warning (m);
   }
 
-  // TODO: [JS] [REIMPLEMENT] Same as warning
   void ThreadView::set_info (refptr<Message> m, ustring txt)
   {
     LOG (debug) << "tv: set info: " << txt;
-    /* ustring js = "Astroid.set_info(" + m->safe_mid () + ", " + txt + ");"; */
-    /* webkit_web_view_run_javascript (webview, js.c_str (), NULL, NULL, NULL); */
+    page_client->set_info (m, txt);
   }
 
   void ThreadView::hide_info (refptr<Message> m) {
-    /* ustring js = "Astroid.hide_info(" + m->safe_mid () + ");"; */
-    /* webkit_web_view_run_javascript (webview, js.c_str (), NULL, NULL, NULL); */
+    page_client->hide_info (m);
   }
   /* end info and warning  */
 

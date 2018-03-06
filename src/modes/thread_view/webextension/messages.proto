@@ -26,6 +26,13 @@ message StyleSheet {
   string css = 1;
 }
 
+message Info {
+  bool warning = 1;
+  bool set = 2;
+  string mid = 3;
+  string txt = 4;
+}
+
 message Address {
   string name = 1;
   string email = 2;
