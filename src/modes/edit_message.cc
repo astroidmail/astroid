@@ -1152,6 +1152,12 @@ namespace Astroid {
     message_sending_status_icon.set (pixbuf);
     sending_in_progress.store (false);
 
+    if (result_from_sender && (astroid->config().get<bool> ("mail.close_on_success"))) {
+      LOG (info) << "cm: sending successful, auto-closing window";
+      close (true);
+    }
+
+
     delete sending_message;
 
     emit_message_sent_attempt (result_from_sender);
