@@ -925,15 +925,162 @@ void AstroidExtension::insert_attachments (
     AstroidMessages::Message &m,
     WebKitDOMHTMLElement * div_message)
 {
+  // <div class="attachment_container">
+  //     <div class="top_border"></div>
+  //     <table class="attachment" data-attachment-id="">
+  //         <tr>
+  //             <td class="preview">
+  //                 <img src="" />
+  //             </td>
+  //             <td class="info">
+  //                 <div class="filename"></div>
+  //                 <div class="filesize"></div>
+  //             </td>
+  //         </tr>
+  //     </table>
+  // </div>
 
-  set_attachment_icon (m, div_message); // TODO: if has attachments
+  GError *err;
+
+  WebKitDOMDocument * d = webkit_web_page_get_dom_document (page);
+  WebKitDOMHTMLElement * attachment_container =
+    DomUtils::clone_select (WEBKIT_DOM_NODE(d), "#attachment_template");
+  WebKitDOMHTMLElement * attachment_template =
+    DomUtils::select (WEBKIT_DOM_NODE(attachment_container), ".attachment");
+
+  webkit_dom_element_remove_attribute (WEBKIT_DOM_ELEMENT (attachment_container),
+      "id");
+  webkit_dom_node_remove_child (WEBKIT_DOM_NODE (attachment_container),
+      WEBKIT_DOM_NODE(attachment_template), (err = NULL, &err));
+
+  int attachments = 0;
+
+  /* generate an attachment table for each attachment */
+  for (auto &c : m.attachments ()) {
+    WebKitDOMHTMLElement * attachment_table =
+      DomUtils::clone_node (WEBKIT_DOM_NODE (attachment_template));
+
+    attachments++;
+
+    WebKitDOMHTMLElement * info_fname =
+      DomUtils::select (WEBKIT_DOM_NODE (attachment_table), ".info .filename");
+
+    ustring fname = c.filename ();
+    if (fname.size () == 0) {
+      fname = "Unnamed attachment";
+    }
+
+    fname = Glib::Markup::escape_text (fname);
+
+    webkit_dom_html_element_set_inner_text (info_fname, fname.c_str(), (err = NULL, &err));
+
+    WebKitDOMHTMLElement * info_fsize =
+      DomUtils::select (WEBKIT_DOM_NODE (attachment_table), ".info .filesize");
+
+    webkit_dom_html_element_set_inner_text (info_fsize, c.human_size().c_str(), (err = NULL, &err));
+
+
+    webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (attachment_table),
+      "data-attachment-id", c.sid().c_str(),
+      (err = NULL, &err));
+    webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (attachment_table),
+      "id", c.sid().c_str(),
+      (err = NULL, &err));
+
+    // set image
+    WebKitDOMHTMLImageElement * img =
+      WEBKIT_DOM_HTML_IMAGE_ELEMENT(
+      DomUtils::select (WEBKIT_DOM_NODE (attachment_table), ".preview img"));
+
+    webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (img), "src",
+        c.thumbnail().c_str(), &err);
+
+    // add the attachment table
+    webkit_dom_node_append_child (WEBKIT_DOM_NODE (attachment_container),
+        WEBKIT_DOM_NODE (attachment_table), (err = NULL, &err));
+
+
+    /* if (c->issigned || c->isencrypted) { */
+    /*   /1* add encryption or signed tag to attachment *1/ */
+    /*   WebKitDOMDOMTokenList * class_list = */
+    /*     webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(attachment_table)); */
+
+    /*   if (c->isencrypted) { */
+    /*     webkit_dom_dom_token_list_add (class_list, "encrypted", */
+    /*         (err = NULL, &err)); */
+    /*   } */
+
+    /*   if (c->issigned) { */
+    /*     webkit_dom_dom_token_list_add (class_list, "signed", */
+    /*         (err = NULL, &err)); */
+    /*   } */
+
+    /*   g_object_unref (class_list); */
+    /* } */
+
+    g_object_unref (img);
+    g_object_unref (info_fname);
+    g_object_unref (info_fsize);
+    g_object_unref (attachment_table);
+
+  }
+
+  if (attachments > 0) {
+    webkit_dom_node_append_child (WEBKIT_DOM_NODE (div_message),
+        WEBKIT_DOM_NODE (attachment_container), (err = NULL, &err));
+  }
+
+  g_object_unref (attachment_template);
+  g_object_unref (attachment_container);
+  g_object_unref (d);
+
+
+  if (attachments > 0)
+    set_attachment_icon (m, div_message);
 }
 
-void AstroidExtension::set_attachment_icon (AstroidMessages::Message m,
-    WebKitDOMHTMLElement * div_message) {
+void AstroidExtension::set_attachment_icon (
+    AstroidMessages::Message &m,
+    WebKitDOMHTMLElement * div_message)
+{
+  GError *err;
+
+  WebKitDOMHTMLElement * attachment_icon_img = DomUtils::select (
+      WEBKIT_DOM_NODE (div_message),
+      ".attachment.icon.first");
+
+  gchar * content;
+  gsize   content_size;
+  attachment_icon->save_to_buffer (content, content_size, "png");
+  ustring image_content_type = "image/png";
+
+  WebKitDOMHTMLImageElement *img = WEBKIT_DOM_HTML_IMAGE_ELEMENT (attachment_icon_img);
+
+  err = NULL;
+  webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (img), "src",
+      DomUtils::assemble_data_uri (image_content_type, content, content_size).c_str(), &err);
+
+  g_object_unref (attachment_icon_img);
+
+  attachment_icon_img = DomUtils::select (
+      WEBKIT_DOM_NODE (div_message),
+      ".attachment.icon.sec");
+  img = WEBKIT_DOM_HTML_IMAGE_ELEMENT (attachment_icon_img);
+
+  err = NULL;
+  webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (img), "src",
+      DomUtils::assemble_data_uri (image_content_type, content, content_size).c_str(), &err);
+
+  WebKitDOMDOMTokenList * class_list =
+    webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(div_message));
+
+  DomUtils::switch_class (class_list, "attachment", true);
+
+  g_object_unref (class_list);
+  g_object_unref (attachment_icon_img);
 }
 
-void AstroidExtension::load_marked_icon (AstroidMessages::Message m,/*{{{*/
+void AstroidExtension::load_marked_icon (AstroidMessages::Message &m,/*{{{*/
   WebKitDOMHTMLElement * div_message) {
   GError *err;
 

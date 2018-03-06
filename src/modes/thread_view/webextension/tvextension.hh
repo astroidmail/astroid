@@ -100,9 +100,9 @@ class AstroidExtension {
 
     static const int ATTACHMENT_ICON_WIDTH = 35;
 
-    void load_marked_icon (AstroidMessages::Message m,
+    void load_marked_icon (AstroidMessages::Message &m,
         WebKitDOMHTMLElement * div_message);
-    void set_attachment_icon (AstroidMessages::Message m,
+    void set_attachment_icon (AstroidMessages::Message &m,
         WebKitDOMHTMLElement * div_message);
 
     /* headers */

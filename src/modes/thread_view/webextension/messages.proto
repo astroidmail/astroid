@@ -79,7 +79,7 @@ message Message {
     bool preferred = 3;
     bool attachment = 7;
     bool is_encrypted = 8;
-    bool is_signed = 9; // 'signed' doesn't 
+    bool is_signed = 9; // 'signed' doesn't
     bool sibling = 11;
     bool use = 12;
 
@@ -88,6 +88,7 @@ message Message {
     int32  size = 15;
     string human_size = 16;
 
+    string thumbnail = 17; // used by attachments
 
     repeated Chunk kids = 4;
     repeated Chunk siblings = 5;

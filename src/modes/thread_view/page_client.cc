@@ -396,16 +396,19 @@ namespace Astroid {
 
     /* add attachments */
     for (refptr<Chunk> &c : m->attachments ()) {
+
       auto _c = msg.add_attachments ();
       auto _n = build_mime_tree (m, c, false, true);
+
       *_c = *_n;
       delete _n;
+
+      _c->set_thumbnail (get_attachment_thumbnail (c));
 
       // add attachment to message state
       MessageState::Element e (MessageState::ElementType::Attachment, c->id);
       thread_view->state[m].elements.push_back (e);
     }
-
 
     return msg;
   }
