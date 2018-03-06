@@ -379,12 +379,38 @@ namespace Astroid {
     }
 
     /* build structure */
-    msg.set_allocated_root (build_mime_tree (m, m->root, true));
+    msg.set_allocated_root (build_mime_tree (m, m->root, true, false));
+
+    /* add MIME messages */
+    typedef ThreadView::MessageState MessageState;
+    for (refptr<Chunk> &c : m->mime_messages ()) {
+      auto _c = msg.add_mime_messages ();
+      auto _n = build_mime_tree (m, c, false, true);
+      *_c = *_n;
+      delete _n;
+
+      // add MIME message to message state
+      MessageState::Element e (MessageState::ElementType::MimeMessage, c->id);
+      thread_view->state[m].elements.push_back (e);
+    }
+
+    /* add attachments */
+    for (refptr<Chunk> &c : m->attachments ()) {
+      auto _c = msg.add_attachments ();
+      auto _n = build_mime_tree (m, c, false, true);
+      *_c = *_n;
+      delete _n;
+
+      // add attachment to message state
+      MessageState::Element e (MessageState::ElementType::Attachment, c->id);
+      thread_view->state[m].elements.push_back (e);
+    }
+
 
     return msg;
   }
 
-  AstroidMessages::Message::Chunk * PageClient::build_mime_tree (refptr<Message> m, refptr<Chunk> c, bool root)
+  AstroidMessages::Message::Chunk * PageClient::build_mime_tree (refptr<Message> m, refptr<Chunk> c, bool root, bool shallow)
   {
     typedef ThreadView::MessageState MessageState;
 
@@ -411,11 +437,16 @@ namespace Astroid {
     part->set_preferred (c->preferred);
     part->set_attachment (c->attachment);
 
+    part->set_filename (c->get_filename ());
+    part->set_size (c->get_file_size ());
+    part->set_human_size (Utils::format_size (part->size()));
+
     // TODO: Add signature state
     // TODO: Add encryption state
     part->set_is_signed (c->issigned);
     part->set_is_encrypted (c->isencrypted);
 
+    if (shallow) return part;
 
     if (root && c->attachment) {
       /* return empty root part */
@@ -430,7 +461,6 @@ namespace Astroid {
       part->set_content (c->viewable_text (true, true));
     }
 
-    /* make state element */
 
     /* Check if we are preferred part or sibling.
      *
@@ -456,6 +486,7 @@ namespace Astroid {
       if (c->viewable && c->preferred) {
         // shown
       } else if (c->viewable) {
+        /* make state element */
         MessageState::Element e (MessageState::ElementType::Part, c->id);
         thread_view->state[m].elements.push_back (e);
       }
@@ -463,7 +494,7 @@ namespace Astroid {
       /* recurse into children after first part so that we get the correct order
        * on elements */
       for (auto &k : c->kids) {
-        auto ch = build_mime_tree (m, k, false);
+        auto ch = build_mime_tree (m, k, false, false);
         if (ch != NULL) {
           auto nch = part->add_kids ();
           *nch = *ch;
@@ -472,6 +503,7 @@ namespace Astroid {
       }
 
     } else {
+      /* make state element */
       MessageState::Element e (MessageState::ElementType::Part, c->id);
       thread_view->state[m].elements.push_back (e);
     }

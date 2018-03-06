@@ -44,32 +44,6 @@ message Encryption {
 
 }
 
-message MimeMessage {
-  int32  eid = 1;
-  string filename = 2;
-  string size = 3;
-
-  bool      signed = 4;
-  Signature signature = 5;
-
-  bool        encrypted = 6;
-  Encryption  encryption = 7;
-}
-
-message Attachment {
-  int32  eid = 1;
-  string filename = 2;
-  string size = 3;
-
-  bool      signed = 4;
-  Signature signature = 5;
-
-  bool        encrypted = 6;
-  Encryption  encryption = 7;
-
-  string thumbnail = 8;
-}
-
 message Message {
   string mid = 1;
 
@@ -96,8 +70,6 @@ message Message {
 
   string preview = 17;
 
-  repeated MimeMessage mime_messages = 18;
-  repeated Attachment  attachments = 19;
 
   message Chunk {
     int32 id = 1;
@@ -112,12 +84,19 @@ message Message {
     bool use = 12;
 
     string content = 10;
+    string filename = 14;
+    int32  size = 15;
+    string human_size = 16;
+
 
     repeated Chunk kids = 4;
     repeated Chunk siblings = 5;
   }
 
   Chunk root = 23;
+
+  repeated Chunk mime_messages = 18;
+  repeated Chunk attachments = 19;
 }
 
 

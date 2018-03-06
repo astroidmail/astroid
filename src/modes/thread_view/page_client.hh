@@ -43,7 +43,7 @@ namespace Astroid {
 
     private:
       AstroidMessages::Message  make_message (refptr<Message> m);
-      AstroidMessages::Message::Chunk * build_mime_tree (refptr<Message> m, refptr<Chunk> c, bool root);
+      AstroidMessages::Message::Chunk * build_mime_tree (refptr<Message> m, refptr<Chunk> c, bool root, bool shallow);
       ustring                   get_attachment_thumbnail (refptr<Chunk>);
 
       static const int MAX_PREVIEW_LEN = 80;

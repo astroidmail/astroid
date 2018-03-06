@@ -863,12 +863,68 @@ void AstroidExtension::create_sibling_part (
   g_object_unref (d);
 } //
 
-void AstroidExtension::insert_mime_messages (AstroidMessages::Message m,
-    WebKitDOMHTMLElement * div_message) {
+void AstroidExtension::insert_mime_messages (
+    AstroidMessages::Message &m,
+    WebKitDOMHTMLElement * div_message)
+{
+  WebKitDOMDocument * d = webkit_web_page_get_dom_document (page);
+  WebKitDOMHTMLElement * div_email_container =
+    DomUtils::select (WEBKIT_DOM_NODE(div_message), "div.email_container");
+
+  WebKitDOMHTMLElement * span_body =
+    DomUtils::select (WEBKIT_DOM_NODE(div_email_container), ".body");
+
+  for (auto &c : m.mime_messages ()) {
+    cout << "create mime message part: " << c.id() << endl;
+    //
+    //  <div id="mime_template" class=mime_container">
+    //      <div class="top_border"></div>
+    //      <div class="message"></div>
+    //  </div>
+
+    GError *err;
+
+    WebKitDOMHTMLElement * mime_container =
+      DomUtils::clone_select (WEBKIT_DOM_NODE(d), "#mime_template");
+
+    webkit_dom_element_remove_attribute (WEBKIT_DOM_ELEMENT (mime_container),
+        "id");
+
+    webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (mime_container),
+      "id", c.sid().c_str(),
+      (err = NULL, &err));
+
+    ustring content = ustring::compose ("MIME message (subject: %1, size: %2 B) - potentially sketchy.",
+        Glib::Markup::escape_text(c.filename ()),
+        c.human_size (),
+        c.sid ());
+
+    WebKitDOMHTMLElement * message_cont =
+      DomUtils::select (WEBKIT_DOM_NODE (mime_container), ".message");
+
+    webkit_dom_html_element_set_inner_html (
+        message_cont,
+        content.c_str(),
+        (err = NULL, &err));
+
+
+    webkit_dom_node_append_child (WEBKIT_DOM_NODE (span_body),
+        WEBKIT_DOM_NODE (mime_container), (err = NULL, &err));
+
+    g_object_unref (message_cont);
+    g_object_unref (mime_container);
+
+  }
+
+  g_object_unref (span_body);
+  g_object_unref (div_email_container);
+  g_object_unref (d);
 }
 
-void AstroidExtension::insert_attachments (AstroidMessages::Message m,
-    WebKitDOMHTMLElement * div_message) {
+void AstroidExtension::insert_attachments (
+    AstroidMessages::Message &m,
+    WebKitDOMHTMLElement * div_message)
+{
 
   set_attachment_icon (m, div_message); // TODO: if has attachments
 }
