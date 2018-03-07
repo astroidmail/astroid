@@ -219,7 +219,7 @@ namespace Astroid {
     default_config.put ("mail.user_agent", "default");
     default_config.put ("mail.send_delay", 2); // wait seconds before sending, allowing to cancel
     default_config.put ("mail.close_on_success", false); // close page automatically on succesful sending of message
-    default_config.put ("mail.format_flowed", true); // mail sent with astroid can be reformatted using format_flowed
+    default_config.put ("mail.format_flowed", false); // mail sent with astroid can be reformatted using format_flowed
 
     /* polling */
     default_config.put ("poll.interval", Poll::DEFAULT_POLL_INTERVAL); // seconds
