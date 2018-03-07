@@ -12,6 +12,7 @@ namespace Astroid {
         StyleSheet,
         State,
         Focus,
+        Navigate,
         Mark,
         Hidden,
         AddMessage,

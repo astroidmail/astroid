@@ -41,6 +41,11 @@ webkit_web_extension_initialize_with_user_data (
     WebKitWebExtension *extension,
     gpointer pipes)
 {
+
+  /* IMPORTANT: We assume that there will only be one extension instance
+   * per web page. That means that there can only be one page in each web view,
+   * and each web view much use its own process. */
+
   ext = new AstroidExtension (extension, pipes);
 
   g_signal_connect (extension, "page-created",
@@ -237,6 +242,16 @@ void AstroidExtension::reader () {/*{{{*/
                 sigc::bind (
                   sigc::mem_fun(*this, &AstroidExtension::set_info), m));
           }
+        }
+        break;
+
+      case AeProtocol::MessageTypes::Navigate:
+        {
+          AstroidMessages::Navigate m;
+          m.ParseFromString (buffer);
+          Glib::signal_idle().connect_once (
+              sigc::bind (
+                sigc::mem_fun(*this, &AstroidExtension::handle_navigate), m));
         }
         break;
 
@@ -1386,6 +1401,9 @@ void AstroidExtension::apply_focus (ustring mid, int element) {
   WebKitDOMDocument *d = webkit_web_page_get_dom_document (page);
   GError * err = NULL;
 
+  focused_message = mid;
+  focused_element = element;
+
   for (auto &m : state.messages()) {
 
     ustring _mid = "message_" + m.mid ();
@@ -1418,6 +1436,141 @@ void AstroidExtension::apply_focus (ustring mid, int element) {
   }
 
   g_object_unref (d);
+
+  /* send back focus to ThreadView */
+  AstroidMessages::Focus fe;
+  fe.set_mid (focused_message);
+  fe.set_element (element);
+  fe.set_focus (true);
+
+  AeProtocol::send_message (AeProtocol::MessageTypes::Focus, fe, ostream);
 }
 
+void AstroidExtension::update_focus_to_view () {
+  /* check if currently focused message has gone out of focus
+   * and update focus */
+
+  /* loop through elements from the top and test whether the top
+   * of it is within the view
+   */
+
+  WebKitDOMDocument * d = webkit_web_page_get_dom_document (page);
+  WebKitDOMDOMWindow * w = webkit_dom_document_get_default_view (d);
+
+  double scrolled = webkit_dom_dom_window_get_scroll_y (w);
+  double height   = webkit_dom_dom_window_get_screen_y (w);
+
+  //LOG (debug) << "scrolled = " << scrolled << ", height = " << height;
+
+  /* check currently focused message */
+  bool take_next = false;
+
+  /* need to apply_focus afterwards */
+  bool redo_focus = false;
+
+  /* take first if none focused */
+  if (focused_message.empty ()) {
+    focused_message = state.messages()[0].mid() ;
+    redo_focus = true;
+  }
+
+  /* check if focused message is still visible */
+  ustring mid = "message_" + focused_message;
+
+  WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
+
+  double clientY = webkit_dom_element_get_offset_top (e);
+  double clientH = webkit_dom_element_get_client_height (e);
+
+  g_object_unref (e);
+
+  //LOG (debug) << "y = " << clientY;
+  //LOG (debug) << "h = " << clientH;
+
+  // height = 0 if there is no paging: all messages are in view.
+  if ((height == 0) || ( (clientY <= (scrolled + height)) && ((clientY + clientH) >= scrolled) )) {
+    //LOG (debug) << "message: " << focused_message->date() << " still in view.";
+  } else {
+    //LOG (debug) << "message: " << focused_message->date() << " out of view.";
+    take_next = true;
+  }
+
+  /* find first message that is in view and update
+   * focused status */
+  if (take_next) {
+    int focused_position = std::find_if (
+        state.messages().begin (),
+        state.messages().end (),
+        [&] (auto &m) { return m.mid () == focused_message; }) - state.messages().begin ();
+    int cur_position = 0;
+
+    bool found = false;
+
+    for (auto &m : state.messages()) {
+      ustring mid = "message_" + m.mid();
+
+      WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
+
+      double clientY = webkit_dom_element_get_offset_top (e);
+      double clientH = webkit_dom_element_get_client_height (e);
+
+      // LOG (debug) << "y = " << clientY;
+      // LOG (debug) << "h = " << clientH;
+
+      GError * gerr = NULL;
+
+      /* search for the last message that is currently in view
+       * if the focused message is now below / beyond the view.
+       * otherwise, take first that is in view now. */
+
+      if ((!found || cur_position < focused_position) &&
+          ( (height == 0) || ((clientY <= (scrolled + height)) && ((clientY + clientH) >= scrolled)) ))
+      {
+        // LOG (debug) << "message: " << m->date() << " now in view.";
+
+        if (found) redo_focus = true;
+        found = true;
+        focused_message = m.mid();
+        focused_element = 0;
+
+      } else {
+        /* reset class */
+        redo_focus = true;
+      }
+
+      g_object_unref (e);
+
+      cur_position++;
+    }
+
+    g_object_unref (w);
+    g_object_unref (d);
+
+    if (redo_focus) apply_focus (focused_message, focused_element);
+  }
+
+}
+
+void AstroidExtension::handle_navigate (AstroidMessages::Navigate &n) {
+  cout << "ae: navigating" << endl;
+
+  WebKitDOMDocument *d = webkit_web_page_get_dom_document (page);
+  WebKitDOMDOMWindow * w = webkit_dom_document_get_default_view (d);
+
+
+  if (n.type () == AstroidMessages::Navigate_Type_VisualBig) {
+    if (n.direction () == AstroidMessages::Navigate_Direction_Down) {
+      webkit_dom_dom_window_scroll_by (w, 0, 100);
+    } else {
+      webkit_dom_dom_window_scroll_by (w, 0, -100);
+    }
+    update_focus_to_view ();
+  } else if (n.type () == AstroidMessages::Navigate_Type_VisualElement) 
+  {
+
+  }
+
+  g_object_unref (w);
+  g_object_unref (d);
+}
 

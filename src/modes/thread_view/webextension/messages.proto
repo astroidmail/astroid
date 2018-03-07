@@ -8,6 +8,29 @@ message Focus {
   int32  element = 3;
 }
 
+message Navigate {
+  enum Direction {
+    Up = 0;
+    Down = 1;
+  }
+
+  enum Type {
+    VisualElement = 0; // Move one element, scrolling if necessary (default movement)
+    Visual        = 1; // Move one visual step regardless of element, update focus if necessary
+    VisualBig     = 2; // Move one visual big step, update focus if necessary
+    VisualPage    = 3; // Move one visual big big step, update focus if necessary
+    Element       = 4; // Move to specific element, update focus (not directional)
+    Message       = 5; // Move one message, update focus
+  }
+
+  Direction direction = 1;
+  Type      type = 2;
+
+  /* for Element */
+  string mid = 3;
+  int32  elemement = 4;
+}
+
 message Mark {
   string mid = 1;
   bool   marked = 2;

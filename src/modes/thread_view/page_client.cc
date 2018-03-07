@@ -11,6 +11,7 @@
 # include <boost/filesystem.hpp>
 # include <iostream>
 # include <thread>
+# include <algorithm>
 
 # include "astroid.hh"
 # include "modes/thread_view/webextension/ae_protocol.hh"
@@ -187,6 +188,23 @@ namespace Astroid {
             AstroidMessages::Debug m;
             m.ParseFromString (buffer);
             LOG (debug) << "pc: ae: " << m.msg ();
+          }
+          break;
+
+        case AeProtocol::MessageTypes::Focus:
+          {
+            AstroidMessages::Focus f;
+            f.ParseFromString (buffer);
+
+            LOG (debug) << "pc: got focus event: " << f.mid () << ", e: " << f.element ();
+
+            /* update focused element in state */
+            thread_view->focused_message = *std::find_if (
+                thread_view->mthread->messages.begin (),
+                thread_view->mthread->messages.end (),
+                [&] (auto &m) { return f.mid () == m->safe_mid (); });
+
+            thread_view->state[thread_view->focused_message].current_element = f.element ();
           }
           break;
 
@@ -599,5 +617,21 @@ namespace Astroid {
 
     return DomUtils::assemble_data_uri (image_content_type, content, content_size);
   } // }}}
+
+  void PageClient::scroll_down_big () {
+    AstroidMessages::Navigate n;
+    n.set_direction (AstroidMessages::Navigate_Direction_Down);
+    n.set_type (AstroidMessages::Navigate_Type_VisualBig);
+
+    AeProtocol::send_message (AeProtocol::MessageTypes::Navigate, n, ostream);
+  }
+
+  void PageClient::scroll_up_big () {
+    AstroidMessages::Navigate n;
+    n.set_direction (AstroidMessages::Navigate_Direction_Up);
+    n.set_type (AstroidMessages::Navigate_Type_VisualBig);
+
+    AeProtocol::send_message (AeProtocol::MessageTypes::Navigate, n, ostream);
+  }
 }
 

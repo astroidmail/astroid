@@ -196,7 +196,6 @@ namespace Astroid {
       void render ();
       void render_messages ();
       void reload_images ();
-      void render_webview ();
 
       /* message loading and rendering */
       void                add_message (refptr<Message>);

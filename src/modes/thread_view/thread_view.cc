@@ -79,6 +79,10 @@ namespace Astroid {
 
     /* create webview */
     WebKitWebContext * webcontext = webkit_web_context_get_default ();
+
+    /* one process for each webview so that a new and unique
+     * instance of the webextension is created for each webview
+     * and page */
     webkit_web_context_set_process_model (webcontext, WEBKIT_PROCESS_MODEL_MULTIPLE_SECONDARY_PROCESSES);
 
     webview = WEBKIT_WEB_VIEW (webkit_web_view_new_with_context (webcontext));
@@ -1184,7 +1188,8 @@ namespace Astroid {
     keys.register_key ("J", { Key (GDK_KEY_Down) }, "thread_view.scroll_down",
         "Scroll down",
         [&] (Key) {
-          // TODO
+          page_client->scroll_down_big ();
+
           return true;
         });
 
@@ -1214,7 +1219,7 @@ namespace Astroid {
         "thread_view.scroll_up",
         "Scroll up",
         [&] (Key) {
-          // TODO
+          page_client->scroll_up_big ();
           return true;
         });
 

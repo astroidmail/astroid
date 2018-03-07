@@ -35,13 +35,17 @@ namespace Astroid {
 
       void set_marked_state (refptr<Message> m, bool marked);
       void set_hidden_state (refptr<Message> m, bool hidden);
-      void set_focus (refptr<Message> m, unsigned int);
 
       void set_warning (refptr<Message>, ustring);
       void hide_warning (refptr<Message>);
       void set_info (refptr<Message>, ustring);
       void hide_info (refptr<Message>);
 
+      /* focus and scrolling */
+      void set_focus (refptr<Message> m, unsigned int);
+
+      void scroll_down_big ();
+      void scroll_up_big ();
 
       bool enable_gravatar = false;
 
