@@ -59,8 +59,6 @@ namespace Astroid {
       refptr<NotmuchThread> thread; // will be refreshed through mthread
       refptr<MessageThread> mthread;
 
-      Gtk::ScrolledWindow scroll;
-
       bool      indent_messages;
 
       bool edit_mode = false;

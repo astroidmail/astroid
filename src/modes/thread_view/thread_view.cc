@@ -75,8 +75,6 @@ namespace Astroid {
 
     ready = false;
 
-    pack_start (scroll, true, true, 0);
-
     /* WebKit: set up webkit web view */
 
     /* content manager for adding theme and script */
@@ -105,7 +103,7 @@ namespace Astroid {
 
     webkit_web_view_set_settings (webview, websettings);
 
-    gtk_container_add (GTK_CONTAINER (scroll.gobj()), GTK_WIDGET(webview));
+    gtk_box_pack_start (GTK_BOX (this->gobj ()), GTK_WIDGET (webview), true, true, 0);
 
 # ifdef DEBUG_WEBKIT
     /* Always show the inspector */
@@ -113,7 +111,7 @@ namespace Astroid {
     webkit_web_inspector_show (WEBKIT_WEB_INSPECTOR(inspector));
 # endif
 
-    scroll.show_all ();
+    show_all ();
 
     wk_loaded = false;
 

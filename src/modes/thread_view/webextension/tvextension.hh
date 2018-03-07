@@ -62,9 +62,6 @@ class AstroidExtension {
     void handle_mark (AstroidMessages::Mark &m);
     void handle_hidden (AstroidMessages::Hidden &m);
 
-    void handle_focus (AstroidMessages::Focus &m);
-    void apply_focus (ustring mid, int element);
-
     void add_message (AstroidMessages::Message &m);
 
     void set_message_html (AstroidMessages::Message m,
@@ -112,10 +109,15 @@ class AstroidExtension {
     void insert_header_row (ustring &header, ustring title, ustring value, bool important);
     ustring create_header_row (ustring title, ustring value, bool important, bool escape, bool noprint = false);
 
+    /* warning and info */
     void set_warning (AstroidMessages::Info &);
     void hide_warning (AstroidMessages::Info &);
     void set_info (AstroidMessages::Info &);
     void hide_info (AstroidMessages::Info &);
+
+    /* focus and scrolling */
+    void handle_focus (AstroidMessages::Focus &m);
+    void apply_focus (ustring mid, int element);
 };
 
 AstroidExtension * ext;
