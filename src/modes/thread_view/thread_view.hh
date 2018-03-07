@@ -188,7 +188,6 @@ namespace Astroid {
       /* webkit */
       WebKitWebView *     webview;
       WebKitSettings *    websettings;
-      WebKitUserContentManager * webcontent;
 
     protected:
       std::atomic<bool> wk_loaded;

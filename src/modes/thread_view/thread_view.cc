@@ -77,11 +77,11 @@ namespace Astroid {
 
     /* WebKit: set up webkit web view */
 
-    /* content manager for adding theme and script */
-    webcontent = webkit_user_content_manager_new ();
-
     /* create webview */
-    webview = WEBKIT_WEB_VIEW (webkit_web_view_new_with_user_content_manager (webcontent));
+    WebKitWebContext * webcontext = webkit_web_context_get_default ();
+    webkit_web_context_set_process_model (webcontext, WEBKIT_PROCESS_MODEL_MULTIPLE_SECONDARY_PROCESSES);
+
+    webview = WEBKIT_WEB_VIEW (webkit_web_view_new_with_context (webcontext));
 
     websettings = WEBKIT_SETTINGS (webkit_settings_new_with_settings (
         "enable-javascript", TRUE,
@@ -146,7 +146,6 @@ namespace Astroid {
   ThreadView::~ThreadView () { //
     LOG (debug) << "tv: deconstruct.";
     g_object_unref (websettings);
-    g_object_unref (webcontent);
   }
 
   void ThreadView::pre_close () {
