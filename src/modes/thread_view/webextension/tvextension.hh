@@ -75,12 +75,12 @@ class AstroidExtension {
         WebKitDOMHTMLElement * span_body);
 
     void create_body_part (
-        const AstroidMessages::Message &message,
+        /* const AstroidMessages::Message &message, */
         const AstroidMessages::Message::Chunk &c,
         WebKitDOMHTMLElement * span_body);
 
     void create_sibling_part (
-        const AstroidMessages::Message &message,
+        /* const AstroidMessages::Message &message, */
         const AstroidMessages::Message::Chunk &c,
         WebKitDOMHTMLElement * span_body);
 
@@ -99,10 +99,8 @@ class AstroidExtension {
 
     static const int ATTACHMENT_ICON_WIDTH = 35;
 
-    void load_marked_icon (AstroidMessages::Message &m,
-        WebKitDOMHTMLElement * div_message);
-    void set_attachment_icon (AstroidMessages::Message &m,
-        WebKitDOMHTMLElement * div_message);
+    void load_marked_icon (WebKitDOMHTMLElement * div_message);
+    void set_attachment_icon (WebKitDOMHTMLElement * div_message);
 
     /* headers */
     void insert_header_date (ustring &header, AstroidMessages::Message);
