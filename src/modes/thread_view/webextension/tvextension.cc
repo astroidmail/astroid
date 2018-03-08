@@ -1788,8 +1788,7 @@ void AstroidExtension::focus_previous_message (bool focus_top) {
   }
 }
 
-void AstroidExtension::scroll_to_element (ustring eid)
-{
+void AstroidExtension::scroll_to_element (ustring eid) {
   if (eid == "") {
     cout << "ae: attempted to scroll to unspecified id." << endl;
     return;
@@ -1860,7 +1859,6 @@ void AstroidExtension::scroll_to_element (ustring eid)
 
   /* } */
 }
-
 
 void AstroidExtension::handle_navigate (AstroidMessages::Navigate &n) {
   cout << "ae: navigating" << endl;

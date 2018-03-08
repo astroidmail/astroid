@@ -193,21 +193,15 @@ namespace Astroid {
       void reload_images ();
 
       /* message loading and rendering */
-      void                add_message (refptr<Message>);
-      void                update_message (refptr<Message>);
-      void                remove_message (refptr<Message>);
-      ptree               build_message (refptr<Message>);
-      ptree               build_mime_tree (refptr<Message>, refptr<Chunk>, bool);
-      ptree               get_encryption_state (refptr<Chunk>);
-      ptree               get_signature_state (refptr<Chunk>);
-
+      void add_message (refptr<Message>);
+      void update_message (refptr<Message>);
+      void remove_message (refptr<Message>);
 
       bool open_html_part_external;
       void display_part (refptr<Message>, refptr<Chunk>, MessageState::Element);
 
       void update_all_indent_states ();
       void update_indent_state (refptr<Message>);
-
 
       void save_all_attachments ();
     public:
