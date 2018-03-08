@@ -1372,6 +1372,24 @@ void AstroidExtension::handle_hidden (AstroidMessages::Hidden &msg) {/*{{{*/
   g_object_unref (d);
 }/*}}}*/
 
+bool AstroidExtension::is_hidden (ustring mid) {
+  ustring mmid = "message_" + mid;
+
+  WebKitDOMDocument *d = webkit_web_page_get_dom_document (page);
+  WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mmid.c_str());
+
+  WebKitDOMDOMTokenList * class_list =
+    webkit_dom_element_get_class_list (e);
+
+  bool r = webkit_dom_dom_token_list_contains (class_list, "hide");
+
+  g_object_unref (class_list);
+  g_object_unref (e);
+  g_object_unref (d);
+
+  return r;
+}
+
 void AstroidExtension::handle_mark (AstroidMessages::Mark &m) {/*{{{*/
   GError *err;
   ustring mid = "message_" + m.mid();
@@ -1551,6 +1569,272 @@ void AstroidExtension::update_focus_to_view () {
 
 }
 
+void AstroidExtension::focus_next_element (bool force_change) {
+  ustring eid;
+
+  WebKitDOMDocument * d = webkit_web_page_get_dom_document (page);
+  WebKitDOMDOMWindow * w = webkit_dom_document_get_default_view (d);
+
+  if (!is_hidden (focused_message) || edit_mode) {
+    /* if the message is expanded, check if we should move focus
+     * to the next element */
+
+    auto s = *std::find_if (
+        state.messages().begin (),
+        state.messages().end (),
+        [&] (auto &m) { return m.mid () == focused_message; });
+
+    /* are there any more elements */
+    if (focused_element < (s.elements().size()-1)) {
+      /* check if the next element is in full view */
+
+      auto next_e = s.elements()[focused_element + 1];
+
+      eid = next_e.sid ();
+
+      bool change_focus = force_change;
+
+      if (!force_change) {
+        WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, eid.c_str());
+
+        double scrolled = webkit_dom_dom_window_get_scroll_y (w);
+        double height   = webkit_dom_dom_window_get_screen_y (w);
+                                                 // no paging.
+
+        double clientY = webkit_dom_element_get_offset_top (e);
+        double clientH = webkit_dom_element_get_client_height (e);
+
+        g_object_unref (e);
+
+        if (height > 0) {
+          if (  (clientY >= scrolled) &&
+              ( (clientY + clientH) <= (scrolled + height) ))
+          {
+            change_focus = true;
+          }
+        } else {
+          change_focus = true;
+        }
+      }
+
+      //LOG (debug) << "focus_next_element: change: " << change_focus;
+
+      if (change_focus) {
+        focused_element++;
+        apply_focus (focused_message, focused_element);
+        scroll_to_element (eid);
+
+        g_object_unref (w);
+        g_object_unref (d);
+        return;
+      }
+    }
+  }
+
+  /* no focus change, standard behaviour */
+  double scrolled = webkit_dom_dom_window_get_scroll_y (w);
+
+  webkit_dom_dom_window_scroll_by (w, 0, STEP);
+
+  if (force_change  || (scrolled == webkit_dom_dom_window_get_scroll_y (w))) {
+    /* we're at the bottom, just move focus down */
+    int focused_position = std::find_if (
+        state.messages().begin (),
+        state.messages().end (),
+        [&] (auto &m) { return m.mid () == focused_message; }) - state.messages().begin ();
+
+    if ((focused_position + 1) < state.messages().size()) {
+      focused_message = state.messages()[focused_position+1].mid();
+      focused_element = 0;
+      apply_focus (focused_message, focused_element);
+      eid = focused_message;
+    }
+  } else {
+    update_focus_to_view ();
+  }
+
+  if (eid != "") scroll_to_element (eid);
+
+  g_object_unref (w);
+  g_object_unref (d);
+}
+
+void AstroidExtension::focus_previous_element (bool force_change) {
+  ustring eid;
+
+  WebKitDOMDocument * d = webkit_web_page_get_dom_document (page);
+  WebKitDOMDOMWindow * w = webkit_dom_document_get_default_view (d);
+
+  if (!is_hidden (focused_message) || edit_mode) {
+    /* if the message is expanded, check if we should move focus
+     * to the previous element */
+
+    auto s = *std::find_if (
+        state.messages().begin (),
+        state.messages().end (),
+        [&] (auto &m) { return m.mid () == focused_message; });
+
+    //LOG (debug) << "focus prev: current elemenet: " << s->current_element;
+    /* are there any more elements */
+    if (focused_element > 0) {
+      /* check if the prev element is in full view */
+
+      auto next_e = s.elements()[focused_element - 1];
+
+      bool change_focus = force_change;
+
+      if (!force_change) {
+        if (next_e.type() != AstroidMessages::State_MessageState_Element_Type_Empty) {
+
+          eid = next_e.sid ();
+
+          WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, eid.c_str());
+
+          double scrolled = webkit_dom_dom_window_get_scroll_y (w);
+          double height   = webkit_dom_dom_window_get_screen_y (w);
+          // CHECK: height is 0 when there is no paging.
+
+          double clientY = webkit_dom_element_get_offset_top (e);
+          double clientH = webkit_dom_element_get_client_height (e);
+
+          g_object_unref (e);
+
+          if (height > 0) {
+            if (  (clientY >= scrolled) &&
+                ( (clientY + clientH) <= (scrolled + height) ))
+            {
+              change_focus = true;
+            }
+          } else {
+            change_focus = true;
+          }
+        } else {
+          change_focus = true;
+        }
+      }
+
+      //LOG (debug) << "focus_prev_element: change: " << change_focus;
+
+      if (change_focus) {
+        focused_element--;
+        apply_focus (focused_message, focused_element);
+        scroll_to_element (eid);
+        g_object_unref (w);
+        g_object_unref (d);
+        return;
+      }
+    }
+  }
+
+  /* standard behaviour */
+  double scrolled = webkit_dom_dom_window_get_scroll_y (w);
+  double height   = webkit_dom_dom_window_get_screen_y (w);
+
+  webkit_dom_dom_window_scroll_by (w, 0, -STEP);
+
+  if (force_change || (scrolled == webkit_dom_dom_window_get_scroll_y (w))) {
+    /* we're at the top, move focus up */
+    int focused_position = std::find_if (
+        state.messages().begin (),
+        state.messages().end (),
+        [&] (auto &m) { return m.mid () == focused_message; }) - state.messages().begin ();
+
+    if (focused_position > 0) {
+      focused_message = state.messages()[focused_position-1].mid();
+      focused_element = state.messages()[focused_position-1].elements().size() - 1;
+      apply_focus (focused_message, focused_element);
+    }
+
+    if (focused_element > 0) {
+      eid = state.messages()[focused_position-1].elements()[focused_element].sid();
+    } else {
+      eid = focused_message; // if no element selected, focus message
+    }
+  } else {
+    /* scroll up */
+    update_focus_to_view ();
+  }
+
+  if (eid != "") scroll_to_element (eid);
+
+  g_object_unref (w);
+  g_object_unref (d);
+}
+
+void AstroidExtension::scroll_to_element (ustring eid)
+{
+  if (eid == "") {
+    cout << "ae: attempted to scroll to unspecified id." << endl;
+    return;
+  }
+
+  WebKitDOMDocument * d = webkit_web_page_get_dom_document (page);
+  WebKitDOMDOMWindow * w = webkit_dom_document_get_default_view (d);
+  WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, eid.c_str());
+
+  double scrolled = webkit_dom_dom_window_get_scroll_y (w);
+  double height   = webkit_dom_dom_window_get_screen_y (w);
+  double upper    = webkit_dom_dom_window_get_outer_height (w);
+
+  double clientY = webkit_dom_element_get_offset_top (e);
+  double clientH = webkit_dom_element_get_client_height (e);
+
+  if (height > 0) {
+    /* if (scroll_when_visible) { */
+    /*   if ((clientY + clientH - height) > upper) { */
+    /*     /1* message is last, can't scroll past bottom *1/ */
+    /*     webkit_dom_dom_window_scroll_to (w, 0, upper); */
+    /*   } else { */
+    /*     webkit_dom_dom_window_scroll_to (w, 0, clientY); */
+    /*   } */
+    /* } else { */
+      /* only scroll if parts of the message are out view */
+      if (clientY < scrolled) {
+        /* top is above view  */
+        webkit_dom_dom_window_scroll_to (w, 0, clientY);
+
+      } else if ((clientY + clientH) > (scrolled + height)) {
+        /* bottom is below view */
+
+        // if message is of less height than page, scroll so that
+        // bottom is aligned with bottom
+
+        if (clientH < height) {
+          webkit_dom_dom_window_scroll_to (w, 0, clientY + clientH - height);
+        } else {
+          // otherwise align top with top
+          if ((clientY + clientH - height) > upper) {
+            /* message is last, can't scroll past bottom */
+            webkit_dom_dom_window_scroll_to (w, 0, upper);
+          } else {
+            webkit_dom_dom_window_scroll_to (w, 0, clientY);
+          }
+        }
+      }
+    /* } */
+  }
+
+  g_object_unref (e);
+  g_object_unref (w);
+  g_object_unref (d);
+
+  /* /1* the height does not seem to make any sense, but is still more */
+  /*  * than empty. we need to re-do the calculation when everything */
+  /*  * has been rendered and re-calculated. *1/ */
+  /* if (height == 1) { */
+  /*   in_scroll = true; */
+  /*   scroll_arg = eid; */
+  /*   _scroll_when_visible = scroll_when_visible; */
+  /*   return false; */
+
+  /* } else { */
+
+  /*   return true; */
+
+  /* } */
+}
+
+
 void AstroidExtension::handle_navigate (AstroidMessages::Navigate &n) {
   cout << "ae: navigating" << endl;
 
@@ -1559,15 +1843,28 @@ void AstroidExtension::handle_navigate (AstroidMessages::Navigate &n) {
 
 
   if (n.type () == AstroidMessages::Navigate_Type_VisualBig) {
+
     if (n.direction () == AstroidMessages::Navigate_Direction_Down) {
-      webkit_dom_dom_window_scroll_by (w, 0, 100);
+      webkit_dom_dom_window_scroll_by (w, 0, BIG_JUMP);
     } else {
-      webkit_dom_dom_window_scroll_by (w, 0, -100);
+      webkit_dom_dom_window_scroll_by (w, 0, - BIG_JUMP);
     }
     update_focus_to_view ();
-  } else if (n.type () == AstroidMessages::Navigate_Type_VisualElement) 
-  {
 
+  } else if (n.type () == AstroidMessages::Navigate_Type_VisualElement) {
+
+    if (n.direction () == AstroidMessages::Navigate_Direction_Down) {
+      focus_next_element (false);
+    } else {
+      focus_previous_element (false);
+    }
+  } else if (n.type () == AstroidMessages::Navigate_Type_Element) {
+
+    if (n.direction () == AstroidMessages::Navigate_Direction_Down) {
+      focus_next_element (true);
+    } else {
+      focus_previous_element (true);
+    }
   }
 
   g_object_unref (w);

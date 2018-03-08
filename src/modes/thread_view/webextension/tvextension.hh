@@ -62,6 +62,7 @@ class AstroidExtension {
 
     void handle_mark (AstroidMessages::Mark &m);
     void handle_hidden (AstroidMessages::Hidden &m);
+    bool is_hidden (ustring);
 
     void add_message (AstroidMessages::Message &m);
 
@@ -124,6 +125,13 @@ class AstroidExtension {
     void apply_focus (ustring mid, int element);
 
     void update_focus_to_view ();
+    void focus_next_element (bool force_change);
+    void focus_previous_element (bool force_change);
+
+    void scroll_to_element (ustring eid);
+
+    const int BIG_JUMP = 150;
+    const int STEP     = 35;
 
     void handle_navigate (AstroidMessages::Navigate &);
 };

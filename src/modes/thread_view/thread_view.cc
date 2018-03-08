@@ -2507,27 +2507,13 @@ namespace Astroid {
      *
      */
 
-    // TODO: check if in view
-
-    if (state[focused_message].current_element == state[focused_message].elements.size () -1) {
-      focus_next_message ();
-    } else {
-      focus_element (focused_message, state[focused_message].current_element +1);
-    }
+    page_client->focus_next_element (force_change);
   }
 
   void ThreadView::focus_previous_element (bool force_change) {
     /* Inverse of focus_next_element */
-
-    // TODO: if not in view, scroll instead
-
-    if (state[focused_message].current_element == 0)
-    {
-      focus_previous_message (true);
-      return;
-    } else {
-      focus_element (focused_message, state[focused_message].current_element -1);
-    }
+    LOG (debug) << "tv: focus previous element";
+    page_client->focus_previous_element (force_change);
   }
 
   void ThreadView::focus_element (refptr<Message> m, unsigned int e) {
@@ -2535,9 +2521,6 @@ namespace Astroid {
       LOG (debug) << "tv: focus message: " << m->safe_mid () << ", element: " << e;
 
       page_client->set_focus (m, e);
-
-      focused_message = m;
-      state[m].current_element = e;
     }
   }
 

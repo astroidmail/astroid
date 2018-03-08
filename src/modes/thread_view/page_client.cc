@@ -633,5 +633,34 @@ namespace Astroid {
 
     AeProtocol::send_message (AeProtocol::MessageTypes::Navigate, n, ostream);
   }
+
+  void PageClient::focus_next_element (bool force_change) {
+    AstroidMessages::Navigate n;
+
+    n.set_direction (AstroidMessages::Navigate_Direction_Down);
+
+    if (force_change) {
+      n.set_type (AstroidMessages::Navigate_Type_Element);
+    } else {
+      n.set_type (AstroidMessages::Navigate_Type_VisualElement);
+    }
+
+    AeProtocol::send_message (AeProtocol::MessageTypes::Navigate, n, ostream);
+  }
+
+  void PageClient::focus_previous_element (bool force_change) {
+    AstroidMessages::Navigate n;
+
+    n.set_direction (AstroidMessages::Navigate_Direction_Up);
+
+    if (force_change) {
+      n.set_type (AstroidMessages::Navigate_Type_Element);
+    } else {
+      n.set_type (AstroidMessages::Navigate_Type_VisualElement);
+    }
+
+    AeProtocol::send_message (AeProtocol::MessageTypes::Navigate, n, ostream);
+    LOG (debug) << "pc: send previous element";    
+  }
 }
 
