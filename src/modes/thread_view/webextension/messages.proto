@@ -11,8 +11,9 @@ message Focus {
 message Navigate {
   enum Direction {
     None = 0;
-    Up = 1;
-    Down = 2;
+    Specific = 1;
+    Up = 2;
+    Down = 3;
   }
 
   enum Type {
@@ -29,7 +30,7 @@ message Navigate {
 
   /* for Element */
   string mid = 3;
-  int32  elemement = 4;
+  int32  element = 4;
 
   /* for message */
   bool focus_top = 5;

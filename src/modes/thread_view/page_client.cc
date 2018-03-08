@@ -681,5 +681,16 @@ namespace Astroid {
 
     AeProtocol::send_message (AeProtocol::MessageTypes::Navigate, n, ostream);
   }
+
+  void PageClient::focus_element (refptr<Message> m, unsigned int e) {
+    AstroidMessages::Navigate n;
+
+    n.set_direction (AstroidMessages::Navigate_Direction_Specific);
+    n.set_type (AstroidMessages::Navigate_Type_Element);
+    n.set_mid (m->safe_mid ());
+    n.set_element (e);
+
+    AeProtocol::send_message (AeProtocol::MessageTypes::Navigate, n, ostream);
+  }
 }
 

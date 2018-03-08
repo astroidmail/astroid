@@ -534,7 +534,6 @@ namespace Astroid {
 
     if (!focused_message) {
       LOG (debug) << "tv: no message focused, showing newest message.";
-
       focused_message = *max_element (
           mthread->messages.begin (),
           mthread->messages.end (),
@@ -2057,7 +2056,7 @@ namespace Astroid {
     if (m) {
       LOG (debug) << "tv: focus message: " << m->safe_mid () << ", element: " << e;
 
-      page_client->set_focus (m, e);
+      page_client->focus_element (m, e);
     }
   }
 

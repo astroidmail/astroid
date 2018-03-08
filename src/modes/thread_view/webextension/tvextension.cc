@@ -1886,7 +1886,15 @@ void AstroidExtension::handle_navigate (AstroidMessages::Navigate &n) {
 
   } else if (n.type () == AstroidMessages::Navigate_Type_Element) {
 
-    if (n.direction () == AstroidMessages::Navigate_Direction_Down) {
+    if (n.direction () == AstroidMessages::Navigate_Direction_Specific) {
+      apply_focus (n.mid(), n.element ());
+      if (n.element () == 0) {
+        scroll_to_element ("message_" + n.mid());
+      } else {
+        scroll_to_element (ustring::compose ("%1", n.element ()));
+      }
+
+    } else if (n.direction () == AstroidMessages::Navigate_Direction_Down) {
       focus_next_element (true);
     } else {
       focus_previous_element (true);
