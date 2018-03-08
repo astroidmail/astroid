@@ -341,6 +341,8 @@ void AstroidExtension::add_message (AstroidMessages::Message &m) {
   g_object_unref (d);
 
   cout << "ae: message added." << endl;
+
+  apply_focus (focused_message, focused_element); // in case we got focus before message was added.
 }
 
 
@@ -1410,10 +1412,12 @@ void AstroidExtension::handle_focus (AstroidMessages::Focus &msg) {
 }
 
 void AstroidExtension::apply_focus (ustring mid, int element) {
-  WebKitDOMDocument *d = webkit_web_page_get_dom_document (page);
-
   focused_message = mid;
   focused_element = element;
+
+  if (focused_message.empty() || focused_element == -1) return;
+
+  WebKitDOMDocument *d = webkit_web_page_get_dom_document (page);
 
   for (auto &m : state.messages()) {
 
@@ -1615,7 +1619,7 @@ void AstroidExtension::focus_next_element (bool force_change) {
       if (change_focus) {
         focused_element++;
         apply_focus (focused_message, focused_element);
-        scroll_to_element (eid);
+        if (!eid.empty()) scroll_to_element (eid);
 
         g_object_unref (body);
         g_object_unref (w);
@@ -1647,7 +1651,7 @@ void AstroidExtension::focus_next_element (bool force_change) {
     update_focus_to_view ();
   }
 
-  if (eid != "") scroll_to_element (eid);
+  if (!eid.empty()) scroll_to_element (eid);
 
   g_object_unref (w);
   g_object_unref (d);
@@ -1713,7 +1717,7 @@ void AstroidExtension::focus_previous_element (bool force_change) {
       if (change_focus) {
         focused_element--;
         apply_focus (focused_message, focused_element);
-        scroll_to_element (eid);
+        if (!eid.empty()) scroll_to_element (eid);
         g_object_unref (body);
         g_object_unref (w);
         g_object_unref (d);
@@ -1751,7 +1755,7 @@ void AstroidExtension::focus_previous_element (bool force_change) {
     update_focus_to_view ();
   }
 
-  if (eid != "") scroll_to_element (eid);
+  if (!eid.empty()) scroll_to_element (eid);
 
   g_object_unref (body);
   g_object_unref (w);
@@ -1795,7 +1799,7 @@ void AstroidExtension::focus_previous_message (bool focus_top) {
 }
 
 void AstroidExtension::scroll_to_element (ustring eid) {
-  if (eid == "") {
+  if (eid.empty()) {
     cout << "ae: attempted to scroll to unspecified id." << endl;
     return;
   }

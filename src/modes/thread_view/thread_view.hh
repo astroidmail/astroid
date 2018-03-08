@@ -115,7 +115,7 @@ namespace Astroid {
         public:
           MessageState ();
 
-          bool expanded         = false;
+          bool expanded         = true;
 
           /* the message was expanded as part of an
            * C-n or C-p command */

@@ -56,8 +56,8 @@ class AstroidExtension {
     void handle_stylesheet (AstroidMessages::StyleSheet &s);
 
     /* state */
-    AstroidMessages::State state;
     bool edit_mode = false;
+    AstroidMessages::State state;
     void handle_state (AstroidMessages::State &m);
 
     void handle_mark (AstroidMessages::Mark &m);
@@ -116,8 +116,8 @@ class AstroidExtension {
     void hide_info (AstroidMessages::Info &);
 
     /* focus and scrolling */
-    ustring focused_message;
-    int     focused_element;
+    ustring focused_message = "";
+    int     focused_element = -1;
 
     void handle_focus (AstroidMessages::Focus &m);
     void apply_focus (ustring mid, int element);

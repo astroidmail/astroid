@@ -533,7 +533,7 @@ namespace Astroid {
     update_all_indent_states ();
 
     if (!focused_message) {
-      LOG (debug) << "tv: no message focused, showing newest message.";
+      LOG (debug) << "tv: no message focused, focusing newest message.";
       focused_message = *max_element (
           mthread->messages.begin (),
           mthread->messages.end (),
@@ -543,7 +543,6 @@ namespace Astroid {
             });
 
       expand (focused_message);
-
       focus_message (focused_message);
     }
 
@@ -590,12 +589,10 @@ namespace Astroid {
       /* optionally hide / collapse the message */
       if (!(m->has_tag("unread") || (expand_flagged && m->has_tag("flagged")))) {
 
-        page_client->set_hidden_state (m, true);
+        collapse (m);
       } else {
-        page_client->set_hidden_state (m, false);
-        // TODO:
-        /* if (!candidate_startup) */
-        /*   candidate_startup = m; */
+        expand (m);
+        focused_message = m;
       }
 
       /* focus first unread message */
@@ -607,8 +604,6 @@ namespace Astroid {
     } else {
       focused_message = m;
     }
-
-    focus_message (focused_message);
 
     {
       if (!edit_mode &&
@@ -2068,15 +2063,12 @@ namespace Astroid {
   /* message expanding and collapsing  */
   bool ThreadView::expand (refptr<Message> m) {
     /* returns true if the message was expanded in the first place */
-
     bool wasexpanded  = state[m].expanded;
 
+    state[m].expanded = true;
+    page_client->set_hidden_state (m, false);
+
     if (!wasexpanded) {
-
-
-      state[m].expanded = true;
-      page_client->set_hidden_state (m, false);
-
       /* if the message was unexpanded, it would not have been marked as read */
       if (unread_delay == 0.0) unread_check ();
     }
@@ -2088,10 +2080,9 @@ namespace Astroid {
     /* returns true if the message was expanded in the first place */
     bool wasexpanded  = state[m].expanded;
 
-    if (wasexpanded) {
-      state[m].expanded = false;
-      page_client->set_hidden_state (m, true);
-    }
+    page_client->set_hidden_state (m, true);
+    state[m].expanded = false;
+
 
     return wasexpanded;
   }
