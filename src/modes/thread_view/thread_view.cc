@@ -2053,32 +2053,6 @@ namespace Astroid {
     return true;
   }
 
-  void ThreadView::focus_change_cb (std::string e) {
-    LOG (debug) << "tv: got focus_change, element: " << e;
-
-    auto vs = VectorUtils::split_and_trim (e, ",");
-    for (auto m : mthread->messages) {
-      if (vs[0] == m->safe_mid ()) {
-        focused_message = m;
-        if (vs[0] != vs[1]) {
-          unsigned int i = 0;
-          for (auto e : state[m].elements) {
-            if (e.element_id () == vs[1]) {
-              state[m].current_element = i;
-            }
-            i++;
-          }
-
-        } else {
-          state[m].current_element = 0;
-        }
-      }
-    }
-
-    /* focused_message = m; */
-    /* state[focused_message].current_element = e; */
-  }
-
   void ThreadView::focus_element (refptr<Message> m, unsigned int e) {
     if (m) {
       LOG (debug) << "tv: focus message: " << m->safe_mid () << ", element: " << e;
