@@ -1467,9 +1467,10 @@ void AstroidExtension::update_focus_to_view () {
 
   WebKitDOMDocument * d = webkit_web_page_get_dom_document (page);
   WebKitDOMDOMWindow * w = webkit_dom_document_get_default_view (d);
+  WebKitDOMElement * body = WEBKIT_DOM_ELEMENT(webkit_dom_document_get_body (d));
 
   double scrolled = webkit_dom_dom_window_get_scroll_y (w);
-  double height   = webkit_dom_dom_window_get_screen_y (w);
+  double height   = webkit_dom_element_get_client_height (body);
 
   //LOG (debug) << "scrolled = " << scrolled << ", height = " << height;
 
@@ -1552,6 +1553,7 @@ void AstroidExtension::update_focus_to_view () {
       cur_position++;
     }
 
+    g_object_unref (body);
     g_object_unref (w);
     g_object_unref (d);
 
@@ -1565,6 +1567,7 @@ void AstroidExtension::focus_next_element (bool force_change) {
 
   WebKitDOMDocument * d = webkit_web_page_get_dom_document (page);
   WebKitDOMDOMWindow * w = webkit_dom_document_get_default_view (d);
+  WebKitDOMElement * body = WEBKIT_DOM_ELEMENT(webkit_dom_document_get_body (d));
 
   if (!is_hidden (focused_message) || edit_mode) {
     /* if the message is expanded, check if we should move focus
@@ -1589,8 +1592,7 @@ void AstroidExtension::focus_next_element (bool force_change) {
         WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, eid.c_str());
 
         double scrolled = webkit_dom_dom_window_get_scroll_y (w);
-        double height   = webkit_dom_dom_window_get_screen_y (w);
-                                                 // no paging.
+        double height   = webkit_dom_element_get_client_height (body);
 
         double clientY = webkit_dom_element_get_offset_top (e);
         double clientH = webkit_dom_element_get_client_height (e);
@@ -1615,6 +1617,7 @@ void AstroidExtension::focus_next_element (bool force_change) {
         apply_focus (focused_message, focused_element);
         scroll_to_element (eid);
 
+        g_object_unref (body);
         g_object_unref (w);
         g_object_unref (d);
         return;
@@ -1655,6 +1658,7 @@ void AstroidExtension::focus_previous_element (bool force_change) {
 
   WebKitDOMDocument * d = webkit_web_page_get_dom_document (page);
   WebKitDOMDOMWindow * w = webkit_dom_document_get_default_view (d);
+  WebKitDOMElement * body = WEBKIT_DOM_ELEMENT(webkit_dom_document_get_body (d));
 
   if (!is_hidden (focused_message) || edit_mode) {
     /* if the message is expanded, check if we should move focus
@@ -1682,7 +1686,7 @@ void AstroidExtension::focus_previous_element (bool force_change) {
           WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, eid.c_str());
 
           double scrolled = webkit_dom_dom_window_get_scroll_y (w);
-          double height   = webkit_dom_dom_window_get_screen_y (w);
+          double height   = webkit_dom_element_get_client_height (body);
           // CHECK: height is 0 when there is no paging.
 
           double clientY = webkit_dom_element_get_offset_top (e);
@@ -1710,6 +1714,7 @@ void AstroidExtension::focus_previous_element (bool force_change) {
         focused_element--;
         apply_focus (focused_message, focused_element);
         scroll_to_element (eid);
+        g_object_unref (body);
         g_object_unref (w);
         g_object_unref (d);
         return;
@@ -1748,6 +1753,7 @@ void AstroidExtension::focus_previous_element (bool force_change) {
 
   if (eid != "") scroll_to_element (eid);
 
+  g_object_unref (body);
   g_object_unref (w);
   g_object_unref (d);
 }
@@ -1797,9 +1803,10 @@ void AstroidExtension::scroll_to_element (ustring eid) {
   WebKitDOMDocument * d = webkit_web_page_get_dom_document (page);
   WebKitDOMDOMWindow * w = webkit_dom_document_get_default_view (d);
   WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, eid.c_str());
+  WebKitDOMElement * body = WEBKIT_DOM_ELEMENT(webkit_dom_document_get_body (d));
 
   double scrolled = webkit_dom_dom_window_get_scroll_y (w);
-  double height   = webkit_dom_dom_window_get_screen_y (w);
+  double height   = webkit_dom_element_get_client_height (body);
   double upper    = webkit_dom_dom_window_get_outer_height (w);
 
   double clientY = webkit_dom_element_get_offset_top (e);
@@ -1840,6 +1847,7 @@ void AstroidExtension::scroll_to_element (ustring eid) {
     /* } */
   }
 
+  g_object_unref (body);
   g_object_unref (e);
   g_object_unref (w);
   g_object_unref (d);
