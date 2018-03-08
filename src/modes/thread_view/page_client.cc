@@ -242,12 +242,12 @@ namespace Astroid {
      */
     AstroidMessages::State state;
 
-    for (auto &ms : thread_view->state) {
+    for (refptr<Message> &ms : thread_view->mthread->messages) {
       AstroidMessages::State::MessageState * m = state.add_messages ();
 
-      m->set_mid (ms.first->safe_mid ());
+      m->set_mid (ms->safe_mid ());
 
-      for (auto &e : ms.second.elements) {
+      for (auto &e : thread_view->state[ms].elements) {
         AstroidMessages::State::MessageState::Element * _e = m->add_elements ();
 
         auto ref = _e->GetReflection();
