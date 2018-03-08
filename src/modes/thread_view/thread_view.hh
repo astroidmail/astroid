@@ -99,11 +99,6 @@ namespace Astroid {
     private:
       /* focus and message state */
       void focus_change_cb (std::string);
-      void focus_next_element (bool = false);
-      void focus_previous_element (bool = false);
-
-      void focus_next_message ();
-      void focus_previous_message (bool focus_top = false);
 
       void focus_message (refptr<Message>);
       void focus_element (refptr<Message>, unsigned int);

@@ -48,7 +48,8 @@ namespace Astroid {
       void scroll_up_big ();
       void focus_next_element (bool force_change);
       void focus_previous_element (bool force_change);
-
+      void focus_next_message ();
+      void focus_previous_message (bool focus_top);
 
       bool enable_gravatar = false;
 

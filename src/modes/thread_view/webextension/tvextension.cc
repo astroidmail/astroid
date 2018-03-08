@@ -1647,7 +1647,7 @@ void AstroidExtension::focus_next_element (bool force_change) {
       focused_message = state.messages()[focused_position+1].mid();
       focused_element = 0;
       apply_focus (focused_message, focused_element);
-      eid = focused_message;
+      eid = "message_" + focused_message;
     }
   } else {
     update_focus_to_view ();
@@ -1748,7 +1748,7 @@ void AstroidExtension::focus_previous_element (bool force_change) {
     if (focused_element > 0) {
       eid = state.messages()[focused_position-1].elements()[focused_element].sid();
     } else {
-      eid = focused_message; // if no element selected, focus message
+      eid = "message_" + focused_message; // if no element selected, focus message
     }
   } else {
     /* scroll up */
@@ -1759,6 +1759,42 @@ void AstroidExtension::focus_previous_element (bool force_change) {
 
   g_object_unref (w);
   g_object_unref (d);
+}
+
+void AstroidExtension::focus_next_message () {
+  if (edit_mode) return;
+
+  int focused_position = std::find_if (
+      state.messages().begin (),
+      state.messages().end (),
+      [&] (auto &m) { return m.mid () == focused_message; }) - state.messages().begin ();
+
+  if (focused_position < static_cast<int>((state.messages().size ()-1))) {
+    focused_message = state.messages()[focused_position + 1].mid ();
+    focused_element = 0; // start at top
+    apply_focus (focused_message, focused_element);
+    scroll_to_element ("message_" + focused_message);
+  }
+}
+
+void AstroidExtension::focus_previous_message (bool focus_top) {
+  if (edit_mode) return;
+
+  int focused_position = std::find_if (
+      state.messages().begin (),
+      state.messages().end (),
+      [&] (auto &m) { return m.mid () == focused_message; }) - state.messages().begin ();
+
+  if (focused_position > 0) {
+    focused_message = state.messages()[focused_position - 1].mid();
+    if (!focus_top && !is_hidden (focused_message)) {
+      focused_element = state.messages()[focused_position - 1].elements().size()-1; // start at bottom
+    } else {
+      focused_element = 0; // start at top
+    }
+    apply_focus (focused_message, focused_element);
+    scroll_to_element ("message_" + focused_message);
+  }
 }
 
 void AstroidExtension::scroll_to_element (ustring eid)
@@ -1858,12 +1894,20 @@ void AstroidExtension::handle_navigate (AstroidMessages::Navigate &n) {
     } else {
       focus_previous_element (false);
     }
+
   } else if (n.type () == AstroidMessages::Navigate_Type_Element) {
 
     if (n.direction () == AstroidMessages::Navigate_Direction_Down) {
       focus_next_element (true);
     } else {
       focus_previous_element (true);
+    }
+
+  } else if (n.type () == AstroidMessages::Navigate_Type_Message) {
+    if (n.direction () == AstroidMessages::Navigate_Direction_Down) {
+      focus_next_message ();
+    } else {
+      focus_previous_message (n.focus_top());
     }
   }
 

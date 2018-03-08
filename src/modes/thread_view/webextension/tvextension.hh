@@ -125,10 +125,13 @@ class AstroidExtension {
     void apply_focus (ustring mid, int element);
 
     void update_focus_to_view ();
+    void scroll_to_element (ustring eid);
+
     void focus_next_element (bool force_change);
     void focus_previous_element (bool force_change);
 
-    void scroll_to_element (ustring eid);
+    void focus_next_message ();
+    void focus_previous_message (bool focus_top);
 
     const int BIG_JUMP = 150;
     const int STEP     = 35;

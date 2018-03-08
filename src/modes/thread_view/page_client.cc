@@ -660,7 +660,26 @@ namespace Astroid {
     }
 
     AeProtocol::send_message (AeProtocol::MessageTypes::Navigate, n, ostream);
-    LOG (debug) << "pc: send previous element";    
+  }
+
+  void PageClient::focus_next_message () {
+    AstroidMessages::Navigate n;
+
+    n.set_direction (AstroidMessages::Navigate_Direction_Down);
+    n.set_type (AstroidMessages::Navigate_Type_Message);
+    n.set_focus_top (false); // not relevant
+
+    AeProtocol::send_message (AeProtocol::MessageTypes::Navigate, n, ostream);
+  }
+
+  void PageClient::focus_previous_message (bool focus_top) {
+    AstroidMessages::Navigate n;
+
+    n.set_direction (AstroidMessages::Navigate_Direction_Up);
+    n.set_type (AstroidMessages::Navigate_Type_Message);
+    n.set_focus_top (focus_top);
+
+    AeProtocol::send_message (AeProtocol::MessageTypes::Navigate, n, ostream);
   }
 }
 

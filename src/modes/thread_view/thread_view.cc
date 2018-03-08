@@ -1172,7 +1172,7 @@ namespace Astroid {
     keys.register_key ("j", "thread_view.down",
         "Scroll down or move focus to next element",
         [&] (Key) {
-          focus_next_element ();
+          page_client->focus_next_element (false);
           return true;
         });
 
@@ -1181,7 +1181,7 @@ namespace Astroid {
         [&] (Key) {
           /* move focus to next element and scroll to it if necessary */
 
-          focus_next_element (true);
+          page_client->focus_next_element (true);
           return true;
         });
 
@@ -1204,14 +1204,14 @@ namespace Astroid {
     keys.register_key ("k", "thread_view.up",
         "Scroll up or move focus to previous element",
         [&] (Key) {
-          focus_previous_element ();
+          page_client->focus_previous_element (false);
           return true;
         });
 
     keys.register_key ("C-k", "thread_view.previous_element",
         "Move focus to previous element",
         [&] (Key) {
-          focus_previous_element (true);
+          page_client->focus_previous_element (true);
           return true;
         });
 
@@ -1371,7 +1371,7 @@ namespace Astroid {
     keys.register_key ("n", "thread_view.next_message",
         "Focus next message",
         [&] (Key) {
-          focus_next_message ();
+          page_client->focus_next_message ();
           return true;
         });
 
@@ -1383,7 +1383,7 @@ namespace Astroid {
             state[focused_message].scroll_expanded = false;
           }
 
-          focus_next_message ();
+          page_client->focus_next_message ();
 
           state[focused_message].scroll_expanded = !expand (focused_message);
           return true;
@@ -1392,7 +1392,7 @@ namespace Astroid {
     keys.register_key ("p", "thread_view.previous_message",
         "Focus previous message",
         [&] (Key) {
-          focus_previous_message (true);
+          page_client->focus_previous_message (true);
           return true;
         });
 
@@ -1404,7 +1404,7 @@ namespace Astroid {
             state[focused_message].scroll_expanded = false;
           }
 
-          focus_previous_message ();
+          page_client->focus_previous_message (false);
 
           state[focused_message].scroll_expanded = !expand (focused_message);
           return true;
@@ -2496,25 +2496,6 @@ namespace Astroid {
     /* state[focused_message].current_element = e; */
   }
 
-  void ThreadView::focus_next_element (bool force_change) {
-    /*
-     * Jump to next element (if no scrolling is necessary),
-     * otherwise scroll the viewport a small increment.
-     *
-     * If force_change is true, then always move focus to the next element.
-     *
-     * The function should return the currently selected message and element.
-     *
-     */
-
-    page_client->focus_next_element (force_change);
-  }
-
-  void ThreadView::focus_previous_element (bool force_change) {
-    /* Inverse of focus_next_element */
-    LOG (debug) << "tv: focus previous element";
-    page_client->focus_previous_element (force_change);
-  }
 
   void ThreadView::focus_element (refptr<Message> m, unsigned int e) {
     if (m) {
@@ -2527,42 +2508,6 @@ namespace Astroid {
   void ThreadView::focus_message (refptr<Message> m) {
     focus_element (m, 0);
   }
-
-  void ThreadView::focus_next_message () {
-    LOG (debug) << "tv: focus_next_message";
-
-    if (edit_mode) return;
-
-    int focused_position = find (
-        mthread->messages.begin (),
-        mthread->messages.end (),
-        focused_message) - mthread->messages.begin ();
-
-    if (focused_position < static_cast<int>((mthread->messages.size ()-1))) {
-      focus_message (mthread->messages[focused_position + 1]);
-    }
-
-  }
-
-  void ThreadView::focus_previous_message (bool focus_top) {
-    LOG (debug) << "tv: focus_previous_message";
-    if (edit_mode) return;
-
-    int focused_position = find (
-        mthread->messages.begin (),
-        mthread->messages.end (),
-        focused_message) - mthread->messages.begin ();
-
-    if (focused_position > 0) {
-      auto m = mthread->messages[focused_position - 1];
-      if (!focus_top && state[focused_message].expanded) {
-        focus_element (m, state[m].elements.size ()-1); // start at bottom
-      } else {
-        focus_message (m); // start at top
-      }
-    }
-  }
-
   /* end focus handeling   */
 
   /* message expanding and collapsing  */
