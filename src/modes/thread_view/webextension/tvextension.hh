@@ -54,7 +54,7 @@ class AstroidExtension {
 
     WebKitDOMNode * container;
 
-    void handle_stylesheet (AstroidMessages::StyleSheet &s);
+    void handle_page (AstroidMessages::Page &s);
 
     /* state */
     bool edit_mode = false;

@@ -217,13 +217,13 @@ void AstroidExtension::reader () {/*{{{*/
         }
         break;
 
-      case AeProtocol::MessageTypes::StyleSheet:
+      case AeProtocol::MessageTypes::Page:
         {
-          AstroidMessages::StyleSheet s;
+          AstroidMessages::Page s;
           s.ParseFromString (buffer);
           Glib::signal_idle().connect_once (
               sigc::bind (
-                sigc::mem_fun(*this, &AstroidExtension::handle_stylesheet), s));
+                sigc::mem_fun(*this, &AstroidExtension::handle_page), s));
         }
         break;
 
@@ -272,11 +272,12 @@ void AstroidExtension::reader () {/*{{{*/
   cout << "ae: reader thread exit." << endl;
 }/*}}}*/
 
-void AstroidExtension::handle_stylesheet (AstroidMessages::StyleSheet &s) {/*{{{*/
-  /* load css style */
-  cout << "ae: adding stylesheet.." << flush;;
+void AstroidExtension::handle_page (AstroidMessages::Page &s) {/*{{{*/
   GError *err = NULL;
   WebKitDOMDocument *d = webkit_web_page_get_dom_document (page);
+
+  /* load css style */
+  cout << "ae: adding stylesheet.." << flush;;
   WebKitDOMElement  *e = webkit_dom_document_create_element (d, "STYLE", &err);
 
   WebKitDOMText *t = webkit_dom_document_create_text_node
@@ -296,6 +297,7 @@ void AstroidExtension::handle_stylesheet (AstroidMessages::StyleSheet &s) {/*{{{
 
 void AstroidExtension::handle_state (AstroidMessages::State &s) {/*{{{*/
   state = s;
+  edit_mode = state.edit_mode ();
 }/*}}}*/
 
 // Message generation {{{
@@ -403,10 +405,6 @@ void AstroidExtension::set_message_html (
     g_object_unref (subject);
   }
 
-  if (m.tags().size () > 0) {
-    header += create_header_row ("Tags", "", false, false, true);
-  }
-
   /* avatar */
   if (!m.gravatar().empty ()) {
     WebKitDOMHTMLImageElement * av = WEBKIT_DOM_HTML_IMAGE_ELEMENT (
@@ -424,13 +422,19 @@ void AstroidExtension::set_message_html (
     DomUtils::select (WEBKIT_DOM_NODE(div_email_container),
         ".header_container .header" );
 
+  if (!edit_mode && m.tags().size () > 0) {
+    header += create_header_row ("Tags", "", false, false, true);
+  }
+
   webkit_dom_element_set_inner_html (
       WEBKIT_DOM_ELEMENT(table_header),
       header.c_str(),
       (err = NULL, &err));
 
-  message_render_tags (m, WEBKIT_DOM_HTML_ELEMENT(div_message));
-  message_update_css_tags (m, WEBKIT_DOM_HTML_ELEMENT(div_message));
+  if (!edit_mode && m.tags().size () > 0) {
+    message_render_tags (m, WEBKIT_DOM_HTML_ELEMENT(div_message));
+    message_update_css_tags (m, WEBKIT_DOM_HTML_ELEMENT(div_message));
+  }
 
   /* if message is missing body, set warning and don't add any content */
   WebKitDOMHTMLElement * span_body =
@@ -490,6 +494,9 @@ void AstroidExtension::set_message_html (
 
 void AstroidExtension::message_render_tags (AstroidMessages::Message &m,
     WebKitDOMHTMLElement * div_message) {
+
+  if (edit_mode) return;
+
   GError *err;
 
   WebKitDOMHTMLElement * tags = DomUtils::select (
@@ -511,6 +518,8 @@ void AstroidExtension::message_render_tags (AstroidMessages::Message &m,
 
 void AstroidExtension::message_update_css_tags (AstroidMessages::Message &m,
     WebKitDOMHTMLElement * div_message) {
+  if (edit_mode) return;
+
   /* check for tag changes that control display */
   WebKitDOMDOMTokenList * class_list =
     webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(div_message));

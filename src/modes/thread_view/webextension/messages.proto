@@ -50,8 +50,8 @@ message Debug {
   string msg = 1;
 }
 
-message StyleSheet {
-  string css = 1;
+message Page {
+  string css = 2;
 }
 
 message Info {
@@ -160,6 +160,7 @@ message State {
   }
 
   repeated MessageState messages = 2;
+  bool edit_mode = 3;
 }
 
 

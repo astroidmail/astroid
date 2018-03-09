@@ -51,7 +51,7 @@ namespace Astroid {
     friend PageClient;
 
     public:
-      ThreadView (MainWindow *);
+      ThreadView (MainWindow *, bool _edit_mode = false);
       ~ThreadView ();
       void load_thread (refptr<NotmuchThread>);
       void load_message_thread (refptr<MessageThread>);
@@ -61,6 +61,7 @@ namespace Astroid {
 
       bool      indent_messages;
 
+    protected:
       bool edit_mode = false;
       bool show_remote_images = false;
 
@@ -186,7 +187,8 @@ namespace Astroid {
       std::atomic<bool> wk_loaded;
 
       /* rendering */
-      void render ();
+      void on_ready_to_render ();
+      void load_html ();
       void render_messages ();
       void reload_images ();
 

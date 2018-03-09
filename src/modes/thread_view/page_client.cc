@@ -146,12 +146,7 @@ namespace Astroid {
 
     ready = true;
 
-    if (thread_view->wk_loaded) {
-      load ();
-      thread_view->render_messages ();
-
-      /* usually this will be called from thread_view, but extension may not yet be ready */
-    }
+    if (thread_view->wk_loaded) thread_view->on_ready_to_render ();
   }
 
   void PageClient::reader () {
@@ -235,9 +230,9 @@ namespace Astroid {
   void PageClient::load () {
     /* load style sheet */
     LOG (debug) << "pc: sending stylesheet..";
-    AstroidMessages::StyleSheet s;
-    s.set_css (thread_view->theme.thread_view_css.c_str ());
-    AeProtocol::send_message (AeProtocol::MessageTypes::StyleSheet, s, ostream);
+    AstroidMessages::Page s;
+    s.set_css  (thread_view->theme.thread_view_css.c_str ());
+    AeProtocol::send_message (AeProtocol::MessageTypes::Page, s, ostream);
   }
 
   void PageClient::write () {
@@ -259,6 +254,8 @@ namespace Astroid {
      *
      */
     AstroidMessages::State state;
+
+    state.set_edit_mode (thread_view->edit_mode);
 
     for (refptr<Message> &ms : thread_view->mthread->messages) {
       AstroidMessages::State::MessageState * m = state.add_messages ();

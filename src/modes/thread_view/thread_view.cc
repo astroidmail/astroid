@@ -49,7 +49,11 @@ using boost::property_tree::ptree;
 
 namespace Astroid {
 
-  ThreadView::ThreadView (MainWindow * mw) : Mode (mw) { //
+  ThreadView::ThreadView (MainWindow * mw, bool _edit_mode) : Mode (mw) { //
+    edit_mode = _edit_mode;
+    wk_loaded = false;
+    ready = false;
+
     page_client = new PageClient ();
     page_client->thread_view = this;
 
@@ -73,7 +77,11 @@ namespace Astroid {
     page_client->enable_gravatar = config.get<bool>("gravatar.enable");
     unread_delay = config.get<double>("mark_unread_delay");
 
-    ready = false;
+    /* home uri used for thread view - request will be relative this
+     * non-existant (hopefully) directory. */
+    home_uri = ustring::compose ("%1/%2",
+        astroid->standard_paths ().config_dir.c_str(),
+        UstringUtils::random_alphanumeric (120));
 
     /* WebKit: set up webkit web view */
 
@@ -115,10 +123,6 @@ namespace Astroid {
     webkit_web_inspector_show (WEBKIT_WEB_INSPECTOR(inspector));
 # endif
 
-    show_all ();
-
-    wk_loaded = false;
-
     g_signal_connect (webview, "load-changed",
         G_CALLBACK(ThreadView_on_load_changed),
         (gpointer) this );
@@ -135,9 +139,11 @@ namespace Astroid {
         G_CALLBACK(ThreadView_decide_policy),
         (gpointer) this);
 
+    load_html ();
 
     register_keys ();
 
+    show_all ();
     show_all_children ();
 
 # ifndef DISABLE_PLUGINS
@@ -430,12 +436,8 @@ namespace Astroid {
           /* render */
           wk_loaded = true;
 
-          if (page_client->ready) {
-            page_client->load ();
-            render_messages ();
-
-            /* if page client is not yet ready it will call this when ready */
-          }
+          // also called in page_client
+          if (page_client->ready) on_ready_to_render ();
         }
       default:
         break;
@@ -463,14 +465,24 @@ namespace Astroid {
 
   void ThreadView::load_message_thread (refptr<MessageThread> _mthread) {
     ready = false;
-    mthread.clear ();
-    mthread = _mthread;
+
+    if (mthread) {
+      mthread.clear ();
+      mthread = _mthread;
+
+      /* re-load html (this will call render_messages()) */
+      load_html ();
+
+    } else {
+      mthread = _mthread;
+
+      if (wk_loaded && page_client->ready) {
+        render_messages ();
+      }
+    }
 
     ustring s = mthread->get_subject();
-
     set_label (s);
-
-    render ();
   }
 
   void ThreadView::on_message_changed (
@@ -497,18 +509,19 @@ namespace Astroid {
   /* rendering  */
 
   /* general message adding and rendering  */
-  void ThreadView::render () {
+  void ThreadView::load_html () {
     LOG (info) << "render: loading html..";
     wk_loaded = false;
+    ready     = false;
 
-    /* home uri used for thread view - request will be relative this
-     * non-existant (hopefully) directory. */
-    home_uri = ustring::compose ("%1/%2",
-        astroid->standard_paths ().config_dir.c_str(),
-        UstringUtils::random_alphanumeric (120));
+    webkit_web_view_load_html (webview, theme.thread_view_html.c_str (), home_uri.c_str ());
+  }
 
-    ready = false;
-    webkit_web_view_load_html (webview, theme.thread_view_html.c_str (), home_uri.c_str());
+  void ThreadView::on_ready_to_render () {
+    page_client->load ();
+
+    /* render messages in case we were not ready when first requested */
+    render_messages ();
   }
 
   void ThreadView::render_messages () {
@@ -546,6 +559,7 @@ namespace Astroid {
       focus_message (focused_message);
     }
 
+    ready = true;
     emit_ready ();
 
     if (!unread_setup) {
