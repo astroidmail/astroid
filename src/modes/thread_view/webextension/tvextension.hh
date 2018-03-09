@@ -50,6 +50,7 @@ class AstroidExtension {
     void        reader ();
     bool        run = true;
     refptr<Gio::Cancellable> reader_cancel;
+    void        write (const ustring);
 
     WebKitDOMNode * container;
 

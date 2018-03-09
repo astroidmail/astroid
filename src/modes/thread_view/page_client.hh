@@ -81,7 +81,7 @@ namespace Astroid {
 
       void        reader ();
       std::thread reader_t;
-      bool        reader_run;
+      bool        reader_run = true;
       refptr<Gio::Cancellable> reader_cancel;
   };
 

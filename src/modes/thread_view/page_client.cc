@@ -155,7 +155,9 @@ namespace Astroid {
   }
 
   void PageClient::reader () {
+    LOG (debug) << "pc: reader started.";
     while (reader_run) {
+      LOG (debug) << "pc: reader waiting..";
       gsize read = 0;
 
       /* read size of message */
@@ -165,21 +167,30 @@ namespace Astroid {
       } catch (Gio::Error &ex) {
         LOG (warn) << "pc: " << ex.what ();
         reader_run = false;
-        return;
+        break;
       }
 
-      if (read != sizeof(sz)) break;;
+      if (read != sizeof(sz)) {
+        LOG (debug) << "pc: reader: could not read size.";
+        break;
+      }
 
       /* read message type */
       AeProtocol::MessageTypes mt;
       read = istream->read ((char*)&mt, sizeof (mt));
-      if (read != sizeof (mt)) break;
+      if (read != sizeof (mt)) {
+        LOG (debug) << "pc: reader: size of message type too short: " << sizeof(mt) << " != " << read;
+        break;
+      }
 
       /* read message */
       gchar buffer[sz + 1]; buffer[sz] = '\0'; // TODO: set max buffer size
       bool s = istream->read_all (buffer, sz, read);
 
-      if (!s) break;
+      if (!s) {
+        LOG (debug) << "pc: reader: error while reading message (size: " << sz << ")";
+        break;
+      }
 
       /* parse message */
       switch (mt) {
@@ -187,7 +198,10 @@ namespace Astroid {
           {
             AstroidMessages::Debug m;
             m.ParseFromString (buffer);
-            LOG (debug) << "pc: ae: " << m.msg ();
+            Glib::signal_idle().connect_once (
+                [&,m] () {
+                  LOG (debug) << "pc: ae: " << m.msg ();
+                });
           }
           break;
 
@@ -196,15 +210,17 @@ namespace Astroid {
             AstroidMessages::Focus f;
             f.ParseFromString (buffer);
 
-            LOG (debug) << "pc: got focus event: " << f.mid () << ", e: " << f.element ();
-
             /* update focused element in state */
-            thread_view->focused_message = *std::find_if (
-                thread_view->mthread->messages.begin (),
-                thread_view->mthread->messages.end (),
-                [&] (auto &m) { return f.mid () == m->safe_mid (); });
+            Glib::signal_idle().connect_once (
+                [&,f] () {
+                  LOG (debug) << "pc: got focus event: " << f.mid () << ", e: " << f.element ();
+                  thread_view->focused_message = *std::find_if (
+                      thread_view->mthread->messages.begin (),
+                      thread_view->mthread->messages.end (),
+                      [&] (auto &m) { return f.mid () == m->safe_mid (); });
 
-            thread_view->state[thread_view->focused_message].current_element = f.element ();
+                  thread_view->state[thread_view->focused_message].current_element = f.element ();
+                });
           }
           break;
 
@@ -212,6 +228,8 @@ namespace Astroid {
           break; // unknown message
       }
     }
+
+    LOG (debug) << "pc: reader exit.";
   }
 
   void PageClient::load () {

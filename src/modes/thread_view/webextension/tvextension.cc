@@ -128,8 +128,17 @@ void AstroidExtension::page_created (WebKitWebExtension * /* extension */,
   cout << "ae: page created." << endl;
 }
 
+void AstroidExtension::write (const ustring t) {
+  AstroidMessages::Debug m;
+  m.set_msg (t);
+
+  AeProtocol::send_message (AeProtocol::MessageTypes::Debug, m, ostream);
+}
+
 void AstroidExtension::reader () {/*{{{*/
   cout << "ae: reader thread: started." << endl;
+
+  write ("reader started.");
 
   while (run) {
     gsize read = 0;
@@ -1457,6 +1466,8 @@ void AstroidExtension::apply_focus (ustring mid, int element) {
   fe.set_mid (focused_message);
   fe.set_element (element);
   fe.set_focus (true);
+
+  cout << "ae: sending focus event: " << fe.mid () << ", element: " << fe.element () << endl;
 
   AeProtocol::send_message (AeProtocol::MessageTypes::Focus, fe, ostream);
 }
