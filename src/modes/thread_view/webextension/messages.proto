@@ -163,6 +163,9 @@ message State {
   bool edit_mode = 3;
 }
 
+message ClearMessage {
+  bool yes = 1;
+}
 
 
 

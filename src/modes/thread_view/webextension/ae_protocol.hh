@@ -15,6 +15,7 @@ namespace Astroid {
         Navigate,
         Mark,
         Hidden,
+        ClearMessages,
         AddMessage,
         UpdateMessage,
       } MessageTypes;

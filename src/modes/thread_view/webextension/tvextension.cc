@@ -227,6 +227,16 @@ void AstroidExtension::reader () {/*{{{*/
         }
         break;
 
+      case AeProtocol::MessageTypes::ClearMessages:
+        {
+          AstroidMessages::ClearMessage m;
+          m.ParseFromString (buffer);
+          Glib::signal_idle().connect_once (
+              sigc::bind (
+                sigc::mem_fun(*this, &AstroidExtension::clear_messages), m));
+        }
+        break;
+
       case AeProtocol::MessageTypes::AddMessage:
         {
           AstroidMessages::Message m;
@@ -299,6 +309,20 @@ void AstroidExtension::handle_state (AstroidMessages::State &s) {/*{{{*/
   state = s;
   edit_mode = state.edit_mode ();
 }/*}}}*/
+
+void AstroidExtension::clear_messages (AstroidMessages::ClearMessage &) {
+  cout << "ae: clearing all messages." << endl;
+
+  WebKitDOMDocument *d = webkit_web_page_get_dom_document (page);
+  WebKitDOMElement * container = DomUtils::get_by_id (d, "message_container");
+
+  GError *err = NULL;
+
+  webkit_dom_element_set_inner_html (container, "<span id=\"placeholder\"></span>", (err = NULL, &err));
+
+  g_object_unref (container);
+  g_object_unref (d);
+}
 
 // Message generation {{{
 void AstroidExtension::add_message (AstroidMessages::Message &m) {

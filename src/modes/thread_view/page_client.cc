@@ -242,6 +242,13 @@ namespace Astroid {
     AeProtocol::send_message (AeProtocol::MessageTypes::Debug, m, ostream);
   }
 
+  void PageClient::clear_messages () {
+    LOG (debug) << "pc: clear messages..";
+    AstroidMessages::ClearMessage c;
+    c.set_yes (true);
+    AeProtocol::send_message (AeProtocol::MessageTypes::ClearMessages, c, ostream);
+  }
+
   void PageClient::update_state () {
     /* Synchronize state structure between ThreadView and Extension. Only a minimal structure
      * is sent to the extension.

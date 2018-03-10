@@ -60,6 +60,7 @@ class AstroidExtension {
     bool edit_mode = false;
     AstroidMessages::State state;
     void handle_state (AstroidMessages::State &m);
+    void clear_messages (AstroidMessages::ClearMessage &c);
 
     void handle_mark (AstroidMessages::Mark &m);
     void handle_hidden (AstroidMessages::Hidden &m);

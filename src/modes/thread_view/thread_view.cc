@@ -466,19 +466,13 @@ namespace Astroid {
   void ThreadView::load_message_thread (refptr<MessageThread> _mthread) {
     ready = false;
 
-    if (mthread) {
-      mthread.clear ();
-      mthread = _mthread;
 
-      /* re-load html (this will call render_messages()) */
-      load_html ();
+    mthread.clear ();
+    mthread = _mthread;
 
-    } else {
-      mthread = _mthread;
-
-      if (wk_loaded && page_client->ready) {
-        render_messages ();
-      }
+    if (wk_loaded && page_client->ready) {
+      page_client->clear_messages ();
+      render_messages (); // resets the state
     }
 
     ustring s = mthread->get_subject();
@@ -521,6 +515,7 @@ namespace Astroid {
     page_client->load ();
 
     /* render messages in case we were not ready when first requested */
+    page_client->clear_messages ();
     render_messages ();
   }
 
