@@ -247,6 +247,26 @@ void AstroidExtension::reader () {/*{{{*/
         }
         break;
 
+      case AeProtocol::MessageTypes::UpdateMessage:
+        {
+          AstroidMessages::Message m;
+          m.ParseFromString (buffer);
+          Glib::signal_idle().connect_once (
+              sigc::bind (
+                sigc::mem_fun(*this, &AstroidExtension::update_message), m));
+        }
+        break;
+
+      case AeProtocol::MessageTypes::RemoveMessage:
+        {
+          AstroidMessages::Message m;
+          m.ParseFromString (buffer);
+          Glib::signal_idle().connect_once (
+              sigc::bind (
+                sigc::mem_fun(*this, &AstroidExtension::remove_message), m));
+        }
+        break;
+
       case AeProtocol::MessageTypes::Info:
         {
           AstroidMessages::Info m;
@@ -380,6 +400,13 @@ void AstroidExtension::add_message (AstroidMessages::Message &m) {
   apply_focus (focused_message, focused_element); // in case we got focus before message was added.
 }
 
+void AstroidExtension::remove_message (AstroidMessages::Message &m) {
+
+}
+
+void AstroidExtension::update_message (AstroidMessages::Message &m) {
+
+}
 
 /* main message generation  */
 void AstroidExtension::set_message_html (

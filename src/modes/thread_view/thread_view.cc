@@ -639,6 +639,7 @@ namespace Astroid {
     state[m].current_element = std::max((unsigned int) (state[m].elements.size () - 1), state[m].current_element);
 
     page_client->update_message (m); // page_client updates the message state
+    page_client->update_state ();
 
     // if the updated message was focused, the currently focused element may
     // have changed.
@@ -650,11 +651,17 @@ namespace Astroid {
     LOG (debug) << "tv: remove message: " << m->mid;
     state.erase (m);
 
-    // TODO: escape message id EVERYWHERE!!
-    // JS: Return new focused element.
-    /* std::string js = "Astroid.remove_message (" + m->safe_mid () + ");"; */
-    /* webkit_web_view_run_javascript (webview, js.c_str (), NULL, NULL, NULL); */
+    /* check if message has been removed from messagethread, if not
+     * message state will not be consistent between threads */
+    for (auto &mm : mthread->messages) {
+      if (m->mid == mm->mid) {
+        LOG (error) << "tv: removed message, but it is still present in the MessageThread.";
+        throw runtime_error ("tv: removed message, but it is still present in the MessageThread: inconsitent state.");
+      }
+    }
 
+    page_client->remove_message (m);
+    page_client->update_state ();
   }
 
   void ThreadView::filter_code_tags (ustring &body) { // {{{
@@ -705,7 +712,10 @@ namespace Astroid {
   } // }}}
 
   // TODO: [JS] [REIMPLEMENT]
-  void ThreadView::display_part (refptr<Message> message, refptr<Chunk> c, MessageState::Element el) {
+  void ThreadView::display_part (
+      refptr<Message> message,
+      refptr<Chunk> c,
+      MessageState::Element el) {
 
   }
 

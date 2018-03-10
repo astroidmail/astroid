@@ -18,6 +18,7 @@ namespace Astroid {
         ClearMessages,
         AddMessage,
         UpdateMessage,
+        RemoveMessage,
       } MessageTypes;
 
       static void send_message (MessageTypes mt, const ::google::protobuf::Message &m, Glib::RefPtr<Gio::OutputStream> ostream);

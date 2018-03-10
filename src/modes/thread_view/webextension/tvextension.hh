@@ -67,6 +67,8 @@ class AstroidExtension {
     bool is_hidden (ustring);
 
     void add_message (AstroidMessages::Message &m);
+    void remove_message (AstroidMessages::Message &m);
+    void update_message (AstroidMessages::Message &m);
 
     void set_message_html (AstroidMessages::Message m,
         WebKitDOMHTMLElement * div_message);

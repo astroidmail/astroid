@@ -313,6 +313,12 @@ namespace Astroid {
     }
   }
 
+  void PageClient::remove_message (refptr<Message> m) {
+    AstroidMessages::Message msg;
+    msg.set_mid (m->safe_mid()); // just mid.
+    AeProtocol::send_message (AeProtocol::MessageTypes::RemoveMessage, msg, ostream);
+  }
+
   void PageClient::add_message (refptr<Message> m) {
     AeProtocol::send_message (AeProtocol::MessageTypes::AddMessage, make_message (m), ostream);
   }

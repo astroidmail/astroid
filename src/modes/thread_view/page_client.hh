@@ -31,6 +31,7 @@ namespace Astroid {
       void load ();
       void add_message (refptr<Message> m);
       void update_message (refptr<Message> m);
+      void remove_message (refptr<Message> m);
       void update_state ();
       void clear_messages ();
 
