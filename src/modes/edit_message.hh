@@ -155,7 +155,7 @@ namespace Astroid {
       bool message_sent = false;
       void lock_message_after_send ();
 
-      void generate_mid_from_account (Account *);
+      ustring generate_mid_from_account (Account *);
 
       ComposeMessage * make_message (bool draft);
 

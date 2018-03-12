@@ -134,23 +134,26 @@ namespace Astroid {
     /* set up message id and random server name for editor */
     id = edit_id++;
 
-    ustring _mid = "";
-
     /* accounst list from defaults */
     accounts = astroid->accounts;
 
 # ifndef DISABLE_PLUGINS
-    if (!astroid->plugin_manager->astroid_extension->generate_mid (_mid)) {
+    ustring _mid = "";
+    if (astroid->plugin_manager->astroid_extension->generate_mid (_mid))
+    {
+      // plugins enabled, and message-id plugin installed
+      // use new message-id provided by plugin
+      if (_mid != "") {
+        msg_id = _mid;
+      }
+    } else {
 # endif
-      generate_mid_from_account(&((accounts->accounts)[accounts->default_account]));
+      // plugins disabled, or no message-id plugin installed
+      // generate a new message-id locally
+      msg_id = generate_mid_from_account(&((accounts->accounts)[accounts->default_account]));
 # ifndef DISABLE_PLUGINS
     }
 # endif
-
-    if (msg_id == "") {
-      msg_id = _mid;
-    }
-
     LOG (info) << "em: msg id: " << msg_id;
 
     make_tmpfile ();
@@ -590,11 +593,11 @@ namespace Astroid {
     if (is_regular_file (fname)) {
       boost::filesystem::remove (fname);
 
-      /* first remove tag in case it has been sent */
       astroid->actions->doit (refptr<Action>(
             new OnMessageAction (draft_msg->mid, draft_msg->tid,
 
               [fname] (Db * db, notmuch_message_t * msg) {
+                /* first remove tag in case it has been sent */
                 for (ustring t : Db::draft_tags) {
                   notmuch_message_remove_tag (msg,
                       t.c_str ());
@@ -608,7 +611,6 @@ namespace Astroid {
                 }
               })));
     }
-
   }
 
   /* edit / read message cycling {{{ */
@@ -617,7 +619,7 @@ namespace Astroid {
      * manually in the e-mail as well. this check prevents the
      * message currently being read from the edited draft to be
      * overwritten before it is read. */
-    if (!in_read) {
+    if ( ! in_read) {
       prepare_message ();
       read_edited_message ();
     }
@@ -666,7 +668,56 @@ namespace Astroid {
   }
 
   bool EditMessage::set_from (Account * a) {
-    generate_mid_from_account(a);
+    if (draft_msg) {
+      LOG(debug) << "em: set_from called for saved draft";
+       if (a != accounts->get_account_for_address (draft_msg->sender)) {
+         LOG(debug) << "em: set_from called for saved draft with different account";
+
+         ustring fname = draft_msg->fname;
+         path fpath = path(fname.c_str ());
+         if (is_regular_file (fpath)) {
+           boost::filesystem::remove (fpath);
+            ComposeMessage * cmsg = make_draft_message ();
+            ustring new_mid = generate_mid_from_account (a);
+            cmsg->set_id (new_mid);
+//            draft_msg->mid = msg_id;         // propagate new message id to draft_msg
+//            draft_msg->nmmsg->mid = msg_id;
+//            draft_msg->message->message_id = (char*) msg_id.c_str();
+            ThreadView *tv = thread_view;
+            astroid->actions->doit(refptr<Action>(new OnMessageAction (draft_msg->mid, "" /*draft_msg->tid*/,
+              [fname, cmsg, tv] (Db * db, notmuch_message_t * msg) {
+                // first, remove any draft tags
+                for (ustring t : Db::draft_tags) {
+                  notmuch_message_remove_tag (msg, t.c_str ());
+                }
+                // remember remaining (non-draft) tags (if any)
+                notmuch_tags_t *keep_tags = notmuch_message_get_tags(msg);
+                // remove previous incarnation from notmuch
+                bool persists = ! db->remove_message (fname);
+                if (persists && db->maildir_synchronize_flags) {
+                  // sync in case there are other copies of the message
+                  notmuch_message_tags_to_maildir_flags (msg);
+                }
+                // make a new message with the new message id, and add it to notmuch
+                cmsg->write (fname);
+                db->add_draft_message (fname);
+                 notmuch_message_t *new_msg = NULL;
+                 notmuch_database_find_message (db->nm_db, cmsg->id.c_str(), &new_msg);
+                // add tags from old message
+                for (/* keep_tags was initialised _before_ the old message was removed */;
+                     notmuch_tags_valid (keep_tags);
+                     notmuch_tags_move_to_next (keep_tags)) {
+                  notmuch_message_add_tag (new_msg, notmuch_tags_get (keep_tags));
+                }
+                delete cmsg;
+              })));
+         }
+       }
+    }
+    else {
+      LOG(debug) << "em: set_from called for stand-alone draft";
+      msg_id = generate_mid_from_account(a);
+    }
 
     int rn = from_combo->get_active_row_number ();
 
@@ -680,7 +731,7 @@ namespace Astroid {
     }
 
     bool same_account = (rn == from_combo->get_active_row_number ());
-    LOG (debug) << "same account: " << same_account;
+    LOG (debug) << "em: same account: " << same_account;
     if (!same_account) {
       reset_signature ();
     }
@@ -688,53 +739,56 @@ namespace Astroid {
     return same_account;
   }
 
-  void EditMessage::generate_mid_from_account (Account * _a) {
-     ustring rnd = UstringUtils::random_rfc5322_atext (40);   // 40 gives 253 bits entropy
+  ustring EditMessage::generate_mid_from_account (Account * _a) {
+    ustring rnd = UstringUtils::random_rfc5322_atext (40);   // 40 gives 253 bits entropy
+     ustring mid;
 
-     ustring user = astroid->config ().get<string> (ustring::compose("accounts.%1.message_id_user", _a->id).c_str());
-     UstringUtils::trim (user);
+    ustring user = astroid->config ().get<string> (ustring::compose("accounts.%1.message_id_user", _a->id).c_str());
+    UstringUtils::trim (user);
 
-     ustring hostname = astroid->config ().get <string> (ustring::compose("accounts.%1.message_id_fqdn", _a->id).c_str());
-     UstringUtils::trim (hostname);
+    ustring hostname = astroid->config ().get <string> (ustring::compose("accounts.%1.message_id_fqdn", _a->id).c_str());
+    UstringUtils::trim (hostname);
 
-     // fallback value if hostname is empty
-     if (hostname.empty ()) {
-        char _hostname[1024];
-        _hostname[1023] = 0;
-        gethostname (_hostname, 1023);
+    // fallback value if hostname is empty
+    if (hostname.empty ()) {
+      char _hostname[1024];
+      _hostname[1023] = 0;
+      gethostname (_hostname, 1023);
 
-        if (*_hostname != 0) {
-           hostname = _hostname;
+      if (*_hostname != 0) {
+        hostname = _hostname;
 
-           char _domainname[1024];
-           _domainname[1023] = 0;
-           if (getdomainname (_domainname, 1023) < 0) {
-              *_domainname = '\0';
-           }
-
-           if (*_domainname != 0) {
-              ustring d (_domainname);
-              d = UstringUtils::replace (d, "(", ""); // often "(none)" is returned
-              d = UstringUtils::replace (d, ")", "");
-              hostname += ".";
-              hostname += d;
-           }
-
-           if (hostname.find (".", 0) == std::string::npos) {
-              /* add a top level domain */
-              hostname += ".none";
-           }
-        } else {
-           hostname = UstringUtils::random_alphanumeric (10) + ".none";
+        char _domainname[1024];
+        _domainname[1023] = 0;
+        if (getdomainname (_domainname, 1023) < 0) {
+          *_domainname = '\0';
         }
-     }
 
-     // assemble message id string
-     if (user.empty ()) {
-        msg_id = ustring::compose ("%1@%2", rnd, hostname);
-     } else {
-        msg_id = ustring::compose ("%1.%2@%3", rnd, user, hostname);
-     }
+        if (*_domainname != 0) {
+          ustring d (_domainname);
+          d = UstringUtils::replace (d, "(", ""); // often "(none)" is returned
+          d = UstringUtils::replace (d, ")", "");
+          hostname += ".";
+          hostname += d;
+        }
+
+        if (hostname.find (".", 0) == std::string::npos) {
+          /* add a top level domain */
+          hostname += ".none";
+        }
+      } else {
+        hostname = UstringUtils::random_alphanumeric (10) + ".none";
+      }
+    }
+
+    // assemble message id string
+    if (user.empty ()) {
+      mid = ustring::compose ("%1@%2", rnd, hostname);
+    } else {
+      mid = ustring::compose ("%1.%2@%3", rnd, user, hostname);
+    }
+
+    return (mid);
   }
 
   void EditMessage::reset_signature () {

@@ -78,6 +78,7 @@ namespace Astroid {
 
   void ComposeMessage::set_id (ustring _id) {
     id = _id;
+    g_mime_message_set_message_id (message, id.c_str());
   }
 
   void ComposeMessage::set_references (ustring _refs) {
