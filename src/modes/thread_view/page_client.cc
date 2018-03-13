@@ -8,6 +8,8 @@
 # include <glibmm.h>
 # include <giomm.h>
 # include <giomm/socket.h>
+# include <gmime/gmime.h>
+# include "utils/gmime/gmime-compat.h"
 # include <boost/filesystem.hpp>
 # include <iostream>
 # include <thread>
