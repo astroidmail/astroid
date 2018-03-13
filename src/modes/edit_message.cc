@@ -671,46 +671,50 @@ namespace Astroid {
     if (draft_msg) {
       LOG(debug) << "em: set_from called for saved draft";
        if (a != accounts->get_account_for_address (draft_msg->sender)) {
-         LOG(debug) << "em: set_from called for saved draft with different account";
+         LOG(debug) << "em: set_from called for saved draft with different from account";
 
          ustring fname = draft_msg->fname;
          path fpath = path(fname.c_str ());
          if (is_regular_file (fpath)) {
+           // remove old message file from filesystem
            boost::filesystem::remove (fpath);
-            ComposeMessage * cmsg = make_draft_message ();
-            ustring new_mid = generate_mid_from_account (a);
-            cmsg->set_id (new_mid);
-//            draft_msg->mid = msg_id;         // propagate new message id to draft_msg
-//            draft_msg->nmmsg->mid = msg_id;
-//            draft_msg->message->message_id = (char*) msg_id.c_str();
-            ThreadView *tv = thread_view;
-            astroid->actions->doit(refptr<Action>(new OnMessageAction (draft_msg->mid, "" /*draft_msg->tid*/,
-              [fname, cmsg, tv] (Db * db, notmuch_message_t * msg) {
-                // first, remove any draft tags
-                for (ustring t : Db::draft_tags) {
-                  notmuch_message_remove_tag (msg, t.c_str ());
-                }
-                // remember remaining (non-draft) tags (if any)
-                notmuch_tags_t *keep_tags = notmuch_message_get_tags(msg);
-                // remove previous incarnation from notmuch
-                bool persists = ! db->remove_message (fname);
-                if (persists && db->maildir_synchronize_flags) {
-                  // sync in case there are other copies of the message
-                  notmuch_message_tags_to_maildir_flags (msg);
-                }
-                // make a new message with the new message id, and add it to notmuch
-                cmsg->write (fname);
-                db->add_draft_message (fname);
-                 notmuch_message_t *new_msg = NULL;
-                 notmuch_database_find_message (db->nm_db, cmsg->id.c_str(), &new_msg);
-                // add tags from old message
-                for (/* keep_tags was initialised _before_ the old message was removed */;
-                     notmuch_tags_valid (keep_tags);
-                     notmuch_tags_move_to_next (keep_tags)) {
-                  notmuch_message_add_tag (new_msg, notmuch_tags_get (keep_tags));
-                }
-                delete cmsg;
-              })));
+           // make a new draft message with the new mesage id, and save it to the filesystem
+           ComposeMessage * cmsg = make_draft_message ();
+           ustring new_mid = generate_mid_from_account (a);
+           cmsg->set_id (new_mid);
+           path ddir = cmsg->account->save_drafts_to;
+           ddir = ddir / path(UstringUtils::random_file_name (editor_config.get
+                                                              <std::string>("external_tmpfile_suffix")));
+           ustring new_fname = ddir.c_str ();
+           cmsg->write (new_fname);
+//           draft_msg->mid = msg_id;         // propagate new message id to draft_msg
+//           draft_msg->nmmsg->mid = msg_id;
+//           draft_msg->message->message_id = (char*) msg_id.c_str();
+//           ThreadView *tv = thread_view;
+           astroid->actions->doit(refptr<Action>(new OnMessageAction (draft_msg->mid, ""/**/ /*draft_msg->tid/**/,
+             [fname, cmsg, new_fname] (Db * db, notmuch_message_t * msg) {
+               // add the new message (with the new message id) as a new draft to notmuch
+               db->add_draft_message (new_fname);
+               notmuch_message_t *new_msg = NULL;
+               notmuch_database_find_message (db->nm_db, cmsg->id.c_str(), &new_msg);
+               // first, remove any draft tags from the old message
+               for (ustring t : Db::draft_tags) {
+                 notmuch_message_remove_tag (msg, t.c_str ());
+               }
+               // transfer remaining (non-draft) tags from old message to new message
+               for (notmuch_tags_t *keep_tags = notmuch_message_get_tags(msg);
+                 notmuch_tags_valid (keep_tags);
+                 notmuch_tags_move_to_next (keep_tags)) {
+                 notmuch_message_add_tag (new_msg, notmuch_tags_get (keep_tags));
+               }
+               delete cmsg;
+               // remove old message from notmuch
+               bool persists = ! db->remove_message (fname);
+               if (persists && db->maildir_synchronize_flags) {
+                 // sync in case there are other copies of the message
+                 notmuch_message_tags_to_maildir_flags (msg);
+               }
+             })));
          }
        }
     }
@@ -740,7 +744,7 @@ namespace Astroid {
   }
 
   ustring EditMessage::generate_mid_from_account (Account * _a) {
-    ustring rnd = UstringUtils::random_rfc5322_atext (40);   // 40 gives 253 bits entropy
+     ustring rnd = UstringUtils::random_rfc5322_atext_shell_safe_subset (42);   // 42 gives 258 bits entropy (and 42 is the answer anyway ;)
      ustring mid;
 
     ustring user = astroid->config ().get<string> (ustring::compose("accounts.%1.message_id_user", _a->id).c_str());
