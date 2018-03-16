@@ -888,7 +888,11 @@ namespace Astroid {
     msgt->add_message (tmpf);
     thread_view->load_message_thread (msgt);
 
-    delete c;
+    astroid->actions->doit(refptr<Action>(new OnMessageAction ("", "",
+      [c] (Db *, notmuch_message_t *) {
+        LOG (debug) << "em: read_edited_message: deleting ComposeMessage * c = " << c;
+        delete c;
+    })));
 
     unlink (tmpf.c_str());
 
