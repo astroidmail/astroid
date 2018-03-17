@@ -28,7 +28,7 @@ namespace Astroid {
     editor_started = true;
 
     ustring cmd = ustring::compose (editor_cmd,
-        em->tmpfile_path.c_str ());
+        em->tmpfile_path.c_str (), "''", "-1");
 
     LOG (debug) << "em: ex: launching editor: " << cmd;
 

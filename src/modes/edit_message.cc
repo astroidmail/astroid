@@ -95,6 +95,12 @@ namespace Astroid {
 
 # ifndef DISABLE_EMBEDDED
     embed_editor = !editor_config.get<bool> ("external_editor");
+    char const* xdg_session_type = std::getenv("XDG_SESSION_TYPE");
+    LOG (info) << "xdg_session_type: " << xdg_session_type;
+    if(xdg_session_type && std::string(xdg_session_type) == "wayland"){
+      LOG (warn) << "Embedded editor not available under wayland. Falling back to external";
+      embed_editor = false;
+    }
 # endif
     save_draft_on_force_quit = editor_config.get <bool> ("save_draft_on_force_quit");
 
@@ -653,7 +659,7 @@ namespace Astroid {
 
   }
 
-  /* edit / read message cycling {{{ */
+  /* edit / read message cycling {{{ */
   void EditMessage::on_from_combo_changed () {
     /* this will be called when the From: field has been changed
      * manually in the e-mail as well. this check prevents the
