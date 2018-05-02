@@ -1009,14 +1009,15 @@ namespace Astroid {
         });
 
     keys->register_run ("thread_index.run",
-        [&] (Key, ustring cmd) {
+        [&] (Key, ustring cmd, ustring undo_cmd) {
           auto t = get_current_thread ();
 
           if (t) {
             cmd = ustring::compose (cmd, t->thread_id);
+            undo_cmd = ustring::compose (undo_cmd, t->thread_id);
 
             astroid->actions->doit (refptr<Action> (new CmdAction (
-                    Cmd ("thread_index.run", cmd), t->thread_id, "")));
+                    Cmd ("thread_index.run", cmd, undo_cmd), t->thread_id, "")));
 
           }
 

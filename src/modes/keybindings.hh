@@ -101,7 +101,7 @@ namespace Astroid {
                          std::function<bool (Key)>);
 
       void register_run (ustring name,
-                         std::function<bool (Key, ustring)>);
+                         std::function<bool (Key, ustring, ustring)>);
 
       bool handle (GdkEventKey *);
       bool handle (ustring name);
@@ -116,7 +116,7 @@ namespace Astroid {
       ustring prefix = "";
 
       static std::vector<Key>  user_bindings;
-      static std::vector<std::pair<Key, ustring>> user_run_bindings;
+      static std::vector<std::pair<Key, std::pair<ustring, ustring>>> user_run_bindings;
 
       static std::atomic<bool> user_bindings_loaded;
       static const char * user_bindings_file;

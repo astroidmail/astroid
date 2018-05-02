@@ -18,11 +18,11 @@ namespace Astroid {
   }
 
   bool CmdAction::undo (Db *) {
-    return false;
+    return cmd.undo ();
   }
 
   bool CmdAction::undoable () {
-    return false;
+    return cmd.undoable ();
   }
 
   void CmdAction::emit (Db * db) {

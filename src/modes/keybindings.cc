@@ -17,7 +17,7 @@ namespace Astroid {
   std::atomic<bool> Keybindings::user_bindings_loaded (false);
   const char * Keybindings::user_bindings_file = "keybindings";
   std::vector<Key>  Keybindings::user_bindings;
-  std::vector<std::pair<Key, ustring>> Keybindings::user_run_bindings;
+  std::vector<std::pair<Key, std::pair<ustring, ustring>>> Keybindings::user_run_bindings;
 
   void Keybindings::init () {
     if (!user_bindings_loaded) {
@@ -31,13 +31,10 @@ namespace Astroid {
 
         /* the bindings file has the format:
          *
-         * ```
-         * thread_index.next_thread=j
-         * thread_index.next_thread=Down
+         * ``` thread_index.next_thread=j thread_index.next_thread=Down
          * thread_index.label=C-j
          *
-         * # thread_
-         * ```
+         * # thread_ ```
          *
          * blank lines, or lines starting with # are ignored. a keybinding can
          * be listed several times, in which case they will be interpreted as
@@ -45,15 +42,17 @@ namespace Astroid {
          *
          * shell hooks follow the format:
          *
-         *  thread_index.run(cmd)=key
+         *  thread_index.run(cmd, undo cmd)=key thread_index.run(cmd)=key
          *
          *  it will be parsed by searching for:
          *
-         *  1. prefix.run(
-         *  2. then search backwards for =
-         *  3. split out key
-         *  4. search backwards for )
-         *  5. split out cmd
+         *  1. prefix.run( 2. then search backwards for = 3. split out key 4.
+         *  search backwards for ) 5. split out cmd 6. separate cmd and undo
+         *  cmd if both exist
+         *
+         *  Any commands containing , (comma) must have them escaped using \
+         *  (backslash). Empty undo cmd or none specified results in the same
+         *  behaviour.
          *
          * a mode then registers run targets which is a function that gets the
          * target, runs it and signals update_thread or similar if necessary.
@@ -125,6 +124,49 @@ namespace Astroid {
             }
 
             ustring target = line.substr (fnd + 1, rfnd - fnd -1);
+            ustring undo_target = "";
+
+            /* splitting cmd and undo cmd */
+            fnd = 0;
+            std::size_t separator = std::string::npos;
+
+            bool err = false;
+            while (fnd != std::string::npos && fnd < target.length ()) {
+              fnd = target.find (",", fnd);
+
+              if (fnd == 0) {
+                LOG (error) << "ky: invalid 'run'-speficiation: command starts with ',', cannot only have undo command.";
+                err = true;
+                break;
+
+              } else if (fnd != std::string::npos) {
+                if (target[fnd - 1] == '\\') {
+                  /* traverse whole input string: escaped separator,
+                   * skip '\' and keep looking */
+                  target.erase (fnd -1, 1);
+
+                  /* fnd now points to position after comma - new iteration */
+                } else if (separator == std::string::npos) {
+                  /* found separator */
+                  separator = fnd;
+                  fnd++;
+
+                } else {
+                  LOG (error) << "ky: invalid 'run'-speficiation: several ',' separators.";
+                  err = true;
+                  break;
+                }
+              }
+            }
+
+            if (err) continue;
+
+            if (separator != std::string::npos) {
+              undo_target = target.substr (separator + 1, target.size ());
+              target = target.substr (0, separator);
+              UstringUtils::trim (undo_target); /* undo_target may be empty */
+            }
+
             UstringUtils::trim (target);
 
             Key k (keyspec);
@@ -139,7 +181,7 @@ namespace Astroid {
             k.allow_duplicate_name = true;
             k.userdefined = true;
 
-            user_run_bindings.push_back (std::make_pair (k, target));
+            user_run_bindings.push_back (std::make_pair (k, std::make_pair(target, undo_target)));
 
             continue;
           }
@@ -501,25 +543,25 @@ namespace Astroid {
   }
 
   void Keybindings::register_run (ustring name,
-      std::function<bool (Key, ustring)> cb) {
+      std::function<bool (Key, ustring, ustring)> cb) {
 
-    /* name will be look up in user targets, cb will be
-     * called with target cmd string */
+    /* name will be looked up in user targets, cb will be
+     * called with target and undo-target cmd string */
     auto b = user_run_bindings.begin ();
 
     while (b = std::find_if (b, user_run_bindings.end (),
-          [&](std::pair<Key, ustring> p) {
+          [&](std::pair<Key, std::pair<ustring, ustring>> p) {
             return p.first.name == name;
           }),
         b != user_run_bindings.end ()) {
 
       /* b is now a matching binding */
-      LOG (info) << "ky: run, binding: " << name << "(" << b->first.str () << ") (userdefined: " << b->first.userdefined << ") to: " << b->second;
+      LOG (info) << "ky: run, binding: " << name << "(" << b->first.str () << ") (userdefined: " << b->first.userdefined << ") to: " << b->second.first << ", " << b->second.second;
 
       register_key (b->first,
                     b->first.name,
-                    ustring::compose ("Run hook: %1", b->second),
-                    bind (cb, _1, b->second)
+                    ustring::compose ("Run hook: %1,%2", b->second.first, b->second.second),
+                    bind (cb, _1, b->second.first, b->second.second)
                     );
 
       b++;

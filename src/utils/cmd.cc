@@ -11,12 +11,13 @@ using std::string;
 namespace bfs = boost::filesystem;
 
 namespace Astroid {
-  Cmd::Cmd (ustring _prefix, ustring _cmd) : Cmd (_cmd) {
+  Cmd::Cmd (ustring _prefix, ustring _cmd, ustring _undo_cmd) : Cmd (_cmd, _undo_cmd) {
     prefix = _prefix + ": ";
   }
 
-  Cmd::Cmd (ustring _cmd) {
+  Cmd::Cmd (ustring _cmd, ustring _undo_cmd) {
     cmd = substitute (_cmd);
+    undo_cmd = substitute (_undo_cmd);
   }
 
   Cmd::Cmd () {
@@ -24,12 +25,30 @@ namespace Astroid {
   }
 
   int Cmd::run () {
-    LOG (info) << "cmd: running: " << cmd;
+    return execute (false);
+  }
+
+  bool Cmd::undoable () {
+    return !undo_cmd.empty ();
+  }
+
+  int Cmd::undo () {
+    if (!undoable ()) {
+      LOG (error) << "cmd: tried to undo non-undoable command: " << cmd;
+      return 1;
+    }
+    return execute (true);
+  }
+
+  int Cmd::execute (bool undo) {
+    ustring c = (!undo ? cmd : undo_cmd);
+
+    LOG (info) << "cmd: running: " << c;
     string _stdout;
     string _stderr;
     int exit;
 
-    string _cmd = cmd;
+    string _cmd = c;
     try {
       Glib::spawn_command_line_sync (_cmd, &_stdout, &_stderr, &exit);
     } catch (Glib::SpawnError &ex) {

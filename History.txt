@@ -1,8 +1,9 @@
 == **
 * `mail.close_on_success` configures if page closes on successful send.
 * `terminal.font_description` configures font of embedded terminal.
-* `termina.height` configures height of embedded terminal.
+* `terminal.height` configures height of embedded terminal.
 * `mail.format_flowed` is off by default.
+* Make hooks undoable by providing a field for the inverse command.
 
 == v0.11.1 / 2018-02-20
 

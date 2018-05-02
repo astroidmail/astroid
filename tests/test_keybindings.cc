@@ -76,13 +76,17 @@ BOOST_AUTO_TEST_SUITE(TestTestKeybindings)
     /* test run hook */
     ustring test_thread = "001";
 
-    auto f = [&] (Key, ustring cmd) {
-      LOG (test) << "key: run-hook got back: " << cmd;
+    auto f = [&] (Key, ustring cmd, ustring undo) {
+      LOG (test) << "key: run-hook got back: " << cmd << ", undo: " << undo;
 
       ustring final_cmd = ustring::compose (cmd, test_thread);
+      ustring final_undo_cmd = ustring::compose (undo, test_thread);
       LOG (test) << "key: would run: " << final_cmd;
+      LOG (test) << "key: would undo: " << final_undo_cmd;
 
-      Cmd("test", final_cmd).run ();
+      auto c = Cmd("test", final_cmd, final_undo_cmd);
+      c.run ();
+      c.undo ();
 
       return true;
     };

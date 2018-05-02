@@ -2660,13 +2660,13 @@ namespace Astroid {
         });
 
     keys.register_run ("thread_view.run",
-	[&] (Key, ustring cmd) {
+	[&] (Key, ustring cmd, ustring undo_cmd) {
           if (!edit_mode && focused_message) {
-
             cmd = ustring::compose (cmd, focused_message->tid, focused_message->mid);
+            undo_cmd = ustring::compose (undo_cmd, focused_message->tid, focused_message->mid);
 
             astroid->actions->doit (refptr<Action> (new CmdAction (
-              Cmd ("thread_view.run", cmd), focused_message->tid, focused_message->mid)));
+              Cmd ("thread_view.run", cmd, undo_cmd), focused_message->tid, focused_message->mid)));
 
             }
           return true;
