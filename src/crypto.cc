@@ -238,11 +238,7 @@ namespace Astroid {
         mo,
         sign,
         userid.c_str (),
-# if (GMIME_MAJOR_VERSION >= 3)
-        GMIME_ENCRYPT_THROW_KEYIDS, // only in Gmime 3
-# else
         GMIME_ENCRYPT_NONE,
-# endif
         recpa,
         err);
 
