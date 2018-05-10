@@ -257,6 +257,11 @@ namespace Astroid {
   }
 
   bool ThreadIndex::on_index_action (ThreadView * tv, ThreadView::IndexAction action) {
+
+    if (list_view->filtered_store->children().size() < 2) {
+      return true;
+    }
+
     switch (action) {
       case ThreadView::IndexAction::IA_Next:
         {
