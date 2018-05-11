@@ -17,7 +17,6 @@ namespace Astroid {
     config       = astroid->config ("crypto");
     gpgpath      = ustring (config.get<std::string> ("gpg.path"));
     always_trust = config.get<bool> ("gpg.always_trust");
-    throw_keyids = config.get<bool> ("gpg.throw_keyids");
 
     LOG (debug) << "crypto: gpg: " << gpgpath;
 
@@ -239,11 +238,7 @@ namespace Astroid {
         mo,
         sign,
         userid.c_str (),
-# if (GMIME_MAJOR_VERSION >= 3)
-        (throw_keyids ? GMIME_ENCRYPT_THROW_KEYIDS : GMIME_ENCRYPT_NONE), // only in Gmime 3
-# else
         GMIME_ENCRYPT_NONE,
-# endif
         recpa,
         err);
 
