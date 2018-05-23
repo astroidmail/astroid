@@ -630,10 +630,9 @@ namespace Astroid {
     /* focus out */
     ungrab_active ();
 
-    /* remove all modes */
-    /* for (int n = notebook.get_n_pages(); n > 0; n--) { */
-    /*   close_page (true); */
-    /* } */
+    for (int c = 0; c < notebook.get_n_pages(); c++) {
+      ((Mode*) notebook.get_nth_page (c))->pre_close ();
+    }
 
     close (); // Gtk::Window::close ()
   }
