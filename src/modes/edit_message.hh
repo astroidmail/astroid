@@ -50,6 +50,8 @@ namespace Astroid {
       Gtk::Revealer *reply_revealer;
       Gtk::Revealer *encryption_revealer;
 
+      bool gpgenabled;
+
 # ifndef DISABLE_EMBEDDED
       bool embed_editor = true;
 # else

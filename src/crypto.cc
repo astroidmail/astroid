@@ -17,6 +17,7 @@ namespace Astroid {
     config       = astroid->config ("crypto");
     gpgpath      = ustring (config.get<std::string> ("gpg.path"));
     always_trust = config.get<bool> ("gpg.always_trust");
+    gpgenabled   = config.get<bool> ("gpg.enabled");
 
     LOG (debug) << "crypto: gpg: " << gpgpath;
 
@@ -26,6 +27,11 @@ namespace Astroid {
          protocol == "application/pgp-signature")) {
 
       isgpg = true;
+      if (! gpgenabled) {
+        ready = false;
+        return;
+      }
+
       create_gpg_context ();
 
     } else {
