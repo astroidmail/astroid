@@ -17,6 +17,7 @@ namespace Astroid {
 
       bool ready = false;
       bool isgpg = false;
+      bool gpgenabled = true;
 
       GMimeObject * decrypt_and_verify (GMimeObject * mo);
       GMimeMessage * decrypt_message (GMimeMessage * in);

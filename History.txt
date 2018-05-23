@@ -5,6 +5,7 @@
 * `mail.format_flowed` is off by default.
 * Make hooks undoable by providing a field for the inverse command.
 * Do not force throw-keyid (follow gpg config).
+* Allow GPG to be disabled with configuration option.
 
 == v0.11.1 / 2018-02-20
 
