@@ -20,7 +20,7 @@ namespace Astroid {
       void refine_query (ustring);
 
       void start (ustring);
-      void stop ();
+      void stop (bool in_destructor = false);
       void reload ();
 
       unsigned int loaded_threads;

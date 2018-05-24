@@ -311,6 +311,7 @@ namespace Astroid {
   }
 
   void ThreadIndex::pre_close () {
+    queryloader.stop (true);
     if (packed > 1) del_pane (1);
 # ifndef DISABLE_PLUGINS
     plugins->deactivate ();

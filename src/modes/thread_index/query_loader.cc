@@ -56,8 +56,7 @@ namespace Astroid {
 
   QueryLoader::~QueryLoader () {
     LOG (debug) << "ql: destruct.";
-    in_destructor = true;
-    stop ();
+    stop (true);
   }
 
   void QueryLoader::start (ustring q) {
@@ -67,13 +66,15 @@ namespace Astroid {
     loader_thread = std::thread (&QueryLoader::loader, this);
   }
 
-  void QueryLoader::stop () {
+  void QueryLoader::stop (bool _in_destructor) {
+    in_destructor = _in_destructor;
+
     if (run) {
       LOG (info) << "ql (" << id << "): stopping loader...";
     }
 
     run = false;
-    loader_thread.join ();
+    if (loader_thread.joinable ()) loader_thread.join ();
   }
 
   void QueryLoader::reload () {
@@ -372,7 +373,7 @@ namespace Astroid {
 
     if (changed) {
       refresh_stats_db (db); // we should already be running on the gui thread
-      list_view->thread_index->on_stats_ready ();
+      if (!in_destructor) list_view->thread_index->on_stats_ready ();
     }
   }
 }
