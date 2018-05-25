@@ -371,9 +371,9 @@ namespace Astroid {
       }
     }
 
-    if (changed) {
+    if (changed && !in_destructor) {
       refresh_stats_db (db); // we should already be running on the gui thread
-      if (!in_destructor) list_view->thread_index->on_stats_ready ();
+      stats_ready.emit ();
     }
   }
 }
