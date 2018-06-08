@@ -132,7 +132,7 @@ void AstroidExtension::write (const ustring t) {
   AstroidMessages::Debug m;
   m.set_msg (t);
 
-  AeProtocol::send_message (AeProtocol::MessageTypes::Debug, m, ostream);
+  AeProtocol::send_message (AeProtocol::MessageTypes::Debug, m, ostream, m_ostream);
 }
 
 void AstroidExtension::reader () {/*{{{*/
@@ -306,9 +306,17 @@ void AstroidExtension::handle_page (AstroidMessages::Page &s) {/*{{{*/
   GError *err = NULL;
   WebKitDOMDocument *d = webkit_web_page_get_dom_document (page);
 
+  /* load html */
+  cout << "ae: loading html.." << endl;
+
+  WebKitDOMElement * he = webkit_dom_document_create_element (d, "HTML", (err = NULL, &err));
+  webkit_dom_element_set_outer_html (he, s.html ().c_str (), (err = NULL, &err));
+
+  webkit_dom_document_set_body (d, WEBKIT_DOM_HTML_ELEMENT(he), (err = NULL, &err));
+
   /* load css style */
-  cout << "ae: adding stylesheet.." << flush;;
-  WebKitDOMElement  *e = webkit_dom_document_create_element (d, "STYLE", &err);
+  cout << "ae: loading stylesheet.." << flush;;
+  WebKitDOMElement  *e = webkit_dom_document_create_element (d, "STYLE", (err = NULL, &err));
 
   WebKitDOMText *t = webkit_dom_document_create_text_node
     (d, s.css().c_str());
@@ -319,6 +327,7 @@ void AstroidExtension::handle_page (AstroidMessages::Page &s) {/*{{{*/
   webkit_dom_node_append_child (WEBKIT_DOM_NODE(head), WEBKIT_DOM_NODE(e), (err = NULL, &err));
   cout << "done" << endl;
 
+  g_object_unref (he);
   g_object_unref (head);
   g_object_unref (t);
   g_object_unref (e);
@@ -326,6 +335,7 @@ void AstroidExtension::handle_page (AstroidMessages::Page &s) {/*{{{*/
 }/*}}}*/
 
 void AstroidExtension::handle_state (AstroidMessages::State &s) {/*{{{*/
+  cout << "ae: got state." << endl;
   state = s;
   edit_mode = state.edit_mode ();
 }/*}}}*/
@@ -1529,7 +1539,7 @@ void AstroidExtension::apply_focus (ustring mid, int element) {
 
   cout << "ae: sending focus event: " << fe.mid () << ", element: " << fe.element () << endl;
 
-  AeProtocol::send_message (AeProtocol::MessageTypes::Focus, fe, ostream);
+  AeProtocol::send_message (AeProtocol::MessageTypes::Focus, fe, ostream, m_ostream);
 }
 
 void AstroidExtension::update_focus_to_view () {

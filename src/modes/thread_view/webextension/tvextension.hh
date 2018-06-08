@@ -7,6 +7,7 @@
 # include <giomm.h>
 # include <giomm/socket.h>
 # include <thread>
+# include <mutex>
 
 # include "messages.pb.h"
 
@@ -45,6 +46,7 @@ class AstroidExtension {
 
     refptr<Gio::InputStream>  istream;
     refptr<Gio::OutputStream> ostream;
+    std::mutex                m_ostream;
 
     std::thread reader_t;
     void        reader ();

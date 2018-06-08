@@ -3,10 +3,13 @@
 
 # include <giomm.h>
 # include <string>
+# include <mutex>
 
 namespace Astroid {
 
-  void AeProtocol::send_message (MessageTypes mt, const ::google::protobuf::Message &m, Glib::RefPtr<Gio::OutputStream> ostream) {
+  void AeProtocol::send_message (MessageTypes mt, const ::google::protobuf::Message &m, Glib::RefPtr<Gio::OutputStream> ostream, std::mutex &m_ostream) {
+
+    std::lock_guard<std::mutex> lk (m_ostream);
 
     std::string o;
 

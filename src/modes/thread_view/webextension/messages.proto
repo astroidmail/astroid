@@ -10,10 +10,10 @@ message Focus {
 
 message Navigate {
   enum Direction {
-    None = 0;
+    None     = 0;
     Specific = 1;
-    Up = 2;
-    Down = 3;
+    Up       = 2;
+    Down     = 3;
   }
 
   enum Type {
@@ -51,6 +51,7 @@ message Debug {
 }
 
 message Page {
+  string html = 1;
   string css = 2;
 }
 

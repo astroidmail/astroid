@@ -80,6 +80,7 @@ namespace Astroid {
 
       refptr<Gio::InputStream>  istream;
       refptr<Gio::OutputStream> ostream;
+      std::mutex                m_ostream;
 
       void        reader ();
       std::thread reader_t;

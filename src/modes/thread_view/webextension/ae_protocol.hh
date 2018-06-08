@@ -1,6 +1,8 @@
 # pragma once
 
 # include <giomm.h>
+# include <mutex>
+
 # include "messages.pb.h"
 
 namespace Astroid {
@@ -21,7 +23,7 @@ namespace Astroid {
         RemoveMessage,
       } MessageTypes;
 
-      static void send_message (MessageTypes mt, const ::google::protobuf::Message &m, Glib::RefPtr<Gio::OutputStream> ostream);
+      static void send_message (MessageTypes mt, const ::google::protobuf::Message &m, Glib::RefPtr<Gio::OutputStream> ostream, std::mutex &);
   };
 }
 
