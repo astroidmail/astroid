@@ -24,6 +24,8 @@ namespace Astroid {
       } MessageTypes;
 
       static void send_message (MessageTypes mt, const ::google::protobuf::Message &m, Glib::RefPtr<Gio::OutputStream> ostream, std::mutex &);
+
+      static const gsize MAX_MESSAGE_SZ = 200 * 1024 * 1024; // 200 MB
   };
 }
 

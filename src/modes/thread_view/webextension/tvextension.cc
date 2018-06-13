@@ -156,13 +156,18 @@ void AstroidExtension::reader () {/*{{{*/
 
     if (read != sizeof(sz)) break;;
 
+    if (sz > AeProtocol::MAX_MESSAGE_SZ) {
+      cout << "ae: reader: message exceeds max size." << endl;
+      break;
+    }
+
     /* read message type */
     AeProtocol::MessageTypes mt;
     read = istream->read ((char*)&mt, sizeof (mt), reader_cancel);
     if (read != sizeof (mt)) break;
 
     /* read message */
-    gchar buffer[sz + 1]; buffer[sz] = '\0'; // TODO: set max buffer size
+    gchar buffer[sz + 1]; buffer[sz] = '\0';
     bool s = istream->read_all (buffer, sz, read, reader_cancel);
 
     if (!s) break;
@@ -1936,27 +1941,12 @@ void AstroidExtension::scroll_to_element (ustring eid) {
   g_object_unref (e);
   g_object_unref (w);
   g_object_unref (d);
-
-  /* /1* the height does not seem to make any sense, but is still more */
-  /*  * than empty. we need to re-do the calculation when everything */
-  /*  * has been rendered and re-calculated. *1/ */
-  /* if (height == 1) { */
-  /*   in_scroll = true; */
-  /*   scroll_arg = eid; */
-  /*   _scroll_when_visible = scroll_when_visible; */
-  /*   return false; */
-
-  /* } else { */
-
-  /*   return true; */
-
-  /* } */
 }
 
 void AstroidExtension::handle_navigate (AstroidMessages::Navigate &n) {
   cout << "ae: navigating" << endl;
 
-  WebKitDOMDocument *d = webkit_web_page_get_dom_document (page);
+  WebKitDOMDocument * d = webkit_web_page_get_dom_document (page);
   WebKitDOMDOMWindow * w = webkit_dom_document_get_default_view (d);
 
 
@@ -1965,7 +1955,7 @@ void AstroidExtension::handle_navigate (AstroidMessages::Navigate &n) {
     if (n.direction () == AstroidMessages::Navigate_Direction_Down) {
       webkit_dom_dom_window_scroll_by (w, 0, BIG_JUMP);
     } else {
-      webkit_dom_dom_window_scroll_by (w, 0, - BIG_JUMP);
+      webkit_dom_dom_window_scroll_by (w, 0, -BIG_JUMP);
     }
     update_focus_to_view ();
 

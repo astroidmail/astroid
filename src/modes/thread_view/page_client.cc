@@ -162,6 +162,7 @@ namespace Astroid {
 
       /* read size of message */
       gsize sz;
+
       try {
         read = istream->read ((char*)&sz, sizeof (sz), reader_cancel); // blocking
       } catch (Gio::Error &ex) {
@@ -175,6 +176,11 @@ namespace Astroid {
         break;
       }
 
+      if (sz > AeProtocol::MAX_MESSAGE_SZ) {
+        LOG (error) << "pc: reader: message exceeds max size.";
+        break;
+      }
+
       /* read message type */
       AeProtocol::MessageTypes mt;
       read = istream->read ((char*)&mt, sizeof (mt));
@@ -184,7 +190,7 @@ namespace Astroid {
       }
 
       /* read message */
-      gchar buffer[sz + 1]; buffer[sz] = '\0'; // TODO: set max buffer size
+      gchar buffer[sz + 1]; buffer[sz] = '\0';
       bool s = istream->read_all (buffer, sz, read);
 
       if (!s) {
