@@ -170,7 +170,10 @@ void AstroidExtension::reader () {/*{{{*/
     gchar buffer[sz + 1]; buffer[sz] = '\0';
     bool s = istream->read_all (buffer, sz, read, reader_cancel);
 
-    if (!s) break;
+    if (!s) {
+      cout << "pc: reader: error while reading message (size: " << sz << ")" << endl;
+      break;
+    }
 
     /* parse message */
     switch (mt) {
@@ -1902,39 +1905,27 @@ void AstroidExtension::scroll_to_element (ustring eid) {
   double clientY = webkit_dom_element_get_offset_top (e);
   double clientH = webkit_dom_element_get_client_height (e);
 
-  if (height > 0) {
-    /* if (scroll_when_visible) { */
-    /*   if ((clientY + clientH - height) > upper) { */
-    /*     /1* message is last, can't scroll past bottom *1/ */
-    /*     webkit_dom_dom_window_scroll_to (w, 0, upper); */
-    /*   } else { */
-    /*     webkit_dom_dom_window_scroll_to (w, 0, clientY); */
-    /*   } */
-    /* } else { */
-      /* only scroll if parts of the message are out view */
-      if (clientY < scrolled) {
-        /* top is above view  */
+  if (clientY < scrolled) {
+    /* top is above view  */
+    webkit_dom_dom_window_scroll_to (w, 0, clientY);
+
+  } else if ((clientY + clientH) > (scrolled + height)) {
+    /* bottom is below view */
+
+    // if message is of less height than page, scroll so that
+    // bottom is aligned with bottom
+
+    if (clientH < height) {
+      webkit_dom_dom_window_scroll_to (w, 0, clientY + clientH - height);
+    } else {
+      // otherwise align top with top
+      if ((clientY + clientH - height) > upper) {
+        /* message is last, can't scroll past bottom */
+        webkit_dom_dom_window_scroll_to (w, 0, upper);
+      } else {
         webkit_dom_dom_window_scroll_to (w, 0, clientY);
-
-      } else if ((clientY + clientH) > (scrolled + height)) {
-        /* bottom is below view */
-
-        // if message is of less height than page, scroll so that
-        // bottom is aligned with bottom
-
-        if (clientH < height) {
-          webkit_dom_dom_window_scroll_to (w, 0, clientY + clientH - height);
-        } else {
-          // otherwise align top with top
-          if ((clientY + clientH - height) > upper) {
-            /* message is last, can't scroll past bottom */
-            webkit_dom_dom_window_scroll_to (w, 0, upper);
-          } else {
-            webkit_dom_dom_window_scroll_to (w, 0, clientY);
-          }
-        }
       }
-    /* } */
+    }
   }
 
   g_object_unref (body);

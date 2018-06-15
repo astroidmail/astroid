@@ -107,7 +107,7 @@ namespace Astroid {
     g_object_unref (ucss);
 
     websettings = WEBKIT_SETTINGS (webkit_settings_new_with_settings (
-        "enable-javascript", TRUE,
+        "enable-javascript", FALSE,
         "enable-java", FALSE,
         "enable-plugins", FALSE,
         "auto-load-images", TRUE,
@@ -121,7 +121,9 @@ namespace Astroid {
         "enable-private-browsing", TRUE,
         "enable-xss-auditor", TRUE,
         "media-playback-requires-user-gesture", TRUE,
-        "enable-developer-extras", TRUE, // TODO: should only enabled conditionally
+# if (DEBUG || DEBUG_WEBKIT)
+        "enable-developer-extras", TRUE,
+# endif
         NULL));
 
     webkit_web_view_set_settings (webview, websettings);
