@@ -98,6 +98,7 @@ namespace Astroid {
 
 # else
     // TODO: Add install path
+    LOG (error) << "pc: WebKit2 only works in DEBUG builds.";
 # endif
 
     /* set up unix socket */
