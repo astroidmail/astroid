@@ -1,5 +1,13 @@
 syntax = "proto3";
 
+/* Note:
+ *
+ * Messages with a single field like integer or bool seem to mess up the
+ * reader. I have had to add a bogus string field AND set it to something
+ * arbitrary to have the internal protocol work.
+ *
+ */
+
 package AstroidMessages;
 
 message Focus {
