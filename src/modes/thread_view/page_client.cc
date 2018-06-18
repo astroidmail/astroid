@@ -341,6 +341,7 @@ namespace Astroid {
   }
 
   void PageClient::remove_message (refptr<Message> m) {
+    /* TODO: update state */
     AstroidMessages::Message msg;
     msg.set_mid (m->safe_mid()); // just mid.
     handle_ack (
@@ -355,6 +356,7 @@ namespace Astroid {
   }
 
   void PageClient::update_message (refptr<Message> m) {
+    /* TODO: update state */
     handle_ack (
         AeProtocol::send_message_sync (AeProtocol::MessageTypes::UpdateMessage, make_message (m), ostream, m_ostream, istream, m_istream)
         );

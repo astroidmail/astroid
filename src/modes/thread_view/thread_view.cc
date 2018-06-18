@@ -649,7 +649,7 @@ namespace Astroid {
 
     // reset element list
     state[m].elements.clear ();
-    state[m].current_element = std::max((unsigned int) (state[m].elements.size () - 1), state[m].current_element);
+    state[m].current_element = std::max((unsigned int) (state[m].elements.size ()), state[m].current_element);
 
     page_client->update_message (m); // page_client updates the message state
     page_client->update_state ();

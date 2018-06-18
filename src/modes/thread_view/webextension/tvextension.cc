@@ -1950,7 +1950,8 @@ void AstroidExtension::scroll_to_element (ustring eid) {
 }
 
 void AstroidExtension::handle_navigate (AstroidMessages::Navigate &n) {
-  cout << "ae: navigating, type: " << n.type() << endl;
+  std::string _t = AstroidMessages::Navigate_Type_descriptor ()->FindValueByNumber (n.type ())->name ();
+  cout << "ae: navigating, type: " << _t << endl;
 
   WebKitDOMDocument * d = webkit_web_page_get_dom_document (page);
   WebKitDOMDOMWindow * w = webkit_dom_document_get_default_view (d);
