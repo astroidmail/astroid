@@ -67,6 +67,7 @@ class AstroidExtension {
     void handle_mark (AstroidMessages::Mark &m);
     void handle_hidden (AstroidMessages::Hidden &m);
     bool is_hidden (ustring);
+    void set_hidden (ustring, bool);
 
     void add_message (AstroidMessages::Message &m);
     void remove_message (AstroidMessages::Message &m);

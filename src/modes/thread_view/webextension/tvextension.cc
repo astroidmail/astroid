@@ -377,13 +377,6 @@ void AstroidExtension::add_message (AstroidMessages::Message &m) {
   cout << "ae: adding message: " << m.mid () << endl;
 
   WebKitDOMDocument *d = webkit_web_page_get_dom_document (page);
-
-  /* there seems to be a bug in webkit2 where get_element_by_id() is unable to
-   * find the DIV by id
-   *
-   * WebKitDOMElement * container = webkit_dom_document_get_element_by_id (d, "message_container");
-   */
-
   WebKitDOMElement * container = DomUtils::get_by_id (d, "message_container");
 
   ustring div_id = "message_" + m.mid();
@@ -435,6 +428,48 @@ void AstroidExtension::remove_message (AstroidMessages::Message &m) {
 }
 
 void AstroidExtension::update_message (AstroidMessages::Message &m) {
+  cout << "ae: updating message: " << m.mid () << endl;
+
+
+  WebKitDOMDocument *d = webkit_web_page_get_dom_document (page);
+  WebKitDOMElement * container = DomUtils::get_by_id (d, "message_container");
+
+  ustring div_id = "message_" + m.mid();
+
+  WebKitDOMHTMLElement * old_div_message = WEBKIT_DOM_HTML_ELEMENT(webkit_dom_document_get_element_by_id (d, div_id.c_str()));
+
+  /* various states */
+  bool hidden = is_hidden (m.mid ());
+  // TODO: info and warning
+
+  GError * err = NULL;
+
+  WebKitDOMHTMLElement * div_message = DomUtils::make_message_div (d);
+  webkit_dom_element_set_id (WEBKIT_DOM_ELEMENT (div_message), div_id.c_str());
+  set_message_html (m, div_message);
+
+  /* insert mime messages */
+  if (!m.missing_content()) {
+    insert_mime_messages (m, div_message);
+  }
+
+  /* insert attachments */
+  if (!m.missing_content()) {
+    insert_attachments (m, div_message);
+  }
+
+  /* marked */
+  load_marked_icon (div_message);
+
+  webkit_dom_node_replace_child (WEBKIT_DOM_NODE(container), WEBKIT_DOM_NODE (div_message), WEBKIT_DOM_NODE (old_div_message), (err = NULL, &err));
+
+  /* set hidden state */
+  set_hidden (m.mid (), hidden);
+
+  g_object_unref (div_message);
+  g_object_unref (container);
+  g_object_unref (d);
+
   ack (true);
 }
 
@@ -1452,9 +1487,9 @@ void AstroidExtension::hide_info (AstroidMessages::Info &m) {
 
 /* }}} */
 
-void AstroidExtension::handle_hidden (AstroidMessages::Hidden &msg) {/*{{{*/
+void AstroidExtension::set_hidden (ustring mid, bool hidden) {
   /* hide or show message */
-  ustring div_id = "message_" + msg.mid();
+  ustring div_id = "message_" + mid;
 
   GError * err = NULL;
 
@@ -1464,18 +1499,21 @@ void AstroidExtension::handle_hidden (AstroidMessages::Hidden &msg) {/*{{{*/
   WebKitDOMDOMTokenList * class_list =
     webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(e));
 
-  if (msg.hidden ()) {
-    cout << "ae: hide: " << msg.mid () << endl;
-    webkit_dom_dom_token_list_toggle (class_list, "hide", msg.hidden (), &err );
+  if (hidden) {
+    cout << "ae: hide: " << mid << endl;
+    webkit_dom_dom_token_list_toggle (class_list, "hide", hidden, &err );
   } else if (webkit_dom_dom_token_list_contains (class_list, "hide")) {
-    cout << "ae: show: " << msg.mid () << endl;
+    cout << "ae: show: " << mid << endl;
     webkit_dom_dom_token_list_toggle (class_list, "hide", false, &err );
   }
 
   g_object_unref (class_list);
   g_object_unref (e);
   g_object_unref (d);
+}
 
+void AstroidExtension::handle_hidden (AstroidMessages::Hidden &msg) {/*{{{*/
+  set_hidden (msg.mid (), msg.hidden ());
   ack (true);
 }/*}}}*/
 
