@@ -279,6 +279,7 @@ namespace Astroid {
      * * Changing elements
      *
      */
+    LOG (debug) << "pc: sending state..";
     AstroidMessages::State state;
 
     state.set_edit_mode (thread_view->edit_mode);

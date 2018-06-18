@@ -497,7 +497,7 @@ namespace Astroid {
       Message * m,
       Message::MessageChangedEvent me)
   {
-    if (!edit_mode && ready) { // edit mode doesn't show tags
+    if (ready) {
       if (me == Message::MessageChangedEvent::MESSAGE_TAGS_CHANGED) {
         if (m->in_notmuch && m->tid == thread->thread_id) {
           LOG (debug) << "tv: got message updated.";
@@ -562,15 +562,15 @@ namespace Astroid {
             {
               return ( a->time < b->time );
             });
-
-      expand (focused_message);
-      focus_message (focused_message);
     }
+
+    expand (focused_message);
+    focus_message (focused_message);
 
     ready = true;
     emit_ready ();
 
-    if (!unread_setup) {
+    if (!edit_mode && !unread_setup) {
       /* there's potentially a small chance that scroll_to_message gets an
        * on_scroll_vadjustment_change emitted before we get here. probably not, since
        * it is the same thread - but still.. */
@@ -600,10 +600,8 @@ namespace Astroid {
 
     state.insert (std::pair<refptr<Message>, MessageState> (m, MessageState ()));
 
-    if (!edit_mode) {
-      m->signal_message_changed ().connect (
-          sigc::mem_fun (this, &ThreadView::on_message_changed));
-    }
+    m->signal_message_changed ().connect (
+        sigc::mem_fun (this, &ThreadView::on_message_changed));
 
     page_client->add_message (m);
 
@@ -624,6 +622,7 @@ namespace Astroid {
         }
       }
     } else {
+      /* edit mode */
       focused_message = m;
     }
 
@@ -972,7 +971,6 @@ namespace Astroid {
     keys.register_key ("S", "thread_view.save_all_attachments",
         "Save all attachments",
         [&] (Key) {
-          if (edit_mode) return false;
           save_all_attachments ();
           return true;
         });
@@ -1237,7 +1235,7 @@ namespace Astroid {
 
     keys.register_run ("thread_view.run",
 	[&] (Key, ustring cmd, ustring undo_cmd) {
-          if (!edit_mode && focused_message) {
+          if (focused_message) {
             cmd = ustring::compose (cmd, focused_message->tid, focused_message->mid);
             undo_cmd = ustring::compose (undo_cmd, focused_message->tid, focused_message->mid);
 

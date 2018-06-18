@@ -503,7 +503,7 @@ void AstroidExtension::set_message_html (
     DomUtils::select (WEBKIT_DOM_NODE(div_email_container),
         ".header_container .header" );
 
-  if (!edit_mode && m.tags().size () > 0) {
+  if (m.tags().size () > 0) {
     header += create_header_row ("Tags", "", false, false, true);
   }
 
@@ -512,7 +512,7 @@ void AstroidExtension::set_message_html (
       header.c_str(),
       (err = NULL, &err));
 
-  if (!edit_mode && m.tags().size () > 0) {
+  if (m.tags().size () > 0) {
     message_render_tags (m, WEBKIT_DOM_HTML_ELEMENT(div_message));
     message_update_css_tags (m, WEBKIT_DOM_HTML_ELEMENT(div_message));
   }
@@ -576,8 +576,6 @@ void AstroidExtension::set_message_html (
 void AstroidExtension::message_render_tags (AstroidMessages::Message &m,
     WebKitDOMHTMLElement * div_message) {
 
-  if (edit_mode) return;
-
   GError *err;
 
   WebKitDOMHTMLElement * tags = DomUtils::select (
@@ -599,8 +597,6 @@ void AstroidExtension::message_render_tags (AstroidMessages::Message &m,
 
 void AstroidExtension::message_update_css_tags (AstroidMessages::Message &m,
     WebKitDOMHTMLElement * div_message) {
-  if (edit_mode) return;
-
   /* check for tag changes that control display */
   WebKitDOMDOMTokenList * class_list =
     webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(div_message));
@@ -1335,8 +1331,7 @@ ustring AstroidExtension::create_header_row (
 /* warning and info {{{ */
 void AstroidExtension::set_warning (AstroidMessages::Info &m) {
   if (!m.set ()) {
-    hide_warning (m);
-    ack (true);
+    hide_warning (m); // ack's
     return;
   }
 
@@ -1387,13 +1382,14 @@ void AstroidExtension::hide_warning (AstroidMessages::Info &m)
   g_object_unref (warning);
   g_object_unref (e);
   g_object_unref (d);
+
+  ack (true);
 }
 
 void AstroidExtension::set_info (AstroidMessages::Info &m)
 {
   if (!m.set ()) {
-    hide_info (m);
-    ack (true);
+    hide_info (m); // ack's
     return;
   }
 
@@ -1464,8 +1460,10 @@ void AstroidExtension::handle_hidden (AstroidMessages::Hidden &msg) {/*{{{*/
     webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(e));
 
   if (msg.hidden ()) {
+    cout << "ae: hide: " << msg.mid () << endl;
     webkit_dom_dom_token_list_toggle (class_list, "hide", msg.hidden (), &err );
   } else if (webkit_dom_dom_token_list_contains (class_list, "hide")) {
+    cout << "ae: show: " << msg.mid () << endl;
     webkit_dom_dom_token_list_toggle (class_list, "hide", false, &err );
   }
 
@@ -1669,12 +1667,13 @@ void AstroidExtension::update_focus_to_view () {
 
 void AstroidExtension::focus_next_element (bool force_change) {
   ustring eid;
+  cout << "fne: " << focused_message << ", " << focused_element << endl;
 
   WebKitDOMDocument * d = webkit_web_page_get_dom_document (page);
   WebKitDOMDOMWindow * w = webkit_dom_document_get_default_view (d);
   WebKitDOMElement * body = WEBKIT_DOM_ELEMENT(webkit_dom_document_get_body (d));
 
-  if (!is_hidden (focused_message) || edit_mode) {
+  if (!is_hidden (focused_message)) {
     /* if the message is expanded, check if we should move focus
      * to the next element */
 
@@ -1765,7 +1764,7 @@ void AstroidExtension::focus_previous_element (bool force_change) {
   WebKitDOMDOMWindow * w = webkit_dom_document_get_default_view (d);
   WebKitDOMElement * body = WEBKIT_DOM_ELEMENT(webkit_dom_document_get_body (d));
 
-  if (!is_hidden (focused_message) || edit_mode) {
+  if (!is_hidden (focused_message)) {
     /* if the message is expanded, check if we should move focus
      * to the previous element */
 
