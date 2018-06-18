@@ -1334,6 +1334,7 @@ void AstroidExtension::set_warning (AstroidMessages::Info &m) {
     hide_warning (m); // ack's
     return;
   }
+  cout << "ae: set warning: " << m.txt () << endl;
 
   ustring mid = "message_" + m.mid();
   ustring txt = m.txt();
@@ -1357,10 +1358,12 @@ void AstroidExtension::set_warning (AstroidMessages::Info &m) {
   g_object_unref (warning);
   g_object_unref (e);
   g_object_unref (d);
+  ack (true);
 }
 
 void AstroidExtension::hide_warning (AstroidMessages::Info &m)
 {
+  cout << "ae: hide warning." << endl;
   ustring mid = "message_" + m.mid();
 
   WebKitDOMDocument * d = webkit_web_page_get_dom_document (page);
@@ -1392,6 +1395,7 @@ void AstroidExtension::set_info (AstroidMessages::Info &m)
     hide_info (m); // ack's
     return;
   }
+  cout << "ae: set info: " << m.txt () << endl;
 
   ustring mid = "message_" + m.mid();
   ustring txt = m.txt();
@@ -1420,6 +1424,7 @@ void AstroidExtension::set_info (AstroidMessages::Info &m)
 }
 
 void AstroidExtension::hide_info (AstroidMessages::Info &m) {
+  cout << "ae: hide info." << endl;
   ustring mid = "message_" + m.mid();
 
   WebKitDOMDocument * d = webkit_web_page_get_dom_document (page);
