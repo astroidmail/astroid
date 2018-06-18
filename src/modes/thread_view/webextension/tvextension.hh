@@ -46,13 +46,13 @@ class AstroidExtension {
 
     refptr<Gio::InputStream>  istream;
     refptr<Gio::OutputStream> ostream;
-    std::mutex                m_ostream;
+    std::mutex      m_ostream;
 
     std::thread reader_t;
     void        reader ();
     bool        run = true;
     refptr<Gio::Cancellable> reader_cancel;
-    void        write (const ustring);
+    void        ack (bool success);
 
     WebKitDOMNode * container;
 

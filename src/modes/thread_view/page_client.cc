@@ -75,9 +75,9 @@ namespace Astroid {
 
     LOG (debug) << "pc: closing";
 
-    if (reader_cancel)
-      reader_cancel->cancel ();
-    reader_t.join ();
+    /* if (reader_cancel) */
+    /*   reader_cancel->cancel (); */
+    /* reader_t.join (); */
 
     istream.clear ();
     ostream.clear ();
@@ -144,8 +144,8 @@ namespace Astroid {
     ostream = ext->get_output_stream ();
 
     /* setting up reader */
-    reader_cancel = Gio::Cancellable::create ();
-    reader_t = std::thread (&PageClient::reader, this);
+    /* reader_cancel = Gio::Cancellable::create (); */
+    /* reader_t = std::thread (&PageClient::reader, this); */
 
     ready = true;
 
@@ -153,6 +153,19 @@ namespace Astroid {
       Glib::signal_idle().connect_once (
         sigc::mem_fun (thread_view, &ThreadView::on_ready_to_render));
     }
+  }
+
+  void PageClient::handle_ack (const AstroidMessages::Ack & ack) {
+      LOG (debug) << "pc: got ack (s: " << ack.success () << ") , focus: " << ack.focus().mid () << ", e: " << ack.focus().element ();
+
+      if (!ack.focus().mid ().empty () && ack.focus().element () >= 0) {
+        thread_view->focused_message = *std::find_if (
+            thread_view->mthread->messages.begin (),
+            thread_view->mthread->messages.end (),
+            [&] (auto &m) { return ack.focus().mid () == m->safe_mid (); });
+
+        thread_view->state[thread_view->focused_message].current_element = ack.focus().element ();
+      }
   }
 
   void PageClient::reader () {
@@ -245,21 +258,14 @@ namespace Astroid {
     AstroidMessages::Page s;
     s.set_css  (thread_view->theme.thread_view_css.c_str ());
     s.set_html (thread_view->theme.thread_view_html.c_str ());
-    AeProtocol::send_message (AeProtocol::MessageTypes::Page, s, ostream, m_ostream);
-  }
-
-  void PageClient::write () {
-    AstroidMessages::Debug m;
-    m.set_msg ("here is the message!");
-
-    AeProtocol::send_message (AeProtocol::MessageTypes::Debug, m, ostream, m_ostream);
+    AeProtocol::send_message_sync (AeProtocol::MessageTypes::Page, s, ostream, m_ostream, istream, m_istream);
   }
 
   void PageClient::clear_messages () {
     LOG (debug) << "pc: clear messages..";
     AstroidMessages::ClearMessage c;
     c.set_yes (true);
-    AeProtocol::send_message (AeProtocol::MessageTypes::ClearMessages, c, ostream, m_ostream);
+    AeProtocol::send_message_sync (AeProtocol::MessageTypes::ClearMessages, c, ostream, m_ostream, istream, m_istream);
   }
 
   void PageClient::update_state () {
@@ -292,7 +298,9 @@ namespace Astroid {
       }
     }
 
-    AeProtocol::send_message (AeProtocol::MessageTypes::State, state, ostream, m_ostream);
+    handle_ack (
+      AeProtocol::send_message_sync (AeProtocol::MessageTypes::State, state, ostream, m_ostream, istream, m_istream)
+      );
   }
 
   void PageClient::set_marked_state (refptr<Message> m, bool marked) {
@@ -300,7 +308,9 @@ namespace Astroid {
     msg.set_mid (m->safe_mid ());
     msg.set_marked (marked);
 
-    AeProtocol::send_message (AeProtocol::MessageTypes::Mark, msg, ostream, m_ostream);
+    handle_ack (
+      AeProtocol::send_message_sync (AeProtocol::MessageTypes::Mark, msg, ostream, m_ostream, istream, m_istream)
+      );
   }
 
   void PageClient::set_hidden_state (refptr<Message> m, bool hidden) {
@@ -309,7 +319,9 @@ namespace Astroid {
     msg.set_mid (m->safe_mid ());
     msg.set_hidden (hidden);
 
-    AeProtocol::send_message (AeProtocol::MessageTypes::Hidden, msg, ostream, m_ostream);
+    handle_ack (
+        AeProtocol::send_message_sync (AeProtocol::MessageTypes::Hidden, msg, ostream, m_ostream, istream, m_istream)
+        );
   }
 
   void PageClient::set_focus (refptr<Message> m, unsigned int e) {
@@ -320,7 +332,9 @@ namespace Astroid {
       msg.set_focus (true);
       msg.set_element (e);
 
-      AeProtocol::send_message (AeProtocol::MessageTypes::Focus, msg, ostream, m_ostream);
+      handle_ack (
+          AeProtocol::send_message_sync (AeProtocol::MessageTypes::Focus, msg, ostream, m_ostream, istream, m_istream)
+          );
     } else {
       LOG (warn) << "pc: tried to focus unset message";
     }
@@ -329,15 +343,21 @@ namespace Astroid {
   void PageClient::remove_message (refptr<Message> m) {
     AstroidMessages::Message msg;
     msg.set_mid (m->safe_mid()); // just mid.
-    AeProtocol::send_message (AeProtocol::MessageTypes::RemoveMessage, msg, ostream, m_ostream);
+    handle_ack (
+        AeProtocol::send_message_sync (AeProtocol::MessageTypes::RemoveMessage, msg, ostream, m_ostream, istream, m_istream)
+        );
   }
 
   void PageClient::add_message (refptr<Message> m) {
-    AeProtocol::send_message (AeProtocol::MessageTypes::AddMessage, make_message (m), ostream, m_ostream);
+    handle_ack (
+        AeProtocol::send_message_sync (AeProtocol::MessageTypes::AddMessage, make_message (m), ostream, m_ostream, istream, m_istream)
+        );
   }
 
   void PageClient::update_message (refptr<Message> m) {
-    AeProtocol::send_message (AeProtocol::MessageTypes::UpdateMessage, make_message (m), ostream, m_ostream);
+    handle_ack (
+        AeProtocol::send_message_sync (AeProtocol::MessageTypes::UpdateMessage, make_message (m), ostream, m_ostream, istream, m_istream)
+        );
   }
 
   AstroidMessages::Message PageClient::make_message (refptr<Message> m) {
@@ -581,7 +601,9 @@ namespace Astroid {
     i.set_set (true);
     i.set_txt (txt);
 
-    AeProtocol::send_message (AeProtocol::MessageTypes::Info, i, ostream, m_ostream);
+    handle_ack (
+        AeProtocol::send_message_sync (AeProtocol::MessageTypes::Info, i, ostream, m_ostream, istream, m_istream)
+        );
   }
 
   void PageClient::hide_warning (refptr<Message> m) {
@@ -591,7 +613,9 @@ namespace Astroid {
     i.set_set (false);
     i.set_txt ("");
 
-    AeProtocol::send_message (AeProtocol::MessageTypes::Info, i, ostream, m_ostream);
+    handle_ack (
+        AeProtocol::send_message_sync (AeProtocol::MessageTypes::Info, i, ostream, m_ostream, istream, m_istream)
+        );
   }
 
   void PageClient::set_info (refptr<Message> m, ustring txt) {
@@ -601,7 +625,9 @@ namespace Astroid {
     i.set_set (true);
     i.set_txt (txt);
 
-    AeProtocol::send_message (AeProtocol::MessageTypes::Info, i, ostream, m_ostream);
+    handle_ack (
+        AeProtocol::send_message_sync (AeProtocol::MessageTypes::Info, i, ostream, m_ostream, istream, m_istream)
+        );
   }
 
   void PageClient::hide_info (refptr<Message> m) {
@@ -611,7 +637,9 @@ namespace Astroid {
     i.set_set (false);
     i.set_txt ("");
 
-    AeProtocol::send_message (AeProtocol::MessageTypes::Info, i, ostream, m_ostream);
+    handle_ack (
+        AeProtocol::send_message_sync (AeProtocol::MessageTypes::Info, i, ostream, m_ostream, istream, m_istream)
+        );
   }
 
   ustring PageClient::get_attachment_thumbnail (refptr<Chunk> c) { // {{{
@@ -664,7 +692,9 @@ namespace Astroid {
     n.set_direction (AstroidMessages::Navigate_Direction_Down);
     n.set_type (AstroidMessages::Navigate_Type_VisualBig);
 
-    AeProtocol::send_message (AeProtocol::MessageTypes::Navigate, n, ostream, m_ostream);
+    handle_ack (
+        AeProtocol::send_message_sync (AeProtocol::MessageTypes::Navigate, n, ostream, m_ostream, istream, m_istream)
+        );
   }
 
   void PageClient::scroll_up_big () {
@@ -672,7 +702,9 @@ namespace Astroid {
     n.set_direction (AstroidMessages::Navigate_Direction_Up);
     n.set_type (AstroidMessages::Navigate_Type_VisualBig);
 
-    AeProtocol::send_message (AeProtocol::MessageTypes::Navigate, n, ostream, m_ostream);
+    handle_ack (
+        AeProtocol::send_message_sync (AeProtocol::MessageTypes::Navigate, n, ostream, m_ostream, istream, m_istream)
+        );
   }
 
   void PageClient::focus_next_element (bool force_change) {
@@ -686,7 +718,9 @@ namespace Astroid {
       n.set_type (AstroidMessages::Navigate_Type_VisualElement);
     }
 
-    AeProtocol::send_message (AeProtocol::MessageTypes::Navigate, n, ostream, m_ostream);
+    handle_ack (
+        AeProtocol::send_message_sync (AeProtocol::MessageTypes::Navigate, n, ostream, m_ostream, istream, m_istream)
+        );
   }
 
   void PageClient::focus_previous_element (bool force_change) {
@@ -700,7 +734,9 @@ namespace Astroid {
       n.set_type (AstroidMessages::Navigate_Type_VisualElement);
     }
 
-    AeProtocol::send_message (AeProtocol::MessageTypes::Navigate, n, ostream, m_ostream);
+    handle_ack (
+        AeProtocol::send_message_sync (AeProtocol::MessageTypes::Navigate, n, ostream, m_ostream, istream, m_istream)
+        );
   }
 
   void PageClient::focus_next_message () {
@@ -710,7 +746,9 @@ namespace Astroid {
     n.set_type (AstroidMessages::Navigate_Type_Message);
     n.set_focus_top (false); // not relevant
 
-    AeProtocol::send_message (AeProtocol::MessageTypes::Navigate, n, ostream, m_ostream);
+    handle_ack (
+        AeProtocol::send_message_sync (AeProtocol::MessageTypes::Navigate, n, ostream, m_ostream, istream, m_istream)
+        );
   }
 
   void PageClient::focus_previous_message (bool focus_top) {
@@ -720,7 +758,9 @@ namespace Astroid {
     n.set_type (AstroidMessages::Navigate_Type_Message);
     n.set_focus_top (focus_top);
 
-    AeProtocol::send_message (AeProtocol::MessageTypes::Navigate, n, ostream, m_ostream);
+    handle_ack (
+        AeProtocol::send_message_sync (AeProtocol::MessageTypes::Navigate, n, ostream, m_ostream, istream, m_istream)
+        );
   }
 
   void PageClient::focus_element (refptr<Message> m, unsigned int e) {
@@ -731,7 +771,9 @@ namespace Astroid {
     n.set_mid (m->safe_mid ());
     n.set_element (e);
 
-    AeProtocol::send_message (AeProtocol::MessageTypes::Navigate, n, ostream, m_ostream);
+    handle_ack (
+        AeProtocol::send_message_sync (AeProtocol::MessageTypes::Navigate, n, ostream, m_ostream, istream, m_istream)
+        );
   }
 }
 

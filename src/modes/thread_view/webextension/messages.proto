@@ -8,6 +8,13 @@ message Focus {
   int32  element = 3;
 }
 
+message Ack {
+  int32 id = 1;
+  bool  success = 2;
+
+  Focus focus = 3;
+}
+
 message Navigate {
   enum Direction {
     None     = 0;

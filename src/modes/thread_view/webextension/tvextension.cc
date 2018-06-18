@@ -128,17 +128,21 @@ void AstroidExtension::page_created (WebKitWebExtension * /* extension */,
   cout << "ae: page created." << endl;
 }
 
-void AstroidExtension::write (const ustring t) {
-  AstroidMessages::Debug m;
-  m.set_msg (t);
+void AstroidExtension::ack (bool success) {
+  /* prepare and send acknowledgement message */
+  AstroidMessages::Ack m;
+  m.set_success (success);
 
-  AeProtocol::send_message (AeProtocol::MessageTypes::Debug, m, ostream, m_ostream);
+  /* send back focus */
+  m.mutable_focus ()->set_mid (focused_message);
+  m.mutable_focus ()->set_element (focused_element);
+  m.mutable_focus ()->set_focus (true);
+
+  AeProtocol::send_message_async (AeProtocol::MessageTypes::Ack, m, ostream, m_ostream);
 }
 
 void AstroidExtension::reader () {/*{{{*/
   cout << "ae: reader thread: started." << endl;
-
-  write ("reader started.");
 
   while (run) {
     gsize read = 0;
@@ -182,6 +186,7 @@ void AstroidExtension::reader () {/*{{{*/
           AstroidMessages::Debug m;
           m.ParseFromString (buffer);
           cout << "ae: " << m.msg () << endl;
+          ack (true);
         }
         break;
 
@@ -340,12 +345,15 @@ void AstroidExtension::handle_page (AstroidMessages::Page &s) {/*{{{*/
   g_object_unref (t);
   g_object_unref (e);
   g_object_unref (d);
+
+  ack (true);
 }/*}}}*/
 
 void AstroidExtension::handle_state (AstroidMessages::State &s) {/*{{{*/
   cout << "ae: got state." << endl;
   state = s;
   edit_mode = state.edit_mode ();
+  ack (true);
 }/*}}}*/
 
 void AstroidExtension::clear_messages (AstroidMessages::ClearMessage &) {
@@ -360,6 +368,8 @@ void AstroidExtension::clear_messages (AstroidMessages::ClearMessage &) {
 
   g_object_unref (container);
   g_object_unref (d);
+
+  ack (true);
 }
 
 // Message generation {{{
@@ -416,14 +426,16 @@ void AstroidExtension::add_message (AstroidMessages::Message &m) {
   cout << "ae: message added." << endl;
 
   apply_focus (focused_message, focused_element); // in case we got focus before message was added.
+
+  ack (true);
 }
 
 void AstroidExtension::remove_message (AstroidMessages::Message &m) {
-
+  ack (true);
 }
 
 void AstroidExtension::update_message (AstroidMessages::Message &m) {
-
+  ack (true);
 }
 
 /* main message generation  */
@@ -1324,6 +1336,7 @@ ustring AstroidExtension::create_header_row (
 void AstroidExtension::set_warning (AstroidMessages::Info &m) {
   if (!m.set ()) {
     hide_warning (m);
+    ack (true);
     return;
   }
 
@@ -1380,6 +1393,7 @@ void AstroidExtension::set_info (AstroidMessages::Info &m)
 {
   if (!m.set ()) {
     hide_info (m);
+    ack (true);
     return;
   }
 
@@ -1405,6 +1419,8 @@ void AstroidExtension::set_info (AstroidMessages::Info &m)
   g_object_unref (info);
   g_object_unref (e);
   g_object_unref (d);
+
+  ack (true);
 }
 
 void AstroidExtension::hide_info (AstroidMessages::Info &m) {
@@ -1429,6 +1445,8 @@ void AstroidExtension::hide_info (AstroidMessages::Info &m) {
   g_object_unref (info);
   g_object_unref (e);
   g_object_unref (d);
+
+  ack (true);
 }
 
 /* }}} */
@@ -1454,6 +1472,8 @@ void AstroidExtension::handle_hidden (AstroidMessages::Hidden &msg) {/*{{{*/
   g_object_unref (class_list);
   g_object_unref (e);
   g_object_unref (d);
+
+  ack (true);
 }/*}}}*/
 
 bool AstroidExtension::is_hidden (ustring mid) {
@@ -1490,15 +1510,17 @@ void AstroidExtension::handle_mark (AstroidMessages::Mark &m) {/*{{{*/
   g_object_unref (class_list);
   g_object_unref (e);
   g_object_unref (d);
+
+  ack (true);
 }/*}}}*/
 
 void AstroidExtension::handle_focus (AstroidMessages::Focus &msg) {
-  cout << "ae: focusing: " << msg.mid() << ": " << msg.element () << endl;
-
   apply_focus (msg.mid (), msg.element ());
+  ack (true);
 }
 
 void AstroidExtension::apply_focus (ustring mid, int element) {
+  cout << "ae: focusing: " << mid << ": " << element << endl;
   focused_message = mid;
   focused_element = element;
 
@@ -1538,16 +1560,6 @@ void AstroidExtension::apply_focus (ustring mid, int element) {
   }
 
   g_object_unref (d);
-
-  /* send back focus to ThreadView */
-  AstroidMessages::Focus fe;
-  fe.set_mid (focused_message);
-  fe.set_element (element);
-  fe.set_focus (true);
-
-  cout << "ae: sending focus event: " << fe.mid () << ", element: " << fe.element () << endl;
-
-  AeProtocol::send_message (AeProtocol::MessageTypes::Focus, fe, ostream, m_ostream);
 }
 
 void AstroidExtension::update_focus_to_view () {
@@ -1888,6 +1900,7 @@ void AstroidExtension::focus_previous_message (bool focus_top) {
 }
 
 void AstroidExtension::scroll_to_element (ustring eid) {
+  cout << "ae: scrolling to: " << eid << endl;
   if (eid.empty()) {
     cout << "ae: attempted to scroll to unspecified id." << endl;
     return;
@@ -1898,9 +1911,10 @@ void AstroidExtension::scroll_to_element (ustring eid) {
   WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, eid.c_str());
   WebKitDOMElement * body = WEBKIT_DOM_ELEMENT(webkit_dom_document_get_body (d));
 
+
   double scrolled = webkit_dom_dom_window_get_scroll_y (w);
   double height   = webkit_dom_element_get_client_height (body);
-  double upper    = webkit_dom_dom_window_get_outer_height (w);
+  double upper    = webkit_dom_dom_window_get_inner_height (w);
 
   double clientY = webkit_dom_element_get_offset_top (e);
   double clientH = webkit_dom_element_get_client_height (e);
@@ -1932,14 +1946,14 @@ void AstroidExtension::scroll_to_element (ustring eid) {
   g_object_unref (e);
   g_object_unref (w);
   g_object_unref (d);
+  cout << "ae: scroll done." << endl;
 }
 
 void AstroidExtension::handle_navigate (AstroidMessages::Navigate &n) {
-  cout << "ae: navigating" << endl;
+  cout << "ae: navigating, type: " << n.type() << endl;
 
   WebKitDOMDocument * d = webkit_web_page_get_dom_document (page);
   WebKitDOMDOMWindow * w = webkit_dom_document_get_default_view (d);
-
 
   if (n.type () == AstroidMessages::Navigate_Type_VisualBig) {
 
@@ -1982,7 +1996,11 @@ void AstroidExtension::handle_navigate (AstroidMessages::Navigate &n) {
     }
   }
 
+  cout << "ae: navigation done." << endl;
+
   g_object_unref (w);
   g_object_unref (d);
+
+  ack (true);
 }
 

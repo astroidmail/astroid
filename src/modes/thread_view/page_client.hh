@@ -25,7 +25,6 @@ namespace Astroid {
       ThreadView * thread_view;
 
       void init_web_extensions (WebKitWebContext * context);
-      void write ();
 
       /* ThreadView interface */
       void load ();
@@ -80,8 +79,10 @@ namespace Astroid {
 
       refptr<Gio::InputStream>  istream;
       refptr<Gio::OutputStream> ostream;
-      std::mutex                m_ostream;
+      std::mutex      m_ostream;
+      std::mutex      m_istream;
 
+      void        handle_ack (const AstroidMessages::Ack & ack);
       void        reader ();
       std::thread reader_t;
       bool        reader_run = true;
