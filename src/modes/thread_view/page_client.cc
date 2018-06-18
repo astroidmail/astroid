@@ -288,6 +288,7 @@ namespace Astroid {
       AstroidMessages::State::MessageState * m = state.add_messages ();
 
       m->set_mid (ms->safe_mid ());
+      m->set_level (ms->level);
 
       for (auto &e : thread_view->state[ms].elements) {
         AstroidMessages::State::MessageState::Element * _e = m->add_elements ();
@@ -302,6 +303,16 @@ namespace Astroid {
     handle_ack (
       AeProtocol::send_message_sync (AeProtocol::MessageTypes::State, state, ostream, m_ostream, istream, m_istream)
       );
+  }
+
+  void PageClient::update_indent_state (bool indent) {
+    LOG (debug) << "pc: sending indent..";
+    AstroidMessages::Indent msg;
+    msg.set_bogus ("asdfadsf");
+    msg.set_indent (indent);
+    handle_ack (
+      AeProtocol::send_message_sync (AeProtocol::MessageTypes::Indent, msg, ostream, m_ostream, istream, m_istream)
+    );
   }
 
   void PageClient::set_marked_state (refptr<Message> m, bool marked) {

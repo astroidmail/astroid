@@ -201,7 +201,6 @@ namespace Astroid {
       void display_part (refptr<Message>, refptr<Chunk>, MessageState::Element);
 
       void update_all_indent_states ();
-      void update_indent_state (refptr<Message>);
 
       void save_all_attachments ();
     public:

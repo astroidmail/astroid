@@ -147,7 +147,7 @@ void AstroidExtension::reader () {/*{{{*/
   while (run) {
     gsize read = 0;
 
-    cout << "ae: reader waiting.." << endl;
+    cout << "ae: reader waiting.." << endl << flush;
 
     /* read size of message */
     gsize sz;
@@ -229,6 +229,17 @@ void AstroidExtension::reader () {/*{{{*/
                 sigc::mem_fun(*this, &AstroidExtension::handle_state), m));
         }
         break;
+
+      case AeProtocol::MessageTypes::Indent:
+        {
+          AstroidMessages::Indent m;
+          m.ParseFromString (buffer);
+          Glib::signal_idle().connect_once (
+              sigc::bind (
+                sigc::mem_fun(*this, &AstroidExtension::handle_update_indent), m));
+        }
+        break;
+
 
       case AeProtocol::MessageTypes::Page:
         {
@@ -356,6 +367,38 @@ void AstroidExtension::handle_state (AstroidMessages::State &s) {/*{{{*/
   ack (true);
 }/*}}}*/
 
+void AstroidExtension::set_indent (bool indent) {
+  cout << "ae: update indent." << endl;
+  indent_messages = indent;
+
+  WebKitDOMDocument * d = webkit_web_page_get_dom_document (page);
+
+  for (auto &m : state.messages()) {
+    ustring mid = "message_" + m.mid ();
+
+    GError * err = NULL;
+
+    WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
+
+    /* set indentation based on level */
+    if (indent_messages && m.level() > 0) {
+      webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (e),
+          "style", ustring::compose ("margin-left: %1px", int(m.level() * INDENT_PX)).c_str(), (err = NULL, &err));
+    } else {
+      webkit_dom_element_remove_attribute (WEBKIT_DOM_ELEMENT (e), "style");
+    }
+
+    g_object_unref (e);
+  }
+
+  g_object_unref (d);
+}
+
+void AstroidExtension::handle_update_indent (AstroidMessages::Indent &i) {
+  set_indent (i.indent ());
+  ack (true);
+}
+
 void AstroidExtension::clear_messages (AstroidMessages::ClearMessage &) {
   cout << "ae: clearing all messages." << endl;
 
@@ -424,6 +467,23 @@ void AstroidExtension::add_message (AstroidMessages::Message &m) {
 }
 
 void AstroidExtension::remove_message (AstroidMessages::Message &m) {
+  cout << "ae: removing message: " << m.mid () << endl;
+
+  WebKitDOMDocument *d = webkit_web_page_get_dom_document (page);
+  WebKitDOMElement * container = DomUtils::get_by_id (d, "message_container");
+
+  ustring div_id = "message_" + m.mid();
+  WebKitDOMHTMLElement * div_message = WEBKIT_DOM_HTML_ELEMENT(webkit_dom_document_get_element_by_id (d, div_id.c_str()));
+
+  GError * err = NULL;
+  webkit_dom_node_remove_child (WEBKIT_DOM_NODE(container), WEBKIT_DOM_NODE (div_message), (err = NULL, &err));
+
+  g_object_unref (div_message);
+  g_object_unref (container);
+  g_object_unref (d);
+
+  cout << "ae: message removed." << endl;
+
   ack (true);
 }
 
@@ -463,8 +523,9 @@ void AstroidExtension::update_message (AstroidMessages::Message &m) {
 
   webkit_dom_node_replace_child (WEBKIT_DOM_NODE(container), WEBKIT_DOM_NODE (div_message), WEBKIT_DOM_NODE (old_div_message), (err = NULL, &err));
 
-  /* set hidden state */
+  /* set various state */
   set_hidden (m.mid (), hidden);
+  set_indent (indent_messages);
 
   g_object_unref (div_message);
   g_object_unref (container);

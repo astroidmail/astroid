@@ -586,13 +586,7 @@ namespace Astroid {
   }
 
   void ThreadView::update_all_indent_states () {
-    for (auto &m : mthread->messages) {
-      update_indent_state (m);
-    }
-  }
-
-  // TODO: [JS] [REIMPLEMENT]
-  void ThreadView::update_indent_state (refptr<Message> m) {
+    page_client->update_indent_state (indent_messages);
   }
 
   void ThreadView::add_message (refptr<Message> m) {

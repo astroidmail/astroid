@@ -15,6 +15,11 @@ message Ack {
   Focus focus = 3;
 }
 
+message Indent {
+  string bogus = 1;
+  bool   indent = 2;
+}
+
 message Navigate {
   enum Direction {
     None     = 0;
@@ -165,6 +170,7 @@ message State {
     }
 
     repeated Element elements = 5;
+    int32    level = 6;
   }
 
   repeated MessageState messages = 2;

@@ -64,6 +64,10 @@ class AstroidExtension {
     void handle_state (AstroidMessages::State &m);
     void clear_messages (AstroidMessages::ClearMessage &c);
 
+    void handle_update_indent (AstroidMessages::Indent &i);
+    void set_indent (bool);
+    bool indent_messages;
+
     void handle_mark (AstroidMessages::Mark &m);
     void handle_hidden (AstroidMessages::Hidden &m);
     bool is_hidden (ustring);

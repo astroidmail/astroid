@@ -14,6 +14,7 @@ namespace Astroid {
         Info,
         Page,
         State,
+        Indent,
         Focus,
         Navigate,
         Mark,
