@@ -147,6 +147,8 @@ void AstroidExtension::reader () {/*{{{*/
   while (run) {
     gsize read = 0;
 
+    // TODO: Remove all '<< flush's. They cause astroid to hang if output is
+    // suspended (e.g. when scrolling tmux)
     cout << "ae: reader waiting.." << endl << flush;
 
     /* read size of message */

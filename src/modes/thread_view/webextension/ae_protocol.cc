@@ -35,7 +35,7 @@ namespace Astroid {
     if (sz == 0) {
       return;
     }
-    ostream->write ((char*)&sz, sizeof(sz));
+    ostream->write ((char*) &sz, sizeof(sz));
 
     /* send message type */
     ostream->write ((char*) &mt, sizeof (mt));
