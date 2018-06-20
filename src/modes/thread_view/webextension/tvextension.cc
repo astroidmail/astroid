@@ -207,8 +207,10 @@ void AstroidExtension::reader () {/*{{{*/
           AstroidMessages::Hidden m;
           m.ParseFromString (buffer);
           Glib::signal_idle().connect_once (
-              sigc::bind (
-                sigc::mem_fun(*this, &AstroidExtension::handle_hidden), m));
+              [this,m] () {
+                set_hidden (m.mid (), m.hidden ());
+                ack (true);
+              });
         }
         break;
 
@@ -237,8 +239,10 @@ void AstroidExtension::reader () {/*{{{*/
           AstroidMessages::Indent m;
           m.ParseFromString (buffer);
           Glib::signal_idle().connect_once (
-              sigc::bind (
-                sigc::mem_fun(*this, &AstroidExtension::handle_update_indent), m));
+              [this,m] () {
+                set_indent (m.indent ());
+                ack (true);
+              });
         }
         break;
 
@@ -394,11 +398,6 @@ void AstroidExtension::set_indent (bool indent) {
   }
 
   g_object_unref (d);
-}
-
-void AstroidExtension::handle_update_indent (AstroidMessages::Indent &i) {
-  set_indent (i.indent ());
-  ack (true);
 }
 
 void AstroidExtension::clear_messages (AstroidMessages::ClearMessage &) {
@@ -1552,6 +1551,7 @@ void AstroidExtension::hide_info (AstroidMessages::Info &m) {
 
 void AstroidExtension::set_hidden (ustring mid, bool hidden) {
   /* hide or show message */
+  cout << "set hidden" << endl;
   ustring div_id = "message_" + mid;
 
   GError * err = NULL;
@@ -1574,11 +1574,6 @@ void AstroidExtension::set_hidden (ustring mid, bool hidden) {
   g_object_unref (e);
   g_object_unref (d);
 }
-
-void AstroidExtension::handle_hidden (AstroidMessages::Hidden &msg) {/*{{{*/
-  set_hidden (msg.mid (), msg.hidden ());
-  ack (true);
-}/*}}}*/
 
 bool AstroidExtension::is_hidden (ustring mid) {
   ustring mmid = "message_" + mid;
