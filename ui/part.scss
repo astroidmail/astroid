@@ -1,0 +1,29 @@
+/* Fonts */
+@if not(global-variable-exists(font-base-size)) {
+  $font-base-size: 16px !global;
+}
+
+@if not(global-variable-exists(font-mono)) {
+  $font-mono: monospace !global;
+}
+
+@if not(global-variable-exists(font-sans)) {
+  $font-sans: sans-serif !global;
+}
+
+@if not(global-variable-exists(font-family-default)) {
+  $font-family-default: $font-sans !global;
+}
+
+body {
+  background-color: white !important;
+  overflow-x: auto;
+  overflow-y: hidden;
+  word-break: break-all;
+
+  font-size: $font-base-size;
+  font-family: $font-family-default;
+  margin: 0 0 0 0;
+  text-align: left;
+}
+

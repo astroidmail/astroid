@@ -73,6 +73,7 @@ message Debug {
 message Page {
   string html = 1;
   string css = 2;
+  string part_css = 3;
 }
 
 message Info {

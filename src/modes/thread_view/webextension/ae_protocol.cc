@@ -66,7 +66,6 @@ namespace Astroid {
       Glib::RefPtr<Gio::InputStream> istream,
       std::mutex & m_istream)
   {
-
     LOG (debug) << "ae: sending: " << mt << endl;
     LOG (debug) << "ae: send (sync) waiting for lock.." << endl;
     std::lock_guard<std::mutex> rlk (m_istream);

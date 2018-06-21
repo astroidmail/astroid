@@ -48,7 +48,7 @@ if [ ! -e ${NOTMUCH_CONFIG} ]; then
 
   # set up theme
   mkdir -p ${BINDIR}/ui
-  cp ${SRCDIR}/ui/thread-view.* ${BINDIR}/ui/
+  cp ${SRCDIR}/ui/*.{scss,css,html} ${BINDIR}/ui/
 fi
 
 echo "Running: ${TEST}.."

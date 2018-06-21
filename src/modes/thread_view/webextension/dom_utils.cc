@@ -16,9 +16,13 @@ using std::endl;
 using std::vector;
 
 namespace Astroid {
-  std::string DomUtils::assemble_data_uri (ustring mime_type, gchar * &data, gsize len) {
+  std::string DomUtils::assemble_data_uri (const char * mime_type, const gchar * data, gsize len) {
+    return DomUtils::assemble_data_uri (std::string (mime_type), std::string (data, len));
+  }
 
-    std::string base64 = "data:" + mime_type + ";base64," + Glib::Base64::encode (std::string(data, len));
+  std::string DomUtils::assemble_data_uri (const std::string mime_type, const std::string data) {
+
+    std::string base64 = "data:" + mime_type + ";base64," + Glib::Base64::encode (data);
 
     return base64;
   }

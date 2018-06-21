@@ -391,7 +391,14 @@ body:not(.nohide) .email.hide .header_container .avatar {
     .body_part a[href*="//"] {
 	word-break: break-all;
     }
-    
+}
+
+iframe {
+  border: none;
+  width: 100%;
+  text-align: left;
+  float: left;
+  display: block;
 }
 
 .email .remote_images {
@@ -540,15 +547,6 @@ body:not(.nohide) .email.hide .header_container .avatar {
     }
     body:not(.nohide) .compressed + .compressed + .compressed + .compressed + .compressed + .compressed + .compressed + .compressed + .compressed {
         display:none;
-    }
-
-}
-
-@media (-webkit-min-device-pixel-ratio: 1), (min-resolution: 196dpi)
-{
-    body {
-        /* Why this choice? */
-        /* font-size: smaller !important; */
     }
 }
 
@@ -702,6 +700,7 @@ body.nohide .email .compressed_note > span {
 .attachment .signed {
   border: 1px dashed orange !important;
 }
+
 
 #encrypt_container {
   display: none;

@@ -218,6 +218,8 @@ namespace Astroid {
       WebKitPolicyDecisionType decision_type)
   {
 
+    LOG (debug) << "tv: decide policy";
+
     switch (decision_type) {
       case WEBKIT_POLICY_DECISION_TYPE_NAVIGATION_ACTION: // navigate to {{{
         {
@@ -329,13 +331,11 @@ namespace Astroid {
         break;
 
       default:
-        /* webkit_policy_decision_ignore (decision); */
-        /* return true; // stop event */
-        // TODO: [W2] when do we ignore and when do we use?
-        return false;
+        webkit_policy_decision_ignore (decision);
+        return true; // stop event
     }
 
-    return false; // stop event
+    return true; // stop event
   }
 
   void ThreadView::open_link (ustring uri) {

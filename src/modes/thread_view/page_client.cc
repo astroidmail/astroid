@@ -257,6 +257,7 @@ namespace Astroid {
     LOG (debug) << "pc: sending page..";
     AstroidMessages::Page s;
     s.set_css  (thread_view->theme.thread_view_css.c_str ());
+    s.set_part_css (thread_view->theme.part_css.c_str ());
     s.set_html (thread_view->theme.thread_view_html.c_str ());
     AeProtocol::send_message_sync (AeProtocol::MessageTypes::Page, s, ostream, m_ostream, istream, m_istream);
   }
@@ -698,7 +699,7 @@ namespace Astroid {
       image_content_type = "image/png";
     }
 
-    return DomUtils::assemble_data_uri (image_content_type, content, content_size);
+    return DomUtils::assemble_data_uri (image_content_type.c_str (), content, content_size);
   } // }}}
 
   void PageClient::scroll_down_big () {

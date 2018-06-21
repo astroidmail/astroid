@@ -385,6 +385,8 @@ if(DISABLE_LIBSASS)
   message (STATUS "Generating thread-view.css")
   add_custom_command ( TARGET astroid
     COMMAND ${SCSS_COMPILER} ${CMAKE_SOURCE_DIR}/ui/thread-view.scss ${CMAKE_BINARY_DIR}/thread-view.css )
+  add_custom_command ( TARGET astroid
+    COMMAND ${SCSS_COMPILER} ${CMAKE_SOURCE_DIR}/ui/part.scss ${CMAKE_BINARY_DIR}/part.css )
 endif()
 
 ##
@@ -516,10 +518,10 @@ install (FILES ui/thread-view.html ui/edit-message.glade ui/no-mail.png
   )
 
 if(DISABLE_LIBSASS)
-  install (FILES ${CMAKE_BINARY_DIR}/thread-view.css
+  install (FILES ${CMAKE_BINARY_DIR}/thread-view.css ${CMAKE_BINARY_DIR}/part.css
     DESTINATION share/astroid/ui )
 else()
-  install (FILES ui/thread-view.scss
+  install (FILES ui/thread-view.scss ui/part.scss
     DESTINATION share/astroid/ui)
 endif()
 

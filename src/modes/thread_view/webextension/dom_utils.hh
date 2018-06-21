@@ -17,7 +17,8 @@ using std::vector;
 namespace Astroid {
   class DomUtils {
     public:
-      static std::string assemble_data_uri (ustring, gchar *&, gsize);
+      static std::string assemble_data_uri (const char *, const gchar *, gsize);
+      static std::string assemble_data_uri (const std::string mime_type, const std::string data);
 
 #ifdef ASTROID_WEBEXTENSION
 

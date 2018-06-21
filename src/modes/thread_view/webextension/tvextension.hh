@@ -57,6 +57,7 @@ class AstroidExtension {
     WebKitDOMNode * container;
 
     void handle_page (AstroidMessages::Page &s);
+    ustring part_css;
 
     /* state */
     bool edit_mode = false;
@@ -84,9 +85,11 @@ class AstroidExtension {
         WebKitDOMHTMLElement * span_body);
 
     void create_body_part (
-        /* const AstroidMessages::Message &message, */
+        const AstroidMessages::Message &message,
         const AstroidMessages::Message::Chunk &c,
         WebKitDOMHTMLElement * span_body);
+
+    void set_iframe_src (ustring, ustring, ustring);
 
     void create_sibling_part (
         /* const AstroidMessages::Message &message, */

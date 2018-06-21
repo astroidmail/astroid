@@ -28,11 +28,14 @@ namespace Astroid {
   const char * Theme::thread_view_html_f = "ui/thread-view.html";
 # ifndef DISABLE_LIBSASS
   const char * Theme::thread_view_scss_f  = "ui/thread-view.scss";
+  const char * Theme::part_scss_f  = "ui/part.scss";
 # else
   const char * Theme::thread_view_css_f  = "ui/thread-view.css";
+  const char * Theme::part_css_f  = "ui/part.css";
 # endif
   ustring Theme::thread_view_html;
   ustring Theme::thread_view_css;
+  ustring Theme::part_css;
 
   Theme::Theme () {
     load (false);
@@ -60,12 +63,19 @@ namespace Astroid {
         LOG (error) << "tv: scss file version does not match!";
 
       }
+
+      path part_scss = Resource (true, part_scss_f).get_path ();
+      if (!check_theme_version (part_scss)) {
+
+        LOG (error) << "tv: part scss file version does not match!";
+
+      }
 # else
-      path tv_css = Resource (true, thread_view_css_f).get_path ();
+      path part_css = Resource (true, part_css_f).get_path ();
 
-      if (!check_theme_version (tv_css)) {
+      if (!check_theme_version (part_css)) {
 
-        LOG (error) << "tv: css file version does not match!";
+        LOG (error) << "tv: part css file version does not match!";
 
       }
 # endif
@@ -83,6 +93,7 @@ namespace Astroid {
       /* load style sheet */
 # ifndef DISABLE_LIBSASS
       thread_view_css = process_scss (tv_scss.c_str ());
+      part_css        = process_scss (part_scss.c_str ());
 # else
       {
         std::ifstream tv_css_f (tv_css.c_str());
@@ -91,6 +102,15 @@ namespace Astroid {
 
         thread_view_css.append (tv_iit, eos);
         tv_css_f.close ();
+      }
+
+      {
+        std::ifstream part_css_f (part_css.c_str());
+        std::istreambuf_iterator<char> eos; // default is eos
+        std::istreambuf_iterator<char> tv_iit (tv_css_f);
+
+        part_css.append (tv_iit, eos);
+        part_css_f.close ();
       }
 # endif
 

@@ -46,6 +46,7 @@ webkit_web_extension_initialize_with_user_data (
    * per web page. That means that there can only be one page in each web view,
    * and each web view much use its own process. */
 
+  cout << "ae: init (CB)." << endl;
   ext = new AstroidExtension (extension, pipes);
 
   g_signal_connect (extension, "page-created",
@@ -345,7 +346,7 @@ void AstroidExtension::handle_page (AstroidMessages::Page &s) {/*{{{*/
   webkit_dom_document_set_body (d, WEBKIT_DOM_HTML_ELEMENT(he), (err = NULL, &err));
 
   /* load css style */
-  cout << "ae: loading stylesheet.." << flush;;
+  cout << "ae: loading stylesheet.." << flush;
   WebKitDOMElement  *e = webkit_dom_document_create_element (d, "STYLE", (err = NULL, &err));
 
   WebKitDOMText *t = webkit_dom_document_create_text_node
@@ -356,6 +357,9 @@ void AstroidExtension::handle_page (AstroidMessages::Page &s) {/*{{{*/
   WebKitDOMHTMLHeadElement * head = webkit_dom_document_get_head (d);
   webkit_dom_node_append_child (WEBKIT_DOM_NODE(head), WEBKIT_DOM_NODE(e), (err = NULL, &err));
   cout << "done" << endl;
+
+  /* store part / iframe css for later */
+  part_css = s.part_css ();
 
   g_object_unref (he);
   g_object_unref (head);
@@ -740,7 +744,7 @@ void AstroidExtension::create_message_part_html (
 
   if (c.use()) {
     if (c.viewable() && c.preferred()) {
-      create_body_part (c, span_body);
+      create_body_part (message, c, span_body);
     } else if (c.viewable()) {
       create_sibling_part (c, span_body);
     }
@@ -755,7 +759,7 @@ void AstroidExtension::create_message_part_html (
 
 
 void AstroidExtension::create_body_part (
-    /* const AstroidMessages::Message &message, */
+    const AstroidMessages::Message &message,
     const AstroidMessages::Message::Chunk &c,
     WebKitDOMHTMLElement * span_body)
 {
@@ -771,6 +775,10 @@ void AstroidExtension::create_body_part (
 
   webkit_dom_element_remove_attribute (WEBKIT_DOM_ELEMENT (body_container),
       "id");
+
+  ustring cid = "chunk_" + message.mid () + "_" + c.sid ();
+  webkit_dom_element_set_id (WEBKIT_DOM_ELEMENT (body_container),
+      cid.c_str());
 
   ustring body = c.content();
 
@@ -788,10 +796,8 @@ void AstroidExtension::create_body_part (
   }
   */
 
-  webkit_dom_element_set_inner_html (
-      WEBKIT_DOM_ELEMENT(body_container),
-      body.c_str(),
-      (err = NULL, &err));
+  webkit_dom_node_append_child (WEBKIT_DOM_NODE (span_body),
+      WEBKIT_DOM_NODE (body_container), (err = NULL, &err));
 
   /* check encryption */
   //
@@ -1041,9 +1047,63 @@ void AstroidExtension::create_body_part (
   }
 # endif
 
-  webkit_dom_node_append_child (WEBKIT_DOM_NODE (span_body),
-      WEBKIT_DOM_NODE (body_container), (err = NULL, &err));
+  g_object_unref (d);
 
+  Glib::signal_idle().connect_once (
+      sigc::bind (
+        sigc::mem_fun(*this, &AstroidExtension::set_iframe_src), message.mid(), cid, body));
+
+  cout << "ae: create_body_part done." << endl;
+}
+
+void AstroidExtension::set_iframe_src (ustring mid, ustring cid, ustring body) {
+  cout << "ae: set iframe src: " << mid << ", " << cid << endl;
+  /* this function is designed to be run async (on GUI thread in extension)
+   * to avoid blocking the main astroid thread. ThreadView needs to approve
+   * the request caused by the iframe and cannot be blocked by e.g.
+   * add_message(...) */
+
+  WebKitDOMDocument * d = webkit_web_page_get_dom_document (page);
+  GError *err;
+
+  WebKitDOMHTMLElement * body_container = WEBKIT_DOM_HTML_ELEMENT(webkit_dom_document_get_element_by_id (d, cid.c_str ()));
+
+  /* we are creating the iframe here so that no requests will be made
+   * before this function. */
+
+  WebKitDOMHTMLElement * iframe = DomUtils::select (WEBKIT_DOM_NODE(body_container), ".body_iframe");
+
+  /* webkit_dom_html_iframe_element_set_src (WEBKIT_DOM_HTML_IFRAME_ELEMENT (iframe), */
+  /* DomUtils::assemble_data_uri ("text/html", body).c_str()); */
+
+  /* set style */
+  WebKitDOMDocument * iframe_d = webkit_dom_html_iframe_element_get_content_document (WEBKIT_DOM_HTML_IFRAME_ELEMENT(iframe));
+
+  WebKitDOMElement  *e = webkit_dom_document_create_element (iframe_d, "STYLE", (err = NULL, &err));
+
+  WebKitDOMText *t = webkit_dom_document_create_text_node
+    (iframe_d, part_css.c_str());
+
+  webkit_dom_node_append_child (WEBKIT_DOM_NODE(e), WEBKIT_DOM_NODE(t), (err = NULL, &err));
+
+  WebKitDOMHTMLHeadElement * head = webkit_dom_document_get_head (iframe_d);
+
+  webkit_dom_node_append_child (WEBKIT_DOM_NODE(head), WEBKIT_DOM_NODE(e), (err = NULL, &err));
+
+  WebKitDOMHTMLElement * b = webkit_dom_document_get_body (iframe_d);
+  webkit_dom_element_set_inner_html (WEBKIT_DOM_ELEMENT(b), body.c_str (), (err = NULL, &err));
+
+  double height = webkit_dom_element_get_scroll_height (WEBKIT_DOM_ELEMENT(b));
+  ustring h = ustring::compose ("%1px", height);
+
+  webkit_dom_html_iframe_element_set_height (WEBKIT_DOM_HTML_IFRAME_ELEMENT (iframe), h.c_str ());
+
+  g_object_unref (b);
+  g_object_unref (head);
+  g_object_unref (t);
+  g_object_unref (e);
+  g_object_unref (iframe_d);
+  g_object_unref (iframe);
   g_object_unref (body_container);
   g_object_unref (d);
 }
@@ -1286,7 +1346,7 @@ void AstroidExtension::set_attachment_icon (
 
   err = NULL;
   webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (img), "src",
-      DomUtils::assemble_data_uri (image_content_type, content, content_size).c_str(), &err);
+      DomUtils::assemble_data_uri (image_content_type.c_str (), content, content_size).c_str(), &err);
 
   g_object_unref (attachment_icon_img);
 
@@ -1297,7 +1357,7 @@ void AstroidExtension::set_attachment_icon (
 
   err = NULL;
   webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (img), "src",
-      DomUtils::assemble_data_uri (image_content_type, content, content_size).c_str(), &err);
+      DomUtils::assemble_data_uri (image_content_type.c_str (), content, content_size).c_str(), &err);
 
   WebKitDOMDOMTokenList * class_list =
     webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(div_message));
@@ -1321,7 +1381,7 @@ void AstroidExtension::load_marked_icon (WebKitDOMHTMLElement * div_message) {
 
   WebKitDOMHTMLImageElement *img = WEBKIT_DOM_HTML_IMAGE_ELEMENT (marked_icon_img);
 
-  webkit_dom_html_image_element_set_src (img, DomUtils::assemble_data_uri (image_content_type, content, content_size).c_str());
+  webkit_dom_html_image_element_set_src (img, DomUtils::assemble_data_uri (image_content_type.c_str (), content, content_size).c_str());
 
   g_object_unref (marked_icon_img);
 
@@ -1330,7 +1390,7 @@ void AstroidExtension::load_marked_icon (WebKitDOMHTMLElement * div_message) {
       ".marked.icon.sec");
   img = WEBKIT_DOM_HTML_IMAGE_ELEMENT (marked_icon_img);
 
-  webkit_dom_html_image_element_set_src (img, DomUtils::assemble_data_uri (image_content_type, content, content_size).c_str());
+  webkit_dom_html_image_element_set_src (img, DomUtils::assemble_data_uri (image_content_type.c_str (), content, content_size).c_str());
 
   g_object_unref (marked_icon_img);
 }
