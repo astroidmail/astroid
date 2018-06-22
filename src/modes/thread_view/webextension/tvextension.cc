@@ -757,7 +757,6 @@ void AstroidExtension::create_message_part_html (
   }
 }
 
-
 void AstroidExtension::create_body_part (
     const AstroidMessages::Message &message,
     const AstroidMessages::Message::Chunk &c,
@@ -776,9 +775,8 @@ void AstroidExtension::create_body_part (
   webkit_dom_element_remove_attribute (WEBKIT_DOM_ELEMENT (body_container),
       "id");
 
-  ustring cid = "chunk_" + message.mid () + "_" + c.sid ();
   webkit_dom_element_set_id (WEBKIT_DOM_ELEMENT (body_container),
-      cid.c_str());
+      c.sid().c_str ());
 
   ustring body = c.content();
 
@@ -1051,7 +1049,7 @@ void AstroidExtension::create_body_part (
 
   Glib::signal_idle().connect_once (
       sigc::bind (
-        sigc::mem_fun(*this, &AstroidExtension::set_iframe_src), message.mid(), cid, body));
+        sigc::mem_fun(*this, &AstroidExtension::set_iframe_src), message.mid(), c.sid(), body));
 
   cout << "ae: create_body_part done." << endl;
 }
@@ -1699,18 +1697,26 @@ void AstroidExtension::apply_focus (ustring mid, int element) {
 
     g_object_unref (class_list);
 
-    int ei = 1;
+    int ei = 0;
     for (auto &e : m.elements ()) {
-      if (e.id() < 0) continue; // all states contain an empty element at first.
+      cout << "ae:  element: " << ei << ", " << e.sid () << endl;
+      if (
+          // all states contain an empty element at first
+          e.type() != AstroidMessages::State_MessageState_Element_Type_Empty
 
-      WebKitDOMElement * ee = webkit_dom_document_get_element_by_id (d, e.sid().c_str());
-      WebKitDOMDOMTokenList * e_class_list =
-        webkit_dom_element_get_class_list (ee);
+          // skip elements that are not focused
+          && e.focusable() == true
+         ) {
 
-      DomUtils::switch_class (e_class_list, "focused", (m.mid () == mid && ei == element));
+        WebKitDOMElement * ee = webkit_dom_document_get_element_by_id (d, e.sid().c_str());
+        WebKitDOMDOMTokenList * e_class_list =
+          webkit_dom_element_get_class_list (ee);
 
-      g_object_unref (e_class_list);
-      g_object_unref (ee);
+        DomUtils::switch_class (e_class_list, "focused", (m.mid () == mid && ei == element));
+
+        g_object_unref (e_class_list);
+        g_object_unref (ee);
+      }
 
       ei++;
     }
@@ -1719,6 +1725,8 @@ void AstroidExtension::apply_focus (ustring mid, int element) {
   }
 
   g_object_unref (d);
+
+  cout << "ae: focus done." << endl;
 }
 
 void AstroidExtension::update_focus_to_view () {
@@ -1843,13 +1851,15 @@ void AstroidExtension::focus_next_element (bool force_change) {
         state.messages().end (),
         [&] (auto &m) { return m.mid () == focused_message; });
 
-    /* are there any more elements */
-    if (focused_element < (s.elements().size()-1)) {
+    /* are there any more focusable elements */
+    auto next_e = std::find_if (
+        s.elements().begin () + (focused_element +1),
+        s.elements().end (),
+        [&] (auto &e) { return e.focusable (); });
+
+    if (next_e != s.elements().end ()) {
       /* check if the next element is in full view */
-
-      auto next_e = s.elements()[focused_element + 1];
-
-      eid = next_e.sid ();
+      eid = next_e->sid ();
 
       bool change_focus = force_change;
 
@@ -1878,7 +1888,7 @@ void AstroidExtension::focus_next_element (bool force_change) {
       //LOG (debug) << "focus_next_element: change: " << change_focus;
 
       if (change_focus) {
-        focused_element++;
+        focused_element = std::distance (s.elements ().begin (), next_e);
         apply_focus (focused_message, focused_element);
         if (!eid.empty()) scroll_to_element (eid);
 
@@ -1934,19 +1944,22 @@ void AstroidExtension::focus_previous_element (bool force_change) {
         state.messages().end (),
         [&] (auto &m) { return m.mid () == focused_message; });
 
-    //LOG (debug) << "focus prev: current elemenet: " << s->current_element;
-    /* are there any more elements */
-    if (focused_element > 0) {
+    /* focus previous focusable element */
+
+    auto next_e = std::find_if (
+        s.elements().rbegin() + (s.elements().size() - focused_element),
+        s.elements().rend (),
+        [&] (auto &e) { return e.focusable (); });
+
+
+    if (next_e != s.elements().rend()) {
       /* check if the prev element is in full view */
-
-      auto next_e = s.elements()[focused_element - 1];
-
       bool change_focus = force_change;
 
       if (!force_change) {
-        if (next_e.type() != AstroidMessages::State_MessageState_Element_Type_Empty) {
+        if (next_e->type() != AstroidMessages::State_MessageState_Element_Type_Empty) {
 
-          eid = next_e.sid ();
+          eid = next_e->sid ();
 
           WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, eid.c_str());
 
@@ -1976,7 +1989,7 @@ void AstroidExtension::focus_previous_element (bool force_change) {
       //LOG (debug) << "focus_prev_element: change: " << change_focus;
 
       if (change_focus) {
-        focused_element--;
+        focused_element = std::distance (s.elements ().begin (), next_e.base() -1);
         apply_focus (focused_message, focused_element);
         if (!eid.empty()) scroll_to_element (eid);
         g_object_unref (body);
@@ -2002,12 +2015,29 @@ void AstroidExtension::focus_previous_element (bool force_change) {
 
     if (focused_position > 0) {
       focused_message = state.messages()[focused_position-1].mid();
-      focused_element = state.messages()[focused_position-1].elements().size() - 1;
+
+      /* find last focusable element */
+      auto s = *std::find_if (
+          state.messages().begin (),
+          state.messages().end (),
+          [&] (auto &m) { return m.mid () == focused_message; });
+
+      auto next_e = std::find_if (
+          s.elements().rbegin (),
+          s.elements().rend (),
+          [&] (auto &e) { return e.focusable (); });
+      if (next_e != s.elements ().rend ())  {
+        focused_element = std::distance (s.elements ().begin (), next_e.base() -1);
+      } else {
+        focused_element = 0;
+      }
+
       apply_focus (focused_message, focused_element);
+      focused_position--;
     }
 
     if (focused_element > 0) {
-      eid = state.messages()[focused_position-1].elements()[focused_element].sid();
+      eid = state.messages()[focused_position].elements()[focused_element].sid();
     } else {
       eid = "message_" + focused_message; // if no element selected, focus message
     }

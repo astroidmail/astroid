@@ -9,6 +9,7 @@
 # include <atomic>
 
 # include "astroid.hh"
+# include "thread_view.hh"
 
 # include "messages.pb.h"
 
@@ -34,6 +35,8 @@ namespace Astroid {
       void update_state ();
       void clear_messages ();
       void update_indent_state (bool);
+
+      void toggle_part (refptr<Message> m, refptr<Chunk>, ThreadView::MessageState::Element);
 
       void set_marked_state (refptr<Message> m, bool marked);
       void set_hidden_state (refptr<Message> m, bool hidden);

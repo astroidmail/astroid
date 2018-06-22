@@ -298,6 +298,7 @@ namespace Astroid {
         ref->SetEnumValue (_e, _e->GetDescriptor()->FindFieldByName("type"), e.type);
         _e->set_id (e.id);
         _e->set_sid (e.element_id ());
+        _e->set_focusable (e.focusable);
       }
     }
 
@@ -351,6 +352,11 @@ namespace Astroid {
     } else {
       LOG (warn) << "pc: tried to focus unset message";
     }
+  }
+
+  void PageClient::toggle_part (refptr<Message> m, refptr<Chunk>, ThreadView::MessageState::Element el) {
+    /* hides current sibling part and shows the focused one */
+
   }
 
   void PageClient::remove_message (refptr<Message> m) {
@@ -580,11 +586,17 @@ namespace Astroid {
 
 
     if (use) {
-      if (c->viewable && c->preferred) {
-        // shown
-      } else if (c->viewable) {
+
+      if (c->viewable) {
         /* make state element */
         MessageState::Element e (MessageState::ElementType::Part, c->id);
+        if (c->preferred) {
+          // shown
+          e.focusable = false;
+        } else {
+          // hidden by default
+          e.focusable = true;
+        }
         thread_view->state[m].elements.push_back (e);
       }
 

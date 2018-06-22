@@ -127,7 +127,7 @@ namespace Astroid {
           bool unread_checked   = false;
 
           enum ElementType {
-            Empty,
+            Empty = 0,
             Address,
             Part,
             Attachment,
@@ -141,6 +141,7 @@ namespace Astroid {
               ElementType type;
               int         id;
               ustring     element_id ();
+              bool        focusable = true;
 
               bool operator== ( const Element & other ) const;
           };
@@ -198,7 +199,6 @@ namespace Astroid {
       void remove_message (refptr<Message>);
 
       bool open_html_part_external;
-      void display_part (refptr<Message>, refptr<Chunk>, MessageState::Element);
 
       void update_all_indent_states ();
 

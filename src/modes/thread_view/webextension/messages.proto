@@ -176,6 +176,7 @@ message State {
       Type   type = 1;
       int32  id   = 2;
       string sid  = 3;
+      bool   focusable = 4;
     }
 
     repeated Element elements = 5;

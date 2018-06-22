@@ -717,14 +717,6 @@ namespace Astroid {
 
   } // }}}
 
-  // TODO: [JS] [REIMPLEMENT]
-  void ThreadView::display_part (
-      refptr<Message> message,
-      refptr<Chunk> c,
-      MessageState::Element el) {
-
-  }
-
   /* info and warning  */
   void ThreadView::set_warning (refptr<Message> m, ustring txt)
   {
@@ -1982,7 +1974,7 @@ namespace Astroid {
                     } else {
                       /* show part internally */
 
-                      display_part (focused_message, c, state[focused_message].elements[state[focused_message].current_element]);
+                      page_client->toggle_part (focused_message, c, state[focused_message].elements[state[focused_message].current_element]);
 
                     }
                   } else {
