@@ -52,7 +52,7 @@ namespace Astroid {
         { "html" , g_mime_content_type_new ("text", "html") }
       };
 
-      GMimeContentType * preferred_type = viewable_types["plain"];
+      GMimeContentType * preferred_type;
 
       refptr<Crypto> crypt;
 

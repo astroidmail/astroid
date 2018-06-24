@@ -236,6 +236,7 @@ namespace Astroid {
      *            externally when this is set. the part is opened with
      *            'attachment.external_open_cmd'. */
     default_config.put ("thread_view.open_html_part_external", false);
+    default_config.put ("thread_view.preferred_type", "plain");
 
     /*   if a link is clicked (html, ftp, etc..) it is executed with this
      *   command. */

@@ -116,7 +116,9 @@ namespace Astroid {
       ( "help,h", "print this help message")
       ( "config,c", po::value<ustring>(), "config file, default: $XDG_CONFIG_HOME/astroid/config")
       ( "new-config,n", "make new default config, then exit")
+# ifdef DEBUG
       ( "test-config,t", "use test config (same as used when tests are run), only makes sense from the source root")
+# endif
       ( "mailto,m", po::value<ustring>(), "compose mail with mailto url or address")
       ( "no-auto-poll", "do not poll automatically")
       ( "log,l", po::value<ustring>(), "log to file")
@@ -125,7 +127,7 @@ namespace Astroid {
       ( "log-level", po::value<ustring>(), "set logging level (trace, debug, info, warning, error, fatal)")
       ( "start-polling", "indicate that external polling (external notmuch db R/W operations) starts")
       ( "stop-polling", "indicate that external polling stops")
-      ( "refresh", po::value<unsigned long>(), "refresh threads changed since lastmod")
+      ( "refresh", po::value<unsigned long>(), "refresh messages changed since lastmod")
 # ifndef DISABLE_PLUGINS
       ( "disable-plugins", "disable plugins");
 # else

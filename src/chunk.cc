@@ -31,6 +31,13 @@ namespace Astroid {
     issigned    = _signed;
     crypt       = _cr;
 
+    ustring pts = astroid->config().get<std::string>("thread_view.preferred_type");
+    if (pts != "plain" && pts != "html") {
+      LOG (error) << "chunk: preferred type not 'html' or 'plain', setting to 'plain'.";
+      pts = "plain";
+    }
+    preferred_type = viewable_types[pts];
+
     if (mp == NULL) {
       LOG (error) << "chunk (" << id << "): got NULL mime_object.";
 

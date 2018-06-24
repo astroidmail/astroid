@@ -1093,9 +1093,7 @@ void AstroidExtension::create_body_part (
 
   g_object_unref (d);
 
-  Glib::signal_idle().connect_once (
-      sigc::bind (
-        sigc::mem_fun(*this, &AstroidExtension::set_iframe_src), message.mid(), c.sid(), body));
+  set_iframe_src (message.mid (), c.sid (), body);
 
   cout << "ae: create_body_part done." << endl;
 }

@@ -1963,7 +1963,7 @@ namespace Astroid {
                       state[focused_message].elements[state[focused_message].current_element].id);
 
                   if (c) {
-                    if (open_html_part_external) {
+                    if (c->get_content_type() != "text/plain" && open_html_part_external) {
                       c->open ();
                     } else {
                       /* show part internally */
