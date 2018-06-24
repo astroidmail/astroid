@@ -11,6 +11,7 @@
 # include "config.hh"
 # include "poll.hh"
 # include "utils/utils.hh"
+# include "utils/resource.hh"
 
 using namespace std;
 using namespace boost::filesystem;
@@ -293,7 +294,12 @@ namespace Astroid {
       config.put ("poll.interval", 0);
       config.put ("accounts.charlie.gpgkey", "gaute@astroidmail.bar");
       config.put ("mail.send_delay", 0);
-      std::string test_nmcfg_path = path(current_path() / path ("tests/mail/test_config")).string();
+      std::string test_nmcfg_path;
+      if (getenv ("ASTROID_BUILD_DIR")) {
+        test_nmcfg_path = (current_path () / path ("tests/mail/test_config")).string();
+      } else {
+        test_nmcfg_path = (Resource::get_exe_dir () / path ("tests/mail/test_config")).string();
+      }
       boost::property_tree::read_ini (test_nmcfg_path, notmuch_config);
       has_notmuch_config = true;
       return;
