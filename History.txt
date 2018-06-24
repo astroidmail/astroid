@@ -1,3 +1,11 @@
+==
+
+* WebKit2
+* Show parts in IFRAME
+* Toggle between parts without re-opening
+* Configure default part
+* Show HTML parts if no other part (configurable)
+
 == v0.12
 * `mail.close_on_success` configures if page closes on successful send.
 * `terminal.font_description` configures font of embedded terminal.
