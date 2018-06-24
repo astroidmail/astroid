@@ -139,6 +139,7 @@ message Message {
     bool is_signed = 9; // 'signed' doesn't
     bool sibling = 11;
     bool use = 12;
+    bool focusable = 18;
 
     string content = 10;
     string filename = 14;

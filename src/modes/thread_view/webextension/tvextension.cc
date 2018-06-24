@@ -536,6 +536,47 @@ void AstroidExtension::update_message (AstroidMessages::Message &m) {
   g_object_unref (container);
   g_object_unref (d);
 
+  auto ms = std::find_if (
+      state.messages().begin(),
+      state.messages().end(),
+      [&] (auto m) {
+        return m.mid() == focused_message;
+      });
+
+  if (!ms->elements()[focused_element].focusable()) {
+    /* find next or previous element */
+
+    /* are there any more focusable elements */
+    auto next_e = std::find_if (
+        ms->elements().begin () + (focused_element +1),
+        ms->elements().end (),
+        [&] (auto &e) { return e.focusable (); });
+
+    if (next_e != ms->elements().end()) {
+      focused_element = std::distance (ms->elements ().begin (), next_e);
+
+    } else {
+      cout << "ae: take previous" << endl;
+      /* take previous element */
+      auto next_e = std::find_if (
+          ms->elements().rbegin() +
+            (ms->elements().size() - focused_element),
+
+          ms->elements().rend (),
+          [&] (auto &e) { return e.focusable (); });
+
+      if (next_e != ms->elements().rend ()) {
+        /* previous */
+        focused_element = std::distance (ms->elements ().begin (), next_e.base() -1);
+      } else {
+        /* message */
+        focused_element = 0;
+      }
+    }
+
+  }
+
+  apply_focus (focused_message, focused_element);
   ack (true);
 }
 
@@ -740,20 +781,25 @@ void AstroidExtension::create_message_part_html (
   ustring mime_type = c.mime_type ();
 
   cout << "create message part: " << c.id() << " (siblings: " << c.sibling() << ") (kids: " << c.kids().size() << ")" <<
-    " (attachment: " << c.attachment() << ")" << " (viewable: " << c.viewable() << ")" << " (mimetype: " << mime_type << ")" << endl;
+    " (attachment: " << c.attachment() << ")" << " (viewable: " << c.viewable() << ")" << " (focusable: " << c.focusable () << ")" << " (mimetype: " << mime_type << ")" << endl;
 
   if (c.use()) {
-    if (c.viewable() && c.preferred()) {
+    if (!c.focusable () && c.viewable()) {
       create_body_part (message, c, span_body);
     } else if (c.viewable()) {
       create_sibling_part (c, span_body);
     }
 
+    /* descend */
     for (auto &k: c.kids()) {
       create_message_part_html (message, k, span_body);
     }
   } else {
-    create_sibling_part (c, span_body);
+    if (!c.focusable ()) {
+      create_body_part (message, c, span_body);
+    } else {
+      create_sibling_part (c, span_body);
+    }
   }
 }
 
@@ -1130,9 +1176,9 @@ void AstroidExtension::create_sibling_part (
     "id", sibling.sid().c_str(),
     (err = NULL, &err));
 
-  ustring content = ustring::compose ("Alternative part (type: %1) - potentially sketchy.",
+  ustring content = ustring::compose ("Alternative part (type: %1)%2",
       Glib::Markup::escape_text(sibling.mime_type ()),
-      sibling.sid());
+      (sibling.mime_type() != "text/plain" ? " - potentially sketchy." : ""));
 
   WebKitDOMHTMLElement * message_cont =
     DomUtils::select (WEBKIT_DOM_NODE (sibling_container), ".message");
@@ -1704,7 +1750,7 @@ void AstroidExtension::apply_focus (ustring mid, int element) {
           // all states contain an empty element at first
           e.type() != AstroidMessages::State_MessageState_Element_Type_Empty
 
-          // skip elements that are not focused
+          // skip elements that cannot be focused
           && e.focusable() == true
          ) {
 

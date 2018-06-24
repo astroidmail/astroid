@@ -354,13 +354,33 @@ namespace Astroid {
     }
   }
 
-  void PageClient::toggle_part (refptr<Message> m, refptr<Chunk>, ThreadView::MessageState::Element el) {
+  void PageClient::toggle_part (refptr<Message> m, refptr<Chunk> c, ThreadView::MessageState::Element el) {
     /* hides current sibling part and shows the focused one */
+    LOG (debug) << "pc: toggling part: " << m->safe_mid () << ", " << c->id;
 
+    /* update state */
+    std::find_if (
+      thread_view->state[m].elements.begin (),
+      thread_view->state[m].elements.end (),
+      [&] (auto e) { return e.id == el.id; })->focusable = false;
+
+
+    /* make siblings focusable */
+    for (auto &c : c->siblings) {
+      std::find_if (
+        thread_view->state[m].elements.begin (),
+        thread_view->state[m].elements.end (),
+        [&] (auto e) { return e.id == c->id; })->focusable = true;
+    }
+
+    /* update state */
+    update_state ();
+
+    /* send updated message */
+    update_message (m);
   }
 
   void PageClient::remove_message (refptr<Message> m) {
-    /* TODO: update state */
     AstroidMessages::Message msg;
     msg.set_mid (m->safe_mid()); // just mid.
     handle_ack (
@@ -375,13 +395,13 @@ namespace Astroid {
   }
 
   void PageClient::update_message (refptr<Message> m) {
-    /* TODO: update state */
     handle_ack (
-        AeProtocol::send_message_sync (AeProtocol::MessageTypes::UpdateMessage, make_message (m), ostream, m_ostream, istream, m_istream)
+        AeProtocol::send_message_sync (AeProtocol::MessageTypes::UpdateMessage, make_message (m, true), ostream, m_ostream, istream, m_istream)
         );
   }
 
-  AstroidMessages::Message PageClient::make_message (refptr<Message> m) {
+  AstroidMessages::Message PageClient::make_message (refptr<Message> m, bool keep_state) {
+    typedef ThreadView::MessageState MessageState;
     AstroidMessages::Message msg;
 
     msg.set_mid (m->safe_mid());
@@ -479,41 +499,44 @@ namespace Astroid {
     }
 
     /* build structure */
-    msg.set_allocated_root (build_mime_tree (m, m->root, true, false));
+    msg.set_allocated_root (build_mime_tree (m, m->root, true, false, keep_state));
 
     /* add MIME messages */
-    typedef ThreadView::MessageState MessageState;
     for (refptr<Chunk> &c : m->mime_messages ()) {
       auto _c = msg.add_mime_messages ();
-      auto _n = build_mime_tree (m, c, false, true);
+      auto _n = build_mime_tree (m, c, false, true, keep_state);
       *_c = *_n;
       delete _n;
 
-      // add MIME message to message state
-      MessageState::Element e (MessageState::ElementType::MimeMessage, c->id);
-      thread_view->state[m].elements.push_back (e);
+      if (!keep_state) {
+        // add MIME message to message state
+        MessageState::Element e (MessageState::ElementType::MimeMessage, c->id);
+        thread_view->state[m].elements.push_back (e);
+      }
     }
 
     /* add attachments */
     for (refptr<Chunk> &c : m->attachments ()) {
 
       auto _c = msg.add_attachments ();
-      auto _n = build_mime_tree (m, c, false, true);
+      auto _n = build_mime_tree (m, c, false, true, keep_state);
 
       *_c = *_n;
       delete _n;
 
       _c->set_thumbnail (get_attachment_thumbnail (c));
 
-      // add attachment to message state
-      MessageState::Element e (MessageState::ElementType::Attachment, c->id);
-      thread_view->state[m].elements.push_back (e);
+      if (!keep_state) {
+        // add attachment to message state
+        MessageState::Element e (MessageState::ElementType::Attachment, c->id);
+        thread_view->state[m].elements.push_back (e);
+      }
     }
 
     return msg;
   }
 
-  AstroidMessages::Message::Chunk * PageClient::build_mime_tree (refptr<Message> m, refptr<Chunk> c, bool root, bool shallow)
+  AstroidMessages::Message::Chunk * PageClient::build_mime_tree (refptr<Message> m, refptr<Chunk> c, bool root, bool shallow, bool keep_state)
   {
     typedef ThreadView::MessageState MessageState;
 
@@ -579,6 +602,7 @@ namespace Astroid {
         use = false; // create sibling part
       }
     } else {
+      /* a part which may contain sub-parts */
       use = true;
     }
 
@@ -586,24 +610,31 @@ namespace Astroid {
 
 
     if (use) {
-
       if (c->viewable) {
         /* make state element */
-        MessageState::Element e (MessageState::ElementType::Part, c->id);
-        if (c->preferred) {
-          // shown
-          e.focusable = false;
+        if (!keep_state) {
+          MessageState::Element e (MessageState::ElementType::Part, c->id);
+
+          if (c->preferred) {
+            // shown
+            e.focusable = false;
+          } else {
+            // hidden by default
+            e.focusable = true;
+          }
+
+          part->set_focusable (e.focusable);
+          thread_view->state[m].elements.push_back (e);
         } else {
-          // hidden by default
-          e.focusable = true;
+          LOG (debug) << "cid: " << c->id;
+          part->set_focusable ( thread_view->state[m].get_element_by_id (c->id)->focusable );
         }
-        thread_view->state[m].elements.push_back (e);
       }
 
       /* recurse into children after first part so that we get the correct order
        * on elements */
       for (auto &k : c->kids) {
-        auto ch = build_mime_tree (m, k, false, false);
+        auto ch = build_mime_tree (m, k, false, false, keep_state);
         if (ch != NULL) {
           auto nch = part->add_kids ();
           *nch = *ch;
@@ -612,11 +643,15 @@ namespace Astroid {
       }
 
     } else {
-      /* make state element */
-      MessageState::Element e (MessageState::ElementType::Part, c->id);
-      thread_view->state[m].elements.push_back (e);
+      /* make state element for sibling part (hidden by default) */
+      if (!keep_state) {
+        MessageState::Element e (MessageState::ElementType::Part, c->id);
+        part->set_focusable (e.focusable);
+        thread_view->state[m].elements.push_back (e);
+      } else {
+        part->set_focusable ( thread_view->state[m].get_element_by_id (c->id)->focusable );
+      }
     }
-
 
     return part;
   }

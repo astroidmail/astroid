@@ -543,11 +543,9 @@ namespace Astroid {
     state.clear ();
     focused_message.clear ();
 
-    for_each (mthread->messages.begin(),
-              mthread->messages.end(),
-              [&](refptr<Message> m) {
-                add_message (m);
-              });
+    for (auto &m : mthread->messages) {
+      add_message (m);
+    }
 
     page_client->update_state ();
 
@@ -640,11 +638,7 @@ namespace Astroid {
   void ThreadView::update_message (refptr<Message> m) {
     LOG (debug) << "tv: updating message: " << m->mid;
 
-    // reset element list
-    state[m].elements.clear ();
-    state[m].current_element = std::max((unsigned int) (state[m].elements.size ()), state[m].current_element);
-
-    page_client->update_message (m); // page_client updates the message state
+    page_client->update_message (m);
     page_client->update_state ();
 
     // if the updated message was focused, the currently focused element may
@@ -2243,6 +2237,23 @@ namespace Astroid {
     } else {
       return &(elements[current_element]);
     }
+  }
+
+  ThreadView::MessageState::Element * ThreadView::MessageState::get_element_by_id (int id) {
+    for (auto e : elements) {
+      LOG (debug) << "e: " << e.id;
+    }
+
+    auto e = std::find_if (
+        elements.begin (), elements
+        .end (),
+        [&] (auto e) { return e.id == id; } );
+
+    if (e == elements.end ()) {
+      LOG (error) << "tv: e == NULL";
+    }
+
+    return (e != elements.end() ? &(*e) : NULL);
   }
 
   /* end MessageState  */

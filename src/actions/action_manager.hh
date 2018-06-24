@@ -86,7 +86,15 @@ namespace Astroid {
 
       void emit_thread_changed (Db *, ustring);
 
-      /* message update signal */
+      /* message-updated signal:
+       *
+       * this signal is only emitted if tags or the like are changed. the
+       * actual content should not be reloaded. the thread view relies on this
+       * since otherwise the order and expanded parts might be changed, and a
+       * HTML part might replace a regular part - and thus be expanded without
+       * the user intending so.
+       *
+       */
       typedef sigc::signal <void, Db *, ustring> type_signal_message_updated;
       type_signal_message_updated signal_message_updated ();
 

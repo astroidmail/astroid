@@ -155,6 +155,7 @@ namespace Astroid {
           std::vector<Element> elements;
           unsigned int    current_element;
           Element * get_current_element ();
+          Element * get_element_by_id (int id);
       };
 
       std::map<refptr<Message>, MessageState> state;

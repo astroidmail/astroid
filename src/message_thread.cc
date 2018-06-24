@@ -102,6 +102,9 @@ namespace Astroid {
 
   void Message::on_message_updated (Db * db, ustring _mid) {
     if (in_notmuch && (mid == _mid)) {
+
+      /* IMPORTANT: the message source is not re-loaded since this could change
+       * the message structure. See note in action manager. */
       refresh (db);
 
       emit_message_changed (db, MessageChangedEvent::MESSAGE_TAGS_CHANGED);
