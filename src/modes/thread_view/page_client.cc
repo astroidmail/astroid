@@ -498,6 +498,28 @@ namespace Astroid {
       msg.set_preview (Glib::Markup::escape_text (bp));
     }
 
+    if (astroid->config().get<std::string> ("thread_view.preferred_type") == "plain" &&
+        astroid->config().get<bool> ("thread_view.preferred_html_only")) {
+      /* check if we have a preferred part - and open first viewable if not */
+      bool found_preferred = false;
+      for (auto &c : m->all_parts ()) {
+        if (c->preferred) {
+          found_preferred = true;
+          break;
+        }
+      }
+
+      /* take first viewable */
+      if (!found_preferred) {
+        for (auto &c : m->all_parts ()) {
+          if (c->viewable) {
+            c->preferred = true;
+            break;
+          }
+        }
+      }
+    }
+
     /* build structure */
     msg.set_allocated_root (build_mime_tree (m, m->root, true, false, keep_state));
 

@@ -76,6 +76,8 @@ namespace Astroid {
        * mime_messages (), but in the correct order. */
       std::vector<refptr<Chunk>> mime_messages_and_attachments ();
 
+      std::vector<refptr<Chunk>> all_parts ();
+
       refptr<Glib::ByteArray> contents ();
       refptr<Glib::ByteArray> raw_contents ();
 

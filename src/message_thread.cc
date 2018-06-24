@@ -369,6 +369,25 @@ namespace Astroid {
     return attachments;
   }
 
+  vector<refptr<Chunk>> Message::all_parts () {
+    vector<refptr<Chunk>> parts;
+
+    function< void (refptr<Chunk>) > app_part =
+      [&] (refptr<Chunk> c)
+    {
+      parts.push_back (c);
+
+      for_each (c->kids.begin(),
+                c->kids.end (),
+                app_part);
+    };
+
+    if (root)
+      app_part (root);
+
+    return parts;
+  }
+
   ustring Message::safe_mid () {
     ustring _m;
     _m = Glib::Markup::escape_text (mid);
