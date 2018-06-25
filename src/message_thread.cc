@@ -1052,5 +1052,15 @@ namespace Astroid {
     }
   }
 
+  std::vector<refptr<Message>> MessageThread::messages_by_time () {
+    auto f = [&] (refptr<Message> a, refptr<Message> b) {
+       return a->time < b->time;
+      };
+
+    std::vector<refptr<Message>> sorted_messages = messages;
+    std::sort (sorted_messages.begin (), sorted_messages.end (), f);
+
+    return sorted_messages;
+  }
 }
 

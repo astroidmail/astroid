@@ -139,6 +139,8 @@ namespace Astroid {
       refptr<NotmuchThread> thread;
       std::vector<refptr<Message>> messages;
 
+      std::vector<refptr<Message>> messages_by_time ();
+
       void load_messages (Db *);
       void add_message (ustring);
       void add_message (refptr<Chunk>);

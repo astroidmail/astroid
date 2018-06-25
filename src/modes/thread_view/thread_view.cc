@@ -110,7 +110,7 @@ namespace Astroid {
         "enable-javascript", FALSE,
         "enable-java", FALSE,
         "enable-plugins", FALSE,
-        "auto-load-images", FALSE,
+        "auto-load-images", TRUE,
         "enable-dns-prefetching", FALSE,
         "enable-fullscreen", FALSE,
         "enable-html5-database", FALSE,
@@ -552,8 +552,17 @@ namespace Astroid {
     }
 
     page_client->update_state ();
-
     update_all_indent_states ();
+
+    /* focus oldest unread message */
+    if (!edit_mode) {
+      for (auto &m : mthread->messages_by_time ()) {
+        if (m->has_tag ("unread")) {
+          focused_message = m;
+          break;
+        }
+      }
+    }
 
     if (!focused_message) {
       LOG (debug) << "tv: no message focused, focusing newest message.";
@@ -948,11 +957,11 @@ namespace Astroid {
         [&] (Key) {
           /* we only allow remote images / resources when
            * no encrypted parts are present */
-          if (!config.get<bool> ("allow_remote_when_encrypted")) {
+          if (!astroid->config("thread_view").get<bool> ("allow_remote_when_encrypted")) {
             for (auto &m : mthread->messages) {
-              for (auto &c : mthread->all_parts()) {
+              for (auto &c : m->all_parts()) {
                 if (c->isencrypted) {
-                  LOG (error) "tv: remote resources are not allowed in encrypted messages. check your configuration if you wish to change this.";
+                  LOG (error) << "tv: remote resources are not allowed in encrypted messages. check your configuration if you wish to change this.";
                   return true;
                 }
               }
