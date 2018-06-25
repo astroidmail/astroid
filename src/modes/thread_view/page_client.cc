@@ -165,6 +165,8 @@ namespace Astroid {
             [&] (auto &m) { return ack.focus().mid () == m->safe_mid (); });
 
         thread_view->state[thread_view->focused_message].current_element = ack.focus().element ();
+
+        thread_view->unread_check ();
       }
   }
 

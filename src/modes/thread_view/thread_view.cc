@@ -582,9 +582,6 @@ namespace Astroid {
     emit_ready ();
 
     if (!edit_mode && !unread_setup) {
-      /* there's potentially a small chance that scroll_to_message gets an
-       * on_scroll_vadjustment_change emitted before we get here. probably not, since
-       * it is the same thread - but still.. */
       unread_setup = true;
 
       if (unread_delay > 0) {
@@ -620,12 +617,6 @@ namespace Astroid {
         focused_message = m;
       }
 
-      /* focus first unread message */
-      if (!focused_message) {
-        if (m->has_tag ("unread")) {
-          focused_message = m;
-        }
-      }
     } else {
       /* edit mode */
       focused_message = m;
