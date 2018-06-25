@@ -119,8 +119,10 @@ namespace Astroid {
         "enable-offline-web-application-cache", FALSE,
         "enable-page-cache", FALSE,
         "enable-private-browsing", TRUE,
+        "is-ephemeral", TRUE,
         "enable-xss-auditor", TRUE,
         "media-playback-requires-user-gesture", TRUE,
+        "zoom-text-only", TRUE,
 # if (DEBUG || DEBUG_WEBKIT)
         "enable-developer-extras", TRUE,
 # endif
@@ -945,6 +947,24 @@ namespace Astroid {
           show_remote_images = true;
           LOG (debug) << "tv: show remote images: " << show_remote_images;
           reload_images ();
+          return true;
+        });
+
+    keys.register_key ("C-+", "thread_view.zoom_in",
+        "Zoom in",
+        [&] (Key) {
+          webkit_web_view_set_zoom_level (webview,
+              webkit_web_view_get_zoom_level (webview) + .1);
+
+          return true;
+        });
+
+    keys.register_key ("C-minus", "thread_view.zoom_out",
+        "Zoom out",
+        [&] (Key) {
+          webkit_web_view_set_zoom_level (webview,
+              std::max ((webkit_web_view_get_zoom_level (webview) - .1), 0.0));
+
           return true;
         });
 
