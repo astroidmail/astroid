@@ -5,6 +5,7 @@
 * Toggle between parts without re-opening
 * Configure default part
 * Show HTML parts if no other part (configurable)
+* Do not allow images in encrypted messages (#499)
 * Zoom messages with C-+ and C--
 
 == v0.12

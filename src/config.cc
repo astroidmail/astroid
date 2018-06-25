@@ -228,7 +228,7 @@ namespace Astroid {
 
     /* attachments
      *
-     *   a chunk is saved and opened with the this command */
+     *   a chunk is saved and opened with this command */
     default_config.put ("attachment.external_open_cmd", "xdg-open");
 
     /* thread view
@@ -239,6 +239,8 @@ namespace Astroid {
     default_config.put ("thread_view.open_html_part_external", false);
     default_config.put ("thread_view.preferred_type", "plain");
     default_config.put ("thread_view.preferred_html_only", false);
+
+    default_config.put ("thread_view.allow_remote_when_encrypted", false);
 
     /*   if a link is clicked (html, ftp, etc..) it is executed with this
      *   command. */

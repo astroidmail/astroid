@@ -110,7 +110,7 @@ namespace Astroid {
         "enable-javascript", FALSE,
         "enable-java", FALSE,
         "enable-plugins", FALSE,
-        "auto-load-images", TRUE,
+        "auto-load-images", FALSE,
         "enable-dns-prefetching", FALSE,
         "enable-fullscreen", FALSE,
         "enable-html5-database", FALSE,
@@ -279,6 +279,8 @@ namespace Astroid {
 
           const gchar * uri_c = webkit_uri_request_get_uri (request);
           ustring uri (uri_c);
+
+          LOG (debug) << "tv: request for resource: " << uri;
 
           // prefix of local uris for loading image thumbnails
           vector<ustring> allowed_uris =
@@ -942,8 +944,21 @@ namespace Astroid {
         });
 
     keys.register_key ("C-i", "thread_view.show_remote_images",
-        "Show remote images (warning: approves all requests to remote content!)",
+        "Show remote images (warning: approves all requests to remote content for this thread!)",
         [&] (Key) {
+          /* we only allow remote images / resources when
+           * no encrypted parts are present */
+          if (!config.get<bool> ("allow_remote_when_encrypted")) {
+            for (auto &m : mthread->messages) {
+              for (auto &c : mthread->all_parts()) {
+                if (c->isencrypted) {
+                  LOG (error) "tv: remote resources are not allowed in encrypted messages. check your configuration if you wish to change this.";
+                  return true;
+                }
+              }
+            }
+          }
+
           show_remote_images = true;
           LOG (debug) << "tv: show remote images: " << show_remote_images;
           reload_images ();
