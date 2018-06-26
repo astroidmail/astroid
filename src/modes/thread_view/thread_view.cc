@@ -271,69 +271,6 @@ namespace Astroid {
         webkit_policy_decision_ignore (decision);
         break;
 
-      case WEBKIT_POLICY_DECISION_TYPE_RESPONSE: // {{{
-        {
-          /* request to load any resources or similar */
-          WebKitResponsePolicyDecision * response = WEBKIT_RESPONSE_POLICY_DECISION (decision);
-          WebKitURIRequest * request = webkit_response_policy_decision_get_request (response);
-
-          const gchar * uri_c = webkit_uri_request_get_uri (request);
-          ustring uri (uri_c);
-
-          LOG (debug) << "tv: request for resource: " << uri;
-
-          // prefix of local uris for loading image thumbnails
-          vector<ustring> allowed_uris =
-            {
-              home_uri,
-              "data:image/png;base64",
-              "data:image/jpeg;base64",
-            };
-
-          if (page_client->enable_gravatar) {
-            allowed_uris.push_back ("https://www.gravatar.com/avatar/");
-          }
-
-          if (enable_code_prettify) {
-            allowed_uris.push_back (code_prettify_uri.substr (0, code_prettify_uri.rfind ("/")));
-          }
-
-# ifndef DISABLE_PLUGINS
-          /* get plugin allowed uris */
-          std::vector<ustring> puris = plugins->get_allowed_uris ();
-          if (puris.size() > 0) {
-            LOG (debug) << "tv: plugin allowed uris: " << VectorUtils::concat_tags (puris);
-            allowed_uris.insert (allowed_uris.end (), puris.begin (), puris.end ());
-          }
-# endif
-
-          // TODO: show cid type images and inline-attachments
-
-          /* is this request allowed */
-          if (find_if (allowed_uris.begin (), allowed_uris.end (),
-                [&](ustring &a) {
-                  return (uri.substr (0, a.length ()) == a);
-                }) != allowed_uris.end ())
-          {
-
-            /* LOG (debug) << "tv: request: allowed: " << uri; */
-            webkit_policy_decision_use (decision);
-
-          } else {
-            if (show_remote_images) {
-              // TODO: use an approved-url (like geary) to only allow imgs, not JS
-              //       or other content.
-              LOG (warn) << "tv: remote images allowed, approving _all_ requests: " << uri;
-              webkit_policy_decision_use (decision);
-            } else {
-              LOG (debug)<< "tv: request: denied: " << uri;
-              webkit_policy_decision_ignore (decision);
-              /* webkit_network_request_set_uri (request, "about:blank"); // no */
-            }
-          }
-        } // }}}
-        break;
-
       default:
         webkit_policy_decision_ignore (decision);
         return true; // stop event

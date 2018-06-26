@@ -33,7 +33,20 @@ web_page_created_callback (WebKitWebExtension *extension,
                            WebKitWebPage      *web_page,
                            gpointer            user_data )
 {
+
+  g_signal_connect (web_page, "send-request",
+      G_CALLBACK (web_page_send_request),
+      NULL);
+
   ext->page_created (extension, web_page, user_data);
+}
+
+bool web_page_send_request ( WebKitWebPage    *  web_page,
+                             WebKitURIRequest *  request,
+                             WebKitURIResponse * response,
+                             gpointer            user_data)
+{
+  return ext->send_request (web_page, request, response, user_data);
 }
 
 G_MODULE_EXPORT void
@@ -52,7 +65,6 @@ webkit_web_extension_initialize_with_user_data (
   g_signal_connect (extension, "page-created",
       G_CALLBACK (web_page_created_callback),
       NULL);
-
 }
 
 }/*}}}*/
@@ -127,6 +139,35 @@ void AstroidExtension::page_created (WebKitWebExtension * /* extension */,
   page = _page;
 
   cout << "ae: page created." << endl;
+}
+
+bool AstroidExtension::send_request (
+                    WebKitWebPage    *  web_page,
+                    WebKitURIRequest *  request,
+                    WebKitURIResponse * response,
+                    gpointer            user_data) {
+
+  const char * curi = webkit_uri_request_get_uri (request);
+  std::string uri (curi != NULL ? curi : "");
+  cout << "ae: request: " << uri << endl;
+
+  if (allow_remote_resources) {
+    return false;
+  } else {
+    // prefix of local uris for loading image thumbnails
+    allowed_uris.push_back ("data:image/png;base64");
+    allowed_uris.push_back ("data:image/jpeg;base64");
+
+    if (find_if (allowed_uris.begin (), allowed_uris.end (),
+          [&](std::string &a) {
+            return (uri.substr (0, a.length ()) == a);
+          }) != allowed_uris.end ())
+    {
+      return false; // allow
+    } else {
+      return true; // stop
+    }
+  }
 }
 
 void AstroidExtension::ack (bool success) {
@@ -360,6 +401,10 @@ void AstroidExtension::handle_page (AstroidMessages::Page &s) {/*{{{*/
 
   /* store part / iframe css for later */
   part_css = s.part_css ();
+
+  /* store allowed uris */
+  for (auto &s : s.allowed_uris ())
+    allowed_uris.push_back (s);
 
   g_object_unref (he);
   g_object_unref (head);
@@ -1093,7 +1138,9 @@ void AstroidExtension::create_body_part (
 
   g_object_unref (d);
 
-  set_iframe_src (message.mid (), c.sid (), body);
+  Glib::signal_idle().connect_once (
+      sigc::bind (
+        sigc::mem_fun(*this, &AstroidExtension::set_iframe_src), message.mid(), c.sid(), body));
 
   cout << "ae: create_body_part done." << endl;
 }

@@ -24,6 +24,10 @@ web_page_created_callback (WebKitWebExtension *extension,
 G_MODULE_EXPORT void
 webkit_web_extension_initialize_with_user_data (WebKitWebExtension *extension, gpointer pipes);
 
+bool web_page_send_request ( WebKitWebPage    *  web_page,
+                             WebKitURIRequest *  request,
+                             WebKitURIResponse * response,
+                             gpointer            user_data);
 
 }
 
@@ -33,6 +37,14 @@ class AstroidExtension {
     ~AstroidExtension ();
 
     void page_created (WebKitWebExtension *, WebKitWebPage *, gpointer);
+    bool send_request ( WebKitWebPage    *  web_page,
+                        WebKitURIRequest *  request,
+                        WebKitURIResponse * response,
+                        gpointer            user_data);
+
+    bool allow_remote_resources = false;
+    std::vector<std::string> allowed_uris;
+
 
     const int MAX_PREVIEW_LEN = 80;
     const int INDENT_PX       = 20;

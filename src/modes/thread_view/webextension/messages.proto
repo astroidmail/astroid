@@ -74,6 +74,7 @@ message Page {
   string html = 1;
   string css = 2;
   string part_css = 3;
+  repeated string allowed_uris = 4;
 }
 
 message Info {
