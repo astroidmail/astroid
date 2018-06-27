@@ -906,9 +906,11 @@ namespace Astroid {
 
   void MessageThread::on_thread_updated (Db * db, ustring tid) {
     if (in_notmuch && tid == thread->thread_id) {
-      thread->refresh (db);
-      for (auto &m : messages) {
-        m->on_message_updated (db, m->mid);
+      in_notmuch = thread->refresh (db);
+      if (in_notmuch) {
+        for (auto &m : messages) {
+          m->on_message_updated (db, m->mid);
+        }
       }
     }
   }

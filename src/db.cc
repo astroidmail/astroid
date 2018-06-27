@@ -459,7 +459,9 @@ namespace Astroid {
 
     if (c < 1) {
       LOG (error) << "db: could not find thread: " << thread_id;
-      throw invalid_argument ("db: could not find thread!");
+      func (NULL);
+      notmuch_query_destroy (query);
+      return;
     }
 
     /* call function */
@@ -540,15 +542,23 @@ namespace Astroid {
     //LOG (debug) << "nmt: deconstruct.";
   }
 
-  void NotmuchThread::refresh (Db * db) {
+  bool NotmuchThread::refresh (Db * db) {
     /* do a new db query and update all fields */
+
+    bool in_notmuch = true;
 
     db->on_thread (thread_id,
         [&](notmuch_thread_t * nm_thread) {
 
-          load (nm_thread);
-
+          if (nm_thread != NULL) {
+            in_notmuch = true;
+            load (nm_thread);
+          } else {
+            in_notmuch = false;
+          }
         });
+
+    return in_notmuch;
   }
 
   void NotmuchThread::load (notmuch_thread_t * nm_thread) {
@@ -964,14 +974,20 @@ namespace Astroid {
           });
   }
 
-  void NotmuchMessage::refresh (Db * db) {
+  bool NotmuchMessage::refresh (Db * db) {
     /* do a new db query and update all fields */
+    bool in_notmuch = true;
     db->on_message (mid,
         [&](notmuch_message_t * m) {
 
-          refresh (m);
-
+          if (m != NULL) {
+            in_notmuch = true;
+            refresh (m);
+          } else {
+            in_notmuch = false;
+            }
         });
+    return in_notmuch;
   }
 
   void NotmuchMessage::refresh (notmuch_message_t * msg) {
