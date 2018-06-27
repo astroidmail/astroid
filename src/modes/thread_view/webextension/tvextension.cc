@@ -1852,7 +1852,6 @@ void AstroidExtension::apply_focus (ustring mid, int element) {
 
     int ei = 0;
     for (auto &e : m.elements ()) {
-      cout << "ae:  element: " << ei << ", " << e.sid () << endl;
       if (
           // all states contain an empty element at first
           e.type() != AstroidMessages::State_MessageState_Element_Type_Empty
@@ -2257,7 +2256,7 @@ void AstroidExtension::scroll_to_element (ustring eid) {
 
   double scrolled = webkit_dom_dom_window_get_scroll_y (w);
   double height   = webkit_dom_element_get_client_height (body);
-  double upper    = webkit_dom_dom_window_get_inner_height (w);
+  double upper    = webkit_dom_element_get_scroll_height (body);
 
   double clientY = webkit_dom_element_get_offset_top (e);
   double clientH = webkit_dom_element_get_client_height (e);
