@@ -16,11 +16,10 @@
 # include <algorithm>
 
 # include "astroid.hh"
+# include "build_config.hh"
 # include "modes/thread_view/webextension/ae_protocol.hh"
 # include "modes/thread_view/webextension/dom_utils.hh"
 # include "messages.pb.h"
-
-# include "astroid.hh"
 # include "config.hh"
 # include "thread_view.hh"
 # include "message_thread.hh"
@@ -97,8 +96,13 @@ namespace Astroid {
         Resource::get_exe_dir().c_str());
 
 # else
-    // TODO: Add install path
-    LOG (error) << "pc: WebKit2 only works in DEBUG builds.";
+    path wke = path (PREFIX) / path ("lib/astroid/web-extensions");
+    LOG (warn) << "pc: adding " << wke.c_str () << " to web extension search path.";
+
+    webkit_web_context_set_web_extensions_directory (
+        context,
+        wke.c_str());
+
 # endif
 
     /* set up unix socket */

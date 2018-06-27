@@ -497,6 +497,10 @@ endif(DISABLE_PLUGINS)
 install ( TARGETS astroid
   RUNTIME DESTINATION bin )
 
+install ( TARGETS tvextension
+  DESTINATION lib/astroid/web-extensions
+  )
+
 # icons are installed in three locations
 install (DIRECTORY ui/icons
   DESTINATION share/astroid/ui
