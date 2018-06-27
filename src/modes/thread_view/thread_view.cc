@@ -183,10 +183,6 @@ namespace Astroid {
   }
 
   /* navigation requests  */
-  void ThreadView::reload_images () {
-    /* TODO: [JS]: Reload all images */
-  }
-
   extern "C" gboolean ThreadView_permission_request (
       WebKitWebView * w,
       WebKitPermissionRequest * request,
@@ -896,9 +892,9 @@ namespace Astroid {
             }
           }
 
-          show_remote_images = true;
-          LOG (debug) << "tv: show remote images: " << show_remote_images;
-          reload_images ();
+          LOG (debug) << "tv: show remote images.";
+          page_client->allow_remote_resources ();
+
           return true;
         });
 

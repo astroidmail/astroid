@@ -142,10 +142,10 @@ void AstroidExtension::page_created (WebKitWebExtension * /* extension */,
 }
 
 bool AstroidExtension::send_request (
-                    WebKitWebPage    *  web_page,
+                    WebKitWebPage    *  /* web_page */,
                     WebKitURIRequest *  request,
-                    WebKitURIResponse * response,
-                    gpointer            user_data) {
+                    WebKitURIResponse * /* response */,
+                    gpointer            /* user_data */) {
 
   const char * curi = webkit_uri_request_get_uri (request);
   std::string uri (curi != NULL ? curi : "");
@@ -288,6 +288,18 @@ void AstroidExtension::reader () {/*{{{*/
         }
         break;
 
+      case AeProtocol::MessageTypes::AllowRemoteImages:
+        {
+          AstroidMessages::AllowRemoteImages m;
+          m.ParseFromString (buffer);
+          Glib::signal_idle().connect_once (
+              [this,m] () {
+                allow_remote_resources = true;
+                reload_images ();
+                ack (true);
+              });
+        }
+        break;
 
       case AeProtocol::MessageTypes::Page:
         {
@@ -414,6 +426,56 @@ void AstroidExtension::handle_page (AstroidMessages::Page &s) {/*{{{*/
 
   ack (true);
 }/*}}}*/
+
+void AstroidExtension::reload_images () {
+  cout << "ae: reload images." << endl;
+  GError * err = NULL;
+  WebKitDOMDocument * d = webkit_web_page_get_dom_document (page);
+
+  for (auto &m : state.messages()) {
+    ustring div_id = "message_" + m.mid ();
+    WebKitDOMElement * me = webkit_dom_document_get_element_by_id (d, div_id.c_str());
+
+    for (auto &c : m.elements()) {
+      if (!c.focusable ()) {
+        WebKitDOMHTMLElement * body_container = WEBKIT_DOM_HTML_ELEMENT(webkit_dom_document_get_element_by_id (d, c.sid ().c_str ()));
+        WebKitDOMHTMLElement * iframe = DomUtils::select (WEBKIT_DOM_NODE(body_container), ".body_iframe");
+        WebKitDOMDocument * iframe_d = webkit_dom_html_iframe_element_get_content_document (WEBKIT_DOM_HTML_IFRAME_ELEMENT(iframe));
+        WebKitDOMHTMLElement * b = webkit_dom_document_get_body (iframe_d);
+
+        WebKitDOMNodeList * imgs = webkit_dom_element_query_selector_all (WEBKIT_DOM_ELEMENT(b), "img", (err = NULL, &err));
+
+        gulong l = webkit_dom_node_list_get_length (imgs);
+        for (gulong i = 0; i < l; i++) {
+
+          WebKitDOMNode * in = webkit_dom_node_list_item (imgs, i);
+          WebKitDOMElement * ine = WEBKIT_DOM_ELEMENT (in);
+
+          if (ine != NULL) {
+            gchar * src = webkit_dom_element_get_attribute (ine, "src");
+            if (src != NULL) {
+              webkit_dom_element_set_attribute (ine, "src", "", (err = NULL, &err));
+              webkit_dom_element_set_attribute (ine, "src", src, (err = NULL, &err));
+            }
+
+            // TODO: cid type images or attachment references are not loaded
+          }
+
+          g_object_unref (in);
+        }
+
+        g_object_unref (imgs);
+        g_object_unref (b);
+        g_object_unref (iframe_d);
+        g_object_unref (iframe);
+        g_object_unref (body_container);
+      }
+    }
+    g_object_unref (me);
+  }
+
+  g_object_unref (d);
+}
 
 void AstroidExtension::handle_state (AstroidMessages::State &s) {/*{{{*/
   cout << "ae: got state." << endl;

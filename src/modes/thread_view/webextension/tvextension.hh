@@ -42,10 +42,6 @@ class AstroidExtension {
                         WebKitURIResponse * response,
                         gpointer            user_data);
 
-    bool allow_remote_resources = false;
-    std::vector<std::string> allowed_uris;
-
-
     const int MAX_PREVIEW_LEN = 80;
     const int INDENT_PX       = 20;
 
@@ -70,6 +66,10 @@ class AstroidExtension {
 
     void handle_page (AstroidMessages::Page &s);
     ustring part_css;
+
+    bool allow_remote_resources = false;
+    std::vector<std::string> allowed_uris;
+    void reload_images ();
 
     /* state */
     bool edit_mode = false;

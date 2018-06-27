@@ -15,6 +15,7 @@ namespace Astroid {
         Page,
         State,
         Indent,
+        AllowRemoteImages,
         Focus,
         Navigate,
         Mark,

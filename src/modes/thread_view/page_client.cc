@@ -281,6 +281,17 @@ namespace Astroid {
     AeProtocol::send_message_sync (AeProtocol::MessageTypes::Page, s, ostream, m_ostream, istream, m_istream);
   }
 
+  void PageClient::allow_remote_resources () {
+    LOG (debug) << "pc: allow remote resources.";
+
+    AstroidMessages::AllowRemoteImages msg;
+    msg.set_bogus ("asdfadsf");
+    msg.set_allow (true);
+    handle_ack (
+      AeProtocol::send_message_sync (AeProtocol::MessageTypes::AllowRemoteImages, msg, ostream, m_ostream, istream, m_istream)
+    );
+  }
+
   void PageClient::clear_messages () {
     LOG (debug) << "pc: clear messages..";
     AstroidMessages::ClearMessage c;

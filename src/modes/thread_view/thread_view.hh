@@ -63,7 +63,6 @@ namespace Astroid {
 
     protected:
       bool edit_mode = false;
-      bool show_remote_images = false;
 
       double unread_delay = .5;
       std::chrono::time_point<std::chrono::steady_clock> focus_time;
@@ -192,7 +191,6 @@ namespace Astroid {
       void on_ready_to_render ();
       void load_html ();
       void render_messages ();
-      void reload_images ();
 
       /* message loading and rendering */
       void add_message (refptr<Message>);

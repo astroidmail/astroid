@@ -28,6 +28,11 @@ message Indent {
   bool   indent = 2;
 }
 
+message AllowRemoteImages {
+  string bogus = 1;
+  bool   allow = 2;
+}
+
 message Navigate {
   enum Direction {
     None     = 0;

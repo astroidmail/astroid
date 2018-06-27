@@ -35,6 +35,7 @@ namespace Astroid {
       void update_state ();
       void clear_messages ();
       void update_indent_state (bool);
+      void allow_remote_resources ();
 
       void toggle_part (refptr<Message> m, refptr<Chunk>, ThreadView::MessageState::Element);
 
