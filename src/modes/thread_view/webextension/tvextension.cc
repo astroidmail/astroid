@@ -1781,6 +1781,22 @@ void AstroidExtension::set_hidden (ustring mid, bool hidden) {
     webkit_dom_dom_token_list_toggle (class_list, "hide", false, &err );
   }
 
+  /* if the message we just hid or showed is not the focused one it may have
+   * caused the focused message to go out of view. scroll to original focused
+   * message in that case. */
+
+  if (mid != focused_message && !focused_message.empty()) {
+    if (focused_element > 0) {
+      scroll_to_element (
+          std::find_if (state.messages().begin (), state.messages().end (),
+            [&] (auto &m) { return m.mid () == focused_message; })->elements()[focused_element].sid ()
+          );
+    } else {
+      ustring div = "message_" + focused_message;
+      scroll_to_element (div);
+    }
+  }
+
   g_object_unref (class_list);
   g_object_unref (e);
   g_object_unref (d);
