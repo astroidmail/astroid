@@ -861,6 +861,88 @@ namespace Astroid {
     return "threadid:" + thread_id;
   }
 
+
+  std::vector<std::pair<int, refptr<NotmuchMessage>>> NotmuchThread::messages (Db * db)
+  {
+    std::vector<std::pair<int, refptr<NotmuchMessage>>> msgs;
+
+    db->on_thread (thread_id, [&](notmuch_thread_t * nm_thread)
+      {
+        notmuch_messages_t * qmessages;
+        notmuch_message_t  * message;
+
+        function<void(notmuch_message_t *, int)> add_replies =
+          [&] (notmuch_message_t * root, int lvl) {
+
+          notmuch_messages_t * replies;
+          notmuch_message_t  * reply;
+
+          for (replies = notmuch_message_get_replies (root);
+               notmuch_messages_valid (replies);
+               notmuch_messages_move_to_next (replies)) {
+
+
+              reply = notmuch_messages_get (replies);
+
+              msgs.push_back ( std::make_pair (
+                    lvl, refptr<NotmuchMessage> (new NotmuchMessage (reply))));
+
+              add_replies (reply, lvl + 1);
+            }
+          };
+
+        for (qmessages = notmuch_thread_get_toplevel_messages (nm_thread);
+             notmuch_messages_valid (qmessages);
+             notmuch_messages_move_to_next (qmessages)) {
+
+          message = notmuch_messages_get (qmessages);
+
+          msgs.push_back ( std::make_pair (
+                0, refptr<NotmuchMessage> (new NotmuchMessage (message))));
+
+          add_replies (message, 1);
+        }
+
+        /* check if all messages are shown: #243
+         *
+         * if at some point notmuch fixes this bug this code should be
+         * removed for those versions of notmuch */
+        if (msgs.size() != (unsigned int) notmuch_thread_get_total_messages (nm_thread))
+        {
+          ustring mid;
+          LOG (error) << "db: thread count not met! Brute force!";
+          for (qmessages = notmuch_thread_get_messages (nm_thread);
+               notmuch_messages_valid (qmessages);
+               notmuch_messages_move_to_next (qmessages)) {
+            bool found;
+            found = false;
+
+            message = notmuch_messages_get (qmessages);
+
+            mid = notmuch_message_get_message_id (message);
+            LOG (error) << "mid: " << mid;
+
+            for (unsigned int i = 0; i < msgs.size(); i ++)
+            {
+              if (msgs[i].second->mid == mid)
+              {
+                found = true;
+                break;
+              }
+            }
+            if ( ! found )
+            {
+              LOG (error) << "mid: " << mid << " was missing!";
+              msgs.push_back ( std::make_pair (
+                    0, refptr<NotmuchMessage> (new NotmuchMessage (message))));
+            }
+          }
+        }
+      });
+
+    return msgs;
+  }
+
   /****************
    * NotmuchMessage
    ****************/

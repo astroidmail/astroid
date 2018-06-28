@@ -307,7 +307,7 @@ namespace Astroid {
     /* Synchronize state structure between ThreadView and Extension. Only a minimal structure
      * is sent to the extension.
      *
-     * This must be called every time the messages in the thread are changed in a way that effects:
+     * This must be called every time the messages in the thread are changed in a way that affects:
      *
      * * Order
      * * Adding / removing

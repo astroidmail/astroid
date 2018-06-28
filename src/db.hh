@@ -105,6 +105,8 @@ namespace Astroid {
       bool matches (std::vector<ustring> &k) override;
       bool in_query (Db *, ustring) override;
 
+      std::vector<std::pair<int, refptr<NotmuchMessage>>> messages (Db *);
+
     private:
       int check_total_messages (notmuch_thread_t *);
       std::vector<std::tuple<ustring,bool>> get_authors (notmuch_thread_t *);

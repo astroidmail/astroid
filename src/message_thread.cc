@@ -71,13 +71,14 @@ namespace Astroid {
     tags = nmmsg->tags;
   }
 
-  Message::Message (refptr<NotmuchMessage> _msg) : Message () {
+  Message::Message (refptr<NotmuchMessage> _msg, int _level) : Message () {
     in_notmuch = true;
     nmmsg = _msg;
     mid = nmmsg->mid;
     tid = nmmsg->thread_id;
     fname = nmmsg->filename;
     has_file = true;
+    level = _level;
 
     LOG (info) << "msg: loading mid: " << mid;
     LOG (info) << "msg: filename: " << fname;
@@ -908,6 +909,15 @@ namespace Astroid {
     if (in_notmuch && tid == thread->thread_id) {
       in_notmuch = thread->refresh (db);
       if (in_notmuch) {
+        /* TODO:
+         * * get new message list
+         * * update existing
+         * * add new
+         * * remove old
+         *
+        auto new_messages = thread->messages (db);
+        */
+
         for (auto &m : messages) {
           m->on_message_updated (db, m->mid);
         }
@@ -930,107 +940,14 @@ namespace Astroid {
     /* update values */
     subject = thread->subject;
     set_first_subject (thread->subject);
-    /*
-    newest_date = notmuch_thread_get_newest_date (nm_thread);
-    unread      = check_unread (nm_thread);
-    attachment  = check_attachment (nm_thread);
-    */
 
+    for (auto &mm : thread->messages (db)) {
+      auto m = refptr<Message>(new Message (mm.second, mm.first));
+      if (!first_subject_set) set_first_subject(m->subject);
 
-    /* get messages from thread */
-    db->on_thread (thread->thread_id, [&](notmuch_thread_t * nm_thread)
-      {
-
-        notmuch_messages_t * qmessages;
-        notmuch_message_t  * message;
-
-        int level = 0;
-
-        function<void(notmuch_message_t *, int)> add_replies =
-          [&] (notmuch_message_t * root, int lvl) {
-
-          notmuch_messages_t * replies;
-          notmuch_message_t  * reply;
-
-          for (replies = notmuch_message_get_replies (root);
-               notmuch_messages_valid (replies);
-               notmuch_messages_move_to_next (replies)) {
-
-
-              reply = notmuch_messages_get (replies);
-              auto m = refptr<Message>(new Message (reply, lvl));
-
-              if (!first_subject_set) set_first_subject(m->subject);
-
-              m->subject_is_different = subject_is_different (m->subject);
-              messages.push_back (m);
-
-
-              add_replies (reply, lvl + 1);
-
-            }
-
-          };
-
-        for (qmessages = notmuch_thread_get_toplevel_messages (nm_thread);
-             notmuch_messages_valid (qmessages);
-             notmuch_messages_move_to_next (qmessages)) {
-
-          message = notmuch_messages_get (qmessages);
-
-          auto m = refptr<Message>(new Message (message, level));
-
-          if (!first_subject_set) set_first_subject(m->subject);
-
-          m->subject_is_different = subject_is_different (m->subject);
-          messages.push_back (m);
-
-          add_replies (message, level + 1);
-
-        }
-
-        /* check if all messages are shown: #243
-         *
-         * if at some point notmuch fixes this bug this code should be
-         * removed for those versions of notmuch */
-        if (messages.size() != (unsigned int) notmuch_thread_get_total_messages (nm_thread))
-        {
-          ustring mid;
-          LOG (error) << "message: thread count not met! Brute force!";
-          for (qmessages = notmuch_thread_get_messages (nm_thread);
-               notmuch_messages_valid (qmessages);
-               notmuch_messages_move_to_next (qmessages)) {
-            bool found;
-            found = false;
-
-            message = notmuch_messages_get (qmessages);
-
-            mid = notmuch_message_get_message_id (message);
-            LOG (error) << "mid: " << mid;
-
-            for (unsigned int i = 0; i < messages.size(); i ++)
-            {
-              if (messages[i]->mid == mid)
-              {
-                found = true;
-                break;
-              }
-            }
-            if ( ! found )
-            {
-              LOG (error) << "mid: " << mid << " was missing!";
-              auto m = refptr<Message>(new Message (message, 0));
-
-              if (!first_subject_set) set_first_subject(m->subject);
-
-              m->subject_is_different = subject_is_different (m->subject);
-              messages.push_back (m);
-            }
-          }
-
-        }
-
-      });
+      m->subject_is_different = subject_is_different (m->subject);
+      messages.push_back (m);
+    }
   }
 
   void MessageThread::add_message (ustring fname) {

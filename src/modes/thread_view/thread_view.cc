@@ -445,6 +445,13 @@ namespace Astroid {
 
           update_message (_m);
         }
+      } else if (me == Message::MessageChangedEvent::MESSAGE_REMOVED) {
+        LOG (debug) << "tv: got message removed.";
+
+        refptr<Message> _m = refptr<Message> (m);
+        _m->reference (); // since m is owned by caller
+
+        remove_message (_m);
       }
     }
   }

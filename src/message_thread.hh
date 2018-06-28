@@ -17,7 +17,7 @@ namespace Astroid {
       Message (ustring _mid, ustring _fname);
       Message (notmuch_message_t *, int _level);
       Message (GMimeMessage *);
-      Message (refptr<NotmuchMessage>);
+      Message (refptr<NotmuchMessage>, int _level = 0);
       ~Message ();
 
       ustring fname;
@@ -96,6 +96,7 @@ namespace Astroid {
       /* message changed signal */
       typedef enum {
         MESSAGE_TAGS_CHANGED,
+        MESSAGE_REMOVED,
       } MessageChangedEvent;
 
       typedef sigc::signal <void, Db *, Message *, MessageChangedEvent> type_signal_message_changed;
