@@ -106,6 +106,29 @@ namespace Astroid {
 
     return x;
   }
+
+  bool DomUtils::in_view (WebKitWebPage * page, ustring eid) {
+    WebKitDOMDocument * d = webkit_web_page_get_dom_document (page);
+    WebKitDOMDOMWindow * w = webkit_dom_document_get_default_view (d);
+    WebKitDOMElement * body = WEBKIT_DOM_ELEMENT(webkit_dom_document_get_body (d));
+
+    WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, eid.c_str());
+
+    double scrolled = webkit_dom_dom_window_get_scroll_y (w);
+    double height   = webkit_dom_element_get_client_height (body);
+
+    double clientY = webkit_dom_element_get_offset_top (e);
+    double clientH = webkit_dom_element_get_client_height (e);
+
+    g_object_unref (e);
+    g_object_unref (body);
+    g_object_unref (w);
+    g_object_unref (d);
+
+    return ( (clientY >= scrolled) &&
+           ( (clientY + clientH) <= (scrolled + height) ));
+  }
+
 # endif
 
 }

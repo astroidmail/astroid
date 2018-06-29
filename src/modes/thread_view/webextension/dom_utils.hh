@@ -47,6 +47,8 @@ namespace Astroid {
           WebKitDOMDocument * n, ustring id);
 
       static bool switch_class (WebKitDOMDOMTokenList *, ustring, bool);
+
+      static bool in_view (WebKitWebPage * page, ustring eid);
 # endif
   };
 }

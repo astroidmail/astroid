@@ -719,7 +719,7 @@ body.nohide .email .compressed_note > span {
 }
 
 .email > .email_container > .body > .encrypt_container > .message > span.header {
-  color: black; 
+  color: black;
   font-weight: bold;
   margin-bottom: 2px;
   display: block;
@@ -769,6 +769,7 @@ body.nohide .email .compressed_note > span {
 
 .email > .email_container > .body > .sibling_container, .email > .email_container > .body > .mime_container {
     display: block;
+    clear: both;
     vertical-align: middle;
     text-align: center;
     padding: 0px;
@@ -1042,112 +1043,3 @@ blockquote > blockquote > blockquote > blockquote > blockquote > blockquote > bl
     background-color: #e8e8e8;
 }
 
-#spinner {
-    display: none;
-    margin: 100px auto;
-    width: 128px;
-}
-
-/*
-Spinner code from CSSload.net
-License: http://cssload.net/en/terms_of_use
-*/
-
-#spinner #floatingCirclesG {
-    position:relative;
-    width:128px;
-    height:128px;
-    -webkit-transform:scale(0.6);
-    transform:scale(0.6);
-}
-
-#spinner .f_circleG {
-    position:absolute;
-    background-color:#FFFFFF;
-    height:23px;
-    width:23px;
-    -webkit-border-radius:12px;
-    -webkit-animation-name:f_fadeG;
-    -webkit-animation-duration:1.04s;
-    -webkit-animation-iteration-count:infinite;
-    -webkit-animation-direction:linear;
-    border-radius:12px;
-    animation-name:f_fadeG;
-    animation-duration:1.04s;
-    animation-iteration-count:infinite;
-    animation-direction:linear;
-}
-
-#spinner #frotateG_01 {
-    left:0;
-    top:52px;
-    -webkit-animation-delay:0.39s;
-    animation-delay:0.39s;
-}
-
-#spinner #frotateG_02 {
-    left:15px;
-    top:15px;
-    -webkit-animation-delay:0.52s;
-    animation-delay:0.52s;
-}
-
-#spinner #frotateG_03 {
-    left:52px;
-    top:0;
-    -webkit-animation-delay:0.65s;
-    animation-delay:0.65s;
-}
-
-#spinner #frotateG_04 {
-    right:15px;
-    top:15px;
-    -webkit-animation-delay:0.78s;
-    animation-delay:0.78s;
-}
-
-#spinner #frotateG_05 {
-    right:0;
-    top:52px;
-    -webkit-animation-delay:0.91s;
-    animation-delay:0.91s;
-}
-
-#spinner #frotateG_06 {
-    right:15px;
-    bottom:15px;
-    -webkit-animation-delay:1.04s;
-    animation-delay:1.04s;
-}
-
-#spinner #frotateG_07 {
-    left:52px;
-    bottom:0;
-    -moz-animation-delay:1.17s;
-    -webkit-animation-delay:1.17s;
-    -ms-animation-delay:1.17s;
-    -o-animation-delay:1.17s;
-    animation-delay:1.17s;
-}
-
-#spinner #frotateG_08 {
-    left:15px;
-    bottom:15px;
-    -moz-animation-delay:1.3s;
-    -webkit-animation-delay:1.3s;
-    -ms-animation-delay:1.3s;
-    -o-animation-delay:1.3s;
-    animation-delay:1.3s;
-}
-
-@-webkit-keyframes f_fadeG {
-    0% {
-        background-color:#000000
-    }
-
-    100% {
-    background-color:#FFFFFF
-    }
-}
-
-/* /Spinner */

@@ -2010,6 +2010,15 @@ void AstroidExtension::focus_next_element (bool force_change) {
   WebKitDOMDOMWindow * w = webkit_dom_document_get_default_view (d);
   WebKitDOMElement * body = WEBKIT_DOM_ELEMENT(webkit_dom_document_get_body (d));
 
+  /* force change if we are at maximum scroll */
+  long scroll_height = webkit_dom_element_get_scroll_height (body);
+  long scroll_top    = webkit_dom_element_get_scroll_top (body);
+  long body_height   = webkit_dom_element_get_client_height (body);
+
+  force_change = force_change ||
+    (scroll_height - scroll_top == body_height);
+
+
   if (!is_hidden (focused_message)) {
     /* if the message is expanded, check if we should move focus
      * to the next element */
@@ -2029,69 +2038,74 @@ void AstroidExtension::focus_next_element (bool force_change) {
       /* check if the next element is in full view */
       eid = next_e->sid ();
 
-      bool change_focus = force_change;
+      cout << "ae: next_e: " << eid << endl;
 
-      if (!force_change) {
-        WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, eid.c_str());
-
-        double scrolled = webkit_dom_dom_window_get_scroll_y (w);
-        double height   = webkit_dom_element_get_client_height (body);
-
-        double clientY = webkit_dom_element_get_offset_top (e);
-        double clientH = webkit_dom_element_get_client_height (e);
-
-        g_object_unref (e);
-
-        if (height > 0) {
-          if (  (clientY >= scrolled) &&
-              ( (clientY + clientH) <= (scrolled + height) ))
-          {
-            change_focus = true;
-          }
-        } else {
-          change_focus = true;
-        }
-      }
-
-      //LOG (debug) << "focus_next_element: change: " << change_focus;
-
-      if (change_focus) {
+      if (force_change) {
+        /* move focus to next element and scroll if necessary */
         focused_element = std::distance (s.elements ().begin (), next_e);
         apply_focus (focused_message, focused_element);
-        if (!eid.empty()) scroll_to_element (eid);
+
+        scroll_to_element (eid);
+        g_object_unref (body);
+        g_object_unref (w);
+        g_object_unref (d);
+        return;
+
+      } else {
+        /* check if the next element is in full view, otherwise scroll */
+        if (DomUtils::in_view (page, eid)) {
+          cout << "ae: in view." << endl;
+
+          focused_element = std::distance (s.elements ().begin (), next_e);
+          apply_focus (focused_message, focused_element);
+
+          g_object_unref (body);
+          g_object_unref (w);
+          g_object_unref (d);
+          return;
+
+        } else {
+          cout << "ae: not in view." << endl;
+          /* fall through to scroll */
+        }
+      }
+    }
+  } else {
+    if (force_change) {
+      /* move focus to next message */
+
+      int focused_position = std::find_if (
+          state.messages().begin (),
+          state.messages().end (),
+          [&] (auto &m) { return m.mid () == focused_message; }) - state.messages().begin ();
+
+      if ((focused_position + 1) < state.messages().size()) {
+        focused_message = state.messages()[focused_position+1].mid();
+        focused_element = 0;
+        apply_focus (focused_message, focused_element);
+        eid = "message_" + focused_message;
+        scroll_to_element (eid);
 
         g_object_unref (body);
         g_object_unref (w);
         g_object_unref (d);
         return;
       }
+      /* fall through to scroll */
     }
+
+    /* fall through to scroll */
   }
 
   /* no focus change, standard behaviour */
-  double scrolled = webkit_dom_dom_window_get_scroll_y (w);
 
   webkit_dom_dom_window_scroll_by (w, 0, STEP);
 
-  if (force_change  || (scrolled == webkit_dom_dom_window_get_scroll_y (w))) {
-    /* we're at the bottom, just move focus down */
-    int focused_position = std::find_if (
-        state.messages().begin (),
-        state.messages().end (),
-        [&] (auto &m) { return m.mid () == focused_message; }) - state.messages().begin ();
-
-    if ((focused_position + 1) < state.messages().size()) {
-      focused_message = state.messages()[focused_position+1].mid();
-      focused_element = 0;
-      apply_focus (focused_message, focused_element);
-      eid = "message_" + focused_message;
-    }
-  } else {
+  if (!force_change) {
     update_focus_to_view ();
   }
 
-  if (!eid.empty()) scroll_to_element (eid);
-
+  g_object_unref (body);
   g_object_unref (w);
   g_object_unref (d);
 }
