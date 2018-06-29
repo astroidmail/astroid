@@ -13,6 +13,7 @@
 # include <gio/gio.h>
 # include <boost/property_tree/ptree.hpp>
 
+# include "build_config.hh"
 # include "thread_view.hh"
 # include "theme.hh"
 # include "page_client.hh"
@@ -119,24 +120,19 @@ namespace Astroid {
         "enable-offline-web-application-cache", FALSE,
         "enable-page-cache", FALSE,
         "enable-private-browsing", TRUE,
-        "is-ephemeral", TRUE,
         "enable-xss-auditor", TRUE,
         "media-playback-requires-user-gesture", TRUE,
         "zoom-text-only", TRUE,
 # if (DEBUG || DEBUG_WEBKIT)
         "enable-developer-extras", TRUE,
+# else
+        "is-ephemeral", TRUE,
 # endif
         NULL));
 
     webkit_web_view_set_settings (webview, websettings);
 
     gtk_box_pack_start (GTK_BOX (this->gobj ()), GTK_WIDGET (webview), true, true, 0);
-
-# ifdef DEBUG_WEBKIT
-    /* Always show the inspector */
-    WebKitWebInspector *inspector = webkit_web_view_get_inspector (WEBKIT_WEB_VIEW(webview));
-    webkit_web_inspector_show (WEBKIT_WEB_INSPECTOR(inspector));
-# endif
 
     g_signal_connect (webview, "load-changed",
         G_CALLBACK(ThreadView_on_load_changed),
@@ -699,6 +695,17 @@ namespace Astroid {
           load_message_thread (mthread);
           return true;
         });
+
+    keys.register_key ("C-I", "thread_view.show_web_inspector",
+        "Show web inspector",
+        [&] (Key) {
+          LOG (debug) << "tv show web inspector";
+          /* Show the inspector */
+          WebKitWebInspector *inspector = webkit_web_view_get_inspector (WEBKIT_WEB_VIEW(webview));
+          webkit_web_inspector_show (WEBKIT_WEB_INSPECTOR(inspector));
+          return true;
+        });
+
 # endif
 
     keys.register_key ("j", "thread_view.down",
