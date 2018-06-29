@@ -48,6 +48,7 @@ message Navigate {
     VisualPage    = 3; // Move one visual big big step, update focus if necessary
     Element       = 4; // Move to specific element, update focus (not directional)
     Message       = 5; // Move one message, update focus
+    FocusView     = 6; // Update focus to match view
   }
 
   Direction direction = 1;

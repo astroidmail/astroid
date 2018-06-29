@@ -246,7 +246,6 @@ namespace Astroid {
       void prev_search_match ();
 
       bool in_search = false;
-      bool in_search_match = false;
       ustring search_q = "";
 
     public:

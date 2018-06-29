@@ -893,5 +893,16 @@ namespace Astroid {
         AeProtocol::send_message_sync (AeProtocol::MessageTypes::Navigate, n, ostream, m_ostream, istream, m_istream)
         );
   }
+
+  void PageClient::update_focus_to_view () {
+    AstroidMessages::Navigate n;
+
+    n.set_direction (AstroidMessages::Navigate_Direction_Specific);
+    n.set_type (AstroidMessages::Navigate_Type_FocusView);
+
+    handle_ack (
+        AeProtocol::send_message_sync (AeProtocol::MessageTypes::Navigate, n, ostream, m_ostream, istream, m_istream)
+        );
+  }
 }
 

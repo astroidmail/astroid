@@ -2305,6 +2305,8 @@ void AstroidExtension::handle_navigate (AstroidMessages::Navigate &n) {
     } else {
       focus_previous_message (n.focus_top());
     }
+  } else if (n.type () == AstroidMessages::Navigate_Type_FocusView) {
+    update_focus_to_view ();
   }
 
   cout << "ae: navigation done." << endl;

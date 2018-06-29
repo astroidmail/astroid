@@ -2265,19 +2265,13 @@ namespace Astroid {
     }
 
     in_search = false;
-    in_search_match = false;
     search_q  = "";
 
-    // TODO: [W2]
-# if 0
-    webkit_web_view_set_highlight_text_matches (webview, false);
-    webkit_web_view_unmark_text_matches (webview);
-# endif
+    WebKitFindController * f = webkit_web_view_get_find_controller (webview);
+    webkit_find_controller_search_finish (f);
   }
 
   void ThreadView::on_search (ustring k) {
-    reset_search ();
-
     if (!k.empty ()) {
 
       /* expand all messages, these should be closed - except the focused one
@@ -2287,30 +2281,14 @@ namespace Astroid {
       }
 
       LOG (debug) << "tv: searching for: " << k;
-      // TODO: [W2]
-      /* int n = webkit_web_view_mark_text_matches (webview, k.c_str (), false, 0); */
-      int n = 0; // TODO
+      WebKitFindController * f = webkit_web_view_get_find_controller (webview);
 
-      LOG (debug) << "tv: search, found: " << n << " matches.";
-
-      in_search = (n > 0);
-
-      if (in_search) {
-        search_q = k;
-
-        // TODO: [W2]
-        /* webkit_web_view_set_highlight_text_matches (webview, true); */
-
-        next_search_match ();
-
-      } else {
-        /* un-expand messages again */
-        for (auto m : mthread->messages) {
-          if (state[m].search_expanded) collapse (m);
-          state[m].search_expanded = false;
-        }
-
-      }
+      webkit_find_controller_search (f, k.c_str (),
+          WEBKIT_FIND_OPTIONS_CASE_INSENSITIVE |
+          WEBKIT_FIND_OPTIONS_WRAP_AROUND,
+          0);
+      in_search = true;
+      page_client->update_focus_to_view ();
     }
   }
 
@@ -2319,22 +2297,19 @@ namespace Astroid {
     /* there does not seem to be a way to figure out which message currently
      * contains the selected matched text, but when there is a scroll event
      * the match is centered.
-     *
-     * the focusing is handled in on_scroll_vadjustment...
-     *
      */
 
-    in_search_match = true;
-    // TODO: [W2]
-    /* webkit_web_view_search_text (webview, search_q.c_str (), false, true, true); */
+    WebKitFindController * f = webkit_web_view_get_find_controller (webview);
+    webkit_find_controller_search_next (f);
+    page_client->update_focus_to_view ();
   }
 
   void ThreadView::prev_search_match () {
     if (!in_search) return;
 
-    in_search_match = true;
-    // TODO: [W2]
-    /* webkit_web_view_search_text (webview, search_q.c_str (), false, false, true); */
+    WebKitFindController * f = webkit_web_view_get_find_controller (webview);
+    webkit_find_controller_search_previous (f);
+    page_client->update_focus_to_view ();
   }
 
   /***************
