@@ -454,15 +454,24 @@ void AstroidExtension::reload_images () {
           if (ine != NULL) {
             gchar * src = webkit_dom_element_get_attribute (ine, "src");
             if (src != NULL) {
+              ustring usrc (src);
+              /* replace CID images with real image */
+              if (usrc.substr (0, 4) == "cid:") {
+                ustring cid = usrc.substr (4, std::string::npos);
+                cout << "ae: CID: " << cid << endl;
+
+                // TODO: Get attachment somehow
+              }
+
               webkit_dom_element_set_attribute (ine, "src", "", (err = NULL, &err));
               webkit_dom_element_set_attribute (ine, "src", src, (err = NULL, &err));
             }
-
-            // TODO: cid type images or attachment references are not loaded
           }
 
           g_object_unref (in);
         }
+
+        /* TODO: Re-calculate size of iframe after showing images */
 
         g_object_unref (imgs);
         g_object_unref (b);
