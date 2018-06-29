@@ -970,7 +970,7 @@ namespace Astroid {
           return true;
         });
 
-    keys->register_key ("E", "thread_index.edit_draft",
+    keys->register_key ("e", "thread_index.edit_draft",
         "Edit first message marked as draft or last message in thread as new",
         [&] (Key) {
           auto thread = get_current_thread ();

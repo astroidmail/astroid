@@ -999,7 +999,7 @@ namespace Astroid {
       {
 
         /* set warning */
-        set_warning (m, "This message is a draft, edit it with E or delete with D.");
+        set_warning (m, "This message is a draft, edit it with 'e' or delete with 'D'.");
 
       }
     }
@@ -2286,7 +2286,7 @@ namespace Astroid {
           return false;
         });
 
-    keys.register_key ("e", "thread_view.expand",
+    keys.register_key ("E", "thread_view.expand",
         "Toggle expand",
         [&] (Key) {
           if (edit_mode) return false;
@@ -2622,7 +2622,7 @@ namespace Astroid {
           return true;
         });
 
-    keys.register_key ("E", "thread_view.edit_draft",
+    keys.register_key ("e", "thread_view.edit_draft",
         "Edit currently focused message as new or draft",
         [&] (Key) {
           /* edit currently focused message as new or draft */
