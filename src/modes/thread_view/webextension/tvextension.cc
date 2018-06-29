@@ -2241,46 +2241,13 @@ void AstroidExtension::scroll_to_element (ustring eid) {
   }
 
   WebKitDOMDocument * d = webkit_web_page_get_dom_document (page);
-  WebKitDOMDOMWindow * w = webkit_dom_document_get_default_view (d);
   WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, eid.c_str());
-  WebKitDOMElement * body = WEBKIT_DOM_ELEMENT(webkit_dom_document_get_body (d));
 
+  webkit_dom_element_scroll_into_view_if_needed (e, false);
 
-  double scrolled = webkit_dom_dom_window_get_scroll_y (w);
-  double height   = webkit_dom_element_get_client_height (body);
-  double upper    = webkit_dom_element_get_scroll_height (body);
-
-  double clientY = webkit_dom_element_get_offset_top (e);
-  double clientH = webkit_dom_element_get_client_height (e);
-
-  if (clientY < scrolled) {
-    /* top is above view  */
-    webkit_dom_dom_window_scroll_to (w, 0, clientY);
-
-  } else if ((clientY + clientH) > (scrolled + height)) {
-    /* bottom is below view */
-
-    // if message is of less height than page, scroll so that
-    // bottom is aligned with bottom
-
-    if (clientH < height) {
-      webkit_dom_dom_window_scroll_to (w, 0, clientY + clientH - height);
-    } else {
-      // otherwise align top with top
-      if ((clientY + clientH - height) > upper) {
-        /* message is last, can't scroll past bottom */
-        webkit_dom_dom_window_scroll_to (w, 0, upper);
-      } else {
-        webkit_dom_dom_window_scroll_to (w, 0, clientY);
-      }
-    }
-  }
-
-  g_object_unref (body);
   g_object_unref (e);
-  g_object_unref (w);
   g_object_unref (d);
-  cout << "ae: scroll done." << endl;
+  return;
 }
 
 void AstroidExtension::handle_navigate (AstroidMessages::Navigate &n) {
