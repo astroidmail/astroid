@@ -65,6 +65,7 @@ option (DISABLE_EMBEDDED_EDITOR  "Disable embedded editor (default = enabled)"  
 option (DISABLE_PLUGINS          "Disable plugins (default = enabled)"            OFF)
 option (ENABLE_PROFILING         "Enable profiling (default = disabled)"          OFF)
 option (DISABLE_LIBSASS          "Disable libsass, requires a sassc compiler (default = enabled)" OFF)
+option (DEBUG_WEBKIT             "Turn on extra debug options for WebKit (default = disabled)"    OFF)
 
 set (SCSS_COMPILER "sassc" CACHE STRING "SCSS compiler to use when libsass is disabled (default = sassc)")
 
