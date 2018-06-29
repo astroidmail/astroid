@@ -2040,7 +2040,7 @@ void AstroidExtension::focus_next_element (bool force_change) {
 
       cout << "ae: next_e: " << eid << endl;
 
-      if (force_change) {
+      if (force_change || DomUtils::in_view (page, eid)) {
         /* move focus to next element and scroll if necessary */
         focused_element = std::distance (s.elements ().begin (), next_e);
         apply_focus (focused_message, focused_element);
@@ -2050,25 +2050,9 @@ void AstroidExtension::focus_next_element (bool force_change) {
         g_object_unref (w);
         g_object_unref (d);
         return;
-
-      } else {
-        /* check if the next element is in full view, otherwise scroll */
-        if (DomUtils::in_view (page, eid)) {
-          cout << "ae: in view." << endl;
-
-          focused_element = std::distance (s.elements ().begin (), next_e);
-          apply_focus (focused_message, focused_element);
-
-          g_object_unref (body);
-          g_object_unref (w);
-          g_object_unref (d);
-          return;
-
-        } else {
-          cout << "ae: not in view." << endl;
-          /* fall through to scroll */
-        }
       }
+
+      /* fall through to scroll */
     }
   } else {
     if (force_change) {
@@ -2127,7 +2111,6 @@ void AstroidExtension::focus_previous_element (bool force_change) {
         [&] (auto &m) { return m.mid () == focused_message; });
 
     /* focus previous focusable element */
-
     auto next_e = std::find_if (
         s.elements().rbegin() + (s.elements().size() - focused_element),
         s.elements().rend (),
@@ -2136,99 +2119,78 @@ void AstroidExtension::focus_previous_element (bool force_change) {
 
     if (next_e != s.elements().rend()) {
       /* check if the prev element is in full view */
-      bool change_focus = force_change;
+      eid = next_e->sid ();
 
-      if (!force_change) {
-        if (next_e->type() != AstroidMessages::State_MessageState_Element_Type_Empty) {
-
-          eid = next_e->sid ();
-
-          WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, eid.c_str());
-
-          double scrolled = webkit_dom_dom_window_get_scroll_y (w);
-          double height   = webkit_dom_element_get_client_height (body);
-          // CHECK: height is 0 when there is no paging.
-
-          double clientY = webkit_dom_element_get_offset_top (e);
-          double clientH = webkit_dom_element_get_client_height (e);
-
-          g_object_unref (e);
-
-          if (height > 0) {
-            if (  (clientY >= scrolled) &&
-                ( (clientY + clientH) <= (scrolled + height) ))
-            {
-              change_focus = true;
-            }
-          } else {
-            change_focus = true;
-          }
-        } else {
-          change_focus = true;
-        }
-      }
-
-      //LOG (debug) << "focus_prev_element: change: " << change_focus;
-
-      if (change_focus) {
+      if (force_change || DomUtils::in_view (page, eid)) {
         focused_element = std::distance (s.elements ().begin (), next_e.base() -1);
         apply_focus (focused_message, focused_element);
-        if (!eid.empty()) scroll_to_element (eid);
+        scroll_to_element (eid);
         g_object_unref (body);
         g_object_unref (w);
         g_object_unref (d);
         return;
       }
+
+      /* fall through to scroll */
     }
+  } else {
+    if (force_change) {
+      /* move focus to previous message */
+      int focused_position = std::find_if (
+          state.messages().begin (),
+          state.messages().end (),
+          [&] (auto &m) { return m.mid () == focused_message; }) - state.messages().begin ();
+
+      if (focused_position > 0) {
+        focused_message = state.messages()[focused_position-1].mid();
+
+        /* find last focusable element */
+        auto s = *std::find_if (
+            state.messages().begin (),
+            state.messages().end (),
+            [&] (auto &m) { return m.mid () == focused_message; });
+
+        auto next_e = std::find_if (
+            s.elements().rbegin (),
+            s.elements().rend (),
+            [&] (auto &e) { return e.focusable (); });
+
+        if (next_e != s.elements ().rend ())  {
+          focused_element = std::distance (s.elements ().begin (), next_e.base() -1);
+        } else {
+          focused_element = 0;
+        }
+
+        apply_focus (focused_message, focused_element);
+        focused_position--;
+
+        if (focused_element > 0) {
+          eid = state.messages()[focused_position].elements()[focused_element].sid();
+        } else {
+          eid = "message_" + focused_message; // if no element selected, focus message
+        }
+
+        scroll_to_element (eid);
+
+        g_object_unref (body);
+        g_object_unref (w);
+        g_object_unref (d);
+        return;
+      }
+
+      /* fall through to scroll */
+    }
+
+    /* fall through to scroll */
   }
 
   /* standard behaviour */
-  double scrolled = webkit_dom_dom_window_get_scroll_y (w);
-  /* double height   = webkit_dom_dom_window_get_screen_y (w); */
-
   webkit_dom_dom_window_scroll_by (w, 0, -STEP);
 
-  if (force_change || (scrolled == webkit_dom_dom_window_get_scroll_y (w))) {
-    /* we're at the top, move focus up */
-    int focused_position = std::find_if (
-        state.messages().begin (),
-        state.messages().end (),
-        [&] (auto &m) { return m.mid () == focused_message; }) - state.messages().begin ();
-
-    if (focused_position > 0) {
-      focused_message = state.messages()[focused_position-1].mid();
-
-      /* find last focusable element */
-      auto s = *std::find_if (
-          state.messages().begin (),
-          state.messages().end (),
-          [&] (auto &m) { return m.mid () == focused_message; });
-
-      auto next_e = std::find_if (
-          s.elements().rbegin (),
-          s.elements().rend (),
-          [&] (auto &e) { return e.focusable (); });
-      if (next_e != s.elements ().rend ())  {
-        focused_element = std::distance (s.elements ().begin (), next_e.base() -1);
-      } else {
-        focused_element = 0;
-      }
-
-      apply_focus (focused_message, focused_element);
-      focused_position--;
-    }
-
-    if (focused_element > 0) {
-      eid = state.messages()[focused_position].elements()[focused_element].sid();
-    } else {
-      eid = "message_" + focused_message; // if no element selected, focus message
-    }
-  } else {
-    /* scroll up */
+  if (!force_change) {
+    /* we have scrolled */
     update_focus_to_view ();
   }
-
-  if (!eid.empty()) scroll_to_element (eid);
 
   g_object_unref (body);
   g_object_unref (w);
