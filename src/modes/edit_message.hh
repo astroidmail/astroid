@@ -129,7 +129,6 @@ namespace Astroid {
 
       static  int edit_id; // must be incremented each time a new editor is started
       int     id;          // id of this instance
-      time_t  msg_time;
 
       void editor_toggle (bool); // enable or disable editor or thread view
 
@@ -155,9 +154,10 @@ namespace Astroid {
       Gtk::Image message_sending_status_icon;
       bool status_icon_visible = false;
 
-
       bool message_sent = false;
       void lock_message_after_send ();
+
+      ustring generate_mid_from_account (Account *);
 
       ComposeMessage * make_message (bool draft);
 

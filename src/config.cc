@@ -154,6 +154,9 @@ namespace Astroid {
 
       default_config.put ("accounts.charlie.select_query", "");
 
+      default_config.put ("accounts.charlie.message_id_fqdn", ""); // custom fqdn for the message id: default: local hostname
+      default_config.put ("accounts.charlie.message_id_user", "astroid"); // custom user for the message id: default: 'astroid'
+
       /* default searches, also only set if initial */
       default_config.put("startup.queries.inbox", "tag:inbox");
     }
@@ -199,6 +202,7 @@ namespace Astroid {
     default_config.put ("editor.cmd", "gvim -f -c 'set ft=mail' '+set fileencoding=utf-8' '+set enc=utf-8' '+set ff=unix' '+set fo+=w' %1");
     default_config.put ("editor.external_editor", true); // should be true on Wayland
 # endif
+    default_config.put ("editor.external_tmpfile_suffix", ".eml"); // suffix of tmp files passed to external editors; default: '.eml'
 
     default_config.put ("editor.charset", "utf-8");
     default_config.put ("editor.save_draft_on_force_quit", true);
@@ -214,8 +218,6 @@ namespace Astroid {
     default_config.put ("mail.forward.quote_line", "Forwarding %1's message of %2:"); // %1 = author, %2 = pretty_verbose_date
     default_config.put ("mail.forward.disposition", "inline");
     default_config.put ("mail.sent_tags", "sent");
-    default_config.put ("mail.message_id_fqdn", ""); // custom fqdn for the message id: default: local hostname
-    default_config.put ("mail.message_id_user", ""); // custom user for the message id: default: 'astroid'
     default_config.put ("mail.user_agent", "default");
     default_config.put ("mail.send_delay", 2); // wait seconds before sending, allowing to cancel
     default_config.put ("mail.close_on_success", false); // close page automatically on succesful sending of message
@@ -498,6 +500,46 @@ namespace Astroid {
         }
       }
 
+      changed = true;
+    }
+
+    /* message id settings per-account */
+    if (version < 10) {
+      ustring mid_fqdn;
+      ustring mid_usr;
+
+      try {
+        mid_fqdn = config.get<string> ("mail.message_id_fqdn");
+        config.get_child("mail").erase("message_id_fqdn");
+      } catch (const boost::property_tree::ptree_bad_path &ex) {
+        mid_fqdn = "";
+      }
+
+      try {
+        mid_usr = config.get<string> ("mail.message_id_user");
+        config.get_child("mail").erase("message_id_user");
+      } catch (const boost::property_tree::ptree_bad_path &ex) {
+        mid_usr = "astroid";
+      }
+
+      ptree apt = config.get_child ("accounts");
+
+      for (auto &kv : apt) {
+        try {
+          ustring fqdn = kv.second.get<string> ("message_id_fqdn");
+        } catch (const boost::property_tree::ptree_bad_path &ex) {
+          ustring key = ustring::compose ("accounts.%1.message_id_fqdn", kv.first);
+          config.put (key.c_str (), mid_fqdn.c_str());
+        }
+
+        try {
+          ustring usr = kv.second.get<string> ("message_id_user");
+        } catch (const boost::property_tree::ptree_bad_path &ex) {
+          ustring key = ustring::compose ("accounts.%1.message_id_user", kv.first);
+          config.put (key.c_str (), mid_usr.c_str());
+        }
+      }
+       LOG (warn) << "config: options 'mail.message_id_fqdn' and 'mail.message_id_user' are deprecated; they have been moved to account-specific parameters of the same name. Any global values have been migrated to all accounts.";
       changed = true;
     }
 

@@ -1,7 +1,8 @@
 # include <iostream>
 # include <vector>
 # include <algorithm>
-# include <random>
+
+# include <stdlib.h>
 
 # include "astroid.hh"
 # include "proto.hh"
@@ -53,19 +54,39 @@ namespace Astroid {
       trim_right(str);
   }
 
-  ustring UstringUtils::random_alphanumeric (int length) {
+  ustring UstringUtils::random_string_from_charset (const ustring chars, const int length) {
     ustring str;
+    uint32_t r;
 
-    const string _chars = "abcdefghijklmnopqrstuvwxyz1234567890";
-    random_device rd;
-    mt19937 g(rd());
-
-    for (int i = 0; i < length; i++)
-      str += _chars[g() % _chars.size()];
+    for (int i = 0; i < length; i++) {
+      r = arc4random_uniform(chars.length());   // This is recommended over constructions
+                                                 // like "arc4random() % upper_bound" as it
+                                                 // avoids "modulo bias" when the upper
+                                                 // bound is not a power of two.
+      str += chars[r];
+    }    
 
     return str;
   }
+  
+  ustring UstringUtils::random_alphanumeric (int length) {
+    const ustring _chars = "abcdefghijklmnopqrstuvwxyz1234567890";
+    return UstringUtils::random_string_from_charset(_chars, length);
+  }
 
+  ustring UstringUtils::random_rfc5322_atext (int length) {
+    // 81 allowed charaters for the message id as per RFC 5322
+    const ustring _chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890!#$%&'*+-/=?^_`{|}~";
+    return UstringUtils::random_string_from_charset(_chars, length);
+  }
+
+  ustring UstringUtils::random_file_name (const ustring suffix) {
+    return (UstringUtils::random_alphanumeric (50)   // use at least 256 bit of
+                                                     // entropy to remain sufficiently
+                                                     // unique for the forseeable future
+	    + suffix);
+  }
+  
   /* http://stackoverflow.com/a/15372760/377927 */
   ustring UstringUtils::replace (ustring subject, const ustring& search,
                           const ustring& replace) {

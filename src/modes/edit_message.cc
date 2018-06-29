@@ -8,6 +8,7 @@
 # include <gtkmm.h>
 
 # include <boost/filesystem.hpp>
+# include <boost/algorithm/string/replace.hpp>
 
 # include "astroid.hh"
 # include "config.hh"
@@ -135,63 +136,26 @@ namespace Astroid {
     /* set up message id and random server name for editor */
     id = edit_id++;
 
+    /* accounst list from defaults */
+    accounts = astroid->accounts;
+
+# ifndef DISABLE_PLUGINS
     ustring _mid = "";
-    msg_time = time(0);
-
-# ifndef DISABLE_PLUGINS
-    if (!astroid->plugin_manager->astroid_extension->generate_mid (_mid)) {
+    if (astroid->plugin_manager->astroid_extension->generate_mid (_mid))
+    {
+      // plugins enabled, and message-id plugin installed
+      // use new message-id provided by plugin
+      if (_mid != "") {
+        msg_id = _mid;
+      }
+    } else {
 # endif
-
-      char _hostname[1024];
-      _hostname[1023] = 0;
-      gethostname (_hostname, 1023);
-
-      char _domainname[1024];
-      _domainname[1023] = 0;
-      if (getdomainname (_domainname, 1023) < 0) {
-        *_domainname = '\0';
-      }
-
-      ustring hostname = astroid->config ().get <string> ("mail.message_id_fqdn");
-      UstringUtils::trim (hostname);
-      if (hostname.empty ()) {
-        if (*_hostname != 0) {
-          hostname = _hostname;
-
-          if (*_domainname != 0) {
-            ustring d (_domainname);
-            d = UstringUtils::replace (d, "(", ""); // often (none) is returned
-            d = UstringUtils::replace (d, ")", "");
-            hostname += ".";
-            hostname += d;
-          }
-
-          if (hostname.find (".", 0) == std::string::npos) {
-            /* add a top level domain */
-            hostname += ".none";
-          }
-        } else {
-          hostname = UstringUtils::random_alphanumeric (10) + ".none";
-        }
-      }
-
-
-      ustring user = astroid->config ().get<string> ("mail.message_id_user");
-      UstringUtils::trim (user);
-      if (user.empty ()) user = "astroid";
-
-      _mid = UstringUtils::random_alphanumeric (10);
-
-      _mid = ustring::compose ("%1.%2.%3@%4", msg_time, _mid, user, hostname);
-
+      // plugins disabled, or no message-id plugin installed
+      // generate a new message-id locally
+      msg_id = generate_mid_from_account(&((accounts->accounts)[accounts->default_account]));
 # ifndef DISABLE_PLUGINS
     }
 # endif
-
-    if (msg_id == "") {
-      msg_id = _mid;
-    }
-
     LOG (info) << "em: msg id: " << msg_id;
 
     make_tmpfile ();
@@ -220,9 +184,6 @@ namespace Astroid {
 
     thread_view->signal_element_action().connect (
         sigc::mem_fun (this, &EditMessage::on_element_action));
-
-    /* defaults */
-    accounts = astroid->accounts;
 
     /* from combobox */
     from_store = Gtk::ListStore::create (from_columns);
@@ -590,8 +551,8 @@ namespace Astroid {
         return false;
 
       } else {
-        /* msg_id might come from external client or server */
-        ddir = ddir / path(Utils::safe_fname (msg_id));
+        ddir = ddir / path(UstringUtils::random_file_name (editor_config.get
+                                                           <std::string>("external_tmpfile_suffix")));
         fname = ddir.c_str ();
 
         add_to_notmuch = true;
@@ -634,11 +595,11 @@ namespace Astroid {
     if (is_regular_file (fname)) {
       boost::filesystem::remove (fname);
 
-      /* first remove tag in case it has been sent */
       astroid->actions->doit (refptr<Action>(
             new OnMessageAction (draft_msg->mid, draft_msg->tid,
 
               [fname] (Db * db, notmuch_message_t * msg) {
+                /* first remove tag in case it has been sent */
                 for (ustring t : Db::draft_tags) {
                   notmuch_message_remove_tag (msg,
                       t.c_str ());
@@ -652,7 +613,6 @@ namespace Astroid {
                 }
               })));
     }
-
   }
 
   /* edit / read message cycling {{{ */
@@ -661,7 +621,7 @@ namespace Astroid {
      * manually in the e-mail as well. this check prevents the
      * message currently being read from the edited draft to be
      * overwritten before it is read. */
-    if (!in_read) {
+    if ( ! in_read) {
       prepare_message ();
       read_edited_message ();
     }
@@ -705,7 +665,7 @@ namespace Astroid {
     if (!accounts->is_me (a)) {
       LOG (error) << "em: from address is not a defined account.";
     }
-
+   
     return set_from (accounts->get_account_for_address (a));
   }
 
@@ -722,12 +682,64 @@ namespace Astroid {
     }
 
     bool same_account = (rn == from_combo->get_active_row_number ());
-    LOG (debug) << "same account: " << same_account;
+    LOG (debug) << "em: same account: " << same_account;
     if (!same_account) {
       reset_signature ();
     }
 
     return same_account;
+  }
+
+  ustring EditMessage::generate_mid_from_account (Account * _a) {
+     ustring rnd = UstringUtils::random_rfc5322_atext_shell_safe_subset (42);   // 42 gives 258 bits entropy (and 42 is the answer anyway ;)
+     ustring mid;
+
+    ustring user = astroid->config ().get<string> (ustring::compose("accounts.%1.message_id_user", _a->id).c_str());
+    UstringUtils::trim (user);
+
+    ustring hostname = astroid->config ().get <string> (ustring::compose("accounts.%1.message_id_fqdn", _a->id).c_str());
+    UstringUtils::trim (hostname);
+
+    // fallback value if hostname is empty
+    if (hostname.empty ()) {
+      char _hostname[1024];
+      _hostname[1023] = 0;
+      gethostname (_hostname, 1023);
+
+      if (*_hostname != 0) {
+        hostname = _hostname;
+
+        char _domainname[1024];
+        _domainname[1023] = 0;
+        if (getdomainname (_domainname, 1023) < 0) {
+          *_domainname = '\0';
+        }
+
+        if (*_domainname != 0) {
+          ustring d (_domainname);
+          d = UstringUtils::replace (d, "(", ""); // often "(none)" is returned
+          d = UstringUtils::replace (d, ")", "");
+          hostname += ".";
+          hostname += d;
+        }
+
+        if (hostname.find (".", 0) == std::string::npos) {
+          /* add a top level domain */
+          hostname += ".none";
+        }
+      } else {
+        hostname = UstringUtils::random_alphanumeric (10) + ".none";
+      }
+    }
+
+    // assemble message id string
+    if (user.empty ()) {
+      mid = ustring::compose ("%1@%2", rnd, hostname);
+    } else {
+      mid = ustring::compose ("%1.%2@%3", rnd, user, hostname);
+    }
+
+    return (mid);
   }
 
   void EditMessage::reset_signature () {
@@ -803,13 +815,86 @@ namespace Astroid {
     subject = c->subject;
     body = ustring(c->body.str());
 
-    ustring tmpf = c->write_tmp ();
+    /* if the from address has been changed to a different account,
+     * a new message id needs to be generated, since the message id
+     * settings are per account
+     * from notmuch's point of view, a new message id makes it a new
+     * message, however; hence we need to make a new draft message
+     * with the new mesage id, and replace the current message in the
+     * filesystem and the notmuch db */
+    if (draft_msg) {
+      if (c->account != accounts->get_account_for_address (draft_msg->sender)) {
+        LOG(debug) << "em: read_edited_message called for saved draft with different from account (updating message id)";
 
+        ustring fname = draft_msg->fname;
+        path fpath = path (fname.c_str ());
+        if (is_regular_file (fpath)) {
+
+          /* remove old message file from filesystem */
+          boost::filesystem::remove (fpath);
+
+          /* write a new message file using a new message id to the filesystem */
+          path ddir = c->account->save_drafts_to / path(UstringUtils::random_file_name(editor_config.get<std::string>("external_tmpfile_suffix")));
+          ustring new_fname = ddir.c_str ();
+          ustring new_mid = generate_mid_from_account (c->account);
+          c->set_id (new_mid);
+          c->write (new_fname);
+
+          /* update the notmuch db accordingly (delete old draft message, add new draft message) */
+          ustring old_mid = draft_msg->mid;
+          draft_msg->fname = new_fname;
+          draft_msg->mid = new_mid;
+          draft_msg->nmmsg->mid = new_mid;
+          g_mime_message_set_message_id (draft_msg->message, new_mid.c_str());
+//          ThreadView *tv = thread_view;
+          /* operations on the notmuch db must be done in an OnMessageAction to ensure proper serialisation */
+          astroid->actions->doit(refptr<Action>(new OnMessageAction (old_mid, "" /*draft_msg->tid*/,
+            [fname, c, new_fname] (Db * db, notmuch_message_t * msg) {
+
+              /* add the new message (with the new message id) as a new draft to notmuch */
+              db->add_draft_message (new_fname);
+              notmuch_message_t *new_msg = NULL;
+              notmuch_database_find_message (db->nm_db, c->id.c_str(), &new_msg);
+
+              /* first, remove any draft tags from the old message */
+              for (ustring t : Db::draft_tags) {
+                notmuch_message_remove_tag (msg, t.c_str ());
+              }
+              /* then transfer remaining (non-draft) tags from old message to new message */
+              for (notmuch_tags_t *keep_tags = notmuch_message_get_tags(msg);
+                   notmuch_tags_valid (keep_tags);
+                   notmuch_tags_move_to_next (keep_tags)) {
+                notmuch_message_add_tag (new_msg, notmuch_tags_get (keep_tags));
+              }
+
+              /* now it's safe to remove the old message from notmuch */
+              bool persists = ! db->remove_message (fname);
+              if (persists && db->maildir_synchronize_flags) {
+                // sync in case there are other copies of the message
+                notmuch_message_tags_to_maildir_flags (msg);
+              }
+
+              /* TODO: force refresh any UI views that show messages tagged "draft" */
+          })));
+        }
+      }
+    } else {
+      LOG(debug) << "em: read_edited_message called for stand-alone draft";
+      msg_id = generate_mid_from_account(c->account);
+      c->set_id(msg_id);
+    }
+    msg_id = c->id;
+
+    ustring tmpf = c->write_tmp ();
     auto msgt = refptr<MessageThread>(new MessageThread());
     msgt->add_message (tmpf);
     thread_view->load_message_thread (msgt);
 
-    delete c;
+    astroid->actions->doit(refptr<Action>(new OnMessageAction ("", "",
+      [c] (Db *, notmuch_message_t *) {
+        LOG (debug) << "em: read_edited_message: deleting ComposeMessage * c = " << c;
+        delete c;
+    })));
 
     unlink (tmpf.c_str());
 
@@ -1230,7 +1315,8 @@ namespace Astroid {
   /* }}} */
 
   void EditMessage::make_tmpfile () {
-    tmpfile_path = tmpfile_path / path(msg_id);
+    tmpfile_path = tmpfile_path / path(UstringUtils::random_file_name (editor_config.get
+								       <std::string>("external_tmpfile_suffix")));
 
     LOG (info) << "em: tmpfile: " << tmpfile_path;
 

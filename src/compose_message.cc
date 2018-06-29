@@ -78,6 +78,7 @@ namespace Astroid {
 
   void ComposeMessage::set_id (ustring _id) {
     id = _id;
+    g_mime_message_set_message_id (message, id.c_str());
   }
 
   void ComposeMessage::set_references (ustring _refs) {
@@ -614,7 +615,8 @@ namespace Astroid {
 
         if (account->save_sent) {
           using bfs::path;
-          save_to = account->save_sent_to / path(id + ":2,");
+          // canonical maildir spec: https://cr.yp.to/proto/maildir.html
+          save_to = account->save_sent_to / path(UstringUtils::random_file_name (":2,"));
           LOG (info) << "cm: saving message to: " << save_to;
 
           write (save_to.c_str());

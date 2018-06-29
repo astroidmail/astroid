@@ -44,11 +44,7 @@ namespace Astroid {
 
 
     /* quote string can also be formatted using date formats:
-     * https://developer.gnome.org/glibmm/stable/classGlib_1_1DateTime.html#a820ed73fbf469a24f86f417540873339
-     *
-     * note that the format specifiers in the docs use a leading '\' this should
-     * be a leading '%'.
-     *
+     * https://developer.gnome.org/glib/stable/glib-GDateTime.html#g-date-time-format
      */
     Glib::DateTime dt = Glib::DateTime::create_now_local (msg->time);
     quoting_a = dt.format (quoting_a);
