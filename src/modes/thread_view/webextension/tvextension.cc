@@ -2062,22 +2062,19 @@ void AstroidExtension::focus_next_element (bool force_change) {
       }
 
       /* fall through to scroll */
-    }
-  } else {
-    if (force_change) {
-      /* move focus to next message */
-
-      int focused_position = std::find_if (
+    } else {
+      /* move focus to next message if in view or force_change */
+      auto s = std::find_if (
           state.messages().begin (),
           state.messages().end (),
-          [&] (auto &m) { return m.mid () == focused_message; }) - state.messages().begin ();
+          [&] (auto &m) { return m.mid () == focused_message; });
 
-      if ((focused_position + 1) < state.messages().size()) {
-        focused_message = state.messages()[focused_position+1].mid();
-        focused_element = 0;
-        apply_focus (focused_message, focused_element);
-        eid = "message_" + focused_message;
-        scroll_to_element (eid);
+      s++;
+
+      if (s < state.messages().end () &&
+          (force_change || DomUtils::in_view (page, "message_" + s->mid ()))) {
+
+        focus_next_message ();
 
         g_object_unref (body);
         g_object_unref (w);
@@ -2086,7 +2083,26 @@ void AstroidExtension::focus_next_element (bool force_change) {
       }
       /* fall through to scroll */
     }
+  } else {
+    /* move focus to next message if in view or force_change */
 
+    auto s = std::find_if (
+        state.messages().begin (),
+        state.messages().end (),
+        [&] (auto &m) { return m.mid () == focused_message; });
+
+    s++;
+
+    if (s < state.messages().end () &&
+        (force_change || DomUtils::in_view (page, "message_" + s->mid ()))) {
+
+      focus_next_message ();
+
+      g_object_unref (body);
+      g_object_unref (w);
+      g_object_unref (d);
+      return;
+    }
     /* fall through to scroll */
   }
 
@@ -2110,9 +2126,17 @@ void AstroidExtension::focus_previous_element (bool force_change) {
   WebKitDOMDOMWindow * w = webkit_dom_document_get_default_view (d);
   WebKitDOMElement * body = WEBKIT_DOM_ELEMENT(webkit_dom_document_get_body (d));
 
+  /* force change if scrolled to top */
+  long scroll_top = webkit_dom_element_get_scroll_top (body);
+  force_change    = force_change || (scroll_top == 0);
+
+
+
   if (!is_hidden (focused_message)) {
     /* if the message is expanded, check if we should move focus
      * to the previous element */
+
+    LOG (debug) << "fpe: prev, not hidden";
 
     auto s = *std::find_if (
         state.messages().begin (),
@@ -2129,11 +2153,41 @@ void AstroidExtension::focus_previous_element (bool force_change) {
     if (next_e != s.elements().rend()) {
       /* check if the prev element is in full view */
       eid = next_e->sid ();
+      LOG (debug) << "fpe: more prev items: " << eid;
 
       if (force_change || DomUtils::in_view (page, eid)) {
+
         focused_element = std::distance (s.elements ().begin (), next_e.base() -1);
+
         apply_focus (focused_message, focused_element);
-        scroll_to_element (eid);
+
+        if (next_e->id() != -1) {
+          /* if part element (always id == -1), don't scroll to empty part */
+          scroll_to_element (eid);
+        }
+
+        g_object_unref (body);
+        g_object_unref (w);
+        g_object_unref (d);
+        return;
+      }
+
+      /* fall through to scroll */
+
+    }  else {
+      /* focus previous message if in view */
+      auto s = std::find_if (
+          state.messages().begin (),
+          state.messages().end (),
+          [&] (auto &m) { return m.mid () == focused_message; });
+
+      s--;
+
+      if (s >= state.messages().begin () && (
+            force_change || DomUtils::in_view (page, "message_" + s->mid ()) )) {
+
+        focus_previous_message (false);
+
         g_object_unref (body);
         g_object_unref (w);
         g_object_unref (d);
@@ -2143,53 +2197,24 @@ void AstroidExtension::focus_previous_element (bool force_change) {
       /* fall through to scroll */
     }
   } else {
-    if (force_change) {
-      /* move focus to previous message */
-      int focused_position = std::find_if (
-          state.messages().begin (),
-          state.messages().end (),
-          [&] (auto &m) { return m.mid () == focused_message; }) - state.messages().begin ();
+    /* move focus to previous message if in view or force_change */
+    auto s = std::find_if (
+        state.messages().begin (),
+        state.messages().end (),
+        [&] (auto &m) { return m.mid () == focused_message; });
 
-      if (focused_position > 0) {
-        focused_message = state.messages()[focused_position-1].mid();
+    s--;
 
-        /* find last focusable element */
-        auto s = *std::find_if (
-            state.messages().begin (),
-            state.messages().end (),
-            [&] (auto &m) { return m.mid () == focused_message; });
+    if (s >= state.messages().begin () && (
+          force_change || DomUtils::in_view (page, "message_" + s->mid ()) )) {
 
-        auto next_e = std::find_if (
-            s.elements().rbegin (),
-            s.elements().rend (),
-            [&] (auto &e) { return e.focusable (); });
+      focus_previous_message (false);
 
-        if (next_e != s.elements ().rend ())  {
-          focused_element = std::distance (s.elements ().begin (), next_e.base() -1);
-        } else {
-          focused_element = 0;
-        }
-
-        apply_focus (focused_message, focused_element);
-        focused_position--;
-
-        if (focused_element > 0) {
-          eid = state.messages()[focused_position].elements()[focused_element].sid();
-        } else {
-          eid = "message_" + focused_message; // if no element selected, focus message
-        }
-
-        scroll_to_element (eid);
-
-        g_object_unref (body);
-        g_object_unref (w);
-        g_object_unref (d);
-        return;
-      }
-
-      /* fall through to scroll */
+      g_object_unref (body);
+      g_object_unref (w);
+      g_object_unref (d);
+      return;
     }
-
     /* fall through to scroll */
   }
 
@@ -2209,13 +2234,15 @@ void AstroidExtension::focus_previous_element (bool force_change) {
 void AstroidExtension::focus_next_message () {
   if (edit_mode) return;
 
-  int focused_position = std::find_if (
-      state.messages().begin (),
-      state.messages().end (),
-      [&] (auto &m) { return m.mid () == focused_message; }) - state.messages().begin ();
+  auto s = std::find_if (
+        state.messages().begin (),
+        state.messages().end (),
+        [&] (auto &m) { return m.mid () == focused_message; });
 
-  if (focused_position < static_cast<int>((state.messages().size ()-1))) {
-    focused_message = state.messages()[focused_position + 1].mid ();
+  s++;
+
+  if (s < state.messages().end ()) {
+    focused_message = s->mid ();
     focused_element = 0; // start at top
     apply_focus (focused_message, focused_element);
     scroll_to_element ("message_" + focused_message);
@@ -2224,19 +2251,35 @@ void AstroidExtension::focus_next_message () {
 
 void AstroidExtension::focus_previous_message (bool focus_top) {
   if (edit_mode) return;
+  cout << "prev message" << endl;
 
-  int focused_position = std::find_if (
-      state.messages().begin (),
-      state.messages().end (),
-      [&] (auto &m) { return m.mid () == focused_message; }) - state.messages().begin ();
+  auto s = std::find_if (
+        state.messages().begin (),
+        state.messages().end (),
+        [&] (auto &m) { return m.mid () == focused_message; });
 
-  if (focused_position > 0) {
-    focused_message = state.messages()[focused_position - 1].mid();
+  s--;
+
+  if (s >= state.messages().begin ()) {
+    focused_message = s->mid();
     if (!focus_top && !is_hidden (focused_message)) {
-      focused_element = state.messages()[focused_position - 1].elements().size()-1; // start at bottom
+      /* focus last focusable element */
+      auto next_e = std::find_if (
+          s->elements().rbegin(),
+          s->elements().rend (),
+          [&] (auto &e) { return e.focusable (); });
+
+      if (next_e != s->elements ().rend ()) {
+
+        focused_element = std::distance (s->elements ().begin (), next_e.base() -1);
+
+      } else {
+        focused_element = 0;
+      }
     } else {
-      focused_element = 0; // start at top
+      focused_element = 0;
     }
+
     apply_focus (focused_message, focused_element);
     scroll_to_element ("message_" + focused_message);
   }
