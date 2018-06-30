@@ -352,6 +352,7 @@ target_link_libraries (
   ${CMAKE_THREAD_LIBS_INIT}
   ${PROTOBUF_LIBRARIES}
   ${GTKMM3_LDFLAGS}
+  ${Boost_LIBRARIES}
   )
 
 target_compile_definitions (

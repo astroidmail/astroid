@@ -11,8 +11,11 @@
 
 # include "dom_utils.hh"
 
-using std::cout;
-using std::endl;
+# include <boost/log/core.hpp>
+# include <boost/log/trivial.hpp>
+# define LOG(x) BOOST_LOG_TRIVIAL(x)
+# define warn warning
+
 using std::vector;
 
 namespace Astroid {
@@ -81,7 +84,7 @@ namespace Astroid {
     }
 
     if (gerr != NULL)
-      std::cout << "dom: error: " << gerr->message << std::endl;
+      LOG (debug) << "dom: error: " << gerr->message;
 
     return e;
   }

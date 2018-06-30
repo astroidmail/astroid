@@ -13,16 +13,31 @@
 # include <giomm/socket.h>
 # include <gtkmm.h>
 
+/* boost::log */
+# include <boost/log/core.hpp>
+# include <boost/log/utility/setup/file.hpp>
+# include <boost/log/utility/setup/console.hpp>
+# include <boost/log/utility/setup/common_attributes.hpp>
+# include <boost/log/sinks/text_file_backend.hpp>
+# include <boost/log/sources/severity_logger.hpp>
+# include <boost/log/sources/record_ostream.hpp>
+# include <boost/log/utility/setup/filter_parser.hpp>
+# include <boost/log/utility/setup/formatter_parser.hpp>
+# include <boost/date_time/posix_time/posix_time_types.hpp>
+# include <boost/log/expressions.hpp>
+# include <boost/log/trivial.hpp>
+# include <boost/log/support/date_time.hpp>
+# define LOG(x) BOOST_LOG_TRIVIAL(x)
+# define warn warning
 
 # include "modes/thread_view/webextension/ae_protocol.hh"
 # include "modes/thread_view/webextension/dom_utils.hh"
 # include "utils/ustring_utils.hh"
 # include "messages.pb.h"
 
-
-using std::cout;
-using std::endl;
-using std::flush;
+namespace logging   = boost::log;
+namespace keywords  = boost::log::keywords;
+namespace expr      = boost::log::expressions;
 
 using namespace Astroid;
 
@@ -59,7 +74,6 @@ webkit_web_extension_initialize_with_user_data (
    * per web page. That means that there can only be one page in each web view,
    * and each web view much use its own process. */
 
-  cout << "ae: init (CB)." << endl;
   ext = new AstroidExtension (extension, pipes);
 
   g_signal_connect (extension, "page-created",
@@ -73,11 +87,25 @@ AstroidExtension::AstroidExtension (WebKitWebExtension * e,
     gpointer gaddr) {
   extension = e;
 
-  std::cout << "ae: inititalize" << std::endl;
-
   Glib::init ();
   Gtk::Main::init_gtkmm_internals ();
   Gio::init ();
+
+  /* log to console */
+  logging::add_common_attributes ();
+  logging::formatter format =
+                expr::stream
+                    << "["
+                    << expr::format_date_time< boost::posix_time::ptime >("TimeStamp", "%H:%M:%S")
+                    << "] [" << expr::attr <boost::log::attributes::current_thread_id::value_type>("ThreadID")
+                    << "] [E] [" << logging::trivial::severity
+                    << "] " << expr::smessage
+            ;
+
+  logging::add_console_log ()->set_formatter (format);
+
+  LOG (debug) << "initialize";
+
 
   /* load attachment icon */
   Glib::RefPtr<Gtk::IconTheme> theme = Gtk::IconTheme::get_default();
@@ -95,13 +123,13 @@ AstroidExtension::AstroidExtension (WebKitWebExtension * e,
   /* retrieve socket address */
   gsize sz;
   const char * caddr = g_variant_get_string ((GVariant *) gaddr, &sz);
-  std::cout << "addr: " << caddr << std::endl;
+  LOG (debug) << "addr: " << caddr;
 
   refptr<Gio::UnixSocketAddress> addr = Gio::UnixSocketAddress::create (caddr,
       Gio::UNIX_SOCKET_ADDRESS_ABSTRACT);
 
   /* connect to socket */
-  std::cout << "ae: connecting.." << std::endl;
+  LOG (debug) << "connecting..";
   cli = Gio::SocketClient::create ();
 
   try {
@@ -114,10 +142,10 @@ AstroidExtension::AstroidExtension (WebKitWebExtension * e,
     reader_t = std::thread (&AstroidExtension::reader, this);
 
   } catch (Gio::Error &ex) {
-    cout << "ae: error: " << ex.what () << endl;
+    LOG (debug) << "error: " << ex.what ();
   }
 
-  std::cout << "ae: init done" << std::endl;
+  LOG (debug) << "init done";
 }
 
 AstroidExtension::~AstroidExtension () {
@@ -137,8 +165,7 @@ void AstroidExtension::page_created (WebKitWebExtension * /* extension */,
     gpointer /* user_data */) {
 
   page = _page;
-
-  cout << "ae: page created." << endl;
+  LOG (debug) << "page created.";
 }
 
 bool AstroidExtension::send_request (
@@ -149,7 +176,6 @@ bool AstroidExtension::send_request (
 
   const char * curi = webkit_uri_request_get_uri (request);
   std::string uri (curi != NULL ? curi : "");
-  cout << "ae: request: " << uri << endl;
 
   if (allow_remote_resources) {
     return false;
@@ -184,28 +210,28 @@ void AstroidExtension::ack (bool success) {
 }
 
 void AstroidExtension::reader () {/*{{{*/
-  cout << "ae: reader thread: started." << endl;
+  LOG (debug) << "reader thread: started.";
 
   while (run) {
     gsize read = 0;
 
     // TODO: Remove all '<< flush's. They cause astroid to hang if output is
     // suspended (e.g. when scrolling tmux)
-    cout << "ae: reader waiting.." << endl << flush;
+    LOG (debug) << "reader waiting..";
 
     /* read size of message */
     gsize sz;
     try {
       read = istream->read ((char*)&sz, sizeof (sz), reader_cancel); // blocking
     } catch (Gio::Error &e) {
-      cout << "ae: reader thread: " << e.what () << endl;
+      LOG (debug) << "reader thread: " << e.what ();
       return;
     }
 
     if (read != sizeof(sz)) break;;
 
     if (sz > AeProtocol::MAX_MESSAGE_SZ) {
-      cout << "ae: reader: message exceeds max size." << endl;
+      LOG (debug) << "reader: message exceeds max size.";
       break;
     }
 
@@ -219,7 +245,7 @@ void AstroidExtension::reader () {/*{{{*/
     bool s = istream->read_all (buffer, sz, read, reader_cancel);
 
     if (!s) {
-      cout << "pc: reader: error while reading message (size: " << sz << ")" << endl;
+      LOG (debug) << "pc: reader: error while reading message (size: " << sz << ")";
       break;
     }
 
@@ -229,7 +255,7 @@ void AstroidExtension::reader () {/*{{{*/
         {
           AstroidMessages::Debug m;
           m.ParseFromString (buffer);
-          cout << "ae: " << m.msg () << endl;
+          LOG (debug) << m.msg ();
           ack (true);
         }
         break;
@@ -383,7 +409,7 @@ void AstroidExtension::reader () {/*{{{*/
     }
   }
 
-  cout << "ae: reader thread exit." << endl;
+  LOG (debug) << "reader thread exit.";
 }/*}}}*/
 
 void AstroidExtension::handle_page (AstroidMessages::Page &s) {/*{{{*/
@@ -391,7 +417,7 @@ void AstroidExtension::handle_page (AstroidMessages::Page &s) {/*{{{*/
   WebKitDOMDocument *d = webkit_web_page_get_dom_document (page);
 
   /* load html */
-  cout << "ae: loading html.." << endl;
+  LOG (debug) << "loading html..";
 
   WebKitDOMElement * he = webkit_dom_document_create_element (d, "HTML", (err = NULL, &err));
   webkit_dom_element_set_outer_html (he, s.html ().c_str (), (err = NULL, &err));
@@ -399,7 +425,7 @@ void AstroidExtension::handle_page (AstroidMessages::Page &s) {/*{{{*/
   webkit_dom_document_set_body (d, WEBKIT_DOM_HTML_ELEMENT(he), (err = NULL, &err));
 
   /* load css style */
-  cout << "ae: loading stylesheet.." << flush;
+  LOG (debug) << "loading stylesheet..";
   WebKitDOMElement  *e = webkit_dom_document_create_element (d, "STYLE", (err = NULL, &err));
 
   WebKitDOMText *t = webkit_dom_document_create_text_node
@@ -409,7 +435,7 @@ void AstroidExtension::handle_page (AstroidMessages::Page &s) {/*{{{*/
 
   WebKitDOMHTMLHeadElement * head = webkit_dom_document_get_head (d);
   webkit_dom_node_append_child (WEBKIT_DOM_NODE(head), WEBKIT_DOM_NODE(e), (err = NULL, &err));
-  cout << "done" << endl;
+  LOG (debug) << "done";
 
   /* store part / iframe css for later */
   part_css = s.part_css ();
@@ -428,7 +454,7 @@ void AstroidExtension::handle_page (AstroidMessages::Page &s) {/*{{{*/
 }/*}}}*/
 
 void AstroidExtension::reload_images () {
-  cout << "ae: reload images." << endl;
+  LOG (debug) << "reload images.";
   GError * err = NULL;
   WebKitDOMDocument * d = webkit_web_page_get_dom_document (page);
 
@@ -458,7 +484,7 @@ void AstroidExtension::reload_images () {
               /* replace CID images with real image */
               if (usrc.substr (0, 4) == "cid:") {
                 ustring cid = usrc.substr (4, std::string::npos);
-                cout << "ae: CID: " << cid << endl;
+                LOG (debug) << "CID: " << cid;
 
                 // TODO: Get attachment somehow
               }
@@ -485,14 +511,14 @@ void AstroidExtension::reload_images () {
 }
 
 void AstroidExtension::handle_state (AstroidMessages::State &s) {/*{{{*/
-  cout << "ae: got state." << endl;
+  LOG (debug) << "got state.";
   state = s;
   edit_mode = state.edit_mode ();
   ack (true);
 }/*}}}*/
 
 void AstroidExtension::set_indent (bool indent) {
-  cout << "ae: update indent." << endl;
+  LOG (debug) << "update indent.";
   indent_messages = indent;
 
   WebKitDOMDocument * d = webkit_web_page_get_dom_document (page);
@@ -519,7 +545,7 @@ void AstroidExtension::set_indent (bool indent) {
 }
 
 void AstroidExtension::clear_messages (AstroidMessages::ClearMessage &) {
-  cout << "ae: clearing all messages." << endl;
+  LOG (debug) << "clearing all messages.";
 
   WebKitDOMDocument *d = webkit_web_page_get_dom_document (page);
   WebKitDOMElement * container = DomUtils::get_by_id (d, "message_container");
@@ -536,7 +562,7 @@ void AstroidExtension::clear_messages (AstroidMessages::ClearMessage &) {
 
 // Message generation {{{
 void AstroidExtension::add_message (AstroidMessages::Message &m) {
-  cout << "ae: adding message: " << m.mid () << endl;
+  LOG (debug) << "adding message: " << m.mid ();
 
   WebKitDOMDocument *d = webkit_web_page_get_dom_document (page);
   WebKitDOMElement * container = DomUtils::get_by_id (d, "message_container");
@@ -578,7 +604,7 @@ void AstroidExtension::add_message (AstroidMessages::Message &m) {
   g_object_unref (container);
   g_object_unref (d);
 
-  cout << "ae: message added." << endl;
+  LOG (debug) << "message added.";
 
   apply_focus (focused_message, focused_element); // in case we got focus before message was added.
 
@@ -586,7 +612,7 @@ void AstroidExtension::add_message (AstroidMessages::Message &m) {
 }
 
 void AstroidExtension::remove_message (AstroidMessages::Message &m) {
-  cout << "ae: removing message: " << m.mid () << endl;
+  LOG (debug) << "removing message: " << m.mid ();
 
   WebKitDOMDocument *d = webkit_web_page_get_dom_document (page);
   WebKitDOMElement * container = DomUtils::get_by_id (d, "message_container");
@@ -601,13 +627,13 @@ void AstroidExtension::remove_message (AstroidMessages::Message &m) {
   g_object_unref (container);
   g_object_unref (d);
 
-  cout << "ae: message removed." << endl;
+  LOG (debug) << "message removed.";
 
   ack (true);
 }
 
 void AstroidExtension::update_message (AstroidMessages::Message &m) {
-  cout << "ae: updating message: " << m.mid () << endl;
+  LOG (debug) << "updating message: " << m.mid ();
 
 
   WebKitDOMDocument *d = webkit_web_page_get_dom_document (page);
@@ -670,7 +696,7 @@ void AstroidExtension::update_message (AstroidMessages::Message &m) {
       focused_element = std::distance (ms->elements ().begin (), next_e);
 
     } else {
-      cout << "ae: take previous" << endl;
+      LOG (debug) << "take previous";
       /* take previous element */
       auto next_e = std::find_if (
           ms->elements().rbegin() +
@@ -894,8 +920,8 @@ void AstroidExtension::create_message_part_html (
 
   ustring mime_type = c.mime_type ();
 
-  cout << "create message part: " << c.id() << " (siblings: " << c.sibling() << ") (kids: " << c.kids().size() << ")" <<
-    " (attachment: " << c.attachment() << ")" << " (viewable: " << c.viewable() << ")" << " (focusable: " << c.focusable () << ")" << " (mimetype: " << mime_type << ")" << endl;
+   LOG (debug) << "create message part: " << c.id() << " (siblings: " << c.sibling() << ") (kids: " << c.kids().size() << ")" <<
+    " (attachment: " << c.attachment() << ")" << " (viewable: " << c.viewable() << ")" << " (focusable: " << c.focusable () << ")" << " (mimetype: " << mime_type << ")";
 
   if (c.use()) {
     if (!c.focusable () && c.viewable()) {
@@ -924,7 +950,7 @@ void AstroidExtension::create_body_part (
 {
   // <span id="body_template" class="body_part"></span>
 
-  cout << "create body part: " << c.id() << endl;
+  LOG (debug) << "create body part: " << c.id();
 
   GError *err;
 
@@ -1211,11 +1237,11 @@ void AstroidExtension::create_body_part (
       sigc::bind (
         sigc::mem_fun(*this, &AstroidExtension::set_iframe_src), message.mid(), c.sid(), body));
 
-  cout << "ae: create_body_part done." << endl;
+  LOG (debug) << "create_body_part done.";
 }
 
 void AstroidExtension::set_iframe_src (ustring mid, ustring cid, ustring body) {
-  cout << "ae: set iframe src: " << mid << ", " << cid << endl;
+  LOG (debug) << "set iframe src: " << mid << ", " << cid;
   /* this function is designed to be run async (on GUI thread in extension)
    * to avoid blocking the main astroid thread. ThreadView needs to approve
    * the request caused by the iframe and cannot be blocked by e.g.
@@ -1266,7 +1292,7 @@ void AstroidExtension::create_sibling_part (
     const AstroidMessages::Message::Chunk &sibling,
     WebKitDOMHTMLElement * span_body) {
 
-  cout << "create sibling part: " << sibling.id () << endl;
+  LOG (debug) << "create sibling part: " << sibling.id ();
   //
   //  <div id="sibling_template" class=sibling_container">
   //      <div class="message"></div>
@@ -1317,7 +1343,7 @@ void AstroidExtension::insert_mime_messages (
     DomUtils::select (WEBKIT_DOM_NODE(div_email_container), ".body");
 
   for (auto &c : m.mime_messages ()) {
-    cout << "create mime message part: " << c.id() << endl;
+    LOG (debug) << "create mime message part: " << c.id();
     //
     //  <div id="mime_template" class=mime_container">
     //      <div class="top_border"></div>
@@ -1644,7 +1670,7 @@ void AstroidExtension::set_warning (AstroidMessages::Info &m) {
     hide_warning (m); // ack's
     return;
   }
-  cout << "ae: set warning: " << m.txt () << endl;
+  LOG (debug) << "set warning: " << m.txt ();
 
   ustring mid = "message_" + m.mid();
   ustring txt = m.txt();
@@ -1673,7 +1699,7 @@ void AstroidExtension::set_warning (AstroidMessages::Info &m) {
 
 void AstroidExtension::hide_warning (AstroidMessages::Info &m)
 {
-  cout << "ae: hide warning." << endl;
+  LOG (debug) << "hide warning.";
   ustring mid = "message_" + m.mid();
 
   WebKitDOMDocument * d = webkit_web_page_get_dom_document (page);
@@ -1705,7 +1731,7 @@ void AstroidExtension::set_info (AstroidMessages::Info &m)
     hide_info (m); // ack's
     return;
   }
-  cout << "ae: set info: " << m.txt () << endl;
+  LOG (debug) << "set info: " << m.txt ();
 
   ustring mid = "message_" + m.mid();
   ustring txt = m.txt();
@@ -1734,7 +1760,7 @@ void AstroidExtension::set_info (AstroidMessages::Info &m)
 }
 
 void AstroidExtension::hide_info (AstroidMessages::Info &m) {
-  cout << "ae: hide info." << endl;
+  LOG (debug) << "hide info.";
   ustring mid = "message_" + m.mid();
 
   WebKitDOMDocument * d = webkit_web_page_get_dom_document (page);
@@ -1764,7 +1790,7 @@ void AstroidExtension::hide_info (AstroidMessages::Info &m) {
 
 void AstroidExtension::set_hidden (ustring mid, bool hidden) {
   /* hide or show message */
-  cout << "set hidden" << endl;
+  LOG (debug) << "set hidden";
   ustring div_id = "message_" + mid;
 
   GError * err = NULL;
@@ -1776,10 +1802,10 @@ void AstroidExtension::set_hidden (ustring mid, bool hidden) {
     webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(e));
 
   if (hidden) {
-    cout << "ae: hide: " << mid << endl;
+    LOG (debug) << "hide: " << mid;
     webkit_dom_dom_token_list_toggle (class_list, "hide", hidden, &err );
   } else if (webkit_dom_dom_token_list_contains (class_list, "hide")) {
-    cout << "ae: show: " << mid << endl;
+    LOG (debug) << "show: " << mid;
     webkit_dom_dom_token_list_toggle (class_list, "hide", false, &err );
   }
 
@@ -1848,7 +1874,7 @@ void AstroidExtension::handle_focus (AstroidMessages::Focus &msg) {
 }
 
 void AstroidExtension::apply_focus (ustring mid, int element) {
-  cout << "ae: focusing: " << mid << ": " << element << endl;
+  LOG (debug) << "focusing: " << mid << ": " << element;
   focused_message = mid;
   focused_element = element;
 
@@ -1896,7 +1922,7 @@ void AstroidExtension::apply_focus (ustring mid, int element) {
 
   g_object_unref (d);
 
-  cout << "ae: focus done." << endl;
+  LOG (debug) << "focus done.";
 }
 
 void AstroidExtension::update_focus_to_view () {
@@ -2006,7 +2032,7 @@ void AstroidExtension::update_focus_to_view () {
 
 void AstroidExtension::focus_next_element (bool force_change) {
   ustring eid;
-  cout << "fne: " << focused_message << ", " << focused_element << endl;
+  LOG (debug) << "fne: " << focused_message << ", " << focused_element;
 
   WebKitDOMDocument * d = webkit_web_page_get_dom_document (page);
   WebKitDOMDOMWindow * w = webkit_dom_document_get_default_view (d);
@@ -2040,7 +2066,7 @@ void AstroidExtension::focus_next_element (bool force_change) {
       /* check if the next element is in full view */
       eid = next_e->sid ();
 
-      cout << "ae: next_e: " << eid << endl;
+      LOG (debug) << "next_e: " << eid;
 
       if (force_change || DomUtils::in_view (page, eid)) {
         /* move focus to next element and scroll if necessary */
@@ -2244,7 +2270,7 @@ void AstroidExtension::focus_next_message () {
 
 void AstroidExtension::focus_previous_message (bool focus_top) {
   if (edit_mode) return;
-  cout << "prev message" << endl;
+  LOG (debug) << "prev message";
 
   auto s = std::find_if (
         state.messages().begin (),
@@ -2279,9 +2305,9 @@ void AstroidExtension::focus_previous_message (bool focus_top) {
 }
 
 void AstroidExtension::scroll_to_element (ustring eid) {
-  cout << "ae: scrolling to: " << eid << endl;
+  LOG (debug) << "scrolling to: " << eid;
   if (eid.empty()) {
-    cout << "ae: attempted to scroll to unspecified id." << endl;
+    LOG (debug) << "attempted to scroll to unspecified id.";
     return;
   }
 
@@ -2297,7 +2323,7 @@ void AstroidExtension::scroll_to_element (ustring eid) {
 
 void AstroidExtension::handle_navigate (AstroidMessages::Navigate &n) {
   std::string _t = AstroidMessages::Navigate_Type_descriptor ()->FindValueByNumber (n.type ())->name ();
-  cout << "ae: navigating, type: " << _t << endl;
+  LOG (debug) << "navigating, type: " << _t;
 
   WebKitDOMDocument * d = webkit_web_page_get_dom_document (page);
   WebKitDOMDOMWindow * w = webkit_dom_document_get_default_view (d);
@@ -2345,7 +2371,7 @@ void AstroidExtension::handle_navigate (AstroidMessages::Navigate &n) {
     update_focus_to_view ();
   }
 
-  cout << "ae: navigation done." << endl;
+  LOG (debug) << "navigation done.";
 
   g_object_unref (w);
   g_object_unref (d);

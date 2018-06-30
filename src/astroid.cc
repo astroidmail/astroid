@@ -78,9 +78,9 @@ namespace Astroid {
     logging::formatter format =
                   expr::stream
                       << "["
-                      << expr::format_date_time< boost::posix_time::ptime >("TimeStamp", "%H:%M:%S.%f")
+                      << expr::format_date_time< boost::posix_time::ptime >("TimeStamp", "%H:%M:%S")
                       << "] [" << expr::attr <boost::log::attributes::current_thread_id::value_type>("ThreadID")
-                      << "] [" << logging::trivial::severity
+                      << "] [M] [" << logging::trivial::severity
                       << "] " << expr::smessage
               ;
 
