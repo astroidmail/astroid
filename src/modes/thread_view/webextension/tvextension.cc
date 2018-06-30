@@ -471,8 +471,6 @@ void AstroidExtension::reload_images () {
           g_object_unref (in);
         }
 
-        /* TODO: Re-calculate size of iframe after showing images */
-
         g_object_unref (imgs);
         g_object_unref (b);
         g_object_unref (iframe_d);
@@ -1252,11 +1250,6 @@ void AstroidExtension::set_iframe_src (ustring mid, ustring cid, ustring body) {
 
   WebKitDOMHTMLElement * b = webkit_dom_document_get_body (iframe_d);
   webkit_dom_element_set_inner_html (WEBKIT_DOM_ELEMENT(b), body.c_str (), (err = NULL, &err));
-
-  double height = webkit_dom_element_get_scroll_height (WEBKIT_DOM_ELEMENT(b));
-  ustring h = ustring::compose ("%1px", height);
-
-  webkit_dom_html_iframe_element_set_height (WEBKIT_DOM_HTML_IFRAME_ELEMENT (iframe), h.c_str ());
 
   g_object_unref (b);
   g_object_unref (head);
