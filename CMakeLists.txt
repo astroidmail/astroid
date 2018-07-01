@@ -106,7 +106,7 @@ find_package ( Boost REQUIRED
   system
   )
 
-find_package (Protobuf REQUIRED)
+find_package (Protobuf 3.5 REQUIRED)
 set (PROTO_FILES
   src/modes/thread_view/webextension/messages.proto
   )
