@@ -5,7 +5,7 @@
   We have now finally moved to WebKit2. This is a big change since the previous
   functionality had to be moved to a WebExtension running in a separate process.
 
-  The IPC with the extension is implemented using Google ProtoBufs (>= 3.5) and Unix
+  The IPC with the extension is implemented using Google ProtoBufs (>= 3.0) and Unix
   Domain Sockets.
 
   WebKit2 is actively maintained and consequently a long list of CVEs in the

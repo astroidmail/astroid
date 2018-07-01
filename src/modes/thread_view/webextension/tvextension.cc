@@ -681,7 +681,7 @@ void AstroidExtension::update_message (AstroidMessages::Message &m) {
         return m.mid() == focused_message;
       });
 
-  if (!ms->elements()[focused_element].focusable()) {
+  if (!ms->elements(focused_element).focusable()) {
     /* find next or previous element */
 
     /* are there any more focusable elements */
@@ -1677,7 +1677,7 @@ void AstroidExtension::set_hidden (ustring mid, bool hidden) {
     if (focused_element > 0) {
       scroll_to_element (
           std::find_if (state.messages().begin (), state.messages().end (),
-            [&] (auto &m) { return m.mid () == focused_message; })->elements()[focused_element].sid ()
+            [&] (auto &m) { return m.mid () == focused_message; })->elements(focused_element).sid ()
           );
     } else {
       ustring div = "message_" + focused_message;
@@ -1810,7 +1810,7 @@ void AstroidExtension::update_focus_to_view () {
 
   /* take first if none focused */
   if (focused_message.empty ()) {
-    focused_message = state.messages()[0].mid() ;
+    focused_message = state.messages(0).mid() ;
     redo_focus = true;
   }
 
