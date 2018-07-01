@@ -15,6 +15,9 @@ namespace Astroid {
       Crypto (ustring protocol);
       ~Crypto ();
 
+      // used as element id
+      int id = 0;
+
       bool ready = false;
       bool isgpg = false;
       bool gpgenabled = true;

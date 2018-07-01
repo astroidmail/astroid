@@ -100,14 +100,6 @@ message AddressList {
   repeated Address addresses = 1;
 };
 
-message Signature {
-
-}
-
-message Encryption {
-
-}
-
 message Message {
   string mid = 1;
 
@@ -142,8 +134,27 @@ message Message {
     bool viewable = 2;
     bool preferred = 3;
     bool attachment = 7;
-    bool is_encrypted = 8;
-    bool is_signed = 9; // 'signed' doesn't
+
+    bool  is_encrypted = 8;
+    bool  is_signed = 9; // 'signed' doesn't work
+    int32 crypto_id = 21;
+
+    message Signature {
+      bool verified = 1;
+
+      repeated string sign_strings = 2;
+      repeated string all_errors = 3;
+    }
+
+    message Encryption {
+      bool decrypted = 1;
+      repeated string enc_strings = 2;
+    }
+
+    Signature   signature  = 19;
+    Encryption  encryption = 20;
+
+
     bool sibling = 11;
     bool use = 12;
     bool focusable = 18;

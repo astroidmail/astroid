@@ -623,10 +623,158 @@ namespace Astroid {
     part->set_size (c->get_file_size ());
     part->set_human_size (Utils::format_size (part->size()));
 
-    // TODO: Add signature state
-    // TODO: Add encryption state
     part->set_is_signed (c->issigned);
     part->set_is_encrypted (c->isencrypted);
+
+    if (c->issigned || c->isencrypted) {
+      LOG (debug) << "tv: added encrypt: " << c->crypt->id << " to chunk: " << c->id;
+      part->set_crypto_id (c->crypt->id);
+
+      /* add to MessageState */
+      if (!keep_state) {
+        MessageState::Element e (MessageState::ElementType::Encryption, c->crypt->id);
+        thread_view->state[m].elements.push_back (e);
+      }
+
+      vector<ustring> all_sig_errors;
+
+      if (c->issigned) {
+
+        refptr<Crypto> cr = c->crypt;
+        part->mutable_signature()->set_verified (cr->verified);
+
+        for (int i = 0; i < g_mime_signature_list_length (cr->slist); i++) {
+          GMimeSignature * s = g_mime_signature_list_get_signature (cr->slist, i);
+          GMimeCertificate * ce = NULL;
+          if (s) ce = g_mime_signature_get_certificate (s);
+
+          ustring nm, em, ky;
+          ustring gd = "";
+          ustring err = "";
+          vector<ustring> sig_errors;
+
+          if (ce) {
+            const char * c = NULL;
+            nm = (c = g_mime_certificate_get_name (ce), c ? c : "");
+            em = (c = g_mime_certificate_get_email (ce), c ? c : "");
+            ky = (c = g_mime_certificate_get_key_id (ce), c ? c : "");
+
+
+# if (GMIME_MAJOR_VERSION < 3)
+            switch (g_mime_signature_get_status (s)) {
+              case GMIME_SIGNATURE_STATUS_GOOD:
+                gd = "Good";
+                break;
+
+              case GMIME_SIGNATURE_STATUS_BAD:
+                gd = "Bad";
+                // fall through
+
+              case GMIME_SIGNATURE_STATUS_ERROR:
+                if (gd.empty ()) gd = "Erroneous";
+
+                GMimeSignatureError e = g_mime_signature_get_errors (s);
+                if (e & GMIME_SIGNATURE_ERROR_EXPSIG)
+                  sig_errors.push_back ("expired");
+                if (e & GMIME_SIGNATURE_ERROR_NO_PUBKEY)
+                  sig_errors.push_back ("no-pub-key");
+                if (e & GMIME_SIGNATURE_ERROR_EXPKEYSIG)
+                  sig_errors.push_back ("expired-key-sig");
+                if (e & GMIME_SIGNATURE_ERROR_REVKEYSIG)
+                  sig_errors.push_back ("revoked-key-sig");
+                if (e & GMIME_SIGNATURE_ERROR_UNSUPP_ALGO)
+                  sig_errors.push_back ("unsupported-algo");
+                if (!sig_errors.empty ()) {
+                  err = "[Error: " + VectorUtils::concat (sig_errors, ",") + "]";
+                }
+                break;
+# else
+            GMimeSignatureStatus stat = g_mime_signature_get_status (s);
+            if (g_mime_signature_status_good (stat)) {
+                gd = "Good";
+            } else if (g_mime_signature_status_bad (stat) || g_mime_signature_status_error (stat)) {
+
+              if (g_mime_signature_status_bad (stat)) gd = "Bad";
+              else gd = "Erroneous";
+
+              if (stat & GMIME_SIGNATURE_STATUS_KEY_REVOKED) sig_errors.push_back ("revoked-key");
+              if (stat & GMIME_SIGNATURE_STATUS_KEY_EXPIRED) sig_errors.push_back ("expired-key");
+              if (stat & GMIME_SIGNATURE_STATUS_SIG_EXPIRED) sig_errors.push_back ("expired-sig");
+              if (stat & GMIME_SIGNATURE_STATUS_KEY_MISSING) sig_errors.push_back ("key-missing");
+              if (stat & GMIME_SIGNATURE_STATUS_CRL_MISSING) sig_errors.push_back ("crl-missing");
+              if (stat & GMIME_SIGNATURE_STATUS_CRL_TOO_OLD) sig_errors.push_back ("crl-too-old");
+              if (stat & GMIME_SIGNATURE_STATUS_BAD_POLICY)  sig_errors.push_back ("bad-policy");
+              if (stat & GMIME_SIGNATURE_STATUS_SYS_ERROR)   sig_errors.push_back ("sys-error");
+              if (stat & GMIME_SIGNATURE_STATUS_TOFU_CONFLICT) sig_errors.push_back ("tofu-conflict");
+
+              if (!sig_errors.empty ()) {
+                err = "[Error: " + VectorUtils::concat (sig_errors, ",") + "]";
+              }
+# endif
+            }
+          } else {
+            err = "[Error: Could not get certificate]";
+          }
+
+# if (GMIME_MAJOR_VERSION < 3)
+          GMimeCertificateTrust t = g_mime_certificate_get_trust (ce);
+          ustring trust = "";
+          switch (t) {
+            case GMIME_CERTIFICATE_TRUST_NONE: trust = "none"; break;
+            case GMIME_CERTIFICATE_TRUST_NEVER: trust = "never"; break;
+            case GMIME_CERTIFICATE_TRUST_UNDEFINED: trust = "undefined"; break;
+            case GMIME_CERTIFICATE_TRUST_MARGINAL: trust = "marginal"; break;
+            case GMIME_CERTIFICATE_TRUST_FULLY: trust = "fully"; break;
+            case GMIME_CERTIFICATE_TRUST_ULTIMATE: trust = "ultimate"; break;
+          }
+# else
+          GMimeTrust t = g_mime_certificate_get_trust (ce);
+          ustring trust = "";
+          switch (t) {
+            case GMIME_TRUST_UNKNOWN: trust = "unknown"; break;
+            case GMIME_TRUST_UNDEFINED: trust = "undefined"; break;
+            case GMIME_TRUST_NEVER: trust = "never"; break;
+            case GMIME_TRUST_MARGINAL: trust = "marginal"; break;
+            case GMIME_TRUST_FULL: trust = "full"; break;
+            case GMIME_TRUST_ULTIMATE: trust = "ultimate"; break;
+          }
+# endif
+
+          part->mutable_signature ()->add_sign_strings (
+              ustring::compose (
+              "<br />%1 signature from: %2 (%3) [0x%4] [trust: %5] %6",
+              gd, nm, em, ky, trust, err));
+
+          for (auto &e : sig_errors) {
+            part->mutable_signature ()->add_all_errors (e);
+          }
+        }
+      }
+
+      if (c->isencrypted) {
+        refptr<Crypto> cr = c->crypt;
+
+        if (cr->decrypted) {
+          part->mutable_encryption ()->set_decrypted (true);
+
+          GMimeCertificateList * rlist = cr->rlist;
+          for (int i = 0; i < g_mime_certificate_list_length (rlist); i++) {
+
+            GMimeCertificate * ce = g_mime_certificate_list_get_certificate (rlist, i);
+
+            const char * c = NULL;
+            ustring fp = (c = g_mime_certificate_get_fingerprint (ce), c ? c : "");
+            ustring nm = (c = g_mime_certificate_get_name (ce), c ? c : "");
+            ustring em = (c = g_mime_certificate_get_email (ce), c ? c : "");
+            ustring ky = (c = g_mime_certificate_get_key_id (ce), c ? c : "");
+
+            part->mutable_encryption ()->add_enc_strings (
+                ustring::compose ("<br /> Encrypted for: %1 (%2) [0x%3]",
+                nm, em, ky));
+          }
+        }
+      }
+    }
 
     if (shallow) return part;
 

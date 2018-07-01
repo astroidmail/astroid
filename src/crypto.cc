@@ -10,9 +10,13 @@
 # include "config.hh"
 # include "crypto.hh"
 # include "utils/address.hh"
+# include "chunk.hh"
 
 namespace Astroid {
   Crypto::Crypto (ustring _protocol) {
+
+    id = Chunk::nextid++;
+
     using std::endl;
     config       = astroid->config ("crypto");
     gpgpath      = ustring (config.get<std::string> ("gpg.path"));

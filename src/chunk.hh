@@ -13,7 +13,9 @@
 
 namespace Astroid {
   class Chunk : public Glib::Object {
-    private:
+    friend Crypto;
+
+    protected:
       static std::atomic<uint> nextid;
 
     public:

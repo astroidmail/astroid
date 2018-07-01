@@ -708,6 +708,7 @@ body.nohide .email .compressed_note > span {
 
 .email > .email_container > .body > .encrypt_container {
   display: block;
+  clear: both;
   vertical-align: middle;
   text-align: center;
   padding-bottom: 5px;

@@ -215,8 +215,6 @@ void AstroidExtension::reader () {/*{{{*/
   while (run) {
     gsize read = 0;
 
-    // TODO: Remove all '<< flush's. They cause astroid to hang if output is
-    // suspended (e.g. when scrolling tmux)
     LOG (debug) << "reader waiting..";
 
     /* read size of message */
@@ -980,34 +978,24 @@ void AstroidExtension::create_body_part (
   }
   */
 
-  webkit_dom_node_append_child (WEBKIT_DOM_NODE (span_body),
-      WEBKIT_DOM_NODE (body_container), (err = NULL, &err));
-
   /* check encryption */
   //
   //  <div id="encrypt_template" class=encrypt_container">
   //      <div class="message"></div>
   //  </div>
-#if 0
-  if (c->is_encrypted() || c->is_signed()) {
+  if (c.is_encrypted() || c.is_signed()) {
     WebKitDOMHTMLElement * encrypt_container =
       DomUtils::clone_select (WEBKIT_DOM_NODE(d), "#encrypt_template");
 
     webkit_dom_element_remove_attribute (WEBKIT_DOM_ELEMENT (encrypt_container),
         "id");
 
-    // add to message state
-    MessageState::Element e (MessageState::ElementType::Encryption, c->id);
-    state[message].elements.push_back (e);
-    LOG (debug) << "tv: added encrypt: " << c->id;
-
     webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (encrypt_container),
-      "id", e.element_id().c_str(),
+      "id", ustring::compose ("%1", c.crypto_id()).c_str (),
       (err = NULL, &err));
 
     WebKitDOMDOMTokenList * class_list_e =
       webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(encrypt_container));
-
 
 
     ustring content = "";
@@ -1017,152 +1005,35 @@ void AstroidExtension::create_body_part (
 
     vector<ustring> all_sig_errors;
 
-    if (c->issigned) {
+    if (c.is_signed ()) {
 
-      refptr<Crypto> cr = c->crypt;
-
-      if (cr->verified) {
+      if (c.signature().verified()) {
         sign_string += "<span class=\"header\">Signature verification succeeded.</span>";
       } else {
         sign_string += "<span class=\"header\">Signature verification failed!</span>";
       }
 
-      for (int i = 0; i < g_mime_signature_list_length (cr->slist); i++) {
-        GMimeSignature * s = g_mime_signature_list_get_signature (cr->slist, i);
-        GMimeCertificate * ce = NULL;
-        if (s) ce = g_mime_signature_get_certificate (s);
-
-        ustring nm, em, ky;
-        ustring gd = "";
-        ustring err = "";
-        vector<ustring> sig_errors;
-
-        if (ce) {
-          const char * c = NULL;
-          nm = (c = g_mime_certificate_get_name (ce), c ? c : "");
-          em = (c = g_mime_certificate_get_email (ce), c ? c : "");
-          ky = (c = g_mime_certificate_get_key_id (ce), c ? c : "");
-
-
-# if (GMIME_MAJOR_VERSION < 3)
-          switch (g_mime_signature_get_status (s)) {
-            case GMIME_SIGNATURE_STATUS_GOOD:
-              gd = "Good";
-              break;
-
-            case GMIME_SIGNATURE_STATUS_BAD:
-              gd = "Bad";
-              // fall through
-
-            case GMIME_SIGNATURE_STATUS_ERROR:
-              if (gd.empty ()) gd = "Erroneous";
-
-              GMimeSignatureError e = g_mime_signature_get_errors (s);
-              if (e & GMIME_SIGNATURE_ERROR_EXPSIG)
-                sig_errors.push_back ("expired");
-              if (e & GMIME_SIGNATURE_ERROR_NO_PUBKEY)
-                sig_errors.push_back ("no-pub-key");
-              if (e & GMIME_SIGNATURE_ERROR_EXPKEYSIG)
-                sig_errors.push_back ("expired-key-sig");
-              if (e & GMIME_SIGNATURE_ERROR_REVKEYSIG)
-                sig_errors.push_back ("revoked-key-sig");
-              if (e & GMIME_SIGNATURE_ERROR_UNSUPP_ALGO)
-                sig_errors.push_back ("unsupported-algo");
-              if (!sig_errors.empty ()) {
-                err = "[Error: " + VectorUtils::concat (sig_errors, ",") + "]";
-              }
-              break;
-# else
-          GMimeSignatureStatus stat = g_mime_signature_get_status (s);
-          if (g_mime_signature_status_good (stat)) {
-              gd = "Good";
-          } else if (g_mime_signature_status_bad (stat) || g_mime_signature_status_error (stat)) {
-
-            if (g_mime_signature_status_bad (stat)) gd = "Bad";
-            else gd = "Erroneous";
-
-            if (stat & GMIME_SIGNATURE_STATUS_KEY_REVOKED) sig_errors.push_back ("revoked-key");
-            if (stat & GMIME_SIGNATURE_STATUS_KEY_EXPIRED) sig_errors.push_back ("expired-key");
-            if (stat & GMIME_SIGNATURE_STATUS_SIG_EXPIRED) sig_errors.push_back ("expired-sig");
-            if (stat & GMIME_SIGNATURE_STATUS_KEY_MISSING) sig_errors.push_back ("key-missing");
-            if (stat & GMIME_SIGNATURE_STATUS_CRL_MISSING) sig_errors.push_back ("crl-missing");
-            if (stat & GMIME_SIGNATURE_STATUS_CRL_TOO_OLD) sig_errors.push_back ("crl-too-old");
-            if (stat & GMIME_SIGNATURE_STATUS_BAD_POLICY)  sig_errors.push_back ("bad-policy");
-            if (stat & GMIME_SIGNATURE_STATUS_SYS_ERROR)   sig_errors.push_back ("sys-error");
-            if (stat & GMIME_SIGNATURE_STATUS_TOFU_CONFLICT) sig_errors.push_back ("tofu-conflict");
-
-            if (!sig_errors.empty ()) {
-              err = "[Error: " + VectorUtils::concat (sig_errors, ",") + "]";
-            }
-# endif
-          }
-        } else {
-          err = "[Error: Could not get certificate]";
-        }
-
-# if (GMIME_MAJOR_VERSION < 3)
-        GMimeCertificateTrust t = g_mime_certificate_get_trust (ce);
-        ustring trust = "";
-        switch (t) {
-          case GMIME_CERTIFICATE_TRUST_NONE: trust = "none"; break;
-          case GMIME_CERTIFICATE_TRUST_NEVER: trust = "never"; break;
-          case GMIME_CERTIFICATE_TRUST_UNDEFINED: trust = "undefined"; break;
-          case GMIME_CERTIFICATE_TRUST_MARGINAL: trust = "marginal"; break;
-          case GMIME_CERTIFICATE_TRUST_FULLY: trust = "fully"; break;
-          case GMIME_CERTIFICATE_TRUST_ULTIMATE: trust = "ultimate"; break;
-        }
-# else
-        GMimeTrust t = g_mime_certificate_get_trust (ce);
-        ustring trust = "";
-        switch (t) {
-          case GMIME_TRUST_UNKNOWN: trust = "unknown"; break;
-          case GMIME_TRUST_UNDEFINED: trust = "undefined"; break;
-          case GMIME_TRUST_NEVER: trust = "never"; break;
-          case GMIME_TRUST_MARGINAL: trust = "marginal"; break;
-          case GMIME_TRUST_FULL: trust = "full"; break;
-          case GMIME_TRUST_ULTIMATE: trust = "ultimate"; break;
-        }
-# endif
-
-
-        sign_string += ustring::compose (
-            "<br />%1 signature from: %2 (%3) [0x%4] [trust: %5] %6",
-            gd, nm, em, ky, trust, err);
-
-
-        all_sig_errors.insert (all_sig_errors.end(), sig_errors.begin (), sig_errors.end ());
+      for (auto &s : c.signature().sign_strings ()) {
+        sign_string += s;
       }
     }
 
-    if (c->isencrypted) {
-      refptr<Crypto> cr = c->crypt;
+    if (c.is_encrypted ()) {
+      if (c.is_signed ()) enc_string = "<span class=\"header\">Signed and Encrypted.</span>";
+      else                enc_string = "<span class=\"header\">Encrypted.</span>";
 
-      if (c->issigned) enc_string = "<span class=\"header\">Signed and Encrypted.</span>";
-      else             enc_string = "<span class=\"header\">Encrypted.</span>";
 
-      if (cr->decrypted) {
-
-        GMimeCertificateList * rlist = cr->rlist;
-        for (int i = 0; i < g_mime_certificate_list_length (rlist); i++) {
-
-          GMimeCertificate * ce = g_mime_certificate_list_get_certificate (rlist, i);
-
-          const char * c = NULL;
-          ustring fp = (c = g_mime_certificate_get_fingerprint (ce), c ? c : "");
-          ustring nm = (c = g_mime_certificate_get_name (ce), c ? c : "");
-          ustring em = (c = g_mime_certificate_get_email (ce), c ? c : "");
-          ustring ky = (c = g_mime_certificate_get_key_id (ce), c ? c : "");
-
-          enc_string += ustring::compose ("<br /> Encrypted for: %1 (%2) [0x%3]",
-              nm, em, ky);
+      if (c.encryption().decrypted ()) {
+        for (auto &e : c.encryption ().enc_strings ()) {
+          enc_string += e;
         }
 
-        if (c->issigned) enc_string += "<br /><br />";
+        if (c.is_signed ()) enc_string += "<br /><br />";
 
       } else {
-        enc_string += "Encrypted: Failed decryption.";
-      }
+        enc_string += "Encryption: Failed decryption.";
 
+      }
     }
 
     content = enc_string + sign_string;
@@ -1183,42 +1054,31 @@ void AstroidExtension::create_body_part (
     WebKitDOMDOMTokenList * class_list =
       webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(body_container));
 
-    if (c->isencrypted) {
-      webkit_dom_dom_token_list_add (class_list_e, "encrypted",
-          (err = NULL, &err));
-      webkit_dom_dom_token_list_add (class_list, "encrypted",
-          (err = NULL, &err));
+    if (c.is_encrypted ()) {
+      DomUtils::switch_class (class_list_e, "encrypted", true);
+      DomUtils::switch_class (class_list, "encrypted", true);
 
-      if (!c->crypt->decrypted) {
-        webkit_dom_dom_token_list_add (class_list_e, "decrypt_failed",
-            (err = NULL, &err));
-        webkit_dom_dom_token_list_add (class_list, "decrypt_failed",
-            (err = NULL, &err));
+      if (!c.encryption().decrypted()) {
+        DomUtils::switch_class (class_list_e, "decrypt_failed", true);
+        DomUtils::switch_class (class_list, "decrypt_failed", true);
       }
     }
 
-    if (c->issigned) {
-      webkit_dom_dom_token_list_add (class_list_e, "signed",
-          (err = NULL, &err));
+    if (c.is_signed ()) {
+      DomUtils::switch_class (class_list_e, "signed", true);
+      DomUtils::switch_class (class_list, "signed", true);
 
-      webkit_dom_dom_token_list_add (class_list, "signed",
-          (err = NULL, &err));
-
-      if (!c->crypt->verified) {
-        webkit_dom_dom_token_list_add (class_list_e, "verify_failed",
-            (err = NULL, &err));
-        webkit_dom_dom_token_list_add (class_list, "verify_failed",
-            (err = NULL, &err));
+      if (!c.signature().verified()) {
+        DomUtils::switch_class (class_list_e, "verify_failed", true);
+        DomUtils::switch_class (class_list, "verify_failed", true);
 
         /* add specific errors */
         std::sort (all_sig_errors.begin (), all_sig_errors.end ());
         all_sig_errors.erase (unique (all_sig_errors.begin (), all_sig_errors.end ()), all_sig_errors.end ());
 
         for (ustring & e : all_sig_errors) {
-          webkit_dom_dom_token_list_add (class_list_e, e.c_str (),
-              (err = NULL, &err));
-          webkit_dom_dom_token_list_add (class_list, e.c_str (),
-              (err = NULL, &err));
+          DomUtils::switch_class (class_list_e, e, true);
+          DomUtils::switch_class (class_list, e, true);
         }
       }
     }
@@ -1229,7 +1089,9 @@ void AstroidExtension::create_body_part (
     g_object_unref (message_cont);
 
   }
-# endif
+
+  webkit_dom_node_append_child (WEBKIT_DOM_NODE (span_body),
+      WEBKIT_DOM_NODE (body_container), (err = NULL, &err));
 
   g_object_unref (d);
 
@@ -1468,23 +1330,21 @@ void AstroidExtension::insert_attachments (
         WEBKIT_DOM_NODE (attachment_table), (err = NULL, &err));
 
 
-    /* if (c->issigned || c->isencrypted) { */
-    /*   /1* add encryption or signed tag to attachment *1/ */
-    /*   WebKitDOMDOMTokenList * class_list = */
-    /*     webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(attachment_table)); */
+    if (c.is_signed () || c.is_encrypted ()) {
+      /* add encryption or signed tag to attachment */
+      WebKitDOMDOMTokenList * class_list =
+        webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(attachment_table));
 
-    /*   if (c->isencrypted) { */
-    /*     webkit_dom_dom_token_list_add (class_list, "encrypted", */
-    /*         (err = NULL, &err)); */
-    /*   } */
+      if (c.is_encrypted ()) {
+        DomUtils::switch_class (class_list, "encrypted", true);
+      }
 
-    /*   if (c->issigned) { */
-    /*     webkit_dom_dom_token_list_add (class_list, "signed", */
-    /*         (err = NULL, &err)); */
-    /*   } */
+      if (c.is_signed ()) {
+        DomUtils::switch_class (class_list, "signed", true);
+      }
 
-    /*   g_object_unref (class_list); */
-    /* } */
+      g_object_unref (class_list);
+    }
 
     g_object_unref (img);
     g_object_unref (info_fname);
