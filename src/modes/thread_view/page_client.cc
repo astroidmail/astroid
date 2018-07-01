@@ -89,15 +89,29 @@ namespace Astroid {
 
     /* add path to Astroid web extension */
 # ifdef DEBUG
-    LOG (warn) << "pc: adding " << Resource::get_exe_dir ().c_str () << " to web extension search path.";
+    if (exists (path (Resource::get_exe_dir ()) / path("libtvextension.so"))) {
 
-    webkit_web_context_set_web_extensions_directory (
-        context,
-        Resource::get_exe_dir().c_str());
+      LOG (warn) << "pc: DEBUG build - found local extension. adding: " << Resource::get_exe_dir().c_str () << " to web extensions search path.";
+      webkit_web_context_set_web_extensions_directory (
+          context,
+          Resource::get_exe_dir ().c_str());
+
+    } else {
+
+      LOG (warn) << "pc: DEBUG build. no local extension found. adding installed path.";
+
+      path wke = path (PREFIX) / path ("lib/astroid/web-extensions");
+      LOG (info) << "pc: adding " << wke.c_str () << " to web extension search path.";
+
+      webkit_web_context_set_web_extensions_directory (
+          context,
+          wke.c_str());
+
+    }
 
 # else
     path wke = path (PREFIX) / path ("lib/astroid/web-extensions");
-    LOG (warn) << "pc: adding " << wke.c_str () << " to web extension search path.";
+    LOG (info) << "pc: adding " << wke.c_str () << " to web extension search path.";
 
     webkit_web_context_set_web_extensions_directory (
         context,
