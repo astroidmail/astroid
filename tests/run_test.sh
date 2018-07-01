@@ -49,7 +49,7 @@ if [ ! -e ${NOTMUCH_CONFIG} ]; then
 
   # set up theme
   mkdir -p ${BINDIR}/ui
-  cp ${SRCDIR}/ui/*.{scss,css,html} ${BINDIR}/ui/
+  find "${SRCDIR}/ui/" \( -name "*.scss" -o -name "*.html" -o -name "*.css" \) -exec cp -v {} "${BINDIR}/ui/" \;
 fi
 
 echo "Running: ${TEST}.."
