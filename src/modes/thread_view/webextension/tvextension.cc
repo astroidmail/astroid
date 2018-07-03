@@ -561,6 +561,7 @@ void AstroidExtension::clear_messages (AstroidMessages::ClearMessage &) {
 // Message generation {{{
 void AstroidExtension::add_message (AstroidMessages::Message &m) {
   LOG (debug) << "adding message: " << m.mid ();
+  messages[m.mid()] = m;
 
   WebKitDOMDocument *d = webkit_web_page_get_dom_document (page);
   WebKitDOMElement * container = DomUtils::get_by_id (d, "message_container");
@@ -611,6 +612,7 @@ void AstroidExtension::add_message (AstroidMessages::Message &m) {
 
 void AstroidExtension::remove_message (AstroidMessages::Message &m) {
   LOG (debug) << "removing message: " << m.mid ();
+  messages.erase (m.mid());
 
   WebKitDOMDocument *d = webkit_web_page_get_dom_document (page);
   WebKitDOMElement * container = DomUtils::get_by_id (d, "message_container");
@@ -632,6 +634,7 @@ void AstroidExtension::remove_message (AstroidMessages::Message &m) {
 
 void AstroidExtension::update_message (AstroidMessages::UpdateMessage &um) {
   auto m = um.m();
+  messages[m.mid()] = m;
 
   WebKitDOMDocument *d = webkit_web_page_get_dom_document (page);
   WebKitDOMElement * container = DomUtils::get_by_id (d, "message_container");

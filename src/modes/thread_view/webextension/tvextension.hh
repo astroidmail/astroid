@@ -74,6 +74,8 @@ class AstroidExtension {
     /* state */
     bool edit_mode = false;
     AstroidMessages::State state;
+    std::map<ustring,AstroidMessages::Message> messages;
+
     void handle_state (AstroidMessages::State &m);
     void clear_messages (AstroidMessages::ClearMessage &c);
 
