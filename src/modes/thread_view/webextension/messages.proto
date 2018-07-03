@@ -206,6 +206,17 @@ message State {
   bool edit_mode = 3;
 }
 
+message UpdateMessage {
+  Message m = 1;
+
+  enum Type {
+    Tags         = 0;
+    VisibleParts = 1;
+  }
+
+  Type type = 2;
+}
+
 message ClearMessage {
   bool yes = 1;
 }

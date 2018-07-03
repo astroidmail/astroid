@@ -357,7 +357,7 @@ void AstroidExtension::reader () {/*{{{*/
 
       case AeProtocol::MessageTypes::UpdateMessage:
         {
-          AstroidMessages::Message m;
+          AstroidMessages::UpdateMessage m;
           m.ParseFromString (buffer);
           Glib::signal_idle().connect_once (
               sigc::bind (
@@ -630,9 +630,8 @@ void AstroidExtension::remove_message (AstroidMessages::Message &m) {
   ack (true);
 }
 
-void AstroidExtension::update_message (AstroidMessages::Message &m) {
-  LOG (debug) << "updating message: " << m.mid ();
-
+void AstroidExtension::update_message (AstroidMessages::UpdateMessage &um) {
+  auto m = um.m();
 
   WebKitDOMDocument *d = webkit_web_page_get_dom_document (page);
   WebKitDOMElement * container = DomUtils::get_by_id (d, "message_container");
@@ -641,80 +640,91 @@ void AstroidExtension::update_message (AstroidMessages::Message &m) {
 
   WebKitDOMHTMLElement * old_div_message = WEBKIT_DOM_HTML_ELEMENT(webkit_dom_document_get_element_by_id (d, div_id.c_str()));
 
-  /* various states */
-  bool hidden = is_hidden (m.mid ());
-  // TODO: info and warning
+  if (um.type () == AstroidMessages::UpdateMessage_Type_VisibleParts) {
+    LOG (debug) << "updating message: " << m.mid () << " (full update)";
+    /* various states */
+    bool hidden = is_hidden (m.mid ());
+    // TODO: info and warning
 
-  GError * err = NULL;
+    GError * err = NULL;
 
-  WebKitDOMHTMLElement * div_message = DomUtils::make_message_div (d);
-  webkit_dom_element_set_id (WEBKIT_DOM_ELEMENT (div_message), div_id.c_str());
-  set_message_html (m, div_message);
+    WebKitDOMHTMLElement * div_message = DomUtils::make_message_div (d);
+    webkit_dom_element_set_id (WEBKIT_DOM_ELEMENT (div_message), div_id.c_str());
+    set_message_html (m, div_message);
 
-  /* insert mime messages */
-  if (!m.missing_content()) {
-    insert_mime_messages (m, div_message);
+    /* insert mime messages */
+    if (!m.missing_content()) {
+      insert_mime_messages (m, div_message);
+    }
+
+    /* insert attachments */
+    if (!m.missing_content()) {
+      insert_attachments (m, div_message);
+    }
+
+    /* marked */
+    load_marked_icon (div_message);
+
+    webkit_dom_node_replace_child (WEBKIT_DOM_NODE(container), WEBKIT_DOM_NODE (div_message), WEBKIT_DOM_NODE (old_div_message), (err = NULL, &err));
+
+    /* set various state */
+    set_hidden (m.mid (), hidden);
+    set_indent (indent_messages);
+
+    g_object_unref (div_message);
+
+    auto ms = std::find_if (
+        state.messages().begin(),
+        state.messages().end(),
+        [&] (auto m) {
+          return m.mid() == focused_message;
+        });
+
+    if (!ms->elements(focused_element).focusable()) {
+      /* find next or previous element */
+
+      /* are there any more focusable elements */
+      auto next_e = std::find_if (
+          ms->elements().begin () + (focused_element +1),
+          ms->elements().end (),
+          [&] (auto &e) { return e.focusable (); });
+
+      if (next_e != ms->elements().end()) {
+        focused_element = std::distance (ms->elements ().begin (), next_e);
+
+      } else {
+        LOG (debug) << "take previous";
+        /* take previous element */
+        auto next_e = std::find_if (
+            ms->elements().rbegin() +
+              (ms->elements().size() - focused_element),
+
+            ms->elements().rend (),
+            [&] (auto &e) { return e.focusable (); });
+
+        if (next_e != ms->elements().rend ()) {
+          /* previous */
+          focused_element = std::distance (ms->elements ().begin (), next_e.base() -1);
+        } else {
+          /* message */
+          focused_element = 0;
+        }
+      }
+
+    }
+
+    apply_focus (focused_message, focused_element);
+
+  } else if (um.type () == AstroidMessages::UpdateMessage_Type_Tags) {
+    LOG (debug) << "updating message: " << m.mid () << " (tags only)";
+    message_render_tags (m, WEBKIT_DOM_HTML_ELEMENT(old_div_message));
+    message_update_css_tags (m, WEBKIT_DOM_HTML_ELEMENT(old_div_message));
   }
 
-  /* insert attachments */
-  if (!m.missing_content()) {
-    insert_attachments (m, div_message);
-  }
-
-  /* marked */
-  load_marked_icon (div_message);
-
-  webkit_dom_node_replace_child (WEBKIT_DOM_NODE(container), WEBKIT_DOM_NODE (div_message), WEBKIT_DOM_NODE (old_div_message), (err = NULL, &err));
-
-  /* set various state */
-  set_hidden (m.mid (), hidden);
-  set_indent (indent_messages);
-
-  g_object_unref (div_message);
+  g_object_unref (old_div_message);
   g_object_unref (container);
   g_object_unref (d);
 
-  auto ms = std::find_if (
-      state.messages().begin(),
-      state.messages().end(),
-      [&] (auto m) {
-        return m.mid() == focused_message;
-      });
-
-  if (!ms->elements(focused_element).focusable()) {
-    /* find next or previous element */
-
-    /* are there any more focusable elements */
-    auto next_e = std::find_if (
-        ms->elements().begin () + (focused_element +1),
-        ms->elements().end (),
-        [&] (auto &e) { return e.focusable (); });
-
-    if (next_e != ms->elements().end()) {
-      focused_element = std::distance (ms->elements ().begin (), next_e);
-
-    } else {
-      LOG (debug) << "take previous";
-      /* take previous element */
-      auto next_e = std::find_if (
-          ms->elements().rbegin() +
-            (ms->elements().size() - focused_element),
-
-          ms->elements().rend (),
-          [&] (auto &e) { return e.focusable (); });
-
-      if (next_e != ms->elements().rend ()) {
-        /* previous */
-        focused_element = std::distance (ms->elements ().begin (), next_e.base() -1);
-      } else {
-        /* message */
-        focused_element = 0;
-      }
-    }
-
-  }
-
-  apply_focus (focused_message, focused_element);
   ack (true);
 }
 
@@ -783,9 +793,7 @@ void AstroidExtension::set_message_html (
     DomUtils::select (WEBKIT_DOM_NODE(div_email_container),
         ".header_container .header" );
 
-  if (m.tags().size () > 0) {
-    header += create_header_row ("Tags", "", false, false, true);
-  }
+  header += create_header_row ("Tags", "", false, false, true);
 
   webkit_dom_element_set_inner_html (
       WEBKIT_DOM_ELEMENT(table_header),

@@ -425,7 +425,7 @@ namespace Astroid {
     update_state ();
 
     /* send updated message */
-    update_message (m);
+    update_message (m, AstroidMessages::UpdateMessage_Type_VisibleParts);
   }
 
   void PageClient::remove_message (refptr<Message> m) {
@@ -442,9 +442,14 @@ namespace Astroid {
         );
   }
 
-  void PageClient::update_message (refptr<Message> m) {
+  void PageClient::update_message (refptr<Message> m, AstroidMessages::UpdateMessage_Type t) {
+
+    AstroidMessages::UpdateMessage msg;
+    *msg.mutable_m() = make_message (m, true);
+    msg.set_type (t);
+
     handle_ack (
-        AeProtocol::send_message_sync (AeProtocol::MessageTypes::UpdateMessage, make_message (m, true), ostream, m_ostream, istream, m_istream)
+        AeProtocol::send_message_sync (AeProtocol::MessageTypes::UpdateMessage, msg, ostream, m_ostream, istream, m_istream)
         );
   }
 

@@ -440,7 +440,7 @@ namespace Astroid {
           refptr<Message> _m = refptr<Message> (m);
           _m->reference (); // since m is owned by caller
 
-          page_client->update_message (_m);
+          page_client->update_message (_m, AstroidMessages::UpdateMessage_Type_Tags);
           page_client->update_state ();
         }
 

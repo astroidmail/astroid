@@ -30,7 +30,7 @@ namespace Astroid {
       /* ThreadView interface */
       void load ();
       void add_message (refptr<Message> m);
-      void update_message (refptr<Message> m);
+      void update_message (refptr<Message> m, AstroidMessages::UpdateMessage_Type t);
       void remove_message (refptr<Message> m);
       void update_state ();
       void clear_messages ();
