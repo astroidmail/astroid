@@ -238,12 +238,14 @@ void AstroidExtension::reader () {/*{{{*/
     read = istream->read ((char*)&mt, sizeof (mt), reader_cancel);
     if (read != sizeof (mt)) break;
 
+    LOG (debug) << "reader: got message: " << AeProtocol::MessageTypeStrings[mt] << ", size: " << sz;
+
     /* read message */
     gchar buffer[sz + 1]; buffer[sz] = '\0';
     bool s = istream->read_all (buffer, sz, read, reader_cancel);
 
     if (!s) {
-      LOG (debug) << "pc: reader: error while reading message (size: " << sz << ")";
+      LOG (debug) << "reader: error while reading message (size: " << sz << ")";
       break;
     }
 
@@ -484,11 +486,25 @@ void AstroidExtension::reload_images () {
                 ustring cid = usrc.substr (4, std::string::npos);
                 LOG (debug) << "CID: " << cid;
 
-                // TODO: Get attachment somehow
-              }
+                auto s = std::find_if ( messages[m.mid()].attachments().begin (),
+                                        messages[m.mid()].attachments().end (),
+                                        [&] (auto &a) { return a.cid() == cid; } );
 
-              webkit_dom_element_set_attribute (ine, "src", "", (err = NULL, &err));
-              webkit_dom_element_set_attribute (ine, "src", src, (err = NULL, &err));
+                if (s != messages[m.mid()].attachments().end ()) {
+                  LOG (debug) << "found matching attachment for CID.";
+
+                  webkit_dom_element_set_attribute (ine, "src", "", (err = NULL, &err));
+                  webkit_dom_element_set_attribute (ine, "src", s->content().c_str (), (err = NULL, &err));
+
+                } else {
+                  LOG (warn) << "could not find matching attachment for CID.";
+                }
+              } else {
+
+                /* trigger reload */
+                webkit_dom_element_set_attribute (ine, "src", "", (err = NULL, &err));
+                webkit_dom_element_set_attribute (ine, "src", src, (err = NULL, &err));
+              }
             }
           }
 

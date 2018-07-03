@@ -131,6 +131,7 @@ message Message {
     int32 id = 1;
     string sid = 13;
     string mime_type = 6;
+    string cid = 22;
     bool viewable = 2;
     bool preferred = 3;
     bool attachment = 7;

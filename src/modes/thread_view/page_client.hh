@@ -66,7 +66,9 @@ namespace Astroid {
     private:
       AstroidMessages::Message  make_message (refptr<Message> m, bool keep_state = false);
       AstroidMessages::Message::Chunk * build_mime_tree (refptr<Message> m, refptr<Chunk> c, bool root, bool shallow, bool keep_state = false);
-      ustring                   get_attachment_thumbnail (refptr<Chunk>);
+
+      ustring get_attachment_thumbnail (refptr<Chunk>);
+      ustring get_attachment_data (refptr<Chunk>);
 
       static const int MAX_PREVIEW_LEN = 80;
       static const int THUMBNAIL_WIDTH        = 150; // px

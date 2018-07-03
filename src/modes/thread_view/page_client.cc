@@ -605,6 +605,11 @@ namespace Astroid {
 
       _c->set_thumbnail (get_attachment_thumbnail (c));
 
+      if (!c->content_id.empty ()) {
+        /* send content if CID is set */
+        _c->set_content (get_attachment_data (c));
+      }
+
       if (!keep_state) {
         // add attachment to message state
         MessageState::Element e (MessageState::ElementType::Attachment, c->id);
@@ -634,6 +639,7 @@ namespace Astroid {
     /* defaults */
     part->set_mime_type (mime_type);
     part->set_content ("");
+    part->set_cid (c->content_id);
 
     part->set_id (c->id);
     part->set_sid (ustring::compose ("%1", c->id));
@@ -941,7 +947,7 @@ namespace Astroid {
       mime_type = ustring(g_mime_content_type_get_mime_type (c->content_type));
     }
 
-    LOG (debug) << "tv: set attachment, mime_type: " << mime_type << ", mtype: " << _mtype;
+    LOG (debug) << "tv: set attachment thumbnail, mime_type: " << mime_type << ", mtype: " << _mtype;
 
     gchar * content;
     gsize   content_size;
@@ -974,6 +980,22 @@ namespace Astroid {
     }
 
     return DomUtils::assemble_data_uri (image_content_type.c_str (), content, content_size);
+  } // }}}
+
+  ustring PageClient::get_attachment_data (refptr<Chunk> c) { // {{{
+    /* set the preview image or icon on the attachment display element */
+    const char * _mtype = g_mime_content_type_get_media_type (c->content_type);
+    ustring mime_type;
+    if (_mtype == NULL) {
+      mime_type = "application/octet-stream";
+    } else {
+      mime_type = ustring(g_mime_content_type_get_mime_type (c->content_type));
+    }
+
+    auto data = c->contents ();
+
+    LOG (debug) << "tv: set attachment data, mime_type: " << mime_type << ", mtype: " << _mtype;
+    return DomUtils::assemble_data_uri (mime_type.c_str (), (const gchar *) data->get_data (), data->size ());
   } // }}}
 
   void PageClient::scroll_down_big () {
