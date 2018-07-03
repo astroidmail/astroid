@@ -21,6 +21,25 @@
 
 namespace Astroid {
 
+  const char * AeProtocol::MessageTypeStrings[] = {
+    "Debug",
+    "Ack",
+    "Info",
+    "Page",
+    "State",
+    "Indent",
+    "AllowRemoteImages",
+    "Focus",
+    "Navigate",
+    "Mark",
+    "Hidden",
+    "ClearMessages",
+    "AddMessage",
+    "UpdateMessage",
+    "RemoveMessage",
+  };
+
+
   void AeProtocol::send_message (
       MessageTypes mt,
       const ::google::protobuf::Message &m,
@@ -51,7 +70,7 @@ namespace Astroid {
       Glib::RefPtr<Gio::OutputStream> ostream,
       std::mutex &m_ostream)
   {
-    LOG (debug) << "ae: sending: " << mt;
+    LOG (debug) << "ae: sending: " << MessageTypeStrings[mt];
     LOG (debug) << "ae: send (async) waiting for lock";
     std::lock_guard<std::mutex> lk (m_ostream);
     send_message (mt, m, ostream);
@@ -66,7 +85,7 @@ namespace Astroid {
       Glib::RefPtr<Gio::InputStream> istream,
       std::mutex & m_istream)
   {
-    LOG (debug) << "ae: sending: " << mt;
+    LOG (debug) << "ae: sending: " << MessageTypeStrings[mt];
     LOG (debug) << "ae: send (sync) waiting for lock..";
     std::lock_guard<std::mutex> rlk (m_istream);
     std::lock_guard<std::mutex> wlk (m_ostream);

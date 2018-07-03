@@ -9,6 +9,10 @@ namespace Astroid {
   class AeProtocol {
     public:
       typedef enum _MessageTypes {
+        /*
+         * XXX: Add string value to map in MessageTypeStrings
+         */
+
         Debug = 0,
         Ack,
         Info,
@@ -25,6 +29,8 @@ namespace Astroid {
         UpdateMessage,
         RemoveMessage,
       } MessageTypes;
+
+      static const char* MessageTypeStrings[];
 
       static void send_message_async (
           MessageTypes mt,
