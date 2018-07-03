@@ -20,7 +20,8 @@ body {
   background-color: white !important;
   overflow-x: auto;
   overflow-y: hidden;
-  word-break: break-all;
+  word-break: break-word;
+  word-wrap: break-word;
 
   font-size: $font-base-size;
   font-family: $font-family-default;
