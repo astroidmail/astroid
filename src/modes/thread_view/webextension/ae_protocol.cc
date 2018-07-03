@@ -57,9 +57,10 @@ namespace Astroid {
     ostream->write ((char*) &mt, sizeof (mt));
 
     /* send message */
-    ostream->write (o.c_str (), o.size ());
+    gsize written = 0;
+    ostream->write_all (o, written);
     ostream->flush ();
-    LOG (debug) << "ae: wrote: " << o.size () << " bytes.";
+    LOG (debug) << "ae: wrote: " << written << " of " << o.size () << " bytes.";
   }
 
   void AeProtocol::send_message_async (
