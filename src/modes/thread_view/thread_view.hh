@@ -194,8 +194,6 @@ namespace Astroid {
 
       /* message loading and rendering */
       void add_message (refptr<Message>);
-      void update_message (refptr<Message>);
-      void remove_message (refptr<Message>);
 
       bool open_html_part_external;
 

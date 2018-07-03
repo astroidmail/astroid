@@ -440,15 +440,34 @@ namespace Astroid {
           refptr<Message> _m = refptr<Message> (m);
           _m->reference (); // since m is owned by caller
 
-          update_message (_m);
+          page_client->update_message (_m);
+          page_client->update_state ();
         }
-      } else if (me == Message::MessageChangedEvent::MESSAGE_REMOVED) {
+
+      }
+        else if (me ==
+          Message::MessageChangedEvent::MESSAGE_REMOVED)
+      {
+
         LOG (debug) << "tv: got message removed.";
 
         refptr<Message> _m = refptr<Message> (m);
         _m->reference (); // since m is owned by caller
 
-        remove_message (_m);
+        LOG (debug) << "tv: remove message: " << m->mid;
+        state.erase (_m);
+
+        /* check if message has been removed from messagethread, if not
+         * message state will not be consistent between threads */
+        for (auto &mm : mthread->messages) {
+          if (m->mid == mm->mid) {
+            LOG (error) << "tv: removed message, but it is still present in the MessageThread.";
+            throw runtime_error ("tv: removed message, but it is still present in the MessageThread: inconsitent state.");
+          }
+        }
+
+        page_client->remove_message (_m);
+        page_client->update_state ();
       }
     }
   }
@@ -573,36 +592,6 @@ namespace Astroid {
 
       }
     }
-
-  }
-
-  void ThreadView::update_message (refptr<Message> m) {
-    LOG (debug) << "tv: updating message: " << m->mid;
-
-    page_client->update_message (m);
-    page_client->update_state ();
-
-    // if the updated message was focused, the currently focused element may
-    // have changed.
-    if (m == focused_message)
-      focus_element (focused_message, state[focused_message].current_element);
-  }
-
-  void ThreadView::remove_message (refptr<Message> m) {
-    LOG (debug) << "tv: remove message: " << m->mid;
-    state.erase (m);
-
-    /* check if message has been removed from messagethread, if not
-     * message state will not be consistent between threads */
-    for (auto &mm : mthread->messages) {
-      if (m->mid == mm->mid) {
-        LOG (error) << "tv: removed message, but it is still present in the MessageThread.";
-        throw runtime_error ("tv: removed message, but it is still present in the MessageThread: inconsitent state.");
-      }
-    }
-
-    page_client->remove_message (m);
-    page_client->update_state ();
   }
 
   void ThreadView::filter_code_tags (ustring &body) { // {{{
