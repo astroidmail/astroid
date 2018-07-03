@@ -324,7 +324,6 @@ namespace Astroid {
         LOG (warn) << "cf: no config, using defaults.";
       }
       config = setup_default_config (true);
-      write_back_config ();
     } else {
 
       /* loading config file */
@@ -335,9 +334,7 @@ namespace Astroid {
 
       merge_ptree (new_config);
 
-      if (!check_config (new_config)) {
-        write_back_config ();
-      }
+      check_config (new_config);
     }
 
     /* load save_dir */

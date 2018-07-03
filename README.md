@@ -4,7 +4,7 @@
 
 The [tour of how to install, configure and use astroid](https://github.com/astroidmail/astroid/wiki) provides detailed information on setup and usage, while brief instructions are provided [below](#acquiring-astroid).
 
-## main features
+## Main features
 * lightweight and fast!
 * fully operable by [keyboard](https://github.com/astroidmail/astroid/wiki/Customizing-key-bindings).
 * graphical interface. buffers can be placed in separate windows.
@@ -20,17 +20,17 @@ The [tour of how to install, configure and use astroid](https://github.com/astro
     <img alt="Astroid (with external editor)" src="https://raw.githubusercontent.com/astroidmail/astroid/master/doc/full-demo-external.png">
   </a>
 
-## acquiring astroid
+## Acquiring astroid
 
-get astroid by doing:
+Get astroid through git by:
 
 ```sh
 $ git clone https://github.com/astroidmail/astroid.git
 ```
 
-## installation and usage
+## Installation and Usage
 
-### compiling
+### Building
 
 ```sh
 $ cd astroid
@@ -38,16 +38,16 @@ $ cmake -H. -Bbuild -GNinja # to use the ninja backend
 $ cmake --build build
 ```
 
-run `cmake -DOPTION=VALUE ..` from `build/` to set any build options (list with `cmake -L`). Subsequent builds can be done by running `ninja` (or `make` if you are using that) from the build directory.
+Run `cmake -DOPTION=VALUE ..` from `build/` to set any build options (list with `cmake -L`). Subsequent builds can be done by running `ninja` (or `make` if you are using that) from the build directory.
 
-to run the tests do:
+And to run the tests do:
 
 ```sh
 $ cd build
 $ ctest
 ```
 
-### installing
+### Installing
 
 Configure with a prefix and install:
 ```sh
@@ -55,21 +55,21 @@ $ cmake -H. -Bbuild -GNinja -DCMAKE_INSTALL_PREFIX=/usr/local
 $ cmake --build build --target install
 ```
 
-this will install the `astroid` binary into `/usr/local/bin/`, and data files into `/usr/local/share/astroid/`. Refer to the [installing section](https://github.com/astroidmail/astroid/wiki/Compiling-and-Installing) in the wiki for more information.
+This will install the `astroid` binary into `/usr/local/bin/`, and data files into `/usr/local/share/astroid/`. Refer to the [installing section](https://github.com/astroidmail/astroid/wiki/Compiling-and-Installing) in the wiki for more information.
 
-### configuration
+### Configuration
 
-The initial run of `astroid` will create a new configuration file in `$XDG_CONFIG_HOME/astroid` (normally: `~/.config/astroid/`). Refer to the [configuration section](https://github.com/astroidmail/astroid/wiki/Astroid-setup) in the wiki for more information.
+The configuration of `astroid` is kept in the directory `$XDG_CONFIG_HOME/astroid` (normally: `~/.config/astroid/`). Refer to the [configuration section](https://github.com/astroidmail/astroid/wiki/Astroid-setup) in the wiki for how to configure astroid. You can use `astroid --new-config` to create a configuration file filled with the default values. If no file exists, the [default values](https://github.com/astroidmail/astroid/blob/master/src/config.cc#L116) are used.
 
-### execution and usage
+### Execution and Usage
 
 ```sh
 $ ./build/astroid # to run from source repository
 ```
 
-press `?` to get a list of available key bindings in the current mode, navigate up and down using `j` and `k`. refer to the [usage section](https://github.com/astroidmail/astroid/wiki#usage) in the wiki for more information on usage and customization.
+Press `?` to get a list of available key bindings in the current mode, navigate up and down using `j` and `k`. Refer to the [usage section](https://github.com/astroidmail/astroid/wiki#usage) in the wiki for more information on usage and customization.
 
-## patches, help, comments and bugs
+## Patches, Help, Comments and Bugs
 
 Report on the [github page](https://github.com/astroidmail/astroid) or to the mailinglist at: [astroidmail@googlegroups.com](https://groups.google.com/forum/#!forum/astroidmail), subscribe [online](https://groups.google.com/forum/#!forum/astroidmail) or by sending an email to:
 [astroidmail+subscribe@googlegroups.com](mailto:astroidmail+subscribe@googlegroups.com).
@@ -83,7 +83,7 @@ You can usually find us at <a href="irc://irc.freenode.net/#astroid">#astroid</a
 
 This project adheres to [Contributor Covenant Code of Conduct v1.4](http://contributor-covenant.org/version/1/4/).
 
-## acknowledgements
+## Acknowledgements
 
   The main inspiration for astroid is the [sup] mail user agent. [sup]
   provided inspiration for [notmuch] which is a mail indexer. astroid is
@@ -92,7 +92,7 @@ This project adheres to [Contributor Covenant Code of Conduct v1.4](http://contr
   Some parts of the user interface and layout have been has been
   inspired by the [Geary] mail client. Also, some inspiration and code stems from ner (another notmuch email client).
 
-## licensing
+## License
 
 See [LICENSE.md](./LICENSE.md) for licensing information.
 

@@ -209,6 +209,7 @@ namespace Astroid {
 
       LOG (info) << "writing default config to: " << ncnf.std_paths.config_file.c_str();
       ncnf.load_config (true);
+      ncnf.write_back_config ();
 
       exit (0);
     } // }}}
