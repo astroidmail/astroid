@@ -487,6 +487,8 @@ namespace Astroid {
 
     msg.set_patch (m->is_patch ());
 
+    msg.set_missing_content (m->missing_content);
+
     /* tags */
     {
       unsigned char cv[] = { 0xff, 0xff, 0xff };
@@ -569,7 +571,9 @@ namespace Astroid {
     }
 
     /* build structure */
-    msg.set_allocated_root (build_mime_tree (m, m->root, true, false, keep_state));
+    if (!m->missing_content) {
+      msg.set_allocated_root (build_mime_tree (m, m->root, true, false, keep_state));
+    }
 
     /* add MIME messages */
     for (refptr<Chunk> &c : m->mime_messages ()) {
