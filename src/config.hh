@@ -61,8 +61,8 @@ namespace Astroid {
 
     private:
       ptree setup_default_config (bool);
+      void  setup_default_initial_config (ptree &conf, bool accounts = true, bool startup = true);
 
-      /* TODO: split into utils/ somewhere.. */
       /* merge of property trees */
 
       // from http://stackoverflow.com/questions/8154107/how-do-i-merge-update-a-boostproperty-treeptree

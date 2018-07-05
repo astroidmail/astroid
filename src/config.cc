@@ -113,6 +113,46 @@ namespace Astroid {
     std_paths.attach_dir = std_paths.home;
   }
 
+  void  Config::setup_default_initial_config (ptree &conf, bool accounts, bool startup) {
+    /* initial default options - these are only set when the sections are
+     * completely missing.
+     */
+
+    if (accounts) {
+      /* default example account:
+       *
+       * note: AccountManager will complain if there are no accounts defined.
+       *
+       */
+      conf.put ("accounts.charlie.name", "Charlie Root");
+      conf.put ("accounts.charlie.email", "root@localhost");
+      conf.put ("accounts.charlie.gpgkey", "");
+      conf.put ("accounts.charlie.always_gpg_sign", false);
+      conf.put ("accounts.charlie.sendmail", "msmtp -i -t");
+      conf.put ("accounts.charlie.default", true);
+      conf.put ("accounts.charlie.save_sent", false);
+      conf.put ("accounts.charlie.save_sent_to",
+          "/home/root/Mail/sent/cur/");
+      conf.put ("accounts.charlie.additional_sent_tags", "");
+
+      conf.put ("accounts.charlie.save_drafts_to",
+          "/home/root/Mail/drafts/");
+
+      conf.put ("accounts.charlie.signature_separate", false);
+      conf.put ("accounts.charlie.signature_file", "");
+      conf.put ("accounts.charlie.signature_file_markdown", "");
+      conf.put ("accounts.charlie.signature_default_on", true);
+      conf.put ("accounts.charlie.signature_attach", false);
+
+      conf.put ("accounts.charlie.select_query", "");
+    }
+
+    if (startup) {
+      /* default searches, also only set if initial */
+      conf.put("startup.queries.inbox", "tag:inbox");
+    }
+  }
+
   ptree Config::setup_default_config (bool initial) {
     ptree default_config;
     default_config.put ("astroid.config.version", CONFIG_VERSION);
@@ -134,38 +174,7 @@ namespace Astroid {
 # endif
 
     if (initial) {
-      /* initial default options - these are only set when a new
-       * configuration file is created. */
-
-      /* default example account:
-       *
-       * note: AccountManager will complain if there are no accounts defined.
-       *
-       */
-      default_config.put ("accounts.charlie.name", "Charlie Root");
-      default_config.put ("accounts.charlie.email", "root@localhost");
-      default_config.put ("accounts.charlie.gpgkey", "");
-      default_config.put ("accounts.charlie.always_gpg_sign", false);
-      default_config.put ("accounts.charlie.sendmail", "msmtp -i -t");
-      default_config.put ("accounts.charlie.default", true);
-      default_config.put ("accounts.charlie.save_sent", false);
-      default_config.put ("accounts.charlie.save_sent_to",
-          "/home/root/Mail/sent/cur/");
-      default_config.put ("accounts.charlie.additional_sent_tags", "");
-
-      default_config.put ("accounts.charlie.save_drafts_to",
-          "/home/root/Mail/drafts/");
-
-      default_config.put ("accounts.charlie.signature_separate", false);
-      default_config.put ("accounts.charlie.signature_file", "");
-      default_config.put ("accounts.charlie.signature_file_markdown", "");
-      default_config.put ("accounts.charlie.signature_default_on", true);
-      default_config.put ("accounts.charlie.signature_attach", false);
-
-      default_config.put ("accounts.charlie.select_query", "");
-
-      /* default searches, also only set if initial */
-      default_config.put("startup.queries.inbox", "tag:inbox");
+      setup_default_initial_config (default_config);
     }
 
     /* terminal */
@@ -358,6 +367,7 @@ namespace Astroid {
 
 
   bool Config::check_config (ptree new_config) {
+    LOG (debug) << "cf: check config..";
     bool changed = false;
 
     if (new_config != config) {
@@ -365,6 +375,29 @@ namespace Astroid {
     }
 
     int version = config.get<int>("astroid.config.version");
+
+    {
+      bool hasstartup;
+      try {
+        ptree strup = config.get_child ("startup");
+        hasstartup  = strup.get_child ("queries").size () > 0;
+      } catch (const boost::property_tree::ptree_bad_path &ex) {
+        hasstartup  = false;
+      }
+
+      bool hasaccounts;
+      try {
+        ptree apt   = config.get_child ("accounts");
+        hasaccounts = apt.size () > 0;
+      } catch (const boost::property_tree::ptree_bad_path &ex) {
+        hasaccounts = false;
+      }
+
+      if (!hasaccounts || !hasstartup) {
+        LOG (warn) << "cf: missing accounts or startup.queries: using defaults";
+        setup_default_initial_config (config, !hasaccounts, !hasstartup);
+      }
+    }
 
     if (version < 1) {
       /* check accounts for save_draft */
