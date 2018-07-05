@@ -495,7 +495,7 @@ namespace Astroid {
   void ThreadView::render_messages () {
     LOG (debug) << "render: html loaded, building messages..";
     if (!wk_loaded) {
-      LOG (error) << "tv: web kit not loaded.";
+      LOG (error) << "tv: webkit not loaded.";
       return;
     }
 
@@ -503,49 +503,53 @@ namespace Astroid {
     state.clear ();
     focused_message.clear ();
 
-    for (auto &m : mthread->messages) {
-      add_message (m);
-    }
+    if (mthread) {
+      for (auto &m : mthread->messages) {
+        add_message (m);
+      }
 
-    page_client->update_state ();
-    update_all_indent_states ();
+      page_client->update_state ();
+      update_all_indent_states ();
 
-    /* focus oldest unread message */
-    if (!edit_mode) {
-      for (auto &m : mthread->messages_by_time ()) {
-        if (m->has_tag ("unread")) {
-          focused_message = m;
-          break;
+      /* focus oldest unread message */
+      if (!edit_mode) {
+        for (auto &m : mthread->messages_by_time ()) {
+          if (m->has_tag ("unread")) {
+            focused_message = m;
+            break;
+          }
         }
       }
-    }
 
-    if (!focused_message) {
-      LOG (debug) << "tv: no message focused, focusing newest message.";
-      focused_message = *max_element (
-          mthread->messages.begin (),
-          mthread->messages.end (),
-          [](refptr<Message> &a, refptr<Message> &b)
-            {
-              return ( a->time < b->time );
-            });
-    }
-
-    expand (focused_message);
-    focus_message (focused_message);
-
-    ready = true;
-    emit_ready ();
-
-    if (!edit_mode && !unread_setup) {
-      unread_setup = true;
-
-      if (unread_delay > 0) {
-        Glib::signal_timeout ().connect (
-            sigc::mem_fun (this, &ThreadView::unread_check), std::max (80., (unread_delay * 1000.) / 2));
-      } else {
-        unread_check ();
+      if (!focused_message) {
+        LOG (debug) << "tv: no message focused, focusing newest message.";
+        focused_message = *max_element (
+            mthread->messages.begin (),
+            mthread->messages.end (),
+            [](refptr<Message> &a, refptr<Message> &b)
+              {
+                return ( a->time < b->time );
+              });
       }
+
+      expand (focused_message);
+      focus_message (focused_message);
+
+      ready = true;
+      emit_ready ();
+
+      if (!edit_mode && !unread_setup) {
+        unread_setup = true;
+
+        if (unread_delay > 0) {
+          Glib::signal_timeout ().connect (
+              sigc::mem_fun (this, &ThreadView::unread_check), std::max (80., (unread_delay * 1000.) / 2));
+        } else {
+          unread_check ();
+        }
+      }
+    } else {
+      LOG (debug) << "tv: no message thread.";
     }
   }
 
