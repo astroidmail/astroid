@@ -507,12 +507,27 @@ install ( TARGETS tvextension
 install (DIRECTORY ui/icons
   DESTINATION share/astroid/ui
   )
-include (InstallSymbolicLink)
-install_symlink (../../../../astroid/ui/icons/icon_color.png
-  ${CMAKE_INSTALL_PREFIX}/share/icons/hicolor/512x512/apps/astroid.png
+
+configure_file (
+  ui/icons/icon_color.png
+  astroid.png
+  COPYONLY
   )
-install_symlink (../../../../astroid/ui/icons/icon_color.svg
-  ${CMAKE_INSTALL_PREFIX}/share/icons/hicolor/scalable/app/astroid.svg
+
+configure_file (
+  ui/icons/icon_color.svg
+  astroid.svg
+  COPYONLY
+  )
+
+install (FILES ${CMAKE_BINARY_DIR}/astroid.png
+  DESTINATION
+  ${CMAKE_INSTALL_PREFIX}/share/icons/hicolor/512x512/apps
+  )
+
+install (FILES ${CMAKE_BINARY_DIR}/astroid.svg
+  DESTINATION
+  ${CMAKE_INSTALL_PREFIX}/share/icons/hicolor/scalable/app
   )
 
 install (FILES ui/astroid.desktop
