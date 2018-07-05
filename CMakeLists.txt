@@ -507,12 +507,17 @@ install ( TARGETS tvextension
 install (DIRECTORY ui/icons
   DESTINATION share/astroid/ui
   )
-include (InstallSymbolicLink)
-install_symlink (../../../../astroid/ui/icons/icon_color.png
+
+configure_file (
+  ui/icons/icon_color.png
   astroid.png
+  COPYONLY
   )
-install_symlink (../../../../astroid/ui/icons/icon_color.svg
+
+configure_file (
+  ui/icons/icon_color.svg
   astroid.svg
+  COPYONLY
   )
 
 install (FILES ${CMAKE_BINARY_DIR}/astroid.png
