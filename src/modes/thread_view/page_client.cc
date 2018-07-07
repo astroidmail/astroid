@@ -1018,6 +1018,26 @@ namespace Astroid {
         );
   }
 
+  void PageClient::scroll_down_page () {
+    AstroidMessages::Navigate n;
+    n.set_direction (AstroidMessages::Navigate_Direction_Down);
+    n.set_type (AstroidMessages::Navigate_Type_VisualPage);
+
+    handle_ack (
+        AeProtocol::send_message_sync (AeProtocol::MessageTypes::Navigate, n, ostream, m_ostream, istream, m_istream)
+        );
+  }
+
+  void PageClient::scroll_up_page () {
+    AstroidMessages::Navigate n;
+    n.set_direction (AstroidMessages::Navigate_Direction_Up);
+    n.set_type (AstroidMessages::Navigate_Type_VisualPage);
+
+    handle_ack (
+        AeProtocol::send_message_sync (AeProtocol::MessageTypes::Navigate, n, ostream, m_ostream, istream, m_istream)
+        );
+  }
+
   void PageClient::focus_next_element (bool force_change) {
     AstroidMessages::Navigate n;
 

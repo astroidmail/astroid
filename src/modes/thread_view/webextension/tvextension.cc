@@ -2205,6 +2205,15 @@ void AstroidExtension::handle_navigate (AstroidMessages::Navigate &n) {
     }
     update_focus_to_view ();
 
+  } else if (n.type () == AstroidMessages::Navigate_Type_VisualPage) {
+
+    if (n.direction () == AstroidMessages::Navigate_Direction_Down) {
+      webkit_dom_dom_window_scroll_by (w, 0, PAGE_JUMP);
+    } else {
+      webkit_dom_dom_window_scroll_by (w, 0, -PAGE_JUMP);
+    }
+    update_focus_to_view ();
+
   } else if (n.type () == AstroidMessages::Navigate_Type_VisualElement) {
 
     if (n.direction () == AstroidMessages::Navigate_Direction_Down) {

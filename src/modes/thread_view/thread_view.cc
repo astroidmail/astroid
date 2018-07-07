@@ -221,10 +221,6 @@ namespace Astroid {
           WebKitNavigationPolicyDecision * navigation_decision = WEBKIT_NAVIGATION_POLICY_DECISION (decision);
           WebKitNavigationAction * nav_action = webkit_navigation_policy_decision_get_navigation_action (navigation_decision);
 
-
-          // TODO: [W2]: should this request be used or ignored? Currently ignoring if we
-          //             handle ourselves.
-
           if (webkit_navigation_action_get_navigation_type (nav_action)
               == WEBKIT_NAVIGATION_TYPE_LINK_CLICKED) {
 
@@ -730,7 +726,7 @@ namespace Astroid {
         "thread_view.page_down",
         "Page down",
         [&] (Key) {
-          // TODO
+          page_client->scroll_down_page ();
           return true;
         });
 
@@ -760,7 +756,7 @@ namespace Astroid {
         "thread_view.page_up",
         "Page up",
         [&] (Key) {
-          // TODO
+          page_client->scroll_up_page ();
           return true;
         });
 

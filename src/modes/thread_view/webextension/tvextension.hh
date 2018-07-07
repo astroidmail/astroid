@@ -157,8 +157,9 @@ class AstroidExtension {
     void focus_next_message ();
     void focus_previous_message (bool focus_top);
 
-    const int BIG_JUMP = 150;
-    const int STEP     = 35;
+    const int STEP      = 35;
+    const int BIG_JUMP  = 150;
+    const int PAGE_JUMP = 600;
 
     void handle_navigate (AstroidMessages::Navigate &);
 };
