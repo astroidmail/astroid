@@ -46,21 +46,28 @@ namespace Astroid {
       Glib::RefPtr<Gio::OutputStream> ostream)
   {
     std::string o;
+    gsize written = 0;
+    bool  s = false;
 
     m.SerializeToString (&o);
 
     /* send size of message */
     gsize sz = o.size ();
-    ostream->write ((char*) &sz, sizeof(sz));
+    s = ostream->write_all ((char*) &sz, sizeof(sz), written);
 
     /* send message type */
-    ostream->write ((char*) &mt, sizeof (mt));
+    s &= ostream->write_all ((char*) &mt, sizeof (mt), written);
 
     /* send message */
-    gsize written = 0;
-    ostream->write_all (o, written);
+    s &= ostream->write_all (o, written);
     ostream->flush ();
-    LOG (debug) << "ae: wrote: " << written << " of " << o.size () << " bytes.";
+
+    if (!s) {
+      LOG (error) << "ae: could not write message!";
+      throw ipc_error ("could not write message.");
+    } else {
+      LOG (debug) << "ae: wrote: " << written << " of " << o.size () << " bytes.";
+    }
   }
 
   void AeProtocol::send_message_async (
@@ -99,44 +106,12 @@ namespace Astroid {
     a.set_success (false);
 
     {
-      gsize read = 0;
+      std::string msg_str;
 
-      /* read size of message */
-      gsize sz;
-
-      try {
-        read = istream->read ((char*)&sz, sizeof (sz)); // blocking
-      } catch (Gio::Error &ex) {
-        LOG (debug) << "ae: " << ex.what ();
-        return a;
-      }
-
-      if (read != sizeof(sz)) {
-        LOG (debug) << "ae: reader: could not read size.";
-        return a;
-      }
-
-      if (sz > AeProtocol::MAX_MESSAGE_SZ) {
-        LOG (debug) << "ae: reader: message exceeds max size.";
-        return a;
-      }
-
-      /* read message type */
-      AeProtocol::MessageTypes mt;
-      read = istream->read ((char*)&mt, sizeof (mt));
-      if (read != sizeof (mt)) {
-        LOG (debug) << "ae: reader: size of message type too short: " << sizeof(mt) << " != " << read;
-        return a;
-      }
-
-      /* read message */
-      gchar buffer[sz + 1]; buffer[sz] = '\0';
-      bool s = istream->read_all (buffer, sz, read);
-
-      if (!s) {
-        LOG (debug) << "ae: reader: error while reading message (size: " << sz << ")";
-        return a;
-      }
+      auto mt = read_message (
+          istream,
+          Glib::RefPtr<Gio::Cancellable> (NULL),
+          msg_str);
 
       /* parse message */
       if (mt != AeProtocol::MessageTypes::Ack) {
@@ -145,10 +120,59 @@ namespace Astroid {
       }
 
       LOG (debug) << "ae: send (sync) ACK received.";
-      a.ParseFromString (buffer);
+      a.ParseFromString (msg_str);
     }
 
     return a;
+  }
+
+  AeProtocol::MessageTypes AeProtocol::read_message (
+      Glib::RefPtr<Gio::InputStream> istream,
+      Glib::RefPtr<Gio::Cancellable> reader_cancel,
+      std::string & msg_str)
+  {
+    gsize read = 0;
+    bool  s    = false;
+
+    /* read message size */
+    gsize msg_sz = 0;
+    s = istream->read_all ((char *) &msg_sz, sizeof (msg_sz), read, reader_cancel);
+
+    if (!s || read != sizeof (msg_sz)) {
+      throw ipc_error ("could not read message size");
+    }
+
+    if (msg_sz > AeProtocol::MAX_MESSAGE_SZ) {
+      throw ipc_error ("message exceeds maximum size.");
+    }
+
+    AeProtocol::MessageTypes mt;
+    s = istream->read_all ((char*) &mt, sizeof (mt), read, reader_cancel);
+
+    if (!s || read != sizeof (mt)) {
+      throw ipc_error ("could not read message type");
+    }
+
+    /* read message */
+    gchar buffer[msg_sz + 1]; buffer[msg_sz] = '\0';
+    s = istream->read_all (buffer, msg_sz, read, reader_cancel);
+
+    if (!s || read != msg_sz) {
+      LOG (error) << "reader: error while reading message (size: " << msg_sz << ")";
+      throw ipc_error ("could not read message");
+    }
+
+    msg_str = std::string (buffer, msg_sz);
+    return mt;
+  }
+
+
+  /***************
+   * Exceptions
+   ***************/
+
+  AeProtocol::ipc_error::ipc_error (const char * w) : runtime_error (w)
+  {
   }
 }
 

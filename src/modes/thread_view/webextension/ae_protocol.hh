@@ -31,6 +31,7 @@ namespace Astroid {
       } MessageTypes;
 
       static const char* MessageTypeStrings[];
+      static const gsize MAX_MESSAGE_SZ = 200 * 1024 * 1024; // 200 MB
 
       static void send_message_async (
           MessageTypes mt,
@@ -46,7 +47,16 @@ namespace Astroid {
           Glib::RefPtr<Gio::InputStream>  istream,
           std::mutex & m_istream);
 
-      static const gsize MAX_MESSAGE_SZ = 200 * 1024 * 1024; // 200 MB
+      static MessageTypes read_message (
+          Glib::RefPtr<Gio::InputStream> istream,
+          Glib::RefPtr<Gio::Cancellable> reader_cancel,
+          std::string &buffer);
+
+      /* exceptions */
+      class ipc_error : public std::runtime_error {
+        public:
+          ipc_error (const char *);
+      };
 
     private:
       static void send_message (

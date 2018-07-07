@@ -213,40 +213,21 @@ void AstroidExtension::reader () {/*{{{*/
   LOG (debug) << "reader thread: started.";
 
   while (run) {
-    gsize read = 0;
-
     LOG (debug) << "reader waiting..";
 
-    /* read size of message */
-    gsize sz;
-    try {
-      read = istream->read ((char*)&sz, sizeof (sz), reader_cancel); // blocking
-    } catch (Gio::Error &e) {
-      LOG (debug) << "reader thread: " << e.what ();
-      return;
-    }
-
-    if (read != sizeof(sz)) break;;
-
-    if (sz > AeProtocol::MAX_MESSAGE_SZ) {
-      LOG (debug) << "reader: message exceeds max size.";
-      break;
-    }
-
-    /* read message type */
+    std::string buffer;
     AeProtocol::MessageTypes mt;
-    read = istream->read ((char*)&mt, sizeof (mt), reader_cancel);
-    if (read != sizeof (mt)) break;
 
-    LOG (debug) << "reader: got message: " << AeProtocol::MessageTypeStrings[mt] << ", size: " << sz;
+    try {
 
-    /* read message */
-    gchar buffer[sz + 1]; buffer[sz] = '\0';
-    bool s = istream->read_all (buffer, sz, read, reader_cancel);
+      mt = AeProtocol::read_message (
+          istream,
+          reader_cancel,
+          buffer);
 
-    if (!s) {
-      LOG (debug) << "reader: error while reading message (size: " << sz << ")";
-      break;
+    } catch (Gio::Error &e) {
+      LOG (warn) << "reader thread: " << e.what ();
+      return;
     }
 
     /* parse message */
