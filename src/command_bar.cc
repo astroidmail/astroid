@@ -294,6 +294,52 @@ namespace Astroid {
         }
         break;
 
+      case GDK_KEY_Left:
+        {
+          LOG (debug) << "cb: left";
+          if (mode == Tag || mode == DiffTag) {
+            /* jump to previous tag separator */
+            if (entry.get_position () == 0) return true;
+
+            refptr<TagCompletion> t = refptr<TagCompletion>::cast_dynamic (current_completion);
+
+            ustring_sz pos;
+            t->get_partial_tag (pos);
+
+            if ((int) pos == entry.get_position ()) {
+              /* at separator, search backwards for next tag and jump to its beginning */
+
+              ustring txt = entry.get_text ();
+
+              pos = (pos > 1) ? pos - 1 : pos;
+
+              while (pos > 1) {
+                if (std::any_of (t->break_on.begin (), t->break_on.end (),
+                      [&](char c) {
+                          return ((char)txt[pos] == c);
+                        })) {
+
+                  pos--;
+
+                } else {
+                  break;
+                }
+              }
+
+              LOG (debug) << "pos: " << pos;
+              entry.set_position (pos);
+              t->get_partial_tag (pos);
+            }
+
+            LOG (debug) << "pos: " << pos;
+
+            entry.set_position (pos);
+
+            return true;
+          }
+        }
+        break;
+
       default:
         {
           if (mode == CommandMode::Search) {
