@@ -63,17 +63,7 @@ namespace Astroid {
     open_html_part_external = config.get<bool> ("open_html_part_external");
     open_external_link = config.get<string> ("open_external_link");
 
-    enable_code_prettify = config.get<bool> ("code_prettify.enable");
-    enable_code_prettify_for_patches = config.get<bool> ("code_prettify.enable_for_patches");
-
     expand_flagged = config.get<bool> ("expand_flagged");
-
-    ustring cp_only_tags = config.get<string> ("code_prettify.for_tags");
-    if (cp_only_tags.length() > 0) {
-      code_prettify_only_tags = VectorUtils::split_and_trim (cp_only_tags, ",");
-    }
-
-    code_prettify_code_tag = config.get<string> ("code_prettify.code_tag");
 
     page_client->enable_gravatar = config.get<bool>("gravatar.enable");
     unread_delay = config.get<double>("mark_unread_delay");
@@ -142,11 +132,6 @@ namespace Astroid {
 
     add_events (Gdk::KEY_PRESS_MASK);
 
-    /* navigation requests */
-    /* g_signal_connect (webview, "permissions-request", */
-    /*     G_CALLBACK(ThreadView_permission_request), */
-    /*     (gpointer) this); */
-
     g_signal_connect (webview, "decide-policy",
         G_CALLBACK(ThreadView_decide_policy),
         (gpointer) this);
@@ -180,24 +165,6 @@ namespace Astroid {
   }
 
   /* navigation requests  */
-  extern "C" gboolean ThreadView_permission_request (
-      WebKitWebView * w,
-      WebKitPermissionRequest * request,
-      gpointer user_data) {
-
-    return ((ThreadView*) user_data)->permission_request (w, request);
-  }
-
-  gboolean ThreadView::permission_request (
-      WebKitWebView * /* w */,
-      WebKitPermissionRequest * request) {
-
-    /* these requests are typically full-screen or location requests */
-    webkit_permission_request_allow (request);
-
-    return true;
-  }
-
   extern "C" gboolean ThreadView_decide_policy (
       WebKitWebView * w,
       WebKitPolicyDecision * decision,
@@ -347,35 +314,6 @@ namespace Astroid {
       case WEBKIT_LOAD_FINISHED:
         LOG (debug) << "tv: load finished.";
         {
-          /* load code_prettify if enabled */
-          if (enable_code_prettify) {
-            bool only_tags_ok = false;
-            if (code_prettify_only_tags.size () > 0) {
-              if (mthread->in_notmuch) {
-                for (auto &t : code_prettify_only_tags) {
-                  if (mthread->has_tag (t)) {
-                    only_tags_ok = true;
-                    break;
-                  }
-                }
-              } else {
-                /* enable for messages not in db */
-                only_tags_ok = true;
-              }
-            } else {
-              only_tags_ok = true;
-            }
-
-            if (only_tags_ok) {
-              code_is_on = true;
-
-              // TODO: Load code prettify
-
-              /* webkit_dom_element_set_attribute (me, "src", code_prettify_uri.c_str(), */
-              /*     (err = NULL, &err)); */
-            }
-          }
-
           /* render */
           wk_loaded = true;
 
@@ -408,7 +346,6 @@ namespace Astroid {
 
   void ThreadView::load_message_thread (refptr<MessageThread> _mthread) {
     ready = false;
-
 
     mthread.clear ();
     mthread = _mthread;
@@ -593,53 +530,6 @@ namespace Astroid {
       }
     }
   }
-
-  void ThreadView::filter_code_tags (ustring &body) { // {{{
-    time_t t0 = clock ();
-    ustring code_tag = code_prettify_code_tag;
-    ustring start_tag = code_start_tag;
-    ustring stop_tag  = code_stop_tag;
-
-    if (code_tag.length() < 1) {
-      throw runtime_error ("tv: cannot have a code tag with length 0");
-    }
-
-    /* search for matching code tags */
-    ustring::size_type pos = 0;
-
-    while (true) {
-      /* find first */
-      ustring::size_type first = body.find (code_tag, pos);
-
-      if (first != ustring::npos) {
-        /* find second */
-        ustring::size_type second = body.find (code_tag, first + code_tag.length ());
-        if (second != ustring::npos) {
-          /* found matching tags */
-          body.erase  (first, code_tag.length());
-          body.insert (first, start_tag);
-
-          second += start_tag.length () - code_tag.length ();
-
-          body.erase  (second, code_tag.length ());
-          body.insert (second, stop_tag);
-          second += stop_tag.length () - code_tag.length ();
-
-          pos = second;
-        } else {
-          /* could not find matching, done */
-          break;
-        }
-
-      } else {
-        /* done */
-        break;
-      }
-    }
-
-    LOG (debug) << "tv: code filter done, time: " << ((clock() - t0) * 1000 / CLOCKS_PER_SEC) << " ms.";
-
-  } // }}}
 
   /* info and warning  */
   void ThreadView::set_warning (refptr<Message> m, ustring txt)

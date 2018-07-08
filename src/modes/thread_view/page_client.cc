@@ -56,6 +56,16 @@ namespace Astroid {
         G_CALLBACK (PageClient_init_web_extensions),
         (gpointer) this);
 
+    const ptree& config = astroid->config ("thread_view");
+
+    enable_code_prettify = config.get<bool> ("code_prettify.enable");
+    enable_code_prettify_for_patches = config.get<bool> ("code_prettify.enable_for_patches");
+
+    ustring cp_only_tags = config.get<std::string> ("code_prettify.for_tags");
+    if (cp_only_tags.length() > 0) {
+      code_prettify_only_tags = VectorUtils::split_and_trim (cp_only_tags, ",");
+    }
+
   }
 
   extern "C" void PageClient_init_web_extensions (
@@ -70,13 +80,7 @@ namespace Astroid {
     g_signal_handler_disconnect (webkit_web_context_get_default (),
         extension_connect_id);
 
-    reader_run = false;
-
     LOG (debug) << "pc: closing";
-
-    /* if (reader_cancel) */
-    /*   reader_cancel->cancel (); */
-    /* reader_t.join (); */
 
     istream.clear ();
     ostream.clear ();
@@ -161,10 +165,6 @@ namespace Astroid {
     istream = ext->get_input_stream ();
     ostream = ext->get_output_stream ();
 
-    /* setting up reader */
-    /* reader_cancel = Gio::Cancellable::create (); */
-    /* reader_t = std::thread (&PageClient::reader, this); */
-
     ready = true;
 
     if (thread_view->wk_loaded) {
@@ -186,90 +186,6 @@ namespace Astroid {
 
         thread_view->unread_check ();
       }
-  }
-
-  void PageClient::reader () {
-    LOG (debug) << "pc: reader started.";
-    while (reader_run) {
-      LOG (debug) << "pc: reader waiting..";
-      gsize read = 0;
-
-      /* read size of message */
-      gsize sz;
-
-      try {
-        read = istream->read ((char*)&sz, sizeof (sz), reader_cancel); // blocking
-      } catch (Gio::Error &ex) {
-        LOG (warn) << "pc: " << ex.what ();
-        reader_run = false;
-        break;
-      }
-
-      if (read != sizeof(sz)) {
-        LOG (debug) << "pc: reader: could not read size.";
-        break;
-      }
-
-      if (sz > AeProtocol::MAX_MESSAGE_SZ) {
-        LOG (error) << "pc: reader: message exceeds max size.";
-        break;
-      }
-
-      /* read message type */
-      AeProtocol::MessageTypes mt;
-      read = istream->read ((char*)&mt, sizeof (mt));
-      if (read != sizeof (mt)) {
-        LOG (debug) << "pc: reader: size of message type too short: " << sizeof(mt) << " != " << read;
-        break;
-      }
-
-      /* read message */
-      gchar buffer[sz + 1]; buffer[sz] = '\0';
-      bool s = istream->read_all (buffer, sz, read);
-
-      if (!s) {
-        LOG (debug) << "pc: reader: error while reading message (size: " << sz << ")";
-        break;
-      }
-
-      /* parse message */
-      switch (mt) {
-        case AeProtocol::MessageTypes::Debug:
-          {
-            AstroidMessages::Debug m;
-            m.ParseFromString (buffer);
-            Glib::signal_idle().connect_once (
-                [&,m] () {
-                  LOG (debug) << "pc: ae: " << m.msg ();
-                });
-          }
-          break;
-
-        case AeProtocol::MessageTypes::Focus:
-          {
-            AstroidMessages::Focus f;
-            f.ParseFromString (buffer);
-
-            /* update focused element in state */
-            Glib::signal_idle().connect_once (
-                [&,f] () {
-                  LOG (debug) << "pc: got focus event: " << f.mid () << ", e: " << f.element ();
-                  thread_view->focused_message = *std::find_if (
-                      thread_view->mthread->messages.begin (),
-                      thread_view->mthread->messages.end (),
-                      [&] (auto &m) { return f.mid () == m->safe_mid (); });
-
-                  thread_view->state[thread_view->focused_message].current_element = f.element ();
-                });
-          }
-          break;
-
-        default:
-          break; // unknown message
-      }
-    }
-
-    LOG (debug) << "pc: reader exit.";
   }
 
   void PageClient::load () {
@@ -816,10 +732,29 @@ namespace Astroid {
     }
 
     if (c->viewable) {
-      // TODO: Filter code tags
+      /* check if message should be syntax highlighted  */
+      bool code_is_on = enable_code_prettify;
+      if (enable_code_prettify) {
+        if (code_prettify_only_tags.size () > 0) {
+          code_is_on = false;
+          if (m->in_notmuch) {
+            for (auto &t : code_prettify_only_tags) {
+              if (m->has_tag (t)) {
+                code_is_on = true;
+                break;
+              }
+            }
+          } else {
+            /* enable for messages not in db */
+            code_is_on = true;
+          }
+        } else {
+          code_is_on = true;
+        }
+      }
+
       part->set_content (c->viewable_text (true, true));
     }
-
 
     /* Check if we are preferred part or sibling.
      *

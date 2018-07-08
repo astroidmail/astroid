@@ -30,22 +30,11 @@ namespace Astroid {
       WebKitLoadEvent load_event,
       gpointer user_data);
 
-  extern "C" gboolean ThreadView_permission_request (
-      WebKitWebView * w,
-      WebKitPermissionRequest * request,
-      gpointer user_data);
-
   extern "C" gboolean ThreadView_decide_policy (
       WebKitWebView * w,
       WebKitPolicyDecision * decision,
       WebKitPolicyDecisionType decision_type,
       gpointer user_data);
-
-  extern "C" void ThreadView_js_finished (
-      GObject *       o,
-      GAsyncResult *  result,
-      gpointer        user_data);
-
 
   class ThreadView : public Mode {
     friend PageClient;
@@ -74,22 +63,16 @@ namespace Astroid {
       ustring home_uri;           // relative url for requests
 
       bool    expand_flagged;
-      bool    enable_code_prettify;
-      std::vector<ustring> code_prettify_only_tags;
-      ustring code_prettify_uri = "https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js";
-      ustring code_prettify_code_tag;
-      bool    enable_code_prettify_for_patches;
-      ustring code_start_tag = "<code class=\"prettyprint\">";
-      ustring code_stop_tag  = "</code>";
-
-      bool    code_is_on = false; // for this thread
-      void    filter_code_tags (ustring &); // look for code tags
 
       Theme theme;
 
 # ifndef DISABLE_PLUGINS
       PluginManager::ThreadViewExtension * plugins;
 # endif
+
+      ustring open_external_link;
+      void    open_link (ustring);
+      void    do_open_link (ustring);
 
       void pre_close () override;
 
@@ -206,14 +189,6 @@ namespace Astroid {
       bool on_load_changed (
         WebKitWebView * w,
         WebKitLoadEvent load_event);
-
-      gboolean permission_request (
-          WebKitWebView * w,
-          WebKitPermissionRequest * request);
-
-      ustring open_external_link;
-      void open_link (ustring);
-      void do_open_link (ustring);
 
       gboolean decide_policy (
           WebKitWebView * w,
