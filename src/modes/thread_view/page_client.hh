@@ -78,11 +78,6 @@ namespace Astroid {
       static const int ATTACHMENT_ICON_WIDTH  = 35;
       refptr<Gdk::Pixbuf> attachment_icon;
 
-      /* syntax highlighting */
-      bool    enable_code_prettify;
-      std::vector<ustring> code_prettify_only_tags;
-      bool    enable_code_prettify_for_patches;
-
     private:
       static int id;
 

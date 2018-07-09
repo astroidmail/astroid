@@ -165,3 +165,29 @@ astroid_threadview_activatable_format_tags (AstroidThreadViewActivatable * activ
   return NULL;
 }
 
+/**
+ * astroid_threadview_activatable_filter_part:
+ * @activatable: A #AstroidThreadViewActivatable.
+ * @input_text : A #utf8.
+ * @input_html : A #utf8.
+ * @mime_type : A #utf8.
+ *
+ */
+char *
+astroid_threadview_activatable_filter_part (
+    AstroidThreadViewActivatable * activatable,
+    const char * input_text,
+    const char * input_html,
+    const char * mime_type)
+{
+	AstroidThreadViewActivatableInterface *iface;
+
+	if (!ASTROID_IS_THREADVIEW_ACTIVATABLE (activatable)) return NULL;
+
+	iface = ASTROID_THREADVIEW_ACTIVATABLE_GET_IFACE (activatable);
+	if (iface->filter_part)
+		return iface->filter_part (activatable, input_text, input_html, mime_type);
+
+  return NULL;
+}
+

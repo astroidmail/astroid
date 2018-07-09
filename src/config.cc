@@ -259,17 +259,6 @@ namespace Astroid {
 
     default_config.put ("thread_view.indent_messages", false);
 
-    /* code prettify */
-    default_config.put ("thread_view.code_prettify.enable", true);
-
-    // a comma-separeted list of tags which code_prettify is enabled for, if empty,
-    // allow for all messages.
-    default_config.put ("thread_view.code_prettify.for_tags", "");
-
-    // the tag enclosing code
-    default_config.put ("thread_view.code_prettify.code_tag", "```");
-    default_config.put ("thread_view.code_prettify.enable_for_patches", true);
-
     /* gravatar */
     default_config.put ("thread_view.gravatar.enable", true);
 

@@ -26,10 +26,12 @@ struct _AstroidThreadViewActivatableInterface
 	void (*deactivate) (AstroidThreadViewActivatable * activatable);
 	void (*update_state) (AstroidThreadViewActivatable * activatable);
 
-  char* (*get_avatar_uri) (AstroidThreadViewActivatable * activatable, const char * email, const char * type, int size, GMimeMessage * message);
+  char*  (*get_avatar_uri) (AstroidThreadViewActivatable * activatable, const char * email, const char * type, int size, GMimeMessage * message);
   GList* (*get_allowed_uris) (AstroidThreadViewActivatable * activatable);
 
-  char* (*format_tags) (AstroidThreadViewActivatable * activatable, const char *bg, GList * tags, bool selected);
+  char*  (*format_tags) (AstroidThreadViewActivatable * activatable, const char *bg, GList * tags, bool selected);
+
+  char*  (*filter_part) (AstroidThreadViewActivatable * activatable, const char * input_text, const char * input_html, const char * mime_type);
 };
 
 GType astroid_threadview_activatable_get_type (void) G_GNUC_CONST;
@@ -45,6 +47,8 @@ char * astroid_threadview_activatable_get_avatar_uri (AstroidThreadViewActivatab
 GList * astroid_threadview_activatable_get_allowed_uris (AstroidThreadViewActivatable * activatable);
 
 char * astroid_threadview_activatable_format_tags (AstroidThreadViewActivatable * activatable, const char * bg, GList * tags, bool selected);
+
+char * astroid_threadview_activatable_filter_part (AstroidThreadViewActivatable * activatable, const char * input_text, const char * input_html, const char * mime_type);
 
 G_END_DECLS
 

@@ -56,17 +56,6 @@ namespace Astroid {
         "initialize-web-extensions",
         G_CALLBACK (PageClient_init_web_extensions),
         (gpointer) this);
-
-    const ptree& config = astroid->config ("thread_view");
-
-    enable_code_prettify = config.get<bool> ("code_prettify.enable");
-    enable_code_prettify_for_patches = config.get<bool> ("code_prettify.enable_for_patches");
-
-    ustring cp_only_tags = config.get<std::string> ("code_prettify.for_tags");
-    if (cp_only_tags.length() > 0) {
-      code_prettify_only_tags = VectorUtils::split_and_trim (cp_only_tags, ",");
-    }
-
   }
 
   extern "C" void PageClient_init_web_extensions (
@@ -738,7 +727,16 @@ namespace Astroid {
     }
 
     if (c->viewable) {
+# ifndef DISABLE_PLUGINS
+
+      part->set_content (
+          thread_view->plugins->filter_part (
+            c->viewable_text (false, true),
+            c->viewable_text (true, true), mime_type));
+
+# else
       part->set_content (c->viewable_text (true, true));
+# endif
     }
 
     /* Check if we are preferred part or sibling.

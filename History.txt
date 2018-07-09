@@ -30,6 +30,8 @@
   is removed since we now have multiple processes and this would complicate
   writing to one file.
 * Syntax highlighting has been removed. Hopefully temporarily.
+* Add filter_part plugin method, which can be used to modify the displayed HTML
+  depending on either the text/plain or the text/html part.
 
 == v0.12
 * `mail.close_on_success` configures if page closes on successful send.
