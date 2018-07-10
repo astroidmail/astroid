@@ -86,17 +86,6 @@ namespace Astroid {
 
     webview = WEBKIT_WEB_VIEW (webkit_web_view_new_with_context (webcontext));
 
-    /* load CSS here so that it is already in place when HTML page is loaded */
-    WebKitUserContentManager * wk_cm = webkit_web_view_get_user_content_manager (webview);
-
-    WebKitUserStyleSheet * ucss = webkit_user_style_sheet_new (
-        theme.thread_view_css.c_str (),
-        WEBKIT_USER_CONTENT_INJECT_ALL_FRAMES,
-        WEBKIT_USER_STYLE_LEVEL_AUTHOR,
-        NULL, NULL);
-    webkit_user_content_manager_add_style_sheet (wk_cm, ucss);
-    g_object_unref (ucss);
-
     websettings = WEBKIT_SETTINGS (webkit_settings_new_with_settings (
         "enable-javascript", FALSE,
         "enable-java", FALSE,
