@@ -39,10 +39,11 @@ using namespace boost::filesystem;
 namespace Astroid {
   int PageClient::id = 0;
 
-  PageClient::PageClient () {
+  PageClient::PageClient (ThreadView * t) {
 
     id++;
     ready = false;
+    thread_view = t;
 
     /* load attachment icon */
     Glib::RefPtr<Gtk::IconTheme> theme = Gtk::IconTheme::get_default();
@@ -51,7 +52,7 @@ namespace Astroid {
         ATTACHMENT_ICON_WIDTH,
         Gtk::ICON_LOOKUP_USE_BUILTIN );
 
-    extension_connect_id = g_signal_connect (webkit_web_context_get_default (),
+    extension_connect_id = g_signal_connect (thread_view->context,
         "initialize-web-extensions",
         G_CALLBACK (PageClient_init_web_extensions),
         (gpointer) this);
@@ -77,7 +78,7 @@ namespace Astroid {
 
   PageClient::~PageClient () {
     LOG (debug) << "pc: destruct";
-    g_signal_handler_disconnect (webkit_web_context_get_default (),
+    g_signal_handler_disconnect (thread_view->context,
         extension_connect_id);
 
     LOG (debug) << "pc: closing";

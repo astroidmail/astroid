@@ -20,7 +20,7 @@ namespace Astroid {
 
   class PageClient : public sigc::trackable {
     public:
-      PageClient ();
+      PageClient (ThreadView *);
       ~PageClient ();
 
       ThreadView * thread_view;

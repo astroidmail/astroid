@@ -55,8 +55,19 @@ namespace Astroid {
     wk_loaded = false;
     ready = false;
 
-    page_client = new PageClient ();
-    page_client->thread_view = this;
+    /* home uri used for thread view - request will be relative this
+     * non-existant (hopefully) directory. */
+    home_uri = ustring::compose ("%1/%2",
+        astroid->standard_paths ().config_dir.c_str(),
+        UstringUtils::random_alphanumeric (120));
+
+    /* WebKit: set up webkit web view */
+
+    /* create web context */
+    context = webkit_web_context_new_ephemeral ();
+
+    /* set up this extension interface */
+    page_client = new PageClient (this);
 
     const ptree& config = astroid->config ("thread_view");
     indent_messages = config.get<bool> ("indent_messages");
@@ -68,23 +79,10 @@ namespace Astroid {
     page_client->enable_gravatar = config.get<bool>("gravatar.enable");
     unread_delay = config.get<double>("mark_unread_delay");
 
-    /* home uri used for thread view - request will be relative this
-     * non-existant (hopefully) directory. */
-    home_uri = ustring::compose ("%1/%2",
-        astroid->standard_paths ().config_dir.c_str(),
-        UstringUtils::random_alphanumeric (120));
-
-    /* WebKit: set up webkit web view */
-
-    /* create webview */
-    WebKitWebContext * webcontext = webkit_web_context_get_default ();
-
     /* one process for each webview so that a new and unique
      * instance of the webextension is created for each webview
      * and page */
-    webkit_web_context_set_process_model (webcontext, WEBKIT_PROCESS_MODEL_MULTIPLE_SECONDARY_PROCESSES);
-
-    webview = WEBKIT_WEB_VIEW (webkit_web_view_new_with_context (webcontext));
+    webkit_web_context_set_process_model (context, WEBKIT_PROCESS_MODEL_MULTIPLE_SECONDARY_PROCESSES);
 
     websettings = WEBKIT_SETTINGS (webkit_settings_new_with_settings (
         "enable-javascript", FALSE,
@@ -98,19 +96,21 @@ namespace Astroid {
         "enable-mediasource", FALSE,
         "enable-offline-web-application-cache", FALSE,
         "enable-page-cache", FALSE,
-        "enable-private-browsing", TRUE,
         "enable-xss-auditor", TRUE,
         "media-playback-requires-user-gesture", TRUE,
         "zoom-text-only", TRUE,
         "enable-frame-flattening", TRUE,
 # if (DEBUG || DEBUG_WEBKIT)
         "enable-developer-extras", TRUE,
-# else
-        "is-ephemeral", TRUE,
 # endif
         NULL));
 
-    webkit_web_view_set_settings (webview, websettings);
+    webview =
+      WEBKIT_WEB_VIEW (
+        g_object_new (WEBKIT_TYPE_WEB_VIEW,
+          "web-context", context,
+          "settings", websettings,
+          NULL));
 
     gtk_box_pack_start (GTK_BOX (this->gobj ()), GTK_WIDGET (webview), true, true, 0);
 
