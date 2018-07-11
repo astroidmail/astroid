@@ -177,20 +177,21 @@ bool AstroidExtension::send_request (
   const char * curi = webkit_uri_request_get_uri (request);
   std::string uri (curi != NULL ? curi : "");
 
-  if (allow_remote_resources) {
-    return false;
-  } else {
-    // prefix of local uris for loading image thumbnails
-    allowed_uris.push_back ("data:image/png;base64");
-    allowed_uris.push_back ("data:image/jpeg;base64");
+  LOG (debug) << "request: " << uri.substr (0, std::min (60, (int)uri.size ())) << "..";
 
+  if (allow_remote_resources) {
+    LOG (debug) << "request: allow.";
+    return false; // allow
+  } else {
     if (find_if (allowed_uris.begin (), allowed_uris.end (),
           [&](std::string &a) {
             return (uri.substr (0, a.length ()) == a);
           }) != allowed_uris.end ())
     {
+      LOG (debug) << "request: allow.";
       return false; // allow
     } else {
+      LOG (debug) << "request: blocked.";
       return true; // stop
     }
   }
@@ -422,8 +423,9 @@ void AstroidExtension::handle_page (AstroidMessages::Page &s) {/*{{{*/
   part_css = s.part_css ();
 
   /* store allowed uris */
-  for (auto &s : s.allowed_uris ())
+  for (auto &s : s.allowed_uris ()) {
     allowed_uris.push_back (s);
+  }
 
   g_object_unref (he);
   g_object_unref (head);

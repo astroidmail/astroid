@@ -68,7 +68,12 @@ class AstroidExtension {
     ustring part_css;
 
     bool allow_remote_resources = false;
-    std::vector<std::string> allowed_uris;
+    std::vector<std::string> allowed_uris =
+      {
+        // prefix of local uris for loading image thumbnails
+        "data:image/png;base64",
+        "data:image/jpeg;base64",
+      };
     void reload_images ();
 
     /* state */
