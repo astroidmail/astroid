@@ -19,7 +19,8 @@
 
 # include "proto.hh"
 
-namespace po = boost::program_options;
+namespace po      = boost::program_options;
+namespace logging = boost::log;
 
 namespace Astroid {
   class Astroid : public Gtk::Application {
@@ -31,7 +32,25 @@ namespace Astroid {
 
       int run (int, char**);
       void main_test ();
-      void init_log ();
+
+      void init_console_log ();
+      void init_sys_log ();
+      bool log_stdout   = true;
+      bool log_syslog   = false;
+      bool disable_log  = false;
+
+      ustring log_level = "debug";
+      std::map<std::string, logging::trivial::severity_level> sevmap = {
+        std::pair<std::string,logging::trivial::severity_level>("trace"  , logging::trivial::trace),
+        std::pair<std::string,logging::trivial::severity_level>("debug"  , logging::trivial::debug),
+        std::pair<std::string,logging::trivial::severity_level>("info"   , logging::trivial::info),
+        std::pair<std::string,logging::trivial::severity_level>("warning", logging::trivial::warning),
+        std::pair<std::string,logging::trivial::severity_level>("error"  , logging::trivial::error),
+        std::pair<std::string,logging::trivial::severity_level>("fatal"  , logging::trivial::fatal),
+      };
+
+      const std::string log_ident = "astroid.main";
+
 
       const boost::property_tree::ptree& config (const std::string& path=std::string()) const;
       const boost::property_tree::ptree& notmuch_config () const;
@@ -73,7 +92,6 @@ namespace Astroid {
       void send_mailto (ustring);
 
 
-      static std::atomic<bool> log_initialized;
       int _hint_level = 0;
       po::options_description desc;
   };

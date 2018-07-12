@@ -124,6 +124,15 @@ namespace Astroid {
     /* only show hints with a level higher than this */
     default_config.put ("astroid.hints.level", 0);
 
+    default_config.put ("astroid.log.syslog", false);
+    default_config.put ("astroid.log.stdout", true);
+
+# if DEBUG
+    default_config.put ("astroid.log.level", "debug"); // (trace, debug, info, warning, error, fatal)
+# else
+    default_config.put ("astroid.log.level", "info"); // (trace, debug, info, warning, error, fatal)
+# endif
+
     if (initial) {
       /* initial default options - these are only set when a new
        * configuration file is created. */

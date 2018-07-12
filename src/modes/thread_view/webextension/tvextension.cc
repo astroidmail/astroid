@@ -27,6 +27,7 @@
 # include <boost/log/expressions.hpp>
 # include <boost/log/trivial.hpp>
 # include <boost/log/support/date_time.hpp>
+# include <boost/log/sinks/syslog_backend.hpp>
 # define LOG(x) BOOST_LOG_TRIVIAL(x)
 # define warn warning
 
@@ -72,7 +73,7 @@ webkit_web_extension_initialize_with_user_data (
 
   /* IMPORTANT: We assume that there will only be one extension instance
    * per web page. That means that there can only be one page in each web view,
-   * and each web view much use its own process. */
+   * and each web view must use its own process. */
 
   ext = new AstroidExtension (extension, pipes);
 
@@ -83,16 +84,8 @@ webkit_web_extension_initialize_with_user_data (
 
 }/*}}}*/
 
-AstroidExtension::AstroidExtension (WebKitWebExtension * e,
-    gpointer gaddr) {
-  extension = e;
-
-  Glib::init ();
-  Gtk::Main::init_gtkmm_internals ();
-  Gio::init ();
-
+void AstroidExtension::init_console_log () {
   /* log to console */
-  logging::add_common_attributes ();
   logging::formatter format =
                 expr::stream
                     << "["
@@ -103,9 +96,38 @@ AstroidExtension::AstroidExtension (WebKitWebExtension * e,
             ;
 
   logging::add_console_log ()->set_formatter (format);
+}
 
-  LOG (debug) << "initialize";
+void AstroidExtension::init_sys_log () {
+  typedef logging::sinks::synchronous_sink< logging::sinks::syslog_backend > sink_t;
+  boost::shared_ptr< logging::core > core = logging::core::get();
 
+  // Create a backend
+  boost::shared_ptr< logging::sinks::syslog_backend > backend(new logging::sinks::syslog_backend(
+        keywords::facility = logging::sinks::syslog::user,
+        keywords::use_impl = logging::sinks::syslog::native,
+        keywords::ident    = log_ident
+        ));
+
+  // Set the straightforward level translator for the "Severity" attribute of type int
+  backend->set_severity_mapper(
+      logging::sinks::syslog::direct_severity_mapping< int >("Severity"));
+
+  // Wrap it into the frontend and register in the core.
+  // The backend requires synchronization in the frontend.
+  logging::core::get()->add_sink(boost::make_shared< sink_t >(backend));
+}
+
+AstroidExtension::AstroidExtension (
+    WebKitWebExtension * e,
+    gpointer gaddr)
+{
+  extension = e;
+
+  Glib::init ();
+  Gtk::Main::init_gtkmm_internals ();
+  Gio::init ();
+  logging::add_common_attributes ();
 
   /* load attachment icon */
   Glib::RefPtr<Gtk::IconTheme> theme = Gtk::IconTheme::get_default();
@@ -123,13 +145,11 @@ AstroidExtension::AstroidExtension (WebKitWebExtension * e,
   /* retrieve socket address */
   gsize sz;
   const char * caddr = g_variant_get_string ((GVariant *) gaddr, &sz);
-  LOG (debug) << "addr: " << caddr;
 
   refptr<Gio::UnixSocketAddress> addr = Gio::UnixSocketAddress::create (caddr,
       Gio::UNIX_SOCKET_ADDRESS_ABSTRACT);
 
   /* connect to socket */
-  LOG (debug) << "connecting..";
   cli = Gio::SocketClient::create ();
 
   try {
@@ -142,10 +162,8 @@ AstroidExtension::AstroidExtension (WebKitWebExtension * e,
     reader_t = std::thread (&AstroidExtension::reader, this);
 
   } catch (Gio::Error &ex) {
-    LOG (debug) << "error: " << ex.what ();
+    LOG (error) << "error: " << ex.what ();
   }
-
-  LOG (debug) << "init done";
 }
 
 AstroidExtension::~AstroidExtension () {
@@ -396,6 +414,23 @@ void AstroidExtension::reader () {/*{{{*/
 }/*}}}*/
 
 void AstroidExtension::handle_page (AstroidMessages::Page &s) {/*{{{*/
+  /* set up logging */
+
+  if (!s.use_stdout ()) {
+    /* already set up in constructor to catch early messages */
+    logging::core::get()->remove_all_sinks ();
+  }
+
+  if (s.use_syslog ()) {
+    init_sys_log ();
+  }
+
+  if (s.disable_log ()) {
+    logging::core::get()->set_logging_enabled (false);
+  }
+
+  logging::core::get()->set_filter (logging::trivial::severity >= sevmap[s.log_level ()]);
+
   GError *err = NULL;
   WebKitDOMDocument *d = webkit_web_page_get_dom_document (page);
 

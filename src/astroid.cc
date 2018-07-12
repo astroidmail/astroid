@@ -24,6 +24,7 @@
 # include <boost/log/expressions.hpp>
 # include <boost/log/trivial.hpp>
 # include <boost/log/support/date_time.hpp>
+# include <boost/log/sinks/syslog_backend.hpp>
 
 # include "astroid.hh"
 # include "build_config.hh"
@@ -62,7 +63,6 @@ namespace expr      = boost::log::expressions;
 /* globally available static instance of the Astroid */
 refptr<Astroid::Astroid> Astroid::astroid;
 const char* const Astroid::Astroid::version = GIT_DESC;
-std::atomic<bool> Astroid::Astroid::log_initialized (false);
 
 namespace Astroid {
   // Initialization and creation {{{
@@ -70,11 +70,8 @@ namespace Astroid {
     return refptr<Astroid> (new Astroid ());
   }
 
-  void Astroid::init_log () {
-    if (log_initialized) return;
-    log_initialized = true;
+  void Astroid::init_console_log () {
     /* log to console */
-    logging::add_common_attributes ();
     logging::formatter format =
                   expr::stream
                       << "["
@@ -87,23 +84,31 @@ namespace Astroid {
     logging::add_console_log ()->set_formatter (format);
   }
 
+  void Astroid::init_sys_log () {
+    typedef logging::sinks::synchronous_sink< logging::sinks::syslog_backend > sink_t;
+
+    // Create a backend
+    boost::shared_ptr< logging::sinks::syslog_backend > backend(new logging::sinks::syslog_backend(
+          keywords::facility = logging::sinks::syslog::user,
+          keywords::use_impl = logging::sinks::syslog::native,
+          keywords::ident    = log_ident
+          ));
+
+    // Set the straightforward level translator for the "Severity" attribute of type int
+    backend->set_severity_mapper(
+        logging::sinks::syslog::direct_severity_mapping< int >("Severity"));
+
+    // Wrap it into the frontend and register in the core.
+    // The backend requires synchronization in the frontend.
+    logging::core::get()->add_sink(boost::make_shared< sink_t >(backend));
+  }
+
   Astroid::Astroid () :
     Gtk::Application("org.astroid",
         Gio::APPLICATION_HANDLES_OPEN | Gio::APPLICATION_HANDLES_COMMAND_LINE)
   {
     setlocale (LC_ALL, "");
     Glib::init ();
-    init_log ();
-
-    LOG (info) << "welcome to astroid! - " << Astroid::version;
-
-    string charset;
-    Glib::get_charset(charset);
-    LOG (debug) << "utf8: " << Glib::get_charset () << ", " << charset;
-
-    if (!Glib::get_charset()) {
-      LOG (error) << "astroid needs an UTF-8 locale! this is probably not going to work.";
-    }
 
     /* user agent */
     user_agent = ustring::compose ("astroid/%1 (https://github.com/astroidmail/astroid)", Astroid::version);
@@ -115,18 +120,16 @@ namespace Astroid {
     desc.add_options ()
       ( "help,h", "print this help message")
       ( "config,c", po::value<ustring>(), "config file, default: $XDG_CONFIG_HOME/astroid/config")
-      ( "new-config,n", "make new default config, then exit")
+      ( "new-config,n",   "make new default config, then exit")
 # ifdef DEBUG
-      ( "test-config,t", "use test config (same as used when tests are run), only makes sense from the source root")
+      ( "test-config,t",  "use test config (same as used when tests are run), only makes sense from the source root")
 # endif
       ( "mailto,m", po::value<ustring>(), "compose mail with mailto url or address")
-      ( "no-auto-poll", "do not poll automatically")
-      ( "log,l", po::value<ustring>(), "log to file")
-      ( "append-log,a", "append to log file")
-      ( "disable-log", "disable logging")
-      ( "log-level", po::value<ustring>(), "set logging level (trace, debug, info, warning, error, fatal)")
-      ( "start-polling", "indicate that external polling (external notmuch db R/W operations) starts")
-      ( "stop-polling", "indicate that external polling stops")
+      ( "no-auto-poll",   "do not poll automatically")
+      ( "disable-log",    "disable logging")
+      ( "log-stdout",     "log to stdout regardless of configuration")
+      ( "start-polling",  "indicate that external polling (external notmuch db R/W operations) starts")
+      ( "stop-polling",   "indicate that external polling stops")
       ( "refresh", po::value<unsigned long>(), "refresh messages changed since lastmod")
 # ifndef DISABLE_PLUGINS
       ( "disable-plugins", "disable plugins");
@@ -163,53 +166,16 @@ namespace Astroid {
 
     }
 
+    logging::add_common_attributes ();
+    if (vm.count ("log-stdout")) {
+      log_stdout = true;
+      init_console_log ();
+    }
+
     if (vm.count ("disable-log")) {
-      LOG (warn) << "disabling log";
       logging::core::get()->set_logging_enabled (false);
-    } else if (vm.count ("log-level")) {
-      ustring llevel = vm["log-level"].as<ustring> ();
-      map<string, logging::trivial::severity_level> sevmap;
-
-      /* Map commandline string parameter to severity enum */
-      sevmap.insert (pair<string,logging::trivial::severity_level>("trace"  , logging::trivial::trace));
-      sevmap.insert (pair<string,logging::trivial::severity_level>("debug"  , logging::trivial::debug));
-      sevmap.insert (pair<string,logging::trivial::severity_level>("info"   , logging::trivial::info));
-      sevmap.insert (pair<string,logging::trivial::severity_level>("warning", logging::trivial::warning));
-      sevmap.insert (pair<string,logging::trivial::severity_level>("error"  , logging::trivial::error));
-      sevmap.insert (pair<string,logging::trivial::severity_level>("fatal"  , logging::trivial::fatal));
-
-      /* Non existing llevel in map will be silently ignored */
-      logging::core::get()->set_filter (logging::trivial::severity >= sevmap[llevel]);
+      disable_log = true;
     }
-
-
-    /* log to file */
-    if (vm.count ("log")) {
-      ustring lfile = vm["log"].as<ustring> ();
-      bool append = vm.count ("append-log");
-
-      std::ios_base::openmode om = std::ofstream::out;
-      if (append) om |= std::ofstream::app;
-
-      logging::add_file_log (
-          keywords::file_name   = lfile.c_str (),
-          keywords::auto_flush  = true,
-          keywords::open_mode   = om,
-
-          keywords::format =
-                (
-                  expr::stream
-                      << "["
-                      << expr::format_date_time< boost::posix_time::ptime >("TimeStamp", "%Y-%m-%d %H:%M:%S.%f")
-                      << "] [" << expr::attr <boost::log::attributes::current_thread_id::value_type>("ThreadID")
-                      << "] [" << logging::trivial::severity
-                      << "] " << expr::smessage
-              )
-          );
-
-      LOG (info) << "logging to: " << lfile << " (append: " << append << ")";
-    }
-
 
     /* make new config {{{ */
     if (vm.count("new-config")) {
@@ -247,27 +213,15 @@ namespace Astroid {
       exit (0);
     } // }}}
 
-    bool no_auto_poll = false;
-
-    if (vm.count ("no-auto-poll")) {
-      LOG (info) << "astroid: automatic polling is off.";
-
-      no_auto_poll = true;
-    }
-
-# ifndef DISABLE_PLUGINS
-    bool disable_plugins = vm.count ("disable-plugins");
-# endif
-
     if (!is_remote ()) {
       /* load config */
       if (vm.count("config")) {
         if (test_config) {
-          LOG (error) << "--config cannot be specified together with --test-config.";
+          cout << "--config cannot be specified together with --test-config.";
           exit (1);
         }
 
-        LOG (info) << "astroid: loading config: " << vm["config"].as<ustring>().c_str();
+        cout << "astroid: loading config: " << vm["config"].as<ustring>().c_str();
         m_config = new Config (vm["config"].as<ustring>().c_str());
       } else {
         if (test_config) {
@@ -276,6 +230,33 @@ namespace Astroid {
           m_config = new Config ();
         }
       }
+
+      /* setting up loggers */
+      if (config ("astroid.log").get<bool>("stdout") && !vm.count ("log-stdout")) {
+        init_console_log ();
+        log_stdout = true;
+      }
+
+      if (config ("astroid.log").get<bool> ("syslog")) {
+        init_sys_log ();
+        log_syslog = true;
+      }
+
+      log_level = config ("astroid.log").get<std::string> ("level");
+
+      /* Non existing llevel in map will be silently ignored */
+      logging::core::get()->set_filter (logging::trivial::severity >= sevmap[log_level]);
+
+      LOG (info) << "welcome to astroid! - " << Astroid::version;
+
+      string charset;
+      Glib::get_charset(charset);
+      LOG (debug) << "utf8: " << Glib::get_charset () << ", " << charset;
+
+      if (!Glib::get_charset()) {
+        LOG (error) << "astroid needs an UTF-8 locale! this is probably not going to work.";
+      }
+
 
       if (vm.count("start-polling") || vm.count("stop-polling") || vm.count ("refresh")) {
         LOG (error) << "--start-polling, --stop-polling or --refresh can only be specifed when there is already a running astroid instance.";
@@ -312,6 +293,7 @@ namespace Astroid {
 
 # ifndef DISABLE_PLUGINS
       /* set up plugins */
+      bool disable_plugins = vm.count ("disable-plugins");
       plugin_manager = new PluginManager (disable_plugins, in_test ());
       plugin_manager->astroid_extension = new PluginManager::AstroidExtension (this);
 # endif
@@ -320,6 +302,12 @@ namespace Astroid {
       actions = new ActionManager ();
 
       /* set up poller */
+      bool no_auto_poll = false;
+      if (vm.count ("no-auto-poll")) {
+        LOG (info) << "astroid: automatic polling is off.";
+
+        no_auto_poll = true;
+      }
       poll = new Poll (!no_auto_poll);
 
       Gtk::Application::run (argc, argv);
@@ -329,9 +317,6 @@ namespace Astroid {
     } else {
       Gtk::Application::run (argc, argv);
 
-      if (no_auto_poll) {
-        LOG (warn) << "astroid: specifying no-auto-poll only makes sense when starting a new astroid instance, ignoring.";
-      }
     }
 
     return 0;
@@ -358,6 +343,8 @@ namespace Astroid {
   }
 
   void Astroid::main_test () { // {{{
+    init_console_log ();
+
     m_config = new Config (true);
 
     /* set up static classes */
@@ -501,7 +488,7 @@ namespace Astroid {
         ustring name = kv.first;
         ustring query = kv.second.data();
 
-        LOG (info) << "astroid: got query: " << name << ": " << query;
+        LOG (info) << "got query: " << name << ": " << query;
         Mode * ti = new ThreadIndex (mw, query, name);
         ti->invincible = true; // set startup queries to be invincible
         mw->add_mode (ti);

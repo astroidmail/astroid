@@ -80,7 +80,13 @@ message Page {
   string html = 1;
   string css = 2;
   string part_css = 3;
+
   repeated string allowed_uris = 4;
+
+  bool   use_stdout = 5;
+  bool   use_syslog = 6;
+  bool   disable_log = 7;
+  string log_level = 8;
 }
 
 message Info {

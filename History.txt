@@ -26,6 +26,9 @@
 * Do not allow images in encrypted messages (#499)
 * Show CID (attached) images in HTML parts (on C-i)
 * Zoom messages with C-+ and C--
+* Logging can be configured to go to syslog (or stdout, default). File logging
+  is removed since we now have multiple processes and this would complicate
+  writing to one file.
 
 == v0.12
 * `mail.close_on_success` configures if page closes on successful send.

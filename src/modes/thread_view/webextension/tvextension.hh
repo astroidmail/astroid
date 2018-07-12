@@ -8,11 +8,14 @@
 # include <giomm/socket.h>
 # include <thread>
 # include <mutex>
+# include <boost/log/trivial.hpp>
 
 # include "messages.pb.h"
 
 # define refptr Glib::RefPtr
 typedef Glib::ustring ustring;
+
+namespace logging = boost::log;
 
 extern "C" {
 
@@ -61,6 +64,20 @@ class AstroidExtension {
     bool        run = true;
     refptr<Gio::Cancellable> reader_cancel;
     void        ack (bool success);
+
+    void init_console_log ();
+    void init_sys_log ();
+    const std::string log_ident = "astroid.wext";
+
+    std::map<std::string, logging::trivial::severity_level> sevmap = {
+      std::pair<std::string,logging::trivial::severity_level>("trace"  , logging::trivial::trace),
+      std::pair<std::string,logging::trivial::severity_level>("debug"  , logging::trivial::debug),
+      std::pair<std::string,logging::trivial::severity_level>("info"   , logging::trivial::info),
+      std::pair<std::string,logging::trivial::severity_level>("warning", logging::trivial::warning),
+      std::pair<std::string,logging::trivial::severity_level>("error"  , logging::trivial::error),
+      std::pair<std::string,logging::trivial::severity_level>("fatal"  , logging::trivial::fatal),
+    };
+
 
     WebKitDOMNode * container;
 

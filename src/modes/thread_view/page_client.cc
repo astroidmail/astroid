@@ -197,6 +197,11 @@ namespace Astroid {
     s.set_part_css (thread_view->theme.part_css.c_str ());
     s.set_html (thread_view->theme.thread_view_html.c_str ());
 
+    s.set_use_stdout (astroid->log_stdout);
+    s.set_use_syslog (astroid->log_syslog);
+    s.set_disable_log (astroid->disable_log);
+    s.set_log_level (astroid->log_level);
+
     /* send allowed URIs */
     if (enable_gravatar) {
       s.add_allowed_uris ("https://www.gravatar.com/avatar/");

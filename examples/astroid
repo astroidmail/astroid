@@ -15,5 +15,5 @@ export ASTROID_DIR=$(dirname $ASTROID_DIR)/..
 # GIR
 export GI_TYPELIB_PATH=$ASTROID_DIR/build
 
-unbuffer $ASTROID_DIR/build/astroid -l ~/.config/astroid/log $*
+$ASTROID_DIR/build/astroid $*
 

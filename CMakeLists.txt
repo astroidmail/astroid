@@ -168,6 +168,7 @@ add_compile_options (
   )
 add_definitions (
   -DBOOST_LOG_DYN_LINK
+  -DBOOST_LOG_USE_NATIVE_SYSLOG
   )
 #
 # debug builds
