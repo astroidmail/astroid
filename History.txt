@@ -29,6 +29,7 @@
 * Logging can be configured to go to syslog (or stdout, default). File logging
   is removed since we now have multiple processes and this would complicate
   writing to one file.
+* Syntax highlighting has been removed. Hopefully temporarily.
 
 == v0.12
 * `mail.close_on_success` configures if page closes on successful send.

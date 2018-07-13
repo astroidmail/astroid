@@ -738,27 +738,6 @@ namespace Astroid {
     }
 
     if (c->viewable) {
-      /* check if message should be syntax highlighted  */
-      bool code_is_on = enable_code_prettify;
-      if (enable_code_prettify) {
-        if (code_prettify_only_tags.size () > 0) {
-          code_is_on = false;
-          if (m->in_notmuch) {
-            for (auto &t : code_prettify_only_tags) {
-              if (m->has_tag (t)) {
-                code_is_on = true;
-                break;
-              }
-            }
-          } else {
-            /* enable for messages not in db */
-            code_is_on = true;
-          }
-        } else {
-          code_is_on = true;
-        }
-      }
-
       part->set_content (c->viewable_text (true, true));
     }
 

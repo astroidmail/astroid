@@ -9,7 +9,6 @@ The [tour of how to install, configure and use astroid](https://github.com/astro
 * fully operable by [keyboard](https://github.com/astroidmail/astroid/wiki/Customizing-key-bindings).
 * graphical interface. buffers can be placed in separate windows.
 * display html mail and common attachments inline.
-* syntax highlighting of code (markdown style) and patches.
 * [themable and configurable](https://github.com/astroidmail/astroid/wiki/Customizing-the-user-interface).
 * built-in [crypto (PGP/MIME) support](https://github.com/astroidmail/astroid/wiki/Signing%2C-Encrypting-and-Decrypting).
 * editors: [embedded or external vim or emacs](https://github.com/astroidmail/astroid/wiki/Customizing-editor) (or your favourite editor).
