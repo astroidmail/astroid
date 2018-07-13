@@ -226,9 +226,10 @@ void AstroidExtension::reader () {/*{{{*/
           reader_cancel,
           buffer);
 
-    } catch (Gio::Error &e) {
+    } catch (AeProtocol::ipc_error &e) {
       LOG (warn) << "reader thread: " << e.what ();
-      return;
+      run = false;
+      break;
     }
 
     /* parse message */
