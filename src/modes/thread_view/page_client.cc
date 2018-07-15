@@ -192,6 +192,8 @@ namespace Astroid {
     s.set_log_level (astroid->log_level);
 
     /* send allowed URIs */
+    s.add_allowed_uris (thread_view->home_uri);
+
     if (enable_gravatar) {
       s.add_allowed_uris ("https://www.gravatar.com/avatar/");
     }

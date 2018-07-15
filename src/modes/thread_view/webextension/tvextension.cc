@@ -197,7 +197,11 @@ bool AstroidExtension::send_request (
 
   LOG (debug) << "request: " << uri.substr (0, std::min (60, (int)uri.size ())) << "..";
 
-  if (allow_remote_resources) {
+  /* allow all requests before page has been sent. no user content has been
+   * loaded yet and it seems that sometimes the request for the home uri
+   * is handled here */
+
+  if (!page_ready || allow_remote_resources) {
     LOG (debug) << "request: allow.";
     return false; // allow
   } else {
@@ -415,7 +419,6 @@ void AstroidExtension::reader () {/*{{{*/
 
 void AstroidExtension::handle_page (AstroidMessages::Page &s) {/*{{{*/
   /* set up logging */
-
   if (!s.use_stdout ()) {
     /* already set up in constructor to catch early messages */
     logging::core::get()->remove_all_sinks ();
@@ -462,6 +465,8 @@ void AstroidExtension::handle_page (AstroidMessages::Page &s) {/*{{{*/
   for (auto &s : s.allowed_uris ()) {
     allowed_uris.push_back (s);
   }
+
+  page_ready = true;
 
   g_object_unref (he);
   g_object_unref (head);

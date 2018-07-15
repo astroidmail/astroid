@@ -83,6 +83,7 @@ class AstroidExtension {
 
     void handle_page (AstroidMessages::Page &s);
     ustring part_css;
+    bool page_ready = false;
 
     bool allow_remote_resources = false;
     std::vector<std::string> allowed_uris =
