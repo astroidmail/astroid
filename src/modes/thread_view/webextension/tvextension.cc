@@ -419,9 +419,8 @@ void AstroidExtension::reader () {/*{{{*/
 
 void AstroidExtension::handle_page (AstroidMessages::Page &s) {/*{{{*/
   /* set up logging */
-  if (!s.use_stdout ()) {
-    /* already set up in constructor to catch early messages */
-    logging::core::get()->remove_all_sinks ();
+  if (s.use_stdout ()) {
+    init_console_log ();
   }
 
   if (s.use_syslog ()) {
