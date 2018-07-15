@@ -171,6 +171,7 @@ astroid_threadview_activatable_format_tags (AstroidThreadViewActivatable * activ
  * @input_text : A #utf8.
  * @input_html : A #utf8.
  * @mime_type : A #utf8.
+ * @is_patch : A #bool.
  *
  */
 char *
@@ -178,7 +179,8 @@ astroid_threadview_activatable_filter_part (
     AstroidThreadViewActivatable * activatable,
     const char * input_text,
     const char * input_html,
-    const char * mime_type)
+    const char * mime_type,
+    bool         is_patch)
 {
 	AstroidThreadViewActivatableInterface *iface;
 
@@ -186,7 +188,7 @@ astroid_threadview_activatable_filter_part (
 
 	iface = ASTROID_THREADVIEW_ACTIVATABLE_GET_IFACE (activatable);
 	if (iface->filter_part)
-		return iface->filter_part (activatable, input_text, input_html, mime_type);
+		return iface->filter_part (activatable, input_text, input_html, mime_type, is_patch);
 
   return NULL;
 }

@@ -29,7 +29,7 @@
 * Logging can be configured to go to syslog (or stdout, default). File logging
   is removed since we now have multiple processes and this would complicate
   writing to one file.
-* Syntax highlighting has been removed. Hopefully temporarily.
+* Syntax highlighting through JS has been replaced by a syntax highlight plugin based on Pygments.
 * Add filter_part plugin method, which can be used to modify the displayed HTML
   depending on either the text/plain or the text/html part.
 

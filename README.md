@@ -12,6 +12,7 @@ The [tour of how to install, configure and use astroid](https://github.com/astro
 * [themable and configurable](https://github.com/astroidmail/astroid/wiki/Customizing-the-user-interface).
 * built-in [crypto (PGP/MIME) support](https://github.com/astroidmail/astroid/wiki/Signing%2C-Encrypting-and-Decrypting).
 * editors: [embedded or external vim or emacs](https://github.com/astroidmail/astroid/wiki/Customizing-editor) (or your favourite editor).
+* [syntax highlighting](https://github.com/astroidmail/astroid-syntax-highlight) of patches and code segments.
 * [python and lua plugins](https://github.com/astroidmail/astroid/wiki/Plugins).
 * and much more...
 

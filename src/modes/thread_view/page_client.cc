@@ -734,7 +734,9 @@ namespace Astroid {
       part->set_content (
           thread_view->plugins->filter_part (
             c->viewable_text (false, true),
-            c->viewable_text (true, true), mime_type));
+            c->viewable_text (true, true),
+            mime_type,
+            m->is_patch()));
 
 # else
       part->set_content (c->viewable_text (true, true));

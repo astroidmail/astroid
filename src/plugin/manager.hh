@@ -73,7 +73,7 @@ namespace Astroid {
           std::vector<ustring> get_allowed_uris ();
           bool get_avatar_uri (ustring email, ustring type, int size, refptr<Message> m, ustring &out);
           bool format_tags (std::vector<ustring> tags, ustring bg, bool selected, ustring &out);
-          std::string filter_part (std::string input_text, std::string input_html, std::string mime_type);
+          std::string filter_part (std::string input_text, std::string input_html, std::string mime_type, bool is_patch);
 
       };
 

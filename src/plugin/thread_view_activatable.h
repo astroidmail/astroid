@@ -31,7 +31,7 @@ struct _AstroidThreadViewActivatableInterface
 
   char*  (*format_tags) (AstroidThreadViewActivatable * activatable, const char *bg, GList * tags, bool selected);
 
-  char*  (*filter_part) (AstroidThreadViewActivatable * activatable, const char * input_text, const char * input_html, const char * mime_type);
+  char*  (*filter_part) (AstroidThreadViewActivatable * activatable, const char * input_text, const char * input_html, const char * mime_type, bool is_patch);
 };
 
 GType astroid_threadview_activatable_get_type (void) G_GNUC_CONST;
@@ -48,7 +48,7 @@ GList * astroid_threadview_activatable_get_allowed_uris (AstroidThreadViewActiva
 
 char * astroid_threadview_activatable_format_tags (AstroidThreadViewActivatable * activatable, const char * bg, GList * tags, bool selected);
 
-char * astroid_threadview_activatable_filter_part (AstroidThreadViewActivatable * activatable, const char * input_text, const char * input_html, const char * mime_type);
+char * astroid_threadview_activatable_filter_part (AstroidThreadViewActivatable * activatable, const char * input_text, const char * input_html, const char * mime_type, bool is_patch);
 
 G_END_DECLS
 
