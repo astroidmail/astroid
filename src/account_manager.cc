@@ -28,32 +28,73 @@ namespace Astroid {
       Account * a = new Account ();
       a->id = kv.first;
 
-      a->name  = kv.second.get<string> ("name");
-      a->email = kv.second.get<string> ("email");
-      a->sendmail = kv.second.get<string> ("sendmail");
+      boost::optional<bool> bv;
+      boost::optional<string> sv;
 
-      a->isdefault = kv.second.get<bool> ("default");
+      a->name  =
+        (sv = kv.second.get_optional<string> ("name"),
+        (sv ? sv.get () : ""));
 
-      a->save_sent = kv.second.get<bool> ("save_sent");
-      a->save_sent_to = Utils::expand(bfs::path (kv.second.get<string> ("save_sent_to")));
-      ustring sent_tags_s = kv.second.get<string> ("additional_sent_tags");
+      a->email =
+        (sv = kv.second.get_optional<string> ("email"),
+        (sv ? sv.get () : ""));
+
+      a->sendmail =
+        (sv = kv.second.get_optional<string> ("sendmail"),
+        (sv ? sv.get () : ""));
+
+      a->isdefault =
+        (bv = kv.second.get_optional<bool> ("default"),
+        (bv ? bv.get () : false));
+
+      a->save_sent =
+        (bv = kv.second.get_optional<bool> ("save_sent"),
+        (bv ? bv.get () : false));
+
+      a->save_sent_to = Utils::expand(bfs::path (
+            (sv = kv.second.get_optional<string> ("save_sent_to"),
+            (sv ? sv.get () : ""))
+             ));
+
+      ustring sent_tags_s =
+        (sv = kv.second.get_optional<string> ("additional_sent_tags"),
+        (sv ? sv.get () : ""));
+
       a->additional_sent_tags = VectorUtils::split_and_trim (sent_tags_s, ",");
       sort (a->additional_sent_tags.begin (), a->additional_sent_tags.end ());
 
-      a->save_drafts_to = Utils::expand(bfs::path (kv.second.get<string> ("save_drafts_to")));
+      a->save_drafts_to = Utils::expand(bfs::path (
+            (sv = kv.second.get_optional<string> ("save_drafts_to"),
+            (sv ? sv.get () : ""))
+             ));
 
-      a->signature_separate = kv.second.get<bool> ("signature_separate");
-      a->signature_file = Utils::expand(bfs::path (kv.second.get<string> ("signature_file")));
-      a->signature_file_markdown = Utils::expand(bfs::path (kv.second.get<string> ("signature_file_markdown")));
-      a->signature_default_on = kv.second.get<bool> ("signature_default_on");
-      a->signature_attach     = kv.second.get<bool> ("signature_attach");
+      a->signature_separate =
+        (bv = kv.second.get_optional<bool> ("signature_separate"),
+        (bv ? bv.get () : false));
+
+      a->signature_file = Utils::expand(bfs::path (
+            (sv = kv.second.get_optional<string> ("signature_file"),
+            (sv ? sv.get () : ""))
+             ));
+
+      a->signature_file_markdown = Utils::expand(bfs::path (
+            (sv = kv.second.get_optional<string> ("signature_file_markdown"),
+            (sv ? sv.get () : ""))
+             ));
+
+      a->signature_default_on =
+        (bv = kv.second.get_optional<bool> ("signature_default_on"),
+        (bv ? bv.get () : false));
+
+      a->signature_attach =
+        (bv = kv.second.get_optional<bool> ("signature_attach"),
+        (bv ? bv.get () : false));
 
       if (a->signature_file.string ().size ()) {
         /* if relative, assume relative to config dir */
         if (!a->signature_file.is_absolute ()) {
           a->signature_file = astroid->standard_paths ().config_dir / a->signature_file;
         }
-
 
         if (bfs::exists (a->signature_file) &&
             bfs::is_regular_file (a->signature_file))
@@ -66,19 +107,24 @@ namespace Astroid {
           a->signature_file_markdown = astroid->standard_paths ().config_dir / a->signature_file_markdown;
         }
 
-
         if (bfs::exists (a->signature_file_markdown) &&
             bfs::is_regular_file (a->signature_file_markdown))
           a->has_signature_markdown = true; // requires text signature
       }
 
-      a->gpgkey = kv.second.get<string> ("gpgkey");
+      a->gpgkey =
+        (sv = kv.second.get_optional<string> ("gpgkey"),
+        (sv ? sv.get () : ""));
       if (!a->gpgkey.empty()) {
         a->has_gpg = true;
-        a->always_gpg_sign = kv.second.get<bool> ("always_gpg_sign");
+        a->always_gpg_sign =
+          (bv = kv.second.get_optional<bool> ("always_gpg_sign"),
+          (bv ? bv.get () : false));
       }
 
-      a->select_query = kv.second.get<string> ("select_query");
+      a->select_query =
+        (sv = kv.second.get_optional<string> ("select_query"),
+        (sv ? sv.get () : ""));
 
       LOG (info) << "ac: setup account: " << a->id << " for " << a->name << " (default: " << a->isdefault << ")";
 
