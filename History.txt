@@ -16,7 +16,7 @@
 
   Expect some instability while breaking in this new change!
 
-  Important:  Make sure you update any plugins! If they try to use the old
+  Important:  Make sure you update your plugins! If they try to use the old
               WebKit GIO bindings with the new WebKit objects astroid will freeze.
 
 Part rendering:

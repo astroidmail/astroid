@@ -54,7 +54,7 @@ endif ()
 #
 if(NOT DISABLE_PLUGINS)
   set (PLUGIN_NAMESPACE    "Astroid")
-  set (PLUGIN_API_VERSION  "0.1")
+  set (PLUGIN_API_VERSION  "0.2")
 endif()
 
 ##
