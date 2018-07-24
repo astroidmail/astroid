@@ -20,7 +20,7 @@ core*
 tmp-*
 
 # Common build dirs
-build*
-_build*
+build/*
+_build/*
 compile_commands.json
 
