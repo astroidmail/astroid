@@ -128,6 +128,7 @@ namespace Astroid {
       ( "no-auto-poll",   "do not poll automatically")
       ( "disable-log",    "disable logging")
       ( "log-stdout",     "log to stdout regardless of configuration")
+      ( "log-level", po::value<ustring>(), "override configured logging level (trace, debug, info, warning, error, fatal)")
       ( "start-polling",  "indicate that external polling (external notmuch db R/W operations) starts")
       ( "stop-polling",   "indicate that external polling stops")
       ( "refresh", po::value<unsigned long>(), "refresh messages changed since lastmod")
@@ -140,6 +141,7 @@ namespace Astroid {
   // }}}
 
   int Astroid::run (int argc, char **argv) { // {{{
+    LOG (info) << "welcome to astroid! - " << Astroid::version;
     register_application ();
 
     Resource::init (argv[0]);
@@ -151,8 +153,8 @@ namespace Astroid {
     try {
       po::store ( po::parse_command_line (argc, argv, desc), vm );
     } catch (po::unknown_option &ex) {
-      cout << "unknown option" << endl;
-      cout << ex.what() << endl;
+      LOG (error) << "unknown option" << endl;
+      LOG (error) << ex.what() << endl;
       show_help = true;
     }
 
@@ -218,11 +220,11 @@ namespace Astroid {
       /* load config */
       if (vm.count("config")) {
         if (test_config) {
-          cout << "--config cannot be specified together with --test-config.";
+          LOG (error) << "--config cannot be specified together with --test-config.";
           exit (1);
         }
 
-        cout << "astroid: loading config: " << vm["config"].as<ustring>().c_str();
+        LOG (info) << "astroid: loading config: " << vm["config"].as<ustring>().c_str();
         m_config = new Config (vm["config"].as<ustring>().c_str());
       } else {
         if (test_config) {
@@ -236,23 +238,29 @@ namespace Astroid {
       if (config ("astroid.log").get<bool>("stdout") && !vm.count ("log-stdout")) {
         init_console_log ();
         log_stdout = true;
+        LOG (debug) << "log: stdout: yes";
       }
 
       if (config ("astroid.log").get<bool> ("syslog")) {
         init_sys_log ();
         log_syslog = true;
+        LOG (debug) << "log: syslog: yes";
       }
 
-      log_level = config ("astroid.log").get<std::string> ("level");
+      if (vm.count ("log-level")) {
+        log_level = vm["log-level"].as<ustring> ();
+      } else {
+        log_level = config ("astroid.log").get<std::string> ("level");
+      }
 
       /* Non existing llevel in map will be silently ignored */
       logging::core::get()->set_filter (logging::trivial::severity >= sevmap[log_level]);
 
-      LOG (info) << "welcome to astroid! - " << Astroid::version;
 
       string charset;
       Glib::get_charset(charset);
       LOG (debug) << "utf8: " << Glib::get_charset () << ", " << charset;
+      LOG (info) << "log: level: " << log_level;
 
       if (!Glib::get_charset()) {
         LOG (error) << "astroid needs an UTF-8 locale! this is probably not going to work.";
@@ -430,8 +438,8 @@ namespace Astroid {
       try {
         po::store ( po::parse_command_line (argc, argv, desc), vm );
       } catch (po::unknown_option &ex) {
-        cout << "unknown option" << endl;
-        cout << ex.what() << endl;
+        LOG (error) << "unknown option" << endl;
+        LOG (error) << ex.what() << endl;
         return 1;
       }
 
