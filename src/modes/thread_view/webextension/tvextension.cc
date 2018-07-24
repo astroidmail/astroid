@@ -1014,20 +1014,6 @@ void AstroidExtension::create_body_part (
 
   ustring body = c.content();
 
-  /*
-   * TODO:
-  if (code_is_on) {
-    if (c.patch ()) {
-      LOG (debug) << "tv: message is patch, syntax highlighting.";
-      body.insert (0, code_start_tag);
-      body.insert (body.length()-1, code_stop_tag);
-
-    } else {
-      filter_code_tags (body);
-    }
-  }
-  */
-
   /* check encryption */
   //
   //  <div id="encrypt_template" class=encrypt_container">
