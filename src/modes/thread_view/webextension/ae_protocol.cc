@@ -104,6 +104,7 @@ namespace Astroid {
     LOG (debug) << "ae: send (sync) waiting for ACK..";
     AstroidMessages::Ack a;
     a.set_success (false);
+    return a;
 
     {
       std::string msg_str;
