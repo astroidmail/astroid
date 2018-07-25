@@ -93,6 +93,11 @@ namespace Astroid {
       std::mutex      m_ostream;
       std::mutex      m_istream;
 
+      std::thread reader_t;
+      void        reader ();
+      bool        run = true;
+      refptr<Gio::Cancellable> reader_cancel;
+
       void        handle_ack (const AstroidMessages::Ack & ack);
   };
 

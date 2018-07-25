@@ -72,11 +72,18 @@ namespace Astroid {
 
     LOG (debug) << "pc: closing";
 
+    /* stop reader thread */
+    run = false;
+    if (reader_cancel)
+      reader_cancel->cancel ();
+
     istream.clear ();
     ostream.clear ();
 
     ext->close ();
     srv->close ();
+
+    reader_t.detach ();
   }
 
   void PageClient::init_web_extensions (WebKitWebContext * context) {
@@ -157,10 +164,62 @@ namespace Astroid {
 
     ready = true;
 
+    /* setting up reader thread */
+    reader_t = std::thread (&PageClient::reader, this);
+
     if (thread_view->wk_loaded) {
       Glib::signal_idle().connect_once (
         sigc::mem_fun (thread_view, &ThreadView::on_ready_to_render));
     }
+  }
+
+  void PageClient::reader () {
+    LOG (debug) << "pc: reader thread started.";
+
+    while (run) {
+      LOG (debug) << "reader waiting..";
+
+      std::string buffer;
+      AeProtocol::MessageTypes mt;
+
+      try {
+
+        mt = AeProtocol::read_message (
+            istream,
+            reader_cancel,
+            buffer);
+
+      } catch (std::exception &e) {
+        LOG (warn) << "reader thread: " << e.what ();
+        run = false;
+        break;
+
+      } catch (Gio::Error &e) {
+        LOG (warn) << "reader thread: " << e.what ();
+        run = false;
+        break;
+      }
+
+      switch (mt) {
+        case AeProtocol::MessageTypes::Ack:
+          {
+            AstroidMessages::Ack a;
+            a.set_success (false);
+
+            LOG (debug) << "pc: send (sync) ACK received.";
+            a.ParseFromString (buffer);
+
+            Glib::signal_idle().connect_once (
+                sigc::bind (
+                  sigc::mem_fun(*this, &PageClient::handle_ack), a));
+          }
+          break;
+
+        default:
+          break; // unknown message
+      }
+    }
+    LOG (debug) << "reader thread exit.";
   }
 
   void PageClient::handle_ack (const AstroidMessages::Ack & ack) {
