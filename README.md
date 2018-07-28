@@ -47,6 +47,11 @@ $ cd build
 $ ctest
 ```
 
+#### Manual page
+
+We use [scdoc](https://drewdevault.com/2018/05/13/scdoc.html) to generate
+`astroid(1)`:  `scdoc < doc/astroid.1.scd > doc/astroid.1`.
+
 ### Installing
 
 Configure with a prefix and install:
