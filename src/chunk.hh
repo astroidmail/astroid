@@ -30,6 +30,7 @@ namespace Astroid {
       ustring content_id;
 
       ustring get_content_type ();
+      bool    is_content_type (const char* major, const char* minor);
 
       ustring viewable_text (bool, bool verbose = false);
 

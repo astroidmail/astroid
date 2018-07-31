@@ -324,13 +324,13 @@ namespace Astroid {
       bool use = false;
 
       if (c->siblings.size() >= 1) {
-        if (c->preferred) {
+        if (c->is_content_type ("text", html ? "html" : "plain")) {
           use = true;
         } else {
           /* check if there are any other preferred */
           if (all_of (c->siblings.begin (),
                       c->siblings.end (),
-                      [](refptr<Chunk> c) { return (!c->preferred); })) {
+                      [html](refptr<Chunk> c) { return !c->is_content_type ("text", html ? "html" : "plain"); })) {
             use = true;
           } else {
             use = false;
@@ -341,7 +341,7 @@ namespace Astroid {
       }
 
       if (use) {
-        if (c->viewable && (c->preferred || html || fallback_html)) {
+        if (c->viewable && (c->is_content_type ("text", html ? "html" : "plain") ||  fallback_html)) {
           body += c->viewable_text (html);
         }
 
