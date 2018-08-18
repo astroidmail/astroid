@@ -89,7 +89,7 @@ This project adheres to [Contributor Covenant Code of Conduct v1.4](http://contr
   provided inspiration for [notmuch] which is a mail indexer. astroid is
   using [notmuch] as a backend.
 
-  Some parts of the user interface and layout have been has been
+  Some parts of the user interface and layout has been
   inspired by the [Geary] mail client. Also, some inspiration and code stems from ner (another notmuch email client).
 
 ## License
