@@ -920,6 +920,26 @@ namespace Astroid {
     return DomUtils::assemble_data_uri (mime_type.c_str (), (const gchar *) data->get_data (), data->size ());
   } // }}}
 
+  void PageClient::scroll_to_bottom () {
+    AstroidMessages::Navigate n;
+    n.set_direction (AstroidMessages::Navigate_Direction_Down);
+    n.set_type (AstroidMessages::Navigate_Type_Extreme);
+
+    handle_ack (
+        AeProtocol::send_message_sync (AeProtocol::MessageTypes::Navigate, n, ostream, m_ostream, istream, m_istream)
+        );
+  }
+
+  void PageClient::scroll_to_top () {
+    AstroidMessages::Navigate n;
+    n.set_direction (AstroidMessages::Navigate_Direction_Up);
+    n.set_type (AstroidMessages::Navigate_Type_Extreme);
+
+    handle_ack (
+        AeProtocol::send_message_sync (AeProtocol::MessageTypes::Navigate, n, ostream, m_ostream, istream, m_istream)
+        );
+  }
+
   void PageClient::scroll_down_big () {
     AstroidMessages::Navigate n;
     n.set_direction (AstroidMessages::Navigate_Direction_Down);

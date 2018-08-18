@@ -49,6 +49,7 @@ message Navigate {
     Element       = 4; // Move to specific element, update focus (not directional)
     Message       = 5; // Move one message, update focus
     FocusView     = 6; // Update focus to match view
+    Extreme       = 7; // Top or bottom
   }
 
   Direction direction = 1;

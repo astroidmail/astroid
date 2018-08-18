@@ -643,7 +643,7 @@ namespace Astroid {
         "thread_view.home",
         "Scroll home",
         [&] (Key) {
-          focus_message (mthread->messages[0]);
+          page_client->scroll_to_top ();
           return true;
         });
 
@@ -651,7 +651,7 @@ namespace Astroid {
         "thread_view.end",
         "Scroll to end",
         [&] (Key) {
-          focus_message (mthread->messages[mthread->messages.size()-1]);
+          page_client->scroll_to_bottom ();
           return true;
         });
 

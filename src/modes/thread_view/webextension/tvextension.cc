@@ -2272,8 +2272,45 @@ void AstroidExtension::handle_navigate (AstroidMessages::Navigate &n) {
     } else {
       focus_previous_message (n.focus_top());
     }
+
   } else if (n.type () == AstroidMessages::Navigate_Type_FocusView) {
     update_focus_to_view ();
+
+  } else if (n.type () == AstroidMessages::Navigate_Type_Extreme) {
+    if (n.direction () == AstroidMessages::Navigate_Direction_Down) {
+      WebKitDOMElement * body = WEBKIT_DOM_ELEMENT(webkit_dom_document_get_body (d));
+      double scroll_height = webkit_dom_element_get_scroll_height (body);
+
+      webkit_dom_dom_window_scroll_to (w, 0, scroll_height);
+
+      /* focus last element of last message */
+      auto s = --state.messages ().end ();
+      focused_message = s->mid ();
+
+      if (is_hidden (focused_message)) {
+        focused_element = 0;
+      } else {
+        auto next_e = std::find_if (
+            s->elements().rbegin(),
+            s->elements().rend (),
+            [&] (auto &e) { return e.focusable (); });
+
+        if (next_e != s->elements ().rend ()) {
+
+          focused_element = std::distance (s->elements ().begin (), next_e.base() -1);
+
+        } else {
+          focused_element = 0;
+        }
+      }
+
+      apply_focus (focused_message, focused_element);
+
+      g_object_unref (body);
+    } else {
+      webkit_dom_dom_window_scroll_to (w, 0, 0);
+      apply_focus (state.messages().begin()->mid (), 0);
+    }
   }
 
   LOG (debug) << "navigation done.";

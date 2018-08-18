@@ -55,6 +55,9 @@ namespace Astroid {
       void scroll_down_page ();
       void scroll_up_page ();
 
+      void scroll_to_top ();
+      void scroll_to_bottom ();
+
       void focus_element (refptr<Message> m, unsigned int);
       void focus_next_element (bool force_change);
       void focus_previous_element (bool force_change);
