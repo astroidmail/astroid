@@ -242,6 +242,8 @@ include_directories (
 add_library(
   hypocycloid
 
+  STATIC
+
   src/account_manager.cc
   src/astroid.cc
   src/chunk.cc
