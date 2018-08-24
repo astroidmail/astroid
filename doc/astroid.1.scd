@@ -76,6 +76,10 @@ generate an initial configuration file, then edit it to match the user's needs.
 You will find all the details on Astroid's online documentation:
 https://github.com/astroidmail/astroid/wiki.
 
+You can customized the thread view by putting your own HTML and SCSS files in
+$XDG\_CONFIG\_HOME/astroid/ui/, as explained on
+https://github.com/astroidmail/astroid/wiki/Customizing-the-user-interface.
+
 If $XDG\_CONFIG\_HOME is not set, it defaults to ~/.config.
 
 # NOTE
