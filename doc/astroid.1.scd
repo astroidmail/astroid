@@ -80,20 +80,30 @@ If $XDG\_CONFIG\_HOME is not set, it defaults to ~/.config.
 
 # NOTE
 
-Astroid is a *Mail User Agent*. As such, all Astroid provides is a graphical
-interface to your email. Thus, Astroid enables you to launch actions that rely
-on the performance of other programs to actually fetch, sync, index, search and
-send your email.
+Astroid is a *Mail User Agent*: all Astroid provides is a graphical interface
+to your email (read, view, write, modify, organise). Thus, Astroid enables you
+to launch actions that rely on the performance of other programs to actually
+fetch, sync, index, search and send your email. It depends on Notmuch for
+indexing and searching, but others actions can be handled many different
+programs:
 
-A typical mail setup using Astroid can include:
+- Fetching and syncing your mail between your local computer and email service
+provider can be handled by any program supporting the Maildir format:
+	* *OfflineIMAP*
+	* *mbsync*
+	* *Gmailleer*
+	* ...
 
-- *OfflineIMAP* to fetch/sync your mail between your local computer and an
-  email service provider. Note however that astroid modifies notmuch tags,
-  which won't be picked up by offlineimap and hence won't be synced to remotes.
-- *Notmuch* to index and search your mail.
-- *msmtp* to send your mail through your email service provider.
-- *Astroid* to read, view, write, modify, organise your mail through a graphical interface.
-- *vim* or *emacs* to write and edit email.
+- Sending mail through you email provider can be handler by any sendmail
+compatible program:
+	* *msmtp*
+	* ...
+
+- Editing can be handled by almost any editor:
+	* *vim*
+	* *emacs*
+	* *gedit*
+	* ...
 
 While all these programs (or equivalent programs) need to be setup; once
 they're configured, you shouldn't need to think about them beyond using
