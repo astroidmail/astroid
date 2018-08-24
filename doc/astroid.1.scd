@@ -28,6 +28,10 @@ tons of e-mail.
 *-h, --help*
 	Show the help message and quit.
 
+*--log-level <level>*
+	Override the configured log level. Level options are: trace, debug (default),
+	info, warn, error and fatal.
+
 *--log-stdout*
 	Output logs to the standard output, regardless of any other logging
 	configuration.
