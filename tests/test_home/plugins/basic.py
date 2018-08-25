@@ -1,5 +1,5 @@
 import gi
-gi.require_version ('Astroid', '0.1')
+gi.require_version ('Astroid', '0.2')
 from gi.repository import GObject, Astroid
 
 print ("basic: plugin loading..")
