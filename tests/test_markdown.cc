@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_SUITE(Markdown)
 
     LOG (trace) << "markdown html: '" << _html << "'";
 
-    BOOST_CHECK_MESSAGE ("<h1 id=\"this-is-a-test\">This is a test</h1>" == _html, "html part is correctly constructed html");
+    BOOST_CHECK_MESSAGE ("<h1>This is a test</h1>" == _html, "html part is correctly constructed");
 
     unlink (fn.c_str ());
     teardown ();
