@@ -1,3 +1,7 @@
+==
+
+* Respect $NOTMUCH_CONFIG and ignore configuration option if set. Otherwise fall back to option from configuration file.
+
 == v0.13 / 2018-07-20
 
 * Move to WebKit2
