@@ -394,6 +394,27 @@ if(DISABLE_LIBSASS)
     COMMAND ${SCSS_COMPILER} ${CMAKE_SOURCE_DIR}/ui/part.scss ${CMAKE_BINARY_DIR}/part.css )
 endif()
 
+## Build man pages
+find_program (SCDOC scdoc) # preferred
+find_program (RONN  ronn)
+
+if (SCDOC)
+  add_custom_command (  
+    TARGET astroid
+    COMMAND ${SCDOC} < ${CMAKE_SOURCE_DIR}/doc/astroid.1.scd | gzip > ${CMAKE_BINARY_DIR}/astroid.1.gz 
+    COMMENT "Generating man page (scdoc)")
+else ()
+  if (RONN)
+    message (WARNING "Falling back to 'ronn' for man page generation.")
+    add_custom_command (  
+      TARGET astroid
+      COMMAND ${RONN} -rp ${CMAKE_SOURCE_DIR}/doc/astroid.1.scd | gzip > ${CMAKE_BINARY_DIR}/astroid.1.gz 
+      COMMENT "Generating man page (ronn)")
+  else ()
+    message (FATAL_ERROR "Neither 'scdoc' nor 'ronn' installed. One is required for man page generation")
+  endif()
+endif()
+
 ##
 # embedded editor
 #
@@ -504,6 +525,11 @@ install ( TARGETS astroid
 
 install ( TARGETS tvextension
   DESTINATION lib/astroid/web-extensions
+  )
+
+# Install man page
+install ( FILES ${CMAKE_BINARY_DIR}/astroid.1.gz
+  DESTINATION share/man/man1 
   )
 
 # icons are installed in three locations
