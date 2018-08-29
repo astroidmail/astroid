@@ -388,7 +388,16 @@ namespace Astroid {
       bool hasstartup;
       try {
         ptree strup = config.get_child ("startup");
-        hasstartup  = strup.get_child ("queries").size () > 0;
+        hasstartup  = strup.count ("queries") > 0;
+
+        if ( (hasstartup &&
+              strup.get_child ("queries").size () == 0) &&
+             !config.get<bool> ("saved_searches.show_on_startup")
+            )
+        {
+          LOG (info) << "cf: no startup queries, forcing show saved_searches on startup.";
+          config.put ("saved_searches.show_on_startup", true);
+        }
       } catch (const boost::property_tree::ptree_bad_path &ex) {
         hasstartup  = false;
       }
