@@ -14,7 +14,7 @@
 # Copyright (C) 2010, Pino Toscano, <pino@kde.org>
 #
 # Redistribution and use is allowed according to the terms of the BSD license.
-# For details see the accompanying COPYING-CMAKE-SCRIPTS file.
+# For details see LICENSE.md.
 
 macro(_GIR_GET_PKGCONFIG_VAR _outvar _varname)
   execute_process(
