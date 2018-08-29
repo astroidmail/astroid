@@ -70,11 +70,13 @@ tons of e-mail.
 
 # CONFIGURATION
 
-The configuration file location defaults to $XDG\_CONFIG\_HOME/astroid/config. The
-preconized way to configure a new astroid setup is to use --new-config to
+The configuration file location defaults to $XDG\_CONFIG\_HOME/astroid/config.
+The preferred way to configure a new astroid setup is to use --new-config to
 generate an initial configuration file, then edit it to match the user's needs.
 You will find all the details on Astroid's online documentation:
-https://github.com/astroidmail/astroid/wiki.
+https://github.com/astroidmail/astroid/wiki. If $NOTMUCH\_CONFIG is set it
+takes precedence over the configured value for the notmuch database in the
+configuration file.
 
 You can customized the thread view by putting your own HTML and SCSS files in
 $XDG\_CONFIG\_HOME/astroid/ui/, as explained on
