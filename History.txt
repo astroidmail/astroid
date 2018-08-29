@@ -2,6 +2,8 @@
 
 * Respect $NOTMUCH_CONFIG and ignore configuration option if set. Otherwise fall back to option from configuration file.
 
+* We now have a man page! Generated either by scdoc or ronn.
+
 == v0.13 / 2018-07-20
 
 * Move to WebKit2
