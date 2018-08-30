@@ -60,10 +60,11 @@ endif()
 ##
 # cmake -D...=ON|OFF command line feature switches and their default values
 #
-option (DISABLE_TERMINAL         "Disable embedded terminal (default = enabled)"  OFF)
-option (DISABLE_EMBEDDED_EDITOR  "Disable embedded editor (default = enabled)"    OFF)
-option (DISABLE_PLUGINS          "Disable plugins (default = enabled)"            OFF)
-option (ENABLE_PROFILING         "Enable profiling (default = disabled)"          OFF)
+option (DISABLE_TERMINAL         "Disable embedded terminal (default = enabled)"                  OFF)
+option (DISABLE_EMBEDDED_EDITOR  "Disable embedded editor (default = enabled)"                    OFF)
+option (DISABLE_PLUGINS          "Disable plugins (default = enabled)"                            OFF)
+option (DISABLE_DOCS             "Disable generating docs (manpage) (default = enabled)"          OFF)
+option (ENABLE_PROFILING         "Enable profiling (default = disabled)"                          OFF)
 option (DISABLE_LIBSASS          "Disable libsass, requires a sassc compiler (default = enabled)" OFF)
 option (DEBUG_WEBKIT             "Turn on extra debug options for WebKit (default = disabled)"    OFF)
 
@@ -395,25 +396,29 @@ if(DISABLE_LIBSASS)
 endif()
 
 ## Build man pages
-find_program (SCDOC scdoc) # preferred
-find_program (RONN  ronn)
+if (NOT DISABLE_DOCS)
+  find_program (SCDOC scdoc) # preferred
+  find_program (RONN  ronn)
 
-if (SCDOC)
-  add_custom_command (  
-    TARGET astroid
-    COMMAND ${SCDOC} < ${CMAKE_SOURCE_DIR}/doc/astroid.1.scd | gzip > ${CMAKE_BINARY_DIR}/astroid.1.gz 
-    COMMENT "Generating man page (scdoc)")
-else ()
-  if (RONN)
-    message (WARNING "Falling back to 'ronn' for man page generation.")
-    add_custom_command (  
+  if (SCDOC)
+    add_custom_command (
       TARGET astroid
-      COMMAND ${RONN} -rp ${CMAKE_SOURCE_DIR}/doc/astroid.1.scd | gzip > ${CMAKE_BINARY_DIR}/astroid.1.gz 
-      COMMENT "Generating man page (ronn)")
+      COMMAND ${SCDOC} < ${CMAKE_SOURCE_DIR}/doc/astroid.1.scd | gzip > ${CMAKE_BINARY_DIR}/astroid.1.gz
+      COMMENT "Generating man page (scdoc)")
   else ()
-    message (FATAL_ERROR "Neither 'scdoc' nor 'ronn' installed. One is required for man page generation")
+    if (RONN)
+      message (WARNING "Falling back to 'ronn' for man page generation.")
+      add_custom_command (
+        TARGET astroid
+        COMMAND ${RONN} -rp ${CMAKE_SOURCE_DIR}/doc/astroid.1.scd | gzip > ${CMAKE_BINARY_DIR}/astroid.1.gz
+        COMMENT "Generating man page (ronn)")
+    else ()
+      message (FATAL_ERROR "Neither 'scdoc' nor 'ronn' installed. One is required for man page generation.")
+    endif()
   endif()
-endif()
+else ()
+  message (STATUS "Documentation generation (manpage) disabled.")
+endif ()
 
 ##
 # embedded editor
@@ -528,9 +533,11 @@ install ( TARGETS tvextension
   )
 
 # Install man page
-install ( FILES ${CMAKE_BINARY_DIR}/astroid.1.gz
-  DESTINATION share/man/man1 
-  )
+if (NOT DISABLE_DOCS)
+  install ( FILES ${CMAKE_BINARY_DIR}/astroid.1.gz
+    DESTINATION share/man/man1
+    )
+endif ()
 
 # icons are installed in three locations
 install (DIRECTORY ui/icons
