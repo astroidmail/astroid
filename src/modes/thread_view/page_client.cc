@@ -167,14 +167,18 @@ namespace Astroid {
       LOG (debug) << "pc: got ack (s: " << ack.success () << ") , focus: " << ack.focus().mid () << ", e: " << ack.focus().element ();
 
       if (!ack.focus().mid ().empty () && ack.focus().element () >= 0) {
-        thread_view->focused_message = *std::find_if (
+        auto it = std::find_if (
             thread_view->mthread->messages.begin (),
             thread_view->mthread->messages.end (),
             [&] (auto &m) { return ack.focus().mid () == m->safe_mid (); });
 
-        thread_view->state[thread_view->focused_message].current_element = ack.focus().element ();
+        if (it != thread_view->mthread->messages.end ()) {
+          thread_view->focused_message = *it;
 
-        thread_view->unread_check ();
+          thread_view->state[thread_view->focused_message].current_element = ack.focus().element ();
+
+          thread_view->unread_check ();
+        }
       }
   }
 

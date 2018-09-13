@@ -594,6 +594,14 @@ void AstroidExtension::clear_messages (AstroidMessages::ClearMessage &) {
   g_object_unref (container);
   g_object_unref (d);
 
+  /* reset */
+  focused_message = "";
+  focused_element = -1;
+  messages.clear ();
+  state = AstroidMessages::State();
+  allow_remote_resources = false;
+  indent_messages = false;
+
   ack (true);
 }
 
