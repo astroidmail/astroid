@@ -47,15 +47,19 @@ namespace Astroid {
     deferred_threads_d.connect (
         sigc::mem_fun (this, &QueryLoader::update_deferred_changed_threads));
 
-    astroid->actions->signal_thread_changed ().connect (
+    s_thread_changed = astroid->actions->signal_thread_changed ().connect (
         sigc::mem_fun (this, &QueryLoader::on_thread_changed));
 
-    astroid->actions->signal_refreshed ().connect (
+    s_refreshed = astroid->actions->signal_refreshed ().connect (
         sigc::mem_fun (this, &QueryLoader::on_refreshed));
   }
 
   QueryLoader::~QueryLoader () {
     LOG (debug) << "ql: destruct.";
+
+    s_thread_changed.disconnect();
+    s_refreshed.disconnect();
+
     stop (true);
   }
 

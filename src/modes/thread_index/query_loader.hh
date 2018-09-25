@@ -62,6 +62,8 @@ namespace Astroid {
       std::queue<ustring> changed_threads;
 
       /* signal handlers */
+      sigc::connection s_thread_changed;
+      sigc::connection s_refreshed;
       void on_thread_changed (Db *, ustring);
       void on_refreshed ();
   };
