@@ -117,6 +117,7 @@ namespace Astroid {
       void set_title (ustring);
 
       void quit ();
+      bool on_delete_event (GdkEventAny *);
 
       Glib::Dispatcher update_title_dispatcher;
 

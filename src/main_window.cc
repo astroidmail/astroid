@@ -203,6 +203,10 @@ namespace Astroid {
     update_title_dispatcher.connect (
         sigc::mem_fun (this, &MainWindow::on_update_title));
 
+    /* catch window close events */
+    signal_delete_event ().connect (
+        sigc::mem_fun (this, &MainWindow::on_delete_event));
+
     /* register keys {{{ */
     keys.title = "MainWindow";
 
@@ -635,6 +639,12 @@ namespace Astroid {
     }
 
     close (); // Gtk::Window::close ()
+  }
+
+  bool MainWindow::on_delete_event (GdkEventAny *) {
+    if (!in_quit)
+      quit ();
+    return false;
   }
 
   void MainWindow::on_yes () {
