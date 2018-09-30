@@ -15,7 +15,7 @@ export NOTMUCH_CONFIG="${BINDIR}/tests/mail/test_config"
 export GNUPGHOME="${BINDIR}/tests/test_home/gnupg"
 export ASTROID_BUILD_DIR="${BINDIR}"
 
-gpgconf --kill all # stop all components
+gpgconf -v --kill all # stop all components
 
 if [ ! -e "${NOTMUCH_CONFIG}" ]; then
   echo "Setting up test suite.."
@@ -39,10 +39,10 @@ if [ ! -e "${NOTMUCH_CONFIG}" ]; then
   chmod og-rwx "${GNUPGHOME}"
 
   pushd "${GNUPGHOME}"
-  gpg --batch --gen-key "${SRCDIR}/tests/foo1.key"
-  gpg --batch --gen-key "${SRCDIR}/tests/foo2.key"
-  gpg --batch --always-trust --import one.pub
-  gpg --batch --always-trust --import two.pub
+  gpg -v --batch --gen-key "${SRCDIR}/tests/foo1.key"
+  gpg -v --batch --gen-key "${SRCDIR}/tests/foo2.key"
+  gpg -v --batch --always-trust --import one.pub
+  gpg -v --batch --always-trust --import two.pub
   echo "always-trust" > gpg.conf
   popd
 
