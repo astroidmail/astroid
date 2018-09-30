@@ -1139,7 +1139,13 @@ void AstroidExtension::create_body_part (
 
   g_object_unref (d);
 
-  set_iframe_src (message.mid(), c.sid(), body);
+  /*
+   * run this later on extension GUI thread in order to make sure that the "body part" has been
+   * added to the document.
+   */
+  Glib::signal_idle().connect_once (
+      sigc::bind (
+        sigc::mem_fun(*this, &AstroidExtension::set_iframe_src), message.mid(), c.sid(), body));
 
   LOG (debug) << "create_body_part done.";
 }
@@ -1153,8 +1159,7 @@ void AstroidExtension::set_iframe_src (ustring mid, ustring cid, ustring body) {
   WebKitDOMHTMLElement * body_container = WEBKIT_DOM_HTML_ELEMENT(webkit_dom_document_get_element_by_id (d, cid.c_str ()));
 
   WebKitDOMHTMLElement * iframe =
-    DomUtils::select (WEBKIT_DOM_NODE(d), "#iframe_template");
-  webkit_dom_element_remove_attribute (WEBKIT_DOM_ELEMENT (iframe), "id");
+    DomUtils::select (WEBKIT_DOM_NODE(body_container), ".body_iframe");
 
 
   /* by using srcdoc we avoid creating any requests that would have to be
