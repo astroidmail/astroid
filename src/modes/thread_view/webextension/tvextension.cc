@@ -1139,55 +1139,44 @@ void AstroidExtension::create_body_part (
 
   g_object_unref (d);
 
-  Glib::signal_idle().connect_once (
-      sigc::bind (
-        sigc::mem_fun(*this, &AstroidExtension::set_iframe_src), message.mid(), c.sid(), body));
+  set_iframe_src (message.mid(), c.sid(), body);
 
   LOG (debug) << "create_body_part done.";
 }
 
 void AstroidExtension::set_iframe_src (ustring mid, ustring cid, ustring body) {
   LOG (debug) << "set iframe src: " << mid << ", " << cid;
-  /* this function is designed to be run async (on GUI thread in extension)
-   * to avoid blocking the main astroid thread. ThreadView needs to approve
-   * the request caused by the iframe and cannot be blocked by e.g.
-   * add_message(...) */
 
   WebKitDOMDocument * d = webkit_web_page_get_dom_document (page);
   GError *err;
 
   WebKitDOMHTMLElement * body_container = WEBKIT_DOM_HTML_ELEMENT(webkit_dom_document_get_element_by_id (d, cid.c_str ()));
 
-  /* we are creating the iframe here so that no requests will be made
-   * before this function. */
+  WebKitDOMHTMLElement * iframe =
+    DomUtils::select (WEBKIT_DOM_NODE(d), "#iframe_template");
+  webkit_dom_element_remove_attribute (WEBKIT_DOM_ELEMENT (iframe), "id");
 
-  WebKitDOMHTMLElement * iframe = DomUtils::select (WEBKIT_DOM_NODE(body_container), ".body_iframe");
 
-  /* webkit_dom_html_iframe_element_set_src (WEBKIT_DOM_HTML_IFRAME_ELEMENT (iframe), */
-  /* DomUtils::assemble_data_uri ("text/html", body).c_str()); */
+  /* by using srcdoc we avoid creating any requests that would have to be
+   * allowed on the main GUI thread. even if we run this function async there
+   * might be other sync calls to the webextension that cause blocking since
+   * most webextension funcs need to run on extension GUI thread in order to
+   * manipulate DOM tree */
 
-  /* set style */
-  WebKitDOMDocument * iframe_d = webkit_dom_html_iframe_element_get_content_document (WEBKIT_DOM_HTML_IFRAME_ELEMENT(iframe));
+  /* according to: http://w3c.github.io/html/semantics-embedded-content.html#element-attrdef-iframe-src
+   * we need to escape quotation marks and amperands. it seems that by using
+   * this call webkit does this for us. this is critical since otherwise the
+   * content could break out of the iframe. */
 
-  WebKitDOMElement  *e = webkit_dom_document_create_element (iframe_d, "STYLE", (err = NULL, &err));
+  /* it would probably be possible to mess up the style, but it should only affect the current frame content. this would anyway be possible. */
 
-  WebKitDOMText *t = webkit_dom_document_create_text_node
-    (iframe_d, part_css.c_str());
+  webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (iframe), "srcdoc",
+      ustring::compose (
+        "<STYLE>%1</STYLE>%2",
+        part_css,
+        body ).c_str (),
+      (err = NULL, &err));
 
-  webkit_dom_node_append_child (WEBKIT_DOM_NODE(e), WEBKIT_DOM_NODE(t), (err = NULL, &err));
-
-  WebKitDOMHTMLHeadElement * head = webkit_dom_document_get_head (iframe_d);
-
-  webkit_dom_node_append_child (WEBKIT_DOM_NODE(head), WEBKIT_DOM_NODE(e), (err = NULL, &err));
-
-  WebKitDOMHTMLElement * b = webkit_dom_document_get_body (iframe_d);
-  webkit_dom_element_set_inner_html (WEBKIT_DOM_ELEMENT(b), body.c_str (), (err = NULL, &err));
-
-  g_object_unref (b);
-  g_object_unref (head);
-  g_object_unref (t);
-  g_object_unref (e);
-  g_object_unref (iframe_d);
   g_object_unref (iframe);
   g_object_unref (body_container);
   g_object_unref (d);
