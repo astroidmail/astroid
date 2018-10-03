@@ -53,6 +53,8 @@
 # include <gmime/gmime.h>
 # include <utils/gmime/gmime-compat.h>
 
+# include <libsoup/soup.h>
+
 using namespace std;
 using namespace boost::filesystem;
 
@@ -534,25 +536,48 @@ namespace Astroid {
 
     MainWindow * mw = (MainWindow*) get_windows ()[0];
 
-    ustring scheme = Glib::uri_parse_scheme (url);
-    if (scheme.length () > 0) {
+    SoupURI *uri = soup_uri_new(url.c_str());
+
+    if (SOUP_URI_IS_VALID(uri)) {
       /* we got an mailto url */
-      url = url.substr(scheme.length(), url.length () - scheme.length());
+      ustring from, to, cc, bcc, subject, body;
 
-      ustring to, cc, bcc, subject, body;
+      to = soup_uri_decode (soup_uri_get_path (uri));
 
-      ustring::size_type pos = url.find ("?");
-      /* ustring::size_type next; */
-      if (pos == ustring::npos) pos = url.length ();
-      to = url.substr (0, pos);
+      const char * soup_query = soup_uri_get_query (uri);
+      if (soup_query) {
+        std::istringstream query_string (soup_query);
+        std::string keyval;
+        while (std::getline(query_string, keyval, '&')) {
+          ustring::size_type pos = keyval.find ("=");
 
-      /* TODO: need to finish the rest of the fields */
-      mw->add_mode (new EditMessage (mw, to));
+          ustring key = keyval.substr (0, pos);
+          key = key.lowercase ();
+
+          ustring val = soup_uri_decode (keyval.substr (pos+1).c_str());
+
+          if (key == "from") {
+            from = ustring (val);
+          } else if (key == "cc") {
+            cc = ustring (val);
+          } else if (key == "bcc") {
+            bcc = ustring (val);
+          } else if (key == "subject" ) {
+            subject = ustring (val);
+          } else if (key == "body") {
+            body = ustring (val);
+          }
+        }
+      }
+
+      mw->add_mode (new EditMessage (mw, to, from, cc, bcc, subject, body));
 
     } else {
       /* we probably just got the address on the cmd line */
       mw->add_mode (new EditMessage (mw, url));
     }
+
+    soup_uri_free (uri);
   }
 
   int Astroid::hint_level () {
