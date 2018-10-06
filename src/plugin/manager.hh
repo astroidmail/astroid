@@ -47,7 +47,7 @@ namespace Astroid {
           std::pair<ustring, ustring> get_tag_colors (ustring tag, ustring bg);
       };
 
-      AstroidExtension * astroid_extension; // set up from Astroid
+      std::unique_ptr<AstroidExtension> astroid_extension; // set up from Astroid
 
       class ThreadIndexExtension : public Extension {
         private:

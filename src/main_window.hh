@@ -6,6 +6,7 @@
 # include <gtkmm.h>
 # include <gtkmm/window.h>
 # include <gtkmm/notebook.h>
+# include <memory>
 
 # ifndef DISABLE_VTE
 # include <vte/vte.h>
@@ -99,7 +100,7 @@ namespace Astroid {
 
     public:
       /* actions */
-      ActionManager * actions;
+      std::shared_ptr<ActionManager> actions;
 
       int current = -1;
       bool active = false;

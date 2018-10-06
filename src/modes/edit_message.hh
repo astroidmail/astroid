@@ -146,7 +146,7 @@ namespace Astroid {
       ustring warning_str = "";
       ustring info_str = "";
 
-      AccountManager * accounts;
+      std::shared_ptr<AccountManager> accounts;
 
       boost::filesystem::path tmpfile_path;
       std::fstream tmpfile;

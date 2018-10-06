@@ -4,6 +4,7 @@
 # include <string>
 # include <atomic>
 # include <fstream>
+# include <memory>
 
 # include <boost/property_tree/ptree.hpp>
 # include <boost/program_options.hpp>
@@ -63,17 +64,17 @@ namespace Astroid {
       ustring user_agent;
 
       /* accounts */
-      AccountManager * accounts;
+      std::shared_ptr<AccountManager> accounts;
 
       /* actions */
-      ActionManager * actions;
+      std::shared_ptr<ActionManager> actions;
 
 # ifndef DISABLE_PLUGINS
-      PluginManager * plugin_manager;
+      std::shared_ptr<PluginManager> plugin_manager;
 # endif
 
       /* poll */
-      Poll * poll;
+      std::unique_ptr<Poll> poll;
 
       MainWindow * open_new_window (bool open_defaults = true);
 
@@ -81,7 +82,7 @@ namespace Astroid {
       GdkAtom clipboard_target = GDK_SELECTION_CLIPBOARD;
 
     protected:
-      Config * m_config;
+      std::unique_ptr<Config> m_config;
 
     private:
       void on_activate () override;

@@ -2,6 +2,7 @@
 # include <glibmm.h>
 # include <vector>
 # include <cstdlib>
+# include <memory>
 
 # include <boost/filesystem.hpp>
 

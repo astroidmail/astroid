@@ -225,12 +225,12 @@ namespace Astroid {
         }
 
         LOG (info) << "astroid: loading config: " << vm["config"].as<ustring>().c_str();
-        m_config = new Config (vm["config"].as<ustring>().c_str());
+        m_config = std::make_unique<Config>(vm["config"].as<ustring>().c_str());
       } else {
         if (test_config) {
-          m_config = new Config (true);
+          m_config = std::make_unique<Config> (true);
         } else {
-          m_config = new Config ();
+          m_config = std::make_unique<Config> ();
         }
       }
 
@@ -298,17 +298,17 @@ namespace Astroid {
       SavedSearches::init ();
 
       /* set up accounts */
-      accounts = new AccountManager ();
+      accounts = std::make_shared<AccountManager> ();
 
 # ifndef DISABLE_PLUGINS
       /* set up plugins */
       bool disable_plugins = vm.count ("disable-plugins");
-      plugin_manager = new PluginManager (disable_plugins, in_test ());
-      plugin_manager->astroid_extension = new PluginManager::AstroidExtension (this);
+      plugin_manager = std::make_shared<PluginManager> (disable_plugins, in_test ());
+      plugin_manager->astroid_extension = std::make_unique<PluginManager::AstroidExtension> (this);
 # endif
 
       /* set up global actions */
-      actions = new ActionManager ();
+      actions = std::make_shared<ActionManager> ();
 
       /* set up poller */
       bool no_auto_poll = false;
@@ -317,7 +317,7 @@ namespace Astroid {
 
         no_auto_poll = true;
       }
-      poll = new Poll (!no_auto_poll);
+      poll = std::make_unique<Poll>(!no_auto_poll);
 
       Gtk::Application::run (argc, argv);
 
@@ -325,7 +325,6 @@ namespace Astroid {
 
     } else {
       Gtk::Application::run (argc, argv);
-
     }
 
     return 0;
@@ -354,7 +353,7 @@ namespace Astroid {
   void Astroid::main_test () { // {{{
     init_console_log ();
 
-    m_config = new Config (true);
+    m_config = std::make_unique<Config> (true);
 
     /* set up static classes */
     Date::init ();
@@ -363,22 +362,22 @@ namespace Astroid {
     SavedSearches::init ();
 
     /* set up accounts */
-    accounts = new AccountManager ();
+    accounts = std::make_shared<AccountManager> ();
 
 # ifndef DISABLE_PLUGINS
     /* set up plugins */
-    plugin_manager = new PluginManager (false, true);
-    plugin_manager->astroid_extension = new PluginManager::AstroidExtension (this);
+    plugin_manager = std::make_shared<PluginManager> (false, true);
+    plugin_manager->astroid_extension = std::make_unique<PluginManager::AstroidExtension> (this);
 # endif
 
     /* set up contacts */
     //contacts = new Contacts ();
 
     /* set up global actions */
-    actions = new ActionManager ();
+    actions = std::make_shared<ActionManager>();
 
     /* set up poller */
-    poll = new Poll (false);
+    poll = std::make_unique<Poll>(false);
   } // }}}
 
   bool Astroid::in_test () {
@@ -394,27 +393,16 @@ namespace Astroid {
     if (actions) actions->close ();
     SavedSearches::destruct ();
 
-# ifndef DISABLE_PLUGINS
-    if (plugin_manager && plugin_manager->astroid_extension) delete plugin_manager->astroid_extension;
-    if (plugin_manager) delete plugin_manager;
-# endif
-
     LOG (info) << "astroid: goodbye!";
   }
 
   Astroid::~Astroid () {
-    if (accounts) delete accounts;
-
-    if (m_config) delete m_config;
-
     if (poll) {
       poll->close ();
-      delete poll;
     }
 
     if (actions) {
       actions->close ();
-      delete actions;
     }
   }
 
