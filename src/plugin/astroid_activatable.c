@@ -14,19 +14,19 @@ G_DEFINE_INTERFACE (AstroidActivatable, astroid_activatable, G_TYPE_OBJECT)
 void
 astroid_activatable_default_init (AstroidActivatableInterface *iface)
 {
-	static gboolean initialized = FALSE;
+    static gboolean initialized = FALSE;
 
   (void)(iface); /* unused */
 
-	if (!initialized) {
-		/**
-		 * AstroidActivatable:window:
-		 *
-		 * The window property contains the gtr window for this
-		 * #AstroidActivatable instance.
-		 */
+    if (!initialized) {
+        /**
+         * AstroidActivatable:window:
+         *
+         * The window property contains the gtr window for this
+         * #AstroidActivatable instance.
+         */
     /*
-		g_object_interface_install_property (iface,
+        g_object_interface_install_property (iface,
                            g_param_spec_object ("shell",
                                                 "Shell",
                                                 "The Liferea shell",
@@ -36,8 +36,8 @@ astroid_activatable_default_init (AstroidActivatableInterface *iface)
                                                 G_PARAM_STATIC_STRINGS));
 
                                                 */
-		initialized = TRUE;
-	}
+        initialized = TRUE;
+    }
 }
 
 /**
@@ -49,13 +49,13 @@ astroid_activatable_default_init (AstroidActivatableInterface *iface)
 void
 astroid_activatable_activate (AstroidActivatable * activatable)
 {
-	AstroidActivatableInterface *iface;
+    AstroidActivatableInterface *iface;
 
-	g_return_if_fail (ASTROID_IS_ACTIVATABLE (activatable));
+    g_return_if_fail (ASTROID_IS_ACTIVATABLE (activatable));
 
-	iface = ASTROID_ACTIVATABLE_GET_IFACE (activatable);
-	if (iface->activate)
-		iface->activate (activatable);
+    iface = ASTROID_ACTIVATABLE_GET_IFACE (activatable);
+    if (iface->activate)
+        iface->activate (activatable);
 }
 
 /**
@@ -67,13 +67,13 @@ astroid_activatable_activate (AstroidActivatable * activatable)
 void
 astroid_activatable_deactivate (AstroidActivatable * activatable)
 {
-	AstroidActivatableInterface *iface;
+    AstroidActivatableInterface *iface;
 
-	g_return_if_fail (ASTROID_IS_ACTIVATABLE (activatable));
+    g_return_if_fail (ASTROID_IS_ACTIVATABLE (activatable));
 
-	iface = ASTROID_ACTIVATABLE_GET_IFACE (activatable);
-	if (iface->deactivate)
-		iface->deactivate (activatable);
+    iface = ASTROID_ACTIVATABLE_GET_IFACE (activatable);
+    if (iface->deactivate)
+        iface->deactivate (activatable);
 }
 
 /**
@@ -86,13 +86,13 @@ astroid_activatable_deactivate (AstroidActivatable * activatable)
 void
 astroid_activatable_update_state (AstroidActivatable * activatable)
 {
-	AstroidActivatableInterface *iface;
+    AstroidActivatableInterface *iface;
 
-	g_return_if_fail (ASTROID_IS_ACTIVATABLE (activatable));
+    g_return_if_fail (ASTROID_IS_ACTIVATABLE (activatable));
 
-	iface = ASTROID_ACTIVATABLE_GET_IFACE (activatable);
-	if (iface->update_state)
-		iface->update_state (activatable);
+    iface = ASTROID_ACTIVATABLE_GET_IFACE (activatable);
+    if (iface->update_state)
+        iface->update_state (activatable);
 }
 
 /**
@@ -104,13 +104,13 @@ astroid_activatable_update_state (AstroidActivatable * activatable)
 const char *
 astroid_activatable_get_user_agent (AstroidActivatable * activatable)
 {
-	AstroidActivatableInterface *iface;
+    AstroidActivatableInterface *iface;
 
-	if (!ASTROID_IS_ACTIVATABLE (activatable)) return NULL;
+    if (!ASTROID_IS_ACTIVATABLE (activatable)) return NULL;
 
-	iface = ASTROID_ACTIVATABLE_GET_IFACE (activatable);
-	if (iface->get_user_agent)
-		return iface->get_user_agent (activatable);
+    iface = ASTROID_ACTIVATABLE_GET_IFACE (activatable);
+    if (iface->get_user_agent)
+        return iface->get_user_agent (activatable);
 
   return NULL;
 }
@@ -124,20 +124,20 @@ astroid_activatable_get_user_agent (AstroidActivatable * activatable)
 const char *
 astroid_activatable_generate_mid (AstroidActivatable * activatable)
 {
-	AstroidActivatableInterface *iface;
+    AstroidActivatableInterface *iface;
 
-	if (!ASTROID_IS_ACTIVATABLE (activatable)) return NULL;
+    if (!ASTROID_IS_ACTIVATABLE (activatable)) return NULL;
 
-	iface = ASTROID_ACTIVATABLE_GET_IFACE (activatable);
-	if (iface->generate_mid)
-		return iface->generate_mid (activatable);
+    iface = ASTROID_ACTIVATABLE_GET_IFACE (activatable);
+    if (iface->generate_mid)
+        return iface->generate_mid (activatable);
 
   return NULL;
 }
 
 /**
  * astroid_activatable_get_tag_colors:
- * @activatable: A #AstroidThreadViewActivatable.
+ * @activatable: A #AstroidActivatable.
  * @tag : A #utf8.
  * @bg : A #utf8.
  *
@@ -146,13 +146,35 @@ astroid_activatable_generate_mid (AstroidActivatable * activatable)
 GList *
 astroid_activatable_get_tag_colors (AstroidActivatable * activatable, const char * tag, const char * bg)
 {
-	AstroidActivatableInterface *iface;
+    AstroidActivatableInterface *iface;
 
-	if (!ASTROID_IS_ACTIVATABLE (activatable)) return NULL;
+    if (!ASTROID_IS_ACTIVATABLE (activatable)) return NULL;
 
-	iface = ASTROID_ACTIVATABLE_GET_IFACE (activatable);
-	if (iface->get_tag_colors)
-		return iface->get_tag_colors (activatable, tag, bg);
+    iface = ASTROID_ACTIVATABLE_GET_IFACE (activatable);
+    if (iface->get_tag_colors)
+        return iface->get_tag_colors (activatable, tag, bg);
+
+  return NULL;
+}
+
+/**
+ * astroid_activatable_process:
+ * @activatable: A #AstroidActivatable.
+ * @fname: The file name of the message.
+ *
+ * Returns: Stream of the processed raw message.
+ */
+GMimeStream *
+astroid_activatable_process (AstroidActivatable * activatable, const char * fname)
+{
+  AstroidActivatableInterface *iface;
+
+  if (!ASTROID_IS_ACTIVATABLE (activatable)) return NULL;
+
+  iface = ASTROID_ACTIVATABLE_GET_IFACE (activatable);
+  if (iface->process) {
+    return iface->process (activatable, fname);
+  }
 
   return NULL;
 }

@@ -45,6 +45,7 @@ namespace Astroid {
           bool get_user_agent (ustring &);
           bool generate_mid (ustring &);
           std::pair<ustring, ustring> get_tag_colors (ustring tag, ustring bg);
+          GMimeStream * process (const char * fname);
       };
 
       AstroidExtension * astroid_extension; // set up from Astroid

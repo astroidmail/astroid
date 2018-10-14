@@ -241,6 +241,20 @@ namespace Astroid {
     return clrs;
   }
 
+  GMimeStream * PluginManager::AstroidExtension::process (
+      const char * fname) {
+    if (!active || astroid->plugin_manager->disabled) return NULL;
+
+    for (PeasPluginInfo * p : astroid->plugin_manager->astroid_plugins) {
+      PeasExtension * pe = peas_extension_set_get_extension (extensions, p);
+
+      GMimeStream * ret = astroid_activatable_process (ASTROID_ACTIVATABLE(pe), fname);
+      if(ret != NULL) return ret;
+    }
+
+    return NULL;
+  }
+
   /* ********************
    * ThreadIndexExtension
    * ********************/

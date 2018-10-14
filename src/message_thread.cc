@@ -16,6 +16,9 @@
 # include "utils/ustring_utils.hh"
 # include "utils/vector_utils.hh"
 # include "actions/action_manager.hh"
+# ifndef DISABLE_PLUGINS
+  # include "plugin/manager.hh"
+# endif
 
 using namespace std;
 using namespace boost::filesystem;
@@ -170,30 +173,35 @@ namespace Astroid {
       return;
 
     } else {
-      GError *err = NULL; (void) (err); // not used in GMime 2.
-      GMimeStream   * stream  = g_mime_stream_file_open (fname.c_str(), "r", &err);
-      g_mime_stream_file_set_owner (GMIME_STREAM_FILE(stream), TRUE);
+      GMimeStream * stream = NULL;
+# ifndef DISABLE_PLUGINS
+      stream = astroid->plugin_manager->astroid_extension->process (fname.c_str());
+# endif
       if (stream == NULL) {
-        LOG (error) << "failed to open file: " << fname << " (unspecified error)";
+        GError *err = NULL; (void) (err); // not used in GMime 2.
+        stream  = g_mime_stream_file_open (fname.c_str(), "r", &err);
+        g_mime_stream_file_set_owner (GMIME_STREAM_FILE(stream), TRUE);
+        if (stream == NULL) {
+          LOG (error) << "failed to open file: " << fname << " (unspecified error)";
 
-        has_file = false;
-        missing_content = true;
+          has_file = false;
+          missing_content = true;
 
-        if (in_notmuch) {
-          LOG (warn) << "loading cache for missing file from notmuch";
-          load_notmuch_cache ();
-        } else {
-          LOG (error) << "tried to open disk file, but failed, message is not in database either.";
-          string error_s = "failed to open file: " + fname;
-          throw message_error (error_s.c_str());
+          if (in_notmuch) {
+            LOG (warn) << "loading cache for missing file from notmuch";
+            load_notmuch_cache ();
+          } else {
+            LOG (error) << "tried to open disk file, but failed, message is not in database either.";
+            string error_s = "failed to open file: " + fname;
+            throw message_error (error_s.c_str());
+          }
+          return;
         }
-        return;
       }
 
       GMimeParser   * parser  = g_mime_parser_new_with_stream (stream);
       GMimeMessage * _message = g_mime_parser_construct_message (parser, g_mime_parser_options_get_default ());
       load_message (_message);
-
       g_object_unref (_message); // is reffed in load_message
       g_object_unref (stream); // reffed from parser
       g_object_unref (parser); // reffed from message
