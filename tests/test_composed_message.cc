@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_SUITE(Composing)
 
     Message m (fn);
 
-    ustring rbdy = m.viewable_text (false);
+    ustring rbdy = m.plain_text (false);
 
     BOOST_CHECK_MESSAGE (bdy == rbdy, "message reading produces the same output as compose message input");
 
@@ -143,7 +143,7 @@ BOOST_AUTO_TEST_SUITE(Composing)
       BOOST_CHECK (m.subject == subject);
       BOOST_CHECK (AddressList(m.to()).str () == to);
       BOOST_CHECK (m.mid == id);
-      BOOST_CHECK (m.viewable_text (false) == (body + signature));
+      BOOST_CHECK (m.plain_text (false) == (body + signature));
 
       unlink (fname.c_str ());
     }
@@ -175,7 +175,7 @@ BOOST_AUTO_TEST_SUITE(Composing)
 
     Message m (fn);
 
-    ustring rbdy = m.viewable_text (false);
+    ustring rbdy = m.plain_text (false);
 
     BOOST_CHECK_MESSAGE (bdy == rbdy, "message reading produces the same output as compose message input");
 

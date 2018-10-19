@@ -1153,7 +1153,7 @@ namespace Astroid {
           for (auto &m : mthread->messages) {
             MessageState s = state[m];
             if (s.marked) {
-              y += m->viewable_text (false, true);
+              y += m->plain_text (true);
               y += "\n";
             }
           }
@@ -1709,7 +1709,7 @@ namespace Astroid {
         auto cp = Gtk::Clipboard::get (astroid->clipboard_target);
         ustring t;
 
-        t = focused_message->viewable_text (false, true);
+        t = focused_message->plain_text (true);
 
         cp->set_text (t);
       }
@@ -1739,7 +1739,7 @@ namespace Astroid {
           auto cp = Gtk::Clipboard::get (astroid->clipboard_target);
           ustring t;
 
-          t = focused_message->viewable_text (false, true);
+          t = focused_message->plain_text (true);
 
           cp->set_text (t);
         }

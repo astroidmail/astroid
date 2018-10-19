@@ -23,11 +23,12 @@ BOOST_AUTO_TEST_SUITE(Reading)
 
     Message m (fname);
 
-    ustring text =  m.viewable_text(false);
+    ustring text =  m.plain_text(false);
     BOOST_CHECK (text.find ("line-ignored") != ustring::npos);
 
-    ustring html = m.viewable_text(true);
-    BOOST_CHECK (html.find ("line-ignored") != ustring::npos);
+    /* test obsolete: */
+    /* ustring html = m.viewable_text(true); */
+    /* BOOST_CHECK (html.find ("line-ignored") != ustring::npos); */
 
     teardown ();
   }
@@ -46,11 +47,12 @@ BOOST_AUTO_TEST_SUITE(Reading)
 
     Message m (fname);
 
-    ustring text =  m.viewable_text(false);
+    ustring text =  m.plain_text (false);
     BOOST_CHECK (text.find ("line-ignored.com") != ustring::npos);
 
-    ustring html = m.viewable_text(true);
-    BOOST_CHECK (html.find ("line-ignored.com") != ustring::npos);
+    /* test obsolete: */
+    /* ustring html = m.viewable_text(true); */
+    /* BOOST_CHECK (html.find ("line-ignored.com") != ustring::npos); */
 
 
     teardown ();
@@ -66,11 +68,12 @@ BOOST_AUTO_TEST_SUITE(Reading)
 
     Message m (fname);
 
-    ustring text =  m.viewable_text(false);
+    ustring text =  m.plain_text (false);
     BOOST_CHECK (text.find ("line-ignored.com") != ustring::npos);
 
-    ustring html = m.viewable_text(true);
-    BOOST_CHECK (html.find ("line-ignored.com") != ustring::npos);
+    /* test obsolete: */
+    /* ustring html = m.viewable_text(true); */
+    /* BOOST_CHECK (html.find ("line-ignored.com") != ustring::npos); */
 
 
     teardown ();
@@ -86,7 +89,7 @@ BOOST_AUTO_TEST_SUITE(Reading)
 
     Message m (fname);
 
-    ustring text =  m.viewable_text(false, true);
+    ustring text =  m.plain_text (true);
     BOOST_CHECK (text.find ("line-ignored.com") != ustring::npos);
 
 

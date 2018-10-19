@@ -283,8 +283,7 @@ namespace Astroid {
 
     set_subject (msg.subject);
 
-    body << msg.viewable_text (false);
-
+    body << msg.plain_text (false);
   }
 
   void ComposeMessage::finalize () {

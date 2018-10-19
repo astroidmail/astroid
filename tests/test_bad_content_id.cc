@@ -30,7 +30,7 @@ BOOST_AUTO_TEST_SUITE(Reading)
 
     Message m (fname);
 
-    BOOST_CHECK_NO_THROW (m.viewable_text (true));
+    BOOST_CHECK_NO_THROW (m.plain_text (true));
 
     /* the first part is probablematic */
     /* refptr<Chunk> c = m.root->kids[0]; */
@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_SUITE(Reading)
 
     Message m (fname);
 
-    BOOST_CHECK_NO_THROW (m.viewable_text (true));
+    BOOST_CHECK_NO_THROW (m.plain_text (true));
 
     /* the first part is probablematic */
     /* refptr<Chunk> c = m.root->kids[0]; */
