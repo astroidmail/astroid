@@ -226,6 +226,7 @@ namespace Astroid {
     default_config.put ("editor.attachment_directory", "~");
 
     default_config.put ("editor.markdown_processor", "cmark");
+    default_config.put ("editor.markdown_on", false); // default
 
     /* mail composition */
     default_config.put ("mail.reply.quote_line", "Excerpts from %1's message of %2:"); // %1 = author, %2 = pretty_verbose_date

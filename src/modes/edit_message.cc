@@ -284,6 +284,8 @@ namespace Astroid {
 
     reset_signature ();
 
+    switch_markdown->set_active (astroid->config ().get<bool> ("editor.markdown_on"));
+
     /* register keys {{{ */
     keys.title = "Edit mode";
     keys.register_key (Key (GDK_KEY_Return), { Key (GDK_KEY_KP_Enter) },
