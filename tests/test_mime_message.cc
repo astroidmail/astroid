@@ -27,7 +27,7 @@ BOOST_AUTO_TEST_SUITE(Reading)
 
     Message m (fname);
 
-    BOOST_CHECK_NO_THROW (m.viewable_text (true));
+    BOOST_CHECK_NO_THROW (m.plain_text (true));
 
     teardown ();
   }

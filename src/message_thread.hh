@@ -63,10 +63,10 @@ namespace Astroid {
       ustring date ();
       ustring date_asctime ();
       ustring pretty_date ();
-      ustring pretty_verbose_date (bool = false);
+      ustring pretty_verbose_date (bool include_short = false);
       std::vector<ustring> tags;
 
-      ustring viewable_text (bool, bool fallback_html = false);
+      ustring plain_text (bool fallback_html = false);
       std::vector<refptr<Chunk>> attachments ();
       refptr<Chunk> get_chunk_by_id (int id);
 

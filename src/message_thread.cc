@@ -300,19 +300,10 @@ namespace Astroid {
     root = refptr<Chunk>(new Chunk (g_mime_message_get_mime_part (message)));
   }
 
-  ustring Message::viewable_text (bool html, bool fallback_html) {
-    /* build message body:
-     * html:      output html (using gmimes html filter)
-     *
-     */
-
+  ustring Message::plain_text (bool fallback_html) {
     if (missing_content) {
       LOG (warn) << "message: missing content, no text.";
       return "";
-    }
-
-    if (html && fallback_html) {
-      throw logic_error ("message: html implies fallback_html");
     }
 
     ustring body;
@@ -324,13 +315,13 @@ namespace Astroid {
       bool use = false;
 
       if (c->siblings.size() >= 1) {
-        if (c->is_content_type ("text", html ? "html" : "plain")) {
+        if (c->is_content_type ("text", "plain") || fallback_html) {
           use = true;
         } else {
           /* check if there are any other preferred */
           if (all_of (c->siblings.begin (),
                       c->siblings.end (),
-                      [html](refptr<Chunk> c) { return !c->is_content_type ("text", html ? "html" : "plain"); })) {
+                      [fallback_html](refptr<Chunk> c) { return !(c->is_content_type ("text", "plain") || fallback_html); })) {
             use = true;
           } else {
             use = false;
@@ -341,8 +332,9 @@ namespace Astroid {
       }
 
       if (use) {
-        if (c->viewable && (c->is_content_type ("text", html ? "html" : "plain") ||  fallback_html)) {
-          body += c->viewable_text (html);
+        if (c->viewable && (c->is_content_type ("text", "plain") || fallback_html)) {
+          /* will output html if HTML part */
+          body += c->viewable_text (false);
         }
 
         for_each (c->kids.begin(),
