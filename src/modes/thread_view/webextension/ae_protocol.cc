@@ -59,7 +59,12 @@ namespace Astroid {
     s &= ostream->write_all ((char*) &mt, sizeof (mt), written);
 
     /* send message */
-    s &= ostream->write_all (o, written);
+    try {
+      s &= ostream->write_all (o, written);
+    } catch (Gio::Error &ex) {
+      LOG (error) << "ae: error: " << ex.what ();
+      throw;
+    }
     ostream->flush ();
 
     if (!s) {
@@ -154,8 +159,13 @@ namespace Astroid {
     }
 
     /* read message */
-    gchar buffer[msg_sz + 1]; buffer[msg_sz] = '\0';
-    s = istream->read_all (buffer, msg_sz, read, reader_cancel);
+    gchar * buffer = new gchar[msg_sz];
+    try {
+      s = istream->read_all (buffer, msg_sz, read, reader_cancel);
+    } catch (Gio::Error &ex) {
+      LOG (error) << "ae: error (read): " << ex.code() << ", " <<  ex.what ();
+      throw;
+    }
 
     if (!s || read != msg_sz) {
       LOG (error) << "reader: error while reading message (size: " << msg_sz << ")";
@@ -163,6 +173,7 @@ namespace Astroid {
     }
 
     msg_str = std::string (buffer, msg_sz);
+    delete [] buffer;
     return mt;
   }
 
