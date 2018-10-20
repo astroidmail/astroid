@@ -62,13 +62,14 @@ namespace Astroid {
       astroid->actions->emit_message_updated (db, mid);
   }
 
-  AddSentMessage::AddSentMessage (ustring _f, std::vector<ustring> _additional_sent_tags) {
+  AddSentMessage::AddSentMessage (ustring _f, std::vector<ustring> _additional_sent_tags, ustring _parent_mid) {
     fname = _f;
     additional_sent_tags = _additional_sent_tags;
+    parent_mid = _parent_mid;
   }
 
   bool AddSentMessage::doit (Db * db) {
-    mid = db->add_sent_message (fname, additional_sent_tags);
+    mid = db->add_sent_message (fname, additional_sent_tags, parent_mid);
     return true;
   }
 

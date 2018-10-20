@@ -99,8 +99,9 @@ namespace Astroid {
           g_mime_object_get_header_list (GMIME_OBJECT(message)),
           "In-Reply-To");
     } else {
+      ustring tmp = "<" + inreplyto + ">";
       g_mime_object_set_header (GMIME_OBJECT(message), "In-Reply-To",
-          inreplyto.c_str(), NULL);
+          tmp.c_str(), NULL);
     }
   }
 
@@ -671,7 +672,7 @@ namespace Astroid {
     /* add to notmuch with sent tag (on main GUI thread) */
     if (!dryrun && message_sent_result && account->save_sent) {
       astroid->actions->doit (refptr<Action> (
-            new AddSentMessage (save_to.c_str (), account->additional_sent_tags)));
+            new AddSentMessage (save_to.c_str (), account->additional_sent_tags, inreplyto)));
       LOG (info) << "cm: sent message added to db.";
     }
 
