@@ -327,13 +327,38 @@ namespace Astroid {
     return _mid;
   }
 
-  ustring Db::add_sent_message (ustring fname, vector<ustring> additional_sent_tags) {
+  ustring Db::add_sent_message (ustring fname, vector<ustring> additional_sent_tags, ustring parent_mid) {
     LOG (info) << "db: adding sent message: " << fname;
     additional_sent_tags.insert (additional_sent_tags.end (), sent_tags.begin (), sent_tags.end ());
+
+    if (!parent_mid.empty () &&
+            find(additional_sent_tags.begin(), additional_sent_tags.end(), "*") != additional_sent_tags.end()) {
+        notmuch_message_t * parent_msg;
+        notmuch_database_find_message (nm_db, parent_mid.c_str (), &parent_msg);
+        vector<ustring> parent_tags;
+        for (notmuch_tags_t * tags = notmuch_message_get_tags (parent_msg); notmuch_tags_valid (tags); notmuch_tags_move_to_next (tags)) {
+            parent_tags.push_back (notmuch_tags_get (tags));
+        }
+
+        additional_sent_tags.insert (additional_sent_tags.end (), parent_tags.begin (), parent_tags.end ());
+    }
+
+    // filter tags prefixed with '-'
+    vector<ustring> filtered_tags;
+    copy_if (additional_sent_tags.begin(), additional_sent_tags.end(), back_inserter(filtered_tags), [] (ustring s) { return s[0] == '-'; } );
+    additional_sent_tags.erase(
+        remove_if(additional_sent_tags.begin(), additional_sent_tags.end(),
+            [&filtered_tags] (ustring s) {
+                return s == "*" ||
+                    find(filtered_tags.begin(), filtered_tags.end(), s) != filtered_tags.end() ||
+                    find(filtered_tags.begin(), filtered_tags.end(), '-' + s) != filtered_tags.end();
+            }),
+        additional_sent_tags.end());
+
+    sort (additional_sent_tags.begin (), additional_sent_tags.end ());
     additional_sent_tags.erase (unique (additional_sent_tags.begin (),
           additional_sent_tags.end ()),
           additional_sent_tags.end ());
-
 
     return add_message_with_tags (fname, additional_sent_tags);
   }

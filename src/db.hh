@@ -144,7 +144,7 @@ namespace Astroid {
       static std::vector<ustring> draft_tags;
       static std::vector<ustring> excluded_tags;
 
-      ustring add_sent_message (ustring, std::vector<ustring>);
+      ustring add_sent_message (ustring, std::vector<ustring>, ustring);
       ustring add_draft_message (ustring);
       ustring add_message_with_tags (ustring fname, std::vector<ustring> tags);
       bool remove_message (ustring);
