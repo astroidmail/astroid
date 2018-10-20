@@ -17,6 +17,7 @@ namespace Astroid {
       Message (ustring _mid, ustring _fname);
       Message (notmuch_message_t *, int _level);
       Message (GMimeMessage *);
+      Message (GMimeStream *);
       Message (refptr<NotmuchMessage>, int _level = 0);
       ~Message ();
 
@@ -145,6 +146,7 @@ namespace Astroid {
       void load_messages (Db *);
       void add_message (ustring);
       void add_message (refptr<Chunk>);
+      void add_message (refptr<Message>);
   };
 }
 

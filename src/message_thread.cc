@@ -99,6 +99,23 @@ namespace Astroid {
     load_message (_msg);
   }
 
+  Message::Message (GMimeStream * s) {
+    LOG (info) << "msg: loading message from GMimeStream.";
+    in_notmuch = false;
+    has_file   = false;
+    missing_content = false;
+
+    g_object_ref (s);
+    GMimeParser   * parser  = g_mime_parser_new_with_stream (s);
+    GMimeMessage * _message = g_mime_parser_construct_message (parser, g_mime_parser_options_get_default ());
+
+    load_message (_message);
+
+    g_object_unref (_message);
+    g_object_unref (s);
+    g_object_unref (parser);
+  }
+
   Message::~Message () {
     LOG (debug) << "ms: deconstruct";
     if (message) g_object_unref (message);
@@ -969,6 +986,12 @@ namespace Astroid {
       set_first_subject ((*(--messages.end()))->subject);
       subject = first_subject;
     }
+  }
+
+  void MessageThread::add_message (refptr<Message> m) {
+    if (!first_subject_set) set_first_subject (m->subject);
+    m->subject_is_different = subject_is_different (m->subject);
+    messages.push_back (m);
   }
 
   std::vector<refptr<Message>> MessageThread::messages_by_time () {
