@@ -38,6 +38,7 @@ namespace Astroid {
 
   class ThreadView : public Mode {
     friend PageClient;
+    friend EditMessage;
 
     public:
       ThreadView (MainWindow *, bool _edit_mode = false);
