@@ -114,10 +114,10 @@ namespace Astroid {
 
     public:
       /* message sent */
-      typedef sigc::signal <void, bool> type_message_sent;
+      typedef sigc::signal <void, bool, ustring> type_message_sent;
       type_message_sent message_sent ();
 
-      void emit_message_sent (bool);
+      void emit_message_sent (bool, ustring);
 
       bool message_sent_result;
       void message_sent_event ();

@@ -1129,8 +1129,9 @@ namespace Astroid {
     on_tv_ready ();
   }
 
-  void EditMessage::send_message_finished (bool result_from_sender) {
+  void EditMessage::send_message_finished (bool result_from_sender, ustring fname) {
     LOG (info) << "em: message sending done.";
+    delete sending_message;
     status_icon_visible = true;
 
     Glib::RefPtr<Gtk::IconTheme> theme = Gtk::IconTheme::get_default();
@@ -1150,6 +1151,35 @@ namespace Astroid {
         delete_draft ();
       }
 
+      if (!fname.empty ()) {
+        /* message has been saved to disk, but might be outside notmuch dir and
+         * adding to db is async (message_updated will be emitted when added)
+         *
+         * if the message has not been added yet, the signal will be emitted on
+         * this thread (GUI). so we are sure to catch it if we connect to it now.
+         *
+         */
+
+        Db db;
+        notmuch_message_t * m;
+        if ((notmuch_database_find_message_by_filename (db.nm_db,
+                fname.c_str (), &m) == NOTMUCH_STATUS_SUCCESS) &&
+            (m != NULL))
+        {
+          on_message_added_to_database (&db, notmuch_message_get_message_id (m));
+          notmuch_message_destroy (m);
+        } else {
+          /* not yet added */
+          astroid->actions->signal_message_updated ().connect (
+              sigc::mem_fun (this, &EditMessage::on_message_added_to_database));
+        }
+      } else {
+        /* this account does not save its message, however, the message might
+         * be synced back pretty soon so we wait and see if that happens */
+
+        astroid->actions->signal_message_updated ().connect (
+            sigc::mem_fun (this, &EditMessage::on_message_added_to_database));
+      }
     } else {
       fields_show ();
 
@@ -1167,10 +1197,20 @@ namespace Astroid {
       close (true);
     }
 
-
-    delete sending_message;
-
     emit_message_sent_attempt (result_from_sender);
+  }
+
+  void EditMessage::on_message_added_to_database (Db * db, ustring mid) {
+    if (mid == msg_id) {
+      LOG (info) << "em: message added to database, allow editing.";
+      thread_view->edit_mode = false;
+
+      db->on_message (mid, [&] (notmuch_message_t * msg) {
+            auto msgt = refptr<MessageThread>(new MessageThread());
+            msgt->add_message (refptr<Message>(new Message(msg, 0)));
+            thread_view->load_message_thread (msgt);
+          });
+    }
   }
 
   void EditMessage::lock_message_after_send () {
