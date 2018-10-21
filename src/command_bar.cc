@@ -38,6 +38,14 @@ namespace Astroid {
         sigc::mem_fun (this, &CommandBar::entry_key_press)
         );
 
+    entry.signal_event ().connect ([&] (GdkEvent* event)->bool {
+        if (event->type == GDK_KEY_PRESS) {
+            return entry_key_press ((GdkEventKey *) event);
+        } else {
+            return false;
+        }
+    });
+
     entry.signal_changed ().connect (
         sigc::mem_fun (this, &CommandBar::entry_changed));
 
@@ -245,6 +253,62 @@ namespace Astroid {
           return true;
         }
 
+      case GDK_KEY_Left:
+        {
+          if (mode == CommandMode::Tag || mode == CommandMode::DiffTag) {
+            ustring txt = entry.get_text ();
+            ustring_sz pos = entry.get_position ();
+            if (pos > 0) pos--;
+            while (txt[pos] != ' ' && pos > 0) pos--;
+            entry.set_position (pos);
+            return true;
+          }
+        }
+        break;
+
+      case GDK_KEY_BackSpace:
+        {
+          if (mode == CommandMode::Tag || mode == CommandMode::DiffTag) {
+            ustring txt = entry.get_text ();
+            ustring_sz end = entry.get_position ();
+            ustring_sz start = end;
+            if (start > 0) start--;
+            while (txt[start] != ' ' && start > 0) start--;
+            entry.set_text (txt.substr (0, start) + txt.substr (end, txt.size () - end));
+            entry.set_position (start);
+            return true;
+          }
+        }
+        break;
+
+      case GDK_KEY_Right:
+        {
+          if (mode == CommandMode::Tag || mode == CommandMode::DiffTag) {
+            ustring txt = entry.get_text ();
+            ustring_sz pos = entry.get_position ();
+            if (pos < txt.size ()) pos++;
+            while (txt[pos] != ' ' && pos < txt.size()) pos++;
+            entry.set_position (pos);
+            return true;
+          }
+        }
+        break;
+
+      case GDK_KEY_Delete:
+        {
+          if (mode == CommandMode::Tag || mode == CommandMode::DiffTag) {
+            ustring txt = entry.get_text ();
+            ustring_sz start = entry.get_position ();
+            ustring_sz end = start;
+            if (end < txt.size ()) end++;
+            while (txt[end] != ' ' && end < txt.size ()) end++;
+            entry.set_text (txt.substr (0, start) + txt.substr (end, txt.size () - end));
+            entry.set_position (start);
+            return true;
+          }
+        }
+        break;
+
       case GDK_KEY_Up:
         {
           if (mode == CommandMode::Search) {
@@ -264,8 +328,6 @@ namespace Astroid {
             }
 
             return true;
-          } else {
-            return false;
           }
         }
         break;
@@ -288,8 +350,6 @@ namespace Astroid {
             }
 
             return true;
-          } else {
-            return false;
           }
         }
         break;
