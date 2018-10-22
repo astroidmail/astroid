@@ -335,11 +335,8 @@ namespace Astroid {
             find(additional_sent_tags.begin(), additional_sent_tags.end(), "*") != additional_sent_tags.end()) {
         notmuch_message_t * parent_msg;
         notmuch_database_find_message (nm_db, parent_mid.c_str (), &parent_msg);
-        vector<ustring> parent_tags;
-        for (notmuch_tags_t * tags = notmuch_message_get_tags (parent_msg); notmuch_tags_valid (tags); notmuch_tags_move_to_next (tags)) {
-            parent_tags.push_back (notmuch_tags_get (tags));
-        }
-
+        NotmuchMessage parent_msg_nm = NotmuchMessage(parent_msg);
+        vector<ustring> parent_tags = parent_msg_nm.tags;
         additional_sent_tags.insert (additional_sent_tags.end (), parent_tags.begin (), parent_tags.end ());
     }
 
