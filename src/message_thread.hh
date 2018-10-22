@@ -17,6 +17,7 @@ namespace Astroid {
       Message (ustring _mid, ustring _fname);
       Message (notmuch_message_t *, int _level);
       Message (GMimeMessage *);
+      Message (GMimeStream *);
       Message (refptr<NotmuchMessage>, int _level = 0);
       ~Message ();
 
@@ -63,10 +64,10 @@ namespace Astroid {
       ustring date ();
       ustring date_asctime ();
       ustring pretty_date ();
-      ustring pretty_verbose_date (bool = false);
+      ustring pretty_verbose_date (bool include_short = false);
       std::vector<ustring> tags;
 
-      ustring viewable_text (bool, bool fallback_html = false);
+      ustring plain_text (bool fallback_html = false);
       std::vector<refptr<Chunk>> attachments ();
       refptr<Chunk> get_chunk_by_id (int id);
 
@@ -145,6 +146,7 @@ namespace Astroid {
       void load_messages (Db *);
       void add_message (ustring);
       void add_message (refptr<Chunk>);
+      void add_message (refptr<Message>);
   };
 }
 

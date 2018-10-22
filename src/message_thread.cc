@@ -99,6 +99,23 @@ namespace Astroid {
     load_message (_msg);
   }
 
+  Message::Message (GMimeStream * s) {
+    LOG (info) << "msg: loading message from GMimeStream.";
+    in_notmuch = false;
+    has_file   = false;
+    missing_content = false;
+
+    g_object_ref (s);
+    GMimeParser   * parser  = g_mime_parser_new_with_stream (s);
+    GMimeMessage * _message = g_mime_parser_construct_message (parser, g_mime_parser_options_get_default ());
+
+    load_message (_message);
+
+    g_object_unref (_message);
+    g_object_unref (s);
+    g_object_unref (parser);
+  }
+
   Message::~Message () {
     LOG (debug) << "ms: deconstruct";
     if (message) g_object_unref (message);
@@ -300,19 +317,10 @@ namespace Astroid {
     root = refptr<Chunk>(new Chunk (g_mime_message_get_mime_part (message)));
   }
 
-  ustring Message::viewable_text (bool html, bool fallback_html) {
-    /* build message body:
-     * html:      output html (using gmimes html filter)
-     *
-     */
-
+  ustring Message::plain_text (bool fallback_html) {
     if (missing_content) {
       LOG (warn) << "message: missing content, no text.";
       return "";
-    }
-
-    if (html && fallback_html) {
-      throw logic_error ("message: html implies fallback_html");
     }
 
     ustring body;
@@ -324,13 +332,13 @@ namespace Astroid {
       bool use = false;
 
       if (c->siblings.size() >= 1) {
-        if (c->preferred) {
+        if (c->is_content_type ("text", "plain") || fallback_html) {
           use = true;
         } else {
           /* check if there are any other preferred */
           if (all_of (c->siblings.begin (),
                       c->siblings.end (),
-                      [](refptr<Chunk> c) { return (!c->preferred); })) {
+                      [fallback_html](refptr<Chunk> c) { return !(c->is_content_type ("text", "plain") || fallback_html); })) {
             use = true;
           } else {
             use = false;
@@ -341,8 +349,9 @@ namespace Astroid {
       }
 
       if (use) {
-        if (c->viewable && (c->preferred || html || fallback_html)) {
-          body += c->viewable_text (html);
+        if (c->viewable && (c->is_content_type ("text", "plain") || fallback_html)) {
+          /* will output html if HTML part */
+          body += c->viewable_text (false);
         }
 
         for_each (c->kids.begin(),
@@ -977,6 +986,12 @@ namespace Astroid {
       set_first_subject ((*(--messages.end()))->subject);
       subject = first_subject;
     }
+  }
+
+  void MessageThread::add_message (refptr<Message> m) {
+    if (!first_subject_set) set_first_subject (m->subject);
+    m->subject_is_different = subject_is_different (m->subject);
+    messages.push_back (m);
   }
 
   std::vector<refptr<Message>> MessageThread::messages_by_time () {

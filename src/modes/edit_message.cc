@@ -284,6 +284,8 @@ namespace Astroid {
 
     reset_signature ();
 
+    switch_markdown->set_active (astroid->config ().get<bool> ("editor.markdown_on"));
+
     /* register keys {{{ */
     keys.title = "Edit mode";
     keys.register_key (Key (GDK_KEY_Return), { Key (GDK_KEY_KP_Enter) },
@@ -335,10 +337,14 @@ namespace Astroid {
         [&] (Key) {
           /* view raw source of to be sent message */
           ComposeMessage * c = make_message ();
-          ustring tmpf = c->write_tmp ();
 
-          main_window->add_mode (new RawMessage (main_window, tmpf.c_str(), true));
-          /* tmp file deleted by RawMessage */
+          GMimeStream * m = g_mime_stream_mem_new ();
+          assert (g_mime_stream_mem_get_owner (GMIME_STREAM_MEM(m)) == true);
+          c->write (m);
+
+          main_window->add_mode (new RawMessage (main_window, refptr<Message>(new Message(m))));
+
+          g_object_unref (m);
 
           delete c;
 
@@ -804,15 +810,16 @@ namespace Astroid {
     subject = c->subject;
     body = ustring(c->body.str());
 
-    ustring tmpf = c->write_tmp ();
+    GMimeStream * m = g_mime_stream_mem_new ();
+    assert (g_mime_stream_mem_get_owner (GMIME_STREAM_MEM(m)) == true);
+    c->write (m);
 
     auto msgt = refptr<MessageThread>(new MessageThread());
-    msgt->add_message (tmpf);
+    msgt->add_message (refptr<Message>(new Message(m)));
     thread_view->load_message_thread (msgt);
 
+    g_object_unref (m);
     delete c;
-
-    unlink (tmpf.c_str());
 
     in_read = false;
   }

@@ -35,7 +35,7 @@ BOOST_AUTO_TEST_SUITE(Markdown)
     Message m (fn);
 
     /* check plain text part */
-    ustring pbdy = m.viewable_text (false);
+    ustring pbdy = m.plain_text (false);
     BOOST_CHECK_MESSAGE (pbdy == bdy, "plain text matches plain text");
 
     /* check html part */

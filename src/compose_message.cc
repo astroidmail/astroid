@@ -284,8 +284,7 @@ namespace Astroid {
 
     set_subject (msg.subject);
 
-    body << msg.viewable_text (false);
-
+    body << msg.plain_text (false);
   }
 
   void ComposeMessage::finalize () {
@@ -731,6 +730,18 @@ namespace Astroid {
     g_object_unref(stream);
 
     LOG (debug) << "cm: wrote file: " << fname;
+  }
+
+  void ComposeMessage::write (GMimeStream * stream) {
+    g_object_ref (stream);
+
+    g_mime_object_write_to_stream (GMIME_OBJECT(message), g_mime_format_options_get_default (), stream);
+    g_mime_stream_flush (stream);
+    g_mime_stream_seek (stream, 0, GMIME_STREAM_SEEK_SET);
+
+    g_object_unref(stream);
+
+    LOG (debug) << "cm: wrote to stream.";
   }
 
   ComposeMessage::Attachment::Attachment () {

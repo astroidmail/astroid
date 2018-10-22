@@ -132,7 +132,11 @@ namespace Astroid {
     stringstream s;
 
     /* add filenames */
-    s << "Filename: " << msg->fname << endl << endl;
+    if (msg->has_file) {
+      s << "Filename: " << msg->fname << endl << endl;
+    } else {
+      s << "Filename: (none, memory)"<< endl << endl;
+    }
 
     auto c = msg->raw_contents ();
     auto cnv = UstringUtils::bytearray_to_ustring (c);

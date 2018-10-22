@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_SUITE(GPGEncryption)
     delete c;
 
     Message m (fn);
-    ustring rbdy = m.viewable_text (false);
+    ustring rbdy = m.plain_text (false);
 
     BOOST_CHECK_MESSAGE (bdy == rbdy, "message reading produces the same output as compose message input");
 
@@ -116,7 +116,7 @@ BOOST_AUTO_TEST_SUITE(GPGEncryption)
 
     Message m (fn);
 
-    ustring rbdy = m.viewable_text (false);
+    ustring rbdy = m.plain_text (false);
 
     BOOST_CHECK_MESSAGE (bdy == rbdy, "message reading produces the same output as compose message input");
 
@@ -218,7 +218,7 @@ BOOST_AUTO_TEST_SUITE(GPGEncryption)
     }
 
     /* check that body matches */
-    ustring rbdy = m->viewable_text (false);
+    ustring rbdy = m->plain_text (false);
     BOOST_CHECK_MESSAGE (bdy == rbdy, "message reading produces the same output as compose message input");
 
     /* notmuch thread id */
@@ -251,7 +251,7 @@ BOOST_AUTO_TEST_SUITE(GPGEncryption)
         Db db (Db::DATABASE_READ_ONLY);
         mthread->load_messages (&db);
 
-        BOOST_CHECK_MESSAGE (bdy == mthread->messages[0]->viewable_text (false), "message body matches composed message");
+        BOOST_CHECK_MESSAGE (bdy == mthread->messages[0]->plain_text (false), "message body matches composed message");
 
         tries++;
       }
@@ -321,7 +321,7 @@ BOOST_AUTO_TEST_SUITE(GPGEncryption)
     delete c;
 
     Message m (fn);
-    ustring rbdy = m.viewable_text (false);
+    ustring rbdy = m.plain_text (false);
 
     BOOST_CHECK_MESSAGE (bdy == rbdy, "message reading produces the same output as compose message input");
 

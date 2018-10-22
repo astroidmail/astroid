@@ -93,6 +93,7 @@ namespace Astroid {
       bool cancel_sending ();
       ustring write_tmp (); // write message to tmpfile
       void write (ustring); // write message to some file
+      void write (GMimeStream *); // write to stream
 
       /* encryption */
       bool encryption_success = false;

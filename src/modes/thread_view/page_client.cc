@@ -455,7 +455,7 @@ namespace Astroid {
 
     /* set preview */
     {
-      ustring bp = m->viewable_text (false, false);
+      ustring bp = m->plain_text (false);
       if (static_cast<int>(bp.size()) > MAX_PREVIEW_LEN)
         bp = bp.substr(0, MAX_PREVIEW_LEN - 3) + "...";
 
