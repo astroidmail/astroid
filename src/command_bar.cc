@@ -258,6 +258,8 @@ namespace Astroid {
           if (mode == CommandMode::Tag || mode == CommandMode::DiffTag) {
             ustring txt = entry.get_text ();
             ustring_sz pos = entry.get_position ();
+            // normal behavior if we're not in between tags
+            if (txt[pos] != ' ' && pos > 0 && pos < txt.size ()) return false;
             // skip two spaces at the end
             if (pos == txt.size ()) pos--;
             if (pos > 0) pos--;
@@ -273,6 +275,8 @@ namespace Astroid {
           if (mode == CommandMode::Tag || mode == CommandMode::DiffTag) {
             ustring txt = entry.get_text ();
             ustring_sz end = entry.get_position ();
+            // normal behavior if we're not in between tags
+            if (txt[end] != ' ' && end > 0 && end < txt.size ()) return false;
             ustring_sz start = end;
             // skip two spaces at the end
             if (start == txt.size ()) start--;
@@ -290,6 +294,8 @@ namespace Astroid {
           if (mode == CommandMode::Tag || mode == CommandMode::DiffTag) {
             ustring txt = entry.get_text ();
             ustring_sz pos = entry.get_position ();
+            // normal behavior if we're not in between tags
+            if (txt[pos] != ' ' && pos > 0 && pos < txt.size ()) return false;
             if (pos < txt.size ()) pos++;
             while (txt[pos] != ' ' && pos < txt.size ()) pos++;
             entry.set_position (pos);
@@ -303,6 +309,8 @@ namespace Astroid {
           if (mode == CommandMode::Tag || mode == CommandMode::DiffTag) {
             ustring txt = entry.get_text ();
             ustring_sz start = entry.get_position ();
+            // normal behavior if we're not in between tags
+            if (txt[start] != ' ' && start > 0 && start < txt.size ()) return false;
             ustring_sz end = start;
             if (end < txt.size ()) end++;
             while (txt[end] != ' ' && end < txt.size ()) end++;
@@ -353,6 +361,9 @@ namespace Astroid {
               }
             }
 
+            return true;
+          }
+          if (mode == CommandMode::Tag || mode == CommandMode::DiffTag) {
             return true;
           }
         }
