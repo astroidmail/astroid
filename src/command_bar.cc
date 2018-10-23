@@ -258,6 +258,8 @@ namespace Astroid {
           if (mode == CommandMode::Tag || mode == CommandMode::DiffTag) {
             ustring txt = entry.get_text ();
             ustring_sz pos = entry.get_position ();
+            // skip two spaces at the end
+            if (pos == txt.size ()) pos--;
             if (pos > 0) pos--;
             while (txt[pos] != ' ' && pos > 0) pos--;
             entry.set_position (pos);
@@ -272,6 +274,8 @@ namespace Astroid {
             ustring txt = entry.get_text ();
             ustring_sz end = entry.get_position ();
             ustring_sz start = end;
+            // skip two spaces at the end
+            if (start == txt.size ()) start--;
             if (start > 0) start--;
             while (txt[start] != ' ' && start > 0) start--;
             entry.set_text (txt.substr (0, start) + txt.substr (end, txt.size () - end));
@@ -287,7 +291,7 @@ namespace Astroid {
             ustring txt = entry.get_text ();
             ustring_sz pos = entry.get_position ();
             if (pos < txt.size ()) pos++;
-            while (txt[pos] != ' ' && pos < txt.size()) pos++;
+            while (txt[pos] != ' ' && pos < txt.size ()) pos++;
             entry.set_position (pos);
             return true;
           }
