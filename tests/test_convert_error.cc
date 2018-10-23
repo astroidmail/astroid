@@ -24,7 +24,7 @@ BOOST_AUTO_TEST_SUITE(Reading)
 
     Astroid::Message m (fname);
 
-    BOOST_CHECK_NO_THROW (m.viewable_text (false));
+    BOOST_CHECK_NO_THROW (m.plain_text (false));
 
     teardown ();
   }
@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_SUITE(Reading)
     quoted  << quoting_a.raw ()
             << endl;
 
-    std::string vt = msg.viewable_text(false);
+    std::string vt = msg.plain_text(false);
     std::stringstream sstr (vt);
     while (sstr.good()) {
       std::string line;

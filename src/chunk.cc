@@ -238,6 +238,10 @@ namespace Astroid {
 
   }
 
+  bool Chunk::is_content_type (const char * major, const char * minor) {
+    return (mime_object != NULL) && g_mime_content_type_is_type (content_type, major, minor);
+  }
+
   ustring Chunk::viewable_text (bool html = true, bool verbose) {
     if (isencrypted && !crypt->decrypted) {
       if (verbose) {
@@ -258,7 +262,7 @@ namespace Astroid {
       LOG (debug) << "chunk: body: part";
 
 
-      if (g_mime_content_type_is_type (content_type, "text", "plain")) {
+      if (is_content_type ("text", "plain")) {
         LOG (debug) << "chunk: plain text (out html: " << html << ")";
 
         GMimeDataWrapper * content = g_mime_part_get_content (
@@ -328,7 +332,7 @@ namespace Astroid {
 
         content_stream = filter_stream;
 
-      } else if (g_mime_content_type_is_type (content_type, "text", "html")) {
+      } else if (is_content_type ("text", "html")) {
         LOG (debug) << "chunk: html text";
 
         GMimeDataWrapper * content = g_mime_part_get_content (

@@ -8,6 +8,7 @@
 # include "account_manager.hh"
 # include "utils/address.hh"
 # include "utils/ustring_utils.hh"
+# include <boost/property_tree/ptree.hpp>
 
 BOOST_AUTO_TEST_SUITE(Composing)
 
@@ -44,14 +45,45 @@ BOOST_AUTO_TEST_SUITE(Composing)
 
     Message m (fn);
 
-    ustring rbdy = m.viewable_text (false);
+    ustring rbdy = m.plain_text (false);
 
     BOOST_CHECK_MESSAGE (bdy == rbdy, "message reading produces the same output as compose message input");
 
     unlink (fn.c_str ());
 
     teardown ();
+  }
 
+  BOOST_AUTO_TEST_CASE (compose_test_mem)
+  {
+    using Astroid::ComposeMessage;
+    using Astroid::Message;
+    setup ();
+
+    ComposeMessage * c = new ComposeMessage ();
+
+    ustring bdy = "This is test: æøå.\n > testing\ntesting\n...";
+
+    LOG (trace) << "cm: writing utf-8 text to message body: " << bdy;
+    c->body << bdy;
+
+    c->build ();
+    c->finalize ();
+
+    GMimeStream * ms = g_mime_stream_mem_new ();
+    assert (g_mime_stream_mem_get_owner (GMIME_STREAM_MEM(ms)) == true);
+    c->write (ms);
+
+    Message m (ms);
+
+    delete c;
+    g_object_unref (ms);
+
+    ustring rbdy = m.plain_text (false);
+
+    BOOST_CHECK_MESSAGE (bdy == rbdy, "message reading produces the same output as compose message input");
+
+    teardown ();
   }
 
   BOOST_AUTO_TEST_CASE (compose_test_references)
@@ -142,11 +174,43 @@ BOOST_AUTO_TEST_SUITE(Composing)
       BOOST_CHECK (m.subject == subject);
       BOOST_CHECK (AddressList(m.to()).str () == to);
       BOOST_CHECK (m.mid == id);
-      BOOST_CHECK (m.viewable_text (false) == (body + signature));
+      BOOST_CHECK (m.plain_text (false) == (body + signature));
 
       unlink (fname.c_str ());
     }
 
+    teardown ();
+  }
+
+  BOOST_AUTO_TEST_CASE (compose_test_body_preferred_html)
+  {
+    using Astroid::ComposeMessage;
+    using Astroid::Message;
+    using boost::property_tree::ptree;
+
+    setup ();
+    const_cast<ptree&>(astroid->config()).put ("thread_view.preferred_type", "html");
+
+    ComposeMessage * c = new ComposeMessage ();
+
+    ustring bdy = "This is test: æøå.\n > testing\ntesting\n...";
+
+    LOG (trace) << "cm: writing utf-8 text to message body: " << bdy;
+    c->body << bdy;
+
+    c->build ();
+    c->finalize ();
+    ustring fn = c->write_tmp ();
+
+    delete c;
+
+    Message m (fn);
+
+    ustring rbdy = m.plain_text (false);
+
+    BOOST_CHECK_MESSAGE (bdy == rbdy, "message reading produces the same output as compose message input");
+
+    unlink (fn.c_str ());
     teardown ();
   }
 

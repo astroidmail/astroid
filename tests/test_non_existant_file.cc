@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_SUITE(Reading)
     oos->save_to ("tests/mail/test_mail/wont-work.eml");
 
     LOG (test) << "sender: " << oos->sender;
-    LOG (test) << "text: " << oos->viewable_text (false);
+    LOG (test) << "text: " << oos->plain_text (false);
 
     /* these do not seem to be cached */
     LOG (test) << "to: " << AddressList (oos->to()).str();
