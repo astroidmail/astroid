@@ -50,7 +50,7 @@ namespace Astroid {
       static MessageTypes read_message (
           Glib::RefPtr<Gio::InputStream> istream,
           Glib::RefPtr<Gio::Cancellable> reader_cancel,
-          std::string &buffer);
+          std::vector<gchar> &buffer);
 
       /* exceptions */
       class ipc_error : public std::runtime_error {
