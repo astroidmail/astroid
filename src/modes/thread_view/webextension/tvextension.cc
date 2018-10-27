@@ -238,7 +238,7 @@ void AstroidExtension::reader () {/*{{{*/
   while (run) {
     LOG (debug) << "reader waiting..";
 
-    std::string buffer;
+    std::vector<gchar> buffer;
     AeProtocol::MessageTypes mt;
 
     try {
@@ -259,7 +259,7 @@ void AstroidExtension::reader () {/*{{{*/
       case AeProtocol::MessageTypes::Debug:
         {
           AstroidMessages::Debug m;
-          m.ParseFromString (buffer);
+          m.ParseFromArray (buffer.data(), buffer.size());
           LOG (debug) << m.msg ();
           ack (true);
         }
@@ -268,7 +268,7 @@ void AstroidExtension::reader () {/*{{{*/
       case AeProtocol::MessageTypes::Mark:
         {
           AstroidMessages::Mark m;
-          m.ParseFromString (buffer);
+          m.ParseFromArray (buffer.data(), buffer.size());
           Glib::signal_idle().connect_once (
               sigc::bind (
                 sigc::mem_fun(*this, &AstroidExtension::handle_mark), m));
@@ -278,7 +278,7 @@ void AstroidExtension::reader () {/*{{{*/
       case AeProtocol::MessageTypes::Hidden:
         {
           AstroidMessages::Hidden m;
-          m.ParseFromString (buffer);
+          m.ParseFromArray (buffer.data(), buffer.size());
           Glib::signal_idle().connect_once (
               [this,m] () {
                 set_hidden (m.mid (), m.hidden ());
@@ -290,7 +290,7 @@ void AstroidExtension::reader () {/*{{{*/
       case AeProtocol::MessageTypes::Focus:
         {
           AstroidMessages::Focus m;
-          m.ParseFromString (buffer);
+          m.ParseFromArray (buffer.data(), buffer.size());
           Glib::signal_idle().connect_once (
               sigc::bind (
                 sigc::mem_fun(*this, &AstroidExtension::handle_focus), m));
@@ -300,7 +300,7 @@ void AstroidExtension::reader () {/*{{{*/
       case AeProtocol::MessageTypes::State:
         {
           AstroidMessages::State m;
-          m.ParseFromString (buffer);
+          m.ParseFromArray (buffer.data(), buffer.size());
           Glib::signal_idle().connect_once (
               sigc::bind (
                 sigc::mem_fun(*this, &AstroidExtension::handle_state), m));
@@ -310,7 +310,7 @@ void AstroidExtension::reader () {/*{{{*/
       case AeProtocol::MessageTypes::Indent:
         {
           AstroidMessages::Indent m;
-          m.ParseFromString (buffer);
+          m.ParseFromArray (buffer.data(), buffer.size());
           Glib::signal_idle().connect_once (
               [this,m] () {
                 set_indent (m.indent ());
@@ -322,7 +322,7 @@ void AstroidExtension::reader () {/*{{{*/
       case AeProtocol::MessageTypes::AllowRemoteImages:
         {
           AstroidMessages::AllowRemoteImages m;
-          m.ParseFromString (buffer);
+          m.ParseFromArray (buffer.data(), buffer.size());
           Glib::signal_idle().connect_once (
               [this,m] () {
                 allow_remote_resources = true;
@@ -335,7 +335,7 @@ void AstroidExtension::reader () {/*{{{*/
       case AeProtocol::MessageTypes::Page:
         {
           AstroidMessages::Page s;
-          s.ParseFromString (buffer);
+          s.ParseFromArray (buffer.data(), buffer.size());
           Glib::signal_idle().connect_once (
               sigc::bind (
                 sigc::mem_fun(*this, &AstroidExtension::handle_page), s));
@@ -345,7 +345,7 @@ void AstroidExtension::reader () {/*{{{*/
       case AeProtocol::MessageTypes::ClearMessages:
         {
           AstroidMessages::ClearMessage m;
-          m.ParseFromString (buffer);
+          m.ParseFromArray (buffer.data(), buffer.size());
           Glib::signal_idle().connect_once (
               sigc::bind (
                 sigc::mem_fun(*this, &AstroidExtension::clear_messages), m));
@@ -355,7 +355,7 @@ void AstroidExtension::reader () {/*{{{*/
       case AeProtocol::MessageTypes::AddMessage:
         {
           AstroidMessages::Message m;
-          m.ParseFromString (buffer);
+          m.ParseFromArray (buffer.data(), buffer.size());
           Glib::signal_idle().connect_once (
               sigc::bind (
                 sigc::mem_fun(*this, &AstroidExtension::add_message), m));
@@ -365,7 +365,7 @@ void AstroidExtension::reader () {/*{{{*/
       case AeProtocol::MessageTypes::UpdateMessage:
         {
           AstroidMessages::UpdateMessage m;
-          m.ParseFromString (buffer);
+          m.ParseFromArray (buffer.data(), buffer.size());
           Glib::signal_idle().connect_once (
               sigc::bind (
                 sigc::mem_fun(*this, &AstroidExtension::update_message), m));
@@ -375,7 +375,7 @@ void AstroidExtension::reader () {/*{{{*/
       case AeProtocol::MessageTypes::RemoveMessage:
         {
           AstroidMessages::Message m;
-          m.ParseFromString (buffer);
+          m.ParseFromArray (buffer.data(), buffer.size());
           Glib::signal_idle().connect_once (
               sigc::bind (
                 sigc::mem_fun(*this, &AstroidExtension::remove_message), m));
@@ -385,7 +385,7 @@ void AstroidExtension::reader () {/*{{{*/
       case AeProtocol::MessageTypes::Info:
         {
           AstroidMessages::Info m;
-          m.ParseFromString (buffer);
+          m.ParseFromArray (buffer.data(), buffer.size());
 
           if (m.warning ()) {
             Glib::signal_idle().connect_once (
@@ -402,7 +402,7 @@ void AstroidExtension::reader () {/*{{{*/
       case AeProtocol::MessageTypes::Navigate:
         {
           AstroidMessages::Navigate m;
-          m.ParseFromString (buffer);
+          m.ParseFromArray (buffer.data(), buffer.size());
           Glib::signal_idle().connect_once (
               sigc::bind (
                 sigc::mem_fun(*this, &AstroidExtension::handle_navigate), m));
