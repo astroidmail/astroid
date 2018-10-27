@@ -277,6 +277,9 @@ namespace Astroid {
             ustring_sz end = entry.get_position ();
             // normal behavior if we're not in between tags
             if (txt[end] != ' ' && end > 0 && end < txt.size ()) return false;
+            // normal behavior if we're at the end and the character is not a
+            // space -- assume editing tag
+            if (txt[end] != ' ' && end == txt.size ()) return false;
             ustring_sz start = end;
             // skip two spaces at the end
             if (start == txt.size ()) start--;
