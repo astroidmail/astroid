@@ -72,7 +72,7 @@ namespace Astroid {
     body = ustring(quoted.str());
 
     references = msg->references + " <" + msg->mid + ">";
-    inreplyto  = "<" + msg->mid + ">";
+    inreplyto  = msg->mid;
 
     /* reply mode combobox */
     reply_revealer->set_reveal_child (true);

@@ -41,7 +41,7 @@ namespace Astroid {
 
   class AddSentMessage : public Action {
     public:
-      AddSentMessage (ustring fname, std::vector<ustring> additional_sent_tags);
+      AddSentMessage (ustring fname, std::vector<ustring> additional_sent_tags, ustring parent_mid);
 
       virtual bool doit (Db *) override;
       virtual bool undo (Db *) override;
@@ -52,6 +52,7 @@ namespace Astroid {
       ustring fname;
       ustring mid;
       std::vector<ustring> additional_sent_tags;
+      ustring parent_mid;
   };
 
 }

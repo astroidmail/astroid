@@ -111,7 +111,7 @@ namespace Astroid {
     a.set_success (false);
 
     {
-      std::string msg_str;
+      std::vector<gchar> msg_str;
 
       auto mt = read_message (
           istream,
@@ -125,7 +125,7 @@ namespace Astroid {
       }
 
       LOG (debug) << "ae: send (sync) ACK received.";
-      a.ParseFromString (msg_str);
+      a.ParseFromArray (msg_str.data(), msg_str.size());
     }
 
     return a;
@@ -134,7 +134,7 @@ namespace Astroid {
   AeProtocol::MessageTypes AeProtocol::read_message (
       Glib::RefPtr<Gio::InputStream> istream,
       Glib::RefPtr<Gio::Cancellable> reader_cancel,
-      std::string & msg_str)
+      std::vector<gchar> &buffer)
   {
     gsize read = 0;
     bool  s    = false;
@@ -159,9 +159,9 @@ namespace Astroid {
     }
 
     /* read message */
-    gchar * buffer = new gchar[msg_sz];
+    buffer.resize (msg_sz);
     try {
-      s = istream->read_all (buffer, msg_sz, read, reader_cancel);
+      s = istream->read_all (buffer.data(), msg_sz, read, reader_cancel);
     } catch (Gio::Error &ex) {
       LOG (error) << "ae: error (read): " << ex.code() << ", " <<  ex.what ();
       throw;
@@ -171,9 +171,6 @@ namespace Astroid {
       LOG (error) << "reader: error while reading message (size: " << msg_sz << ")";
       throw ipc_error ("could not read message");
     }
-
-    msg_str = std::string (buffer, msg_sz);
-    delete [] buffer;
     return mt;
   }
 
