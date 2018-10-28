@@ -487,6 +487,11 @@ namespace Astroid {
                              "Toggle archive",
                              bind (&ThreadIndexListView::multi_key_handler, this, MArchive, _1));
 
+    multi_keys.register_key (Key (GDK_KEY_Delete),
+                             "thread_index.multi.trash",
+                             "Toggle trash",
+                             bind (&ThreadIndexListView::multi_key_handler, this, MTrash, _1));
+
     multi_keys.register_key ("S",
                              "thread_index.multi.mark_spam",
                              "Toggle spam",
@@ -875,6 +880,17 @@ namespace Astroid {
           return true;
         });
 
+    keys->register_key (Key (GDK_KEY_Delete), "thread_index.trash",
+        "Toggle 'trash' tag on thread",
+        [&] (Key) {
+          auto thread = get_current_thread ();
+          if (thread) {
+            main_window->actions->doit (refptr<Action>(new TrashAction(thread)));
+          }
+
+          return true;
+        });
+
     keys->register_key (Key (GDK_KEY_asterisk), "thread_index.flag",
         "Toggle 'flagged' tag on thread",
         [&] (Key) {
@@ -1045,6 +1061,7 @@ namespace Astroid {
       case MSpam:
       case MMute:
       case MArchive:
+      case MTrash:
       case MTag:
         {
           vector<refptr<NotmuchItem>> threads;
@@ -1066,6 +1083,10 @@ namespace Astroid {
           switch (maction) {
             case MArchive:
               a = refptr<Action>(new ToggleAction(threads, "inbox"));
+              break;
+
+            case MTrash:
+              a = refptr<Action>(new TrashAction(threads));
               break;
 
             case MFlag:
@@ -1199,6 +1220,14 @@ namespace Astroid {
         {
           if (thread) {
             main_window->actions->doit (refptr<Action>(new ToggleAction(thread, "inbox")));
+          }
+        }
+        break;
+
+      case Trash:
+        {
+          if (thread) {
+            main_window->actions->doit (refptr<Action>(new TrashAction(thread)));
           }
         }
         break;
