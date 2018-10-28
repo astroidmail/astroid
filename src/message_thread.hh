@@ -108,6 +108,7 @@ namespace Astroid {
       type_signal_message_changed m_signal_message_changed;
 
       bool subject_is_different = true;
+      bool process = true;
   };
 
   /* exceptions */
@@ -115,6 +116,15 @@ namespace Astroid {
     public:
       message_error (const char *);
 
+  };
+
+  class UnprocessedMessage : public Message {
+    public:
+      UnprocessedMessage (ustring _fname);
+      UnprocessedMessage (ustring _mid, ustring _fname);
+      UnprocessedMessage (GMimeStream *);
+      UnprocessedMessage (GMimeMessage *);
+      UnprocessedMessage (notmuch_message_t *, int _level);
   };
 
   class MessageThread : public Glib::Object {
@@ -148,5 +158,6 @@ namespace Astroid {
       void add_message (refptr<Chunk>);
       void add_message (refptr<Message>);
   };
+
 }
 

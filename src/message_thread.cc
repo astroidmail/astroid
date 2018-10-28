@@ -90,7 +90,7 @@ namespace Astroid {
     tags = nmmsg->tags;
   }
 
-  Message::Message (GMimeMessage * _msg) {
+  Message::Message (GMimeMessage * _msg) : Message () {
     LOG (info) << "msg: loading message from GMimeMessage.";
     in_notmuch = false;
     has_file   = false;
@@ -99,7 +99,7 @@ namespace Astroid {
     load_message (_msg);
   }
 
-  Message::Message (GMimeStream * s) {
+  Message::Message (GMimeStream * s) : Message () {
     LOG (info) << "msg: loading message from GMimeStream.";
     in_notmuch = false;
     has_file   = false;
@@ -192,7 +192,9 @@ namespace Astroid {
     } else {
       GMimeStream * stream = NULL;
 # ifndef DISABLE_PLUGINS
-      stream = astroid->plugin_manager->astroid_extension->process (fname.c_str());
+      if (process) {
+        stream = astroid->plugin_manager->astroid_extension->process (fname.c_str());
+      }
 # endif
       if (stream == NULL) {
         GError *err = NULL; (void) (err); // not used in GMime 2.
@@ -871,6 +873,82 @@ namespace Astroid {
 
   message_error::message_error (const char * w) : runtime_error (w)
   {
+  }
+
+  /**********************
+   * UnprocessedMessage *
+   **********************/
+  UnprocessedMessage::UnprocessedMessage (ustring _fname) : Message () {
+
+    LOG (info) << "msg: loading message from file: " << fname;
+    fname    = _fname;
+    has_file = true;
+    process  = false;
+    load_message_from_file (fname);
+  }
+
+  UnprocessedMessage::UnprocessedMessage (
+      ustring _mid,
+      ustring _fname)
+    : Message ()
+  {
+    mid = _mid;
+    fname = _fname;
+    process = false; // must be set before load_message_from_file
+    has_file = true;
+
+    LOG (info) << "msg: loading message from file (mid supplied): " << fname;
+    load_message_from_file (fname);
+  };
+
+  UnprocessedMessage::UnprocessedMessage (GMimeStream * s) : Message () {
+    LOG (info) << "msg: loading message from GMimeStream.";
+    in_notmuch = false;
+    has_file   = false;
+    process    = false;
+    missing_content = false;
+
+    g_object_ref (s);
+    GMimeParser   * parser  = g_mime_parser_new_with_stream (s);
+    GMimeMessage * _message = g_mime_parser_construct_message (parser, g_mime_parser_options_get_default ());
+
+    load_message (_message);
+
+    g_object_unref (_message);
+    g_object_unref (s);
+    g_object_unref (parser);
+  }
+
+  UnprocessedMessage::UnprocessedMessage (GMimeMessage * _msg) : Message () {
+    LOG (info) << "msg: loading message from GMimeMessage.";
+    in_notmuch = false;
+    has_file   = false;
+    process    = false;
+    missing_content = false;
+
+    load_message (_msg);
+  }
+
+  UnprocessedMessage::UnprocessedMessage (notmuch_message_t *message, int _level) : Message () {
+    /* The caller must make sure the message pointer
+     * is valid and not destroyed while initializing */
+
+    mid = notmuch_message_get_message_id (message);
+    tid = notmuch_message_get_thread_id (message);
+    in_notmuch = true;
+    has_file   = true;
+    level      = _level;
+    process    = false;
+
+    nmmsg = refptr<NotmuchMessage> (new NotmuchMessage (message));
+
+    LOG (info) << "msg: loading mid: " << mid;
+
+    fname = nmmsg->filename;
+    LOG (info) << "msg: filename: " << fname;
+
+    load_message_from_file (fname);
+    tags = nmmsg->tags;
   }
 
   /* --------

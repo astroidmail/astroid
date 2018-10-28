@@ -261,7 +261,7 @@ namespace Astroid {
 
   void ComposeMessage::load_message (ustring _mid, ustring fname) {
     set_id (_mid);
-    Message msg (_mid, fname);
+    UnprocessedMessage msg (_mid, fname);
 
     Account * from = astroid->accounts->get_account_for_address (msg.sender);
     if (from == NULL) {
@@ -290,15 +290,6 @@ namespace Astroid {
   void ComposeMessage::finalize () {
     /* make message ready to be sent */
     LOG (debug) << "cm: finalize..";
-
-    /* again: ripped more or less from ner */
-
-    /*
-    FILE * file = fopen(_messageFile.c_str(), "r");
-    GMimeStream * stream = g_mime_stream_file_new(file);
-    GMimeParser * parser = g_mime_parser_new_with_stream(stream);
-    GMimeMessage * message = g_mime_parser_construct_message(parser);
-    */
 
     /* set user agent */
     ustring ua = "";
@@ -783,7 +774,7 @@ namespace Astroid {
 
     if (content_type == "message/rfc822") {
       LOG (debug) << "cm: attachment is mime message.";
-      message = refptr<Message> (new Message(fname.c_str ()));
+      message = refptr<Message> (new UnprocessedMessage(fname.c_str ()));
 
       is_mime_message = true;
 
@@ -825,7 +816,7 @@ namespace Astroid {
       content_type = "message/rfc822";
       is_mime_message = true;
 
-      message = refptr<Message> (new Message(GMIME_MESSAGE(c->mime_object)));
+      message = refptr<Message> (new UnprocessedMessage(GMIME_MESSAGE(c->mime_object)));
 
       g_object_ref (c->mime_object); // should be cleaned by Message : Glib::Object
 
