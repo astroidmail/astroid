@@ -1385,6 +1385,20 @@ namespace Astroid {
           return true;
         });
 
+    keys.register_key (Key (GDK_KEY_BackSpace),
+        "thread_view.trash_thread",
+        "Toggle 'trash' tag on the whole thread",
+        [&] (Key) {
+
+          if (!edit_mode && focused_message) {
+            if (thread) {
+              main_window->actions->doit (refptr<Action>(new TrashAction(thread)));
+            }
+          }
+
+          return true;
+        });
+
     keys.register_key ("C-P",
         "thread_view.print",
         "Print focused message",
@@ -1568,6 +1582,16 @@ namespace Astroid {
           return true;
         });
 
+    next_multi.register_key (UnboundKey(),
+        "thread_view.multi_next_thread.trash",
+        "Trash and goto next",
+        [&] (Key) {
+          keys.handle ("thread_view.trash_thread");
+          emit_index_action (IA_Next);
+
+          return true;
+        });
+
     next_multi.register_key (Key ("A"),
         "thread_view.multi_next_thread.archive_next_unread_thread",
         "Archive, goto next unread",
@@ -1578,11 +1602,31 @@ namespace Astroid {
           return true;
         });
 
+    next_multi.register_key (UnboundKey(),
+        "thread_view.multi_next_thread.trash_next_unread_thread",
+        "Trash and goto next unread",
+        [&] (Key) {
+          keys.handle ("thread_view.archive_trash");
+          emit_index_action (IA_NextUnread);
+
+          return true;
+        });
+
     next_multi.register_key (Key ("x"),
         "thread_view.multi_next_thread.close",
         "Archive, close",
         [&] (Key) {
           keys.handle ("thread_view.archive_thread");
+          close ();
+
+          return true;
+        });
+
+    next_multi.register_key (Key (GDK_KEY_Delete),
+        "thread_view.multi_next_thread.trash_close",
+        "Trash and close",
+        [&] (Key) {
+          keys.handle ("thread_view.trash_thread");
           close ();
 
           return true;
@@ -1644,6 +1688,27 @@ namespace Astroid {
         "Alias for thread_view.multi_next_thread.close",
         [&] (Key) {
           return next_multi.handle ("thread_view.multi_next_thread.close");
+        });
+
+    keys.register_key (UnboundKey (),
+        "thread_view.trash_then_next",
+        "Alias for thread_view.multi_next_thread.trash",
+        [&] (Key) {
+          return next_multi.handle ("thread_view.multi_next_thread.trash");
+        });
+
+    keys.register_key (UnboundKey (),
+        "thread_view.trash_then_next_unread",
+        "Alias for thread_view.multi_next_thread.trash_next_unread",
+        [&] (Key) {
+          return next_multi.handle ("thread_view.multi_next_thread.trash_next_unread_thread");
+        });
+
+    keys.register_key (Key (GDK_KEY_Delete),
+        "thread_view.trash_and_close",
+        "Alias for thread_view.multi_next_thread.trash_close",
+        [&] (Key) {
+          return next_multi.handle ("thread_view.multi_next_thread.trash_close");
         });
 
     keys.register_key (UnboundKey (),
