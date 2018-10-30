@@ -342,7 +342,7 @@ namespace Astroid {
           assert (g_mime_stream_mem_get_owner (GMIME_STREAM_MEM(m)) == true);
           c->write (m);
 
-          main_window->add_mode (new RawMessage (main_window, refptr<Message>(new Message(m))));
+          main_window->add_mode (new RawMessage (main_window, refptr<Message>(new UnprocessedMessage(m))));
 
           g_object_unref (m);
 
@@ -397,7 +397,7 @@ namespace Astroid {
                         if (msg != NULL) {
                           LOG (debug) << "em: attaching: " << mid;
 
-                          refptr<Message> mmsg  = refptr<Message> (new Message (msg, 0));
+                          refptr<Message> mmsg  = refptr<Message> (new UnprocessedMessage (msg, 0));
                           add_attachment (new ComposeMessage::Attachment (mmsg));
 
                         } else {
@@ -815,7 +815,7 @@ namespace Astroid {
     c->write (m);
 
     auto msgt = refptr<MessageThread>(new MessageThread());
-    msgt->add_message (refptr<Message>(new Message(m)));
+    msgt->add_message (refptr<Message>(new UnprocessedMessage(m)));
     thread_view->load_message_thread (msgt);
 
     g_object_unref (m);
