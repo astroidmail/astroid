@@ -37,6 +37,12 @@ namespace Astroid {
       Gtk::Label mode_label;
       Gtk::SearchEntry entry;
 
+      enum EditMode {
+        Tags,
+        Chars
+      };
+      EditMode edit_mode;
+
       void set_main_window (MainWindow *);
 
       void on_entry_activated ();
@@ -57,6 +63,7 @@ namespace Astroid {
 
     private:
       void reset_bar ();
+      void setup_bar_labels ();
 
       class GenericCompletion : public Gtk::EntryCompletion {
         public:
