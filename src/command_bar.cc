@@ -126,14 +126,61 @@ namespace Astroid {
       std::function<void(ustring)> f) {
     mode = m;
 
+    ustring edit_mode_str = astroid->config ().get<string> ("general.tagbar_move");
+    if (edit_mode_str == "tag") {
+      edit_mode = EditMode::Tags;
+    } else {
+      edit_mode = EditMode::Chars;
+    }
+
     reset_bar ();
+
+    setup_bar_labels ();
 
     switch (mode) {
 
       case CommandMode::AttachMids:
         {
-          entry.set_icon_from_icon_name ("mail-attachment-symbolic");
           start_generic (cmd);
+        }
+        break;
+
+      case CommandMode::Search:
+        {
+          start_searching (cmd);
+        }
+        break;
+
+      case CommandMode::Filter:
+      case CommandMode::SearchText:
+        {
+          start_text_searching (cmd);
+        }
+        break;
+
+      case CommandMode::Tag:
+        {
+          start_tagging (cmd);
+        }
+        break;
+
+      case CommandMode::DiffTag:
+        {
+          start_difftagging (cmd);
+        }
+        break;
+    }
+    callback = f;
+    entry.set_position (-1);
+    set_search_mode (true);
+  }
+
+  void CommandBar::setup_bar_labels () {
+    switch (mode) {
+
+      case CommandMode::AttachMids:
+        {
+          entry.set_icon_from_icon_name ("mail-attachment-symbolic");
         }
         break;
 
@@ -141,8 +188,6 @@ namespace Astroid {
         {
           mode_label.set_text ("");
           entry.set_icon_from_icon_name ("edit-find-symbolic");
-
-          start_searching (cmd);
         }
         break;
 
@@ -151,33 +196,31 @@ namespace Astroid {
         {
           mode_label.set_text ("Find text");
           entry.set_icon_from_icon_name ("edit-find-symbolic");
-
-          start_text_searching (cmd);
         }
         break;
 
       case CommandMode::Tag:
         {
-          mode_label.set_text ("Change tags");
+          if (edit_mode == EditMode::Tags) {
+            mode_label.set_text ("Change tags [move by tag]");
+          } else {
+            mode_label.set_text ("Change tags");
+          }
           entry.set_icon_from_icon_name ("system-run-symbolic");
-
-          start_tagging (cmd);
         }
         break;
 
       case CommandMode::DiffTag:
         {
-          mode_label.set_text ("Change tags (+/-)");
+          if (edit_mode == EditMode::Tags) {
+            mode_label.set_text ("Change tags (+/-) [move by tag]");
+          } else {
+            mode_label.set_text ("Change tags (+/-)");
+          }
           entry.set_icon_from_icon_name ("system-run-symbolic");
-
-          start_difftagging (cmd);
         }
         break;
     }
-
-    callback = f;
-    entry.set_position (-1);
-    set_search_mode (true);
   }
 
   void CommandBar::reset_bar () {
@@ -241,6 +284,14 @@ namespace Astroid {
     LOG (debug) << "cb: got key: " << event->keyval;
 
     switch (event->keyval) {
+      case GDK_KEY_Control_L:
+      case GDK_KEY_Control_R:
+        {
+          edit_mode = edit_mode == EditMode::Tags ? EditMode::Chars : EditMode::Tags;
+          setup_bar_labels ();
+          return true;
+        }
+
       case GDK_KEY_Tab:
         {
           /* grab the next completion */
@@ -255,7 +306,7 @@ namespace Astroid {
 
       case GDK_KEY_Left:
         {
-          if (mode == CommandMode::Tag || mode == CommandMode::DiffTag) {
+          if (edit_mode == EditMode::Tags && (mode == CommandMode::Tag || mode == CommandMode::DiffTag)) {
             ustring txt = entry.get_text ();
             ustring_sz pos = entry.get_position ();
             // normal behavior if we're not in between tags
@@ -272,7 +323,7 @@ namespace Astroid {
 
       case GDK_KEY_BackSpace:
         {
-          if (mode == CommandMode::Tag || mode == CommandMode::DiffTag) {
+          if (edit_mode == EditMode::Tags && (mode == CommandMode::Tag || mode == CommandMode::DiffTag)) {
             ustring txt = entry.get_text ();
             ustring_sz end = entry.get_position ();
             // normal behavior if we're not in between tags
@@ -294,7 +345,7 @@ namespace Astroid {
 
       case GDK_KEY_Right:
         {
-          if (mode == CommandMode::Tag || mode == CommandMode::DiffTag) {
+          if (edit_mode == EditMode::Tags && (mode == CommandMode::Tag || mode == CommandMode::DiffTag)) {
             ustring txt = entry.get_text ();
             ustring_sz pos = entry.get_position ();
             // normal behavior if we're not in between tags
@@ -309,7 +360,7 @@ namespace Astroid {
 
       case GDK_KEY_Delete:
         {
-          if (mode == CommandMode::Tag || mode == CommandMode::DiffTag) {
+          if (edit_mode == EditMode::Tags && (mode == CommandMode::Tag || mode == CommandMode::DiffTag)) {
             ustring txt = entry.get_text ();
             ustring_sz start = entry.get_position ();
             // normal behavior if we're not in between tags

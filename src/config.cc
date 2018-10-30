@@ -189,6 +189,8 @@ namespace Astroid {
     default_config.put ("general.time.same_year", "%b %-e");
     default_config.put ("general.time.diff_year", "%x");
 
+    default_config.put ("general.tagbar_move", "tag");
+
     /* thread index cell theme */
     default_config.put ("thread_index.cell.font_description", "default");
     default_config.put ("thread_index.cell.line_spacing", 2);
