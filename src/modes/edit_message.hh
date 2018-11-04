@@ -99,12 +99,13 @@ namespace Astroid {
       std::vector<ustring> attachment_words = { "attach" }; // defined in config
 
       bool send_message ();
-      ComposeMessage * setup_message ();
-      void             finalize_message (ComposeMessage *);
-      ComposeMessage * make_message ();
-      ComposeMessage * make_draft_message ();
+      void finalize_message (std::unique_ptr<ComposeMessage> &);
+      std::unique_ptr<ComposeMessage> setup_message ();
+      std::unique_ptr<ComposeMessage> make_message (bool draft);
+      std::unique_ptr<ComposeMessage> make_message ();
+      std::unique_ptr<ComposeMessage> make_draft_message ();
 
-      ComposeMessage * sending_message;
+      std::unique_ptr<ComposeMessage> sending_message;
       std::atomic<bool> sending_in_progress;
       void send_message_finished (bool result);
       void update_send_message_status (bool warn, ustring msg);
@@ -158,8 +159,6 @@ namespace Astroid {
 
       bool message_sent = false;
       void lock_message_after_send ();
-
-      ComposeMessage * make_message (bool draft);
 
     private:
       void on_from_combo_changed ();
