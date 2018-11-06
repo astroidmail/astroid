@@ -63,7 +63,6 @@ namespace Astroid {
 
     private:
       void reset_bar ();
-      void setup_bar_labels ();
 
       class GenericCompletion : public Gtk::EntryCompletion {
         public:
@@ -117,8 +116,8 @@ namespace Astroid {
           static Gdk::RGBA  canvas_color;
           static bool       canvas_color_set;
 
-          virtual void color_tags ();
-          void color_tag (ustring tg, ustring_sz start, Pango::AttrList &attrs);
+          virtual void color_tags (EditMode edit_mode);
+          void color_tag (ustring tg, ustring_sz start, Pango::AttrList &attrs, EditMode edit_mode);
       };
 
       refptr<TagCompletion> tag_completion;
@@ -160,7 +159,7 @@ namespace Astroid {
 
           bool on_match_selected(const Gtk::TreeModel::iterator& iter) override;
 
-          void color_tags () override;
+          void color_tags (EditMode edit_mode) override;
       };
 
       refptr<SearchCompletion> search_completion;
