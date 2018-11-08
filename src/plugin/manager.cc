@@ -323,8 +323,6 @@ namespace Astroid {
    * ThreadViewExtension
    * ************************/
   PluginManager::ThreadViewExtension::ThreadViewExtension (ThreadView * tv) {
-    thread_view  = tv;
-
     if (astroid->plugin_manager->disabled) return;
 
     /* loading extensions for each plugin */

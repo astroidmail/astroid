@@ -212,7 +212,7 @@ namespace Astroid {
     }
 # endif
 
-    thread_view = Gtk::manage(new ThreadView(main_window, true));
+    thread_view = new ThreadView(main_window, true);
     //thread_rev->add (*thread_view);
     editor_box->pack_start (*thread_view, false, false, 2);
 
@@ -545,6 +545,12 @@ namespace Astroid {
     if (is_regular_file (tmpfile_path)) {
       boost::filesystem::remove (tmpfile_path);
     }
+
+    delete thread_view;
+  }
+
+  void EditMessage::pre_close () {
+    ((Mode*) thread_view)->pre_close ();
   }
 
   void EditMessage::close (bool force) {

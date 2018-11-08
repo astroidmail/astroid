@@ -128,6 +128,8 @@ namespace Astroid {
       ThreadView *  thread_view;
       Gtk::Revealer *editor_rev, *thread_rev;
 
+      void pre_close () override;
+
       static  int edit_id; // must be incremented each time a new editor is started
       int     id;          // id of this instance
       time_t  msg_time;

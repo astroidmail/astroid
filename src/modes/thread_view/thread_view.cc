@@ -112,7 +112,12 @@ namespace Astroid {
           "settings", websettings,
           NULL));
 
+    if (g_object_is_floating (webview)) g_object_ref_sink (webview);
+    g_object_unref (context);
+    g_object_unref (websettings);
+
     gtk_box_pack_start (GTK_BOX (this->gobj ()), GTK_WIDGET (webview), true, true, 0);
+
 
     g_signal_connect (webview, "load-changed",
         G_CALLBACK(ThreadView_on_load_changed),
@@ -141,7 +146,7 @@ namespace Astroid {
 
   ThreadView::~ThreadView () { //
     LOG (debug) << "tv: deconstruct.";
-    g_object_unref (websettings);
+    g_object_unref (webview);
   }
 
   void ThreadView::pre_close () {

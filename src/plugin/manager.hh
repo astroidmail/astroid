@@ -63,8 +63,6 @@ namespace Astroid {
       };
 
       class ThreadViewExtension : public Extension {
-        private:
-          ThreadView * thread_view;
 
         public:
           ThreadViewExtension (ThreadView * ti);

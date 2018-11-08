@@ -32,10 +32,10 @@ namespace Astroid {
     list_store = Glib::RefPtr<ThreadIndexListStore>(new ThreadIndexListStore ());
     queryloader.list_store = list_store;
 
-    list_view  = Gtk::manage(new ThreadIndexListView (this, list_store));
+    list_view  = new ThreadIndexListView (this, list_store);
     queryloader.list_view = list_view;
 
-    scroll     = Gtk::manage(new ThreadIndexScrolled (main_window, list_store, list_view));
+    scroll     = new ThreadIndexScrolled (main_window, list_store, list_view);
 
     list_view->set_sort_type (queryloader.sort);
 
@@ -230,10 +230,10 @@ namespace Astroid {
 
     if (new_window) {
       MainWindow * nmw = astroid->open_new_window (false);
-      tv = Gtk::manage(new ThreadView (nmw));
+      tv = new ThreadView (nmw);
       nmw->add_mode (tv);
     } else if (new_tab) {
-      tv = Gtk::manage(new ThreadView (main_window));
+      tv = new ThreadView (main_window);
       main_window->add_mode (tv);
     } else {
       LOG (debug) << "ti: init paned tv";
