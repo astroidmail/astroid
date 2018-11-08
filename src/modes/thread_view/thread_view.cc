@@ -142,8 +142,6 @@ namespace Astroid {
   ThreadView::~ThreadView () { //
     LOG (debug) << "tv: deconstruct.";
     g_object_unref (websettings);
-    g_object_unref (context);
-    g_object_unref (webview);
   }
 
   void ThreadView::pre_close () {
