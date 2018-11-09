@@ -554,7 +554,6 @@ namespace Astroid {
   void ThreadView::register_keys () { // {{{
     keys.title = "Thread View";
 
-# ifdef DEBUG_WEBKIT
     keys.register_key ("C-r", "thread_view.reload",
         "Reload everything",
         [&] (Key) {
@@ -565,6 +564,7 @@ namespace Astroid {
           return true;
         });
 
+# ifdef DEBUG_WEBKIT
     keys.register_key ("C-I", "thread_view.show_web_inspector",
         "Show web inspector",
         [&] (Key) {
