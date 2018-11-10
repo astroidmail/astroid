@@ -551,19 +551,23 @@ namespace Astroid {
     else return Mode::on_key_press_event (event);
   }
 
+  void ThreadView::refresh () {
+    LOG (debug) << "tv: reloading...";
+    theme.load (true);
+
+    Db db (Db::DbMode::DATABASE_READ_ONLY);
+    auto _mthread = refptr<MessageThread>(new MessageThread (thread));
+    _mthread->load_messages (&db);
+    load_message_thread (_mthread);
+  }
+
   void ThreadView::register_keys () { // {{{
     keys.title = "Thread View";
 
     keys.register_key ("$", "thread_view.reload",
         "Reload everything",
         [&] (Key) {
-          LOG (debug) << "tv: reloading...";
-          theme.load (true);
-
-          Db db (Db::DbMode::DATABASE_READ_ONLY);
-          auto _mthread = refptr<MessageThread>(new MessageThread (thread));
-          _mthread->load_messages (&db);
-          load_message_thread (_mthread);
+          refresh();
           return true;
         });
 
