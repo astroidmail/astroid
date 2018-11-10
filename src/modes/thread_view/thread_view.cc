@@ -557,10 +557,13 @@ namespace Astroid {
     keys.register_key ("C-r", "thread_view.reload",
         "Reload everything",
         [&] (Key) {
-          LOG (debug) << "tv: reloading..";
+          LOG (debug) << "tv: reloading...";
           theme.load (true);
 
-          load_message_thread (mthread);
+          Db db (Db::DbMode::DATABASE_READ_ONLY);
+          auto _mthread = refptr<MessageThread>(new MessageThread (thread));
+          _mthread->load_messages (&db);
+          load_message_thread (_mthread);
           return true;
         });
 
