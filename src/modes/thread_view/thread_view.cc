@@ -554,7 +554,7 @@ namespace Astroid {
   void ThreadView::register_keys () { // {{{
     keys.title = "Thread View";
 
-    keys.register_key ("C-r", "thread_view.reload",
+    keys.register_key ("$", "thread_view.reload",
         "Reload everything",
         [&] (Key) {
           LOG (debug) << "tv: reloading...";
