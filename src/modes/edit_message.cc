@@ -212,7 +212,7 @@ namespace Astroid {
     }
 # endif
 
-    thread_view = new ThreadView(main_window, true);
+    thread_view = Gtk::manage(new ThreadView(main_window, true));
     //thread_rev->add (*thread_view);
     editor_box->pack_start (*thread_view, false, false, 2);
 
