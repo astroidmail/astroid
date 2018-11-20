@@ -113,8 +113,6 @@ namespace Astroid {
           NULL));
 
     if (g_object_is_floating (webview)) g_object_ref_sink (webview);
-    g_object_unref (context);
-    g_object_unref (websettings);
 
     gtk_box_pack_start (GTK_BOX (this->gobj ()), GTK_WIDGET (webview), true, true, 0);
 
@@ -146,6 +144,8 @@ namespace Astroid {
 
   ThreadView::~ThreadView () { //
     LOG (debug) << "tv: deconstruct.";
+    g_object_unref (context);
+    g_object_unref (websettings);
     g_object_unref (webview);
   }
 
@@ -1863,7 +1863,7 @@ namespace Astroid {
                   refptr<MessageThread> mt = refptr<MessageThread> (new MessageThread ());
                   mt->add_message (c);
 
-                  ThreadView * tv = new ThreadView (main_window);
+                  ThreadView * tv = Gtk::manage(new ThreadView (main_window));
                   tv->load_message_thread (mt);
 
                   main_window->add_mode (tv);
