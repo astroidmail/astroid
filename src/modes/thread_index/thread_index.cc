@@ -240,7 +240,7 @@ namespace Astroid {
       if (packed == 2) {
         tv = (ThreadView *) pw2;
       } else {
-        tv = new ThreadView (main_window);
+        tv = Gtk::manage(new ThreadView (main_window));
         add_pane (1, tv);
       }
     }

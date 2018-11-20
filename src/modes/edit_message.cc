@@ -545,8 +545,6 @@ namespace Astroid {
     if (is_regular_file (tmpfile_path)) {
       boost::filesystem::remove (tmpfile_path);
     }
-
-    delete thread_view;
   }
 
   void EditMessage::pre_close () {
