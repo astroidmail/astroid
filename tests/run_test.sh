@@ -12,7 +12,7 @@ echo "Source dir: ${SRCDIR}"
 echo "Build dir:  ${BINDIR}"
 
 export NOTMUCH_CONFIG="${BINDIR}/tests/mail/test_config"
-export GNUPGHOME="${BINDIR}/tests/test_home/gnupg"
+export GNUPGHOME="${BINDIR}/gnupg"
 export ASTROID_BUILD_DIR="${BINDIR}"
 
 gpgconf -v --kill all # stop all components
