@@ -179,14 +179,14 @@ namespace Astroid {
     notmuch_threads_destroy (threads);
     notmuch_query_destroy (nmquery);
 
+    run = false; // on_thread_changed will not check lock
+
     if (!in_destructor)
       stats_ready.emit (); // update loading status
 
     // catch any remaining entries
     if (!in_destructor)
       queue_has_data.emit ();
-
-    run = false; // on_thread_changed will not check lock
 
     if (!in_destructor)
       deferred_threads_d.emit ();
@@ -220,7 +220,6 @@ namespace Astroid {
         LOG (debug) << "ql: loaded " << loaded_threads << " threads.";
         if (!in_destructor && !list_view->filter_txt.empty()) stats_ready.emit ();
       }
-      db.close ();
     }
   }
 
