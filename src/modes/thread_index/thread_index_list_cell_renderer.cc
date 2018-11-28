@@ -478,7 +478,15 @@ namespace Astroid {
 
         ustring an = get<0>(a);
 
-        an = an.substr (0, an.find_first_of (", @"));
+        size_t pos = an.find_first_of (",. @");
+        if (an[pos] == ',' || an[pos] == '.') { // last name, first name format or initial/title.
+            an = an.substr (pos + 1, an.size ());
+            UstringUtils::trim_left (an);
+            pos = an.find_first_of (" @");
+            an = an.substr (0, pos);
+        } else {
+            an = an.substr (0, pos);
+        }
 
         int tlen = static_cast<int>(an.size());
         if ((len + tlen) >= authors_len) {
