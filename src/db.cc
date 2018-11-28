@@ -129,7 +129,7 @@ namespace Astroid {
                 time << " of maximum " <<
                 db_open_timeout << " seconds.";
 
-        chrono::seconds duration (db_open_delay);
+        chrono::milliseconds duration (db_open_delay);
         this_thread::sleep_for (duration);
 
         time += db_open_delay;
@@ -168,7 +168,7 @@ namespace Astroid {
                 time << " of maximum " <<
                 db_open_timeout << " seconds.";
 
-        chrono::seconds duration (db_open_delay);
+        chrono::milliseconds duration (db_open_delay);
         this_thread::sleep_for (duration);
 
         time += db_open_delay;
@@ -229,7 +229,7 @@ namespace Astroid {
 
       if (nm_db != NULL) {
         LOG (info) << "db: closing db.";
-        notmuch_database_close (nm_db);
+        notmuch_database_destroy (nm_db);
         nm_db = NULL;
       }
 
@@ -661,6 +661,7 @@ namespace Astroid {
         a = Address(ustring (ac)).fail_safe_name ();
       } else {
         /* LOG (error) << "nmt: got NULL for author!"; */
+        notmuch_message_destroy (message);
         continue;
       }
 
@@ -1064,7 +1065,7 @@ namespace Astroid {
             refresh (m);
           } else {
             in_notmuch = false;
-            }
+          }
         });
     return in_notmuch;
   }

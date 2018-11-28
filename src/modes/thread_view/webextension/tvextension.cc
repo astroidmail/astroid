@@ -410,6 +410,7 @@ void AstroidExtension::reader () {/*{{{*/
         break;
 
       default:
+        run = false;
         break; // unknown message
     }
   }

@@ -197,7 +197,7 @@ namespace Astroid {
       bool closed = false;
 
       const int db_open_timeout = 120; // seconds
-      const int db_open_delay   = 1;   // seconds
+      const int db_open_delay   = 100;   // milliseconds
 
   };
 

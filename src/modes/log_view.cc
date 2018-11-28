@@ -199,8 +199,8 @@ namespace Astroid {
       l = "<span color=\"red\">" + l + "</span>";
     } else if (lvl == logging::trivial::warning) {
       l = "<span color=\"pink\">" + l + "</span>";
-    } else if (lvl == logging::trivial::info) {
-      l = l;
+    //} else if (lvl == logging::trivial::info) {
+    //  l = l;
     } else {
       l = "<span color=\"gray\">" + l + "</span>";
     }

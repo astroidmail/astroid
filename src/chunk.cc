@@ -296,8 +296,7 @@ namespace Astroid {
         g_mime_stream_filter_add(GMIME_STREAM_FILTER(filter_stream), filter);
         g_object_unref(filter);
 
-        if (charset)
-        {
+        if (charset) {
           LOG (debug) << "charset: " << charset;
           if (std::string(charset) == "utf-8") {
             charset = "UTF-8";

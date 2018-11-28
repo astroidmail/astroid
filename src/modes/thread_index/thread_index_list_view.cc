@@ -40,6 +40,7 @@ namespace Astroid {
       Glib::RefPtr<ThreadIndexListStore> _list_store,
       ThreadIndexListView * _list_view) : Mode (mw) {
 
+    list_store.clear ();
     list_store = _list_store;
     list_view  = Gtk::manage(_list_view);
 
@@ -93,6 +94,7 @@ namespace Astroid {
 
     thread_index    = _thread_index;
     main_window     = _thread_index->main_window;
+    list_store.clear ();
     list_store      = store;
     filtered_store  = Gtk::TreeModelFilter::create (list_store);
     filtered_store->set_visible_func (sigc::mem_fun (this, &ThreadIndexListView::filter_visible_row));
