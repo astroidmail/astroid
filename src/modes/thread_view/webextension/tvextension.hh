@@ -79,8 +79,6 @@ class AstroidExtension {
     };
 
 
-    WebKitDOMNode * container;
-
     void handle_page (AstroidMessages::Page &s);
     ustring part_css;
     bool page_ready = false;

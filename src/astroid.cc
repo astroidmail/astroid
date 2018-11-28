@@ -479,7 +479,7 @@ namespace Astroid {
   }
 
   MainWindow * Astroid::open_new_window (bool open_defaults) {
-    LOG (warn) << "astroid: starting a new window..";
+    LOG (info) << "astroid: starting a new window..";
 
     /* set up a new main window */
 
