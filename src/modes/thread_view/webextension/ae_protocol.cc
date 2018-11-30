@@ -139,15 +139,9 @@ namespace Astroid {
     gsize read = 0;
     bool  s    = false;
 
-    AeProtocol::MessageTypes mt;
-
     /* read message size */
     gsize msg_sz = 0;
     s = istream->read_all ((char *) &msg_sz, sizeof (msg_sz), read, reader_cancel);
-
-    if (s && read == 0) {
-      return mt;
-    }
 
     if (!s || read != sizeof (msg_sz)) {
       throw ipc_error ("could not read message size");
@@ -157,6 +151,7 @@ namespace Astroid {
       throw ipc_error ("message exceeds maximum size.");
     }
 
+    AeProtocol::MessageTypes mt;
     s = istream->read_all ((char*) &mt, sizeof (mt), read, reader_cancel);
 
     if (!s || read != sizeof (mt)) {
