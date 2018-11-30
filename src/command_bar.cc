@@ -34,10 +34,6 @@ namespace Astroid {
         sigc::mem_fun (*this, &CommandBar::on_entry_activated)
         );
 
-    entry.signal_key_press_event ().connect (
-        sigc::mem_fun (this, &CommandBar::entry_key_press)
-        );
-
     entry.signal_event ().connect ([&] (GdkEvent* event)->bool {
         if (event->type == GDK_KEY_PRESS) {
             return entry_key_press ((GdkEventKey *) event);
