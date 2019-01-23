@@ -1045,10 +1045,22 @@ namespace Astroid {
     if (attachments.empty () && !attachment_words.empty ()) {
       ustring bl = body.lowercase ();
 
+      /* strip quoted lines */
+      ostringstream nonquoted;
+      stringstream sstr (bl);
+      while (sstr.good()) {
+        string line;
+        getline (sstr, line);
+
+        if (line[0] != '>')
+          nonquoted << line << endl;
+      }
+      ustring nqb = ustring(nonquoted.str());
+
       if (any_of (attachment_words.begin (),
                   attachment_words.end (),
                   [&] (ustring w) {
-                    return bl.find (w) != string::npos;
+                    return nqb.find (w) != string::npos;
                   }))
       {
         set_warning ("Attachments have been mentioned in the message, but none are attached, do you still want to send?");
