@@ -183,14 +183,13 @@ namespace Astroid {
   }
 
   void CommandBar::start_generic (ustring cmd) {
-    entry.set_text (cmd);
     entry.set_completion (refptr<Gtk::EntryCompletion> ());
     current_completion.reset ();
+
+    entry.set_text (cmd);
   }
 
   void CommandBar::start_searching (ustring searchstring) {
-    entry.set_text (searchstring);
-
     /* set up completion */
     search_completion->load_tags (Db::tags);
     search_completion->load_history ();
@@ -200,17 +199,19 @@ namespace Astroid {
     current_completion = search_completion;
 
     search_completion->color_tags (edit_mode);
+
+    entry.set_text (searchstring);
   }
 
   void CommandBar::start_text_searching (ustring searchstring) {
-    entry.set_text (searchstring);
-
     /* set up completion */
     search_completion->load_history ();
     search_completion->orig_text = "";
     search_completion->history_pos = 0;
     entry.set_completion (text_search_completion);
     current_completion = text_search_completion;
+
+    entry.set_text (searchstring);
   }
 
   void CommandBar::start_tagging (ustring tagstring) {
