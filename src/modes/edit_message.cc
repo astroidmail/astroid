@@ -1258,7 +1258,7 @@ namespace Astroid {
 
     if (tmpfile.fail()) {
       LOG (error) << "em: error: could not create tmpfile!";
-      throw runtime_error ("em: coult not create tmpfile!");
+      throw runtime_error ("em: could not create tmpfile!");
     }
 
     tmpfile.close ();

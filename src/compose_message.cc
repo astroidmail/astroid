@@ -157,7 +157,7 @@ namespace Astroid {
         sf << s.rdbuf ();
         s.close ();
         if (account->signature_separate) {
-    md_body_content += "-- \n";
+          md_body_content += "-- \n";
         }
         md_body_content += sf.str ();
       }
@@ -228,6 +228,7 @@ namespace Astroid {
           contentStream = g_mime_stream_mem_new_with_buffer(_html.c_str(), _html.size());
         }
 
+        g_spawn_close_pid (pid);
       } catch (Glib::SpawnError &ex) {
         LOG (error) << "cm: md: failed to spawn markdown processor: " << ex.what ();
 

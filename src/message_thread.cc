@@ -11,6 +11,7 @@
 # include "message_thread.hh"
 # include "chunk.hh"
 # include "utils/utils.hh"
+# include "utils/cmd.hh"
 # include "utils/date_utils.hh"
 # include "utils/address.hh"
 # include "utils/ustring_utils.hh"
@@ -354,6 +355,67 @@ namespace Astroid {
         if (c->viewable && (c->is_content_type ("text", "plain") || fallback_html)) {
           /* will output html if HTML part */
           body += c->viewable_text (false);
+        }
+
+        for_each (c->kids.begin(),
+                  c->kids.end (),
+                  app_body);
+      }
+    };
+
+    app_body (root);
+
+    return body;
+  }
+
+  ustring Message::quote () {
+    if (missing_content) {
+      LOG (warn) << "message: missing content, no text.";
+      return "";
+    }
+
+    ustring body;
+
+    function< void (refptr<Chunk>) > app_body =
+      [&] (refptr<Chunk> c)
+    {
+      /* check if we're the preferred sibling */
+      bool use = false;
+
+      if (c->siblings.size() >= 1) {
+        if (c->is_content_type ("text", "plain") || c->is_content_type ("text", "html")) {
+          use = true;
+        } else {
+          /* check if there are any other preferred */
+          if (all_of (c->siblings.begin (),
+                      c->siblings.end (),
+                      [](refptr<Chunk> c) { return !(c->is_content_type ("text", "plain") || c->is_content_type("text", "html")); })) {
+            use = true; // no
+          } else {
+            use = false;
+          }
+        }
+      } else {
+        use = true;
+      }
+
+      if (use) {
+        if (c->viewable && (c->is_content_type ("text", "plain") || c->is_content_type ("text", "html"))) {
+          /* will output html if HTML part */
+          if (c->is_content_type ("text", "html")) {
+            ustring quote_cmd = astroid->config ().get<string>("mail.reply.quote_processor");
+
+            if (!quote_cmd.empty()) {
+                ustring h = c->viewable_text (false);
+                ustring _stdout, _stderr;
+                Cmd::pipe (quote_cmd, h, _stdout, _stderr);
+
+                body += _stdout;
+            }
+
+          } else {
+            body += c->viewable_text (false);
+          }
         }
 
         for_each (c->kids.begin(),

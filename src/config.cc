@@ -235,6 +235,8 @@ namespace Astroid {
     default_config.put ("editor.markdown_processor", "cmark");
     default_config.put ("editor.markdown_on", false); // default
 
+    default_config.put ("mail.reply.quote_processor", "w3m -dump -T text/html"); // e.g. lynx -dump
+
     /* mail composition */
     default_config.put ("mail.reply.quote_line", "Excerpts from %1's message of %2:"); // %1 = author, %2 = pretty_verbose_date
     default_config.put ("mail.reply.mailinglist_reply_to_sender", true);
