@@ -413,7 +413,7 @@ if (NOT DISABLE_DOCS)
       message (WARNING "Falling back to 'ronn' for man page generation.")
       add_custom_command (
         TARGET astroid
-        COMMAND ${RONN} -rp ${CMAKE_SOURCE_DIR}/doc/astroid.1.scd | gzip > ${CMAKE_BINARY_DIR}/astroid.1.gz
+        COMMAND ${RONN} --roff --pipe ${CMAKE_SOURCE_DIR}/doc/astroid.1.scd | gzip > ${CMAKE_BINARY_DIR}/astroid.1.gz
         COMMENT "Generating man page (ronn)")
     else ()
       message (FATAL_ERROR "Neither 'scdoc' nor 'ronn' installed. One is required for man page generation.")
