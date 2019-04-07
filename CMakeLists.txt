@@ -40,7 +40,7 @@ set (CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
   # debug build - retrieve current project version from git
   execute_process (
-    COMMAND git describe --abbrev=8 --tags --always
+    COMMAND git -C "${CMAKE_SOURCE_DIR}" describe --abbrev=8 --tags --always
     OUTPUT_VARIABLE PROJECT_VERSION
     OUTPUT_STRIP_TRAILING_WHITESPACE
     )
