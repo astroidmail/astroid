@@ -52,3 +52,5 @@ add_astroid_test (address             test_address             test_address.cc  
 add_astroid_test (dates               test_dates               test_dates.cc              )
 add_astroid_test (crypto              test_crypto              test_crypto.cc             )
 add_astroid_test (gmime_version       test_gmime_version       test_gmime_version.cc      )
+add_astroid_test (quote_html          test_quote_html          test_quote_html.cc )
+
