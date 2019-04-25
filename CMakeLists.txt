@@ -84,6 +84,15 @@ if (Notmuch_INDEX_FILE_API)
 endif()
 
 find_package ( PkgConfig REQUIRED )
+
+if(APPLE)
+  # with homebrew, libffi is keg-only, i.e. not symlinked into
+  # /usr/local; hence we have to tell pkg-config where to look
+  # for it
+  list ( APPEND CMAKE_PREFIX_PATH /usr/local/opt/libffi )
+  pkg_check_modules (LIBFFI     REQUIRED libffi>=3.0)
+endif()
+
 pkg_check_modules (GTKMM3     REQUIRED  gtkmm-3.0>=3.10)
 pkg_check_modules (GLIBMM2    REQUIRED  glibmm-2.4)
 pkg_check_modules (WEBKIT2GTK REQUIRED  webkit2gtk-4.0>=2.22)
@@ -450,12 +459,6 @@ if(DISABLE_PLUGINS)
   add_definitions ( -DDISABLE_PLUGINS )
   message (STATUS "Disabling plugins.")
 else()
-  if(APPLE)
-    # with homebrew, libffi is keg-only, i.e. not symlinked into
-    # /usr/local; hence we have to tell pkg-config where to look for
-    # it
-    list ( APPEND CMAKE_PREFIX_PATH /usr/local/opt/libffi )
-  endif()
   include (FindGObjectIntrospection)   # this performs a pkg_check_modules()
   pkg_check_modules (PEAS libpeas-1.0>=1.0.0)
   if(INTROSPECTION_FOUND AND PEAS_FOUND)
