@@ -5,10 +5,11 @@
 # include "test_common.hh"
 # include "message_thread.hh"
 # include "utils/ustring_utils.hh"
+# include "config.hh"
 
 BOOST_AUTO_TEST_SUITE(QuoteHtml)
 
-  BOOST_AUTO_TEST_CASE(quote_html_lynx)
+  BOOST_AUTO_TEST_CASE(quote_html)
   {
     using Astroid::Message;
     setup ();
@@ -36,6 +37,24 @@ You are receiving this because you commented.
 Reply to this email directly, view it on GitHub, or mute the thread.*)";
 
     BOOST_CHECK (quoted == target);
+
+    teardown ();
+  }
+
+  BOOST_AUTO_TEST_CASE(quote_html_convert_error)
+  {
+    using Astroid::Message;
+    setup ();
+
+    // TODO: Does not work with lynx
+    /* const_cast<ptree&>(astroid->config()).put ("mail.reply.quote_processor", "lynx -dump -stdin"); */
+
+    ustring fname = "tests/mail/test_mail/isspace-fail-utf-8.eml";
+
+    Message m (fname);
+    ustring quoted = m.quote ();
+
+    LOG (trace) << "quoted plain text: " << quoted;
 
     teardown ();
   }
