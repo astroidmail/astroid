@@ -418,8 +418,6 @@ namespace Astroid {
       actions->close ();
       delete actions;
     }
-
-    logging::core::get()->remove_all_sinks ();
   }
 
   int Astroid::on_command_line (const refptr<Gio::ApplicationCommandLine> & cmd) {
