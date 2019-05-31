@@ -2,6 +2,9 @@
 
 # include "astroid.hh"
 # include "proto.hh"
+# include <boost/log/core.hpp>
+
+namespace logging = boost::log;
 
 using Astroid::astroid;
 using Astroid::ustring;
@@ -16,5 +19,6 @@ void setup () {
 
 void teardown () {
   Astroid::astroid.clear ();
+  logging::core::get()->remove_all_sinks ();
 }
 
