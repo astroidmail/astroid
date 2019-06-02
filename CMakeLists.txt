@@ -159,6 +159,7 @@ include_directories (
   ${SASS_INCLUDE_DIRS}
   ${Boost_INCLUDE_DIRS}
   ${PROTOBUF_INCLUDE_DIRS}
+  ${Notmuch_INCLUDE_DIRS}
   )
 
 add_compile_options (
