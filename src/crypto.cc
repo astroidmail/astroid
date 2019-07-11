@@ -248,7 +248,7 @@ namespace Astroid {
         mo,
         sign,
         userid.c_str (),
-        GMIME_ENCRYPT_NONE,
+        always_trust ? GMIME_ENCRYPT_ALWAYS_TRUST : GMIME_ENCRYPT_NONE,
         recpa,
         err);
 
