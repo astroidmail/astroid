@@ -13,7 +13,7 @@ Vagrant.configure("2") do |config|
   config.vm.provision "shell", inline: <<-SHELL
     pacman -Syu --noconfirm
 
-    pacman -S --noconfirm --needed cmake ninja ccache git gcc notmuch-runtime glibmm gtkmm3 vte3 boost libsass libpeas ruby-ronn pkgconf webkit2gtk protobuf gobject-introspection xorg-xauth xorg-xclock cmark python-gobject ipython gvim
+    pacman -S --noconfirm --needed cmake ninja ccache git gcc notmuch-runtime glibmm gtkmm3 vte3 boost libsass libpeas ruby-ronn pkgconf webkit2gtk protobuf gobject-introspection xorg-xauth xorg-xclock cmark python-gobject ipython gvim w3m
 
     cat > /etc/profile.d/astroid.sh <<EOL
       export ASTROID_DIR=/vagrant
