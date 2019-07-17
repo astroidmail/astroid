@@ -1,3 +1,9 @@
+== v0.15 / 2019-07-17
+
+* Faster editing of tags
+* Number of bug fixes
+* Lots more, check the git log!
+
 == v0.14 / 2018-09-30
 
 * Use cmark by default as markdown processor.
