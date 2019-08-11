@@ -129,18 +129,19 @@ namespace Astroid {
 
     /* create text part */
     GMimeStream * contentStream = g_mime_stream_mem_new_with_buffer(text_body_content.c_str(), text_body_content.size());
-    GMimePart * messagePart = g_mime_part_new_with_type ("text", "plain");
+    GMimePart * text = g_mime_part_new_with_type ("text", "plain");
+    GMimeObject * messagePart = GMIME_OBJECT(text); // top-level mime part object; default is plain text
 
-    g_mime_object_set_content_type_parameter ((GMimeObject *) messagePart, "charset", astroid->config().get<string>("editor.charset").c_str());
+    g_mime_object_set_content_type_parameter ((GMimeObject *) text, "charset", astroid->config().get<string>("editor.charset").c_str());
 
     if (astroid->config().get<bool> ("mail.format_flowed")) {
-      g_mime_object_set_content_type_parameter ((GMimeObject *) messagePart, "format", "flowed");
+      g_mime_object_set_content_type_parameter ((GMimeObject *) text, "format", "flowed");
     }
 
     GMimeDataWrapper * contentWrapper = g_mime_data_wrapper_new_with_stream(contentStream, GMIME_CONTENT_ENCODING_DEFAULT);
 
-    g_mime_part_set_content_encoding (messagePart, GMIME_CONTENT_ENCODING_QUOTEDPRINTABLE);
-    g_mime_part_set_content (messagePart, contentWrapper);
+    g_mime_part_set_content_encoding (text, GMIME_CONTENT_ENCODING_QUOTEDPRINTABLE);
+    g_mime_part_set_content (text, contentWrapper);
 
     g_object_unref(contentWrapper);
     g_object_unref(contentStream);
@@ -162,12 +163,10 @@ namespace Astroid {
         md_body_content += sf.str ();
       }
 
-      GMimePart * text = messagePart;
-      GMimeMultipart * mp = g_mime_multipart_new_with_subtype ("alternative");
+      GMimeMultipart * multipartAlt = g_mime_multipart_new_with_subtype ("alternative");
 
       /* add text part */
-      g_mime_multipart_add (mp, GMIME_OBJECT(messagePart));
-      messagePart = GMIME_PART(mp);
+      g_mime_multipart_add (multipartAlt, GMIME_OBJECT(text));
 
       /* construct HTML part */
       GMimePart * html = g_mime_part_new_with_type ("text", "html");
@@ -247,16 +246,15 @@ namespace Astroid {
         g_object_unref(contentStream);
 
         /* add html part to message */
-        g_mime_multipart_add (mp, GMIME_OBJECT (html));
+        g_mime_multipart_add (multipartAlt, GMIME_OBJECT (html));
+
+        messagePart = GMIME_OBJECT(multipartAlt);
         g_object_unref (text);
-      } else {
-        /* revert to only text part */
-        g_object_unref (messagePart);
-        messagePart = text;
       }
+      g_object_unref (html);
     }
 
-    g_mime_message_set_mime_part(message, GMIME_OBJECT(messagePart));
+    g_mime_message_set_mime_part(message, messagePart);
     g_object_unref(messagePart);
   }
 
