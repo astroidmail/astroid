@@ -225,7 +225,7 @@ namespace Astroid {
 
           LOG (debug) << "cm: md: got html: " << _html;
 
-          contentStream = g_mime_stream_mem_new_with_buffer(_html.c_str(), _html.size());
+          contentStream = g_mime_stream_mem_new_with_buffer(_html.c_str(), _html.bytes());
         }
 
         g_spawn_close_pid (pid);
