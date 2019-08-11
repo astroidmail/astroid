@@ -176,7 +176,7 @@ namespace Astroid {
         g_mime_object_set_content_type_parameter ((GMimeObject *) html, "format", "flowed");
       }
 
-      GMimeStream * contentStream;
+      GMimeStream * contentStream = g_mime_stream_mem_new();
 
       /* pipe through markdown to html generator */
       int pid;
@@ -224,7 +224,11 @@ namespace Astroid {
 
           LOG (debug) << "cm: md: got html: " << _html;
 
-          contentStream = g_mime_stream_mem_new_with_buffer(_html.c_str(), _html.bytes());
+          if (0 > g_mime_stream_write(contentStream, _html.c_str(), _html.bytes())) {
+            LOG (error) << "cm: md: could not write html string to GMimeStream contentStream";
+            markdown_error   = "Could not write html string to GMimeStream contentStream";
+            markdown_success = false;
+          }
         }
 
         g_spawn_close_pid (pid);
@@ -242,15 +246,15 @@ namespace Astroid {
         g_mime_part_set_content_encoding (html, GMIME_CONTENT_ENCODING_QUOTEDPRINTABLE);
         g_mime_part_set_content (html, contentWrapper);
 
-        g_object_unref(contentWrapper);
-        g_object_unref(contentStream);
-
         /* add html part to message */
         g_mime_multipart_add (multipartAlt, GMIME_OBJECT (html));
 
         messagePart = GMIME_OBJECT(multipartAlt);
+
+        g_object_unref(contentWrapper);
         g_object_unref (text);
       }
+      g_object_unref(contentStream);
       g_object_unref (html);
     }
 
