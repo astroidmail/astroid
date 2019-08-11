@@ -172,10 +172,6 @@ namespace Astroid {
       GMimePart * html = g_mime_part_new_with_type ("text", "html");
       g_mime_object_set_content_type_parameter ((GMimeObject *) html, "charset", astroid->config().get<string>("editor.charset").c_str());
 
-      if (astroid->config().get<bool> ("mail.format_flowed")) {
-        g_mime_object_set_content_type_parameter ((GMimeObject *) html, "format", "flowed");
-      }
-
       GMimeStream * contentStream = g_mime_stream_mem_new();
 
       /* pipe through markdown to html generator */
