@@ -146,8 +146,14 @@ AstroidExtension::AstroidExtension (
   gsize sz;
   const char * caddr = g_variant_get_string ((GVariant *) gaddr, &sz);
 
-  refptr<Gio::UnixSocketAddress> addr = Gio::UnixSocketAddress::create (caddr,
-      Gio::UNIX_SOCKET_ADDRESS_ABSTRACT);
+  refptr<Gio::UnixSocketAddress> addr;
+  if(Gio::UnixSocketAddress::abstract_names_supported ()) {
+	addr = Gio::UnixSocketAddress::create (caddr,
+		Gio::UNIX_SOCKET_ADDRESS_ABSTRACT);
+  } else {
+	refptr<Gio::UnixSocketAddress> addr = Gio::UnixSocketAddress::create (caddr,
+		Gio::UNIX_SOCKET_ADDRESS_PATH);
+  }
 
   /* connect to socket */
   cli = Gio::SocketClient::create ();
