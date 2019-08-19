@@ -158,6 +158,26 @@ astroid_activatable_get_tag_colors (AstroidActivatable * activatable, const char
 }
 
 /**
+ * astroid_activatable_get_queries:
+ * @activatable: A #AstroidActivatable.
+ *
+ * Returns: (element-type utf8) (transfer container): List of lists containing a name and a query.
+ */
+GList *
+astroid_activatable_get_queries (AstroidActivatable * activatable)
+{
+    AstroidActivatableInterface *iface;
+
+    if (!ASTROID_IS_ACTIVATABLE (activatable)) return NULL;
+
+    iface = ASTROID_ACTIVATABLE_GET_IFACE (activatable);
+    if (iface->get_queries)
+        return iface->get_queries (activatable);
+
+  return NULL;
+}
+
+/**
  * astroid_activatable_process:
  * @activatable: A #AstroidActivatable.
  * @fname: A #utf8.

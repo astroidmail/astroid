@@ -28,6 +28,7 @@ struct _AstroidActivatableInterface
   const char * (*get_user_agent) (AstroidActivatable * activatable);
   const char * (*generate_mid) (AstroidActivatable * activatable);
   GList *      (*get_tag_colors) (AstroidActivatable * activatable, const char * tag, const char * bg);
+  GList *      (*get_queries) (AstroidActivatable * activatable);
   GMimeStream * (*process) (AstroidActivatable * activatable, const char * fname);
 
 };
@@ -43,6 +44,7 @@ void astroid_activatable_update_state (AstroidActivatable *activatable);
 const char * astroid_activatable_get_user_agent (AstroidActivatable * activatable);
 const char * astroid_activatable_generate_mid (AstroidActivatable * activatable);
 GList *      astroid_activatable_get_tag_colors (AstroidActivatable * activatable, const char * tag, const char * bg);
+GList *      astroid_activatable_get_queries (AstroidActivatable * activatable);
 GMimeStream * astroid_activatable_process (AstroidActivatable * activatable, const char * fname);
 
 G_END_DECLS
