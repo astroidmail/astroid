@@ -241,6 +241,32 @@ namespace Astroid {
     return clrs;
   }
 
+  std::vector<std::pair<ustring, ustring>> PluginManager::AstroidExtension::get_queries () {
+    std::vector<std::pair<ustring, ustring>> queries = {};
+
+    if (!active || astroid->plugin_manager->disabled) return queries;
+
+    for (PeasPluginInfo * p : astroid->plugin_manager->astroid_plugins) {
+      PeasExtension * pe = peas_extension_set_get_extension (extensions, p);
+
+      GList * list = astroid_activatable_get_queries (ASTROID_ACTIVATABLE(pe));
+
+      if (list != NULL) {
+        std::vector<ustring> _list = Glib::ListHandler<ustring>::list_to_vector (list, Glib::OWNERSHIP_NONE);
+        if (_list.size() % 2 != 0) {
+          return queries;
+        }
+        for (auto it = _list.begin(); it != _list.end(); it += 2) {
+          queries.push_back(std::make_pair(*it, *(it+1)));
+        }
+
+        g_list_free(list);
+      }
+    }
+
+    return queries;
+  }
+
   GMimeStream * PluginManager::AstroidExtension::process (
       const char * fname) {
     if (!active || astroid->plugin_manager->disabled) return NULL;
