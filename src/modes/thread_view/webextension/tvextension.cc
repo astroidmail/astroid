@@ -147,7 +147,11 @@ AstroidExtension::AstroidExtension (
   const char * caddr = g_variant_get_string ((GVariant *) gaddr, &sz);
 
   refptr<Gio::UnixSocketAddress> addr = Gio::UnixSocketAddress::create (caddr,
+# if defined __FreeBSD__ || defined __APPLE__
+      Gio::UNIX_SOCKET_ADDRESS_PATH);
+# elif
       Gio::UNIX_SOCKET_ADDRESS_ABSTRACT);
+# endif
 
   /* connect to socket */
   cli = Gio::SocketClient::create ();

@@ -100,6 +100,9 @@ namespace Astroid {
       std_paths.cache_dir = path(cache) / path("astroid");
     }
 
+    /* socket path */
+    std_paths.socket_dir = std_paths.cache_dir / path("socket");
+
     /* default runtime */
     char * runtime = getenv ("XDG_RUNTIME_HOME");
     if (runtime == NULL) {
@@ -336,6 +339,11 @@ namespace Astroid {
     if (!is_directory(std_paths.runtime_dir)) {
       LOG (warn) << "cf: making runtime dir..";
       create_directories (std_paths.runtime_dir);
+    }
+
+    if (!is_directory(std_paths.socket_dir)) {
+      LOG (warn) << "cf: making socket dir..";
+      create_directories (std_paths.socket_dir);
     }
 
     if (!is_regular_file (std_paths.config_file)) {
