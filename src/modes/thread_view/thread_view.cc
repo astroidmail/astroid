@@ -1385,12 +1385,12 @@ namespace Astroid {
 
     keys.register_key ("a",
         "thread_view.archive_thread",
-        "Toggle 'inbox' tag on the whole thread",
+        "Toggle 'archived' tag on the whole thread",
         [&] (Key) {
 
           if (!edit_mode && focused_message) {
             if (thread) {
-              main_window->actions->doit (refptr<Action>(new ToggleAction(thread, "inbox")));
+              main_window->actions->doit (refptr<Action>(new ToggleAction(thread, "archived")));
             }
           }
 
