@@ -867,11 +867,11 @@ namespace Astroid {
         });
 
     keys->register_key ("a", "thread_index.archive",
-        "Toggle 'archived' tag on thread",
+        "Toggle 'inbox' tag on thread",
         [&] (Key) {
           auto thread = get_current_thread ();
           if (thread) {
-            main_window->actions->doit (refptr<Action>(new ToggleAction(thread, "archived")));
+            main_window->actions->doit (refptr<Action>(new ToggleAction(thread, "inbox")));
           }
 
           return true;
@@ -1067,7 +1067,7 @@ namespace Astroid {
           refptr<Action> a;
           switch (maction) {
             case MArchive:
-              a = refptr<Action>(new ToggleAction(threads, "archived"));
+              a = refptr<Action>(new ToggleAction(threads, "inbox"));
               break;
 
             case MFlag:
@@ -1200,7 +1200,7 @@ namespace Astroid {
       case Archive:
         {
           if (thread) {
-            main_window->actions->doit (refptr<Action>(new ToggleAction(thread, "archived")));
+            main_window->actions->doit (refptr<Action>(new ToggleAction(thread, "inbox")));
           }
         }
         break;
