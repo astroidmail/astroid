@@ -1,6 +1,7 @@
 # include <iostream>
 # include <stdlib.h>
 # include <functional>
+# include <sys/stat.h>
 
 # include <boost/filesystem.hpp>
 # include <boost/filesystem/operations.hpp>
@@ -343,7 +344,9 @@ namespace Astroid {
 
     if (!is_directory(std_paths.socket_dir)) {
       LOG (warn) << "cf: making socket dir..";
+      mode_t um = umask (077);
       create_directories (std_paths.socket_dir);
+      umask (um);
     }
 
     if (!is_regular_file (std_paths.config_file)) {
