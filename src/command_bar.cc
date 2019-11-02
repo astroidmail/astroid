@@ -27,6 +27,7 @@ namespace Astroid {
 
     hbox.pack_start (mode_label, false, false, 5);
     hbox.pack_start (entry, true, true, 5);
+    entry.set_max_width_chars(600);
     add(hbox);
 
     entry.signal_activate ().connect (
