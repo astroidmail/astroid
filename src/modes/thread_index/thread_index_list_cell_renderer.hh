@@ -127,17 +127,20 @@ namespace Astroid {
       int render_date (
           const ::Cairo::RefPtr< ::Cairo::Context>&cr,
           Gtk::Widget &widget,
-          const Gdk::Rectangle &cell_area );
+          const Gdk::Rectangle &cell_area,
+          Gtk::CellRendererState flags );
 
       void render_message_count (
           const ::Cairo::RefPtr< ::Cairo::Context>&cr,
           Gtk::Widget &widget,
-          const Gdk::Rectangle &cell_area );
+          const Gdk::Rectangle &cell_area,
+          Gtk::CellRendererState flags );
 
       void render_authors (
           const ::Cairo::RefPtr< ::Cairo::Context>&cr,
           Gtk::Widget &widget,
-          const Gdk::Rectangle &cell_area );
+          const Gdk::Rectangle &cell_area,
+          Gtk::CellRendererState flags );
 
       void render_delimiter (
           const ::Cairo::RefPtr< ::Cairo::Context>&cr,
