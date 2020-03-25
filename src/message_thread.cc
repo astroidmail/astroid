@@ -383,7 +383,7 @@ namespace Astroid {
       bool use = false;
 
       if (c->siblings.size() >= 1) {
-        if (c->is_content_type ("text", "plain") || c->is_content_type ("text", "html")) {
+        if (c->is_content_type ("text", "plain")) {
           use = true;
         } else {
           /* check if there are any other preferred */
