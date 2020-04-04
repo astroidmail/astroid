@@ -20,5 +20,4 @@ notmuch new
 
 # Here you can process the mail in any way you see fit. See the following link
 # for examples:
-# https://github.com/astroidmail/astroid/wiki/Processing-mail
-
+# https://github.com/astroidmail/astroid/wiki/Advanced-Polling-and-Processing-mail#automatic-tagging

@@ -479,7 +479,7 @@ namespace Astroid {
   }
 
   MainWindow * Astroid::open_new_window (bool open_defaults) {
-    LOG (warn) << "astroid: starting a new window..";
+    LOG (info) << "astroid: starting a new window..";
 
     /* set up a new main window */
 
@@ -493,6 +493,17 @@ namespace Astroid {
         mw->add_mode (s);
       }
 
+# ifndef DISABLE_PLUGINS
+      auto queries = plugin_manager->astroid_extension->get_queries ();
+      LOG (info) << "extension queries: " << queries.size();
+      if (queries.size() > 0) {
+        for (auto query : queries) {
+          Mode * ti = new ThreadIndex(mw, query.second, query.first);
+          ti->invincible = true;
+          mw->add_mode(ti);
+        }
+      } else {
+# endif
       ptree qpt = config ("startup.queries");
 
       for (const auto &kv : qpt) {
@@ -504,6 +515,9 @@ namespace Astroid {
         ti->invincible = true; // set startup queries to be invincible
         mw->add_mode (ti);
       }
+# ifndef DISABLE_PLUGINS
+      }
+# endif
 
       mw->set_active (0);
     }

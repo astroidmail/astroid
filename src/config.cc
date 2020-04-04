@@ -1,6 +1,7 @@
 # include <iostream>
 # include <stdlib.h>
 # include <functional>
+# include <sys/stat.h>
 
 # include <boost/filesystem.hpp>
 # include <boost/filesystem/operations.hpp>
@@ -100,6 +101,9 @@ namespace Astroid {
       std_paths.cache_dir = path(cache) / path("astroid");
     }
 
+    /* socket path */
+    std_paths.socket_dir = std_paths.cache_dir / path("socket");
+
     /* default runtime */
     char * runtime = getenv ("XDG_RUNTIME_HOME");
     if (runtime == NULL) {
@@ -156,7 +160,12 @@ namespace Astroid {
   ptree Config::setup_default_config (bool initial) {
     ptree default_config;
     default_config.put ("astroid.config.version", CONFIG_VERSION);
+
     std::string nm_cfg = path(std_paths.home / path (".notmuch-config")).string();
+    char* nm_env = getenv("NOTMUCH_CONFIG");
+    if (nm_env != NULL) {
+      nm_cfg.assign(nm_env, strlen(nm_env));
+    }
     default_config.put ("astroid.notmuch_config" , nm_cfg);
 
     default_config.put ("astroid.debug.dryrun_sending", false);
@@ -188,6 +197,8 @@ namespace Astroid {
     default_config.put ("general.time.clock_format", "local"); // or 24h, 12h
     default_config.put ("general.time.same_year", "%b %-e");
     default_config.put ("general.time.diff_year", "%x");
+
+    default_config.put ("general.tagbar_move", "tag");
 
     /* thread index cell theme */
     default_config.put ("thread_index.cell.font_description", "default");
@@ -227,6 +238,8 @@ namespace Astroid {
 
     default_config.put ("editor.markdown_processor", "cmark");
     default_config.put ("editor.markdown_on", false); // default
+
+    default_config.put ("mail.reply.quote_processor", "w3m -dump -T text/html"); // e.g. lynx -dump
 
     /* mail composition */
     default_config.put ("mail.reply.quote_line", "Excerpts from %1's message of %2:"); // %1 = author, %2 = pretty_verbose_date
@@ -327,6 +340,13 @@ namespace Astroid {
     if (!is_directory(std_paths.runtime_dir)) {
       LOG (warn) << "cf: making runtime dir..";
       create_directories (std_paths.runtime_dir);
+    }
+
+    if (!is_directory(std_paths.socket_dir)) {
+      LOG (warn) << "cf: making socket dir..";
+      mode_t um = umask (077);
+      create_directories (std_paths.socket_dir);
+      umask (um);
     }
 
     if (!is_regular_file (std_paths.config_file)) {

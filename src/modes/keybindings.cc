@@ -436,7 +436,7 @@ namespace Astroid {
             "key: %1 (%2) already exists in map with name: %3, overwriting.",
             k.str (), k.name, r.first->first.name);
 
-        LOG (warn) << wrr;
+        LOG (info) << wrr;
 
         keys.erase (r.first);
         r = keys.insert (KeyBinding (k, t));

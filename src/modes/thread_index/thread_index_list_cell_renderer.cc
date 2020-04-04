@@ -108,12 +108,12 @@ namespace Astroid {
     }
 
     render_background (cr, widget, background_area, flags);
-    render_date (cr, widget, cell_area); // returns height
+    render_date (cr, widget, cell_area, flags); // returns height
 
     if (thread->total_messages > 1)
-      render_message_count (cr, widget, cell_area);
+      render_message_count (cr, widget, cell_area, flags);
 
-    render_authors (cr, widget, cell_area);
+    render_authors (cr, widget, cell_area, flags);
 
     tags_width = render_tags (cr, widget, cell_area, flags); // returns width
     subject_start = tags_start + tags_width / Pango::SCALE + ((tags_width > 0) ? padding : 0);
@@ -383,7 +383,8 @@ namespace Astroid {
   int ThreadIndexListCellRenderer::render_date ( // {{{
       const ::Cairo::RefPtr< ::Cairo::Context>&cr,
       Gtk::Widget &widget,
-      const Gdk::Rectangle &cell_area ) {
+      const Gdk::Rectangle &cell_area,
+      Gtk::CellRendererState flags) {
 
     ustring date = Date::pretty_print (thread->newest_date);
 
@@ -393,7 +394,12 @@ namespace Astroid {
 
     /* set color */
     Glib::RefPtr<Gtk::StyleContext> stylecontext = widget.get_style_context();
-    Gdk::RGBA color = stylecontext->get_color(Gtk::STATE_FLAG_NORMAL);
+    Gdk::RGBA color;
+    if ((flags & Gtk::CELL_RENDERER_SELECTED) != 0) {
+        color = stylecontext->get_color(Gtk::STATE_FLAG_SELECTED);
+    } else {
+        color = stylecontext->get_color(Gtk::STATE_FLAG_NORMAL);
+    }
     cr->set_source_rgb (color.get_red(), color.get_green(), color.get_blue());
 
     /* align in the middle */
@@ -414,7 +420,8 @@ namespace Astroid {
   void ThreadIndexListCellRenderer::render_message_count ( // {{{
       const ::Cairo::RefPtr< ::Cairo::Context>&cr,
       Gtk::Widget &widget,
-      const Gdk::Rectangle &cell_area ) {
+      const Gdk::Rectangle &cell_area,
+      Gtk::CellRendererState flags) {
 
 # define BUFLEN 24
     char buf[BUFLEN];
@@ -427,7 +434,12 @@ namespace Astroid {
 
     /* set color */
     Glib::RefPtr<Gtk::StyleContext> stylecontext = widget.get_style_context();
-    Gdk::RGBA color = stylecontext->get_color(Gtk::STATE_FLAG_NORMAL);
+    Gdk::RGBA color;
+    if ((flags & Gtk::CELL_RENDERER_SELECTED) != 0) {
+        color = stylecontext->get_color(Gtk::STATE_FLAG_SELECTED);
+    } else {
+        color = stylecontext->get_color(Gtk::STATE_FLAG_NORMAL);
+    }
     cr->set_source_rgb (color.get_red(), color.get_green(), color.get_blue());
 
     /* align in the middle */
@@ -446,7 +458,8 @@ namespace Astroid {
   void ThreadIndexListCellRenderer::render_authors ( // {{{
       const ::Cairo::RefPtr< ::Cairo::Context>&cr,
       Gtk::Widget &widget,
-      const Gdk::Rectangle &cell_area ) {
+      const Gdk::Rectangle &cell_area,
+      Gtk::CellRendererState flags) {
 
     /* format authors string */
     ustring authors;
@@ -478,7 +491,15 @@ namespace Astroid {
 
         ustring an = get<0>(a);
 
-        an = an.substr (0, an.find_first_of (", @"));
+        size_t pos = an.find_first_of (",. @");
+        if (an[pos] == ',' || an[pos] == '.') { // last name, first name format or initial/title.
+            an = an.substr (pos + 1, an.size ());
+            UstringUtils::trim_left (an);
+            pos = an.find_first_of (" @");
+            an = an.substr (0, pos);
+        } else {
+            an = an.substr (0, pos);
+        }
 
         int tlen = static_cast<int>(an.size());
         if ((len + tlen) >= authors_len) {
@@ -525,7 +546,12 @@ namespace Astroid {
 
     /* set color */
     Glib::RefPtr<Gtk::StyleContext> stylecontext = widget.get_style_context();
-    Gdk::RGBA color = stylecontext->get_color(Gtk::STATE_FLAG_NORMAL);
+    Gdk::RGBA color;
+    if ((flags & Gtk::CELL_RENDERER_SELECTED) != 0) {
+        color = stylecontext->get_color(Gtk::STATE_FLAG_SELECTED);
+    } else {
+        color = stylecontext->get_color(Gtk::STATE_FLAG_NORMAL);
+    }
     cr->set_source_rgb (color.get_red(), color.get_green(), color.get_blue());
 
     /* align in the middle */

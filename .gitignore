@@ -23,4 +23,5 @@ tmp-*
 build/*
 _build/*
 compile_commands.json
+.vagrant
 

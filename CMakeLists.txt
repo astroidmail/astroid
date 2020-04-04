@@ -40,13 +40,13 @@ set (CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
   # debug build - retrieve current project version from git
   execute_process (
-    COMMAND git describe --abbrev=8 --tags --always
+    COMMAND git -C "${CMAKE_SOURCE_DIR}" describe --abbrev=8 --tags --always
     OUTPUT_VARIABLE PROJECT_VERSION
     OUTPUT_STRIP_TRAILING_WHITESPACE
     )
 else ()
   # release build - use hard-coded version string
-  set ( PROJECT_VERSION "0.14.0" )
+  set ( PROJECT_VERSION "0.15.0" )
 endif ()
 
 ##
@@ -84,6 +84,15 @@ if (Notmuch_INDEX_FILE_API)
 endif()
 
 find_package ( PkgConfig REQUIRED )
+
+if(APPLE)
+  # with homebrew, libffi is keg-only, i.e. not symlinked into
+  # /usr/local; hence we have to tell pkg-config where to look
+  # for it
+  list ( APPEND CMAKE_PREFIX_PATH /usr/local/opt/libffi )
+  pkg_check_modules (LIBFFI     REQUIRED libffi>=3.0)
+endif()
+
 pkg_check_modules (GTKMM3     REQUIRED  gtkmm-3.0>=3.10)
 pkg_check_modules (GLIBMM2    REQUIRED  glibmm-2.4)
 pkg_check_modules (WEBKIT2GTK REQUIRED  webkit2gtk-4.0>=2.22)
@@ -150,6 +159,7 @@ include_directories (
   ${SASS_INCLUDE_DIRS}
   ${Boost_INCLUDE_DIRS}
   ${PROTOBUF_INCLUDE_DIRS}
+  ${Notmuch_INCLUDE_DIRS}
   )
 
 add_compile_options (
@@ -327,6 +337,7 @@ target_link_libraries (
   ${GLIBMM2_LDFLAGS}
   ${GIOMM2_LDFLAGS}
   ${GIOUINX_LDFLAGS}
+  ${LIBSOUP_LDFLAGS}
   ${GMIME_LDFLAGS}
   ${VTE2_LDFLAGS}
   ${SASS_LDFLAGS}
@@ -413,7 +424,7 @@ if (NOT DISABLE_DOCS)
       message (WARNING "Falling back to 'ronn' for man page generation.")
       add_custom_command (
         TARGET astroid
-        COMMAND ${RONN} -rp ${CMAKE_SOURCE_DIR}/doc/astroid.1.scd | gzip > ${CMAKE_BINARY_DIR}/astroid.1.gz
+        COMMAND ${RONN} --roff --pipe ${CMAKE_SOURCE_DIR}/doc/astroid.1.scd | gzip > ${CMAKE_BINARY_DIR}/astroid.1.gz
         COMMENT "Generating man page (ronn)")
     else ()
       message (FATAL_ERROR "Neither 'scdoc' nor 'ronn' installed. One is required for man page generation.")
@@ -450,12 +461,6 @@ if(DISABLE_PLUGINS)
   add_definitions ( -DDISABLE_PLUGINS )
   message (STATUS "Disabling plugins.")
 else()
-  if(APPLE)
-    # with homebrew, libffi is keg-only, i.e. not symlinked into
-    # /usr/local; hence we have to tell pkg-config where to look for
-    # it
-    list ( APPEND CMAKE_PREFIX_PATH /usr/local/opt/libffi )
-  endif()
   include (FindGObjectIntrospection)   # this performs a pkg_check_modules()
   pkg_check_modules (PEAS libpeas-1.0>=1.0.0)
   if(INTROSPECTION_FOUND AND PEAS_FOUND)

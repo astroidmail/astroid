@@ -203,6 +203,8 @@ namespace Astroid {
       virtual void release_modal () override;
       bool on_key_press_event (GdkEventKey *event) override;
 
+      void refresh ();
+
     private:
       Keybindings multi_keys;
       Keybindings next_multi;

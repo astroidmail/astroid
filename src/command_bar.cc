@@ -27,16 +27,20 @@ namespace Astroid {
 
     hbox.pack_start (mode_label, false, false, 5);
     hbox.pack_start (entry, true, true, 5);
-    entry.set_size_request (600, -1);
+    entry.set_max_width_chars(600);
     add(hbox);
 
     entry.signal_activate ().connect (
         sigc::mem_fun (*this, &CommandBar::on_entry_activated)
         );
 
-    entry.signal_key_press_event ().connect (
-        sigc::mem_fun (this, &CommandBar::entry_key_press)
-        );
+    entry.signal_event ().connect ([&] (GdkEvent* event)->bool {
+        if (event->type == GDK_KEY_PRESS) {
+            return entry_key_press ((GdkEventKey *) event);
+        } else {
+            return false;
+        }
+    });
 
     entry.signal_changed ().connect (
         sigc::mem_fun (this, &CommandBar::entry_changed));
@@ -118,6 +122,13 @@ namespace Astroid {
       std::function<void(ustring)> f) {
     mode = m;
 
+    ustring edit_mode_str = astroid->config ().get<string> ("general.tagbar_move");
+    if (edit_mode_str == "tag") {
+      edit_mode = EditMode::Tags;
+    } else {
+      edit_mode = EditMode::Chars;
+    }
+
     reset_bar ();
 
     switch (mode) {
@@ -133,7 +144,6 @@ namespace Astroid {
         {
           mode_label.set_text ("");
           entry.set_icon_from_icon_name ("edit-find-symbolic");
-
           start_searching (cmd);
         }
         break;
@@ -143,7 +153,6 @@ namespace Astroid {
         {
           mode_label.set_text ("Find text");
           entry.set_icon_from_icon_name ("edit-find-symbolic");
-
           start_text_searching (cmd);
         }
         break;
@@ -152,7 +161,6 @@ namespace Astroid {
         {
           mode_label.set_text ("Change tags");
           entry.set_icon_from_icon_name ("system-run-symbolic");
-
           start_tagging (cmd);
         }
         break;
@@ -161,12 +169,10 @@ namespace Astroid {
         {
           mode_label.set_text ("Change tags (+/-)");
           entry.set_icon_from_icon_name ("system-run-symbolic");
-
           start_difftagging (cmd);
         }
         break;
     }
-
     callback = f;
     entry.set_position (-1);
     set_search_mode (true);
@@ -177,14 +183,13 @@ namespace Astroid {
   }
 
   void CommandBar::start_generic (ustring cmd) {
-    entry.set_text (cmd);
     entry.set_completion (refptr<Gtk::EntryCompletion> ());
     current_completion.reset ();
+
+    entry.set_text (cmd);
   }
 
   void CommandBar::start_searching (ustring searchstring) {
-    entry.set_text (searchstring);
-
     /* set up completion */
     search_completion->load_tags (Db::tags);
     search_completion->load_history ();
@@ -193,18 +198,20 @@ namespace Astroid {
     entry.set_completion (search_completion);
     current_completion = search_completion;
 
-    search_completion->color_tags ();
+    search_completion->color_tags (edit_mode);
+
+    entry.set_text (searchstring);
   }
 
   void CommandBar::start_text_searching (ustring searchstring) {
-    entry.set_text (searchstring);
-
     /* set up completion */
     search_completion->load_history ();
     search_completion->orig_text = "";
     search_completion->history_pos = 0;
     entry.set_completion (text_search_completion);
     current_completion = text_search_completion;
+
+    entry.set_text (searchstring);
   }
 
   void CommandBar::start_tagging (ustring tagstring) {
@@ -215,7 +222,7 @@ namespace Astroid {
 
     entry.set_text (tagstring);
 
-    tag_completion->color_tags ();
+    tag_completion->color_tags (edit_mode);
   }
 
   void CommandBar::start_difftagging (ustring tagstring) {
@@ -226,13 +233,22 @@ namespace Astroid {
 
     entry.set_text (tagstring);
 
-    difftag_completion->color_tags ();
+    difftag_completion->color_tags (edit_mode);
   }
 
   bool CommandBar::entry_key_press (GdkEventKey * event) {
     LOG (debug) << "cb: got key: " << event->keyval;
 
     switch (event->keyval) {
+      case GDK_KEY_Control_L:
+      case GDK_KEY_Control_R:
+        {
+          edit_mode = edit_mode == EditMode::Tags ? EditMode::Chars : EditMode::Tags;
+          entry_changed ();
+
+          return true;
+        }
+
       case GDK_KEY_Tab:
         {
           /* grab the next completion */
@@ -244,6 +260,77 @@ namespace Astroid {
 
           return true;
         }
+
+      case GDK_KEY_Left:
+        {
+          if (edit_mode == EditMode::Tags && (mode == CommandMode::Tag || mode == CommandMode::DiffTag)) {
+            ustring txt = entry.get_text ();
+            ustring_sz pos = entry.get_position ();
+            // normal behavior if we're not in between tags
+            if (txt[pos] != ' ' && pos > 0 && pos < txt.size ()) return false;
+            // skip two spaces at the end
+            if (pos == txt.size ()) pos--;
+            if (pos > 0) pos--;
+            while (txt[pos] != ' ' && pos > 0) pos--;
+            entry.set_position (pos);
+            return true;
+          }
+        }
+        break;
+
+      case GDK_KEY_BackSpace:
+        {
+          if (edit_mode == EditMode::Tags && (mode == CommandMode::Tag || mode == CommandMode::DiffTag)) {
+            ustring txt = entry.get_text ();
+            ustring_sz end = entry.get_position ();
+            // normal behavior if we're not in between tags
+            if (txt[end] != ' ' && end > 0 && end < txt.size ()) return false;
+            // normal behavior if we're at the end and the character is not a
+            // space -- assume editing tag
+            if (txt[end] != ' ' && end == txt.size ()) return false;
+            ustring_sz start = end;
+            // skip two spaces at the end
+            if (start == txt.size ()) start--;
+            if (start > 0) start--;
+            while (txt[start] != ' ' && start > 0) start--;
+            entry.set_text (txt.substr (0, start) + txt.substr (end, txt.size () - end));
+            entry.set_position (start);
+            return true;
+          }
+        }
+        break;
+
+      case GDK_KEY_Right:
+        {
+          if (edit_mode == EditMode::Tags && (mode == CommandMode::Tag || mode == CommandMode::DiffTag)) {
+            ustring txt = entry.get_text ();
+            ustring_sz pos = entry.get_position ();
+            // normal behavior if we're not in between tags
+            if (txt[pos] != ' ' && pos > 0 && pos < txt.size ()) return false;
+            if (pos < txt.size ()) pos++;
+            while (txt[pos] != ' ' && pos < txt.size ()) pos++;
+            entry.set_position (pos);
+            return true;
+          }
+        }
+        break;
+
+      case GDK_KEY_Delete:
+        {
+          if (edit_mode == EditMode::Tags && (mode == CommandMode::Tag || mode == CommandMode::DiffTag)) {
+            ustring txt = entry.get_text ();
+            ustring_sz start = entry.get_position ();
+            // normal behavior if we're not in between tags
+            if (txt[start] != ' ' && start > 0 && start < txt.size ()) return false;
+            ustring_sz end = start;
+            if (end < txt.size ()) end++;
+            while (txt[end] != ' ' && end < txt.size ()) end++;
+            entry.set_text (txt.substr (0, start) + txt.substr (end, txt.size () - end));
+            entry.set_position (start);
+            return true;
+          }
+        }
+        break;
 
       case GDK_KEY_Up:
         {
@@ -264,8 +351,6 @@ namespace Astroid {
             }
 
             return true;
-          } else {
-            return false;
           }
         }
         break;
@@ -288,8 +373,9 @@ namespace Astroid {
             }
 
             return true;
-          } else {
-            return false;
+          }
+          if (mode == CommandMode::Tag || mode == CommandMode::DiffTag) {
+            return true;
           }
         }
         break;
@@ -321,7 +407,7 @@ namespace Astroid {
     } else if (mode == CommandMode::Tag || mode == CommandMode::DiffTag || mode == CommandMode::Search) {
 
       if (current_completion)
-        refptr<TagCompletion>::cast_dynamic (current_completion)->color_tags ();
+        refptr<TagCompletion>::cast_dynamic (current_completion)->color_tags (edit_mode);
 
     }
   }
@@ -511,7 +597,7 @@ namespace Astroid {
     return true;
   }
 
-  void CommandBar::TagCompletion::color_tags () {
+  void CommandBar::TagCompletion::color_tags (EditMode edit_mode) {
     Gtk::Entry * entry = get_entry ();
     if (entry == NULL) return;
 
@@ -547,7 +633,7 @@ namespace Astroid {
       /* grapheme positions */
       ustring_sz gstart = txt.substr (0, pos).bytes ();
 
-      color_tag (tag, gstart, attrs);
+      color_tag (tag, gstart, attrs, edit_mode);
 
       pos = end+1;
     }
@@ -556,7 +642,7 @@ namespace Astroid {
   }
 
   void CommandBar::TagCompletion::color_tag (ustring tag,
-    ustring_sz gstart, Pango::AttrList &attrs) {
+    ustring_sz gstart, Pango::AttrList &attrs, EditMode edit_mode) {
 
     unsigned char cv[3] = { (unsigned char) (canvas_color.get_red_u ()   * 255 / 65535),
                             (unsigned char) (canvas_color.get_green_u () * 255 / 65535),
@@ -567,7 +653,7 @@ namespace Astroid {
     auto fg = colors.first;
     auto bg = colors.second;
 
-    ustring_sz gend   = gstart + tag.bytes ();
+    ustring_sz gend = gstart + tag.bytes ();
 
     auto fga = Pango::Attribute::Attribute::create_attr_foreground (fg.get_red_u (), fg.get_green_u (), fg.get_blue_u ());
     fga.set_start_index (gstart);
@@ -580,6 +666,13 @@ namespace Astroid {
     auto bgalpha = Pango::Attribute::Attribute::create_attr_background_alpha (bg.get_alpha_u ());
     bgalpha.set_start_index (gstart);
     bgalpha.set_end_index   (gend);
+
+    if (edit_mode == EditMode::Chars) {
+      auto underline = Pango::Attribute::create_attr_underline (Pango::UNDERLINE_SINGLE);
+      underline.set_start_index (gstart);
+      underline.set_end_index (gend);
+      attrs.insert (underline);
+    }
 
     attrs.insert (bga);
     attrs.insert (bgalpha);
@@ -716,7 +809,7 @@ namespace Astroid {
     return true;
   }
 
-  void CommandBar::SearchCompletion::color_tags () {
+  void CommandBar::SearchCompletion::color_tags (EditMode edit_mode) {
     Gtk::Entry * entry = get_entry ();
     if (entry == NULL) return;
 
@@ -756,7 +849,7 @@ namespace Astroid {
       /* grapheme positions */
       ustring_sz gstart = txt.substr (0, pos).bytes ();
 
-      color_tag (tag, gstart, attrs);
+      color_tag (tag, gstart, attrs, edit_mode);
 
       pos = end+1;
     }

@@ -56,7 +56,7 @@ namespace Astroid {
     quoted  << quoting_a.raw ()
             << endl;
 
-    string vt = msg->plain_text (false);
+    string vt = msg->quote ();
     stringstream sstr (vt);
     while (sstr.good()) {
       string line;

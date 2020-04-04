@@ -112,7 +112,10 @@ namespace Astroid {
           "settings", websettings,
           NULL));
 
+    if (g_object_is_floating (webview)) g_object_ref_sink (webview);
+
     gtk_box_pack_start (GTK_BOX (this->gobj ()), GTK_WIDGET (webview), true, true, 0);
+
 
     g_signal_connect (webview, "load-changed",
         G_CALLBACK(ThreadView_on_load_changed),
@@ -141,7 +144,9 @@ namespace Astroid {
 
   ThreadView::~ThreadView () { //
     LOG (debug) << "tv: deconstruct.";
+    g_object_unref (context);
     g_object_unref (websettings);
+    g_object_unref (webview);
   }
 
   void ThreadView::pre_close () {
@@ -551,20 +556,27 @@ namespace Astroid {
     else return Mode::on_key_press_event (event);
   }
 
+  void ThreadView::refresh () {
+    LOG (debug) << "tv: reloading...";
+    theme.load (true);
+
+    Db db (Db::DbMode::DATABASE_READ_ONLY);
+    auto _mthread = refptr<MessageThread>(new MessageThread (thread));
+    _mthread->load_messages (&db);
+    load_message_thread (_mthread);
+  }
+
   void ThreadView::register_keys () { // {{{
     keys.title = "Thread View";
 
-# ifdef DEBUG_WEBKIT
-    keys.register_key ("C-r", "thread_view.reload",
+    keys.register_key ("$", "thread_view.reload",
         "Reload everything",
         [&] (Key) {
-          LOG (debug) << "tv: reloading..";
-          theme.load (true);
-
-          load_message_thread (mthread);
+          refresh();
           return true;
         });
 
+# ifdef DEBUG_WEBKIT
     keys.register_key ("C-I", "thread_view.show_web_inspector",
         "Show web inspector",
         [&] (Key) {
@@ -1916,7 +1928,7 @@ namespace Astroid {
                   refptr<MessageThread> mt = refptr<MessageThread> (new MessageThread ());
                   mt->add_message (c);
 
-                  ThreadView * tv = new ThreadView (main_window);
+                  ThreadView * tv = Gtk::manage(new ThreadView (main_window));
                   tv->load_message_thread (mt);
 
                   main_window->add_mode (tv);

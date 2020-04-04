@@ -67,7 +67,7 @@ namespace Astroid {
         quoted << "Cc: " << AddressList(msg->cc()).str () << endl;
       quoted << endl;
 
-      string vt = msg->plain_text (false);
+      string vt = msg->quote ();
       quoted << vt;
 
       body = ustring(quoted.str());

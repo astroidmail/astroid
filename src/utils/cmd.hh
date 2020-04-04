@@ -1,11 +1,7 @@
 # pragma once
 
 # include "astroid.hh"
-
-# include <mutex>
-# include <chrono>
-# include <glibmm/threads.h>
-# include <glibmm/iochannel.h>
+# include <string>
 
 namespace Astroid {
   class Cmd {
@@ -25,8 +21,12 @@ namespace Astroid {
       ustring undo_cmd;
 
       int execute (bool undo); /* currently only in sync */
+      int execute (bool undo, std::string& _stdout, std::string& _stderr); /* currently only in sync */
 
       ustring substitute (ustring);
+
+    public:
+      static bool pipe (ustring cmd, const ustring& _stdin, ustring& _stdout, ustring& _stderr);
   };
 }
 

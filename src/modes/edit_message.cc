@@ -336,7 +336,7 @@ namespace Astroid {
         "View raw message",
         [&] (Key) {
           /* view raw source of to be sent message */
-          ComposeMessage * c = make_message ();
+          auto c = make_message ();
 
           GMimeStream * m = g_mime_stream_mem_new ();
           assert (g_mime_stream_mem_get_owner (GMIME_STREAM_MEM(m)) == true);
@@ -345,8 +345,6 @@ namespace Astroid {
           main_window->add_mode (new RawMessage (main_window, refptr<Message>(new UnprocessedMessage(m))));
 
           g_object_unref (m);
-
-          delete c;
 
           return true;
         });
@@ -549,6 +547,10 @@ namespace Astroid {
     }
   }
 
+  void EditMessage::pre_close () {
+    ((Mode*) thread_view)->pre_close ();
+  }
+
   void EditMessage::close (bool force) {
     if (sending_in_progress.load ()) {
       /* block closing the window while sending */
@@ -581,7 +583,7 @@ namespace Astroid {
   bool EditMessage::save_draft () {
     LOG (info) << "em: saving draft..";
     draft_saved = false;
-    ComposeMessage * c = make_draft_message ();
+    auto c = make_draft_message ();
     ustring fname;
 
     bool add_to_notmuch = false;
@@ -593,7 +595,6 @@ namespace Astroid {
       if (!is_directory(ddir)) {
         LOG (error) << "em: no draft directory specified!";
         set_warning ("draft could not be saved, no suitable draft directory for account specified.");
-        delete c;
         return false;
 
       } else {
@@ -616,7 +617,6 @@ namespace Astroid {
             new AddDraftMessage (fname)));
     }
 
-    delete c;
     draft_saved = true;
     return true;
   }
@@ -784,7 +784,7 @@ namespace Astroid {
     }
 
     /* make message */
-    ComposeMessage * c = setup_message ();
+    auto c = setup_message ();
 
     /* set account selector to from address email */
     set_from (c->account);
@@ -819,7 +819,6 @@ namespace Astroid {
     thread_view->load_message_thread (msgt);
 
     g_object_unref (m);
-    delete c;
 
     in_read = false;
   }
@@ -1046,10 +1045,22 @@ namespace Astroid {
     if (attachments.empty () && !attachment_words.empty ()) {
       ustring bl = body.lowercase ();
 
+      /* strip quoted lines */
+      ostringstream nonquoted;
+      stringstream sstr (bl);
+      while (sstr.good()) {
+        string line;
+        getline (sstr, line);
+
+        if (line[0] != '>')
+          nonquoted << line << endl;
+      }
+      ustring nqb = ustring(nonquoted.str());
+
       if (any_of (attachment_words.begin (),
                   attachment_words.end (),
                   [&] (ustring w) {
-                    return bl.find (w) != string::npos;
+                    return nqb.find (w) != string::npos;
                   }))
       {
         set_warning ("Attachments have been mentioned in the message, but none are attached, do you still want to send?");
@@ -1072,21 +1083,18 @@ namespace Astroid {
 
     on_tv_ready ();
 
-    ComposeMessage * c = make_message ();
+    auto c = make_message ();
 
     if (c == NULL) return false;
 
     if (c->markdown && !c->markdown_success) {
       set_warning ("Cannot send, failed processing markdown: " + UstringUtils::replace (c->markdown_error, "\n", "<br />"));
-      delete c;
       return false;
     }
 
     if (c->encrypt || c->sign) {
       if (!c->encryption_success) {
         set_warning ("Cannot send, failed encrypting: " + UstringUtils::replace (c->encryption_error, "\n", "<br />"));
-
-        delete c;
         return false;
       }
     }
@@ -1112,7 +1120,7 @@ namespace Astroid {
 
     c->send_threaded ();
 
-    sending_message = c;
+    sending_message = std::move (c);
 
     return true;
   }
@@ -1162,15 +1170,14 @@ namespace Astroid {
     message_sending_status_icon.set (pixbuf);
     sending_in_progress.store (false);
 
+    sending_message.reset();
+
+    emit_message_sent_attempt (result_from_sender);
+
     if (result_from_sender && (astroid->config().get<bool> ("mail.close_on_success"))) {
       LOG (info) << "cm: sending successful, auto-closing window";
       close (true);
     }
-
-
-    delete sending_message;
-
-    emit_message_sent_attempt (result_from_sender);
   }
 
   void EditMessage::lock_message_after_send () {
@@ -1179,8 +1186,8 @@ namespace Astroid {
     fields_hide ();
   }
 
-  ComposeMessage * EditMessage::setup_message () {
-    ComposeMessage * c = new ComposeMessage ();
+  std::unique_ptr<ComposeMessage> EditMessage::setup_message () {
+    auto c = std::unique_ptr<ComposeMessage>(new ComposeMessage ());
 
     c->load_message (msg_id, tmpfile_path.c_str());
 
@@ -1194,7 +1201,7 @@ namespace Astroid {
     return c;
   }
 
-  void EditMessage::finalize_message (ComposeMessage * c) {
+  void EditMessage::finalize_message (std::unique_ptr<ComposeMessage> &c) {
     /* these options are not known before setup_message is done, and the
      * new account information has been applied to the editor */
     if (c->account->has_signature && switch_signature->get_active ()) {
@@ -1213,16 +1220,16 @@ namespace Astroid {
     c->finalize ();
   }
 
-  ComposeMessage * EditMessage::make_message () {
+  std::unique_ptr<ComposeMessage> EditMessage::make_message () {
     return make_message (false);
   }
 
-  ComposeMessage * EditMessage::make_draft_message () {
+  std::unique_ptr<ComposeMessage> EditMessage::make_draft_message () {
     return make_message (true);
   }
 
-  ComposeMessage * EditMessage::make_message (bool draft = false) {
-    ComposeMessage * c = setup_message ();
+  std::unique_ptr<ComposeMessage> EditMessage::make_message (bool draft = false) {
+    auto c = setup_message ();
     bool sigstate = c->account->has_signature;
 
     if (draft) {
@@ -1251,7 +1258,7 @@ namespace Astroid {
 
     if (tmpfile.fail()) {
       LOG (error) << "em: error: could not create tmpfile!";
-      throw runtime_error ("em: coult not create tmpfile!");
+      throw runtime_error ("em: could not create tmpfile!");
     }
 
     tmpfile.close ();

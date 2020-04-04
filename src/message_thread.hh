@@ -68,6 +68,7 @@ namespace Astroid {
       std::vector<ustring> tags;
 
       ustring plain_text (bool fallback_html = false);
+      ustring quote ();
       std::vector<refptr<Chunk>> attachments ();
       refptr<Chunk> get_chunk_by_id (int id);
 

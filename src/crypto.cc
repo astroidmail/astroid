@@ -248,7 +248,11 @@ namespace Astroid {
         mo,
         sign,
         userid.c_str (),
+# if (GMIME_MAJOR_VERSION < 3)
         GMIME_ENCRYPT_NONE,
+# else
+        always_trust ? GMIME_ENCRYPT_ALWAYS_TRUST : GMIME_ENCRYPT_NONE,
+# endif
         recpa,
         err);
 

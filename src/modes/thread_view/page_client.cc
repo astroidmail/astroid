@@ -116,14 +116,19 @@ namespace Astroid {
     /* set up unix socket */
     LOG (warn) << "pc: id: " << id;
 
-    socket_addr = ustring::compose ("%1/sockets/astroid.%2.%3.%4",
-        astroid->standard_paths ().runtime_dir.c_str(),
+    socket_addr = ustring::compose ("%1/astroid.%2.%3.%4",
+        astroid->standard_paths ().socket_dir.c_str(),
         getpid(),
         id,
         UstringUtils::random_alphanumeric (30));
-
-    refptr<Gio::UnixSocketAddress> addr = Gio::UnixSocketAddress::create (socket_addr,
-        Gio::UNIX_SOCKET_ADDRESS_ABSTRACT);
+    refptr<Gio::UnixSocketAddress> addr;
+    if(Gio::UnixSocketAddress::abstract_names_supported ()) {
+      addr = Gio::UnixSocketAddress::create (socket_addr,
+          Gio::UNIX_SOCKET_ADDRESS_ABSTRACT);
+    } else {
+      addr = Gio::UnixSocketAddress::create (socket_addr,
+          Gio::UNIX_SOCKET_ADDRESS_PATH);
+    }
 
     refptr<Gio::SocketAddress> eaddr;
 

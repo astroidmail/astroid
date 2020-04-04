@@ -8,6 +8,7 @@
 
 using std::endl;
 using std::string;
+
 namespace bfs = boost::filesystem;
 
 namespace Astroid {
@@ -44,9 +45,8 @@ namespace Astroid {
     ustring c = (!undo ? cmd : undo_cmd);
 
     LOG (info) << "cmd: running: " << c;
-    string _stdout;
-    string _stderr;
     int exit;
+    string _stdout, _stderr;
 
     string _cmd = c;
     try {
@@ -71,6 +71,7 @@ namespace Astroid {
     return (exit == 0);
   }
 
+
   ustring Cmd::substitute (const ustring _cmd) {
     ustring ncmd = _cmd;
 
@@ -81,6 +82,58 @@ namespace Astroid {
     }
 
     return ncmd;
+  }
+
+  bool Cmd::pipe (ustring cmd, const ustring& _stdin, ustring& _stdout, ustring &_stderr) {
+    LOG (info) << "cmd: running: " << cmd;
+
+    try {
+      int pid;
+      int stdin;
+      int stdout;
+      int stderr;
+      std::vector<std::string> args = Glib::shell_parse_argv (cmd);
+
+      Glib::spawn_async_with_pipes ("",
+          args,
+          Glib::SPAWN_DO_NOT_REAP_CHILD |
+          Glib::SPAWN_SEARCH_PATH,
+          sigc::slot <void> (),
+          &pid,
+          &stdin,
+          &stdout,
+          &stderr
+          );
+
+      refptr<Glib::IOChannel> ch_stdin;
+      refptr<Glib::IOChannel> ch_stdout;
+      refptr<Glib::IOChannel> ch_stderr;
+      ch_stdin  = Glib::IOChannel::create_from_fd (stdin);
+      ch_stdout = Glib::IOChannel::create_from_fd (stdout);
+      ch_stderr = Glib::IOChannel::create_from_fd (stderr);
+
+      ch_stdin->write (_stdin);
+      ch_stdin->close ();
+
+      ch_stderr->read_to_end (_stderr);
+      ch_stderr->close ();
+
+      if (!_stderr.empty ()) {
+        LOG (error) << "cmd: " << _stderr;
+      }
+
+      ch_stdout->read_to_end (_stdout);
+      ch_stdout->close ();
+
+      g_spawn_close_pid (pid);
+
+    } catch (Glib::SpawnError &ex) {
+      LOG (error) << "cmd: failed to execute: '" << cmd << "': " << ex.what ();
+      return false;
+    }
+
+
+    return true;
   }
 }
 

@@ -14,8 +14,6 @@
 
 # include <notmuch.h>
 
-using std::endl;
-
 namespace Astroid {
   int QueryLoader::nextid = 0;
 
@@ -57,6 +55,9 @@ namespace Astroid {
   QueryLoader::~QueryLoader () {
     LOG (debug) << "ql: destruct.";
     stop (true);
+    list_store->clear ();
+    std::queue<refptr<NotmuchThread>> ().swap (to_list_store);
+    std::queue<ustring> ().swap (changed_threads);
   }
 
   void QueryLoader::start (ustring q) {
@@ -67,11 +68,8 @@ namespace Astroid {
   }
 
   void QueryLoader::stop (bool _in_destructor) {
+    LOG (debug) << "ql (" << id << "): stopping loader...";
     in_destructor = _in_destructor;
-
-    if (run) {
-      LOG (info) << "ql (" << id << "): stopping loader...";
-    }
 
     run = false;
     if (loader_thread.joinable ()) loader_thread.join ();
@@ -82,8 +80,7 @@ namespace Astroid {
     std::lock_guard<std::mutex> lk (to_list_m);
     list_store->clear ();
 
-    while (!to_list_store.empty ())
-      to_list_store.pop ();
+    std::queue<refptr<NotmuchThread>> ().swap (to_list_store);
 
     start (query);
   }
@@ -126,10 +123,9 @@ namespace Astroid {
     if (!in_destructor) stats_ready.emit ();
 
     /* set up query */
-    notmuch_query_t * nmquery;
     notmuch_threads_t * threads;
 
-    nmquery = notmuch_query_create (db.nm_db, query.c_str ());
+    notmuch_query_t * nmquery = notmuch_query_create (db.nm_db, query.c_str ());
     for (ustring & t : db.excluded_tags) {
       notmuch_query_add_tag_exclude (nmquery, t.c_str());
     }
@@ -180,8 +176,10 @@ namespace Astroid {
     }
 
     /* closing query */
-    if (st == NOTMUCH_STATUS_SUCCESS) notmuch_threads_destroy (threads);
+    notmuch_threads_destroy (threads);
     notmuch_query_destroy (nmquery);
+
+    run = false; // on_thread_changed will not check lock
 
     if (!in_destructor)
       stats_ready.emit (); // update loading status
@@ -190,10 +188,10 @@ namespace Astroid {
     if (!in_destructor)
       queue_has_data.emit ();
 
-    run = false; // on_thread_changed will not check lock
-
     if (!in_destructor)
       deferred_threads_d.emit ();
+
+    db.close ();
   }
 
   void QueryLoader::to_list_adder () {
@@ -236,6 +234,7 @@ namespace Astroid {
         LOG (debug) << "ql: deferred update of: " << tid;
         on_thread_changed (&db, tid);
       }
+      db.close ();
     }
   }
 

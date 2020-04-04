@@ -35,7 +35,6 @@ namespace Astroid {
 
   void Mode::close (bool force) {
     /* close current page */
-    using std::endl;
     int c = main_window->notebook.page_num (*this);
 
     if (((Mode*) main_window->notebook.get_nth_page (c))->invincible && !force) {

@@ -129,7 +129,7 @@ namespace Astroid {
                 time << " of maximum " <<
                 db_open_timeout << " seconds.";
 
-        chrono::seconds duration (db_open_delay);
+        chrono::milliseconds duration (db_open_delay);
         this_thread::sleep_for (duration);
 
         time += db_open_delay;
@@ -168,7 +168,7 @@ namespace Astroid {
                 time << " of maximum " <<
                 db_open_timeout << " seconds.";
 
-        chrono::seconds duration (db_open_delay);
+        chrono::milliseconds duration (db_open_delay);
         this_thread::sleep_for (duration);
 
         time += db_open_delay;
@@ -229,7 +229,7 @@ namespace Astroid {
 
       if (nm_db != NULL) {
         LOG (info) << "db: closing db.";
-        notmuch_database_close (nm_db);
+        notmuch_database_destroy (nm_db);
         nm_db = NULL;
       }
 
@@ -643,31 +643,6 @@ namespace Astroid {
      * an unread message in the thread */
     vector<tuple<ustring, bool>> aths;
 
-    /* first check if any messages are unread, if not: just fetch the authors for
-     * the thread without checking each one.
-     *
-     * `get_tags ()` have already been called, so we can safely use `unread` */
-
-    if (!unread) {
-      const char * auths = notmuch_thread_get_authors (nm_thread);
-
-      ustring astr;
-
-      if (auths != NULL) {
-        astr = auths;
-      } else {
-        /* LOG (error) << "nmt: got NULL for authors!"; */
-      }
-
-      std::vector<ustring> maths = VectorUtils::split_and_trim (astr, ",|\\|");
-
-      for (auto & a : maths) {
-        aths.push_back (make_tuple (a, false));
-      }
-
-      return aths;
-    }
-
     /* get messages from thread */
     notmuch_messages_t * qmessages;
     notmuch_message_t  * message;
@@ -686,6 +661,7 @@ namespace Astroid {
         a = Address(ustring (ac)).fail_safe_name ();
       } else {
         /* LOG (error) << "nmt: got NULL for author!"; */
+        notmuch_message_destroy (message);
         continue;
       }
 
@@ -1089,7 +1065,7 @@ namespace Astroid {
             refresh (m);
           } else {
             in_notmuch = false;
-            }
+          }
         });
     return in_notmuch;
   }
