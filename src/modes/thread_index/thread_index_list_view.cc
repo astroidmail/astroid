@@ -499,7 +499,7 @@ namespace Astroid {
                              "Toggle archive",
                              bind (&ThreadIndexListView::multi_key_handler, this, MArchive, _1));
 
-    multi_keys.register_key (Key (GDK_KEY_Delete),
+    multi_keys.register_key ("d",
                              "thread_index.multi.trash",
                              "Toggle trash",
                              bind (&ThreadIndexListView::multi_key_handler, this, MTrash, _1));
@@ -892,7 +892,7 @@ namespace Astroid {
           return true;
         });
 
-    keys->register_key (Key (GDK_KEY_Delete), "thread_index.trash",
+    keys->register_key ("d", "thread_index.trash",
         "Toggle 'trash' tag on thread",
         [&] (Key) {
           auto thread = get_current_thread ();
