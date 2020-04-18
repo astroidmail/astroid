@@ -1397,7 +1397,7 @@ namespace Astroid {
           return true;
         });
 
-    keys.register_key (Key (GDK_KEY_BackSpace),
+    keys.register_key (Key (GDK_KEY_Delete),
         "thread_view.trash_thread",
         "Toggle 'trash' tag on the whole thread",
         [&] (Key) {
@@ -1634,7 +1634,7 @@ namespace Astroid {
           return true;
         });
 
-    next_multi.register_key (Key (GDK_KEY_Delete),
+    next_multi.register_key ("d",
         "thread_view.multi_next_thread.trash_close",
         "Trash and close",
         [&] (Key) {
@@ -1716,10 +1716,12 @@ namespace Astroid {
           return next_multi.handle ("thread_view.multi_next_thread.trash_next_unread_thread");
         });
 
-    keys.register_key (Key (GDK_KEY_Delete),
+    keys.register_key ("d",
         "thread_view.trash_and_close",
         "Alias for thread_view.multi_next_thread.trash_close",
         [&] (Key) {
+          if (edit_mode) return false;
+          
           return next_multi.handle ("thread_view.multi_next_thread.trash_close");
         });
 
