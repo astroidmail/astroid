@@ -32,7 +32,7 @@ BOOST_AUTO_TEST_SUITE(Composing)
 
     ComposeMessage * c = new ComposeMessage ();
 
-    ustring bdy = "This is test: æøå.\n > testing\ntesting\n...";
+    ustring bdy = "This is test: æøå.\n > testing\ntesting\n...\n";
 
     LOG (trace) << "cm: writing utf-8 text to message body: " << bdy;
     c->body << bdy;
@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_SUITE(Composing)
 
     ComposeMessage * c = new ComposeMessage ();
 
-    ustring bdy = "This is test: æøå.\n > testing\ntesting\n...";
+    ustring bdy = "This is test: æøå.\n > testing\ntesting\n...\n";
 
     LOG (trace) << "cm: writing utf-8 text to message body: " << bdy;
     c->body << bdy;
@@ -193,7 +193,7 @@ BOOST_AUTO_TEST_SUITE(Composing)
 
     ComposeMessage * c = new ComposeMessage ();
 
-    ustring bdy = "This is test: æøå.\n > testing\ntesting\n...";
+    ustring bdy = "This is test: æøå.\n > testing\ntesting\n...\n";
 
     LOG (trace) << "cm: writing utf-8 text to message body: " << bdy;
     c->body << bdy;
