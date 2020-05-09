@@ -1,0 +1,72 @@
+---
+name: "CI: Debian & Derivatives"
+on:
+  - push
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    container: ${{ matrix.container }}
+    strategy:
+      fail-fast: false
+      matrix:
+        container:
+          - 'debian:sid'
+          - 'debian:stable'
+          - 'ubuntu:devel'
+          - 'ubuntu:focal'
+          - 'ubuntu:bionic'
+    timeout-minutes: 15
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v2
+      - name: Install build dependencies
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          echo 'APT::Install-Recommends "false";' > /etc/apt/apt.conf.d/80-no-recommends
+          apt-get update
+          apt-get -y upgrade
+          apt-get -y install \
+            cmake \
+            cmark \
+            gnupg \
+            libboost-date-time-dev \
+            libboost-filesystem-dev \
+            libboost-log-dev \
+            libboost-program-options-dev \
+            libboost-system-dev \
+            libboost-test-dev \
+            libboost-thread-dev \
+            libgirepository1.0-dev \
+            libglibmm-2.4-dev \
+            libgmime-3.0-dev \
+            libgtkmm-3.0-dev \
+            libnotmuch-dev \
+            libpeas-dev \
+            libprotobuf-dev \
+            libsass-dev \
+            libsoup2.4-dev \
+            libvte-2.91-dev \
+            libwebkit2gtk-4.0-dev \
+            ninja-build \
+            notmuch \
+            pkg-config \
+            protobuf-compiler \
+            python3-gi \
+            w3m \
+            xauth \
+            xvfb
+          # Older releases don't have scdoc, but should have ronn
+          apt-get -y install scdoc || apt-get -y install ruby-ronn
+      - name: "CMake: Configure"
+        run: cmake -H. -Bbuild -GNinja
+      - name: "CMake: Build"
+        run: cmake --build build
+      - name: Run Tests
+        env:
+          HOME: /tmp/home
+          LC_ALL: C.UTF-8
+        run: |
+          mkdir -p $HOME
+          cd build
+          xvfb-run ctest --output-on-failure
