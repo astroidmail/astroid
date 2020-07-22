@@ -451,7 +451,6 @@ namespace Astroid {
     string query_s = "thread:" + thread_id;
 
     notmuch_query_t * query = notmuch_query_create (nm_db, query_s.c_str());
-    notmuch_thread_t  * nm_thread;
     notmuch_threads_t * nm_threads;
     notmuch_status_t st = NOTMUCH_STATUS_SUCCESS;
 
@@ -469,13 +468,8 @@ namespace Astroid {
     int c = 0;
     for ( ; notmuch_threads_valid (nm_threads);
          notmuch_threads_move_to_next (nm_threads)) {
-      if (c > 0) {
-        LOG (error) << "db: got more than one thread for thread id.";
-        throw invalid_argument ("db: got more than one thread for thread id.");
-      }
-
-      nm_thread = notmuch_threads_get (nm_threads);
-
+      notmuch_thread_t* nm_thread = notmuch_threads_get (nm_threads);
+      func (nm_thread);
       c++;
     }
 
@@ -485,9 +479,6 @@ namespace Astroid {
       notmuch_query_destroy (query);
       return;
     }
-
-    /* call function */
-    func (nm_thread);
 
     /* free resources */
     notmuch_query_destroy (query);
