@@ -123,7 +123,7 @@ namespace Astroid {
     if (!in_destructor) stats_ready.emit ();
 
     /* set up query */
-    notmuch_threads_t * threads;
+    notmuch_threads_t * threads = NULL;
 
     notmuch_query_t * nmquery = notmuch_query_create (db.nm_db, query.c_str ());
     for (ustring & t : db.excluded_tags) {
