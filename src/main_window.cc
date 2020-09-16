@@ -260,52 +260,52 @@ namespace Astroid {
     keys.register_key ("M-1",
         "main_window.jump_to_page_1",
         "Jump to page 1",
-        bind (&MainWindow::jump_to_page, this, _1, 1));
+        bind (&MainWindow::jump_to_page, this, std::placeholders::_1, 1));
 
     keys.register_key ("M-2",
         "main_window.jump_to_page_2",
         "Jump to page 2",
-        bind (&MainWindow::jump_to_page, this, _1, 2));
+        bind (&MainWindow::jump_to_page, this, std::placeholders::_1, 2));
 
     keys.register_key ("M-3",
         "main_window.jump_to_page_3",
         "Jump to page 3",
-        bind (&MainWindow::jump_to_page, this, _1, 3));
+        bind (&MainWindow::jump_to_page, this, std::placeholders::_1, 3));
 
     keys.register_key ("M-4",
         "main_window.jump_to_page_4",
         "Jump to page 4",
-        bind (&MainWindow::jump_to_page, this, _1, 4));
+        bind (&MainWindow::jump_to_page, this, std::placeholders::_1, 4));
 
     keys.register_key ("M-5",
         "main_window.jump_to_page_5",
         "Jump to page 5",
-        bind (&MainWindow::jump_to_page, this, _1, 5));
+        bind (&MainWindow::jump_to_page, this, std::placeholders::_1, 5));
 
     keys.register_key ("M-6",
         "main_window.jump_to_page_6",
         "Jump to page 6",
-        bind (&MainWindow::jump_to_page, this, _1, 6));
+        bind (&MainWindow::jump_to_page, this, std::placeholders::_1, 6));
 
     keys.register_key ("M-7",
         "main_window.jump_to_page_7",
         "Jump to page 7",
-        bind (&MainWindow::jump_to_page, this, _1, 7));
+        bind (&MainWindow::jump_to_page, this, std::placeholders::_1, 7));
 
     keys.register_key ("M-8",
         "main_window.jump_to_page_8",
         "Jump to page 8",
-        bind (&MainWindow::jump_to_page, this, _1, 8));
+        bind (&MainWindow::jump_to_page, this, std::placeholders::_1, 8));
 
     keys.register_key ("M-9",
         "main_window.jump_to_page_9",
         "Jump to page 9",
-        bind (&MainWindow::jump_to_page, this, _1, 9));
+        bind (&MainWindow::jump_to_page, this, std::placeholders::_1, 9));
 
     keys.register_key ("M-0",
         "main_window.jump_to_page_0",
         "Jump to page 0",
-        bind (&MainWindow::jump_to_page, this, _1, 0));
+        bind (&MainWindow::jump_to_page, this, std::placeholders::_1, 0));
 
     keys.register_key ("C-w", "main_window.close_page",
         "Close mode (or window if other windows are open)",

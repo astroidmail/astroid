@@ -477,38 +477,38 @@ namespace Astroid {
     multi_keys.register_key ("N",
                              "thread_index.multi.mark_unread",
                              "Toggle unread",
-                             bind (&ThreadIndexListView::multi_key_handler, this, MUnread, _1));
+                             bind (&ThreadIndexListView::multi_key_handler, this, MUnread, std::placeholders::_1));
 
     multi_keys.register_key ("*",
                              "thread_index.multi.flag",
                              "Toggle flagged",
-                             bind (&ThreadIndexListView::multi_key_handler, this, MFlag, _1));
+                             bind (&ThreadIndexListView::multi_key_handler, this, MFlag, std::placeholders::_1));
 
     multi_keys.register_key ("a",
                              "thread_index.multi.archive",
                              "Toggle archive",
-                             bind (&ThreadIndexListView::multi_key_handler, this, MArchive, _1));
+                             bind (&ThreadIndexListView::multi_key_handler, this, MArchive, std::placeholders::_1));
 
     multi_keys.register_key ("S",
                              "thread_index.multi.mark_spam",
                              "Toggle spam",
-                             bind (&ThreadIndexListView::multi_key_handler, this, MSpam, _1));
+                             bind (&ThreadIndexListView::multi_key_handler, this, MSpam, std::placeholders::_1));
 
     multi_keys.register_key ("+",
                              "thread_index.multi.tag",
                              "Tag",
-                             bind (&ThreadIndexListView::multi_key_handler, this, MTag, _1));
+                             bind (&ThreadIndexListView::multi_key_handler, this, MTag, std::placeholders::_1));
 
 
     multi_keys.register_key ("C-m",
                              "thread_index.multi.mute",
                              "Toggle mute",
-                             bind (&ThreadIndexListView::multi_key_handler, this, MMute, _1));
+                             bind (&ThreadIndexListView::multi_key_handler, this, MMute, std::placeholders::_1));
 
     multi_keys.register_key ("t",
                              "thread_index.multi.toggle",
                              "Toggle marked",
-                             bind (&ThreadIndexListView::multi_key_handler, this, MToggle, _1));
+                             bind (&ThreadIndexListView::multi_key_handler, this, MToggle, std::placeholders::_1));
 
     keys->register_key (Key (GDK_KEY_semicolon),
           "thread_index.multi",
