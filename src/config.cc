@@ -488,7 +488,7 @@ namespace Astroid {
   void Config::merge_ptree(const ptree &pt)   {
     function<void(const ptree &,
       const ptree::path_type &,
-      const ptree&)> method = bind (&Config::merge, this, _1, _2, _3);
+      const ptree&)> method = bind (&Config::merge, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
 
     traverse(pt, method);
   }

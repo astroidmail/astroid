@@ -561,7 +561,7 @@ namespace Astroid {
       register_key (b->first,
                     b->first.name,
                     ustring::compose ("Run hook: %1,%2", b->second.first, b->second.second),
-                    bind (cb, _1, b->second.first, b->second.second)
+                    bind (cb, std::placeholders::_1, b->second.first, b->second.second)
                     );
 
       b++;
