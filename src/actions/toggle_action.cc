@@ -72,4 +72,13 @@ namespace Astroid {
   MuteAction::MuteAction (vector<refptr<NotmuchItem>> nmts)
     : ToggleAction (nmts, "muted") {
     }
+
+  TrashAction::TrashAction (refptr<NotmuchItem> nmt)
+    : ToggleAction (nmt, "trash") {
+  }
+
+  TrashAction::TrashAction (vector<refptr<NotmuchItem>> nmts)
+    : ToggleAction (nmts, "trash") {
+  }
+
 }

@@ -85,6 +85,7 @@ namespace Astroid {
         MUnread = 0,
         MFlag,
         MArchive,
+        MTrash,
         MSpam,
         MMute,
         MToggle,
@@ -103,6 +104,7 @@ namespace Astroid {
         Forward,
         Flag,
         Archive,
+        Trash,
         Open,
         OpenNewWindow,
       };

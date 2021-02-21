@@ -167,10 +167,20 @@ namespace Astroid {
           , PopupItem::Archive));
     archive_i->set_tooltip_text ("Archive");
 
+    Gtk::Image * trash = Gtk::manage (new Gtk::Image ());
+    trash->set_from_icon_name ("edit-delete", Gtk::ICON_SIZE_LARGE_TOOLBAR);
+    Gtk::MenuItem * trash_i = Gtk::manage (new Gtk::MenuItem (*trash));
+    trash_i->signal_activate ().connect (
+        sigc::bind (
+          sigc::mem_fun (*this, &ThreadIndexListView::popup_activate_generic)
+          , PopupItem::Trash));
+    trash_i->set_tooltip_text ("Send to Trash");
+
     item_popup.attach (*reply_i, 0, 1, 0, 1);
     item_popup.attach (*forward_i, 1, 2, 0, 1);
     item_popup.attach (*flag_i, 2, 3, 0, 1);
     item_popup.attach (*archive_i, 3, 4, 0, 1);
+    item_popup.attach (*trash_i, 4, 5, 0, 1);
 
     Gtk::MenuItem * sep = Gtk::manage (new Gtk::SeparatorMenuItem ());
     item_popup.append (*sep);
@@ -488,6 +498,11 @@ namespace Astroid {
                              "thread_index.multi.archive",
                              "Toggle archive",
                              bind (&ThreadIndexListView::multi_key_handler, this, MArchive, std::placeholders::_1));
+
+    multi_keys.register_key ("d",
+                             "thread_index.multi.trash",
+                             "Toggle trash",
+                             bind (&ThreadIndexListView::multi_key_handler, this, MTrash, _1));
 
     multi_keys.register_key ("S",
                              "thread_index.multi.mark_spam",
@@ -877,6 +892,17 @@ namespace Astroid {
           return true;
         });
 
+    keys->register_key ("d", "thread_index.trash",
+        "Toggle 'trash' tag on thread",
+        [&] (Key) {
+          auto thread = get_current_thread ();
+          if (thread) {
+            main_window->actions->doit (refptr<Action>(new TrashAction(thread)));
+          }
+
+          return true;
+        });
+
     keys->register_key (Key (GDK_KEY_asterisk), "thread_index.flag",
         "Toggle 'flagged' tag on thread",
         [&] (Key) {
@@ -1047,6 +1073,7 @@ namespace Astroid {
       case MSpam:
       case MMute:
       case MArchive:
+      case MTrash:
       case MTag:
         {
           vector<refptr<NotmuchItem>> threads;
@@ -1068,6 +1095,10 @@ namespace Astroid {
           switch (maction) {
             case MArchive:
               a = refptr<Action>(new ToggleAction(threads, "inbox"));
+              break;
+
+            case MTrash:
+              a = refptr<Action>(new TrashAction(threads));
               break;
 
             case MFlag:
@@ -1201,6 +1232,14 @@ namespace Astroid {
         {
           if (thread) {
             main_window->actions->doit (refptr<Action>(new ToggleAction(thread, "inbox")));
+          }
+        }
+        break;
+
+      case Trash:
+        {
+          if (thread) {
+            main_window->actions->doit (refptr<Action>(new TrashAction(thread)));
           }
         }
         break;
