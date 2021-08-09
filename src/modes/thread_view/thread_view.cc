@@ -50,6 +50,102 @@ using boost::property_tree::ptree;
 
 namespace Astroid {
 
+  extern "C" bool ThreadView_on_load_changed (
+    WebKitWebView * w,
+    WebKitLoadEvent load_event,
+    gpointer user_data);
+
+  extern "C" gboolean ThreadView_decide_policy (
+    WebKitWebView * w,
+    WebKitPolicyDecision * decision,
+    WebKitPolicyDecisionType decision_type,
+    gpointer user_data);
+
+  struct ThreadView::Private {
+    WebKitWebView *     webview;
+    WebKitSettings *    websettings;
+    WebKitWebContext *  context;
+  
+    /* event wrappers */
+    bool on_load_changed (ThreadView & self,
+                          WebKitWebView * /* w */,
+                          WebKitLoadEvent load_event) {
+      LOG (debug) << "tv: on_load_changed: " << load_event;
+      switch (load_event) {
+      case WEBKIT_LOAD_FINISHED:
+        LOG (debug) << "tv: load finished.";
+        {
+          /* render */
+          self.wk_loaded = true;
+
+          // also called in page_client
+          if (self.page_client->ready) on_ready_to_render ();
+        }
+      default:
+        break;
+      }
+
+      return true;
+    }
+      
+    gboolean decide_policy (ThreadView & self,
+                            WebKitWebView * /* w */,
+                            WebKitPolicyDecision * decision,
+                            WebKitPolicyDecisionType decision_type) {
+      LOG (debug) << "tv: decide policy";
+
+      switch (decision_type) {
+      case WEBKIT_POLICY_DECISION_TYPE_NAVIGATION_ACTION: // navigate to {{{
+        {
+          WebKitNavigationPolicyDecision * navigation_decision = WEBKIT_NAVIGATION_POLICY_DECISION (decision);
+          WebKitNavigationAction * nav_action = webkit_navigation_policy_decision_get_navigation_action (navigation_decision);
+
+          if (webkit_navigation_action_get_navigation_type (nav_action)
+              == WEBKIT_NAVIGATION_TYPE_LINK_CLICKED) {
+
+            webkit_policy_decision_ignore (decision);
+
+            const gchar * uri_c =
+              webkit_uri_request_get_uri (webkit_navigation_action_get_request (nav_action));
+
+            ustring uri (uri_c);
+            LOG (info) << "tv: navigating to: " << uri;
+
+            ustring scheme = Glib::uri_parse_scheme (uri);
+
+            if (scheme == "mailto") {
+
+              uri = uri.substr (scheme.length ()+1, uri.length () - scheme.length()-1);
+              UstringUtils::trim(uri);
+
+              self.main_window->add_mode (new EditMessage (self.main_window, uri));
+
+            } else if (scheme == "id" || scheme == "mid" ) {
+              self.main_window->add_mode (new ThreadIndex (self.main_window, uri));
+
+            } else if (scheme == "http" || scheme == "https" || scheme == "ftp") {
+              self.open_link (uri);
+
+            } else {
+              LOG (error) << "tv: unknown uri scheme. not opening.";
+            }
+          }
+        } // }}}
+        break;
+
+      case WEBKIT_POLICY_DECISION_TYPE_NEW_WINDOW_ACTION:
+        webkit_policy_decision_ignore (decision);
+        break;
+
+      default:
+        webkit_policy_decision_ignore (decision);
+        return true; // stop event
+      }
+
+      return true; // stop event
+    }
+  }; // struct ThreadView::Private
+
   ThreadView::ThreadView (MainWindow * mw, bool _edit_mode) : Mode (mw) { //
     edit_mode = _edit_mode;
     wk_loaded = false;
@@ -64,7 +160,7 @@ namespace Astroid {
     /* WebKit: set up webkit web view */
 
     /* create web context */
-    context = webkit_web_context_new_ephemeral ();
+    Private->context = webkit_web_context_new_ephemeral ();
 
     /* set up this extension interface */
     page_client = new PageClient (this);
@@ -165,68 +261,7 @@ namespace Astroid {
       WebKitPolicyDecisionType decision_type,
       gpointer user_data) {
 
-    return ((ThreadView *) user_data)->decide_policy (w, decision, decision_type);
-  }
-
-  gboolean ThreadView::decide_policy (
-      WebKitWebView * /* w */,
-      WebKitPolicyDecision *   decision,
-      WebKitPolicyDecisionType decision_type)
-  {
-
-    LOG (debug) << "tv: decide policy";
-
-    switch (decision_type) {
-      case WEBKIT_POLICY_DECISION_TYPE_NAVIGATION_ACTION: // navigate to {{{
-        {
-          WebKitNavigationPolicyDecision * navigation_decision = WEBKIT_NAVIGATION_POLICY_DECISION (decision);
-          WebKitNavigationAction * nav_action = webkit_navigation_policy_decision_get_navigation_action (navigation_decision);
-
-          if (webkit_navigation_action_get_navigation_type (nav_action)
-              == WEBKIT_NAVIGATION_TYPE_LINK_CLICKED) {
-
-            webkit_policy_decision_ignore (decision);
-
-            const gchar * uri_c = webkit_uri_request_get_uri (
-                webkit_navigation_action_get_request (nav_action));
-
-
-            ustring uri (uri_c);
-            LOG (info) << "tv: navigating to: " << uri;
-
-            ustring scheme = Glib::uri_parse_scheme (uri);
-
-            if (scheme == "mailto") {
-
-              uri = uri.substr (scheme.length ()+1, uri.length () - scheme.length()-1);
-              UstringUtils::trim(uri);
-
-              main_window->add_mode (new EditMessage (main_window, uri));
-
-            } else if (scheme == "id" || scheme == "mid" ) {
-              main_window->add_mode (new ThreadIndex (main_window, uri));
-
-            } else if (scheme == "http" || scheme == "https" || scheme == "ftp") {
-              open_link (uri);
-
-            } else {
-
-              LOG (error) << "tv: unknown uri scheme. not opening.";
-            }
-          }
-        } // }}}
-        break;
-
-      case WEBKIT_POLICY_DECISION_TYPE_NEW_WINDOW_ACTION:
-        webkit_policy_decision_ignore (decision);
-        break;
-
-      default:
-        webkit_policy_decision_ignore (decision);
-        return true; // stop event
-    }
-
-    return true; // stop event
+    return ((ThreadView *) user_data)->Private::decide_policy (*user_data, w, decision, decision_type);
   }
 
   void ThreadView::open_link (ustring uri) {
@@ -296,29 +331,7 @@ namespace Astroid {
       WebKitLoadEvent load_event,
       gpointer user_data)
   {
-    return ((ThreadView *) user_data)->on_load_changed (w, load_event);
-  }
-
-  bool ThreadView::on_load_changed (
-      WebKitWebView * /* w */,
-      WebKitLoadEvent load_event)
-  {
-    LOG (debug) << "tv: on_load_changed: " << load_event;
-    switch (load_event) {
-      case WEBKIT_LOAD_FINISHED:
-        LOG (debug) << "tv: load finished.";
-        {
-          /* render */
-          wk_loaded = true;
-
-          // also called in page_client
-          if (page_client->ready) on_ready_to_render ();
-        }
-      default:
-        break;
-    }
-
-    return true;
+    return ((ThreadView *) user_data)->Private::on_load_changed (*user_data, w, load_event);
   }
 
   void ThreadView::load_thread (refptr<NotmuchThread> _thread) {
@@ -929,9 +942,9 @@ namespace Astroid {
                 }
               }
             }
-	    main_window->add_mode (new EditMessage (main_window, to.str (),
-						    from.full_address (),
-						    cc.str(), bcc.str()));
+            main_window->add_mode (new EditMessage (main_window, to.str (),
+                                                    from.full_address (),
+                                                    cc.str(), bcc.str()));
           }
           return true;
         });
@@ -1077,7 +1090,7 @@ namespace Astroid {
         });
 
     keys.register_run ("thread_view.run",
-	[&] (Key, ustring cmd, ustring undo_cmd) {
+        [&] (Key, ustring cmd, ustring undo_cmd) {
           if (focused_message) {
             cmd = ustring::compose (cmd, focused_message->tid, focused_message->mid);
             undo_cmd = ustring::compose (undo_cmd, focused_message->tid, focused_message->mid);
