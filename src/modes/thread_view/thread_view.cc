@@ -265,7 +265,7 @@ namespace Astroid {
       WebKitPolicyDecisionType decision_type,
       gpointer user_data) {
 
-    return ((ThreadView *) user_data)->pImpl->decide_policy ((ThreadView *) user_data, w, decision, decision_type);
+    return ((ThreadView *) user_data)->pImpl->decide_policy ( * ((ThreadView *) user_data), w, decision, decision_type);
   }
 
   void ThreadView::open_link (ustring uri) {
@@ -335,7 +335,7 @@ namespace Astroid {
       WebKitLoadEvent load_event,
       gpointer user_data)
   {
-    return ((ThreadView *) user_data)->pImpl->on_load_changed ((ThreadView *) user_data, w, load_event);
+    return ((ThreadView *) user_data)->pImpl->on_load_changed ( * ((ThreadView *) user_data), w, load_event);
   }
 
   void ThreadView::load_thread (refptr<NotmuchThread> _thread) {
