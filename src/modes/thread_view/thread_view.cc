@@ -215,16 +215,18 @@ namespace Astroid {
     gtk_box_pack_start (GTK_BOX (this->gobj ()), GTK_WIDGET (pImpl->webview), true, true, 0);
 
 
-    g_signal_connect (pImpl->webview, "load-changed",
-        G_CALLBACK(ThreadView_on_load_changed),
-        (gpointer) this );
+    g_signal_connect (pImpl->webview,
+                      "load-changed",
+                      G_CALLBACK(ThreadView_on_load_changed),
+                      (gpointer) this );        // user_data
 
 
     add_events (Gdk::KEY_PRESS_MASK);
 
-    g_signal_connect (pImpl->webview, "decide-policy",
-        G_CALLBACK(ThreadView_decide_policy),
-        (gpointer) this);
+    g_signal_connect (pImpl->webview,
+                      "decide-policy",
+                      G_CALLBACK(ThreadView_decide_policy),
+                      (gpointer) this);       // user_data
 
     load_html ();
 
@@ -263,7 +265,7 @@ namespace Astroid {
       WebKitPolicyDecisionType decision_type,
       gpointer user_data) {
 
-    return ((ThreadView *) user_data)->pImpl->decide_policy (*user_data, w, decision, decision_type);
+    return ((ThreadView *) user_data)->pImpl->decide_policy ((ThreadView *) user_data, w, decision, decision_type);
   }
 
   void ThreadView::open_link (ustring uri) {
@@ -333,7 +335,7 @@ namespace Astroid {
       WebKitLoadEvent load_event,
       gpointer user_data)
   {
-    return ((ThreadView *) user_data)->pImpl->on_load_changed (*user_data, w, load_event);
+    return ((ThreadView *) user_data)->pImpl->on_load_changed ((ThreadView *) user_data, w, load_event);
   }
 
   void ThreadView::load_thread (refptr<NotmuchThread> _thread) {
