@@ -79,7 +79,7 @@ namespace Astroid {
           self.wk_loaded = true;
 
           // also called in page_client
-          if (self.page_client->ready) on_ready_to_render ();
+          if (self.page_client->ready) self.on_ready_to_render ();
         }
       default:
         break;
@@ -160,7 +160,7 @@ namespace Astroid {
     /* WebKit: set up webkit web view */
 
     /* create web context */
-    Private->context = webkit_web_context_new_ephemeral ();
+    ThreadView::Private.context = webkit_web_context_new_ephemeral ();
 
     /* set up this extension interface */
     page_client = new PageClient (this);
@@ -178,9 +178,9 @@ namespace Astroid {
     /* one process for each webview so that a new and unique
      * instance of the webextension is created for each webview
      * and page */
-    webkit_web_context_set_process_model (context, WEBKIT_PROCESS_MODEL_MULTIPLE_SECONDARY_PROCESSES);
+    webkit_web_context_set_process_model (ThreadView::Private.context, WEBKIT_PROCESS_MODEL_MULTIPLE_SECONDARY_PROCESSES);
 
-    websettings = WEBKIT_SETTINGS (webkit_settings_new_with_settings (
+    ThreadView::Private.websettings = WEBKIT_SETTINGS (webkit_settings_new_with_settings (
         "enable-javascript", FALSE,
         "enable-java", FALSE,
         "enable-plugins", FALSE,
@@ -201,26 +201,26 @@ namespace Astroid {
 # endif
         NULL));
 
-    webview =
+    ThreadView::Private.webview =
       WEBKIT_WEB_VIEW (
         g_object_new (WEBKIT_TYPE_WEB_VIEW,
-          "web-context", context,
-          "settings", websettings,
+          "web-context", ThreadView::Private.context,
+          "settings", ThreadView::Private.websettings,
           NULL));
 
-    if (g_object_is_floating (webview)) g_object_ref_sink (webview);
+    if (g_object_is_floating (ThreadView::Private.webview)) g_object_ref_sink (ThreadView::Private.webview);
 
-    gtk_box_pack_start (GTK_BOX (this->gobj ()), GTK_WIDGET (webview), true, true, 0);
+    gtk_box_pack_start (GTK_BOX (this->gobj ()), GTK_WIDGET (ThreadView::Private.webview), true, true, 0);
 
 
-    g_signal_connect (webview, "load-changed",
+    g_signal_connect (ThreadView::Private.webview, "load-changed",
         G_CALLBACK(ThreadView_on_load_changed),
         (gpointer) this );
 
 
     add_events (Gdk::KEY_PRESS_MASK);
 
-    g_signal_connect (webview, "decide-policy",
+    g_signal_connect (ThreadView::Private.webview, "decide-policy",
         G_CALLBACK(ThreadView_decide_policy),
         (gpointer) this);
 
@@ -240,9 +240,9 @@ namespace Astroid {
 
   ThreadView::~ThreadView () { //
     LOG (debug) << "tv: deconstruct.";
-    g_object_unref (context);
-    g_object_unref (websettings);
-    g_object_unref (webview);
+    g_object_unref (ThreadView::Private.context);
+    g_object_unref (ThreadView::Private.websettings);
+    g_object_unref (ThreadView::Private.webview);
   }
 
   void ThreadView::pre_close () {
@@ -261,7 +261,7 @@ namespace Astroid {
       WebKitPolicyDecisionType decision_type,
       gpointer user_data) {
 
-    return ((ThreadView *) user_data)->Private::decide_policy (*user_data, w, decision, decision_type);
+    return ((ThreadView *) user_data)->ThreadView::Private.decide_policy (*user_data, w, decision, decision_type);
   }
 
   void ThreadView::open_link (ustring uri) {
@@ -331,7 +331,7 @@ namespace Astroid {
       WebKitLoadEvent load_event,
       gpointer user_data)
   {
-    return ((ThreadView *) user_data)->Private::on_load_changed (*user_data, w, load_event);
+    return ((ThreadView *) user_data)->ThreadView::Private.on_load_changed (*user_data, w, load_event);
   }
 
   void ThreadView::load_thread (refptr<NotmuchThread> _thread) {
@@ -421,7 +421,7 @@ namespace Astroid {
     wk_loaded = false;
     ready     = false;
 
-    webkit_web_view_load_html (webview, theme.thread_view_html.c_str (), home_uri.c_str ());
+    webkit_web_view_load_html (ThreadView::Private.webview, theme.thread_view_html.c_str (), home_uri.c_str ());
   }
 
   void ThreadView::on_ready_to_render () {
@@ -595,7 +595,7 @@ namespace Astroid {
         [&] (Key) {
           LOG (debug) << "tv show web inspector";
           /* Show the inspector */
-          WebKitWebInspector *inspector = webkit_web_view_get_inspector (WEBKIT_WEB_VIEW(webview));
+          WebKitWebInspector *inspector = webkit_web_view_get_inspector (WEBKIT_WEB_VIEW(ThreadView::Private.webview));
           webkit_web_inspector_show (WEBKIT_WEB_INSPECTOR(inspector));
           return true;
         });
@@ -809,8 +809,8 @@ namespace Astroid {
     keys.register_key ("C-+", "thread_view.zoom_in",
         "Zoom in",
         [&] (Key) {
-          webkit_web_view_set_zoom_level (webview,
-              webkit_web_view_get_zoom_level (webview) + .1);
+          webkit_web_view_set_zoom_level (ThreadView::Private.webview,
+              webkit_web_view_get_zoom_level (ThreadView::Private.webview) + .1);
 
           return true;
         });
@@ -818,8 +818,8 @@ namespace Astroid {
     keys.register_key ("C-minus", "thread_view.zoom_out",
         "Zoom out",
         [&] (Key) {
-          webkit_web_view_set_zoom_level (webview,
-              std::max ((webkit_web_view_get_zoom_level (webview) - .1), 0.0));
+          webkit_web_view_set_zoom_level (ThreadView::Private.webview,
+              std::max ((webkit_web_view_get_zoom_level (ThreadView::Private.webview) - .1), 0.0));
 
           return true;
         });
@@ -1287,7 +1287,7 @@ namespace Astroid {
 
 # if 0
           GError * err = NULL;
-          WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
+          WebKitDOMDocument * d = webkit_web_view_get_dom_document (ThreadView::Private.webview);
 # endif
 
           for (auto &m : toprint) {
@@ -1316,7 +1316,7 @@ namespace Astroid {
           /* open print window */
           // TODO: [W2] Fix print
 # if 0
-          WebKitWebFrame * frame = webkit_web_view_get_main_frame (webview);
+          WebKitWebFrame * frame = webkit_web_view_get_main_frame (ThreadView::Private.webview);
           webkit_web_frame_print (frame);
 # endif
 
@@ -1417,7 +1417,7 @@ namespace Astroid {
         // TODO: [W2]
 # if 0
           GError * err = NULL;
-          WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
+          WebKitDOMDocument * d = webkit_web_view_get_dom_document (ThreadView::Private.webview);
 
           ustring mid = "message_" + focused_message->mid;
           WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
@@ -1437,7 +1437,7 @@ namespace Astroid {
           }
 
           /* open print window */
-          WebKitWebFrame * frame = webkit_web_view_get_main_frame (webview);
+          WebKitWebFrame * frame = webkit_web_view_get_main_frame (ThreadView::Private.webview);
           webkit_web_frame_print (frame);
 
           if (indented) {
@@ -2034,20 +2034,20 @@ namespace Astroid {
   /* general mode stuff  */
   void ThreadView::grab_focus () {
     //LOG (debug) << "tv: grab focus";
-    gtk_widget_grab_focus (GTK_WIDGET (webview));
+    gtk_widget_grab_focus (GTK_WIDGET (ThreadView::Private.webview));
   }
 
   void ThreadView::grab_modal () {
     add_modal_grab ();
     grab_focus ();
 
-    //gtk_grab_add (GTK_WIDGET (webview));
-    //gtk_widget_grab_focus (GTK_WIDGET (webview));
+    //gtk_grab_add (GTK_WIDGET (ThreadView::Private.webview));
+    //gtk_widget_grab_focus (GTK_WIDGET (ThreadView::Private.webview));
   }
 
   void ThreadView::release_modal () {
     remove_modal_grab ();
-    //gtk_grab_remove (GTK_WIDGET (webview));
+    //gtk_grab_remove (GTK_WIDGET (ThreadView::Private.webview));
   }
 
   /* end general mode stuff  */
@@ -2161,7 +2161,7 @@ namespace Astroid {
     in_search = false;
     search_q  = "";
 
-    WebKitFindController * f = webkit_web_view_get_find_controller (webview);
+    WebKitFindController * f = webkit_web_view_get_find_controller (ThreadView::Private.webview);
     webkit_find_controller_search_finish (f);
   }
 
@@ -2175,7 +2175,7 @@ namespace Astroid {
       }
 
       LOG (debug) << "tv: searching for: " << k;
-      WebKitFindController * f = webkit_web_view_get_find_controller (webview);
+      WebKitFindController * f = webkit_web_view_get_find_controller (ThreadView::Private.webview);
 
       webkit_find_controller_search (f, k.c_str (),
           WEBKIT_FIND_OPTIONS_CASE_INSENSITIVE |
@@ -2193,7 +2193,7 @@ namespace Astroid {
      * the match is centered.
      */
 
-    WebKitFindController * f = webkit_web_view_get_find_controller (webview);
+    WebKitFindController * f = webkit_web_view_get_find_controller (ThreadView::Private.webview);
     webkit_find_controller_search_next (f);
     page_client->update_focus_to_view ();
   }
@@ -2201,7 +2201,7 @@ namespace Astroid {
   void ThreadView::prev_search_match () {
     if (!in_search) return;
 
-    WebKitFindController * f = webkit_web_view_get_find_controller (webview);
+    WebKitFindController * f = webkit_web_view_get_find_controller (ThreadView::Private.webview);
     webkit_find_controller_search_previous (f);
     page_client->update_focus_to_view ();
   }
