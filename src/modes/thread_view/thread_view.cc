@@ -67,7 +67,14 @@ namespace Astroid {
       WebKitWebView *     webview;
       WebKitSettings *    websettings;
       WebKitWebContext *  context;
-  
+
+      ThreadView::impl::~ThreadView::impl () { //
+        LOG (debug) << "tv: deconstruct.";
+        g_object_unref (context);
+        g_object_unref (websettings);
+        g_object_unref (webview);
+      }
+
       /* event wrappers */
       bool on_load_changed (ThreadView & self,
                             WebKitWebView * /* w */,
@@ -242,12 +249,9 @@ namespace Astroid {
 
   }
 
-  ThreadView::~ThreadView () { //
-    LOG (debug) << "tv: deconstruct.";
-    g_object_unref (pImpl->context);
-    g_object_unref (pImpl->websettings);
-    g_object_unref (pImpl->webview);
-  }
+  ThreadView::~ThreadView () = default;
+  ThreadView::ThreadView (ThreadView&&) = default;
+  ThreadView& ThreadView::operator= (ThreadView&&) = default;
 
   void ThreadView::pre_close () {
 # ifndef DISABLE_PLUGINS

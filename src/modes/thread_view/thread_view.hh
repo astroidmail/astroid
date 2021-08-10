@@ -39,7 +39,12 @@ namespace Astroid {
 
     public:
       ThreadView (MainWindow *, bool _edit_mode = false);
-      ~ThreadView ();
+      ~ThreadView ();   // defined in the implementation file, where impl is a complete type
+      ThreadView (ThreadView&&); // defined in the implementation file
+      ThreadView (const ThreadView&) = delete;
+      ThreadView& operator= (ThreadView&&); // defined in the implementation file
+      ThreadView& operator= (const ThreadView&) = delete;
+
       void load_thread (refptr<NotmuchThread>);
       void load_message_thread (refptr<MessageThread>);
 
