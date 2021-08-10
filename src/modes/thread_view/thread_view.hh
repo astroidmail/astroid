@@ -37,6 +37,9 @@ namespace Astroid {
   class ThreadView : public Mode {
     friend PageClient;
 
+    class impl;
+    std::experimental::propagate_const<std::unique_ptr<impl>> pImpl;
+
     public:
       ThreadView (MainWindow *, bool _edit_mode = false);
       ~ThreadView ();   // defined in the implementation file, where impl is a complete type
@@ -165,10 +168,6 @@ namespace Astroid {
       } ElementAction;
 
       bool element_action (ElementAction);
-
-      /* webkit */
-      class impl;
-      std::experimental::propagate_const<std::unique_ptr<impl>> pImpl;
 
     protected:
       std::atomic<bool> wk_loaded;
