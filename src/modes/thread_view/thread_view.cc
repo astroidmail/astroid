@@ -62,88 +62,90 @@ namespace Astroid {
     gpointer user_data);
 
   class ThreadView::impl {
-    WebKitWebView *     webview;
-    WebKitSettings *    websettings;
-    WebKitWebContext *  context;
+
+    public:
+      WebKitWebView *     webview;
+      WebKitSettings *    websettings;
+      WebKitWebContext *  context;
   
-    /* event wrappers */
-    bool on_load_changed (ThreadView & self,
-                          WebKitWebView * /* w */,
-                          WebKitLoadEvent load_event) {
-      LOG (debug) << "tv: on_load_changed: " << load_event;
-      switch (load_event) {
-      case WEBKIT_LOAD_FINISHED:
-        LOG (debug) << "tv: load finished.";
-        {
-          /* render */
-          self.wk_loaded = true;
-
-          // also called in page_client
-          if (self.page_client->ready) self.on_ready_to_render ();
-        }
-      default:
-        break;
-      }
-
-      return true;
-    }
-      
-    gboolean decide_policy (ThreadView & self,
+      /* event wrappers */
+      bool on_load_changed (ThreadView & self,
                             WebKitWebView * /* w */,
-                            WebKitPolicyDecision * decision,
-                            WebKitPolicyDecisionType decision_type) {
-      LOG (debug) << "tv: decide policy";
+                            WebKitLoadEvent load_event) {
+        LOG (debug) << "tv: on_load_changed: " << load_event;
+        switch (load_event) {
+        case WEBKIT_LOAD_FINISHED:
+          LOG (debug) << "tv: load finished.";
+          {
+            /* render */
+            self.wk_loaded = true;
 
-      switch (decision_type) {
-      case WEBKIT_POLICY_DECISION_TYPE_NAVIGATION_ACTION: // navigate to {{{
-        {
-          WebKitNavigationPolicyDecision * navigation_decision = WEBKIT_NAVIGATION_POLICY_DECISION (decision);
-          WebKitNavigationAction * nav_action = webkit_navigation_policy_decision_get_navigation_action (navigation_decision);
-
-          if (webkit_navigation_action_get_navigation_type (nav_action)
-              == WEBKIT_NAVIGATION_TYPE_LINK_CLICKED) {
-
-            webkit_policy_decision_ignore (decision);
-
-            const gchar * uri_c =
-              webkit_uri_request_get_uri (webkit_navigation_action_get_request (nav_action));
-
-            ustring uri (uri_c);
-            LOG (info) << "tv: navigating to: " << uri;
-
-            ustring scheme = Glib::uri_parse_scheme (uri);
-
-            if (scheme == "mailto") {
-
-              uri = uri.substr (scheme.length ()+1, uri.length () - scheme.length()-1);
-              UstringUtils::trim(uri);
-
-              self.main_window->add_mode (new EditMessage (self.main_window, uri));
-
-            } else if (scheme == "id" || scheme == "mid" ) {
-              self.main_window->add_mode (new ThreadIndex (self.main_window, uri));
-
-            } else if (scheme == "http" || scheme == "https" || scheme == "ftp") {
-              self.open_link (uri);
-
-            } else {
-              LOG (error) << "tv: unknown uri scheme. not opening.";
-            }
+            // also called in page_client
+            if (self.page_client->ready) self.on_ready_to_render ();
           }
-        } // }}}
-        break;
+        default:
+          break;
+        }
 
-      case WEBKIT_POLICY_DECISION_TYPE_NEW_WINDOW_ACTION:
-        webkit_policy_decision_ignore (decision);
-        break;
+        return true;
+      }
+      
+      gboolean decide_policy (ThreadView & self,
+                              WebKitWebView * /* w */,
+                              WebKitPolicyDecision * decision,
+                              WebKitPolicyDecisionType decision_type) {
+        LOG (debug) << "tv: decide policy";
 
-      default:
-        webkit_policy_decision_ignore (decision);
+        switch (decision_type) {
+        case WEBKIT_POLICY_DECISION_TYPE_NAVIGATION_ACTION: // navigate to {{{
+          {
+            WebKitNavigationPolicyDecision * navigation_decision = WEBKIT_NAVIGATION_POLICY_DECISION (decision);
+            WebKitNavigationAction * nav_action = webkit_navigation_policy_decision_get_navigation_action (navigation_decision);
+
+            if (webkit_navigation_action_get_navigation_type (nav_action)
+                == WEBKIT_NAVIGATION_TYPE_LINK_CLICKED) {
+
+              webkit_policy_decision_ignore (decision);
+
+              const gchar * uri_c =
+                webkit_uri_request_get_uri (webkit_navigation_action_get_request (nav_action));
+
+              ustring uri (uri_c);
+              LOG (info) << "tv: navigating to: " << uri;
+
+              ustring scheme = Glib::uri_parse_scheme (uri);
+
+              if (scheme == "mailto") {
+
+                uri = uri.substr (scheme.length ()+1, uri.length () - scheme.length()-1);
+                UstringUtils::trim(uri);
+
+                self.main_window->add_mode (new EditMessage (self.main_window, uri));
+
+              } else if (scheme == "id" || scheme == "mid" ) {
+                self.main_window->add_mode (new ThreadIndex (self.main_window, uri));
+
+              } else if (scheme == "http" || scheme == "https" || scheme == "ftp") {
+                self.open_link (uri);
+
+              } else {
+                LOG (error) << "tv: unknown uri scheme. not opening.";
+              }
+            }
+          } // }}}
+          break;
+
+        case WEBKIT_POLICY_DECISION_TYPE_NEW_WINDOW_ACTION:
+          webkit_policy_decision_ignore (decision);
+          break;
+
+        default:
+          webkit_policy_decision_ignore (decision);
+          return true; // stop event
+        }
+
         return true; // stop event
       }
-
-      return true; // stop event
-    }
   }; // class ThreadView::impl
 
   ThreadView::ThreadView (MainWindow * mw, bool _edit_mode) : Mode (mw) { //
@@ -160,9 +162,7 @@ namespace Astroid {
     /* WebKit: set up webkit web view */
 
     /* create web context */
-    Private
-      
-      .context = webkit_web_context_new_ephemeral ();
+    pImpl->context = webkit_web_context_new_ephemeral ();
 
     /* set up this extension interface */
     page_client = new PageClient (this);
