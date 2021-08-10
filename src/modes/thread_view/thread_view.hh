@@ -8,6 +8,7 @@
 # include <mutex>
 # include <condition_variable>
 # include <functional>
+# include <experimental/propagate_const>
 
 // avoid conflicting YES/NO in stock.h
 # ifndef GTKMM_DISABLE_DEPRECATED
@@ -161,7 +162,8 @@ namespace Astroid {
       bool element_action (ElementAction);
 
       /* webkit */
-      struct              Private;
+      class impl;
+      std::experimental::propagate_const<std::unique_ptr<impl>> pImpl;
 
     protected:
       std::atomic<bool> wk_loaded;
