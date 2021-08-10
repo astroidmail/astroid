@@ -37,10 +37,10 @@ namespace Astroid {
   class ThreadView : public Mode {
     friend PageClient;
 
-    class impl;
-    std::experimental::propagate_const<std::unique_ptr<impl>> pImpl;
-
     public:
+      class impl;
+      std::experimental::propagate_const<std::unique_ptr<impl>> pImpl;
+
       ThreadView (MainWindow *, bool _edit_mode = false);
       ~ThreadView ();   // defined in the implementation file, where impl is a complete type
       ThreadView (ThreadView&&); // defined in the implementation file

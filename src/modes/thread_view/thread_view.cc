@@ -68,7 +68,7 @@ namespace Astroid {
       WebKitSettings *    websettings;
       WebKitWebContext *  context;
 
-      ThreadView::impl::~ThreadView::impl () { //
+      ~impl () { //
         LOG (debug) << "tv: deconstruct.";
         g_object_unref (context);
         g_object_unref (websettings);
@@ -250,8 +250,6 @@ namespace Astroid {
   }
 
   ThreadView::~ThreadView () = default;
-  ThreadView::ThreadView (ThreadView&&) = default;
-  ThreadView& ThreadView::operator= (ThreadView&&) = default;
 
   void ThreadView::pre_close () {
 # ifndef DISABLE_PLUGINS
