@@ -42,8 +42,8 @@ namespace Astroid {
                                                   gpointer);
    
   class PageClient::impl {
-  public:
-    void init_web_extensions (PageClient & self, WebKitWebContext * context) {
+    public:
+      void init_web_extensions (PageClient & self, WebKitWebContext * context) {
         
         /* add path to Astroid web extension */
 # ifdef DEBUG
@@ -115,7 +115,6 @@ namespace Astroid {
                                                                         context,
                                                                         gaddr);
      }
-
      
   }; // class PageClient::impl
    
@@ -134,10 +133,9 @@ namespace Astroid {
         ATTACHMENT_ICON_WIDTH,
         Gtk::ICON_LOOKUP_USE_BUILTIN );
 
-    extension_connect_id = g_signal_connect (thread_view->pImpl->context,
-        "initialize-web-extensions",
-        G_CALLBACK (PageClient_init_web_extensions),
-        (gpointer) this);
+     extension_connect_id = thread_view->connect_page_client("initialize-web-extensions",
+                                                             G_CALLBACK (PageClient_init_web_extensions),
+                                                             (gpointer) this);
   }
 
   extern "C" void PageClient_init_web_extensions (
@@ -149,9 +147,8 @@ namespace Astroid {
 
   PageClient::~PageClient () {
     LOG (debug) << "pc: destruct";
-    g_signal_handler_disconnect (thread_view->pImpl->context,
-        extension_connect_id);
-
+     thread_view->disconnect_page_client(extension_connect_id);
+     
     LOG (debug) << "pc: closing";
 
     istream.clear ();

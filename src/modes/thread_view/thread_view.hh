@@ -84,6 +84,10 @@ namespace Astroid {
 
       /* Web extension */
       PageClient * page_client;
+      gulong   connect_page_client(const gchar* detailed_signal,
+                                   GCallback c_handler,
+                                   gpointer user_data);
+      void     disconnect_page_client(gulong connection_id);
 
     private:
       /* focus and message state */

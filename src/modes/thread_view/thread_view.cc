@@ -155,6 +155,20 @@ namespace Astroid {
       }
   }; // class ThreadView::impl
 
+  gulong ThreadView::connect_page_client (const gchar* detailed_signal,
+                                          GCallback c_handler,
+                                          gpointer user_data) {
+    return (g_signal_connect (pImpl->context,
+                              detailed_signal,
+                              c_handler,
+                              user_data));
+  }
+   
+  void ThreadView::disconnect_page_client (gulong connection_id) {
+    g_signal_handler_disconnect (pImpl->context,
+                                 connection_id);
+  }
+
   ThreadView::ThreadView (MainWindow * mw, bool _edit_mode) : Mode (mw) { //
     edit_mode = _edit_mode;
     wk_loaded = false;
