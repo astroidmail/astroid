@@ -16,10 +16,11 @@
 namespace Astroid {
 
   class PageClient : public sigc::trackable {
-     class impl;
-     std::experimental::propagate_const<std::unique_ptr<impl>> pImpl;
-
+     
     public:
+      class impl;
+      std::experimental::propagate_const<std::unique_ptr<impl>> pImpl;
+
       PageClient (ThreadView *);
       ~PageClient ();
 

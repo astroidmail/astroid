@@ -42,8 +42,8 @@ namespace Astroid {
                                                   gpointer);
    
   class PageClient::impl {
-     
-    void init_web_extensions (WebKitWebContext * context) {
+  public:
+    void init_web_extensions (PageClient & self, WebKitWebContext * context) {
         
         /* add path to Astroid web extension */
 # ifdef DEBUG
@@ -80,17 +80,17 @@ namespace Astroid {
         /* set up unix socket */
         LOG (warn) << "pc: id: " << id;
         
-        socket_addr = ustring::compose ("%1/astroid.%2.%3.%4",
-                                        astroid->standard_paths ().socket_dir.c_str(),
-                                        getpid(),
-                                        id,
-                                        UstringUtils::random_alphanumeric (30));
+        self.socket_addr = ustring::compose ("%1/astroid.%2.%3.%4",
+                                             astroid->standard_paths ().socket_dir.c_str(),
+                                             getpid(),
+                                             id,
+                                             UstringUtils::random_alphanumeric (30));
         refptr<Gio::UnixSocketAddress> addr;
         if(Gio::UnixSocketAddress::abstract_names_supported ()) {
-           addr = Gio::UnixSocketAddress::create (socket_addr,
+           addr = Gio::UnixSocketAddress::create (self.socket_addr,
                                                   Gio::UNIX_SOCKET_ADDRESS_ABSTRACT);
         } else {
-           addr = Gio::UnixSocketAddress::create (socket_addr,
+           addr = Gio::UnixSocketAddress::create (self.socket_addr,
                                                   Gio::UNIX_SOCKET_ADDRESS_PATH);
         }
         
@@ -99,13 +99,13 @@ namespace Astroid {
         LOG (debug) << "pc: socket: " << addr->get_path ();
         
         mode_t p = umask (0077);
-        srv = Gio::SocketListener::create ();
-        srv->add_address (addr, Gio::SocketType::SOCKET_TYPE_STREAM,
-                          Gio::SocketProtocol::SOCKET_PROTOCOL_DEFAULT,
-                          eaddr);
+        self.srv = Gio::SocketListener::create ();
+        self.srv->add_address (addr, Gio::SocketType::SOCKET_TYPE_STREAM,
+                               Gio::SocketProtocol::SOCKET_PROTOCOL_DEFAULT,
+                               eaddr);
         
         /* listen */
-        srv->accept_async (sigc::mem_fun (this, &PageClient::extension_connect));
+        self.srv->accept_async (sigc::mem_fun (this, &PageClient::extension_connect));
         umask (p);
         
         /* send socket address (TODO: include key) */
@@ -134,7 +134,7 @@ namespace Astroid {
         ATTACHMENT_ICON_WIDTH,
         Gtk::ICON_LOOKUP_USE_BUILTIN );
 
-    extension_connect_id = g_signal_connect (thread_view->context,
+    extension_connect_id = g_signal_connect (thread_view->pImpl->context,
         "initialize-web-extensions",
         G_CALLBACK (PageClient_init_web_extensions),
         (gpointer) this);
@@ -144,12 +144,12 @@ namespace Astroid {
       WebKitWebContext * context,
       gpointer           user_data) {
 
-    ((PageClient *) user_data)->pImpl->init_web_extensions (context);
+    ((PageClient *) user_data)->pImpl->init_web_extensions (((PageClient *) user_data), context);
   }
 
   PageClient::~PageClient () {
     LOG (debug) << "pc: destruct";
-    g_signal_handler_disconnect (thread_view->context,
+    g_signal_handler_disconnect (thread_view->pImpl->context,
         extension_connect_id);
 
     LOG (debug) << "pc: closing";
