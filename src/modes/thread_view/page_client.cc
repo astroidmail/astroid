@@ -105,7 +105,7 @@ namespace Astroid {
                                eaddr);
         
         /* listen */
-        self.srv->accept_async (sigc::mem_fun (this, &PageClient::extension_connect));
+        self.srv->accept_async (sigc::mem_fun (self, &PageClient::extension_connect));
         umask (p);
         
         /* send socket address (TODO: include key) */
@@ -142,7 +142,7 @@ namespace Astroid {
       WebKitWebContext * context,
       gpointer           user_data) {
 
-    ((PageClient *) user_data)->pImpl->init_web_extensions (((PageClient *) user_data), context);
+    ((PageClient *) user_data)->pImpl->init_web_extensions ( * ((PageClient *) user_data), context);
   }
 
   PageClient::~PageClient () {
