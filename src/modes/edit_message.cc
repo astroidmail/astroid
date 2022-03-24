@@ -1111,7 +1111,7 @@ namespace Astroid {
     status_icon_visible = true;
     Glib::RefPtr<Gtk::IconTheme> theme = Gtk::IconTheme::get_default();
     Glib::RefPtr<Gdk::Pixbuf> pixbuf = theme->load_icon (
-        "mail-send",
+        "mail-send-symbolic",
         Notebook::icon_size,
         Gtk::ICON_LOOKUP_USE_BUILTIN | Gtk::ICON_LOOKUP_FORCE_SIZE);
     message_sending_status_icon.set (pixbuf);
@@ -1162,7 +1162,7 @@ namespace Astroid {
       fields_show ();
 
       pixbuf = theme->load_icon (
-         "dialog-error",
+         "dialog-error-symbolic",
           Notebook::icon_size,
           Gtk::ICON_LOOKUP_USE_BUILTIN | Gtk::ICON_LOOKUP_FORCE_SIZE);
     }
