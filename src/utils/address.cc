@@ -32,16 +32,17 @@ namespace Astroid {
 
     _valid = true;
 
-    if (internet_address_list_length (list) > 1) {
-      LOG (error) << "address: more than one address in list!";
+    if (!IS_INTERNET_ADDRESS_LIST (list) || internet_address_list_length (list) < 1) {
+      LOG (error) << "address: no address in string.";
       _valid = false;
       _email = str;
-      g_object_unref (list);
+      if (list != NULL)
+        g_object_unref (list);
       return;
     }
 
-    if (internet_address_list_length (list) < 1) {
-      LOG (error) << "address: no address in string.";
+    if (internet_address_list_length (list) > 1) {
+      LOG (error) << "address: more than one address in list!";
       _email = str;
       _valid = false;
       g_object_unref (list);
