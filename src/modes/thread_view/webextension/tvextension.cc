@@ -464,7 +464,7 @@ void AstroidExtension::handle_page (AstroidMessages::Page &s) {/*{{{*/
   webkit_dom_node_append_child (WEBKIT_DOM_NODE(head), WEBKIT_DOM_NODE(e), (err = NULL, &err));
   LOG (debug) << "done";
 
-  /* store part / iframe css for later */
+  /* store part / body_message css for later */
   part_css = s.part_css ();
 
   /* store allowed uris */
@@ -495,11 +495,9 @@ void AstroidExtension::reload_images () {
     for (auto &c : m.elements()) {
       if (!c.focusable ()) {
         WebKitDOMHTMLElement * body_container = WEBKIT_DOM_HTML_ELEMENT(webkit_dom_document_get_element_by_id (d, c.sid ().c_str ()));
-        WebKitDOMHTMLElement * iframe = DomUtils::select (WEBKIT_DOM_NODE(body_container), ".body_iframe");
-        WebKitDOMDocument * iframe_d = webkit_dom_html_iframe_element_get_content_document (WEBKIT_DOM_HTML_IFRAME_ELEMENT(iframe));
-        WebKitDOMHTMLElement * b = webkit_dom_document_get_body (iframe_d);
+        WebKitDOMHTMLElement * body_message = DomUtils::select (WEBKIT_DOM_NODE (body_container), ".body_message");
 
-        WebKitDOMNodeList * imgs = webkit_dom_element_query_selector_all (WEBKIT_DOM_ELEMENT(b), "img", (err = NULL, &err));
+        WebKitDOMNodeList * imgs = webkit_dom_element_query_selector_all (WEBKIT_DOM_ELEMENT(body_message), "img", (err = NULL, &err));
 
         gulong l = webkit_dom_node_list_get_length (imgs);
         for (gulong i = 0; i < l; i++) {
@@ -542,9 +540,6 @@ void AstroidExtension::reload_images () {
         }
 
         g_object_unref (imgs);
-        g_object_unref (b);
-        g_object_unref (iframe_d);
-        g_object_unref (iframe);
         g_object_unref (body_container);
       }
     }
@@ -1152,44 +1147,30 @@ void AstroidExtension::create_body_part (
    */
   Glib::signal_idle().connect_once (
       sigc::bind (
-        sigc::mem_fun(*this, &AstroidExtension::set_iframe_src), message.mid(), c.sid(), body));
+        sigc::mem_fun(*this, &AstroidExtension::set_body_message), message.mid(), c.sid(), body));
 
   LOG (debug) << "create_body_part done.";
 }
 
-void AstroidExtension::set_iframe_src (ustring mid, ustring cid, ustring body) {
-  LOG (debug) << "set iframe src: " << mid << ", " << cid;
+void AstroidExtension::set_body_message (ustring mid, ustring cid, ustring body) {
+  LOG (debug) << "set body message: " << mid << ", " << cid;
 
   WebKitDOMDocument * d = webkit_web_page_get_dom_document (page);
   GError *err;
 
-  WebKitDOMHTMLElement * body_container = WEBKIT_DOM_HTML_ELEMENT(webkit_dom_document_get_element_by_id (d, cid.c_str ()));
+  WebKitDOMHTMLElement * body_container =
+    WEBKIT_DOM_HTML_ELEMENT(webkit_dom_document_get_element_by_id (d, cid.c_str ()));
+  WebKitDOMHTMLElement * body_message =
+    DomUtils::select (WEBKIT_DOM_NODE (body_container), ".body_message");
 
-  WebKitDOMHTMLElement * iframe =
-    DomUtils::select (WEBKIT_DOM_NODE(body_container), ".body_iframe");
-
-
-  /* by using srcdoc we avoid creating any requests that would have to be
-   * allowed on the main GUI thread. even if we run this function async there
-   * might be other sync calls to the webextension that cause blocking since
-   * most webextension funcs need to run on extension GUI thread in order to
-   * manipulate DOM tree */
-
-  /* according to: http://w3c.github.io/html/semantics-embedded-content.html#element-attrdef-iframe-src
-   * we need to escape quotation marks and amperands. it seems that by using
-   * this call webkit does this for us. this is critical since otherwise the
-   * content could break out of the iframe. */
-
-  /* it would probably be possible to mess up the style, but it should only affect the current frame content. this would anyway be possible. */
-
-  webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (iframe), "srcdoc",
+  webkit_dom_element_set_inner_html (WEBKIT_DOM_ELEMENT(body_message),
       ustring::compose (
         "<STYLE>%1</STYLE>%2",
         part_css,
         body ).c_str (),
       (err = NULL, &err));
 
-  g_object_unref (iframe);
+  g_object_unref (body_message);
   g_object_unref (body_container);
   g_object_unref (d);
 }

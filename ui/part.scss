@@ -1,4 +1,4 @@
-/* ui-version: 5 (do not change when modifying theme for yourself) */
+/* ui-version: 6 (do not change when modifying theme for yourself) */
 /* Fonts */
 @if not(global-variable-exists(font-base-size)) {
   $font-base-size: 16px !global;
@@ -14,20 +14,6 @@
 
 @if not(global-variable-exists(font-family-default)) {
   $font-family-default: $font-sans !global;
-}
-
-body {
-  background-color: white !important;
-  color: black;
-  overflow-x: auto;
-  overflow-y: hidden;
-  word-break: break-word;
-  word-wrap: break-word;
-
-  font-size: $font-base-size;
-  font-family: $font-family-default;
-  margin: 0 0 0 0;
-  text-align: left;
 }
 
 .search_coloring *::selection {
