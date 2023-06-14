@@ -781,7 +781,7 @@ namespace Astroid {
 
     } else {
       /* load into byte array */
-      refptr<Gio::File> fle = Glib::wrap (file, false);
+      refptr<Gio::File> fle = Glib::wrap (file, true);
       refptr<Gio::FileInputStream> istr = fle->read ();
 
       refptr<Glib::Bytes> b;
