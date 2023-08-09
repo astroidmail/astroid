@@ -29,5 +29,11 @@ namespace Astroid {
       MuteAction (std::vector<refptr<NotmuchItem>>);
   };
 
+  class TrashAction : public ToggleAction {
+  public:
+    TrashAction (refptr<NotmuchItem>);
+    TrashAction (std::vector<refptr<NotmuchItem>>);
+  };
+
 }
 
