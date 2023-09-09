@@ -54,6 +54,7 @@ namespace Astroid {
     message_count_len = ti.get<int> ("message_count_length");
     authors_len   = ti.get<int> ("authors_length");
     tags_len      = ti.get<int> ("tags_length");
+    show_left_icons  = ti.get<bool> ("show_left_icons");
 
     subject_color = ti.get<string> ("subject_color");
     subject_color_selected = ti.get<string> ("subject_color_selected");
@@ -84,11 +85,13 @@ namespace Astroid {
       line_height     = content_height + line_spacing;
       height_set = true;
 
-      left_icons_size  = content_height - (2 * left_icons_padding);
+      left_icons_size  = show_left_icons ? content_height - (2 * left_icons_padding) : 0;
       left_icons_width = left_icons_size;
 
-      date_start          = left_icons_width_n * left_icons_width +
-          (left_icons_width_n-1) * left_icons_padding + padding;
+      date_start          = show_left_icons
+				                    ? left_icons_width_n * left_icons_width +
+          (left_icons_width_n-1) * left_icons_padding + padding
+			                      : 0;
       date_width          = char_width * date_len;
       message_count_width = char_width * message_count_len;
       message_count_start = date_start + date_width + padding;
@@ -125,10 +128,10 @@ namespace Astroid {
       render_delimiter (cr, widget, cell_area);
     */
 
-    if (thread->flagged)
+    if (thread->flagged && show_left_icons)
       render_flagged (cr, widget, cell_area);
 
-    if (thread->attachment)
+    if (thread->attachment && show_left_icons)
       render_attachment (cr, widget, cell_area);
 
     /*
