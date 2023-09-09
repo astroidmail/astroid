@@ -31,7 +31,7 @@ namespace Astroid {
 
   /* static settings */
   bool Db::maildir_synchronize_flags = false;
-  std::vector<ustring> Db::excluded_tags = { "muted", "spam", "deleted" };
+  std::vector<ustring> Db::excluded_tags = { "muted", "spam", "deleted", "trash" };
   std::vector<ustring> Db::sent_tags = { "sent" };
   std::vector<ustring> Db::draft_tags = { "draft" };
   std::vector<ustring> Db::tags;

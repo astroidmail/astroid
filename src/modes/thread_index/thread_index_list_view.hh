@@ -85,6 +85,7 @@ namespace Astroid {
         MUnread = 0,
         MFlag,
         MArchive,
+        MTrash,
         MSpam,
         MMute,
         MToggle,
