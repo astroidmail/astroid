@@ -489,6 +489,11 @@ namespace Astroid {
                              "Toggle archive",
                              bind (&ThreadIndexListView::multi_key_handler, this, MArchive, std::placeholders::_1));
 
+    multi_keys.register_key ("#",
+                             "thread_index.multi.trash",
+                             "Toggle trash",
+                             bind (&ThreadIndexListView::multi_key_handler, this, MTrash, std::placeholders::_1));
+
     multi_keys.register_key ("S",
                              "thread_index.multi.mark_spam",
                              "Toggle spam",
@@ -877,6 +882,17 @@ namespace Astroid {
           return true;
         });
 
+    keys->register_key ("#", "thread_index.trash",
+        "Toggle 'trash' tag on thread",
+        [&] (Key) {
+          auto thread = get_current_thread ();
+          if (thread) {
+            main_window->actions->doit (refptr<Action>(new ToggleAction(thread, "trash")));
+          }
+
+          return true;
+        });
+
     keys->register_key (Key (GDK_KEY_asterisk), "thread_index.flag",
         "Toggle 'flagged' tag on thread",
         [&] (Key) {
@@ -1047,6 +1063,7 @@ namespace Astroid {
       case MSpam:
       case MMute:
       case MArchive:
+      case MTrash:
       case MTag:
         {
           vector<refptr<NotmuchItem>> threads;
@@ -1068,6 +1085,10 @@ namespace Astroid {
           switch (maction) {
             case MArchive:
               a = refptr<Action>(new ToggleAction(threads, "inbox"));
+              break;
+
+            case MTrash:
+              a = refptr<Action>(new ToggleAction(threads, "trash"));
               break;
 
             case MFlag:

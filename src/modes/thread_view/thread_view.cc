@@ -1397,6 +1397,20 @@ namespace Astroid {
           return true;
         });
 
+    keys.register_key ("#",
+        "thread_view.trash_thread",
+        "Toggle 'trash' tag on the whole thread",
+        [&] (Key) {
+
+          if (!edit_mode && focused_message) {
+            if (thread) {
+              main_window->actions->doit (refptr<Action>(new ToggleAction(thread, "trash")));
+            }
+          }
+
+          return true;
+        });
+
     keys.register_key ("C-P",
         "thread_view.print",
         "Print focused message",
@@ -1586,6 +1600,16 @@ namespace Astroid {
         [&] (Key) {
           keys.handle ("thread_view.archive_thread");
           emit_index_action (IA_NextUnread);
+
+          return true;
+        });
+
+    next_multi.register_key ("#",
+        "thread_view.multi_next_thread.trash_thread",
+        "Trash, goto next",
+        [&] (Key) {
+          keys.handle ("thread_view.trash_thread");
+          emit_index_action (IA_Next);
 
           return true;
         });
