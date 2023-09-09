@@ -72,6 +72,7 @@ namespace Astroid {
       int line_height; // content_height + line_spacing
       int content_height;
       int line_spacing = 2; // configurable
+			bool show_left_icons = true; // configurable
 
       int left_icons_size;
       int left_icons_width;
