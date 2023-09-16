@@ -51,6 +51,7 @@ pkgs.mkShell {
     gtkmm3
     libpeas
     libsass
+    ninja
     notmuch
     pkgconfig
     python3
