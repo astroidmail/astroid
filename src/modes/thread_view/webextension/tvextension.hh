@@ -124,7 +124,7 @@ class AstroidExtension {
         const AstroidMessages::Message::Chunk &c,
         WebKitDOMHTMLElement * span_body);
 
-    void set_iframe_src (ustring, ustring, ustring);
+    void set_body_message (ustring, ustring, ustring);
 
     void create_sibling_part (
         /* const AstroidMessages::Message &message, */
