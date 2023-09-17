@@ -785,6 +785,41 @@ void AstroidExtension::update_message (AstroidMessages::UpdateMessage &um) {
   ack (true);
 }
 
+void AstroidExtension::size_message_iframes () {
+
+  GError *err = NULL;
+
+  for (auto &sm : state.messages()) {
+    //ustring div_id = "message_" + m.mid ();
+    //WebKitDOMElement * me = webkit_dom_document_get_element_by_id (d, div_id.c_str());
+    for (auto &e : sm.elements()) {
+      if (!e.focusable()) {
+        WebKitDOMDocument *d = webkit_web_page_get_dom_document (page);
+        WebKitDOMHTMLElement * body_container = WEBKIT_DOM_HTML_ELEMENT(webkit_dom_document_get_element_by_id (d, e.sid().c_str()));
+        WebKitDOMHTMLElement * iframe = DomUtils::select (WEBKIT_DOM_NODE(body_container), ".body_iframe");
+        WebKitDOMDocument * iframe_d = webkit_dom_html_iframe_element_get_content_document (WEBKIT_DOM_HTML_IFRAME_ELEMENT(iframe));
+        WebKitDOMHTMLElement * b = webkit_dom_document_get_body (iframe_d);
+        long scroll_height = webkit_dom_element_get_scroll_height(WEBKIT_DOM_ELEMENT(b));
+        LOG(warn) << "email scrollHeight: " << scroll_height;
+        webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (iframe),
+                    "height",
+                    std::to_string(scroll_height).append("px").c_str(),
+                    (err = NULL, &err));
+
+        g_object_unref (b);
+        g_object_unref (iframe_d);
+        g_object_unref (iframe);
+        g_object_unref (body_container);
+        g_object_unref (d);
+      }
+    }
+  }
+
+  g_object_unref (err);
+}
+
+
+
 /* main message generation  */
 void AstroidExtension::set_message_html (
     AstroidMessages::Message m,
@@ -1826,6 +1861,8 @@ void AstroidExtension::apply_focus (ustring mid, int element) {
   }
 
   g_object_unref (d);
+
+  this->size_message_iframes ();
 
   LOG (debug) << "focus done.";
 }
