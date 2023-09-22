@@ -99,7 +99,6 @@ namespace Astroid {
         "enable-xss-auditor", TRUE,
         "media-playback-requires-user-gesture", TRUE,
         "zoom-text-only", TRUE,
-        "enable-frame-flattening", TRUE,
 # if (DEBUG || DEBUG_WEBKIT)
         "enable-developer-extras", TRUE,
 # endif

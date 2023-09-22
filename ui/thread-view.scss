@@ -1,4 +1,4 @@
-/* ui-version: 5 (do not change when modifying theme for yourself) */
+/* ui-version: 6 (do not change when modifying theme for yourself) */
 /* Variables */
 @if not(global-variable-exists(background-color)) {
   $background-color: #ccc !global;
@@ -393,7 +393,7 @@ body:not(.nohide) .email.hide .header_container .avatar {
     }
 }
 
-iframe {
+.body_message {
   border: none;
   width: 100%;
   text-align: left;
