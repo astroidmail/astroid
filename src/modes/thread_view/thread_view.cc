@@ -50,6 +50,125 @@ using boost::property_tree::ptree;
 
 namespace Astroid {
 
+  extern "C" bool ThreadView_on_load_changed (
+    WebKitWebView * w,
+    WebKitLoadEvent load_event,
+    gpointer user_data);
+
+  extern "C" gboolean ThreadView_decide_policy (
+    WebKitWebView * w,
+    WebKitPolicyDecision * decision,
+    WebKitPolicyDecisionType decision_type,
+    gpointer user_data);
+
+  class ThreadView::impl {
+
+    public:
+      WebKitWebView *     webview;
+      WebKitSettings *    websettings;
+      WebKitWebContext *  context;
+
+      ~impl () { //
+        LOG (debug) << "tv: deconstruct.";
+        g_object_unref (context);
+        g_object_unref (websettings);
+        g_object_unref (webview);
+      }
+
+      /* event wrappers */
+      bool on_load_changed (ThreadView & self,
+                            WebKitWebView * /* w */,
+                            WebKitLoadEvent load_event) {
+        LOG (debug) << "tv: on_load_changed: " << load_event;
+        switch (load_event) {
+        case WEBKIT_LOAD_FINISHED:
+          LOG (debug) << "tv: load finished.";
+          {
+            /* render */
+            self.wk_loaded = true;
+
+            // also called in page_client
+            if (self.page_client->ready) self.on_ready_to_render ();
+          }
+        default:
+          break;
+        }
+
+        return true;
+      }
+      
+      gboolean decide_policy (ThreadView & self,
+                              WebKitWebView * /* w */,
+                              WebKitPolicyDecision * decision,
+                              WebKitPolicyDecisionType decision_type) {
+        LOG (debug) << "tv: decide policy";
+
+        switch (decision_type) {
+        case WEBKIT_POLICY_DECISION_TYPE_NAVIGATION_ACTION: // navigate to {{{
+          {
+            WebKitNavigationPolicyDecision * navigation_decision = WEBKIT_NAVIGATION_POLICY_DECISION (decision);
+            WebKitNavigationAction * nav_action = webkit_navigation_policy_decision_get_navigation_action (navigation_decision);
+
+            if (webkit_navigation_action_get_navigation_type (nav_action)
+                == WEBKIT_NAVIGATION_TYPE_LINK_CLICKED) {
+
+              webkit_policy_decision_ignore (decision);
+
+              const gchar * uri_c =
+                webkit_uri_request_get_uri (webkit_navigation_action_get_request (nav_action));
+
+              ustring uri (uri_c);
+              LOG (info) << "tv: navigating to: " << uri;
+
+              ustring scheme = Glib::uri_parse_scheme (uri);
+
+              if (scheme == "mailto") {
+
+                uri = uri.substr (scheme.length ()+1, uri.length () - scheme.length()-1);
+                UstringUtils::trim(uri);
+
+                self.main_window->add_mode (new EditMessage (self.main_window, uri));
+
+              } else if (scheme == "id" || scheme == "mid" ) {
+                self.main_window->add_mode (new ThreadIndex (self.main_window, uri));
+
+              } else if (scheme == "http" || scheme == "https" || scheme == "ftp") {
+                self.open_link (uri);
+
+              } else {
+                LOG (error) << "tv: unknown uri scheme. not opening.";
+              }
+            }
+          } // }}}
+          break;
+
+        case WEBKIT_POLICY_DECISION_TYPE_NEW_WINDOW_ACTION:
+          webkit_policy_decision_ignore (decision);
+          break;
+
+        default:
+          webkit_policy_decision_ignore (decision);
+          return true; // stop event
+        }
+
+        return true; // stop event
+      }
+  }; // class ThreadView::impl
+
+  gulong ThreadView::connect_page_client (const gchar* detailed_signal,
+                                          GCallback c_handler,
+                                          gpointer user_data) {
+    return (g_signal_connect (pImpl->context,
+                              detailed_signal,
+                              c_handler,
+                              user_data));
+  }
+   
+  void ThreadView::disconnect_page_client (gulong connection_id) {
+    g_signal_handler_disconnect (pImpl->context,
+                                 connection_id);
+  }
+
   ThreadView::ThreadView (MainWindow * mw, bool _edit_mode) : Mode (mw) { //
     edit_mode = _edit_mode;
     wk_loaded = false;
@@ -64,7 +183,7 @@ namespace Astroid {
     /* WebKit: set up webkit web view */
 
     /* create web context */
-    context = webkit_web_context_new_ephemeral ();
+    pImpl->context = webkit_web_context_new_ephemeral ();
 
     /* set up this extension interface */
     page_client = new PageClient (this);
@@ -82,9 +201,9 @@ namespace Astroid {
     /* one process for each webview so that a new and unique
      * instance of the webextension is created for each webview
      * and page */
-    webkit_web_context_set_process_model (context, WEBKIT_PROCESS_MODEL_MULTIPLE_SECONDARY_PROCESSES);
+    webkit_web_context_set_process_model (pImpl->context, WEBKIT_PROCESS_MODEL_MULTIPLE_SECONDARY_PROCESSES);
 
-    websettings = WEBKIT_SETTINGS (webkit_settings_new_with_settings (
+    pImpl->websettings = WEBKIT_SETTINGS (webkit_settings_new_with_settings (
         "enable-javascript", FALSE,
         "enable-java", FALSE,
         "enable-plugins", FALSE,
@@ -105,28 +224,30 @@ namespace Astroid {
 # endif
         NULL));
 
-    webview =
+    pImpl->webview =
       WEBKIT_WEB_VIEW (
         g_object_new (WEBKIT_TYPE_WEB_VIEW,
-          "web-context", context,
-          "settings", websettings,
+          "web-context", pImpl->context,
+          "settings", pImpl->websettings,
           NULL));
 
-    if (g_object_is_floating (webview)) g_object_ref_sink (webview);
+    if (g_object_is_floating (pImpl->webview)) g_object_ref_sink (pImpl->webview);
 
-    gtk_box_pack_start (GTK_BOX (this->gobj ()), GTK_WIDGET (webview), true, true, 0);
+    gtk_box_pack_start (GTK_BOX (this->gobj ()), GTK_WIDGET (pImpl->webview), true, true, 0);
 
 
-    g_signal_connect (webview, "load-changed",
-        G_CALLBACK(ThreadView_on_load_changed),
-        (gpointer) this );
+    g_signal_connect (pImpl->webview,
+                      "load-changed",
+                      G_CALLBACK(ThreadView_on_load_changed),
+                      (gpointer) this );        // user_data
 
 
     add_events (Gdk::KEY_PRESS_MASK);
 
-    g_signal_connect (webview, "decide-policy",
-        G_CALLBACK(ThreadView_decide_policy),
-        (gpointer) this);
+    g_signal_connect (pImpl->webview,
+                      "decide-policy",
+                      G_CALLBACK(ThreadView_decide_policy),
+                      (gpointer) this);       // user_data
 
     load_html ();
 
@@ -142,12 +263,7 @@ namespace Astroid {
 
   }
 
-  ThreadView::~ThreadView () { //
-    LOG (debug) << "tv: deconstruct.";
-    g_object_unref (context);
-    g_object_unref (websettings);
-    g_object_unref (webview);
-  }
+  ThreadView::~ThreadView () = default;
 
   void ThreadView::pre_close () {
 # ifndef DISABLE_PLUGINS
@@ -165,68 +281,7 @@ namespace Astroid {
       WebKitPolicyDecisionType decision_type,
       gpointer user_data) {
 
-    return ((ThreadView *) user_data)->decide_policy (w, decision, decision_type);
-  }
-
-  gboolean ThreadView::decide_policy (
-      WebKitWebView * /* w */,
-      WebKitPolicyDecision *   decision,
-      WebKitPolicyDecisionType decision_type)
-  {
-
-    LOG (debug) << "tv: decide policy";
-
-    switch (decision_type) {
-      case WEBKIT_POLICY_DECISION_TYPE_NAVIGATION_ACTION: // navigate to {{{
-        {
-          WebKitNavigationPolicyDecision * navigation_decision = WEBKIT_NAVIGATION_POLICY_DECISION (decision);
-          WebKitNavigationAction * nav_action = webkit_navigation_policy_decision_get_navigation_action (navigation_decision);
-
-          if (webkit_navigation_action_get_navigation_type (nav_action)
-              == WEBKIT_NAVIGATION_TYPE_LINK_CLICKED) {
-
-            webkit_policy_decision_ignore (decision);
-
-            const gchar * uri_c = webkit_uri_request_get_uri (
-                webkit_navigation_action_get_request (nav_action));
-
-
-            ustring uri (uri_c);
-            LOG (info) << "tv: navigating to: " << uri;
-
-            ustring scheme = Glib::uri_parse_scheme (uri);
-
-            if (scheme == "mailto") {
-
-              uri = uri.substr (scheme.length ()+1, uri.length () - scheme.length()-1);
-              UstringUtils::trim(uri);
-
-              main_window->add_mode (new EditMessage (main_window, uri));
-
-            } else if (scheme == "id" || scheme == "mid" ) {
-              main_window->add_mode (new ThreadIndex (main_window, uri));
-
-            } else if (scheme == "http" || scheme == "https" || scheme == "ftp") {
-              open_link (uri);
-
-            } else {
-
-              LOG (error) << "tv: unknown uri scheme. not opening.";
-            }
-          }
-        } // }}}
-        break;
-
-      case WEBKIT_POLICY_DECISION_TYPE_NEW_WINDOW_ACTION:
-        webkit_policy_decision_ignore (decision);
-        break;
-
-      default:
-        webkit_policy_decision_ignore (decision);
-        return true; // stop event
-    }
-
-    return true; // stop event
+    return ((ThreadView *) user_data)->pImpl->decide_policy ( * ((ThreadView *) user_data), w, decision, decision_type);
   }
 
   void ThreadView::open_link (ustring uri) {
@@ -296,29 +351,7 @@ namespace Astroid {
       WebKitLoadEvent load_event,
       gpointer user_data)
   {
-    return ((ThreadView *) user_data)->on_load_changed (w, load_event);
-  }
-
-  bool ThreadView::on_load_changed (
-      WebKitWebView * /* w */,
-      WebKitLoadEvent load_event)
-  {
-    LOG (debug) << "tv: on_load_changed: " << load_event;
-    switch (load_event) {
-      case WEBKIT_LOAD_FINISHED:
-        LOG (debug) << "tv: load finished.";
-        {
-          /* render */
-          wk_loaded = true;
-
-          // also called in page_client
-          if (page_client->ready) on_ready_to_render ();
-        }
-      default:
-        break;
-    }
-
-    return true;
+    return ((ThreadView *) user_data)->pImpl->on_load_changed ( * ((ThreadView *) user_data), w, load_event);
   }
 
   void ThreadView::load_thread (refptr<NotmuchThread> _thread) {
@@ -408,7 +441,7 @@ namespace Astroid {
     wk_loaded = false;
     ready     = false;
 
-    webkit_web_view_load_html (webview, theme.thread_view_html.c_str (), home_uri.c_str ());
+    webkit_web_view_load_html (pImpl->webview, theme.thread_view_html.c_str (), home_uri.c_str ());
   }
 
   void ThreadView::on_ready_to_render () {
@@ -582,7 +615,7 @@ namespace Astroid {
         [&] (Key) {
           LOG (debug) << "tv show web inspector";
           /* Show the inspector */
-          WebKitWebInspector *inspector = webkit_web_view_get_inspector (WEBKIT_WEB_VIEW(webview));
+          WebKitWebInspector *inspector = webkit_web_view_get_inspector (WEBKIT_WEB_VIEW(pImpl->webview));
           webkit_web_inspector_show (WEBKIT_WEB_INSPECTOR(inspector));
           return true;
         });
@@ -796,8 +829,8 @@ namespace Astroid {
     keys.register_key ("C-+", "thread_view.zoom_in",
         "Zoom in",
         [&] (Key) {
-          webkit_web_view_set_zoom_level (webview,
-              webkit_web_view_get_zoom_level (webview) + .1);
+          webkit_web_view_set_zoom_level (pImpl->webview,
+              webkit_web_view_get_zoom_level (pImpl->webview) + .1);
 
           return true;
         });
@@ -805,8 +838,8 @@ namespace Astroid {
     keys.register_key ("C-minus", "thread_view.zoom_out",
         "Zoom out",
         [&] (Key) {
-          webkit_web_view_set_zoom_level (webview,
-              std::max ((webkit_web_view_get_zoom_level (webview) - .1), 0.0));
+          webkit_web_view_set_zoom_level (pImpl->webview,
+              std::max ((webkit_web_view_get_zoom_level (pImpl->webview) - .1), 0.0));
 
           return true;
         });
@@ -929,9 +962,9 @@ namespace Astroid {
                 }
               }
             }
-	    main_window->add_mode (new EditMessage (main_window, to.str (),
-						    from.full_address (),
-						    cc.str(), bcc.str()));
+            main_window->add_mode (new EditMessage (main_window, to.str (),
+                                                    from.full_address (),
+                                                    cc.str(), bcc.str()));
           }
           return true;
         });
@@ -1077,7 +1110,7 @@ namespace Astroid {
         });
 
     keys.register_run ("thread_view.run",
-	[&] (Key, ustring cmd, ustring undo_cmd) {
+        [&] (Key, ustring cmd, ustring undo_cmd) {
           if (focused_message) {
             cmd = ustring::compose (cmd, focused_message->tid, focused_message->mid);
             undo_cmd = ustring::compose (undo_cmd, focused_message->tid, focused_message->mid);
@@ -1274,7 +1307,7 @@ namespace Astroid {
 
 # if 0
           GError * err = NULL;
-          WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
+          WebKitDOMDocument * d = webkit_web_view_get_dom_document (pImpl->webview);
 # endif
 
           for (auto &m : toprint) {
@@ -1303,7 +1336,7 @@ namespace Astroid {
           /* open print window */
           // TODO: [W2] Fix print
 # if 0
-          WebKitWebFrame * frame = webkit_web_view_get_main_frame (webview);
+          WebKitWebFrame * frame = webkit_web_view_get_main_frame (pImpl->webview);
           webkit_web_frame_print (frame);
 # endif
 
@@ -1418,7 +1451,7 @@ namespace Astroid {
         // TODO: [W2]
 # if 0
           GError * err = NULL;
-          WebKitDOMDocument * d = webkit_web_view_get_dom_document (webview);
+          WebKitDOMDocument * d = webkit_web_view_get_dom_document (pImpl->webview);
 
           ustring mid = "message_" + focused_message->mid;
           WebKitDOMElement * e = webkit_dom_document_get_element_by_id (d, mid.c_str());
@@ -1438,7 +1471,7 @@ namespace Astroid {
           }
 
           /* open print window */
-          WebKitWebFrame * frame = webkit_web_view_get_main_frame (webview);
+          WebKitWebFrame * frame = webkit_web_view_get_main_frame (pImpl->webview);
           webkit_web_frame_print (frame);
 
           if (indented) {
@@ -2045,20 +2078,20 @@ namespace Astroid {
   /* general mode stuff  */
   void ThreadView::grab_focus () {
     //LOG (debug) << "tv: grab focus";
-    gtk_widget_grab_focus (GTK_WIDGET (webview));
+    gtk_widget_grab_focus (GTK_WIDGET (pImpl->webview));
   }
 
   void ThreadView::grab_modal () {
     add_modal_grab ();
     grab_focus ();
 
-    //gtk_grab_add (GTK_WIDGET (webview));
-    //gtk_widget_grab_focus (GTK_WIDGET (webview));
+    //gtk_grab_add (GTK_WIDGET (pImpl->webview));
+    //gtk_widget_grab_focus (GTK_WIDGET (pImpl->webview));
   }
 
   void ThreadView::release_modal () {
     remove_modal_grab ();
-    //gtk_grab_remove (GTK_WIDGET (webview));
+    //gtk_grab_remove (GTK_WIDGET (pImpl->webview));
   }
 
   /* end general mode stuff  */
@@ -2172,7 +2205,7 @@ namespace Astroid {
     in_search = false;
     search_q  = "";
 
-    WebKitFindController * f = webkit_web_view_get_find_controller (webview);
+    WebKitFindController * f = webkit_web_view_get_find_controller (pImpl->webview);
     webkit_find_controller_search_finish (f);
   }
 
@@ -2186,7 +2219,7 @@ namespace Astroid {
       }
 
       LOG (debug) << "tv: searching for: " << k;
-      WebKitFindController * f = webkit_web_view_get_find_controller (webview);
+      WebKitFindController * f = webkit_web_view_get_find_controller (pImpl->webview);
 
       webkit_find_controller_search (f, k.c_str (),
           WEBKIT_FIND_OPTIONS_CASE_INSENSITIVE |
@@ -2204,7 +2237,7 @@ namespace Astroid {
      * the match is centered.
      */
 
-    WebKitFindController * f = webkit_web_view_get_find_controller (webview);
+    WebKitFindController * f = webkit_web_view_get_find_controller (pImpl->webview);
     webkit_find_controller_search_next (f);
     page_client->update_focus_to_view ();
   }
@@ -2212,7 +2245,7 @@ namespace Astroid {
   void ThreadView::prev_search_match () {
     if (!in_search) return;
 
-    WebKitFindController * f = webkit_web_view_get_find_controller (webview);
+    WebKitFindController * f = webkit_web_view_get_find_controller (pImpl->webview);
     webkit_find_controller_search_previous (f);
     page_client->update_focus_to_view ();
   }

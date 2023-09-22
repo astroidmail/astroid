@@ -1,12 +1,12 @@
 # pragma once
 
-# include <webkit2/webkit2.h>
 # include <glib.h>
 # include <glibmm.h>
 # include <giomm.h>
 # include <gtkmm.h>
 # include <thread>
 # include <atomic>
+# include <experimental/propagate_const>
 
 # include "astroid.hh"
 # include "thread_view.hh"
@@ -14,18 +14,17 @@
 # include "messages.pb.h"
 
 namespace Astroid {
-  extern "C" void PageClient_init_web_extensions (
-      WebKitWebContext *,
-      gpointer);
 
   class PageClient : public sigc::trackable {
+     
     public:
+      class impl;
+      std::experimental::propagate_const<std::unique_ptr<impl>> pImpl;
+
       PageClient (ThreadView *);
       ~PageClient ();
 
       ThreadView * thread_view;
-
-      void init_web_extensions (WebKitWebContext * context);
 
       /* ThreadView interface */
       void load ();
