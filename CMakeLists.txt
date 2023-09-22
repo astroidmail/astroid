@@ -117,7 +117,9 @@ find_package ( Boost REQUIRED
   system
   )
 
+find_package (Protobuf CONFIG REQUIRED)
 find_package (Protobuf 3.0 REQUIRED)
+set (PROTOBUF_LIBRARIES protobuf::libprotobuf)
 set (PROTO_FILES
   src/modes/thread_view/webextension/messages.proto
   )
@@ -145,7 +147,7 @@ endif()
 # compile flags and options
 #
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
 
 include_directories (
   ${GTKMM3_INCLUDE_DIRS}
