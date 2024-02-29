@@ -6,6 +6,8 @@
 # include <gtkmm.h>
 # include <gtkmm/window.h>
 
+# include <glib.h>
+
 /* program options */
 # include <boost/program_options.hpp>
 # include <boost/filesystem.hpp>
@@ -52,8 +54,6 @@
 /* gmime */
 # include <gmime/gmime.h>
 # include <utils/gmime/gmime-compat.h>
-
-# include <libsoup/soup.h>
 
 using namespace std;
 using namespace boost::filesystem;
@@ -550,17 +550,18 @@ namespace Astroid {
 
     MainWindow * mw = (MainWindow*) get_windows ()[0];
 
-    SoupURI *uri = soup_uri_new(url.c_str());
+    GUriFlags guriflags = (GUriFlags)(G_URI_FLAGS_ENCODED_PATH | G_URI_FLAGS_ENCODED_QUERY | G_URI_FLAGS_ENCODED_FRAGMENT | G_URI_FLAGS_PARSE_RELAXED);
+    GUri *guri = g_uri_parse (url.c_str(), guriflags, NULL);
 
-    if (SOUP_URI_IS_VALID(uri)) {
+    if (guri) {
       /* we got an mailto url */
       ustring from, to, cc, bcc, subject, body;
 
-      to = soup_uri_decode (soup_uri_get_path (uri));
+      to = g_uri_unescape_string (g_uri_get_path (guri), NULL);
 
-      const char * soup_query = soup_uri_get_query (uri);
-      if (soup_query) {
-        std::istringstream query_string (soup_query);
+      const char * uri_query = g_uri_get_query (guri);
+      if (uri_query) {
+        std::istringstream query_string (uri_query);
         std::string keyval;
         while (std::getline(query_string, keyval, '&')) {
           ustring::size_type pos = keyval.find ("=");
@@ -568,7 +569,7 @@ namespace Astroid {
           ustring key = keyval.substr (0, pos);
           key = key.lowercase ();
 
-          ustring val = soup_uri_decode (keyval.substr (pos+1).c_str());
+          ustring val = g_uri_unescape_string (keyval.substr (pos+1).c_str(), NULL);
 
           if (key == "from") {
             from = ustring (val);
@@ -591,7 +592,7 @@ namespace Astroid {
       mw->add_mode (new EditMessage (mw, url));
     }
 
-    soup_uri_free (uri);
+    g_uri_unref (guri);
   }
 
   int Astroid::hint_level () {
