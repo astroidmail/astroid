@@ -1290,7 +1290,7 @@ namespace Astroid {
           for (string &fname : fnames) {
             path p (fname.c_str());
 
-            if (!is_regular (p)) {
+            if (!is_regular_file (p)) {
               LOG (error) << "em: attach: file is not regular: " << p.c_str();
             } else {
               LOG (info) << "em: attaching file: " << p.c_str();
