@@ -57,9 +57,51 @@
 </div>
 
 <div id="body_template" class="body_part">
-  <iframe class="body_iframe" sandbox srcdoc=""></iframe>
+  <!--
+    sandbox="allow-same-origin" is required, otherwise the scrollHeight of the
+    embedded document cannot be accessed.
+    Do not add 'allow-scripts' to the sandbox attribute. This would allow the
+    document to execute scripts itself.
+  -->
+  <iframe class="body_iframe" sandbox="allow-same-origin" onload="handleLoadIframe(this);" srcdoc=""></iframe>
 </div>
 
+<script>
+  function onSetFocused(element, callback) {
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.target.classList.contains("focused")) {
+          callback(mutation.target);
+        }
+      });
+    });
+
+    observer.observe(element, { attributeFilter: ["class"] });
+
+    return observer.disconnect;
+  }
+
+  function sizeIframe(iframe) {
+    iframe.height = 0; // hack, no idea why it only works with this
+    iframe.height = iframe.contentWindow.document.body.scrollHeight;
+  }
+
+  function getParentWithClass(element, c) {
+    p = element.parentElement;
+    while (p != document.body && !p.classList.contains(c)) {
+      p = p.parentElement;
+    }
+
+    return p;
+  }
+
+  function handleLoadIframe(iframe) {
+    sizeIframe(iframe);
+    const email = getParentWithClass(iframe, "email");
+    if (email != document.body)
+      onSetFocused(email, _ => sizeIframe(iframe));
+  };
+</script>
 
 </body>
 </html>

@@ -85,7 +85,7 @@ namespace Astroid {
     webkit_web_context_set_process_model (context, WEBKIT_PROCESS_MODEL_MULTIPLE_SECONDARY_PROCESSES);
 
     websettings = WEBKIT_SETTINGS (webkit_settings_new_with_settings (
-        "enable-javascript", FALSE,
+        "enable-javascript", TRUE,
         "enable-java", FALSE,
         "enable-plugins", FALSE,
         "auto-load-images", TRUE,
@@ -99,7 +99,6 @@ namespace Astroid {
         "enable-xss-auditor", TRUE,
         "media-playback-requires-user-gesture", TRUE,
         "zoom-text-only", TRUE,
-        "enable-frame-flattening", TRUE,
 # if (DEBUG || DEBUG_WEBKIT)
         "enable-developer-extras", TRUE,
 # endif
