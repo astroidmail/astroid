@@ -8,12 +8,20 @@
 # include <mutex>
 # include <condition_variable>
 # include <functional>
+# include <experimental/propagate_const>
 
+// avoid conflicting YES/NO in stock.h
+# ifndef GTKMM_DISABLE_DEPRECATED
+# define GTKMM_DISABLE_DEPRECATED 1
+# define UNDEF_GTKMM_DISABLE_DEPRECATED 1
+# endif
 # include <gtkmm.h>
-# include <webkit2/webkit2.h>
-# include <webkitdom/webkitdom.h>
+# ifdef UNDEF_GTKMM_DISABLE_DEPRECATED
+# undef GTKMM_DISABLE_DEPRECATED
+# endif
 # include <boost/property_tree/ptree.hpp>
 
+# include "db.hh"                   // NotmuchThread
 # include "proto.hh"
 # include "modes/mode.hh"
 # include "message_thread.hh"
@@ -25,23 +33,21 @@
 using boost::property_tree::ptree;
 
 namespace Astroid {
-  extern "C" bool ThreadView_on_load_changed (
-      WebKitWebView * w,
-      WebKitLoadEvent load_event,
-      gpointer user_data);
-
-  extern "C" gboolean ThreadView_decide_policy (
-      WebKitWebView * w,
-      WebKitPolicyDecision * decision,
-      WebKitPolicyDecisionType decision_type,
-      gpointer user_data);
 
   class ThreadView : public Mode {
     friend PageClient;
 
     public:
+      class impl;
+      std::experimental::propagate_const<std::unique_ptr<impl>> pImpl;
+
       ThreadView (MainWindow *, bool _edit_mode = false);
-      ~ThreadView ();
+      ~ThreadView ();   // defined in the implementation file, where impl is a complete type
+      ThreadView (ThreadView&&); // defined in the implementation file
+      ThreadView (const ThreadView&) = delete;
+      ThreadView& operator= (ThreadView&&); // defined in the implementation file
+      ThreadView& operator= (const ThreadView&) = delete;
+
       void load_thread (refptr<NotmuchThread>);
       void load_message_thread (refptr<MessageThread>);
 
@@ -78,6 +84,10 @@ namespace Astroid {
 
       /* Web extension */
       PageClient * page_client;
+      gulong   connect_page_client(const gchar* detailed_signal,
+                                   GCallback c_handler,
+                                   gpointer user_data);
+      void     disconnect_page_client(gulong connection_id);
 
     private:
       /* focus and message state */
@@ -163,11 +173,6 @@ namespace Astroid {
 
       bool element_action (ElementAction);
 
-      /* webkit */
-      WebKitWebView *     webview;
-      WebKitSettings *    websettings;
-      WebKitWebContext *  context;
-
     protected:
       std::atomic<bool> wk_loaded;
 
@@ -184,18 +189,8 @@ namespace Astroid {
       void update_all_indent_states ();
 
       void save_all_attachments ();
+      
     public:
-
-      /* event wrappers */
-      bool on_load_changed (
-        WebKitWebView * w,
-        WebKitLoadEvent load_event);
-
-      gboolean decide_policy (
-          WebKitWebView * w,
-          WebKitPolicyDecision * decision,
-          WebKitPolicyDecisionType decision_type);
-
       void grab_focus ();
 
       /* mode */
