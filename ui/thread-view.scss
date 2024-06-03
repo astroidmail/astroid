@@ -334,6 +334,7 @@ hr {
     text-overflow: ellipsis;
     overflow: hidden;
     margin-left: 48px;
+    //max-width: 80ex; // old behavior
 }
 
 .email_container .header_container .tags {

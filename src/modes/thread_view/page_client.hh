@@ -76,7 +76,7 @@ namespace Astroid {
       ustring get_attachment_thumbnail (refptr<Chunk>);
       ustring get_attachment_data (refptr<Chunk>);
 
-      static const int MAX_PREVIEW_LEN = 80;
+      static const int MAX_PREVIEW_LEN = 200;
       static const int THUMBNAIL_WIDTH        = 150; // px
       static const int ATTACHMENT_ICON_WIDTH  = 35;
       refptr<Gdk::Pixbuf> attachment_icon;
