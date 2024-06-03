@@ -852,11 +852,29 @@ body.nohide .email .compressed_note > span {
     color: black;
     text-decoration: none;
 }
+.header .field .address_list {
+  display: inline;
+  list-style: none;
+  padding-left: 0;
+  margin-left: 0;
+}
+.header .field .address_list li {
+  display: inline;
+}
+.header .field .address_list li + li:before {
+  content: ", ";
+}
 .header .field.important .address_name {
     font-weight: bold;
 }
 .header .field .address_value {
     color: #777;
+}
+.header .field .address_value:before {
+  content: "<";
+}
+.header .field .address_value:after {
+  content: ">";
 }
 
 .geary_spacer {

@@ -150,11 +150,10 @@ class AstroidExtension {
     void set_attachment_icon (WebKitDOMHTMLElement * div_message);
 
     /* headers */
-    void insert_header_date (ustring &header, AstroidMessages::Message);
-    void insert_header_address (ustring &header, ustring title, AstroidMessages::Address a, bool important);
-    void insert_header_address_list (ustring &header, ustring title, AstroidMessages::AddressList al, bool important);
-    void insert_header_row (ustring &header, ustring title, ustring value, bool important);
-    ustring create_header_row (ustring title, ustring value, bool important, bool escape, bool noprint = false);
+    void insert_header_date (WebKitDOMHTMLElement * header, AstroidMessages::Message);
+    void insert_header_address (WebKitDOMHTMLElement * header, ustring title, AstroidMessages::Address a, bool important = false);
+    void insert_header_address_list (WebKitDOMHTMLElement * header, ustring title, AstroidMessages::AddressList al, bool important = false);
+    void insert_header_row (WebKitDOMHTMLElement * header, ustring title, ustring value, bool important = false, bool html_value = false, bool noprint = false);
 
     /* warning and info */
     void set_warning (AstroidMessages::Info &);

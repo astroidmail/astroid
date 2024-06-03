@@ -494,7 +494,7 @@ void AstroidExtension::reload_images () {
 
     for (auto &c : m.elements()) {
       if (!c.focusable ()) {
-        WebKitDOMHTMLElement * body_container = WEBKIT_DOM_HTML_ELEMENT(webkit_dom_document_get_element_by_id (d, c.sid ().c_str ()));
+        WebKitDOMElement * body_container = webkit_dom_document_get_element_by_id (d, c.sid ().c_str ());
         WebKitDOMHTMLElement * iframe = DomUtils::select (WEBKIT_DOM_NODE(body_container), ".body_iframe");
         WebKitDOMDocument * iframe_d = webkit_dom_html_iframe_element_get_content_document (WEBKIT_DOM_HTML_IFRAME_ELEMENT(iframe));
         WebKitDOMHTMLElement * b = webkit_dom_document_get_body (iframe_d);
@@ -672,7 +672,7 @@ void AstroidExtension::remove_message (AstroidMessages::Message &m) {
   WebKitDOMElement * container = DomUtils::get_by_id (d, "message_container");
 
   ustring div_id = "message_" + m.mid();
-  WebKitDOMHTMLElement * div_message = WEBKIT_DOM_HTML_ELEMENT(webkit_dom_document_get_element_by_id (d, div_id.c_str()));
+  WebKitDOMElement * div_message = webkit_dom_document_get_element_by_id (d, div_id.c_str());
 
   GError * err = NULL;
   webkit_dom_node_remove_child (WEBKIT_DOM_NODE(container), WEBKIT_DOM_NODE (div_message), (err = NULL, &err));
@@ -774,8 +774,8 @@ void AstroidExtension::update_message (AstroidMessages::UpdateMessage &um) {
 
   } else if (um.type () == AstroidMessages::UpdateMessage_Type_Tags) {
     LOG (debug) << "updating message: " << m.mid () << " (tags only)";
-    message_render_tags (m, WEBKIT_DOM_HTML_ELEMENT(old_div_message));
-    message_update_css_tags (m, WEBKIT_DOM_HTML_ELEMENT(old_div_message));
+    message_render_tags (m, old_div_message);
+    message_update_css_tags (m, old_div_message);
   }
 
   g_object_unref (old_div_message);
@@ -793,11 +793,14 @@ void AstroidExtension::set_message_html (
   GError *err;
 
   /* load message into div */
-  ustring header;
   WebKitDOMHTMLElement * div_email_container =
     DomUtils::select (WEBKIT_DOM_NODE(div_message),  ".email_container");
 
   /* build header */
+  WebKitDOMHTMLElement * header =
+    DomUtils::select (WEBKIT_DOM_NODE(div_email_container),
+        ".header_container .header" );
+
   insert_header_address (header, "From", m.sender(), true);
 
   if (m.reply_to().email().size () > 0) {
@@ -805,20 +808,20 @@ void AstroidExtension::set_message_html (
       insert_header_address (header, "Reply-To", m.reply_to(), false);
   }
 
-  insert_header_address_list (header, "To", m.to(), false);
+  insert_header_address_list (header, "To", m.to());
 
   if (m.cc().addresses().size () > 0) {
-    insert_header_address_list (header, "Cc", m.cc(), false);
+    insert_header_address_list (header, "Cc", m.cc());
   }
 
   if (m.bcc().addresses().size () > 0) {
-    insert_header_address_list (header, "Bcc", m.bcc(), false);
+    insert_header_address_list (header, "Bcc", m.bcc());
   }
 
   insert_header_date (header, m);
 
   if (m.subject().size() > 0) {
-    insert_header_row (header, "Subject", m.subject(), false);
+    insert_header_row (header, "Subject", m.subject());
 
     WebKitDOMHTMLElement * subject = DomUtils::select (
         WEBKIT_DOM_NODE (div_message),
@@ -828,8 +831,7 @@ void AstroidExtension::set_message_html (
     if (static_cast<int>(s.size()) > MAX_PREVIEW_LEN)
       s = s.substr(0, MAX_PREVIEW_LEN - 3) + "...";
 
-    webkit_dom_element_set_inner_html (WEBKIT_DOM_ELEMENT (subject), s.c_str(), (err = NULL, &err));
-
+    webkit_dom_html_element_set_inner_text (subject, s.c_str(), (err = NULL, &err));
     g_object_unref (subject);
   }
 
@@ -845,21 +847,11 @@ void AstroidExtension::set_message_html (
     g_object_unref (av);
   }
 
-  /* insert header html*/
-  WebKitDOMHTMLElement * table_header =
-    DomUtils::select (WEBKIT_DOM_NODE(div_email_container),
-        ".header_container .header" );
-
-  header += create_header_row ("Tags", "", false, false, true);
-
-  webkit_dom_element_set_inner_html (
-      WEBKIT_DOM_ELEMENT(table_header),
-      header.c_str(),
-      (err = NULL, &err));
+  insert_header_row (header, "Tags", "", false, false, true);
 
   if (m.tags().size () > 0) {
-    message_render_tags (m, WEBKIT_DOM_HTML_ELEMENT(div_message));
-    message_update_css_tags (m, WEBKIT_DOM_HTML_ELEMENT(div_message));
+    message_render_tags (m, div_message);
+    message_update_css_tags (m, div_message);
   }
 
   /* if message is missing body, set warning and don't add any content */
@@ -868,12 +860,12 @@ void AstroidExtension::set_message_html (
         ".body" );
 
   WebKitDOMHTMLElement * preview =
-    DomUtils::select (WEBKIT_DOM_NODE(div_email_container),
+    DomUtils::select (WEBKIT_DOM_NODE (div_email_container),
         ".header_container .preview" );
 
   if (m.missing_content()) {
     /* set preview */
-    webkit_dom_element_set_inner_html (WEBKIT_DOM_ELEMENT(preview), "<i>Message content is missing.</i>", (err = NULL, &err));
+    webkit_dom_html_element_set_inner_html (preview, "<i>Message content is missing.</i>", (err = NULL, &err));
 
     /* set warning */
     AstroidMessages::Info i;
@@ -893,8 +885,8 @@ void AstroidExtension::set_message_html (
     webkit_dom_element_remove_attribute (WEBKIT_DOM_ELEMENT (body_container),
         "id");
 
-    webkit_dom_element_set_inner_html (
-        WEBKIT_DOM_ELEMENT(body_container),
+    webkit_dom_html_element_set_inner_html (
+        body_container,
         "<i>Message content is missing.</i>",
         (err = NULL, &err));
 
@@ -910,12 +902,12 @@ void AstroidExtension::set_message_html (
     create_message_part_html (m, m.root(), span_body);
 
     /* preview */
-    webkit_dom_element_set_inner_html (WEBKIT_DOM_ELEMENT(preview), m.preview().c_str(), (err = NULL, &err));
+    webkit_dom_html_element_set_inner_text (preview, m.preview().c_str(), (err = NULL, &err));
   }
 
   g_object_unref (preview);
   g_object_unref (span_body);
-  g_object_unref (table_header);
+  g_object_unref (header);
 } //
 
 void AstroidExtension::message_render_tags (AstroidMessages::Message &m,
@@ -927,7 +919,11 @@ void AstroidExtension::message_render_tags (AstroidMessages::Message &m,
       WEBKIT_DOM_NODE (div_message),
       ".header_container .tags");
 
-  webkit_dom_element_set_inner_html (WEBKIT_DOM_ELEMENT(tags), m.tag_string().c_str (), (err = NULL, &err));
+  // TODO: Is this secure enough? We can't use set_inner_text because
+  //       the tag string contains html and styling.
+  //       However, tags are sanitized using Glib::Markup::escape_text
+  //       in src/modes/thread_view/page_client.cc.
+  webkit_dom_html_element_set_inner_html (tags, m.tag_string().c_str (), (err = NULL, &err));
 
   g_object_unref (tags);
 
@@ -935,7 +931,7 @@ void AstroidExtension::message_render_tags (AstroidMessages::Message &m,
       WEBKIT_DOM_NODE (div_message),
       ".header_container .header div#Tags .value");
 
-  webkit_dom_element_set_inner_html (WEBKIT_DOM_ELEMENT(tags), m.tag_string().c_str (), (err = NULL, &err));
+  webkit_dom_html_element_set_inner_html (tags, m.tag_string().c_str (), (err = NULL, &err));
 
   g_object_unref (tags);
 }
@@ -1092,10 +1088,7 @@ void AstroidExtension::create_body_part (
     WebKitDOMHTMLElement * message_cont =
       DomUtils::select (WEBKIT_DOM_NODE (encrypt_container), ".message");
 
-    webkit_dom_element_set_inner_html (
-        WEBKIT_DOM_ELEMENT(message_cont),
-        content.c_str(),
-        (err = NULL, &err));
+    webkit_dom_html_element_set_inner_html (message_cont, content.c_str(), (err = NULL, &err));
 
 
     webkit_dom_node_append_child (WEBKIT_DOM_NODE (span_body),
@@ -1163,7 +1156,7 @@ void AstroidExtension::set_iframe_src (ustring mid, ustring cid, ustring body) {
   WebKitDOMDocument * d = webkit_web_page_get_dom_document (page);
   GError *err;
 
-  WebKitDOMHTMLElement * body_container = WEBKIT_DOM_HTML_ELEMENT(webkit_dom_document_get_element_by_id (d, cid.c_str ()));
+  WebKitDOMElement * body_container = webkit_dom_document_get_element_by_id (d, cid.c_str ());
 
   WebKitDOMHTMLElement * iframe =
     DomUtils::select (WEBKIT_DOM_NODE(body_container), ".body_iframe");
@@ -1176,7 +1169,7 @@ void AstroidExtension::set_iframe_src (ustring mid, ustring cid, ustring body) {
    * manipulate DOM tree */
 
   /* according to: http://w3c.github.io/html/semantics-embedded-content.html#element-attrdef-iframe-src
-   * we need to escape quotation marks and amperands. it seems that by using
+   * we need to escape quotation marks and ampersands. it seems that by using
    * this call webkit does this for us. this is critical since otherwise the
    * content could break out of the iframe. */
 
@@ -1225,8 +1218,8 @@ void AstroidExtension::create_sibling_part (
   WebKitDOMHTMLElement * message_cont =
     DomUtils::select (WEBKIT_DOM_NODE (sibling_container), ".message");
 
-  webkit_dom_element_set_inner_html (
-      WEBKIT_DOM_ELEMENT(message_cont),
+  webkit_dom_html_element_set_inner_html (
+      message_cont,
       content.c_str(),
       (err = NULL, &err));
 
@@ -1277,8 +1270,8 @@ void AstroidExtension::insert_mime_messages (
     WebKitDOMHTMLElement * message_cont =
       DomUtils::select (WEBKIT_DOM_NODE (mime_container), ".message");
 
-    webkit_dom_element_set_inner_html (
-        WEBKIT_DOM_ELEMENT(message_cont),
+    webkit_dom_html_element_set_inner_html (
+        message_cont,
         content.c_str(),
         (err = NULL, &err));
 
@@ -1480,19 +1473,29 @@ void AstroidExtension::load_marked_icon (WebKitDOMHTMLElement * div_message) {
 }
 
 /* headers  {{{ */
-void AstroidExtension::insert_header_date (ustring & header, AstroidMessages::Message m)
+void AstroidExtension::insert_header_date (WebKitDOMHTMLElement * header, AstroidMessages::Message m)
 {
-  ustring value = ustring::compose (
-              "<span class=\"hidden_only\">%1</span>"
-              "<span class=\"not_hidden_only\">%2</span>",
-              m.date_pretty (),
-              m.date_verbose ());
+  insert_header_row (header, "Date",
+    "<span class=\"hidden_only\"></span><span class=\"not_hidden_only\"></span>",
+    true);
 
-  header += create_header_row ("Date", value, true, false);
+  WebKitDOMHTMLElement *h = DomUtils::select(
+    WEBKIT_DOM_NODE(header), "#Date .hidden_only");
+  WebKitDOMHTMLElement *nh = DomUtils::select(
+    WEBKIT_DOM_NODE(header), "#Date .not_hidden_only");
+
+  GError *err;
+  webkit_dom_html_element_set_inner_text(
+    h, m.date_pretty().c_str(), (err = NULL, &err));
+  webkit_dom_html_element_set_inner_text(
+    nh, m.date_verbose().c_str(), (err = NULL, &err));
+
+  g_object_unref(h);
+  g_object_unref(nh);
 }
 
 void AstroidExtension::insert_header_address (
-    ustring &header,
+    WebKitDOMHTMLElement * header,
     ustring title,
     AstroidMessages::Address address,
     bool important) {
@@ -1507,63 +1510,105 @@ void AstroidExtension::insert_header_address (
 }
 
 void AstroidExtension::insert_header_address_list (
-    ustring &header,
+    WebKitDOMHTMLElement * header,
     ustring title,
     AstroidMessages::AddressList addresses,
     bool important) {
 
-  ustring value;
-  bool first = true;
+  GError *err;
+  insert_header_row (
+    header,
+    title.c_str(),
+    "<ul class=\"address_list\"><li><a><span class=\"address_name\"></span> <span class=\"address_value\"></span></a></li></ul>",
+    true, important);
+  WebKitDOMNode * list = WEBKIT_DOM_NODE (DomUtils::select (WEBKIT_DOM_NODE(header), "#" + title + " ul"));
+
+  WebKitDOMNode * tpl = webkit_dom_node_get_first_child (list);
+  webkit_dom_node_remove_child(list, tpl, (err = NULL, &err));
+
+  WebKitDOMNode * li_node;
+  WebKitDOMHTMLElement * a;
+  WebKitDOMHTMLElement * name;
+  WebKitDOMHTMLElement * email;
 
   for (const AstroidMessages::Address address : addresses.addresses()) {
     if (address.full_address().size() > 0) {
-      if (!first) {
-        value += ", ";
-      } else {
-        first = false;
-      }
+      li_node = WEBKIT_DOM_NODE (DomUtils::clone_node (tpl));
+      a = DomUtils::select (li_node, "a");
+      name = DomUtils::select(li_node, ".address_name");
+      email = DomUtils::select(li_node, ".address_value");
 
-      value +=
-        ustring::compose ("<a href=\"mailto:%3\">%4%1%5 &lt;%2&gt;</a>",
-          Glib::Markup::escape_text (address.name ()),
-          Glib::Markup::escape_text (address.email ()),
-          Glib::Markup::escape_text (address.full_address()),
-          (important ? "<b>" : ""),
-          (important ? "</b>" : "")
-          );
+      webkit_dom_element_set_attribute (WEBKIT_DOM_ELEMENT (a), "href",
+        ("mailto:" + address.full_address()).c_str(),
+        (err = NULL, &err));
+      webkit_dom_html_element_set_inner_text(
+        name, address.name().c_str(), (err = NULL, &err));
+      webkit_dom_html_element_set_inner_text(
+        email, address.email().c_str(), (err = NULL, &err));
+
+      webkit_dom_node_append_child(list, li_node, (err = NULL, &err));
+
+      g_object_unref (li_node);
+      g_object_unref (a);
+      g_object_unref (name);
+      g_object_unref (email);
     }
   }
 
-  header += create_header_row (title, value, important, false, false);
+  g_object_unref (list);
+  g_object_unref (tpl);
 }
 
 void AstroidExtension::insert_header_row (
-    ustring &header,
+    WebKitDOMHTMLElement * header,
     ustring title,
     ustring value,
-    bool important) {
-
-  header += create_header_row (title, value, important, true, false);
-}
-
-
-ustring AstroidExtension::create_header_row (
-    ustring title,
-    ustring value,
+    bool html_value,
     bool important,
-    bool escape,
     bool noprint) {
 
-  return ustring::compose (
-      "<div class=\"field%1%2\" id=\"%3\">"
-      "  <div class=\"title\">%3:</div>"
-      "  <div class=\"value\">%4</div>"
+  GError *err = NULL;
+
+  WebKitDOMNode *header_node = WEBKIT_DOM_NODE(header);
+  bool first_row = !webkit_dom_node_has_child_nodes (header_node);
+  if (first_row) {
+    webkit_dom_html_element_set_inner_html (header,
+      "<div>"
+      "  <div class=\"title\"></div>"
+      "  <div class=\"value\"></div>"
       "</div>",
-      (important ? " important" : ""),
-      (noprint ? " noprint" : ""),
-      Glib::Markup::escape_text (title),
-      (escape ? Glib::Markup::escape_text (value) : value)
-      );
+      (err = NULL, &err));
+  }
+  WebKitDOMNode *tpl = webkit_dom_node_get_first_child (header_node);
+  if (first_row) {
+    webkit_dom_node_remove_child (WEBKIT_DOM_NODE(header), tpl, (err = NULL, &err));
+  }
+
+  WebKitDOMElement * row = WEBKIT_DOM_ELEMENT (DomUtils::clone_node (tpl));
+  WebKitDOMNode * row_node = WEBKIT_DOM_NODE (row);
+
+  ustring class_name = ustring::compose ("field%1%2",
+    (important ? " important" : ""),
+    (noprint   ? " noprint"   : ""));
+  webkit_dom_element_set_class_name (row, class_name.c_str());
+
+  webkit_dom_element_set_id (row, title.c_str());
+
+  WebKitDOMHTMLElement *title_field = DomUtils::select (row_node, ".title");
+  webkit_dom_html_element_set_inner_text (title_field, (title + ":").c_str(), (err = NULL, &err));
+
+  WebKitDOMHTMLElement *value_field = DomUtils::select (row_node, ".value");
+  (html_value
+    ? webkit_dom_html_element_set_inner_html
+    : webkit_dom_html_element_set_inner_text
+    ) (value_field, value.c_str(), (err = NULL, &err));
+
+  webkit_dom_node_append_child (header_node, row_node, (err = NULL, &err));
+
+  g_object_unref (tpl);
+  g_object_unref (row_node);
+  g_object_unref (title_field);
+  g_object_unref (value_field);
 }
 /* headers end  }}} */
 
@@ -1588,7 +1633,7 @@ void AstroidExtension::set_warning (AstroidMessages::Info &m) {
       ".email_warning");
 
   GError * err;
-  webkit_dom_element_set_inner_html (WEBKIT_DOM_ELEMENT(warning), txt.c_str(), (err = NULL, &err));
+  webkit_dom_html_element_set_inner_text (warning, txt.c_str(), (err = NULL, &err));
 
   WebKitDOMDOMTokenList * class_list =
     webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(warning));
@@ -1615,7 +1660,7 @@ void AstroidExtension::hide_warning (AstroidMessages::Info &m)
       ".email_warning");
 
   GError * err;
-  webkit_dom_element_set_inner_html (WEBKIT_DOM_ELEMENT(warning), "", (err = NULL, &err));
+  webkit_dom_html_element_set_inner_text (warning, "", (err = NULL, &err));
 
   WebKitDOMDOMTokenList * class_list =
     webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(warning));
@@ -1649,7 +1694,7 @@ void AstroidExtension::set_info (AstroidMessages::Info &m)
       ".email_info");
 
   GError * err;
-  webkit_dom_element_set_inner_html (WEBKIT_DOM_ELEMENT(info), txt.c_str(), (err = NULL, &err));
+  webkit_dom_html_element_set_inner_text (info, txt.c_str(), (err = NULL, &err));
 
   WebKitDOMDOMTokenList * class_list =
     webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(info));
@@ -1676,7 +1721,7 @@ void AstroidExtension::hide_info (AstroidMessages::Info &m) {
       ".email_info");
 
   GError * err;
-  webkit_dom_element_set_inner_html (WEBKIT_DOM_ELEMENT(info), "", (err = NULL, &err));
+  webkit_dom_html_element_set_inner_text (info, "", (err = NULL, &err));
 
   WebKitDOMDOMTokenList * class_list =
     webkit_dom_element_get_class_list (WEBKIT_DOM_ELEMENT(info));
