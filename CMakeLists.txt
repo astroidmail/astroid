@@ -117,7 +117,7 @@ find_package ( Boost REQUIRED
   system
   )
 
-find_package (Protobuf CONFIG REQUIRED)
+find_package (Protobuf CONFIG)
 find_package (Protobuf 3.0 REQUIRED)
 set (PROTOBUF_LIBRARIES protobuf::libprotobuf)
 set (PROTO_FILES
