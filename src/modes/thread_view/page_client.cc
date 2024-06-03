@@ -422,11 +422,16 @@ namespace Astroid {
 
       ustring tags_s;
 
+      vector<ustring> tags = m->tags;
+      for (ustring &tag : tags) {
+        tag = Glib::Markup::escape_text (tag);
+      }
+
 # ifndef DISABLE_PLUGINS
-      if (!thread_view->plugins->format_tags (m->tags, "#ffffff", false, tags_s)) {
+      if (!thread_view->plugins->format_tags (tags, "#ffffff", false, tags_s)) {
 #  endif
 
-        tags_s = VectorUtils::concat_tags_color (m->tags, false, 0, cv);
+        tags_s = VectorUtils::concat_tags_color (tags, false, 0, cv);
 
 # ifndef DISABLE_PLUGINS
       }
@@ -434,7 +439,7 @@ namespace Astroid {
 
       msg.set_tag_string (tags_s);
 
-      for (ustring &tag : m->tags) {
+      for (ustring &tag : tags) {
         msg.add_tags (tag);
       }
     }
@@ -464,15 +469,9 @@ namespace Astroid {
       if (static_cast<int>(bp.size()) > MAX_PREVIEW_LEN)
         bp = bp.substr(0, MAX_PREVIEW_LEN - 3) + "...";
 
-      while (true) {
-        size_t i = bp.find ("<br>");
-
-        if (i == ustring::npos) break;
-
-        bp.erase (i, 4);
-      }
-
-      msg.set_preview (Glib::Markup::escape_text (bp));
+      bp = UstringUtils::replace (bp, "<br>", "");
+      bp = UstringUtils::replace (bp, "\n", "");
+      msg.set_preview (bp);
     }
 
     if (astroid->config().get<std::string> ("thread_view.preferred_type") == "plain" &&
