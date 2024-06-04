@@ -98,8 +98,7 @@ pkg_check_modules (GLIBMM2    REQUIRED  glibmm-2.4)
 pkg_check_modules (WEBKIT2GTK REQUIRED  webkit2gtk-4.0>=2.22)
 pkg_check_modules (SASS       REQUIRED  libsass)
 pkg_check_modules (GIOMM2     REQUIRED  giomm-2.4)
-pkg_check_modules (GIOUNIX    REQUIRED  gio-unix-2.0)
-pkg_check_modules (LIBSOUP    REQUIRED  libsoup-2.4)
+pkg_check_modules (GIOUNIX    REQUIRED  gio-unix-2.0>=2.16)
 
 string (REGEX REPLACE "([0-9]+\.[0-9]+)\.[0-9]+" "\\1" GMIME_MAJOR_MINOR ${Notmuch_GMIME_VERSION})
 pkg_check_modules (GMIME      REQUIRED  gmime-${GMIME_MAJOR_MINOR}>=${Notmuch_GMIME_VERSION})
@@ -154,7 +153,6 @@ include_directories (
   ${GLIBMM2_INCLUDE_DIRS}
   ${GIOMM2_INCLUDE_DIRS}
   ${GIOUNIX_INCLUDE_DIRS}
-  ${LIBSOUP_INCLUDE_DIRS}
   ${GMIME_INCLUDE_DIRS}
   ${WEBKIT2GTK_INCLUDE_DIRS}
   ${VTE2_INCLUDE_DIRS}
@@ -169,7 +167,6 @@ add_compile_options (
   ${GLIBMM2_CFLAGS}
   ${GIOMM2_CFLAGS}
   ${GIOUNIX_CFLAGS}
-  ${LIBSOUP_CFLAGS}
   ${GMIME_CFLAGS}
   ${WEBKIT2GTK_CFLAGS}
   ${VTE2_CFLAGS}
@@ -339,7 +336,6 @@ target_link_libraries (
   ${GLIBMM2_LDFLAGS}
   ${GIOMM2_LDFLAGS}
   ${GIOUNIX_LDFLAGS}
-  ${LIBSOUP_LDFLAGS}
   ${GMIME_LDFLAGS}
   ${VTE2_LDFLAGS}
   ${SASS_LDFLAGS}

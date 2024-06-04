@@ -53,8 +53,6 @@
 # include <gmime/gmime.h>
 # include <utils/gmime/gmime-compat.h>
 
-# include <libsoup/soup.h>
-
 using namespace std;
 using namespace boost::filesystem;
 
@@ -126,7 +124,7 @@ namespace Astroid {
 # ifdef DEBUG
       ( "test-config,t",  "use test config (same as used when tests are run), only makes sense from the source root")
 # endif
-      ( "mailto,m", po::value<ustring>(), "compose mail with mailto url or address")
+      ( "mailto,m", po::value< vector<ustring> >()->composing(), "compose mail with mailto url or address")
       ( "no-auto-poll",   "do not poll automatically")
       ( "disable-log",    "disable logging")
       ( "log-stdout",     "log to stdout regardless of configuration")
@@ -139,6 +137,9 @@ namespace Astroid {
 # else
       ;
 # endif
+
+      /* default option (without --<option> prefix) */
+    pdesc.add("mailto", -1);
   }
   // }}}
 
@@ -153,7 +154,11 @@ namespace Astroid {
     bool show_help = false;
 
     try {
-      po::store ( po::parse_command_line (argc, argv, desc), vm );
+      po::store ( po::command_line_parser(argc, argv).
+                      options(desc).
+                      positional(pdesc).
+                      run(),
+                  vm );
     } catch (po::unknown_option &ex) {
       LOG (error) << "unknown option" << endl;
       LOG (error) << ex.what() << endl;
@@ -438,7 +443,11 @@ namespace Astroid {
       po::variables_map vm;
 
       try {
-        po::store ( po::parse_command_line (argc, argv, desc), vm );
+        po::store ( po::command_line_parser(argc, argv).
+                        options(desc).
+                        positional(pdesc).
+                        run(),
+                    vm );
       } catch (po::unknown_option &ex) {
         LOG (error) << "unknown option" << endl;
         LOG (error) << ex.what() << endl;
@@ -446,8 +455,28 @@ namespace Astroid {
       }
 
       if (vm.count("mailto")) {
-        ustring mailtourl = vm["mailto"].as<ustring>();
-        send_mailto (mailtourl);
+        vector <ustring> mailto_list = vm["mailto"].as<vector <ustring>>();
+
+        // is the conversion from ustring to std::string really safe?
+        std::string mailto = "";
+        std::string next;
+
+        ustring::size_type sep;
+
+        for (std::vector<ustring>::size_type i = 0; i < mailto_list.size(); i++) {
+          next = mailto_list[i];
+          sep = next.find("?");
+          if (sep != next.npos)
+            next[sep] = '&';
+          if (next.substr(0, 7) == "mailto:")
+            next.erase(0,7);
+          mailto += "&to=" +  next;
+        }
+
+        mailto[0] = '?';
+        mailto.insert(0, "mailto:");
+
+        send_mailto (mailto);
         new_window = false;
       }
 
@@ -545,53 +574,11 @@ namespace Astroid {
     open_new_window ();
   }
 
-  void Astroid::send_mailto (ustring url) {
-    LOG (info) << "astroid: mailto: " << url;
+  void Astroid::send_mailto (ustring uri) {
+    LOG (info) << "astroid: mailto: " << uri;
 
     MainWindow * mw = (MainWindow*) get_windows ()[0];
-
-    SoupURI *uri = soup_uri_new(url.c_str());
-
-    if (SOUP_URI_IS_VALID(uri)) {
-      /* we got an mailto url */
-      ustring from, to, cc, bcc, subject, body;
-
-      to = soup_uri_decode (soup_uri_get_path (uri));
-
-      const char * soup_query = soup_uri_get_query (uri);
-      if (soup_query) {
-        std::istringstream query_string (soup_query);
-        std::string keyval;
-        while (std::getline(query_string, keyval, '&')) {
-          ustring::size_type pos = keyval.find ("=");
-
-          ustring key = keyval.substr (0, pos);
-          key = key.lowercase ();
-
-          ustring val = soup_uri_decode (keyval.substr (pos+1).c_str());
-
-          if (key == "from") {
-            from = ustring (val);
-          } else if (key == "cc") {
-            cc = ustring (val);
-          } else if (key == "bcc") {
-            bcc = ustring (val);
-          } else if (key == "subject" ) {
-            subject = ustring (val);
-          } else if (key == "body") {
-            body = ustring (val);
-          }
-        }
-      }
-
-      mw->add_mode (new EditMessage (mw, to, from, cc, bcc, subject, body));
-
-    } else {
-      /* we probably just got the address on the cmd line */
-      mw->add_mode (new EditMessage (mw, url));
-    }
-
-    soup_uri_free (uri);
+    mw->add_mode (new EditMessage (mw, uri));
   }
 
   int Astroid::hint_level () {
