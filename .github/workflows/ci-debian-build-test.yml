@@ -15,11 +15,10 @@ jobs:
           - 'debian:stable'
           - 'ubuntu:devel'
           - 'ubuntu:focal'
-          - 'ubuntu:bionic'
     timeout-minutes: 15
     steps:
       - name: Git checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: Install build dependencies
         env:
           DEBIAN_FRONTEND: noninteractive
