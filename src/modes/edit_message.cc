@@ -6,6 +6,7 @@
 # include <memory>
 
 # include <gtkmm.h>
+# include <glib.h>
 
 # include <boost/filesystem.hpp>
 
@@ -35,18 +36,87 @@ using namespace boost::filesystem;
 namespace Astroid {
   int EditMessage::edit_id = 0;
 
-  EditMessage::EditMessage (MainWindow * mw, ustring _to, ustring _from, ustring _cc, ustring _bcc, ustring _subject, ustring _body) :
+  EditMessage::EditMessage (MainWindow * mw, ustring mailto, ustring _from, ustring _cc, ustring _bcc, ustring _subject, ustring _body) :
     EditMessage (mw, false) { // {{{
-
     in_read = false;
-    to  = _to;
-    cc  = _cc;
-    bcc = _bcc;
-    subject = _subject;
-    body = _body;
+    to  = "";
+    cc  = "";
+    bcc = "";
+    subject = "";
+    body = "";
+
+    if (ustring (g_uri_parse_scheme(mailto.c_str())) != "mailto") {
+      // if the prefix 'mailto:' is missing, assume it is only the receipient's address
+      to = mailto;
+    } else {
+      mailto.erase(0,7);
+      ustring::size_type sep = mailto.find("?");
+
+      to = g_uri_unescape_string (mailto.substr(0, sep).c_str(), NULL);
+      try {
+        mailto.erase(0, sep+1);
+      } catch (const std::out_of_range& ex) {
+        mailto = "";
+      }
+
+      ustring key;
+      ustring val;
+
+      while (mailto.size() > 0) {
+        sep = mailto.find("=");
+        key = mailto.substr(0, sep);
+        try {
+          mailto.erase (0,sep+1);
+        } catch (const std::out_of_range& ex) {
+          // = not found, i.e. syntax error
+          break;
+        }
+        sep = mailto.find("&");
+        val = ustring (g_uri_unescape_string (mailto.substr(0, sep).c_str(), NULL));
+        try {
+          if (sep == mailto.npos) {
+            mailto = "";
+          } else {
+            mailto.erase (0, sep+1);
+          }
+        } catch (const std::out_of_range& ex) {
+          // no value
+          break;
+        }
+
+        key = key.lowercase ();
+        if (!val.empty ()) {
+          if (key == "to") {
+            append_address (&to, val);
+          } else if (key == "cc") {
+            append_address (&cc, val);
+          } else if (key == "bcc") {
+            append_address (&bcc, val);
+          } else if (key == "subject") {
+            subject += val;
+          } else if (key == "body") {
+            body += val;
+          } else if (key == "from") {
+            // we accept only one "From" address
+            set_from (Address (val));
+          } else {
+            body = ustring::compose ("Unknown header: %1: %2\n%3", key, val, body);
+          }
+        }
+      }
+    }
+
+    append_address (&cc, _cc);
+    append_address (&bcc, _bcc);
+    subject += _subject;
+    body += _body;
+
+
     if (!_from.empty ()) {
+      // we accept only one "From" address
       set_from (Address (_from));
     }
+
 
     /* reload message */
     prepare_message ();
@@ -1028,6 +1098,11 @@ namespace Astroid {
       }
     }
   }
+
+  void EditMessage::append_address (ustring *s, ustring a) {
+    *s += (s->empty() ? a : "," + a);
+  }
+
 
   /* }}} */
 

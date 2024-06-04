@@ -721,8 +721,7 @@ namespace Astroid {
 
         ustring scheme = Glib::uri_parse_scheme (a);
         if (scheme == "mailto") {
-
-          a = a.substr (scheme.length ()+1, a.length () - scheme.length()-1);
+          a = a.substr (7);
           UstringUtils::trim (a);
           al += Address(a);
         }

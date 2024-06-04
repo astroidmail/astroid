@@ -196,10 +196,6 @@ namespace Astroid {
             ustring scheme = Glib::uri_parse_scheme (uri);
 
             if (scheme == "mailto") {
-
-              uri = uri.substr (scheme.length ()+1, uri.length () - scheme.length()-1);
-              UstringUtils::trim(uri);
-
               main_window->add_mode (new EditMessage (main_window, uri));
 
             } else if (scheme == "id" || scheme == "mid" ) {

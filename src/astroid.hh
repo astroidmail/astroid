@@ -94,6 +94,7 @@ namespace Astroid {
 
       int _hint_level = 0;
       po::options_description desc;
+      po::positional_options_description pdesc;
   };
 
   /* globally available instance of our main Astroid-class */

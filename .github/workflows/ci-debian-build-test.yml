@@ -59,7 +59,6 @@ jobs:
             libpeas-dev \
             libprotobuf-dev \
             libsass-dev \
-            libsoup2.4-dev \
             libvte-2.91-dev \
             libwebkit2gtk-${WEBKITGTK_VERSION}-dev \
             ninja-build \

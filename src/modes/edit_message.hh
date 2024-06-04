@@ -31,7 +31,8 @@ namespace Astroid {
 
     public:
       EditMessage (MainWindow *, bool edit_when_ready = true);
-      EditMessage (MainWindow *, ustring to, ustring from = "", ustring cc = "", ustring bcc = "", ustring subject = "", ustring body = "");
+      // mailto can be mailto uri or simply To: addresses
+      EditMessage (MainWindow *, ustring mailto, ustring from = "", ustring cc = "", ustring bcc = "", ustring subject = "", ustring body = "");
       EditMessage (MainWindow *, refptr<Message> _msg);
       ~EditMessage ();
 
@@ -166,6 +167,7 @@ namespace Astroid {
       void on_from_combo_changed ();
       //bool on_from_combo_key_press (GdkEventKey *);
       void on_element_action (int id, ThreadView::ElementAction action);
+      void append_address (ustring *s, ustring a);
 
     public:
       void grab_modal () override;
