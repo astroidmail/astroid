@@ -145,6 +145,7 @@ namespace Astroid {
 
     rev_yes_no->set_margin_top (0);
     rh->set_margin_bottom (5);
+    rh->set_margin_top (5);
 
     rev_yes_no->add (*rh);
     rev_yes_no->set_reveal_child (false);
@@ -164,7 +165,8 @@ namespace Astroid {
     label_multi->set_halign (Gtk::ALIGN_START);
 
     rev_multi->set_margin_top (0);
-    rh->set_margin_bottom (5);
+    rh_->set_margin_bottom (5);
+    rh_->set_margin_top (5);
 
     rev_multi->add (*rh_);
     rev_multi->set_reveal_child (false);
