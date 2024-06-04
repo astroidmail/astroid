@@ -63,17 +63,17 @@ namespace Astroid {
       ustring user_agent;
 
       /* accounts */
-      AccountManager * accounts;
+      AccountManager * accounts = NULL;
 
       /* actions */
-      ActionManager * actions;
+      ActionManager * actions = NULL;
 
 # ifndef DISABLE_PLUGINS
-      PluginManager * plugin_manager;
+      PluginManager * plugin_manager = NULL;
 # endif
 
       /* poll */
-      Poll * poll;
+      Poll * poll = NULL;
 
       MainWindow * open_new_window (bool open_defaults = true);
 
@@ -81,7 +81,7 @@ namespace Astroid {
       GdkAtom clipboard_target = GDK_SELECTION_CLIPBOARD;
 
     protected:
-      Config * m_config;
+      Config * m_config = NULL;
 
     private:
       void on_activate () override;
