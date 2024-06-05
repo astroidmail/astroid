@@ -144,8 +144,8 @@ namespace Astroid {
     rh->pack_start (*no, false, true, 5);
 
     rev_yes_no->set_margin_top (0);
-    rh->set_margin_bottom (5);
-    rh->set_margin_top (5);
+    rh->set_margin_bottom (3);
+    rh->set_margin_top (3);
 
     rev_yes_no->add (*rh);
     rev_yes_no->set_reveal_child (false);
