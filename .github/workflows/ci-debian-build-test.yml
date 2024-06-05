@@ -17,9 +17,6 @@ jobs:
           - image: 'debian:bullseye'
             env:
               WEBKITGTK_VERSION: '4.0'
-          - image: 'ubuntu:focal'
-            env:
-              WEBKITGTK_VERSION: '4.0'
           - image: 'debian:sid'
             env:
               WEBKITGTK_VERSION: '4.1'
