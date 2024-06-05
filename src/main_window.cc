@@ -788,10 +788,8 @@ namespace Astroid {
     multi_waiting = true;
     multi_keybindings = kb;
 
-#if 0
     rev_multi->set_reveal_child (true);
     label_multi->set_markup (kb.short_help ());
-#endif
 
     return true;
   }
