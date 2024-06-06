@@ -16,19 +16,6 @@
 # include "config.hh"
 # include "proto.hh"
 
-/* there was a bit of a round-dance of with the _st versions of these returning
- * to the old name, but with different signature */
-# if (LIBNOTMUCH_MAJOR_VERSION < 5)
-# define notmuch_query_search_threads(x,y) notmuch_query_search_threads_st(x,y)
-# define notmuch_query_count_threads(x,y) notmuch_query_count_threads_st(x,y)
-# define notmuch_query_search_messages(x,y) notmuch_query_search_messages_st(x,y)
-# define notmuch_query_count_messages(x,y) notmuch_query_count_messages_st(x,y)
-# endif
-
-# ifndef HAVE_NOTMUCH_INDEX_FILE
-# define notmuch_database_index_file(d,f,o,m) notmuch_database_add_message(d,f,m)
-# endif
-
 namespace Astroid {
   class NotmuchItem : public Glib::Object {
     public:
@@ -163,6 +150,7 @@ namespace Astroid {
       static bool maildir_synchronize_flags;
       static void init ();
       static bfs::path path_db;
+      static bfs::path path_config;
 
     private:
       /*

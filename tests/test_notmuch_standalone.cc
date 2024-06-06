@@ -6,16 +6,6 @@
 
 // Build with: g++ test_notmuch_standalone.cc -o test_notmuch_standalone -lnotmuch
 
-
-/* there was a bit of a round-dance of with the _st versions of these returning
- * to the old name, but with different signature */
-# if (LIBNOTMUCH_MAJOR_VERSION < 5)
-# define notmuch_query_search_threads(x,y) notmuch_query_search_threads_st(x,y)
-# define notmuch_query_count_threads(x,y) notmuch_query_count_threads_st(x,y)
-# define notmuch_query_search_messages(x,y) notmuch_query_search_messages_st(x,y)
-# define notmuch_query_count_messages(x,y) notmuch_query_count_messages_st(x,y)
-# endif
-
 using std::cout;
 using std::endl;
 
@@ -25,10 +15,10 @@ int main () {
   notmuch_database_t * nm_db;
 
   notmuch_status_t s =
-    notmuch_database_open (
+    notmuch_database_open_with_config (
       path_db,
       notmuch_database_mode_t::NOTMUCH_DATABASE_MODE_READ_ONLY,
-      &nm_db);
+      "", NULL, &nm_db, NULL);
 
   (void) (s);
 
@@ -108,10 +98,10 @@ int main () {
    * continue loading the original query */
   notmuch_database_t * nm_db2;
 
-  s = notmuch_database_open (
+  s = notmuch_database_open_with_config (
       path_db,
       notmuch_database_mode_t::NOTMUCH_DATABASE_MODE_READ_WRITE,
-      &nm_db2);
+      "", NULL, &nm_db2, NULL);
 
 
   char qry_s[256];
@@ -152,10 +142,10 @@ int main () {
   notmuch_database_close (nm_db2);
 
   /* re-add unread tag */
-  s = notmuch_database_open (
+  s = notmuch_database_open_with_config (
       path_db,
       notmuch_database_mode_t::NOTMUCH_DATABASE_MODE_READ_WRITE,
-      &nm_db2);
+      "", NULL, &nm_db2, NULL);
 
 
 

@@ -319,13 +319,11 @@ namespace Astroid {
       config.put ("poll.interval", 0);
       config.put ("accounts.charlie.gpgkey", "gaute@astroidmail.bar");
       config.put ("mail.send_delay", 0);
-      std::string test_nmcfg_path;
       if (getenv ("ASTROID_BUILD_DIR")) {
-        test_nmcfg_path = (current_path () / path ("tests/mail/test_config")).string();
+        notmuch_config_path = (current_path () / path ("tests/mail/test_config"));
       } else {
-        test_nmcfg_path = (Resource::get_exe_dir () / path ("tests/mail/test_config")).string();
+        notmuch_config_path = (Resource::get_exe_dir () / path ("tests/mail/test_config")).string();
       }
-      boost::property_tree::read_ini (test_nmcfg_path, notmuch_config);
       has_notmuch_config = true;
       return;
     }
@@ -376,8 +374,7 @@ namespace Astroid {
     std_paths.attach_dir = Utils::expand(bfs::path (config.get<string>("editor.attachment_directory")));
     run_paths.attach_dir = std_paths.attach_dir;
 
-    /* read notmuch config */
-    bfs::path notmuch_config_path;
+    /* search for notmuch config file */
     char * notmuch_config_env = getenv ("NOTMUCH_CONFIG");
     if (notmuch_config_env) {
       notmuch_config_path = Utils::expand(bfs::path (notmuch_config_env));
@@ -386,9 +383,6 @@ namespace Astroid {
     }
 
     if (is_regular_file (notmuch_config_path)) {
-      boost::property_tree::read_ini (
-        notmuch_config_path.c_str(),
-        notmuch_config);
       has_notmuch_config = true;
     } else {
       has_notmuch_config = false;
