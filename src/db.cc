@@ -81,6 +81,13 @@ namespace Astroid {
       maildir_synchronize_flags = config.get<bool> ("maildir.synchronize_flags");
     } catch (const boost::property_tree::ptree_bad_path &ex) {
       throw database_error ("db: error: no maildir.maildir_synchronize_flags defined in notmuch-config");
+    } catch (const boost::property_tree::ptree_bad_data &ex) {
+      ustring bad_data_s = config.get<string> ("maildir.synchronize_flags");
+      if (bad_data_s != "") {
+        LOG (error) << "db: error: bad argument '" << bad_data_s << "' "
+          << "for maildir.maildir_synchronize_flags in notmuch-config "
+          << "(expected yes/no)";
+      }
     }
   }
 
