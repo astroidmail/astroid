@@ -42,7 +42,7 @@ namespace Astroid {
       static int icon_size;
 
     private:
-      Gtk::HBox icons;
+      Gtk::Box icons;
       Gtk::Spinner poll_spinner;
       bool spinner_on = false;
 
