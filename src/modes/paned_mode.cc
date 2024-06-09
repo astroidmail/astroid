@@ -55,6 +55,7 @@ namespace Astroid {
 
     Gtk::EventBox * fb = Gtk::manage (new Gtk::EventBox ());
     fb->add (*w);
+    fb->set_size_request (300);
 
     if (p == 0) {
       fp1 = fb;
