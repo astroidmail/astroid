@@ -336,35 +336,31 @@ namespace Astroid {
         Gtk::TreeViewColumn *c;
         list_view->get_cursor (path, c);
 
-        auto iter = list_store->prepend ();
-        Gtk::ListStore::Row newrow = *iter;
 
-        NotmuchThread * t;
+        db->on_thread (thread_id, [this, &path](notmuch_thread_t *nmt) {
+            auto iter = list_store->prepend();
+            Gtk::ListStore::Row newrow = *iter;
+            NotmuchThread* t = new NotmuchThread (nmt);
 
-        db->on_thread (thread_id, [&t](notmuch_thread_t *nmt) {
+            newrow[list_store->columns.newest_date] = t->newest_date;
+            newrow[list_store->columns.oldest_date] = t->oldest_date;
+            newrow[list_store->columns.thread_id]   = t->thread_id;
+            newrow[list_store->columns.thread]      = Glib::RefPtr<NotmuchThread>(t);
 
-            t = new NotmuchThread (nmt);
+            /* check if we should select it (if this is the only item) */
+            if (list_store->children().size() == 1) {
+              if (!in_destructor)
+                first_thread_ready.emit ();
+            } else {
 
-          });
-
-        newrow[list_store->columns.newest_date] = t->newest_date;
-        newrow[list_store->columns.oldest_date] = t->oldest_date;
-        newrow[list_store->columns.thread_id]   = t->thread_id;
-        newrow[list_store->columns.thread]      = Glib::RefPtr<NotmuchThread>(t);
-
-        /* check if we should select it (if this is the only item) */
-        if (list_store->children().size() == 1) {
-          if (!in_destructor)
-            first_thread_ready.emit ();
-        } else {
-
-          if (path == Gtk::TreePath ("0")) {
-            Gtk::TreePath addpath = list_store->get_path (iter);
-            if (addpath <= path) {
-              list_view->set_cursor (addpath);
+              if (path == Gtk::TreePath ("0")) {
+                Gtk::TreePath addpath = list_store->get_path (iter);
+                if (addpath <= path) {
+                  list_view->set_cursor (addpath);
+                }
+              }
             }
-          }
-        }
+          });
 
         changed = true;
       }
