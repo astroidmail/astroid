@@ -163,6 +163,7 @@ namespace Astroid {
     label_multi = Gtk::manage (new Gtk::Label ());
     rh_->pack_start (*label_multi, true, true, 5);
     label_multi->set_halign (Gtk::ALIGN_START);
+    label_multi->set_line_wrap();
 
     rev_multi->set_margin_top (0);
     rh_->set_margin_bottom (5);
