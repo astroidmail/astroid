@@ -37,10 +37,11 @@ namespace Astroid {
   std::vector<ustring> Db::tags;
 
   bfs::path Db::path_db;
-  bfs::path Db::path_config;
+  const char * Db::path_config;
 
   void Db::init () {
-    path_config = astroid->notmuch_config ();
+    // NULL: notmuch searches according to notmuch-config(1) / notmuch.h:notmuch_database_open_with_config()
+    path_config = astroid->has_notmuch_config () ? astroid->notmuch_config().c_str() : NULL;
 
     const char * home = getenv ("HOME");
     if (home == NULL) {
@@ -48,26 +49,30 @@ namespace Astroid {
       throw invalid_argument ("db: error: HOME environment variable not set.");
     }
 
-    if (!astroid->has_notmuch_config ()) {
-      throw database_error ("db: error: no notmuch config file found.");
-    }
-
     notmuch_database_t *dbh = NULL;
     char *error_message = NULL;
-    notmuch_status_t s = notmuch_database_load_config (NULL,
-       path_config.c_str (),
-       NULL, &dbh, &error_message);
+    // NULL: notmuch searches according to notmuch-config(1) / notmuch.h:notmuch_database_open_with_config()
+    notmuch_status_t s = notmuch_database_load_config (NULL, path_config, NULL, &dbh, &error_message);
 
     if (error_message != NULL) {
       LOG (error) << "db: " << error_message;
       free (error_message);
+    }
 
-      if (s == NOTMUCH_STATUS_NO_DATABASE) {
-        notmuch_database_destroy (dbh);
-        throw database_error ("db: error: no database path specified");
+    if (s != NOTMUCH_STATUS_SUCCESS) {
+      notmuch_database_destroy (dbh);
+      const char *db_err_str;
+      switch (s) {
+        case NOTMUCH_STATUS_NO_DATABASE:
+          db_err_str = "db: error: no database path specified";
+          break;
+        case NOTMUCH_STATUS_NO_CONFIG:
+          db_err_str = "db: error: no notmuch config file found.";
+          break;
+        default:
+          db_err_str = "db: error: could not open notmuch config file";
       }
-
-      throw database_error ("db: error: could not open notmuch config file");
+      throw database_error (db_err_str);
     }
 
     const char *db_path = notmuch_config_get (dbh, NOTMUCH_CONFIG_DATABASE_PATH);
@@ -133,7 +138,7 @@ namespace Astroid {
       s = notmuch_database_open_with_config (
         path_db.c_str(),
         notmuch_database_mode_t::NOTMUCH_DATABASE_MODE_READ_WRITE,
-        path_config.c_str(),
+        path_config,
         NULL, &nm_db, &error_message);
 
       if (error_message != NULL) {
@@ -178,7 +183,7 @@ namespace Astroid {
       s = notmuch_database_open_with_config (
           path_db.c_str(),
           notmuch_database_mode_t::NOTMUCH_DATABASE_MODE_READ_ONLY,
-          path_config.c_str(),
+          path_config,
           NULL, &nm_db, &error_message);
 
       if (error_message != NULL) {

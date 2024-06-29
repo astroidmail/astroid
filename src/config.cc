@@ -161,13 +161,6 @@ namespace Astroid {
     ptree default_config;
     default_config.put ("astroid.config.version", CONFIG_VERSION);
 
-    std::string nm_cfg = path(std_paths.home / path (".notmuch-config")).string();
-    char* nm_env = getenv("NOTMUCH_CONFIG");
-    if (nm_env != NULL) {
-      nm_cfg.assign(nm_env, strlen(nm_env));
-    }
-    default_config.put ("astroid.notmuch_config" , nm_cfg);
-
     default_config.put ("astroid.debug.dryrun_sending", false);
 
     /* only show hints with a level higher than this */

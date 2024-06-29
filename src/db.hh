@@ -150,7 +150,7 @@ namespace Astroid {
       static bool maildir_synchronize_flags;
       static void init ();
       static bfs::path path_db;
-      static bfs::path path_config;
+      static const char * path_config;
 
     private:
       /*
