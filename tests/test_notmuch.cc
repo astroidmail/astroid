@@ -27,7 +27,7 @@ BOOST_AUTO_TEST_SUITE(Notmuch)
       notmuch_database_open_with_config (
         path_db.c_str(),
         notmuch_database_mode_t::NOTMUCH_DATABASE_MODE_READ_ONLY,
-        NULL, NULL, &nm_db, NULL);
+        "", NULL, &nm_db, NULL);
 
 
     BOOST_CHECK (s == NOTMUCH_STATUS_SUCCESS);
