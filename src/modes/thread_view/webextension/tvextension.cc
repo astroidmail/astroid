@@ -2272,7 +2272,7 @@ void AstroidExtension::scroll_to_element (ustring eid) {
 }
 
 void AstroidExtension::handle_navigate (AstroidMessages::Navigate &n) {
-  std::string _t = AstroidMessages::Navigate_Type_descriptor ()->FindValueByNumber (n.type ())->name ();
+  std::string _t { AstroidMessages::Navigate_Type_descriptor ()->FindValueByNumber (n.type ())->name () };
   LOG (debug) << "navigating, type: " << _t;
 
   WebKitDOMDocument * d = webkit_web_page_get_dom_document (page);
