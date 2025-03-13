@@ -55,8 +55,8 @@ namespace Astroid {
       void write_back_config ();
 
       ptree config;
-      ptree notmuch_config;
-      bool has_notmuch_config;
+      bfs::path notmuch_config_path;
+      bool has_notmuch_config = false;
 
       const int CONFIG_VERSION = 11;
 

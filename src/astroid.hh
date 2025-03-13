@@ -8,6 +8,7 @@
 # include <boost/property_tree/ptree.hpp>
 # include <boost/program_options.hpp>
 # include <boost/log/trivial.hpp>
+# include <boost/filesystem.hpp>
 
 # define LOG(x) BOOST_LOG_TRIVIAL(x)
 # define warn warning
@@ -53,7 +54,7 @@ namespace Astroid {
 
 
       const boost::property_tree::ptree& config (const std::string& path=std::string()) const;
-      const boost::property_tree::ptree& notmuch_config () const;
+      const boost::filesystem::path& notmuch_config () const;
       const StandardPaths& standard_paths() const;
             RuntimePaths& runtime_paths() const;
       bool  has_notmuch_config ();
