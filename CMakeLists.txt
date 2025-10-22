@@ -116,7 +116,6 @@ find_package ( Boost REQUIRED
   log
   thread
   date_time
-  system
   )
 
 find_package (Protobuf CONFIG)
