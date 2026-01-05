@@ -1,7 +1,12 @@
 ##
 # This MUST be the first line
 #
-cmake_minimum_required (VERSION 3.9)
+cmake_minimum_required (VERSION 3.9...3.31)
+
+# about finding boost
+if (POLICY CMP0167)
+    cmake_policy(SET CMP0167 NEW)
+endif()
 
 ##
 # project name
@@ -11,7 +16,7 @@ project (astroid)
 ##
 # don't use obscure build types, but only Debug and Release
 #
-set (CMAKE_CONFIGURATION_TYPES Debug Release CACHE TYPE INTERNAL FORCE)
+set (CMAKE_CONFIGURATION_TYPES Debug Release CACHE STRING INTERNAL FORCE)
 message (STATUS "Available config types: ${CMAKE_CONFIGURATION_TYPES}")
 
 ##
@@ -404,8 +409,10 @@ endif()
 if(DISABLE_LIBSASS)
   message (STATUS "Generating thread-view.css")
   add_custom_command ( TARGET astroid
+    POST_BUILD
     COMMAND ${SCSS_COMPILER} ${CMAKE_SOURCE_DIR}/ui/thread-view.scss ${CMAKE_BINARY_DIR}/thread-view.css )
   add_custom_command ( TARGET astroid
+    POST_BUILD
     COMMAND ${SCSS_COMPILER} ${CMAKE_SOURCE_DIR}/ui/part.scss ${CMAKE_BINARY_DIR}/part.css )
 endif()
 
@@ -417,6 +424,7 @@ if (NOT DISABLE_DOCS)
   if (SCDOC)
     add_custom_command (
       TARGET astroid
+      POST_BUILD
       COMMAND ${SCDOC} < ${CMAKE_SOURCE_DIR}/doc/astroid.1.scd | gzip > ${CMAKE_BINARY_DIR}/astroid.1.gz
       COMMENT "Generating man page (scdoc)")
   else ()
@@ -424,6 +432,7 @@ if (NOT DISABLE_DOCS)
       message (WARNING "Falling back to 'ronn' for man page generation.")
       add_custom_command (
         TARGET astroid
+        POST_BUILD
         COMMAND ${RONN} --roff --pipe ${CMAKE_SOURCE_DIR}/doc/astroid.1.scd | gzip > ${CMAKE_BINARY_DIR}/astroid.1.gz
         COMMENT "Generating man page (ronn)")
     else ()
