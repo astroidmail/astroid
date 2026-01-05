@@ -13,6 +13,9 @@ jobs:
         container:
           - image: 'debian:stable'
             env:
+              WEBKITGTK_VERSION: '4.1'
+          - image: 'debian:bookworm'
+            env:
               WEBKITGTK_VERSION: '4.0'
           - image: 'debian:bullseye'
             env:
