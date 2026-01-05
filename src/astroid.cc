@@ -342,8 +342,8 @@ namespace Astroid {
     return m_config->config.get_child(id);
   }
 
-  const boost::property_tree::ptree& Astroid::notmuch_config () const {
-    return m_config->notmuch_config;
+  const boost::filesystem::path& Astroid::notmuch_config () const {
+    return m_config->notmuch_config_path;
   }
 
   const StandardPaths& Astroid::standard_paths() const {

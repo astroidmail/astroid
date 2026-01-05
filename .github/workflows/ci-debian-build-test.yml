@@ -17,19 +17,13 @@ jobs:
           - image: 'debian:bookworm'
             env:
               WEBKITGTK_VERSION: '4.0'
-          - image: 'debian:bullseye'
-            env:
-              WEBKITGTK_VERSION: '4.0'
-          - image: 'ubuntu:focal'
-            env:
-              WEBKITGTK_VERSION: '4.0'
           - image: 'debian:sid'
             env:
               WEBKITGTK_VERSION: '4.1'
-          - image: 'ubuntu:devel'
+          - image: 'ubuntu:noble'
             env:
               WEBKITGTK_VERSION: '4.1'
-          - image: 'ubuntu:noble'
+          - image: 'ubuntu:devel'
             env:
               WEBKITGTK_VERSION: '4.1'
     timeout-minutes: 15
