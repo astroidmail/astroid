@@ -1,8 +1,8 @@
-{ ... }:
+{ channel ? <nixpkgs>
+, pkgs ? import channel { }
+, ... }:
 
 let
-  pkgs = import <nixpkgs> { };
-
   shell-configure = pkgs.writeShellScriptBin "configure" ''
     mkdir -p build
     cd build
@@ -46,19 +46,22 @@ pkgs.mkShell {
     cmake
     glib-networking protobuf
     gmime3
-    gnome3.adwaita-icon-theme
+    adwaita-icon-theme
     gsettings-desktop-schemas
     gtkmm3
-    libpeas
+    libpeas # should be updated to peas2
     libsass
+    libsysprof-capture
     ninja
     notmuch
     pkg-config
     python3
     python3Packages.pygobject3
-    ronn
-    webkitgtk
-    wrapGAppsHook
+    scdoc # or ronn
+    vte
+    webkitgtk_4_1
+    wrapGAppsHook3
+    xorg.libXdmcp
   ];
 
   LIBCLANG_PATH   = "${pkgs.llvmPackages.libclang}/lib";
