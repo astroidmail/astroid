@@ -1,6 +1,6 @@
 <img src="https://github.com/astroidmail/astroid/raw/master/ui/icons/horizontal_color.png" width="400px" alt="astroid logo" />
 
-> _Astroid_ is a lightweight and fast **Mail User Agent** that provides a graphical interface to searching, displaying and composing email, organized in threads and tags. _Astroid_ uses the [notmuch](http://notmuchmail.org/) backend for blazingly fast searches through tons of email. _Astroid_ searches, displays and composes emails - and rely on other programs for fetching, syncing and sending email. Check out [Astroid in your general mail setup](https://github.com/astroidmail/astroid/wiki/Astroid-in-your-general-mail-setup) for a suggested complete e-mail solution.
+> _Astroid_ is a lightweight and fast **Mail User Agent** that provides a graphical interface to searching, displaying and composing email, organized in threads and tags. _Astroid_ uses the [notmuch](http://notmuchmail.org/) backend for blazingly fast searches through tons of email. _Astroid_ searches, displays and composes emails - and relies on other programs for fetching, syncing and sending email. Check out [Astroid in your general mail setup](https://github.com/astroidmail/astroid/wiki/Astroid-in-your-general-mail-setup) for a suggested complete e-mail solution.
 
 The [tour of how to install, configure and use astroid](https://github.com/astroidmail/astroid/wiki) provides detailed information on setup and usage, while brief instructions are provided [below](#acquiring-astroid).
 
