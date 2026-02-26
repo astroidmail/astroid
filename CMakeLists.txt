@@ -572,6 +572,10 @@ install (FILES ui/astroid.desktop
   DESTINATION share/applications
   )
 
+install (FILES ui/astroid.metainfo.xml
+  DESTINATION share/metainfo/
+  )
+
 install (FILES ui/thread-view.html ui/edit-message.glade ui/no-mail.png
   DESTINATION share/astroid/ui
   )

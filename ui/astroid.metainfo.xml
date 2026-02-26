@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright 2026 Gaute Hope -->
+<component type="desktop">
+  <id>astroid.desktop</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-or-later AND LGPL-2.1-or-later AND BSD-3-Clause</project_license>
+  <name>Comical</name>
+  <summary>A graphical, lightweight and fast, e-mail client for Notmuch</summary>
+  <description>
+    <p>
+      Astroid is a lightweight and fast Mail User Agent that provides a
+      graphical interface to searching, displaying and composing email,
+      organized in threads and tags. Astroid uses the notmuch backend for
+      blazingly fast searches through tons of email. Astroid searches,
+      displays and composes emails - and rely on other programs for fetching,
+      syncing and sending email.Comical is an easy to use and cross-platform
+      CBR and CBZ reader which prefetches and caches pages for speed.
+    </p>
+  </description>
+  <screenshots>
+    <screenshot type="default">
+      <image>https://raw.githubusercontent.com/astroidmail/astroid/master/doc/full-demo-embedded.png</image>
+    </screenshot>
+  </screenshots>
+  <url type="homepage">http://astroidmail.github.io/</url>
+  <update_contact>astroidmail_at_googlegroups.com</update_contact>
+</component>
