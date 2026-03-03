@@ -370,6 +370,7 @@ namespace Astroid {
             g_mime_content_type_get_media_subtype (contentType));
           g_mime_part_set_content (part, data);
           g_mime_part_set_filename (part, a->name.c_str());
+          g_mime_part_set_content_id (part, a->name.c_str());
 
           if (a->dispostion_inline) {
             g_mime_object_set_disposition (GMIME_OBJECT(part), "inline");
