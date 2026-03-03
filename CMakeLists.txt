@@ -84,8 +84,8 @@ message (STATUS "Building ${PROJECT_NAME} ${PROJECT_VERSION}")
 # check for required packages and libraries
 #
 find_package( Notmuch REQUIRED )
-if (Notmuch_INDEX_FILE_API)
-  add_definitions ( -DHAVE_NOTMUCH_INDEX_FILE )
+if (NOT Notmuch_VERSION VERSION_GREATER_EQUAL "5.4")
+    message (FATAL_ERROR "libnotmuch >= 5.4 must be installed.")
 endif()
 
 find_package ( PkgConfig REQUIRED )

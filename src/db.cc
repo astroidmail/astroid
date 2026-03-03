@@ -37,9 +37,11 @@ namespace Astroid {
   std::vector<ustring> Db::tags;
 
   bfs::path Db::path_db;
+  const char * Db::path_config;
 
   void Db::init () {
-    const ptree& config = astroid->notmuch_config ();
+    // NULL: notmuch searches according to notmuch-config(1) / notmuch.h:notmuch_database_open_with_config()
+    path_config = astroid->has_notmuch_config () ? astroid->notmuch_config().c_str() : NULL;
 
     const char * home = getenv ("HOME");
     if (home == NULL) {
@@ -47,29 +49,40 @@ namespace Astroid {
       throw invalid_argument ("db: error: HOME environment variable not set.");
     }
 
-    if (!astroid->has_notmuch_config ()) {
-      throw database_error ("db: error: no notmuch config file found.");
+    notmuch_database_t *dbh = NULL;
+    char *error_message = NULL;
+    // NULL: notmuch searches according to notmuch-config(1) / notmuch.h:notmuch_database_open_with_config()
+    notmuch_status_t s = notmuch_database_load_config (NULL, path_config, NULL, &dbh, &error_message);
+
+    if (error_message != NULL) {
+      LOG (error) << "db: " << error_message;
+      free (error_message);
     }
 
-    ustring db_path;
-    try {
-      db_path = ustring (config.get<string> ("database.path"));
-    } catch (const boost::property_tree::ptree_bad_path &ex) {
-      throw database_error ("db: error: no database path specified");
+    if (s != NOTMUCH_STATUS_SUCCESS) {
+      notmuch_database_destroy (dbh);
+      const char *db_err_str;
+      switch (s) {
+        case NOTMUCH_STATUS_NO_DATABASE:
+          db_err_str = "db: error: no database path specified";
+          break;
+        case NOTMUCH_STATUS_NO_CONFIG:
+          db_err_str = "db: error: no notmuch config file found.";
+          break;
+        default:
+          db_err_str = "db: error: could not open notmuch config file";
+      }
+      throw database_error (db_err_str);
     }
 
+    const char *db_path = notmuch_config_get (dbh, NOTMUCH_CONFIG_DATABASE_PATH);
     LOG (info) << "db path: " << db_path;
 
-    path_db = Utils::expand (path (db_path));
+    path_db = Utils::expand (path (ustring (db_path)));
     path_db = absolute (path_db);
 
-    ustring excluded_tags_s;
-    try {
-      excluded_tags_s = config.get<string> ("search.exclude_tags");
-    } catch (const boost::property_tree::ptree_bad_path &ex) {
-      throw database_error ("db: error: no search.exclude_tags defined in notmuch-config");
-    }
-    excluded_tags = VectorUtils::split_and_trim (excluded_tags_s, ";");
+    const char *excluded_tags_s = notmuch_config_get (dbh, NOTMUCH_CONFIG_EXCLUDE_TAGS);
+    excluded_tags = VectorUtils::split_and_trim (ustring (excluded_tags_s), ";");
     sort (excluded_tags.begin (), excluded_tags.end ());
 
     // TODO: find a better way to handle sent_tags, probably via AccountManager?
@@ -77,18 +90,13 @@ namespace Astroid {
     sent_tags = VectorUtils::split_and_trim (sent_tags_s, ",");
     sort (sent_tags.begin (), sent_tags.end ());
 
-    try {
-      maildir_synchronize_flags = config.get<bool> ("maildir.synchronize_flags");
-    } catch (const boost::property_tree::ptree_bad_path &ex) {
-      throw database_error ("db: error: no maildir.maildir_synchronize_flags defined in notmuch-config");
-    } catch (const boost::property_tree::ptree_bad_data &ex) {
-      ustring bad_data_s = config.get<string> ("maildir.synchronize_flags");
-      if (bad_data_s != "") {
-        LOG (error) << "db: error: bad argument '" << bad_data_s << "' "
-          << "for maildir.maildir_synchronize_flags in notmuch-config "
-          << "(expected yes/no)";
-      }
+    notmuch_bool_t sync_flags_b;
+    s = notmuch_config_get_bool (dbh, NOTMUCH_CONFIG_SYNC_MAILDIR_FLAGS, &sync_flags_b);
+    if (s == NOTMUCH_STATUS_SUCCESS) {
+      maildir_synchronize_flags = sync_flags_b;
     }
+
+    notmuch_database_destroy (dbh);
   }
 
   Db::Db (DbMode _mode) {
@@ -126,11 +134,17 @@ namespace Astroid {
      * it is done.
      */
     do {
-      s = notmuch_database_open (
+      char *error_message = NULL;
+      s = notmuch_database_open_with_config (
         path_db.c_str(),
         notmuch_database_mode_t::NOTMUCH_DATABASE_MODE_READ_WRITE,
-        &nm_db);
+        path_config,
+        NULL, &nm_db, &error_message);
 
+      if (error_message != NULL) {
+        LOG (error) << "db: " << error_message;
+        free (error_message);
+      }
       if (s == NOTMUCH_STATUS_XAPIAN_EXCEPTION) {
         LOG (error) << "db: error: could not open db r/w, waited " <<
                 time << " of maximum " <<
@@ -165,11 +179,17 @@ namespace Astroid {
     int time = 0;
 
     do {
-      s = notmuch_database_open (
+      char *error_message = NULL;
+      s = notmuch_database_open_with_config (
           path_db.c_str(),
           notmuch_database_mode_t::NOTMUCH_DATABASE_MODE_READ_ONLY,
-          &nm_db);
+          path_config,
+          NULL, &nm_db, &error_message);
 
+      if (error_message != NULL) {
+        LOG (error) << "db: " << error_message;
+        free (error_message);
+      }
       if (s == NOTMUCH_STATUS_XAPIAN_EXCEPTION) {
         LOG (error) << "db: error: could not open db r/o, waited " <<
                 time << " of maximum " <<

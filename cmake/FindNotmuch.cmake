@@ -6,7 +6,6 @@
 #  Notmuch_INCLUDE_DIRS   - the Notmuch include directories
 #  Notmuch_LIBRARIES      - link these to use Notmuch
 #  Notmuch_GMIME_VERSION  - the GMime version notmuch was linked against
-#  Notmuch_INDEX_FILE_API - whether Notmuch has the notmuch_database_index_file() API
 
 include (LibFindMacros)
 
@@ -65,7 +64,6 @@ libfind_process (Notmuch)	# will set Notmuch_FOUND, Notmuch_INCLUDE_DIRS and Not
 include (CheckSymbolExists)
 set (CMAKE_REQUIRED_INCLUDES ${Notmuch_INCLUDE_DIR})
 set (CMAKE_REQUIRED_LIBRARIES ${Notmuch_LIBRARY})
-check_symbol_exists (notmuch_database_index_file notmuch.h Notmuch_INDEX_FILE_API)
 
 # GMime version notmuch was linked against
 include (GetPrerequisites)
