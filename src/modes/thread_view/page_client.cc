@@ -72,11 +72,15 @@ namespace Astroid {
 
     LOG (debug) << "pc: closing";
 
-    istream.clear ();
-    ostream.clear ();
+    if (ready) {
+      istream.clear ();
+      ostream.clear ();
 
-    ext->close ();
-    srv->close ();
+      ext->close ();
+    }
+    if (srv) {
+      srv->close ();
+    }
   }
 
   void PageClient::init_web_extensions (WebKitWebContext * context) {

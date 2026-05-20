@@ -11,6 +11,10 @@ jobs:
       fail-fast: false
       matrix:
         container:
+          # sid fails in install build dependencies step
+          #- image: 'debian:sid'
+          #  env:
+          #    WEBKITGTK_VERSION: '4.1'
           - image: 'debian:stable'
             env:
               WEBKITGTK_VERSION: '4.1'
@@ -20,18 +24,18 @@ jobs:
           - image: 'debian:bullseye'
             env:
               WEBKITGTK_VERSION: '4.0'
-          - image: 'ubuntu:focal'
-            env:
-              WEBKITGTK_VERSION: '4.0'
-          - image: 'debian:sid'
-            env:
-              WEBKITGTK_VERSION: '4.1'
           - image: 'ubuntu:devel'
             env:
               WEBKITGTK_VERSION: '4.1'
           - image: 'ubuntu:noble'
             env:
               WEBKITGTK_VERSION: '4.1'
+          - image: 'ubuntu:jammy'
+            env:
+              WEBKITGTK_VERSION: '4.1'
+          - image: 'ubuntu:focal'
+            env:
+              WEBKITGTK_VERSION: '4.0'
     timeout-minutes: 15
     steps:
       - name: Git checkout

@@ -124,9 +124,14 @@ AstroidExtension::AstroidExtension (
 {
   extension = e;
 
-  Glib::init ();
+  /* initializes glib, gio, gdk, and gtk */
   Gtk::Main::init_gtkmm_internals ();
-  Gio::init ();
+  /* open the default display */
+  if (!Gdk::Display::get_default ()) {
+    auto display = Gdk::Display::open ("");
+    g_assert (display);
+  }
+
   logging::add_common_attributes ();
 
   /* load attachment icon */
